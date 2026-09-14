@@ -153,17 +153,18 @@ button {
 .header-inner {
   display: flex;
   align-items: center;
-  gap: 22px;
+  gap: 14px;
   height: 66px;
 }
 
 .logo {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
+  gap: 8px;
   font-weight: 800;
-  font-size: 1.12rem;
+  font-size: 1.05rem;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 .logo-mark {
@@ -193,17 +194,20 @@ button {
 
 .main-nav {
   display: flex;
-  gap: 4px;
+  gap: 2px;
   flex: 1;
+  min-width: 0;
+  flex-wrap: nowrap;
 }
 
 .main-nav a {
-  padding: 8px 12px;
+  padding: 8px 9px;
   border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 500;
   color: var(--muted);
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
 .main-nav a:hover {
@@ -235,6 +239,7 @@ button {
   border-radius: 999px;
   background: var(--primary-soft);
   color: var(--primary);
+  white-space: nowrap;
 }
 
 .streak-chip {
@@ -285,6 +290,7 @@ button {
 .hero > .container {
   position: relative;
   z-index: 2;
+  text-align: center;
 }
 
 .hero h1 {
@@ -727,6 +733,17 @@ button {
 }
 
 /* ============ Lesson grid ============ */
+.grid-title {
+  font-size: 1.25rem;
+  margin-bottom: 18px;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.topic-section {
+  margin-top: 48px;
+}
+
 .lesson-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -774,6 +791,7 @@ button {
 .lesson-card h3 {
   font-size: 1.02rem;
   margin-bottom: 4px;
+  overflow-wrap: break-word;
 }
 
 .lesson-card .vi-title {
@@ -783,7 +801,8 @@ button {
 
 .lesson-card .meta {
   display: flex;
-  gap: 14px;
+  flex-wrap: wrap;
+  gap: 4px 14px;
   margin-top: 12px;
   font-size: 0.8rem;
   color: var(--muted);
@@ -1801,12 +1820,22 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
   }
 }
 
-@media (max-width: 640px) {
-  .container {
-    padding: 0 16px;
+/* Desktop vừa: ẩn các chip phụ để header không tràn xuống dòng */
+@media (max-width: 1240px) {
+  .xp-chip,
+  .streak-chip {
+    display: none;
   }
+}
 
-  /* Header gọn: chỉ giữ logo + tài khoản + nút menu */
+@media (max-width: 1080px) {
+  .header-actions > a.btn-primary {
+    display: none;
+  }
+}
+
+/* Header thu gọn: chuyển nav thành menu hamburger */
+@media (max-width: 900px) {
   .header-inner {
     gap: 10px;
     height: 60px;
@@ -1819,12 +1848,6 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
   .logo-mark {
     width: 32px;
     height: 32px;
-  }
-
-  .xp-chip,
-  .streak-chip,
-  .header-actions > a.btn-primary {
-    display: none;
   }
 
   .hamburger {
@@ -1891,6 +1914,16 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
   .user-dropdown {
     right: 0;
     min-width: 232px;
+  }
+
+  .test-timer {
+    top: 60px;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 16px;
   }
 
   /* Hero */
@@ -2030,7 +2063,6 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
 
   /* Đề thi */
   .test-timer {
-    top: 60px;
     padding: 10px 14px;
   }
 

@@ -20,8 +20,10 @@ function lessonCardHtml(lesson, kindLabel) {
 }
 
 function initVocabPage() {
-  const gridSeries = el("#gridSeries");
-  const gridTopics = el("#gridTopics");
+  const sectionSeries = el("#gridSeries");
+  const sectionTopics = el("#gridTopics");
+  const gridSeries = el("#gridSeriesGrid");
+  const gridTopics = el("#gridTopicsGrid");
   const list = el("#lessonList");
 
   const renderGrids = () => {
@@ -38,8 +40,8 @@ function initVocabPage() {
   const showLesson = (id) => {
     current = VOCAB_LESSONS.find((l) => l.id === id);
     flashIdx = 0;
-    gridSeries.classList.add("hidden");
-    gridTopics.classList.add("hidden");
+    sectionSeries.classList.add("hidden");
+    sectionTopics.classList.add("hidden");
     document.querySelector(".page-hero").classList.add("hidden");
     list.classList.remove("hidden");
     renderTabs("video");
@@ -52,8 +54,8 @@ function initVocabPage() {
     const back = e.target.closest("#backToGrid");
     if (back) {
       list.classList.add("hidden");
-      gridSeries.classList.remove("hidden");
-      gridTopics.classList.remove("hidden");
+      sectionSeries.classList.remove("hidden");
+      sectionTopics.classList.remove("hidden");
       document.querySelector(".page-hero").classList.remove("hidden");
       renderGrids();
     }
