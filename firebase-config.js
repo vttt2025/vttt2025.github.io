@@ -48,6 +48,6 @@ window.FIREBASE_ENABLED = !String(window.FIREBASE_CONFIG.apiKey || "").startsWit
  *   4. User đó đăng nhập lại là vào được admin.
  */
 window.ADMIN_EMAILS = [
-  "your-email@example.com"
+  "tuadenzettt@gmail.com"
   // "another-admin@example.com",
 ];

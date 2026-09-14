@@ -143,7 +143,7 @@ function renderHeader() {
   host.innerHTML = `
   <header class="site-header">
     <div class="container header-inner">
-      <a class="logo" href="index.html"><span class="logo-mark">ТР</span> Đậu <em>TRKI</em></a>
+      <a class="logo" href="index.html"><span class="logo-mark"><img src="assets/matryoshka-logo.svg" alt="" /></span> Đậu <em>TRKI</em></a>
       <nav class="main-nav" id="mainNav">${links}</nav>
       <div class="header-actions">
         <span class="xp-chip" id="chipXp">⚡ 0 XP</span>
@@ -256,7 +256,7 @@ function renderFooter() {
   <footer class="footer">
     <div class="container footer-grid">
       <div class="footer-brand">
-        <a class="logo" href="index.html"><span class="logo-mark">ТР</span> Đậu <em>TRKI</em></a>
+        <a class="logo" href="index.html"><span class="logo-mark"><img src="assets/matryoshka-logo.svg" alt="" /></span> Đậu <em>TRKI</em></a>
         <p>Nền tảng luyện tiếng Nga & chuẩn bị thi chứng chỉ ТРКИ: từ vựng qua video, ngữ pháp, nghe, nói, viết — tất cả trong một.</p>
       </div>
       <div class="footer-col">

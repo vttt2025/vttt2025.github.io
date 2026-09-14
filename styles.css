@@ -7,24 +7,29 @@
 }
 
 :root {
-  --bg: #f6f8fc;
+  --bg: #fff5f8;
   --surface: #ffffff;
-  --border: #e4e9f2;
-  --text: #101828;
-  --muted: #667085;
-  --primary: #2f6bff;
-  --primary-dark: #1e4fd6;
-  --primary-soft: #eaf1ff;
+  --border: #fce7ee;
+  --text: #2d1b2e;
+  --muted: #8b6b7e;
+  --primary: #ec4899;
+  --primary-dark: #be185d;
+  --primary-soft: #fce7f3;
+  --secondary: #f59e0b;
+  --secondary-soft: #fef4e2;
   --green: #16a34a;
   --green-soft: #e8f7ee;
   --red: #dc2626;
   --red-soft: #fdecec;
   --amber: #f59e0b;
   --amber-soft: #fef4e2;
-  --violet: #7c5cff;
-  --violet-soft: #f1edff;
+  --violet: #a855f7;
+  --violet-soft: #f3e8ff;
+  --russia-red: #dc2626;
+  --russia-blue: #1e40af;
+  --russia-cream: #fef3c7;
   --radius: 14px;
-  --shadow: 0 1px 3px rgba(16, 24, 40, 0.06), 0 8px 24px rgba(16, 24, 40, 0.06);
+  --shadow: 0 1px 3px rgba(190, 24, 93, 0.06), 0 8px 24px rgba(190, 24, 93, 0.08);
   --container: 1120px;
 }
 
@@ -153,13 +158,21 @@ button {
 .logo-mark {
   display: inline-grid;
   place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, var(--primary), var(--violet));
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--russia-red));
   color: #fff;
   font-size: 0.95rem;
   font-weight: 800;
+  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3);
+}
+
+.logo-mark img,
+.logo-mark svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .logo em {
@@ -237,11 +250,30 @@ button {
 
 /* ============ Hero ============ */
 .hero {
+  position: relative;
   padding: 72px 0 56px;
   background:
-    radial-gradient(700px 340px at 15% 0%, rgba(47, 107, 255, 0.09), transparent 65%),
-    radial-gradient(600px 320px at 85% 10%, rgba(124, 92, 255, 0.08), transparent 65%);
-  text-align: center;
+    linear-gradient(180deg, rgba(255, 245, 248, 0.92) 0%, rgba(252, 231, 243, 0.85) 100%),
+    radial-gradient(700px 340px at 15% 0%, rgba(236, 72, 153, 0.18), transparent 65%),
+    radial-gradient(600px 320px at 85% 10%, rgba(245, 158, 11, 0.14), transparent 65%);
+  overflow: hidden;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("assets/red-square.jpg");
+  background-size: cover;
+  background-position: center 30%;
+  opacity: 0.18;
+  filter: saturate(0.85) blur(0.5px);
+  z-index: 0;
+}
+
+.hero > .container {
+  position: relative;
+  z-index: 2;
 }
 
 .hero h1 {
@@ -274,6 +306,40 @@ button {
   font-size: 0.85rem;
   color: var(--muted);
 }
+
+/* Matryoshka trang trí 2 bên hero */
+.hero-decor {
+  position: absolute;
+  bottom: 12px;
+  width: clamp(70px, 12vw, 130px);
+  z-index: 1;
+  opacity: 0.92;
+  pointer-events: none;
+  filter: drop-shadow(0 8px 14px rgba(190, 24, 93, 0.22));
+}
+.hero-decor.left { left: 4%; transform: rotate(-6deg); }
+.hero-decor.right { right: 4%; transform: rotate(5deg); }
+
+@media (max-width: 700px) {
+  .hero-decor { display: none; }
+  .hero::before { opacity: 0.12; }
+}
+
+/* Cờ Nga nhỏ trang trí ở hero */
+.russia-flag {
+  display: inline-flex;
+  width: 28px;
+  height: 18px;
+  border-radius: 3px;
+  overflow: hidden;
+  margin-left: 8px;
+  vertical-align: middle;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+.russia-flag span { flex: 1; height: 100%; }
+.russia-flag span:nth-child(1) { background: #fff; }
+.russia-flag span:nth-child(2) { background: #1e40af; }
+.russia-flag span:nth-child(3) { background: #dc2626; }
 
 /* ============ Stats ============ */
 .stats {
@@ -451,12 +517,30 @@ button {
 }
 
 .cta-box {
-  background: linear-gradient(120deg, var(--primary), var(--violet));
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 90% 20%, rgba(255, 255, 255, 0.25), transparent 50%),
+    linear-gradient(120deg, var(--primary) 0%, var(--russia-red) 100%);
   color: #fff;
   border-radius: 20px;
   padding: 52px 32px;
   text-align: center;
+  box-shadow: 0 12px 36px rgba(220, 38, 38, 0.25);
 }
+
+.cta-box::before,
+.cta-box::after {
+  content: "";
+  position: absolute;
+  width: 140px;
+  height: 180px;
+  background: url("assets/matryoshka.svg") center/contain no-repeat;
+  opacity: 0.18;
+  pointer-events: none;
+}
+.cta-box::before { left: -20px; bottom: -30px; transform: rotate(-10deg); }
+.cta-box::after { right: -20px; top: -30px; transform: rotate(8deg); }
 
 .cta-box h2 {
   font-size: clamp(1.6rem, 3.5vw, 2.2rem);
@@ -464,7 +548,7 @@ button {
 }
 
 .cta-box p {
-  opacity: 0.9;
+  opacity: 0.92;
   margin: 12px 0 24px;
 }
 
@@ -473,17 +557,37 @@ button {
   color: var(--primary);
 }
 
+.cta-box .btn:hover {
+  background: var(--primary-soft);
+  color: var(--primary-dark);
+}
+
 /* ============ Footer ============ */
 .footer {
+  position: relative;
   border-top: 1px solid var(--border);
-  background: var(--surface);
+  background: linear-gradient(180deg, var(--surface) 0%, var(--primary-soft) 100%);
   padding: 48px 0 28px;
+}
+
+.footer::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #fff 0%, #fff 33%, var(--russia-blue) 33%, var(--russia-blue) 66%, var(--russia-red) 66%, var(--russia-red) 100%);
 }
 
 .footer-grid {
   display: grid;
   grid-template-columns: 1.6fr repeat(3, 1fr);
   gap: 32px;
+}
+
+.footer-brand {
+  position: relative;
 }
 
 .footer-brand p {
@@ -493,11 +597,25 @@ button {
   max-width: 280px;
 }
 
+.footer-matryoshka {
+  width: 64px;
+  height: auto;
+  position: absolute;
+  right: 0;
+  top: -6px;
+  opacity: 0.95;
+}
+
+@media (max-width: 720px) {
+  .footer-matryoshka { display: none; }
+}
+
 .footer-col h4 {
   font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 14px;
+  color: var(--text);
 }
 
 .footer-col a {
@@ -505,6 +623,7 @@ button {
   color: var(--muted);
   font-size: 0.9rem;
   margin-bottom: 9px;
+  transition: color 0.15s ease;
 }
 
 .footer-col a:hover {
@@ -517,12 +636,39 @@ button {
   border-top: 1px solid var(--border);
   color: var(--muted);
   font-size: 0.82rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.footer-bottom .russia-flag {
+  width: 22px;
+  height: 14px;
 }
 
 /* ============ Page hero (feature pages) ============ */
 .page-hero {
+  position: relative;
   padding: 44px 0 26px;
   text-align: center;
+  background:
+    radial-gradient(600px 280px at 50% 0%, rgba(236, 72, 153, 0.1), transparent 70%);
+  overflow: hidden;
+}
+
+.page-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("assets/red-square.jpg") center/cover no-repeat;
+  opacity: 0.07;
+  pointer-events: none;
+}
+
+.page-hero > .container {
+  position: relative;
 }
 
 .page-hero h1 {
