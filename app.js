@@ -216,6 +216,7 @@ function renderUserArea() {
         </div>
         <a class="user-dropdown-item" href="index.html#progress" role="menuitem">📊 Tiến độ của tôi</a>
         <a class="user-dropdown-item" href="mock-test.html" role="menuitem">📝 Luyện đề ТРКИ</a>
+        <a class="user-dropdown-item" href="admin.html" role="menuitem">🛠️ Quản trị nội dung</a>
         <button class="user-dropdown-item user-dropdown-signout" id="btnSignOut" type="button" role="menuitem">
           🚪 Đăng xuất
         </button>
@@ -343,5 +344,46 @@ document.addEventListener("DOMContentLoaded", () => {
   renderFooter();
   Progress.touchStreak();
   bindAuthToHeader();
+  mergeAdminData();
   if (typeof initPage === "function") initPage();
 });
+
+/**
+ * Gộp dữ liệu admin từ localStorage vào các mảng toàn cục (VOCAB_LESSONS,
+ * GRAMMAR_LESSONS, ...). Admin item ghi đè item gốc cùng id; các mảng không
+ * có trong store thì giữ nguyên. Gọi lại sau khi admin lưu/xoá/import.
+ */
+function mergeAdminData() {
+  let store;
+  try {
+    store = JSON.parse(localStorage.getItem("trki_admin_data") || "{}");
+  } catch (e) {
+    return;
+  }
+  if (!store || typeof store !== "object") return;
+  const arrays = [
+    "VOCAB_LESSONS",
+    "GRAMMAR_LESSONS",
+    "LISTENING_LESSONS",
+    "SPEAKING_SETS",
+    "WRITING_TASKS",
+    "BLOG_POSTS"
+  ];
+  arrays.forEach((name) => {
+    const list = store[name];
+    if (!Array.isArray(list) || list.length === 0) return;
+    const target = window[name];
+    if (!Array.isArray(target)) return;
+    // Map theo id (hoặc title với blog) để ghi đè, nếu chưa có thì push.
+    const map = new Map();
+    target.forEach((it) => map.set(it.id || it.title, it));
+    list.forEach((it) => {
+      const clean = { ...it };
+      delete clean.__admin;
+      const key = clean.id || clean.title;
+      if (!key) return;
+      map.set(key, clean);
+    });
+    window[name] = Array.from(map.values());
+  });
+}

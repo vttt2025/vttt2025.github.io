@@ -30,3 +30,24 @@ window.FIREBASE_CONFIG = {
  * tự động chuyển sang chế độ "khách" và hiển thị thông báo hướng dẫn.
  */
 window.FIREBASE_ENABLED = !String(window.FIREBASE_CONFIG.apiKey || "").startsWith("REPLACE_ME");
+
+/**
+ * DANH SÁCH EMAIL ĐƯỢC PHÉP VÀO TRANG QUẢN TRỊ (/admin.html).
+ *
+ * Chỉ những tài khoản Google có email nằm trong danh sách này mới có thể
+ * thêm/sửa/xoá dữ liệu. User đăng nhập Gmail khác vẫn thấy các trang học
+ * bình thường, nhưng vào /admin.html sẽ bị từ chối.
+ *
+ * So sánh theo lowercase, KHÔNG phân biệt hoa/thường.
+ * Để trống [] = chặn tất cả (khoá admin tạm thời).
+ *
+ * Cách thêm admin:
+ *   1. Đăng nhập bằng tài khoản Google bạn muốn cấp quyền.
+ *   2. Mở Firebase Console > Authentication > Users — copy email.
+ *   3. Thay "your-email@example.com" bằng email thật, push lên GitHub.
+ *   4. User đó đăng nhập lại là vào được admin.
+ */
+window.ADMIN_EMAILS = [
+  "your-email@example.com"
+  // "another-admin@example.com",
+];

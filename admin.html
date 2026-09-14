@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quản trị — Đậu TRKI</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    /* CSS riêng cho admin — đặt inline để admin hoạt động kể cả khi styles.css lỗi */
+    .admin-tabs { display:flex; gap:6px; flex-wrap:wrap; border-bottom:1px solid var(--border); margin-bottom:18px; }
+    .admin-tab { padding:10px 16px; border:none; background:none; cursor:pointer; font-weight:600; color:var(--muted); border-bottom:2px solid transparent; font-size:.92rem; font-family:inherit; }
+    .admin-tab:hover { color:var(--text); }
+    .admin-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+    .admin-list { display:grid; gap:10px; }
+    .admin-item { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:12px; }
+    .admin-item-meta { flex:1; min-width:0; }
+    .admin-item-title { font-weight:700; font-size:.95rem; margin-bottom:4px; word-break:break-word; }
+    .admin-item-sub { font-size:.82rem; color:var(--muted); word-break:break-word; }
+    .admin-item-badge { display:inline-block; font-size:.7rem; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--violet-soft); color:var(--violet); margin-left:6px; }
+    .admin-item-badge.original { background:var(--primary-soft); color:var(--primary); }
+    .admin-empty { text-align:center; padding:40px 20px; color:var(--muted); background:var(--surface); border:1px dashed var(--border); border-radius:10px; }
+    .admin-toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
+    .admin-modal-back { position:fixed; inset:0; background:rgba(16,24,40,.55); z-index:300; display:none; align-items:flex-start; justify-content:center; overflow:auto; padding:30px 16px; }
+    .admin-modal-back.open { display:flex; }
+    .admin-modal { background:var(--surface); border-radius:14px; width:100%; max-width:780px; box-shadow:0 20px 60px rgba(16,24,40,.25); }
+    .admin-modal-head { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+    .admin-modal-head h3 { margin:0; font-size:1.05rem; }
+    .admin-modal-close { background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted); padding:0 4px; line-height:1; }
+    .admin-modal-body { padding:20px; max-height:75vh; overflow:auto; }
+    .admin-modal-foot { display:flex; justify-content:flex-end; gap:8px; padding:14px 20px; border-top:1px solid var(--border); background:#fafbfd; border-radius:0 0 14px 14px; }
+    .form-row { display:flex; gap:10px; margin-bottom:12px; }
+    .form-row > * { flex:1; min-width:0; }
+    .form-label { display:block; font-size:.82rem; font-weight:600; color:var(--text); margin-bottom:5px; }
+    .form-input, .form-textarea, .form-select { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:.9rem; background:var(--surface); color:var(--text); }
+    .form-textarea { resize:vertical; min-height:60px; }
+    .form-input:focus, .form-textarea:focus, .form-select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft); }
+    .form-section { margin-bottom:18px; padding:12px 14px; background:#fafbfd; border:1px solid var(--border); border-radius:10px; }
+    .form-section h4 { margin:0 0 10px; font-size:.88rem; font-weight:700; color:var(--text); display:flex; justify-content:space-between; align-items:center; }
+    .form-section h4 button { font-size:.78rem; padding:4px 10px; }
+    .form-list-item { display:flex; gap:6px; margin-bottom:6px; align-items:flex-start; }
+    .form-list-item > * { min-width:0; }
+    .form-list-item .form-input { flex:1; }
+    .form-list-item .form-remove { background:none; border:none; color:var(--red); cursor:pointer; padding:4px 8px; font-size:1rem; line-height:1; }
+    .form-help { font-size:.78rem; color:var(--muted); margin-top:4px; }
+    .admin-stats { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; font-size:.82rem; color:var(--muted); }
+    .admin-stats span { padding:3px 10px; background:var(--surface); border:1px solid var(--border); border-radius:999px; }
+    .admin-stats b { color:var(--text); }
+    .login-gate { text-align:center; padding:60px 20px; }
+    .login-gate h2 { margin-bottom:12px; }
+    .login-gate p { color:var(--muted); margin-bottom:24px; }
+    @media (max-width:640px){ .form-row { flex-direction:column; gap:8px; } }
+  </style>
+</head>
+<body data-page="admin">
+  <div id="app-header"></div>
+
+  <section class="page-hero">
+    <div class="container">
+      <h1>🛠️ Quản trị nội dung</h1>
+      <p>Thêm, sửa, xoá bài học cho toàn bộ trang. Cần đăng nhập Gmail để truy cập.</p>
+    </div>
+  </section>
+
+  <main class="container" style="padding-bottom:60px">
+
+    <!-- Gate đăng nhập — ẩn khi đã đăng nhập -->
+    <div id="loginGate" class="login-gate" style="display:none">
+      <h2>🔒 Vui lòng đăng nhập</h2>
+      <p>Trang quản trị yêu cầu đăng nhập bằng tài khoản Google.</p>
+      <button class="btn btn-google" id="adminLoginBtn" type="button">
+        <svg class="g-icon" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8a12 12 0 1 1 7.9-21l5.7-5.7A20 20 0 1 0 44 24c0-1.2-.1-2.4-.4-3.5z"/>
+          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7A20 20 0 0 0 6.3 14.7z"/>
+          <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2A12 12 0 0 1 12.7 28l-6.6 5.1A20 20 0 0 0 24 44z"/>
+          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.6l6.2 5.2C41 36.7 44 31 44 24c0-1.2-.1-2.4-.4-3.5z"/>
+        </svg>
+        Đăng nhập bằng Google
+      </button>
+    </div>
+
+    <!-- Khu vực admin — ẩn khi chưa đăng nhập -->
+    <div id="adminArea" style="display:none">
+
+      <div class="admin-stats" id="adminStats"></div>
+
+      <div class="admin-toolbar">
+        <button class="btn btn-primary btn-sm" id="btnAdd" type="button">➕ Thêm mới</button>
+        <button class="btn btn-soft btn-sm" id="btnExport" type="button">📤 Export JSON</button>
+        <button class="btn btn-soft btn-sm" id="btnImport" type="button">📥 Import JSON</button>
+        <input type="file" id="importFile" accept="application/json,.json" style="display:none" />
+        <button class="btn btn-soft btn-sm" id="btnReset" type="button">🗑️ Xoá hết admin</button>
+      </div>
+
+      <div class="admin-tabs" id="adminTabs"></div>
+      <div id="adminList" class="admin-list"></div>
+
+    </div>
+
+  </main>
+
+  <!-- Modal form thêm/sửa -->
+  <div class="admin-modal-back" id="modalBack">
+    <div class="admin-modal">
+      <div class="admin-modal-head">
+        <h3 id="modalTitle">Thêm bài học</h3>
+        <button class="admin-modal-close" id="modalClose" type="button" aria-label="Đóng">×</button>
+      </div>
+      <div class="admin-modal-body" id="modalBody"></div>
+      <div class="admin-modal-foot">
+        <button class="btn btn-soft btn-sm" id="modalCancel" type="button">Huỷ</button>
+        <button class="btn btn-primary btn-sm" id="modalSave" type="button">💾 Lưu</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="app-footer"></div>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="data.js"></script>
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
