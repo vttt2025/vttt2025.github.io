@@ -150,13 +150,17 @@ function renderHeader() {
         <span class="streak-chip" id="chipStreak">🔥 0 ngày</span>
         <div id="userArea" class="user-area"></div>
         <a class="btn btn-primary btn-sm" href="mock-test.html">Luyện ngay</a>
-        <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+        <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
       </div>
     </div>
   </header>`;
   const burger = document.getElementById("hamburger");
   const nav = document.getElementById("mainNav");
-  burger.addEventListener("click", () => nav.classList.toggle("open"));
+  burger.addEventListener("click", () => {
+    const open = nav.classList.toggle("open");
+    burger.classList.toggle("open", open);
+    burger.setAttribute("aria-expanded", open ? "true" : "false");
+  });
   updateHeaderChips();
   renderUserArea();
 }
