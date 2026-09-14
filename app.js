@@ -148,7 +148,7 @@ function renderHeader() {
       <div class="header-actions">
         <span class="xp-chip" id="chipXp">⚡ 0 XP</span>
         <span class="streak-chip" id="chipStreak">🔥 0 ngày</span>
-        <a class="btn btn-outline btn-sm" href="#" onclick="toast('Demo — đăng nhập sẽ làm ở backend');return false;">Đăng nhập</a>
+        <div id="userArea" class="user-area"></div>
         <a class="btn btn-primary btn-sm" href="mock-test.html">Luyện ngay</a>
         <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
       </div>
@@ -158,6 +158,94 @@ function renderHeader() {
   const nav = document.getElementById("mainNav");
   burger.addEventListener("click", () => nav.classList.toggle("open"));
   updateHeaderChips();
+  renderUserArea();
+}
+
+/**
+ * Render khu vực tài khoản ở header: nút đăng nhập (khi chưa login) hoặc
+ * avatar + menu thả xuống (khi đã login). Được gọi lại khi trạng thái auth đổi.
+ */
+function renderUserArea() {
+  const host = document.getElementById("userArea");
+  if (!host) return;
+  const user = window.Auth && window.Auth.user;
+
+  if (!user) {
+    // Chưa đăng nhập: hiển thị nút Google.
+    host.innerHTML = `
+      <button class="btn btn-outline btn-sm btn-google" id="btnLogin" type="button">
+        <svg class="g-icon" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8a12 12 0 1 1 7.9-21l5.7-5.7A20 20 0 1 0 44 24c0-1.2-.1-2.4-.4-3.5z"/>
+          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7A20 20 0 0 0 6.3 14.7z"/>
+          <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2A12 12 0 0 1 12.7 28l-6.6 5.1A20 20 0 0 0 24 44z"/>
+          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.6l6.2 5.2C41 36.7 44 31 44 24c0-1.2-.1-2.4-.4-3.5z"/>
+        </svg>
+        <span>Đăng nhập</span>
+      </button>`;
+    host.querySelector("#btnLogin").addEventListener("click", () => {
+      if (window.Auth) window.Auth.signInWithGoogle();
+    });
+    return;
+  }
+
+  // Đã đăng nhập: avatar + menu thả xuống.
+  const initials = (user.name || user.email || "?")
+    .split(/\s+/)
+    .map((s) => s[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+  const avatar = user.photo
+    ? `<img class="user-avatar" src="${esc(user.photo)}" alt="${esc(user.name)}" referrerpolicy="no-referrer" />`
+    : `<span class="user-avatar user-avatar-fallback">${esc(initials)}</span>`;
+
+  host.innerHTML = `
+    <div class="user-menu" id="userMenu">
+      <button class="user-trigger" id="userTrigger" type="button" aria-haspopup="true" aria-expanded="false">
+        ${avatar}
+        <span class="user-name-short">${esc(user.name.split(/\s+/)[0] || user.email)}</span>
+        <span class="caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="user-dropdown" id="userDropdown" role="menu">
+        <div class="user-dropdown-head">
+          ${avatar}
+          <div>
+            <div class="user-fullname">${esc(user.name)}</div>
+            <div class="user-email">${esc(user.email)}</div>
+          </div>
+        </div>
+        <a class="user-dropdown-item" href="index.html#progress" role="menuitem">📊 Tiến độ của tôi</a>
+        <a class="user-dropdown-item" href="mock-test.html" role="menuitem">📝 Luyện đề ТРКИ</a>
+        <button class="user-dropdown-item user-dropdown-signout" id="btnSignOut" type="button" role="menuitem">
+          🚪 Đăng xuất
+        </button>
+      </div>
+    </div>`;
+
+  const trigger = host.querySelector("#userTrigger");
+  const dropdown = host.querySelector("#userDropdown");
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = dropdown.classList.toggle("open");
+    trigger.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  document.addEventListener("click", () => {
+    dropdown.classList.remove("open");
+    trigger.setAttribute("aria-expanded", "false");
+  });
+  host.querySelector("#btnSignOut").addEventListener("click", () => {
+    dropdown.classList.remove("open");
+    if (window.Auth) window.Auth.signOut();
+  });
+}
+
+/**
+ * Cầu nối: khi trạng thái auth đổi, re-render khu vực user trong header.
+ * An toàn nếu Auth chưa được tải (chỉ chạy khi đã có cả 2).
+ */
+function bindAuthToHeader() {
+  if (!window.Auth) return;
+  window.Auth.onChange(() => renderUserArea());
 }
 
 function renderFooter() {
@@ -254,5 +342,6 @@ document.addEventListener("DOMContentLoaded", () => {
   renderHeader();
   renderFooter();
   Progress.touchStreak();
+  bindAuthToHeader();
   if (typeof initPage === "function") initPage();
 });
