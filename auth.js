@@ -63,8 +63,12 @@
     /** Đăng ký callback nhận sự kiện khi user thay đổi (login / logout / restore). */
     onChange(cb) {
       this._listeners.push(cb);
-      // Gọi ngay với trạng thái hiện tại nếu đã sẵn sàng.
-      if (this._readyPromise) {
+      // KHÔNG gọi cb ngay lập tức: khi Firebase bật, onAuthStateChanged sẽ tự
+      // fire một lần đầu khi đăng ký (kể cả khi chưa đăng nhập). Gọi cb ngay
+      // với this.user = null trước khi phiên được khôi phục sẽ gây "flash"
+      // nút Đăng nhập ↔ avatar trên header mỗi lần chuyển trang.
+      // Chỉ gọi ngay khi chạy chế độ khách (không có Firebase).
+      if (!window.FIREBASE_ENABLED || !window.firebase || !window.firebase.auth) {
         this.isReady().then(() => cb(this.user));
       }
       // Trả về hàm huỷ đăng ký.

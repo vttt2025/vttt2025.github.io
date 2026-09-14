@@ -115,6 +115,30 @@
             { key: "ru", label: "Tiếng Nga", type: "textarea" },
             { key: "vi", label: "Tiếng Việt", type: "textarea" }
           ]
+        },
+        {
+          key: "blanks", label: "Điền từ vào chỗ trống", type: "list",
+          item: [
+            { key: "before", label: "Phần trước chỗ trống", type: "textarea" },
+            { key: "blank", label: "Từ điền vào (đáp án)", type: "text" },
+            { key: "after", label: "Phần sau chỗ trống", type: "textarea" },
+            { key: "hint", label: "Gợi ý tiếng Việt", type: "text" }
+          ]
+        },
+        {
+          key: "dictation", label: "Câu chính tả (mỗi dòng 1 câu)", type: "list-lines"
+        },
+        {
+          key: "questions", label: "Câu hỏi trắc nghiệm", type: "list",
+          item: [
+            { key: "q", label: "Câu hỏi (VI)", type: "textarea" },
+            { key: "ru", label: "Câu gốc tiếng Nga (tùy chọn)", type: "textarea" },
+            { key: "a0", label: "Đáp án 0 (đúng)", type: "text" },
+            { key: "a1", label: "Đáp án 1", type: "text" },
+            { key: "a2", label: "Đáp án 2", type: "text" },
+            { key: "a3", label: "Đáp án 3", type: "text" },
+            { key: "ex", label: "Giải thích (tùy chọn)", type: "textarea" }
+          ]
         }
       ]
     },
@@ -147,7 +171,8 @@
         { key: "minWords", label: "Số từ tối thiểu", type: "number" },
         {
           key: "tips", label: "Mẹo làm bài (mỗi dòng 1)", type: "list-lines"
-        }
+        },
+        { key: "model", label: "Bài mẫu tiếng Nga", type: "textarea" }
       ]
     },
     BLOG_POSTS: {
@@ -391,7 +416,7 @@
       const labelHtml = `<label class="form-label">${esc(f.label)}${f.required ? ' <span style="color:var(--red)">*</span>' : ""}</label>`;
       if (f.type === "text") return `<div class="form-row"><div>${labelHtml}<input class="form-input" data-key="${f.key}" value="${escAttr(val || "")}" /></div></div>`;
       if (f.type === "textarea") return `<div class="form-row"><div>${labelHtml}<textarea class="form-textarea" data-key="${f.key}">${esc(val || "")}</textarea></div></div>`;
-      if (f.type === "number") return `<div class="form-row"><div>${labelHtml}<input type="number" class="form-input" data-key="${f.key}" value="${val ?? ""}" /></div></div>`;
+      if (f.type === "number") return `<div class="form-row"><div>${labelHtml}<input type="number" class="form-input" data-key="${f.key}" value="${escAttr(val ?? "")}" /></div></div>`;
       if (f.type === "select") {
         const opts = (f.options || []).map((o) => {
           const v = typeof o === "string" ? o : o.v;
@@ -401,7 +426,11 @@
         return `<div class="form-row"><div>${labelHtml}<select class="form-select" data-key="${f.key}">${opts}</select></div></div>`;
       }
       if (f.type === "list-lines") {
-        const arr = Array.isArray(val) ? val : (val ? String(val).split("\n") : []);
+        // Mỗi mục có thể là chuỗi (rules/tips/dictation) hoặc MẢNG cell (table.rows) —
+        // mảng cell được nối bằng " | " để khớp với cách đọc lại khi lưu.
+        const arr = Array.isArray(val)
+          ? val.map((v) => (Array.isArray(v) ? v.join(" | ") : v))
+          : (val ? String(val).split("\n") : []);
         return `<div class="form-section">
           <h4>${esc(f.label)} <button class="btn btn-soft btn-sm" type="button" data-add="lines" data-key="${f.key}">+ Thêm dòng</button></h4>
           <div data-list="${f.key}" data-mode="lines">
@@ -473,14 +502,18 @@
         }
       });
     });
-    // Nút xoá từng dòng (dùng event delegation)
-    document.getElementById("modalBody").addEventListener("click", (e) => {
-      const rm = e.target.closest("[data-remove]");
-      if (rm) {
-        const block = rm.closest("[data-item], .form-list-item");
-        if (block) block.remove();
-      }
-    }, { once: false });
+    // Nút xoá từng dòng (event delegation) — chỉ gắn MỘT lần trên modalBody
+    // (modalBody không bị thay thế nên gắn mỗi openForm sẽ tích tụ listener)
+    if (!wireFormAdds._delegated) {
+      wireFormAdds._delegated = true;
+      document.getElementById("modalBody").addEventListener("click", (e) => {
+        const rm = e.target.closest("[data-remove]");
+        if (rm) {
+          const block = rm.closest("[data-item], .form-list-item");
+          if (block) block.remove();
+        }
+      });
+    }
   }
 
   function findSchema(type, key) {
@@ -524,20 +557,15 @@
         row.querySelectorAll("[data-item-key]").forEach((inp) => {
           obj[inp.dataset.itemKey] = inp.value.trim();
         });
-        if (Object.keys(obj).length) arr.push(denormalizeQuizLike(obj));
+        if (Object.keys(obj).length) {
+          const norm = denormalizeQuizLike(obj);
+          if (norm) arr.push(norm);
+        }
       });
       out[key] = arr;
     });
-    // Group (table)
-    body.querySelectorAll(".form-section > div").forEach((_el) => {/* no-op */});
-    // Đặc biệt: trường table có head + rows (list-lines)
-    if (out.table && (out.table.head || out.table.rows)) {
-      // table là group — đã được đọc ở data-key (input) và data-list (lines)
-      // Cần gộp lại:
-      const headEl = body.querySelector('[data-key="table.head"], [data-list="head"][data-mode="lines"]');
-      // headEl có thể không tồn tại vì group dùng key lồng — sửa riêng bên dưới
-    }
-    // Sửa riêng table.group:
+    // Sửa riêng table.group: head + rows là các list-lines lồng trong group,
+    // không được đọc qua [data-key] — gom về out.table và xoá key rác top-level.
     const tableHeadEl = body.querySelector('[data-list="head"][data-mode="lines"]');
     const tableRowsEl = body.querySelector('[data-list="rows"][data-mode="lines"]');
     if (tableHeadEl || tableRowsEl) {
@@ -545,6 +573,8 @@
       const rowsRaw = tableRowsEl ? Array.from(tableRowsEl.querySelectorAll("[data-line]")).map((tx) => tx.value.trim()).filter(Boolean) : [];
       const rows = rowsRaw.map((line) => line.split("|").map((s) => s.trim()));
       out.table = { head, rows };
+      delete out.head;
+      delete out.rows;
     }
 
     // Ép kiểu số cho ep, minWords
@@ -555,27 +585,39 @@
     return out;
   }
 
-  /** a0..a3 + index a (tính từ a0) → { q, ru, options: [a0,a1,a2,a3], a: 0, ex }. */
+  /**
+   * Dữ liệu gốc { q, ru, options: [...], a, ex } → dạng form { q, ru, a0..a3, ex }.
+   * Xoay mảng options để đáp án đúng (options[a]) luôn nằm ở a0 — vì form admin
+   * cố định "a0 = đáp án đúng". Khi lưu sẽ rotate lại thành a: 0.
+   */
   function normalizeQuizLike(obj) {
     const out = { ...obj };
-    if ("a0" in out || "a1" in out || "a2" in out || "a3" in out) {
-      out.options = [out.a0, out.a1, out.a2, out.a3].map((x) => x || "").filter((_, i) => i < 4);
-      out.a = 0;
-      delete out.a0; delete out.a1; delete out.a2; delete out.a3;
+    const opts = Array.isArray(out.options) ? out.options.map((x) => (x == null ? "" : String(x))) : null;
+    const aRaw = Math.round(+out.a || 0) || 0;
+    delete out.options;
+    delete out.a;
+    if (opts && opts.length >= 2) {
+      const a = Math.min(Math.max(aRaw, 0), opts.length - 1);
+      const rotated = opts.slice(a).concat(opts.slice(0, a));
+      while (rotated.length < 4) rotated.push("");
+      out.a0 = rotated[0] || "";
+      out.a1 = rotated[1] || "";
+      out.a2 = rotated[2] || "";
+      out.a3 = rotated[3] || "";
     }
     return out;
   }
-  /** Ngược lại: { q, ru, options, a, ex } → { q, ru, a0..a3, ex }. */
+  /** Ngược lại: { q, ru, a0..a3, ex } → { q, ru, options: [không rỗng], a: 0, ex }.
+   *  Trả về null nếu câu hỏi không đủ 2 đáp án (bỏ qua khi lưu). */
   function denormalizeQuizLike(obj) {
     const out = { ...obj };
-    if (Array.isArray(out.options)) {
-      while (out.options.length < 4) out.options.push("");
-      out.a0 = out.options[0] || "";
-      out.a1 = out.options[1] || "";
-      out.a2 = out.options[2] || "";
-      out.a3 = out.options[3] || "";
-      delete out.options;
-    }
+    const has = "a0" in out || "a1" in out || "a2" in out || "a3" in out;
+    if (!has) return out;
+    const opts = [out.a0, out.a1, out.a2, out.a3].map((x) => String(x || "").trim()).filter(Boolean);
+    delete out.a0; delete out.a1; delete out.a2; delete out.a3;
+    if (opts.length < 2) return null; // câu hỏi hỏng — không lưu
+    out.options = opts;
+    out.a = 0; // a0 luôn là đáp án đúng trong form admin
     return out;
   }
 
@@ -598,9 +640,19 @@
       }
       adminList.push({ ...data, __admin: true });
     } else {
-      const oldKey = (editingItem && (editingItem.id || editingItem.title)) || (data.id || data.title);
+      const newKey = data.id || data.title;
+      const oldKey = (editingItem && (editingItem.id || editingItem.title)) || newKey;
+      // Đổi ID của mục GỐC (data.js) sẽ tạo bản sao trùng vì không xoá được mục gốc
+      if (editingItem && editingItem.__adminNew && oldKey !== newKey) {
+        toast("Không thể đổi ID của mục gốc (data.js) — chỉ sửa được nội dung.");
+        return;
+      }
       const idx = adminList.findIndex((it) => (it.id || it.title) === oldKey);
-      const item = { ...data, __admin: true };
+      // Merge trên item gốc đang sửa: giữ lại các trường không có trong form
+      // (vd: blanks/dictation của listening, model của writing) khỏi bị mất.
+      const item = { ...(editingItem || {}), ...data, __admin: true };
+      delete item.__adminNew;
+      delete item.__source;
       if (idx >= 0) adminList[idx] = item;
       else adminList.push(item);
     }
@@ -669,17 +721,21 @@
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        // Chấp nhận .js (cắt phần const ... = ... ;) hoặc .json
         let text = String(reader.result).trim();
-        if (text.startsWith("const ")) {
-          // Chuyển thành object: bọc trong {} rồi eval
-          text = "{" + text.replace(/;\s*$/, "") + "}";
-          // eslint-disable-next-line no-eval
-          const obj = eval("(" + text + ")");
-          importToStore(obj);
+        let obj;
+        if (/^[\[{]/.test(text.replace(/^\s*\/\/.*$/gm, "").trim())) {
+          // File .json (hoặc JSON thuần) — bỏ dòng chú thích rồi parse
+          obj = JSON.parse(text.replace(/^\s*\/\/.*$/gm, ""));
         } else {
-          importToStore(JSON.parse(text));
+          // File .js do export tạo ra: `const NAME = [...];` — chạy trong sandbox
+          // function scope và lấy đúng các mảng thuộc TYPE_KEYS. Không dùng eval
+          // trên toàn cục để tránh ghi đè biến toàn cục.
+          const fn = new Function(
+            text + `\n;return { ${TYPE_KEYS.join(", ")} };`
+          );
+          obj = fn();
         }
+        importToStore(obj);
       } catch (err) {
         console.error(err);
         toast("File không hợp lệ: " + err.message);

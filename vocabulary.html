@@ -17,20 +17,292 @@
     </div>
   </section>
 
+  <!-- ============== TOP-LEVEL TABS ============== -->
+  <div class="container voc-top-tabs-wrap">
+    <nav class="voc-top-tabs">
+      <button class="voc-top-tab active" data-t="lessons">
+        <span class="voc-top-icon">📺</span>
+        <span class="voc-top-label">Bài học video</span>
+      </button>
+      <button class="voc-top-tab" data-t="algorithm" id="vocTopAlgorithm">
+        <span class="voc-top-icon">🧠</span>
+        <span class="voc-top-label">Học từ vựng theo flashcard</span>
+      </button>
+    </nav>
+  </div>
+
   <main class="container" style="padding-bottom:60px">
-    <div id="lessonList" class="hidden">
-      <div id="wsTabs"></div>
-      <div class="workspace" id="wsBody"></div>
+
+    <!-- ============== TAB: LESSONS ============== -->
+    <div id="vocPaneLessons" class="voc-top-pane active">
+      <div id="lessonList" class="hidden">
+        <div id="wsTabs"></div>
+        <div class="workspace" id="wsBody"></div>
+      </div>
+
+      <div id="gridSeries">
+        <h2 class="grid-title">📚 Series «Хочу в Россию» — hành trình du học sinh</h2>
+        <div class="lesson-grid" id="gridSeriesGrid"></div>
+      </div>
+
+      <div id="gridTopics" class="topic-section">
+        <h2 class="grid-title">🏷️ Chủ đề đời thường</h2>
+        <div class="lesson-grid" id="gridTopicsGrid"></div>
+      </div>
     </div>
 
-    <div id="gridSeries">
-      <h2 class="grid-title">📚 Series «Хочу в Россию» — hành trình du học sinh</h2>
-      <div class="lesson-grid" id="gridSeriesGrid"></div>
-    </div>
+    <!-- ============== TAB: ALGORITHM (SRS) ============== -->
+    <div id="vocPaneAlgorithm" class="voc-top-pane">
 
-    <div id="gridTopics" class="topic-section">
-      <h2 class="grid-title">🏷️ Chủ đề đời thường</h2>
-      <div class="lesson-grid" id="gridTopicsGrid"></div>
+      <!-- SRS HERO -->
+      <section class="srs-hero">
+        <div class="container">
+          <span class="srs-tag">🧠 Spaced Repetition System</span>
+          <h1 style="font-size:1.7rem">Chinh phục từ vựng <span class="hl">bằng thuật toán</span></h1>
+          <p class="srs-sub">Học theo phương pháp <b>lặp lại ngắt quãng</b> — đẩy đúng từ vào đúng thời điểm não sắp quên. Nhớ lâu, tốn ít công sức.</p>
+          <div class="srs-hero-stats">
+            <div><b id="heroNew">0</b><span>Từ mới hôm nay</span></div>
+            <div><b id="heroDue">0</b><span>Từ tới hạn ôn</span></div>
+            <div><b id="heroMastered">0</b><span>Đã thuộc</span></div>
+            <div><b id="heroStreak">0</b><span>Ngày liên tục</span></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SRS INNER TABS -->
+      <div class="srs-tabs">
+        <button class="srs-tab active" data-t="study">📚 Học</button>
+        <button class="srs-tab" data-t="progress">📈 Tiến độ</button>
+        <button class="srs-tab" data-t="vocab">🗂️ Từ vựng của tôi</button>
+        <button class="srs-tab" data-t="how">⚙️ Thuật toán</button>
+      </div>
+
+      <!-- TAB: STUDY -->
+      <div id="tab-study" class="srs-tab-pane active">
+        <div id="studySetup" class="srs-setup">
+          <div class="srs-setup-card">
+            <h2>Bắt đầu phiên học</h2>
+            <p>Chọn cấp độ TRKI và số lượng từ mới cho hôm nay.</p>
+            <div class="srs-form">
+              <label>
+                <span>Cấp độ</span>
+                <select id="setupLevel">
+                  <option value="all">Tất cả (A1 → C1)</option>
+                  <option value="A1">A1 · ТЭУ — sơ cấp</option>
+                  <option value="A2">A2 · ТЭУ/TBУ — sơ trung cấp</option>
+                  <option value="B1">B1 · ТРКИ-1 — trung cấp</option>
+                  <option value="B2">B2 · ТРКИ-2 — trung cao cấp</option>
+                  <option value="C1">C1 · ТРКИ-3 — cao cấp</option>
+                </select>
+              </label>
+              <label>
+                <span>Số từ mới</span>
+                <input id="setupNew" type="number" value="8" min="3" max="20" />
+              </label>
+              <label>
+                <span>Chế độ học</span>
+                <select id="setupMode">
+                  <option value="flashcard">🃏 Flashcard</option>
+                  <option value="typing">⌨️ Gõ từ</option>
+                  <option value="choice">🔘 Trắc nghiệm</option>
+                  <option value="speak">🎙️ Phát âm</option>
+                </select>
+              </label>
+            </div>
+            <div class="srs-setup-actions">
+              <button class="btn btn-primary btn-lg" id="startSession">▶ Bắt đầu học</button>
+              <button class="btn btn-soft" id="quickSession">⚡ Học nhanh (chỉ từ tới hạn)</button>
+            </div>
+            <p class="srs-setup-hint" id="setupHint"></p>
+          </div>
+        </div>
+
+        <div id="studySession" class="srs-session hidden">
+          <div class="srs-progress-bar">
+            <div class="srs-progress-fill" id="sessionProgress"></div>
+            <span class="srs-progress-text" id="sessionProgressText">0 / 0</span>
+          </div>
+          <div class="srs-mode-bar">
+            <span class="srs-mode-label" id="modeLabel">Flashcard</span>
+            <button class="btn btn-soft btn-sm" id="exitSession">✕ Thoát</button>
+          </div>
+          <div class="srs-stage" id="srsStage"></div>
+          <div class="srs-controls hidden" id="srsControls">
+            <p class="srs-prompt">Bạn nhớ từ này thế nào?</p>
+            <div class="srs-rate-row">
+              <button class="rate-btn rate-again" data-r="again">
+                <span class="rate-label">🔁 Học lại</span>
+                <span class="rate-time" id="rateAgain">—</span>
+              </button>
+              <button class="rate-btn rate-hard" data-r="hard">
+                <span class="rate-label">😣 Khó</span>
+                <span class="rate-time" id="rateHard">—</span>
+              </button>
+              <button class="rate-btn rate-good" data-r="good">
+                <span class="rate-label">🙂 Tốt</span>
+                <span class="rate-time" id="rateGood">—</span>
+              </button>
+              <button class="rate-btn rate-easy" data-r="easy">
+                <span class="rate-label">😎 Dễ</span>
+                <span class="rate-time" id="rateEasy">—</span>
+              </button>
+            </div>
+            <div class="srs-extra-row">
+              <button class="btn btn-soft btn-sm" id="replayAudio">🔊 Nghe lại</button>
+              <button class="btn btn-mastered btn-sm" id="markMastered">✓ Tick · Đã thuộc</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="studyDone" class="srs-done hidden">
+          <div class="srs-done-card">
+            <p style="font-size:3rem">🎉</p>
+            <h2>Hoàn thành phiên học!</h2>
+            <div class="srs-done-stats" id="doneStats"></div>
+            <div class="srs-done-actions">
+              <button class="btn btn-primary" id="doneAgain">Học tiếp</button>
+              <button class="btn btn-soft" id="doneBack">Về trang chính</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: PROGRESS -->
+      <div id="tab-progress" class="srs-tab-pane">
+        <div class="srs-progress-grid">
+          <div class="prog-card">
+            <h3>Hôm nay</h3>
+            <div class="prog-big" id="progTodayReviewed">0</div>
+            <div class="prog-meta">
+              <span>📚 Đã ôn: <b id="progTodayReviewed2">0</b></span>
+              <span>✨ Từ mới: <b id="progTodayNew">0</b></span>
+              <span>🎯 Đúng: <b id="progTodayCorrect">0</b></span>
+            </div>
+          </div>
+          <div class="prog-card">
+            <h3>Tổng quan</h3>
+            <div class="prog-big" id="progTotalMastered">0</div>
+            <div class="prog-meta">
+              <span>🟢 Đã thuộc: <b id="progMastered2">0</b></span>
+              <span>🔄 Đang ôn: <b id="progReviewing">0</b></span>
+              <span>🆕 Từ mới: <b id="progNew">0</b></span>
+            </div>
+          </div>
+          <div class="prog-card">
+            <h3>Độ chính xác</h3>
+            <div class="prog-big" id="progAccuracy">0%</div>
+            <div class="prog-meta">
+              <span>Tổng lượt ôn: <b id="progTotalReviews">0</b></span>
+              <span>Đúng: <b id="progTotalCorrect">0</b></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="prog-card prog-chart-card">
+          <h3>Sức mạnh của ôn tập</h3>
+          <p style="color:var(--muted);font-size:.9rem">Mô phỏng đường nhớ từ vựng với / không có hệ thống ôn tập.</p>
+          <canvas id="retentionChart" width="800" height="220" style="width:100%;max-width:100%;height:220px;display:block;margin-top:10px"></canvas>
+          <div class="chart-legend">
+            <span><i style="background:#dc2626"></i> Không ôn (lãng quên)</span>
+            <span><i style="background:#16a34a"></i> Có ôn theo Mishka</span>
+          </div>
+        </div>
+
+        <div class="prog-card">
+          <h3>Cài đặt</h3>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-soft" id="exportData">📤 Xuất dữ liệu</button>
+            <button class="btn btn-soft" id="importData">📥 Nhập dữ liệu</button>
+            <input type="file" id="importFile" accept=".json" style="display:none" />
+            <button class="btn btn-outline" id="resetSrs" style="color:var(--red);border-color:var(--red)">🗑️ Reset toàn bộ tiến độ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: VOCAB -->
+      <div id="tab-vocab" class="srs-tab-pane">
+        <div class="vocab-toolbar">
+          <input id="vocabSearch" type="search" placeholder="🔍 Tìm từ tiếng Nga hoặc nghĩa..." />
+          <select id="vocabFilter">
+            <option value="all">Tất cả trạng thái</option>
+            <option value="new">🆕 Từ mới</option>
+            <option value="learning">🔄 Đang học</option>
+            <option value="reviewing">📚 Đang ôn</option>
+            <option value="mastered">✅ Đã thuộc</option>
+          </select>
+          <select id="vocabLevel">
+            <option value="all">Tất cả cấp độ</option>
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="C1">C1</option>
+          </select>
+        </div>
+        <div id="vocabList" class="vocab-list"></div>
+      </div>
+
+      <!-- TAB: HOW -->
+      <div id="tab-how" class="srs-tab-pane">
+        <div class="how-card">
+          <h2>Cách Mishka dạy từ vựng</h2>
+          <p class="how-lead">Bạn chỉ bấm <b>Again / Hard / Good / Easy</b> — hệ thống lo phần lịch ôn, nhắc nhở và phân loại.</p>
+
+          <div class="how-features">
+            <div class="how-feat">
+              <div class="how-feat-icon">⏰</div>
+              <h4>Tự động lên lịch</h4>
+              <p>Bạn chấm — hệ thống tự tính ngày ôn kế tiếp.</p>
+            </div>
+            <div class="how-feat">
+              <div class="how-feat-icon">🎯</div>
+              <h4>4 chế độ học</h4>
+              <p>Flashcard · Gõ từ · Trắc nghiệm · Phát âm.</p>
+            </div>
+            <div class="how-feat">
+              <div class="how-feat-icon">📊</div>
+              <h4>Phân loại theo CEFR</h4>
+              <p>Từ vựng chia theo A1 → C1 tương ứng ТЭУ → ТРКИ-3.</p>
+            </div>
+          </div>
+
+          <h3 style="margin-top:30px">Hành trình của một từ</h3>
+          <div class="how-steps">
+            <div class="how-step">
+              <span class="how-step-num">01</span>
+              <h4>Khi mới gặp một từ</h4>
+              <p>Hệ thống đưa 4 lựa chọn để bạn chấm độ nhớ ngay lập tức:</p>
+              <ul>
+                <li><b>Học lại</b> — gặp lại sau 5 thẻ</li>
+                <li><b>Khó</b> — nhắc ôn sau 6 giờ</li>
+                <li><b>Tốt</b> — nhắc ôn sau 1 ngày</li>
+                <li><b>Dễ</b> — nhắc ôn sau 3 ngày</li>
+              </ul>
+            </div>
+            <div class="how-step">
+              <span class="how-step-num">02</span>
+              <h4>Chu kỳ ôn tập tự động</h4>
+              <p>Mỗi lần bạn chấm, hệ thống nhân mốc thời gian hiện tại theo công thức:</p>
+              <div class="how-mults">
+                <span class="mult mult-hard">×2 <em>Khó</em></span>
+                <span class="mult mult-good">×3 <em>Tốt</em></span>
+                <span class="mult mult-easy">×4 <em>Dễ</em></span>
+              </div>
+              <p>Ví dụ: từ đang ở mốc 24 giờ → Tốt sẽ đẩy sang 72 giờ (3 ngày).</p>
+            </div>
+            <div class="how-step">
+              <span class="how-step-num">03</span>
+              <h4>Đánh dấu Mastered</h4>
+              <p>Bấm nút <b>✓ Tick</b> ở góc phải — từ sẽ chuyển sang "Đã thuộc" và không còn xuất hiện trong hàng đợi.</p>
+            </div>
+          </div>
+
+          <div class="how-quote">
+            <p>"Bạn chỉ cần học mỗi ngày — Mishka lo phần lịch ôn."</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   </main>
 
@@ -42,6 +314,7 @@
   <script src="auth.js"></script>
   <script src="app.js"></script>
   <script src="pages.js"></script>
+  <script src="srs.js"></script>
   <script>
     function initPage() { initVocabPage(); }
   </script>

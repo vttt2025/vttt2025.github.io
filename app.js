@@ -44,10 +44,12 @@ const Progress = {
 };
 
 function updateHeaderChips() {
-  const xp = document.getElementById("chipXp");
-  const st = document.getElementById("chipStreak");
-  if (xp) xp.textContent = "⚡ " + STORE.get("xp", 0) + " XP";
-  if (st) st.textContent = "🔥 " + STORE.get("streak", 0) + " ngày";
+  const xp = STORE.get("xp", 0);
+  const streak = STORE.get("streak", 0);
+  const xpChip = document.getElementById("chipXp");
+  const streakChip = document.getElementById("chipStreak");
+  if (xpChip) xpChip.textContent = "⚡ " + xp + " XP";
+  if (streakChip) streakChip.textContent = "🔥 " + streak + " ngày";
 }
 
 function toast(msg) {
@@ -122,8 +124,15 @@ function esc(s) {
   }[c]));
 }
 
+/**
+ * NAV_LINKS — cấu trúc mảng các cấp:
+ *   ["url.html", "Label"]         → liên kết đơn
+ *   ["url.html", "Label", [...]]  → liên kết có dropdown con (các mục con cùng cấu trúc)
+ * Sub-items có thể trỏ đến hash trên cùng trang (vd "vocabulary.html#algorithm").
+ */
 const NAV_LINKS = [
   ["vocabulary.html", "Từ vựng"],
+  ["dictionary.html", "Từ điển"],
   ["grammar.html", "Ngữ pháp"],
   ["listening.html", "Nghe"],
   ["speaking.html", "Nói"],
@@ -209,18 +218,15 @@ function renderHeader() {
   const host = document.getElementById("app-header");
   if (!host) return;
   const page = document.body.dataset.page;
-  const links = NAV_LINKS.map(
-    ([href, label]) =>
-      `<a href="${href}" class="${page && href.startsWith(page.replace(".html", "")) ? "active" : ""}">${label}</a>`
-  ).join("");
+  const links = NAV_LINKS.map((item) => renderNavLink(item, page)).join("");
   host.innerHTML = `
   <header class="site-header">
     <div class="container header-inner">
       <a class="logo" href="index.html"><span class="logo-mark"><img src="assets/mishka-logo.svg" alt="" /></span> Mishka <em>TRKI</em></a>
       <nav class="main-nav" id="mainNav">${links}</nav>
       <div class="header-actions">
-        <span class="xp-chip" id="chipXp">⚡ 0 XP</span>
-        <span class="streak-chip" id="chipStreak">🔥 0 ngày</span>
+        <span class="xp-chip" id="chipXp">⚡ ${STORE.get("xp", 0)} XP</span>
+        <span class="streak-chip" id="chipStreak">🔥 ${STORE.get("streak", 0)} ngày</span>
         <button class="season-btn" id="seasonBtn" type="button">🌸</button>
         <div id="userArea" class="user-area"></div>
         <a class="btn btn-primary btn-sm" href="mock-test.html">Luyện ngay</a>
@@ -228,6 +234,7 @@ function renderHeader() {
       </div>
     </div>
   </header>`;
+  initNavDropdowns();
   const burger = document.getElementById("hamburger");
   const nav = document.getElementById("mainNav");
   burger.addEventListener("click", () => {
@@ -237,8 +244,66 @@ function renderHeader() {
   });
   const seasonBtn = document.getElementById("seasonBtn");
   if (seasonBtn) seasonBtn.addEventListener("click", cycleSeason);
-  updateHeaderChips();
   renderUserArea();
+}
+
+/** Render một mục nav (đơn hoặc có dropdown). */
+function renderNavLink(item, page) {
+  const [href, label, children] = item;
+  const isActive = page && (href === page + ".html" || href.startsWith(page + ".html"));
+  if (children && children.length) {
+    const subHtml = children
+      .map(([subHref, subLabel]) => {
+        const subActive = page && (subHref === page + ".html" || subHref.startsWith(page + ".html#"));
+        return `<a href="${subHref}" class="nav-sub-item ${subActive ? "active" : ""}" role="menuitem">${subLabel}</a>`;
+      })
+      .join("");
+    return `
+      <div class="nav-dropdown ${isActive ? "active" : ""}">
+        <button type="button" class="nav-dropdown-trigger" aria-haspopup="true" aria-expanded="false">
+          ${label}<span class="nav-caret">▾</span>
+        </button>
+        <div class="nav-dropdown-menu" role="menu">${subHtml}</div>
+      </div>`;
+  }
+  return `<a href="${href}" class="${isActive ? "active" : ""}">${label}</a>`;
+}
+
+/** Khởi tạo hành vi hover/click cho các nav dropdown. */
+function initNavDropdowns() {
+  document.querySelectorAll(".nav-dropdown").forEach((dd) => {
+    const trigger = dd.querySelector(".nav-dropdown-trigger");
+    if (!trigger) return;
+    let hoverTimer = null;
+    const open = () => {
+      // Đóng các dropdown khác
+      document.querySelectorAll(".nav-dropdown.open").forEach((o) => {
+        if (o !== dd) o.classList.remove("open");
+      });
+      dd.classList.add("open");
+      trigger.setAttribute("aria-expanded", "true");
+    };
+    const close = () => {
+      dd.classList.remove("open");
+      trigger.setAttribute("aria-expanded", "false");
+    };
+    trigger.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dd.classList.contains("open") ? close() : open();
+    });
+    dd.addEventListener("mouseenter", () => {
+      clearTimeout(hoverTimer);
+      open();
+    });
+    dd.addEventListener("mouseleave", () => {
+      hoverTimer = setTimeout(close, 180);
+    });
+  });
+  // Click ngoài dropdown để đóng
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".nav-dropdown.open").forEach((o) => o.classList.remove("open"));
+  });
 }
 
 /**
@@ -248,7 +313,9 @@ function renderHeader() {
 function renderUserArea() {
   const host = document.getElementById("userArea");
   if (!host) return;
-  const user = window.Auth && window.Auth.user;
+  // Ưu tiên trạng thái thật từ Firebase; nếu chưa kịp phản hồi thì dùng cache
+  // từ lần đăng nhập trước để header không bị nhảy nút Đăng nhập ↔ avatar.
+  const user = (window.Auth && window.Auth.user) || STORE.get("auth_user", null);
 
   if (!user) {
     // Chưa đăng nhập: hiển thị nút Google.
@@ -283,18 +350,20 @@ function renderUserArea() {
     <div class="user-menu" id="userMenu">
       <button class="user-trigger" id="userTrigger" type="button" aria-haspopup="true" aria-expanded="false">
         ${avatar}
-        <span class="user-name-short">${esc(user.name.split(/\s+/)[0] || user.email)}</span>
         <span class="caret" aria-hidden="true">▾</span>
       </button>
       <div class="user-dropdown" id="userDropdown" role="menu">
         <div class="user-dropdown-head">
           ${avatar}
-          <div>
+          <div class="user-head-info">
             <div class="user-fullname">${esc(user.name)}</div>
             <div class="user-email">${esc(user.email)}</div>
           </div>
         </div>
+
         <a class="user-dropdown-item" href="index.html#progress" role="menuitem">📊 Tiến độ của tôi</a>
+        <a class="user-dropdown-item" href="vocabulary.html#algorithm" role="menuitem">🧠 Học từ vựng theo flashcard</a>
+        <a class="user-dropdown-item" href="dictionary.html" role="menuitem">📖 Mở từ điển</a>
         <a class="user-dropdown-item" href="mock-test.html" role="menuitem">📝 Luyện đề ТРКИ</a>
         <a class="user-dropdown-item" href="admin.html" role="menuitem">🛠️ Quản trị nội dung</a>
         <button class="user-dropdown-item user-dropdown-signout" id="btnSignOut" type="button" role="menuitem">
@@ -310,10 +379,15 @@ function renderUserArea() {
     const open = dropdown.classList.toggle("open");
     trigger.setAttribute("aria-expanded", open ? "true" : "false");
   });
-  document.addEventListener("click", () => {
+  // Gỡ listener "click ngoài" của lần render trước để không tích tụ mỗi lần auth đổi
+  if (renderUserArea._outsideClick) {
+    document.removeEventListener("click", renderUserArea._outsideClick);
+  }
+  renderUserArea._outsideClick = () => {
     dropdown.classList.remove("open");
     trigger.setAttribute("aria-expanded", "false");
-  });
+  };
+  document.addEventListener("click", renderUserArea._outsideClick);
   host.querySelector("#btnSignOut").addEventListener("click", () => {
     dropdown.classList.remove("open");
     if (window.Auth) window.Auth.signOut();
@@ -326,7 +400,12 @@ function renderUserArea() {
  */
 function bindAuthToHeader() {
   if (!window.Auth) return;
-  window.Auth.onChange(() => renderUserArea());
+  window.Auth.onChange((u) => {
+    // Lưu/xoá cache user để lần tải trang sau render avatar NGAY,
+    // không phải chờ Firebase phản hồi (tránh header nhảy nút Đăng nhập ↔ avatar).
+    STORE.set("auth_user", u || null);
+    renderUserArea();
+  });
 }
 
 function renderFooter() {
@@ -367,8 +446,19 @@ function renderFooter() {
 
 function quizEngine(container, questions, { onFinish } = {}) {
   container.innerHTML = "";
+  // Lọc bỏ câu lỗi (thiếu options / đáp án sai chỉ số) — phòng dữ liệu admin hỏng
+  questions = (Array.isArray(questions) ? questions : []).filter(
+    (q) => q && Array.isArray(q.options) && q.options.length >= 2 && Number.isInteger(q.a) && q.a >= 0 && q.a < q.options.length
+  );
   let correct = 0;
   let index = 0;
+
+  // Không có câu hỏi nào: tránh chia 0 (NaN%) và treo màn hình
+  if (questions.length === 0) {
+    container.innerHTML = `<div class="quiz-result"><p>Chưa có câu hỏi cho bài này.</p></div>`;
+    if (onFinish) onFinish(0, 0);
+    return;
+  }
 
   const renderQ = () => {
     if (index >= questions.length) {
