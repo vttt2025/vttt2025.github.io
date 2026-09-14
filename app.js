@@ -132,6 +132,79 @@ const NAV_LINKS = [
   ["blog.html", "Blog"]
 ];
 
+const SEASON_ORDER = ["spring", "summer", "autumn", "winter"];
+
+const SEASON_META = {
+  spring: { icon: "🌸", label: "Mùa xuân", fx: ["🌸", "🌸", "💮", "🌸"] },
+  summer: { icon: "☀️", label: "Mùa hè", fx: ["✨", "☀️", "✨", "🌞", "✨"] },
+  autumn: { icon: "🍂", label: "Mùa thu", fx: ["🍂", "🍁", "🍂", "🍃"] },
+  winter: { icon: "❄️", label: "Mùa đông", fx: ["❄️", "dot", "❄️", "dot", "dot"] }
+};
+
+function autoSeason() {
+  const m = new Date().getMonth() + 1;
+  if (m >= 3 && m <= 5) return "spring";
+  if (m >= 6 && m <= 8) return "summer";
+  if (m >= 9 && m <= 11) return "autumn";
+  return "winter";
+}
+
+function currentSeason() {
+  const saved = STORE.get("season", null);
+  return SEASON_ORDER.includes(saved) ? saved : autoSeason();
+}
+
+function applySeason(season) {
+  const meta = SEASON_META[season] || SEASON_META[autoSeason()];
+  document.body.dataset.season = season;
+
+  let fx = document.getElementById("seasonFx");
+  if (!fx) {
+    fx = document.createElement("div");
+    fx.id = "seasonFx";
+    fx.className = "season-fx";
+    fx.setAttribute("aria-hidden", "true");
+    document.body.appendChild(fx);
+  }
+  fx.innerHTML = "";
+
+  const isSummer = season === "summer";
+  const count = isSummer ? 18 : 26;
+  for (let i = 0; i < count; i++) {
+    const s = document.createElement("span");
+    const kind = meta.fx[Math.floor(Math.random() * meta.fx.length)];
+    if (kind === "dot") {
+      s.className = "fx-dot";
+      s.style.fontSize = 5 + Math.random() * 5 + "px";
+    } else {
+      s.textContent = kind;
+      s.style.fontSize = 14 + Math.random() * 16 + "px";
+    }
+    s.style.left = Math.random() * 100 + "vw";
+    s.style.setProperty("--drift", Math.round(Math.random() * 160 - 80) + "px");
+    const dur = isSummer ? 2.5 + Math.random() * 3 : 6 + Math.random() * 6;
+    s.style.animationDuration = dur.toFixed(2) + "s";
+    s.style.animationDelay = (-Math.random() * dur).toFixed(2) + "s";
+    if (isSummer) s.style.top = Math.random() * 90 + "vh";
+    fx.appendChild(s);
+  }
+
+  const btn = document.getElementById("seasonBtn");
+  if (btn) {
+    btn.textContent = meta.icon;
+    const tip = "Đổi mùa — hiện tại: " + meta.label;
+    btn.title = tip;
+    btn.setAttribute("aria-label", tip);
+  }
+}
+
+function cycleSeason() {
+  const next = SEASON_ORDER[(SEASON_ORDER.indexOf(currentSeason()) + 1) % SEASON_ORDER.length];
+  STORE.set("season", next);
+  applySeason(next);
+  toast(SEASON_META[next].icon + " Đã chuyển sang " + SEASON_META[next].label);
+}
+
 function renderHeader() {
   const host = document.getElementById("app-header");
   if (!host) return;
@@ -148,6 +221,7 @@ function renderHeader() {
       <div class="header-actions">
         <span class="xp-chip" id="chipXp">⚡ 0 XP</span>
         <span class="streak-chip" id="chipStreak">🔥 0 ngày</span>
+        <button class="season-btn" id="seasonBtn" type="button">🌸</button>
         <div id="userArea" class="user-area"></div>
         <a class="btn btn-primary btn-sm" href="mock-test.html">Luyện ngay</a>
         <button class="hamburger" id="hamburger" aria-label="Menu" aria-expanded="false"><span></span><span></span><span></span></button>
@@ -161,6 +235,8 @@ function renderHeader() {
     burger.classList.toggle("open", open);
     burger.setAttribute("aria-expanded", open ? "true" : "false");
   });
+  const seasonBtn = document.getElementById("seasonBtn");
+  if (seasonBtn) seasonBtn.addEventListener("click", cycleSeason);
   updateHeaderChips();
   renderUserArea();
 }
@@ -346,6 +422,7 @@ function quizEngine(container, questions, { onFinish } = {}) {
 document.addEventListener("DOMContentLoaded", () => {
   renderHeader();
   renderFooter();
+  applySeason(currentSeason());
   Progress.touchStreak();
   bindAuthToHeader();
   mergeAdminData();
