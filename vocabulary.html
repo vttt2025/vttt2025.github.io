@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Từ vựng tiếng Nga qua video — Đậu TRKI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="vocabulary">
+  <div id="app-header"></div>
+
+  <section class="page-hero">
+    <div class="container">
+      <h1>🎬 Từ vựng qua video</h1>
+      <p>Học từ vựng theo <b>series «Хочу в Россию»</b> — hành trình du học sinh — và theo chủ đề đời thường. Mỗi video là một chuỗi hành động liên tiếp để bạn vừa học danh từ, vừa học động từ và giới từ.</p>
+    </div>
+  </section>
+
+  <main class="container" style="padding-bottom:60px">
+    <div id="lessonList" class="hidden">
+      <div id="wsTabs"></div>
+      <div class="workspace" id="wsBody"></div>
+    </div>
+
+    <div id="gridSeries">
+      <h2 style="font-size:1.25rem;margin-bottom:18px">📚 Series «Хочу в Россию» — hành trình du học sinh</h2>
+      <div class="lesson-grid" id="gridSeries"></div>
+    </div>
+
+    <div id="gridTopics" style="margin-top:48px">
+      <h2 style="font-size:1.25rem;margin-bottom:18px">🏷️ Chủ đề đời thường</h2>
+      <div class="lesson-grid" id="gridTopics"></div>
+    </div>
+  </main>
+
+  <div id="app-footer"></div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script src="pages.js"></script>
+  <script>
+    function initPage() { initVocabPage(); }
+  </script>
+</body>
+</html>

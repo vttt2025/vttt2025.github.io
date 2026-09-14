@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Luyện nói tiếng Nga với AI — Đậu TRKI</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="speaking">
+  <div id="app-header"></div>
+
+  <section class="page-hero">
+    <div class="container">
+      <h1>🎙️ Luyện nói với AI</h1>
+      <p>Bấm nút mic, đọc câu tiếng Nga — AI nhận dạng giọng nói sẽ chấm điểm <b>độ chính xác phát âm</b> theo phần trăm. Nghe mẫu trước, rồi thử lại!</p>
+    </div>
+  </section>
+
+  <main class="container narrow" style="padding-bottom:60px">
+    <div id="srWarn" class="explain hidden" style="margin-bottom:18px">
+      ⚠️ Trình duyệt của bạn không hỗ trợ nhận dạng giọng nói. Hãy mở trang bằng <b>Chrome hoặc Edge</b> để AI chấm phát âm.
+    </div>
+    <div class="tabs" id="speakTabs"></div>
+    <div id="speakHost"></div>
+  </main>
+
+  <div id="app-footer"></div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script src="pages.js"></script>
+  <script>
+    function initPage() { initSpeakingPage(); }
+  </script>
+</body>
+</html>
