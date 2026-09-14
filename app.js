@@ -175,13 +175,13 @@ function applySeason(season) {
     const kind = meta.fx[Math.floor(Math.random() * meta.fx.length)];
     if (kind === "dot") {
       s.className = "fx-dot";
-      s.style.fontSize = 5 + Math.random() * 5 + "px";
+      s.style.fontSize = 4 + Math.random() * 4 + "px";
     } else {
       s.textContent = kind;
-      s.style.fontSize = 14 + Math.random() * 16 + "px";
+      s.style.fontSize = 10 + Math.random() * 10 + "px";
     }
     s.style.left = Math.random() * 100 + "vw";
-    s.style.setProperty("--drift", Math.round(Math.random() * 160 - 80) + "px");
+    s.style.setProperty("--drift", Math.round(Math.random() * 120 - 60) + "px");
     const dur = isSummer ? 2.5 + Math.random() * 3 : 6 + Math.random() * 6;
     s.style.animationDuration = dur.toFixed(2) + "s";
     s.style.animationDelay = (-Math.random() * dur).toFixed(2) + "s";
