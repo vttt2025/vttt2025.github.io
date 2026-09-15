@@ -29,6 +29,16 @@
         <button class="dict-clear" id="dictClear" aria-label="Xóa">×</button>
       </div>
 
+      <div class="dict-suggest">
+        <span class="dict-suggest-label">Tra nhanh:</span>
+        <button class="dict-suggest-chip ru" data-q="привет">привет</button>
+        <button class="dict-suggest-chip ru" data-q="спасибо">спасибо</button>
+        <button class="dict-suggest-chip ru" data-q="извините">извините</button>
+        <button class="dict-suggest-chip ru" data-q="как дела?">как дела?</button>
+        <button class="dict-suggest-chip ru" data-q="до свидания">до свидания</button>
+        <button class="dict-suggest-chip ru" data-q="пожалуйста">пожалуйста</button>
+      </div>
+
       <div class="dict-hero-stats">
         <div><b id="statTotal">0</b><span>Tổng từ</span></div>
         <div><b id="statMastered">0</b><span>Đã thuộc</span></div>
@@ -79,14 +89,7 @@
     </div>
   </main>
 
-  <!-- WORD DETAIL MODAL -->
-  <div id="dictModal" class="dict-modal hidden" aria-hidden="true">
-    <div class="dict-modal-backdrop" id="dictModalBackdrop"></div>
-    <div class="dict-modal-card">
-      <button class="dict-modal-close" id="dictModalClose" aria-label="Đóng">×</button>
-      <div id="dictModalBody"></div>
-    </div>
-  </div>
+  <!-- WORD DETAIL MODAL (WordDetail — tự tạo trong dict-detail.js) -->
 
   <div id="app-footer"></div>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -97,6 +100,7 @@
   <script src="app.js"></script>
   <script src="srs.js"></script>
   <script src="dict-data.js"></script>
+  <script src="dict-detail.js"></script>
   <script src="pages.js"></script>
   <script>
     function initPage() { initDictPage(); }

@@ -189,6 +189,95 @@ const MishkaDict = {
       res[st]++;
     }
     return res;
+  },
+
+  /**
+   * Extra — dữ liệu bổ sung cho chi tiết từ (kiểu TFlat):
+   *   forms (bảng chia 6 cách), syn/ant (đồng/trái nghĩa),
+   *   fam (họ từ), gov (kết cấu đi kèm), au (audio ghi âm).
+   * Chia bucket theo chữ cái đầu — chỉ tải bucket của từ đang xem.
+   */
+  Extra: {
+    _fam: null,
+    _rel: {},          // letter -> {word: {s,a,d,fg,au,gv}}
+    _forms: {},        // letter -> {word: {n|a|sa|v|pn}}
+    _pending: {},
+
+    /** Bỏ dấu nhấn (кни́га -> книга) để tra/so khớp. */
+    stripStress(s) {
+      return (s || "").replace(/\u0301/g, "");
+    },
+
+    /** Chữ cái bucket của một từ (ё -> е; trả về null nếu không phải Cyrillic). */
+    letter(word) {
+      const w = this.stripStress(word).toLowerCase().replace(/ё/g, "е");
+      return /^[а-я]/.test(w) ? w[0] : null;
+    },
+
+    _fetchJson(url) {
+      return fetch(url).then((r) => {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      });
+    },
+
+    loadFam() {
+      if (this._fam) return Promise.resolve(this._fam);
+      return this._fetchJson("data/dict-fam.json").then((j) => {
+        this._fam = j;
+        return j;
+      }).catch(() => {
+        this._fam = { g: [] };
+        return this._fam;
+      });
+    },
+
+    /** Tải (và cache) bucket rel + forms của một chữ cái. */
+    loadBucket(letter) {
+      if (this._rel[letter] && this._forms[letter]) {
+        return Promise.resolve();
+      }
+      if (this._pending[letter]) return this._pending[letter];
+      this._pending[letter] = Promise.all([
+        this._rel[letter]
+          ? Promise.resolve()
+          : this._fetchJson("data/dict-rel-" + letter + ".json")
+              .then((j) => { this._rel[letter] = j; })
+              .catch(() => { this._rel[letter] = {}; }),
+        this._forms[letter]
+          ? Promise.resolve()
+          : this._fetchJson("data/dict-forms-" + letter + ".json")
+              .then((j) => { this._forms[letter] = j; })
+              .catch(() => { this._forms[letter] = {}; })
+      ]).finally(() => {
+        delete this._pending[letter];
+      });
+      return this._pending[letter];
+    },
+
+    /**
+     * Lấy toàn bộ dữ liệu bổ sung của một từ Nga.
+     * Trả về: { ru, forms, syn, ant, der, fam, gov, audio } (các mục có thể null).
+     */
+    async for(word) {
+      const ru = this.stripStress(word).toLowerCase().trim();
+      if (!ru) return null;
+      const letter = this.letter(ru);
+      if (!letter) return null;
+      await Promise.all([this.loadFam(), this.loadBucket(letter)]);
+      const slot = (this._rel[letter] || {})[ru] || {};
+      const forms = (this._forms[letter] || {})[ru] || null;
+      return {
+        ru,
+        forms: forms,
+        syn: slot.s || null,
+        ant: slot.a || null,
+        der: slot.d || null,
+        fam: slot.fg != null && this._fam ? this._fam.g[slot.fg] || null : null,
+        gov: slot.gv || null,
+        audio: slot.au || null
+      };
+    }
   }
 };
 

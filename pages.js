@@ -922,7 +922,7 @@ function initSrsPage() {
           ? "⏰ Tới hạn ngay"
           : "⏳ " + SRS.formatInterval((c.dueDate - Date.now()) / 3600000);
         return `
-        <div class="vocab-row ${c.mastered ? "mastered" : ""}" data-id="${c.id}">
+        <div class="vocab-row ${c.mastered ? "mastered" : ""}" data-id="${c.id}" data-ru="${esc(c.ru)}" style="cursor:pointer">
           <div class="vocab-word">
             <b class="ru">${esc(c.ru)}</b>
             <span class="vocab-pos">${esc(c.pos || "")}</span>
@@ -939,13 +939,28 @@ function initSrsPage() {
               : `<button class="btn btn-mastered btn-sm vocab-master" data-id="${c.id}">✓ Thuộc</button>`
             }
             <button class="btn btn-outline btn-sm vocab-speak" data-ru="${esc(c.ru)}">🔊</button>
+            <button class="btn btn-outline btn-sm vocab-detail" data-ru="${esc(c.ru)}" title="Chi tiết từ">📖</button>
           </div>
         </div>`;
       })
       .join("");
 
+    el("#vocabList").querySelectorAll(".vocab-row").forEach((row) => {
+      row.onclick = (e) => {
+        if (e.target.closest("button")) return;
+        const c = state.cards[row.dataset.id];
+        if (c) WordDetail.open(c.ru, { ru: c.ru, vi: c.vi, pos: c.pos, ex: c.ex, level: c.level, dir: "ru-vi" });
+      };
+    });
     el("#vocabList").querySelectorAll(".vocab-speak").forEach((b) => {
       b.onclick = () => speak(b.dataset.ru);
+    });
+    el("#vocabList").querySelectorAll(".vocab-detail").forEach((b) => {
+      b.onclick = () => {
+        const row = b.closest(".vocab-row");
+        const card = row ? state.cards[row.dataset.id] : null;
+        if (card) WordDetail.open(card.ru, { ru: card.ru, vi: card.vi, pos: card.pos, ex: card.ex, level: card.level, dir: "ru-vi" });
+      };
     });
     el("#vocabList").querySelectorAll(".vocab-master").forEach((b) => {
       b.onclick = () => {
@@ -1137,6 +1152,7 @@ function initSrsPage() {
         </div>
         <div class="srs-quick-actions">
           <button class="btn btn-soft btn-sm" id="speakNow">🔊 Nghe phát âm</button>
+          <button class="btn btn-soft btn-sm" id="wordDetail">📖 Chi tiết từ</button>
         </div>
       </div>`;
     const f = el("#srsFlash");
@@ -1151,6 +1167,10 @@ function initSrsPage() {
     el("#speakNow").onclick = (e) => {
       e.stopPropagation();
       speak(card.ru);
+    };
+    el("#wordDetail").onclick = (e) => {
+      e.stopPropagation();
+      WordDetail.open(card.ru, { ru: card.ru, vi: card.vi, pos: card.pos, ex: card.ex, level: card.level, dir: "ru-vi" });
     };
     showControls();
   }
@@ -1611,9 +1631,10 @@ function initDictPage() {
                            st === "learning" ? "🔄" :
                            st === "reviewing" ? "📚" :
                            st === "new" ? "🆕" : "·";
-        const levelBadge = w.level ? `<span class="dict-level lvl-${w.level}">${w.level}</span>` : "";
+        const levelBadge = w.level ? `<span class="dict-level lvl-${w.level}">${w.level}</span>` : `<span></span>`;
         const pronLine = w.pron ? `<p class="dict-pron ru">${esc(w.pron)}</p>` : "";
         const catBadge = w.cat ? `<span class="dict-cat">${esc(w.cat)}</span>` : "";
+        const posText = w.pos || w.gram || "";
         return `
         <article class="dict-card" data-dk="${esc(w.dk || "")}">
           <div class="dict-card-head">
@@ -1623,8 +1644,8 @@ function initDictPage() {
           <h3 class="dict-ru ru">${esc(w.ru)}</h3>
           ${pronLine}
           <p class="dict-vi">${esc(w.vi)}</p>
-          <p class="dict-pos">${esc(w.pos || w.gram || "")}${catBadge}</p>
           <div class="dict-card-foot">
+            <p class="dict-pos">${esc(posText)}${catBadge}</p>
             <button class="dict-speak" data-ru="${esc(w.ru)}" title="Nghe">🔊</button>
           </div>
         </article>`;
@@ -1686,6 +1707,15 @@ function initDictPage() {
     renderList();
     el("#dictSearch").focus();
   };
+  document.querySelectorAll(".dict-suggest-chip").forEach((b) => {
+    b.onclick = () => {
+      el("#dictSearch").value = b.dataset.q;
+      searchQuery = b.dataset.q;
+      page = 1;
+      renderList();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+  });
   el("#dictPrev").onclick = () => {
     if (page > 1) {
       page--;
@@ -1734,139 +1764,13 @@ function initDictPage() {
   renderStats();
   loadDir(dir);
 
-  /* ---------- MODAL ---------- */
+  /* ---------- MODAL (WordDetail — kiểu TFlat) ---------- */
   function openModal(entry) {
-    const state = SRS.getState();
-    // Entry "chuẩn" cho SRS (ưu tiên pool SRS_WORDS để khớp id card cũ), entry đang xem để hiển thị
-    const canonical = SRS.findWord(entry.ru) || entry;
-    const id = SRS.cardId(canonical);
-    const card = state.cards[id];
-    const status = !card ? "Chưa học" :
-                   card.mastered ? "Đã thuộc" :
-                   card.isNew ? "Mới" :
-                   card.learningStep === 1 ? "Đang học" : "Đang ôn";
-    const dueText = !card ? "Chưa có lịch ôn" :
-                    card.mastered ? "Đã thuộc — không còn nhắc" :
-                    card.dueDate <= Date.now() ? "⏰ Tới hạn ngay" :
-                    "⏳ " + SRS.formatInterval((card.dueDate - Date.now()) / 3600000);
-
-    const levelBadge = entry.level ? `<span class="dict-level lvl-${entry.level}">${entry.level}</span>` : "";
-    const pronLine = entry.pron ? `<p class="dict-pron ru dict-modal-pron">${esc(entry.pron)}</p>` : "";
-    const posBits = [entry.pos, entry.gram && entry.gram !== entry.pos ? entry.gram : ""]
-      .filter(Boolean).join(" · ");
-    const catChip = entry.cat ? `<span class="dict-cat">${esc(entry.cat)}</span>` : "";
-    const meaning = entry.vi || canonical.vi || "(chưa có)";
-
-    const srcCls = dir === "ru-vi" ? "ru" : "";
-    const dstCls = dir === "vi-ru" ? "ru" : "";
-    const exHtml = !entry.ex
-      ? `<p class="ru dict-modal-ex">(chưa có)</p>`
-      : entry.ex.split("\n").map((line) => {
-          const idx = line.indexOf("→");
-          if (idx === -1) {
-            return `<div class="ex-line"><span class="${srcCls}">${esc(line.trim())}</span></div>`;
-          }
-          return `<div class="ex-line"><span class="ex-src ${srcCls}">${esc(line.slice(0, idx).trim())}</span><span class="ex-arrow">→</span><span class="ex-dst ${dstCls}">${esc(line.slice(idx + 1).trim())}</span></div>`;
-        }).join("");
-
-    el("#dictModalBody").innerHTML = `
-      <div class="dict-modal-head">
-        <div>
-          ${levelBadge}
-          <h2 class="dict-modal-ru ru">${esc(entry.ru)}</h2>
-          ${pronLine}
-          <p class="dict-modal-pos">${esc(posBits)}${catChip}</p>
-        </div>
-        <div class="dict-modal-actions">
-          <button class="btn btn-soft btn-sm" id="modalSpeak">🔊 Nghe</button>
-          ${card
-            ? `<button class="btn btn-mastered btn-sm" id="modalMastered">✓ Đã thuộc</button>`
-            : `<button class="btn btn-outline btn-sm" id="modalAdd">+ Hàng đợi</button>`}
-        </div>
-      </div>
-
-      <div class="dict-modal-meaning">${esc(meaning)}</div>
-
-      <div class="dict-modal-section">
-        <h4>📝 Ví dụ</h4>
-        ${exHtml}
-      </div>
-
-      <div class="dict-modal-meta">
-        <div><span class="meta-label">Trạng thái</span><b>${status}</b></div>
-        <div><span class="meta-label">Ôn tập</span><b>${dueText}</b></div>
-        <div><span class="meta-label">Lặp lại</span><b>${card ? (card.repetitions || 0) + " lần" : "0"}</b></div>
-        <div><span class="meta-label">Quên</span><b>${card ? (card.lapses || 0) + " lần" : "0"}</b></div>
-      </div>
-
-      <div class="dict-modal-actions-bottom">
-        ${card && card.mastered
-          ? `<button class="btn btn-soft btn-sm" id="modalUnmaster">↩ Bỏ Mastered</button>`
-          : `<button class="btn btn-soft btn-sm" id="modalGoStudy">📚 Học ngay bằng flashcard</button>`
-        }
-      </div>
-    `;
-
-    el("#modalSpeak").onclick = () => speak(entry.ru);
-    const addBtn = el("#modalAdd");
-    if (addBtn) {
-      addBtn.onclick = () => {
-        const r = SRS.addToQueue(entry.ru);
-        if (r.ok) {
-          toast(`Đã thêm "${entry.ru}" vào hàng đợi — sẽ xuất hiện ở phiên học kế tiếp ✨`);
-          renderStats();
-          renderList();
-          openModal(entry); // refresh
-        }
-      };
-    }
-    const masteredBtn = el("#modalMastered");
-    if (masteredBtn) {
-      masteredBtn.onclick = () => {
-        if (card && card.mastered) {
-          SRS.unmarkMastered(id);
-          toast("Đã bỏ Mastered");
-        } else {
-          SRS.markMastered(id);
-          toast("Đã đánh dấu Mastered ✓");
-        }
-        renderStats();
-        renderList();
-        openModal(entry);
-      };
-    }
-    const unmasterBtn = el("#modalUnmaster");
-    if (unmasterBtn) {
-      unmasterBtn.onclick = () => {
-        SRS.unmarkMastered(id);
-        toast("Đã bỏ Mastered");
-        renderStats();
-        renderList();
-        openModal(entry);
-      };
-    }
-    const goStudyBtn = el("#modalGoStudy");
-    if (goStudyBtn) {
-      goStudyBtn.onclick = () => {
-        window.location.href = "vocabulary.html#algorithm";
-      };
-    }
-
-    el("#dictModal").classList.remove("hidden");
-    el("#dictModal").setAttribute("aria-hidden", "false");
-    document.body.style.overflow = "hidden";
+    WordDetail.open(entry.ru, entry, () => {
+      renderStats();
+      renderList();
+    });
   }
-
-  function closeModal() {
-    el("#dictModal").classList.add("hidden");
-    el("#dictModal").setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
-  }
-  el("#dictModalClose").onclick = closeModal;
-  el("#dictModalBackdrop").onclick = closeModal;
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && !el("#dictModal").classList.contains("hidden")) closeModal();
-  });
 
   /* ---------- KEYBOARD NAV ---------- */
   document.addEventListener("keydown", (e) => {

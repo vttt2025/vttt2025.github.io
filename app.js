@@ -71,6 +71,31 @@ function detectLang(text) {
   return "ru-RU";
 }
 
+/* Chọn giọng đọc tốt nhất cho mỗi ngôn ngữ — ưu tiên giọng tự nhiên. */
+const SPEAK_VOICE_PREF = [
+  /milena/i, /yuri/i, /katya/i, /alyona/i, /tatyana/i, /pavel/i, /dmitri/i, // tiếng Nga
+  /google/i, /microsoft/i, /siri/i, /namminh/i, /hosaminh/i, /giahuy/i, /linhsan/i, // tiếng Việt
+];
+const _voiceCache = {};
+
+function pickVoice(lang) {
+  if (!("speechSynthesis" in window)) return null;
+  const voices = speechSynthesis.getVoices().filter((v) =>
+    v.lang && v.lang.toLowerCase().startsWith(lang.slice(0, 2).toLowerCase())
+  );
+  if (!voices.length) return null;
+  const c = _voiceCache[lang];
+  if (c && voices.includes(c)) return c;
+  let best = null;
+  for (const pref of SPEAK_VOICE_PREF) {
+    best = voices.find((v) => pref.test(v.name));
+    if (best) break;
+  }
+  if (!best) best = voices.find((v) => v.localService) || voices[0];
+  _voiceCache[lang] = best;
+  return best;
+}
+
 function speak(text, lang = null, rate = 0.9) {
   if (!("speechSynthesis" in window)) {
     toast("Trình duyệt không hỗ trợ đọc — hãy dùng Chrome/Edge.");
@@ -81,11 +106,21 @@ function speak(text, lang = null, rate = 0.9) {
   const u = new SpeechSynthesisUtterance(text);
   u.lang = l;
   u.rate = rate;
-  const voice = speechSynthesis
-    .getVoices()
-    .find((v) => v.lang && v.lang.toLowerCase().startsWith(l.slice(0, 2).toLowerCase()));
+  const voice = pickVoice(l);
   if (voice) u.voice = voice;
   speechSynthesis.speak(u);
+}
+
+/** Nghe phát âm chậm — dùng trong modal chi tiết từ. */
+function speakSlow(text, lang = null) {
+  speak(text, lang, 0.5);
+}
+
+// Một số trình duyệt nạp danh sách giọng bất đồng bộ — nạp sớm để chọn được giọng tốt.
+if ("speechSynthesis" in window) {
+  speechSynthesis.onvoiceschanged = () => {
+    Object.keys(_voiceCache).forEach((k) => delete _voiceCache[k]);
+  };
 }
 
 function levenshtein(a, b) {
