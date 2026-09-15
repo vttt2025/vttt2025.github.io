@@ -14,70 +14,19 @@
   <!-- HERO + SEARCH -->
   <section class="dict-hero">
     <div class="container">
-      <span class="dict-tag" id="dictTag">📖 Từ điển Nga — Việt</span>
-      <h1 id="dictTitle">Tra cứu <span class="hl">từ vựng tiếng Nga</span></h1>
-      <p class="dict-sub">Hơn <b id="dictTotal">172.000</b> từ hai chiều <b>Nga — Việt</b> và <b>Việt — Nga</b> — nghe phát âm, xem ví dụ, thêm vào hàng đợi học từ vựng bằng 1 cú nhấp.</p>
-
-      <div class="dict-tabs" role="tablist">
-        <button class="dict-tab active" id="dirRuVi" data-dir="ru-vi">🇷🇺 Nga → Việt</button>
-        <button class="dict-tab" id="dirViRu" data-dir="vi-ru">🇻🇳 Việt → Nga</button>
-      </div>
+      <span class="dict-tag">📖 Từ điển Nga — Việt</span>
+      <h1>Tra cứu <span class="hl">từ vựng tiếng Nga</span></h1>
+      <p class="dict-sub">Hơn <b id="dictTotal">81.000</b> từ Nga — Việt — nghe phát âm, xem ví dụ, thêm vào hàng đợi học từ vựng bằng 1 cú nhấp.</p>
 
       <div class="dict-search-wrap">
         <span class="dict-search-icon">🔍</span>
         <input id="dictSearch" type="search" placeholder="Tìm tiếng Nga hoặc tiếng Việt..." autocomplete="off" />
         <button class="dict-clear" id="dictClear" aria-label="Xóa">×</button>
       </div>
-
-      <div class="dict-suggest">
-        <span class="dict-suggest-label">Tra nhanh:</span>
-        <button class="dict-suggest-chip ru" data-q="привет">привет</button>
-        <button class="dict-suggest-chip ru" data-q="спасибо">спасибо</button>
-        <button class="dict-suggest-chip ru" data-q="извините">извините</button>
-        <button class="dict-suggest-chip ru" data-q="как дела?">как дела?</button>
-        <button class="dict-suggest-chip ru" data-q="до свидания">до свидания</button>
-        <button class="dict-suggest-chip ru" data-q="пожалуйста">пожалуйста</button>
-      </div>
-
-      <div class="dict-hero-stats">
-        <div><b id="statTotal">0</b><span>Tổng từ</span></div>
-        <div><b id="statMastered">0</b><span>Đã thuộc</span></div>
-        <div><b id="statLearning">0</b><span>Đang học</span></div>
-        <div><b id="statQueue">0</b><span>Tới hạn ôn</span></div>
-      </div>
     </div>
   </section>
 
   <main class="container" style="padding-bottom:60px">
-    <!-- FILTER CHIPS -->
-    <div class="dict-filter-bar">
-      <div class="dict-filter-group" id="levelFilterGroup">
-        <span class="filter-label">Cấp độ:</span>
-        <button class="chip chip-level active" data-l="all">Tất cả</button>
-        <button class="chip chip-level lvl-A1" data-l="A1">A1</button>
-        <button class="chip chip-level lvl-A2" data-l="A2">A2</button>
-        <button class="chip chip-level lvl-B1" data-l="B1">B1</button>
-        <button class="chip chip-level lvl-B2" data-l="B2">B2</button>
-        <button class="chip chip-level lvl-C1" data-l="C1">C1</button>
-      </div>
-      <div class="dict-filter-group">
-        <span class="filter-label">Loại:</span>
-        <button class="chip chip-pos active" data-p="all">Tất cả</button>
-        <button class="chip chip-pos" data-p="danh từ">Danh từ</button>
-        <button class="chip chip-pos" data-p="động từ">Động từ</button>
-        <button class="chip chip-pos" data-p="tính từ">Tính từ</button>
-        <button class="chip chip-pos" data-p="phó từ">Phó từ</button>
-        <button class="chip chip-pos" data-p="giới từ">Giới từ</button>
-      </div>
-      <div class="dict-filter-group">
-        <span class="filter-label">Trạng thái:</span>
-        <button class="chip chip-status active" data-s="all">Tất cả</button>
-        <button class="chip chip-status" data-s="unseen">Mới</button>
-        <button class="chip chip-status" data-s="learning">Đang học</button>
-        <button class="chip chip-status" data-s="mastered">Đã thuộc</button>
-      </div>
-    </div>
-
     <!-- WORD LIST -->
     <div id="dictList" class="dict-grid"></div>
 

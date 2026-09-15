@@ -2703,7 +2703,7 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
 /* ============ Dictionary (dictionary.html) ============ */
 .dict-hero {
   position: relative;
-  padding: 54px 0 96px;
+  padding: 54px 0 72px;
   background: linear-gradient(135deg, #be185d 0%, #db2777 42%, #a855f7 100%);
   color: #fff;
   overflow: hidden;
@@ -2767,40 +2767,6 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
 }
 .dict-sub b { color: #fff; }
 
-/* Tabs đổi hướng — kính mờ trên nền gradient */
-.dict-tabs {
-  display: inline-flex;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 999px;
-  padding: 5px;
-  margin: 20px 0 0;
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-.dict-tab {
-  border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.85);
-  font-family: inherit;
-  font-size: 0.92rem;
-  font-weight: 600;
-  padding: 9px 20px;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.dict-tab:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.1);
-}
-.dict-tab.active {
-  background: #fff;
-  color: var(--primary-dark);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.18);
-}
-
 /* Ô tìm kiếm lớn */
 .dict-search-wrap {
   position: relative;
@@ -2856,123 +2822,13 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
 }
 
 /* Gợi ý từ phổ biến */
-.dict-suggest {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 16px;
-}
-.dict-suggest-label {
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.75);
-  font-weight: 600;
-}
-.dict-suggest-chip {
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-  transition: all 0.14s ease;
-}
-.dict-suggest-chip:hover {
-  background: rgba(255, 255, 255, 0.26);
-  transform: translateY(-1px);
-}
-
-/* Thống kê — thẻ kính */
-.dict-hero-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
-  max-width: 700px;
-  margin-top: 26px;
-}
-.dict-hero-stats > div {
-  background: rgba(255, 255, 255, 0.13);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 16px;
-  padding: 14px 16px;
-  text-align: center;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-.dict-hero-stats b {
-  display: block;
-  font-size: 1.45rem;
-  color: #fff;
-  letter-spacing: -0.01em;
-}
-.dict-hero-stats span {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-/* Filter bar — nổi lên trên hero */
-.dict-filter-bar {
-  position: relative;
-  z-index: 5;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 16px 20px;
-  margin: -58px auto 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 11px;
-  box-shadow: 0 14px 34px rgba(80, 7, 46, 0.12);
-}
-.dict-filter-group {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  flex-wrap: wrap;
-}
-.filter-label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: var(--muted);
-  margin-right: 6px;
-  min-width: 70px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.chip {
-  border: 1.5px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.14s ease;
-}
-.chip:hover {
-  background: var(--bg);
-  color: var(--text);
-  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
-}
-.chip.active {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  border-color: transparent;
-  color: white;
-  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
-}
-.chip.chip-level.active { background: linear-gradient(135deg, #f59e0b, #d97706); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); }
-.chip.chip-status.active { background: linear-gradient(135deg, #a855f7, #7c3aed); box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); }
 
 /* Word grid — thẻ từ hiện đại */
 .dict-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(236px, 1fr));
   gap: 14px;
-  margin-bottom: 22px;
+  margin: 26px 0 22px;
 }
 .dict-card {
   position: relative;
@@ -3270,15 +3126,10 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
 @media (max-width: 720px) {
   .dict-hero { padding: 40px 0 84px; }
   .dict-hero h1 { font-size: 1.55rem; }
-  .dict-hero-stats { grid-template-columns: repeat(2, 1fr); }
-  .dict-filter-group { flex-direction: row; flex-wrap: wrap; }
-  .dict-filter-bar { margin-top: -52px; padding: 12px 14px; }
-  .filter-label { min-width: 100%; margin-right: 0; }
   .dict-pagination { gap: 8px; }
   #dictPageInfo { min-width: 0; }
   .dict-modal { padding: 10px 0; }
 }
-
 
 /* ============ Responsive SRS ============ */
 @media (max-width: 720px) {

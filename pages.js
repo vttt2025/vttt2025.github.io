@@ -1511,55 +1511,23 @@ function initSrsPage() {
  * ===================================================================== */
 function initDictPage() {
   const PAGE_SIZE = 48;
-  let dir = "ru-vi";          // hướng từ điển đang hiển thị
-  let dictData = null;        // { list, total } của hướng đang chọn
-  let filterLevel = "all";
-  let filterPos = "all";
-  let filterStatus = "all";
+  let dictData = null;        // { list, total } của từ điển Nga → Việt
   let searchQuery = "";
   let page = 1;
   let searchTimer = 0;
 
   const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
 
-  /* ---------- HƯỚNG TỪ ĐIỂN ---------- */
-  const DIR_META = {
-    "ru-vi": {
-      tag: "📖 Từ điển Nga — Việt",
-      title: 'Tra cứu <span class="hl">từ vựng tiếng Nga</span>',
-      placeholder: "Tìm tiếng Nga hoặc tiếng Việt, ví dụ..."
-    },
-    "vi-ru": {
-      tag: "📖 Từ điển Việt — Nga",
-      title: 'Tra cứu <span class="hl">từ vựng tiếng Việt</span>',
-      placeholder: "Tìm tiếng Việt hoặc tiếng Nga, ví dụ..."
-    }
-  };
-
-  const applyDirUi = () => {
-    const meta = DIR_META[dir];
-    el("#dictTag").textContent = meta.tag;
-    el("#dictTitle").innerHTML = meta.title;
-    el("#dictSearch").placeholder = meta.placeholder;
-    el("#levelFilterGroup").style.display = dir === "ru-vi" ? "" : "none";
-    document.querySelectorAll(".dict-tab").forEach((b) =>
-      b.classList.toggle("active", b.dataset.dir === dir)
-    );
-  };
-
-  const loadDir = (d) => {
-    applyDirUi();
-    el("#dictList").innerHTML = `<div class="dict-loading"><span class="dict-spinner"></span><p>Đang tải từ điển ${d === "ru-vi" ? "Nga → Việt" : "Việt → Nga"}…</p></div>`;
-    MishkaDict.load(d)
+  const loadDir = () => {
+    el("#dictList").innerHTML = `<div class="dict-loading"><span class="dict-spinner"></span><p>Đang tải từ điển Nga → Việt…</p></div>`;
+    MishkaDict.load("ru-vi")
       .then((data) => {
-        if (dir !== d) return; // người dùng đã đổi hướng trong lúc tải
         dictData = data;
         renderStats();
         page = 1;
         renderList();
       })
       .catch(() => {
-        if (dir !== d) return;
         el("#dictList").innerHTML = `<div class="empty-state">
           <p style="font-size:2.5rem">📂</p>
           <p>Không tải được dữ liệu từ điển.<br/>Hãy mở trang qua web server và kiểm tra thư mục <b>data/</b>.</p>
@@ -1567,26 +1535,9 @@ function initDictPage() {
       });
   };
 
-  /* ---------- HERO STATS ---------- */
+  /* ---------- TỔNG SỐ TỪ ---------- */
   const renderStats = () => {
-    let total = null;
-    let mastered = 0;
-    let learning = 0;
-    if (dictData) {
-      const c = MishkaDict.counts(dir, SRS.getState());
-      if (c) {
-        total = c.total;
-        mastered = c.mastered;
-        learning = c.new + c.learning + c.reviewing;
-      }
-    }
-    const ru = MishkaDict._cache["ru-vi"];
-    const vr = MishkaDict._cache["vi-ru"];
-    if (ru && vr) el("#dictTotal").textContent = fmt(ru.total + vr.total);
-    el("#statTotal").textContent = total === null ? "…" : fmt(total);
-    el("#statMastered").textContent = fmt(mastered);
-    el("#statLearning").textContent = fmt(learning);
-    el("#statQueue").textContent = fmt(SRS.getDueCards().length);
+    if (dictData) el("#dictTotal").textContent = fmt(dictData.total);
   };
 
   /* ---------- DANH SÁCH + TÌM KIẾM ---------- */
@@ -1594,12 +1545,8 @@ function initDictPage() {
     const host = el("#dictList");
     if (!dictData) return; // đang tải dữ liệu
     const sm = MishkaDict.statusMap(SRS.getState());
-    const filtered = MishkaDict.search(dir, {
-      q: searchQuery,
-      level: filterLevel,
-      pos: filterPos,
-      status: filterStatus,
-      statusMap: sm
+    const filtered = MishkaDict.search("ru-vi", {
+      q: searchQuery
     });
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     if (page > totalPages) page = totalPages;
@@ -1610,7 +1557,7 @@ function initDictPage() {
     if (slice.length === 0) {
       host.innerHTML = `<div class="empty-state">
         <p style="font-size:2.5rem">🔎</p>
-        <p>Không có từ nào khớp với bộ lọc. Hãy thử bỏ bớt điều kiện.</p>
+        <p>Không tìm thấy từ nào khớp. Hãy thử từ khóa khác.</p>
       </div>`;
       el("#dictPageInfo").textContent = `0 kết quả`;
       el("#dictPrev").disabled = true;
@@ -1667,31 +1614,7 @@ function initDictPage() {
     });
   };
 
-  /* ---------- FILTERS ---------- */
-  document.querySelectorAll(".chip-level").forEach((b) => {
-    b.onclick = () => {
-      filterLevel = b.dataset.l;
-      document.querySelectorAll(".chip-level").forEach((x) => x.classList.toggle("active", x === b));
-      page = 1;
-      renderList();
-    };
-  });
-  document.querySelectorAll(".chip-pos").forEach((b) => {
-    b.onclick = () => {
-      filterPos = b.dataset.p;
-      document.querySelectorAll(".chip-pos").forEach((x) => x.classList.toggle("active", x === b));
-      page = 1;
-      renderList();
-    };
-  });
-  document.querySelectorAll(".chip-status").forEach((b) => {
-    b.onclick = () => {
-      filterStatus = b.dataset.s;
-      document.querySelectorAll(".chip-status").forEach((x) => x.classList.toggle("active", x === b));
-      page = 1;
-      renderList();
-    };
-  });
+  /* ---------- TÌM KIẾM + PHÂN TRANG ---------- */
   el("#dictSearch").addEventListener("input", (e) => {
     searchQuery = e.target.value;
     clearTimeout(searchTimer);
@@ -1707,15 +1630,6 @@ function initDictPage() {
     renderList();
     el("#dictSearch").focus();
   };
-  document.querySelectorAll(".dict-suggest-chip").forEach((b) => {
-    b.onclick = () => {
-      el("#dictSearch").value = b.dataset.q;
-      searchQuery = b.dataset.q;
-      page = 1;
-      renderList();
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    };
-  });
   el("#dictPrev").onclick = () => {
     if (page > 1) {
       page--;
@@ -1736,33 +1650,8 @@ function initDictPage() {
     }
   });
 
-  /* ---------- ĐỔI HƯỚNG TỪ ĐIỂN ---------- */
-  document.querySelectorAll(".dict-tab").forEach((b) => {
-    b.onclick = () => {
-      const d = b.dataset.dir;
-      if (d === dir) return;
-      dir = d;
-      // Cấp độ CEFR chỉ có ở hướng Nga → Việt
-      filterLevel = "all";
-      document.querySelectorAll(".chip-level").forEach((x) =>
-        x.classList.toggle("active", x.dataset.l === "all")
-      );
-      page = 1;
-      const cached = MishkaDict._cache[d];
-      if (cached) {
-        dictData = cached;
-        applyDirUi();
-        renderStats();
-        renderList();
-      } else {
-        loadDir(d);
-      }
-    };
-  });
-
-  applyDirUi();
   renderStats();
-  loadDir(dir);
+  loadDir();
 
   /* ---------- MODAL (WordDetail — kiểu TFlat) ---------- */
   function openModal(entry) {
