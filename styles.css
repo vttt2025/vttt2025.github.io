@@ -2932,6 +2932,7 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
   align-items: center;
   gap: 14px;
   margin-top: 16px;
+  flex-wrap: wrap;
 }
 #dictPageInfo {
   font-size: 0.9rem;
@@ -3199,8 +3200,10 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
 @media (max-width: 720px) {
   .dict-hero h1 { font-size: 1.5rem; }
   .dict-hero-stats { grid-template-columns: repeat(2, 1fr); }
-  .dict-filter-group { flex-direction: column; align-items: flex-start; }
+  .dict-filter-group { flex-direction: row; flex-wrap: wrap; }
   .dict-modal-meta { grid-template-columns: 1fr; }
+  .dict-pagination { gap: 8px; }
+  #dictPageInfo { min-width: 0; }
 }
 
 /* ============ Responsive SRS ============ */
@@ -3371,6 +3374,15 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
   .container {
     padding: 0 16px;
   }
+
+  /* Header gọn đủ rộng trên màn nhỏ — không tràn ngang */
+  .header-actions { gap: 6px; }
+  .user-area .btn {
+    padding: 7px 10px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+  .logo { letter-spacing: -0.3px; }
 
   /* Hero */
   .hero {
