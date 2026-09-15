@@ -14,13 +14,18 @@
   <!-- HERO + SEARCH -->
   <section class="dict-hero">
     <div class="container">
-      <span class="dict-tag">📖 Từ điển Nga — Việt</span>
-      <h1>Tra cứu <span class="hl">từ vựng tiếng Nga</span> theo CEFR</h1>
-      <p class="dict-sub">Hơn <b id="dictTotal">0</b> từ từ <b>A1</b> (ТЭУ) đến <b>C1</b> (ТРКИ-3) — nghe phát âm, xem ví dụ, thêm vào hàng đợi học từ vựng bằng 1 cú nhấp.</p>
+      <span class="dict-tag" id="dictTag">📖 Từ điển Nga — Việt</span>
+      <h1 id="dictTitle">Tra cứu <span class="hl">từ vựng tiếng Nga</span></h1>
+      <p class="dict-sub">Hơn <b id="dictTotal">172.000</b> từ hai chiều <b>Nga — Việt</b> và <b>Việt — Nga</b> — nghe phát âm, xem ví dụ, thêm vào hàng đợi học từ vựng bằng 1 cú nhấp.</p>
+
+      <div class="dict-tabs" role="tablist">
+        <button class="dict-tab active" id="dirRuVi" data-dir="ru-vi">🇷🇺 Nga → Việt</button>
+        <button class="dict-tab" id="dirViRu" data-dir="vi-ru">🇻🇳 Việt → Nga</button>
+      </div>
 
       <div class="dict-search-wrap">
         <span class="dict-search-icon">🔍</span>
-        <input id="dictSearch" type="search" placeholder="Tìm tiếng Nga, tiếng Việt, ví dụ..." autocomplete="off" />
+        <input id="dictSearch" type="search" placeholder="Tìm tiếng Nga hoặc tiếng Việt..." autocomplete="off" />
         <button class="dict-clear" id="dictClear" aria-label="Xóa">×</button>
       </div>
 
@@ -36,7 +41,7 @@
   <main class="container" style="padding-bottom:60px">
     <!-- FILTER CHIPS -->
     <div class="dict-filter-bar">
-      <div class="dict-filter-group">
+      <div class="dict-filter-group" id="levelFilterGroup">
         <span class="filter-label">Cấp độ:</span>
         <button class="chip chip-level active" data-l="all">Tất cả</button>
         <button class="chip chip-level lvl-A1" data-l="A1">A1</button>
@@ -69,6 +74,7 @@
     <div class="dict-pagination">
       <button class="btn btn-soft" id="dictPrev">← Trước</button>
       <span id="dictPageInfo">Trang 1 / 1</span>
+      <input id="dictJump" type="number" min="1" value="1" aria-label="Đến trang" />
       <button class="btn btn-soft" id="dictNext">Sau →</button>
     </div>
   </main>
@@ -89,8 +95,9 @@
   <script src="data.js"></script>
   <script src="auth.js"></script>
   <script src="app.js"></script>
-  <script src="pages.js"></script>
   <script src="srs.js"></script>
+  <script src="dict-data.js"></script>
+  <script src="pages.js"></script>
   <script>
     function initPage() { initDictPage(); }
   </script>

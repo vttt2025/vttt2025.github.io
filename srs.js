@@ -553,6 +553,8 @@ const SRS = {
         pos: word.pos,
         ex: word.ex,
         level: word.level,
+        dk: word.dk || null,
+        dir: word.dir || "ru-vi",
         // SRS fields
         interval: 0,           // giờ
         repetitions: 0,        // số lần ôn thành công liên tiếp
@@ -569,15 +571,19 @@ const SRS = {
     return id;
   },
 
-  /** Sinh id ổn định cho card từ từ tiếng Nga. */
+  /** Sinh id ổn định cho card. Từ ngoài từ điển đầy đủ dùng dk riêng để tránh trùng do mất dấu. */
   cardId(word) {
+    if (word && word.dk) return "srsd_" + word.dk;
     return "srs_" + word.ru.toLowerCase().replace(/[^а-яёa-z0-9]/gi, "_");
   },
 
-  /** Tìm entry trong SRS_WORDS theo từ tiếng Nga (case-insensitive). */
+  /** Tìm entry: pool SRS_WORDS trước, sau đó tra từ điển đầy đủ (nếu đã tải). */
   findWord(ru) {
     const lower = ru.toLowerCase().trim();
-    return SRS_WORDS.find((w) => w.ru.toLowerCase() === lower) || null;
+    const pool = SRS_WORDS.find((w) => w.ru.toLowerCase() === lower);
+    if (pool) return pool;
+    if (window.MishkaDict) return MishkaDict.lookup(lower) || null;
+    return null;
   },
 
   /** Thêm từ vào hàng đợi SRS — nếu chưa có card thì tạo, đánh dấu "due now". */

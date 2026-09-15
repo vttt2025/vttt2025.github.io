@@ -811,7 +811,9 @@ function initIndexPage() {
   const vocabDone = Progress.doneList("vocabDone").length;
   el("#pwXp").textContent = xp;
   el("#pwStreak").textContent = STORE.get("streak", 0);
-  el("#pwBest").textContent = STORE.get("bestTest", 0) + "%";
+  el("#pwVocab").textContent = `${vocabDone}/${VOCAB_LESSONS.length}`;
+  const best = STORE.get("bestTest", null);
+  el("#pwBest").textContent = best === null ? "—" : best + "%";
 }
 
 /* =====================================================================
@@ -1489,56 +1491,101 @@ function initSrsPage() {
  * ===================================================================== */
 function initDictPage() {
   const PAGE_SIZE = 48;
+  let dir = "ru-vi";          // hướng từ điển đang hiển thị
+  let dictData = null;        // { list, total } của hướng đang chọn
   let filterLevel = "all";
   let filterPos = "all";
   let filterStatus = "all";
   let searchQuery = "";
   let page = 1;
+  let searchTimer = 0;
 
-  const all = SRS.getDictionary();
+  const fmt = (n) => Number(n || 0).toLocaleString("vi-VN");
+
+  /* ---------- HƯỚNG TỪ ĐIỂN ---------- */
+  const DIR_META = {
+    "ru-vi": {
+      tag: "📖 Từ điển Nga — Việt",
+      title: 'Tra cứu <span class="hl">từ vựng tiếng Nga</span>',
+      placeholder: "Tìm tiếng Nga hoặc tiếng Việt, ví dụ..."
+    },
+    "vi-ru": {
+      tag: "📖 Từ điển Việt — Nga",
+      title: 'Tra cứu <span class="hl">từ vựng tiếng Việt</span>',
+      placeholder: "Tìm tiếng Việt hoặc tiếng Nga, ví dụ..."
+    }
+  };
+
+  const applyDirUi = () => {
+    const meta = DIR_META[dir];
+    el("#dictTag").textContent = meta.tag;
+    el("#dictTitle").innerHTML = meta.title;
+    el("#dictSearch").placeholder = meta.placeholder;
+    el("#levelFilterGroup").style.display = dir === "ru-vi" ? "" : "none";
+    document.querySelectorAll(".dict-tab").forEach((b) =>
+      b.classList.toggle("active", b.dataset.dir === dir)
+    );
+  };
+
+  const loadDir = (d) => {
+    applyDirUi();
+    el("#dictList").innerHTML = `<div class="dict-loading"><span class="dict-spinner"></span><p>Đang tải từ điển ${d === "ru-vi" ? "Nga → Việt" : "Việt → Nga"}…</p></div>`;
+    MishkaDict.load(d)
+      .then((data) => {
+        if (dir !== d) return; // người dùng đã đổi hướng trong lúc tải
+        dictData = data;
+        renderStats();
+        page = 1;
+        renderList();
+      })
+      .catch(() => {
+        if (dir !== d) return;
+        el("#dictList").innerHTML = `<div class="empty-state">
+          <p style="font-size:2.5rem">📂</p>
+          <p>Không tải được dữ liệu từ điển.<br/>Hãy mở trang qua web server và kiểm tra thư mục <b>data/</b>.</p>
+        </div>`;
+      });
+  };
 
   /* ---------- HERO STATS ---------- */
   const renderStats = () => {
-    el("#dictTotal").textContent = all.length;
-    const mastered = all.filter((w) => w.status === "mastered").length;
-    const learning = all.filter((w) => w.status === "learning" || w.status === "reviewing").length;
-    const dueCount = SRS.getDueCards().length;
-    el("#statTotal").textContent = all.length;
-    el("#statMastered").textContent = mastered;
-    el("#statLearning").textContent = learning;
-    el("#statQueue").textContent = dueCount;
-  };
-  renderStats();
-
-  /* ---------- FILTER LIST ---------- */
-  const getFiltered = () => {
-    const q = searchQuery.toLowerCase().trim();
-    return all.filter((w) => {
-      if (filterLevel !== "all" && w.level !== filterLevel) return false;
-      if (filterPos !== "all") {
-        // pos filter matches prefix (e.g., "động từ" matches "động từ" and "động từ chưa hoàn thành / hoàn thành")
-        if (!w.pos.toLowerCase().includes(filterPos.toLowerCase())) return false;
+    let total = null;
+    let mastered = 0;
+    let learning = 0;
+    if (dictData) {
+      const c = MishkaDict.counts(dir, SRS.getState());
+      if (c) {
+        total = c.total;
+        mastered = c.mastered;
+        learning = c.new + c.learning + c.reviewing;
       }
-      if (filterStatus !== "all") {
-        if (filterStatus === "new" && w.status !== "unseen" && w.status !== "new") return false;
-        if (filterStatus === "learning" && w.status !== "learning") return false;
-        if (filterStatus === "mastered" && w.status !== "mastered") return false;
-      }
-      if (q) {
-        const hay = (w.ru + " " + w.vi + " " + (w.ex || "")).toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
-      return true;
-    });
+    }
+    const ru = MishkaDict._cache["ru-vi"];
+    const vr = MishkaDict._cache["vi-ru"];
+    if (ru && vr) el("#dictTotal").textContent = fmt(ru.total + vr.total);
+    el("#statTotal").textContent = total === null ? "…" : fmt(total);
+    el("#statMastered").textContent = fmt(mastered);
+    el("#statLearning").textContent = fmt(learning);
+    el("#statQueue").textContent = fmt(SRS.getDueCards().length);
   };
 
+  /* ---------- DANH SÁCH + TÌM KIẾM ---------- */
   const renderList = () => {
-    const filtered = getFiltered();
+    const host = el("#dictList");
+    if (!dictData) return; // đang tải dữ liệu
+    const sm = MishkaDict.statusMap(SRS.getState());
+    const filtered = MishkaDict.search(dir, {
+      q: searchQuery,
+      level: filterLevel,
+      pos: filterPos,
+      status: filterStatus,
+      statusMap: sm
+    });
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     if (page > totalPages) page = totalPages;
+    if (page < 1) page = 1;
     const start = (page - 1) * PAGE_SIZE;
     const slice = filtered.slice(start, start + PAGE_SIZE);
-    const host = el("#dictList");
 
     if (slice.length === 0) {
       host.innerHTML = `<div class="empty-state">
@@ -1548,27 +1595,35 @@ function initDictPage() {
       el("#dictPageInfo").textContent = `0 kết quả`;
       el("#dictPrev").disabled = true;
       el("#dictNext").disabled = true;
+      el("#dictJump").value = 1;
       return;
     }
     el("#dictPrev").disabled = page <= 1;
     el("#dictNext").disabled = page >= totalPages;
-    el("#dictPageInfo").textContent = `Trang ${page} / ${totalPages} · ${filtered.length} từ`;
+    el("#dictJump").value = page;
+    el("#dictJump").max = totalPages;
+    el("#dictPageInfo").textContent = `Trang ${fmt(page)} / ${fmt(totalPages)} · ${fmt(filtered.length)} từ`;
 
     host.innerHTML = slice
       .map((w) => {
-        const statusIcon = w.status === "mastered" ? "✅" :
-                           w.status === "learning" ? "🔄" :
-                           w.status === "reviewing" ? "📚" :
-                           w.status === "new" ? "🆕" : "·";
+        const st = sm.get(SRS.cardId(w)) || "unseen";
+        const statusIcon = st === "mastered" ? "✅" :
+                           st === "learning" ? "🔄" :
+                           st === "reviewing" ? "📚" :
+                           st === "new" ? "🆕" : "·";
+        const levelBadge = w.level ? `<span class="dict-level lvl-${w.level}">${w.level}</span>` : "";
+        const pronLine = w.pron ? `<p class="dict-pron ru">${esc(w.pron)}</p>` : "";
+        const catBadge = w.cat ? `<span class="dict-cat">${esc(w.cat)}</span>` : "";
         return `
-        <article class="dict-card" data-ru="${esc(w.ru)}" data-id="${w.id}">
+        <article class="dict-card" data-dk="${esc(w.dk || "")}">
           <div class="dict-card-head">
-            <span class="dict-level lvl-${w.level}">${w.level}</span>
-            <span class="dict-status-icon" title="${w.status}">${statusIcon}</span>
+            ${levelBadge}
+            <span class="dict-status-icon" title="${st}">${statusIcon}</span>
           </div>
           <h3 class="dict-ru ru">${esc(w.ru)}</h3>
+          ${pronLine}
           <p class="dict-vi">${esc(w.vi)}</p>
-          <p class="dict-pos">${esc(w.pos)}</p>
+          <p class="dict-pos">${esc(w.pos || w.gram || "")}${catBadge}</p>
           <div class="dict-card-foot">
             <button class="dict-speak" data-ru="${esc(w.ru)}" title="Nghe">🔊</button>
           </div>
@@ -1577,10 +1632,10 @@ function initDictPage() {
       .join("");
 
     // Event: mở modal khi click card
-    host.querySelectorAll(".dict-card").forEach((card) => {
+    host.querySelectorAll(".dict-card").forEach((card, i) => {
       card.onclick = (e) => {
         if (e.target.closest(".dict-speak")) return;
-        openModal(card.dataset.ru);
+        openModal(slice[i]);
       };
     });
     host.querySelectorAll(".dict-speak").forEach((btn) => {
@@ -1618,8 +1673,11 @@ function initDictPage() {
   });
   el("#dictSearch").addEventListener("input", (e) => {
     searchQuery = e.target.value;
-    page = 1;
-    renderList();
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+      page = 1;
+      renderList();
+    }, 150);
   });
   el("#dictClear").onclick = () => {
     el("#dictSearch").value = "";
@@ -1640,15 +1698,48 @@ function initDictPage() {
     renderList();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  el("#dictJump").addEventListener("change", (e) => {
+    const v = parseInt(e.target.value, 10);
+    if (!isNaN(v)) {
+      page = v;
+      renderList();
+    }
+  });
 
-  renderList();
+  /* ---------- ĐỔI HƯỚNG TỪ ĐIỂN ---------- */
+  document.querySelectorAll(".dict-tab").forEach((b) => {
+    b.onclick = () => {
+      const d = b.dataset.dir;
+      if (d === dir) return;
+      dir = d;
+      // Cấp độ CEFR chỉ có ở hướng Nga → Việt
+      filterLevel = "all";
+      document.querySelectorAll(".chip-level").forEach((x) =>
+        x.classList.toggle("active", x.dataset.l === "all")
+      );
+      page = 1;
+      const cached = MishkaDict._cache[d];
+      if (cached) {
+        dictData = cached;
+        applyDirUi();
+        renderStats();
+        renderList();
+      } else {
+        loadDir(d);
+      }
+    };
+  });
+
+  applyDirUi();
+  renderStats();
+  loadDir(dir);
 
   /* ---------- MODAL ---------- */
-  function openModal(ru) {
+  function openModal(entry) {
     const state = SRS.getState();
-    const word = SRS.findWord(ru);
-    if (!word) return;
-    const id = SRS.cardId(word);
+    // Entry "chuẩn" cho SRS (ưu tiên pool SRS_WORDS để khớp id card cũ), entry đang xem để hiển thị
+    const canonical = SRS.findWord(entry.ru) || entry;
+    const id = SRS.cardId(canonical);
     const card = state.cards[id];
     const status = !card ? "Chưa học" :
                    card.mastered ? "Đã thuộc" :
@@ -1659,25 +1750,46 @@ function initDictPage() {
                     card.dueDate <= Date.now() ? "⏰ Tới hạn ngay" :
                     "⏳ " + SRS.formatInterval((card.dueDate - Date.now()) / 3600000);
 
+    const levelBadge = entry.level ? `<span class="dict-level lvl-${entry.level}">${entry.level}</span>` : "";
+    const pronLine = entry.pron ? `<p class="dict-pron ru dict-modal-pron">${esc(entry.pron)}</p>` : "";
+    const posBits = [entry.pos, entry.gram && entry.gram !== entry.pos ? entry.gram : ""]
+      .filter(Boolean).join(" · ");
+    const catChip = entry.cat ? `<span class="dict-cat">${esc(entry.cat)}</span>` : "";
+    const meaning = entry.vi || canonical.vi || "(chưa có)";
+
+    const srcCls = dir === "ru-vi" ? "ru" : "";
+    const dstCls = dir === "vi-ru" ? "ru" : "";
+    const exHtml = !entry.ex
+      ? `<p class="ru dict-modal-ex">(chưa có)</p>`
+      : entry.ex.split("\n").map((line) => {
+          const idx = line.indexOf("→");
+          if (idx === -1) {
+            return `<div class="ex-line"><span class="${srcCls}">${esc(line.trim())}</span></div>`;
+          }
+          return `<div class="ex-line"><span class="ex-src ${srcCls}">${esc(line.slice(0, idx).trim())}</span><span class="ex-arrow">→</span><span class="ex-dst ${dstCls}">${esc(line.slice(idx + 1).trim())}</span></div>`;
+        }).join("");
+
     el("#dictModalBody").innerHTML = `
       <div class="dict-modal-head">
         <div>
-          <span class="dict-level lvl-${word.level}">${word.level}</span>
-          <h2 class="dict-modal-ru ru">${esc(word.ru)}</h2>
-          <p class="dict-modal-pos">${esc(word.pos)}</p>
+          ${levelBadge}
+          <h2 class="dict-modal-ru ru">${esc(entry.ru)}</h2>
+          ${pronLine}
+          <p class="dict-modal-pos">${esc(posBits)}${catChip}</p>
         </div>
         <div class="dict-modal-actions">
           <button class="btn btn-soft btn-sm" id="modalSpeak">🔊 Nghe</button>
-          <button class="btn btn-outline btn-sm" id="modalAdd">+ Hàng đợi</button>
-          <button class="btn btn-mastered btn-sm hidden" id="modalMastered">✓ Đã thuộc</button>
+          ${card
+            ? `<button class="btn btn-mastered btn-sm" id="modalMastered">✓ Đã thuộc</button>`
+            : `<button class="btn btn-outline btn-sm" id="modalAdd">+ Hàng đợi</button>`}
         </div>
       </div>
 
-      <div class="dict-modal-meaning">${esc(word.vi)}</div>
+      <div class="dict-modal-meaning">${esc(meaning)}</div>
 
       <div class="dict-modal-section">
         <h4>📝 Ví dụ</h4>
-        <p class="ru dict-modal-ex">${esc(word.ex || "(chưa có)")}</p>
+        ${exHtml}
       </div>
 
       <div class="dict-modal-meta">
@@ -1695,22 +1807,32 @@ function initDictPage() {
       </div>
     `;
 
-    el("#modalSpeak").onclick = () => speak(word.ru);
-    el("#modalAdd").onclick = () => {
-      const r = SRS.addToQueue(word.ru);
-      if (r.ok) {
-        toast(`Đã thêm "${word.ru}" vào hàng đợi — sẽ xuất hiện ở phiên học kế tiếp ✨`);
-        renderStats();
-        openModal(word.ru); // refresh
-      }
-    };
+    el("#modalSpeak").onclick = () => speak(entry.ru);
+    const addBtn = el("#modalAdd");
+    if (addBtn) {
+      addBtn.onclick = () => {
+        const r = SRS.addToQueue(entry.ru);
+        if (r.ok) {
+          toast(`Đã thêm "${entry.ru}" vào hàng đợi — sẽ xuất hiện ở phiên học kế tiếp ✨`);
+          renderStats();
+          renderList();
+          openModal(entry); // refresh
+        }
+      };
+    }
     const masteredBtn = el("#modalMastered");
     if (masteredBtn) {
       masteredBtn.onclick = () => {
-        SRS.markMastered(id);
-        toast("Đã đánh dấu Mastered ✓");
+        if (card && card.mastered) {
+          SRS.unmarkMastered(id);
+          toast("Đã bỏ Mastered");
+        } else {
+          SRS.markMastered(id);
+          toast("Đã đánh dấu Mastered ✓");
+        }
         renderStats();
-        openModal(word.ru);
+        renderList();
+        openModal(entry);
       };
     }
     const unmasterBtn = el("#modalUnmaster");
@@ -1719,7 +1841,8 @@ function initDictPage() {
         SRS.unmarkMastered(id);
         toast("Đã bỏ Mastered");
         renderStats();
-        openModal(word.ru);
+        renderList();
+        openModal(entry);
       };
     }
     const goStudyBtn = el("#modalGoStudy");

@@ -3068,6 +3068,133 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
   padding-top: 14px;
 }
 
+/* Direction tabs */
+.dict-tabs {
+  display: inline-flex;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 5px;
+  margin-bottom: 18px;
+}
+.dict-tab {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 8px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.dict-tab:hover {
+  color: var(--text);
+}
+.dict-tab.active {
+  background: var(--secondary);
+  color: white;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+}
+
+/* Loading state */
+.dict-loading {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 60px 0;
+  color: var(--muted);
+}
+.dict-spinner {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 4px solid var(--border);
+  border-top-color: var(--secondary);
+  animation: dictSpin 0.8s linear infinite;
+}
+@keyframes dictSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Pronunciation + category */
+.dict-pron {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 0;
+}
+.dict-modal-pron {
+  font-size: 1.05rem;
+  margin: -2px 0 4px;
+}
+.dict-cat {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.dict-vi {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Examples trong modal */
+.ex-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: baseline;
+  background: var(--bg);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border-left: 3px solid var(--secondary);
+  margin-bottom: 6px;
+  font-size: 0.95rem;
+}
+.ex-src {
+  font-weight: 600;
+}
+.ex-arrow {
+  color: var(--secondary);
+  font-weight: 700;
+}
+.ex-dst {
+  color: var(--muted);
+}
+
+/* Pagination jump */
+#dictJump {
+  width: 76px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  text-align: center;
+}
+#dictJump:focus {
+  outline: none;
+  border-color: var(--secondary);
+}
+
+/* Modal meaning nhiều dòng */
+.dict-modal-meaning {
+  white-space: pre-line;
+}
+
 /* Responsive */
 @media (max-width: 720px) {
   .dict-hero h1 { font-size: 1.5rem; }

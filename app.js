@@ -65,19 +65,26 @@ function toast(msg) {
   t._timer = setTimeout(() => t.classList.remove("show"), 2200);
 }
 
-function speak(text, lang = "ru-RU", rate = 0.9) {
+function detectLang(text) {
+  if (/[\u0400-\u04FF]/.test(text)) return "ru-RU";
+  if (/[ăâđêôơưáàảãạấầẩẫậắằẳẵặéèẻẽẹếềểễệíìỉĩịóòỏõọốồổỗộớờởỡợúùủũụứừửữựýỳỷỹỵ]/i.test(text)) return "vi-VN";
+  return "ru-RU";
+}
+
+function speak(text, lang = null, rate = 0.9) {
   if (!("speechSynthesis" in window)) {
     toast("Trình duyệt không hỗ trợ đọc — hãy dùng Chrome/Edge.");
     return;
   }
+  const l = lang || detectLang(text);
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = lang;
+  u.lang = l;
   u.rate = rate;
-  const ruVoice = speechSynthesis
+  const voice = speechSynthesis
     .getVoices()
-    .find((v) => v.lang && v.lang.toLowerCase().startsWith("ru"));
-  if (ruVoice) u.voice = ruVoice;
+    .find((v) => v.lang && v.lang.toLowerCase().startsWith(l.slice(0, 2).toLowerCase()));
+  if (voice) u.voice = voice;
   speechSynthesis.speak(u);
 }
 
@@ -144,7 +151,7 @@ const NAV_LINKS = [
 const SEASON_ORDER = ["spring", "summer", "autumn", "winter"];
 
 const SEASON_META = {
-  spring: { icon: "🌸", label: "Mùa xuân", fx: ["🌸", "🌸", "💮", "🌸"] },
+  spring: { icon: "🪻", label: "Mùa xuân", fx: ["🪻", "🌷", "🪻", "🌷"] },
   summer: { icon: "☀️", label: "Mùa hè", fx: ["✨", "☀️", "✨", "🌞", "✨"] },
   autumn: { icon: "🍂", label: "Mùa thu", fx: ["🍂", "🍁", "🍂", "🍃"] },
   winter: { icon: "❄️", label: "Mùa đông", fx: ["❄️", "dot", "❄️", "dot", "dot"] }
@@ -178,7 +185,7 @@ function applySeason(season) {
   fx.innerHTML = "";
 
   const isSummer = season === "summer";
-  const count = isSummer ? 18 : 26;
+  const count = isSummer ? 18 : season === "autumn" ? 12 : 26;
   for (let i = 0; i < count; i++) {
     const s = document.createElement("span");
     const kind = meta.fx[Math.floor(Math.random() * meta.fx.length)];
@@ -416,11 +423,12 @@ function renderFooter() {
     <div class="container footer-grid">
       <div class="footer-brand">
         <a class="logo" href="index.html"><span class="logo-mark"><img src="assets/mishka-logo.svg" alt="" /></span> Mishka <em>TRKI</em></a>
-        <p>Mishka TRKI — gấu đồng hành cùng bạn luyện tiếng Nga & thi chứng chỉ ТРКИ: từ vựng qua video, ngữ pháp, nghe, nói, viết — tất cả trong một.</p>
+        <p>Mishka TRKI — gấu đồng hành cùng bạn luyện tiếng Nga & thi chứng chỉ ТРКИ: từ điển 172.000+ từ, từ vựng qua video, ngữ pháp, nghe, nói, viết — tất cả trong một.</p>
       </div>
       <div class="footer-col">
         <h4>Sản phẩm</h4>
         <a href="vocabulary.html">Từ vựng</a>
+        <a href="dictionary.html">Từ điển</a>
         <a href="grammar.html">Ngữ pháp</a>
         <a href="listening.html">Luyện nghe</a>
         <a href="mock-test.html">Đề thi thử</a>
@@ -435,6 +443,7 @@ function renderFooter() {
         <h4>Tài nguyên</h4>
         <a href="blog.html">Blog</a>
         <a href="vocabulary.html">Series video</a>
+        <a href="vocabulary.html#algorithm">Thuật toán học từ</a>
         <a href="mock-test.html">Đề ТРКИ</a>
       </div>
     </div>
