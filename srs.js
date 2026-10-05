@@ -1,5 +1,5 @@
 /* =====================================================================
- * SRS — Spaced Repetition System cho Mishka TRKI
+ * SRS — Spaced Repetition System cho Rusi TRKI
  * Thuật toán lặp lại ngắt quãng theo phong cách Đậu TOEIC:
  *   - Từ mới: Again = xem lại sau 5 thẻ; Hard = 6 giờ; Good = 1 ngày; Easy = 3 ngày.
  *   - Từ đã ôn: nhân khoảng thời gian hiện tại theo ×2 (Hard) / ×3 (Good) / ×4 (Easy).
@@ -582,7 +582,7 @@ const SRS = {
     const lower = ru.toLowerCase().trim();
     const pool = SRS_WORDS.find((w) => w.ru.toLowerCase() === lower);
     if (pool) return pool;
-    if (window.MishkaDict) return MishkaDict.lookup(lower) || null;
+    if (window.RusiDict) return RusiDict.lookup(lower) || null;
     return null;
   },
 

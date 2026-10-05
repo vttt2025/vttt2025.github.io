@@ -89,7 +89,7 @@ def main():
     result = {}
     stats = {"lines": 0, "matched": 0, "json_errors": 0}
 
-    req = urllib.request.Request(URL, headers={"User-Agent": "MishkaTRKI/1.0 (dict build)"})
+    req = urllib.request.Request(URL, headers={"User-Agent": "RusiTRKI/1.0 (dict build)"})
     with urllib.request.urlopen(req, timeout=60) as resp:
         total = int(resp.headers.get("Content-Length", 0))
         buf = b""

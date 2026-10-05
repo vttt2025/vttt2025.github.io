@@ -1,5 +1,5 @@
 /* =====================================================================
- * WordDetail — modal chi tiết từ vựng kiểu TFlat cho Mishka TRKI
+ * WordDetail — modal chi tiết từ vựng kiểu TFlat cho Rusi TRKI
  *
  * Khi bấm vào một từ, modal hiện các mục nhỏ gập/mở được:
  *   📖 Nghĩa · 💬 Ví dụ · 🧩 Kết cấu đi kèm · ↔️ Đồng/Trái nghĩa ·
@@ -134,7 +134,7 @@ const WordDetail = (() => {
     return words
       .map((w) => {
         const base = stripStress(w);
-        const known = window.MishkaDict && MishkaDict.lookup(base);
+        const known = window.RusiDict && RusiDict.lookup(base);
         return `<button class="wd-chip ru ${cls}" data-w="${esc(base)}" title="${known ? "Xem chi tiết" : ""}">${esc(w)}</button>`;
       })
       .join("");
@@ -454,7 +454,7 @@ const WordDetail = (() => {
     ensureShell();
     onClosedHook = onClose || onClosedHook || null;
     const ru = stripStress(word).trim();
-    if (!entry && window.MishkaDict) entry = MishkaDict.lookup(ru);
+    if (!entry && window.RusiDict) entry = RusiDict.lookup(ru);
     if (!entry) entry = { ru, vi: "", pos: "", ex: "", gram: "" };
 
     current = { ru, entry, audio: null, extra: null };
@@ -469,8 +469,8 @@ const WordDetail = (() => {
 
     // tải dữ liệu bổ sung rồi render lại
     try {
-      if (window.MishkaDict && MishkaDict.Extra) {
-        const extra = await MishkaDict.Extra.for(ru);
+      if (window.RusiDict && RusiDict.Extra) {
+        const extra = await RusiDict.Extra.for(ru);
         if (current && current.ru === ru) {
           if (extra && extra.audio) current.audio = extra.audio;
           current.extra = extra;
@@ -492,13 +492,13 @@ const WordDetail = (() => {
    */
   async function openChipWord(w) {
     let entry = null;
-    if (window.MishkaDict) {
-      entry = MishkaDict.lookup(w);
+    if (window.RusiDict) {
+      entry = RusiDict.lookup(w);
       if (!entry) {
         toast("Đang tải dữ liệu từ điển…");
         try {
-          await MishkaDict.load("ru-vi");
-          entry = MishkaDict.lookup(w);
+          await RusiDict.load("ru-vi");
+          entry = RusiDict.lookup(w);
         } catch (e) { /* bỏ qua */ }
       }
     }

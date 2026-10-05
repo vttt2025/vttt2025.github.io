@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Dựng dữ liệu bổ sung cho từ điển Mishka:
+Dựng dữ liệu bổ sung cho từ điển Rusi:
 
   data/dict-forms.json  — bảng biến thể từ:
         danh từ / đại từ / số từ : 6 cách × số ít / số nhiều

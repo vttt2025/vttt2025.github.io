@@ -1383,7 +1383,7 @@ function initSrsPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `mishka-srs-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `rusi-srs-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast("Đã xuất dữ liệu.");
@@ -1520,7 +1520,7 @@ function initDictPage() {
 
   const loadDir = () => {
     el("#dictList").innerHTML = `<div class="dict-loading"><span class="dict-spinner"></span><p>Đang tải từ điển Nga → Việt…</p></div>`;
-    MishkaDict.load("ru-vi")
+    RusiDict.load("ru-vi")
       .then((data) => {
         dictData = data;
         renderStats();
@@ -1544,8 +1544,8 @@ function initDictPage() {
   const renderList = () => {
     const host = el("#dictList");
     if (!dictData) return; // đang tải dữ liệu
-    const sm = MishkaDict.statusMap(SRS.getState());
-    const filtered = MishkaDict.search("ru-vi", {
+    const sm = RusiDict.statusMap(SRS.getState());
+    const filtered = RusiDict.search("ru-vi", {
       q: searchQuery
     });
     const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));

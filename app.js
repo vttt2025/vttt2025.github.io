@@ -186,7 +186,7 @@ const NAV_LINKS = [
 const SEASON_ORDER = ["spring", "summer", "autumn", "winter"];
 
 const SEASON_META = {
-  spring: { icon: "🪻", label: "Mùa xuân", fx: ["🪻", "🌷", "🪻", "🌷"] },
+  spring: { icon: "🪻", label: "Mùa xuân", fx: ["🌹", "🪆", "🌹", "🪆"] },
   summer: { icon: "☀️", label: "Mùa hè", fx: ["✨", "☀️", "✨", "🌞", "✨"] },
   autumn: { icon: "🍂", label: "Mùa thu", fx: ["🍂", "🍁", "🍂", "🍃"] },
   winter: { icon: "❄️", label: "Mùa đông", fx: ["❄️", "dot", "❄️", "dot", "dot"] }
@@ -220,7 +220,7 @@ function applySeason(season) {
   fx.innerHTML = "";
 
   const isSummer = season === "summer";
-  const count = isSummer ? 18 : season === "autumn" ? 12 : 26;
+  const count = isSummer ? 18 : season === "autumn" ? 4 : 10;
   for (let i = 0; i < count; i++) {
     const s = document.createElement("span");
     const kind = meta.fx[Math.floor(Math.random() * meta.fx.length)];
@@ -264,7 +264,7 @@ function renderHeader() {
   host.innerHTML = `
   <header class="site-header">
     <div class="container header-inner">
-      <a class="logo" href="index.html"><span class="logo-mark"><img src="assets/mishka-logo.svg" alt="" /></span> Mishka <em>TRKI</em></a>
+      <a class="logo" href="index.html"><span class="logo-mark"><img src="assets/rusi-logo.svg" alt="" /></span> Rusi <em>TRKI</em></a>
       <nav class="main-nav" id="mainNav">${links}</nav>
       <div class="header-actions">
         <span class="xp-chip" id="chipXp">⚡ ${STORE.get("xp", 0)} XP</span>
@@ -457,8 +457,8 @@ function renderFooter() {
   <footer class="footer">
     <div class="container footer-grid">
       <div class="footer-brand">
-        <a class="logo" href="index.html"><span class="logo-mark"><img src="assets/mishka-logo.svg" alt="" /></span> Mishka <em>TRKI</em></a>
-        <p>Mishka TRKI — gấu đồng hành cùng bạn luyện tiếng Nga & thi chứng chỉ ТРКИ: từ điển 172.000+ từ, từ vựng qua video, ngữ pháp, nghe, nói, viết — tất cả trong một.</p>
+        <a class="logo" href="index.html"><span class="logo-mark"><img src="assets/rusi-logo.svg" alt="" /></span> Rusi <em>TRKI</em></a>
+        <p>Rusi TRKI — gấu đồng hành cùng bạn luyện tiếng Nga & thi chứng chỉ ТРКИ: từ điển 172.000+ từ, từ vựng qua video, ngữ pháp, nghe, nói, viết — tất cả trong một.</p>
       </div>
       <div class="footer-col">
         <h4>Sản phẩm</h4>

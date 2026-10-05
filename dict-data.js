@@ -1,15 +1,15 @@
 /* =====================================================================
- * MishkaDict — dữ liệu từ điển đầy đủ (Nga→Việt & Việt→Nga)
+ * RusiDict — dữ liệu từ điển đầy đủ (Nga→Việt & Việt→Nga)
  * Nguồn: data/dict-ru-vi.json (~81.000 từ), data/dict-vi-ru.json (~91.700 từ)
  * Tải lazily theo hướng đang chọn, dựng index tìm kiếm ở máy khách.
  * API:
- *   MishkaDict.load(dir)                 -> Promise<{dir, list, total}>
- *   MishkaDict.search(dir, opts)         -> mảng entry (đã lọc + xếp hạng)
- *   MishkaDict.lookup(word)              -> entry khớp chính xác (nếu đã tải)
- *   MishkaDict.statusMap(state)          -> Map(cardId -> trạng thái SRS)
- *   MishkaDict.counts(dir, state)        -> {total, unseen, learning, mastered}
+ *   RusiDict.load(dir)                 -> Promise<{dir, list, total}>
+ *   RusiDict.search(dir, opts)         -> mảng entry (đã lọc + xếp hạng)
+ *   RusiDict.lookup(word)              -> entry khớp chính xác (nếu đã tải)
+ *   RusiDict.statusMap(state)          -> Map(cardId -> trạng thái SRS)
+ *   RusiDict.counts(dir, state)        -> {total, unseen, learning, mastered}
  * ===================================================================== */
-const MishkaDict = {
+const RusiDict = {
   _cache: {},
   _loading: {},
 
@@ -281,4 +281,4 @@ const MishkaDict = {
   }
 };
 
-window.MishkaDict = MishkaDict;
+window.RusiDict = RusiDict;

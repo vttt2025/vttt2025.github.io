@@ -1,5 +1,5 @@
 /**
- * Cấu hình Firebase cho dự án Mishka TRKI.
+ * Cấu hình Firebase cho dự án Rusi TRKI.
  *
  * HƯỚNG DẪN LẤY CONFIG (chỉ làm 1 lần, khoảng 5 phút):
  *   1. Truy cập https://console.firebase.google.com/ và tạo project mới.
