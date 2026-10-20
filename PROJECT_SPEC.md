@@ -737,3 +737,9 @@ CREATE POLICY "Super Admins view audit logs" ON admin_audit_logs FOR SELECT USIN
 
 
 6. **Quy chuẩn thanh điều hướng (Header Navigation)**: Thanh tiêu đề chính (Navbar) là cấu trúc phẳng, tuyệt đối không có phần con (dropdown submenu), chỉ gồm đúng 7 liên kết đơn tương ứng 7 trụ cột: `TRKI | Từ vựng | Nghe | Nói | Viết | Shop | Blog`.
+
+7. **Quy chuẩn Deploy GitHub Pages & Cloudflare Cache Invalidation**:
+* **Bắt buộc file `.nojekyll`**: Tại thư mục gốc của repository phải luôn duy trì tệp `.nojekyll` (dung lượng 0 bytes) nhằm chỉ thị GitHub Pages bỏ qua bộ xử lý Jekyll, chuyển trực tiếp các file tĩnh HTML/JS/CSS và tránh lỗi build / 403.
+* **Cache-Busting Query Parameter (`?v=X.Y`)**: Mọi file HTML khi nhúng tài nguyên nội bộ (`styles.css`, `data.js`, `auth.js`, `app.js`, `pages.js`, `admin.js`, `srs.js`) bắt buộc phải gắn tham số phiên bản `?v=2.2` (hoặc mới hơn). Do Cloudflare và GitHub Pages cấu hình `Cache-Control: max-age=14400` (4 tiếng), việc gắn query parameter buộc trình duyệt và CDN nạp ngay phiên bản mới nhất, tránh tình trạng local hiển thị một kiểu nhưng website trên mạng vẫn hiện phiên bản cũ.
+* **Thao tác Hard Reload cho người dùng**: Sau mỗi lần `git push`, hướng dẫn người dùng nhấn `Ctrl + F5` (hoặc `Cmd + Shift + R` trên Mac) hoặc mở tab Ẩn danh (Incognito) nếu trình duyệt còn lưu cache từ phiên trước.
+```
