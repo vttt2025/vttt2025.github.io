@@ -594,3 +594,395 @@ const BLOG_POSTS = [
     icon: "🎙️"
   }
 ];
+
+
+// =======================================================================
+// NGÂN HÀNG ĐỀ THI TRKI CHUẨN QUỐC TẾ (TRKI_BANK)
+// =======================================================================
+const TRKI_BANK = [
+  {
+    id: "trki_a1",
+    level: "A1 (ТЭУ)",
+    levelName: "Trình độ sơ cấp A1",
+    title: "Đề thi thử ТРКИ ТЭУ (Trình độ sơ cấp)",
+    durationMin: 45,
+    passPercent: 60,
+    is_pro_only: false,
+    parts: MOCK_TEST.parts
+  },
+  {
+    id: "trki_a2",
+    level: "A2 (ТБУ)",
+    levelName: "Trình độ cơ bản A2",
+    title: "Đề thi thử ТРКИ ТБУ (Trình độ cơ bản)",
+    durationMin: 50,
+    passPercent: 66,
+    is_pro_only: false,
+    parts: [
+      {
+        id: "gram",
+        name: "Часть 1. Лексика и грамматика",
+        vi: "Phần 1. Từ vựng và ngữ pháp",
+        questions: [
+          { q: "Мы познакомились с новым ___. (преподаватель)", options: ["преподавателем", "преподавателя", "преподавателю", "преподаватель"], a: 0, ex: "с + cách 5 (kết thúc phụ âm mềm -ель -> -елем)." },
+          { q: "Анна часто звонит своей ___. (мать)", options: ["матери", "матерью", "мать", "матере"], a: 0, ex: "звонить + cách 3 (мать -> матери)." },
+          { q: "Вчера я долго ___ эту сложную книгу.", options: ["читал", "прочитал", "прочту", "почитаю"], a: 0, ex: "долго + động từ chưa hoàn thành thể (НСВ) ở quá khứ." },
+          { q: "Когда мы пришли на вокзал, поезд уже ___.", options: ["ушёл", "уходил", "идёт", "поедет"], a: 0, ex: "Hành động tàu rời ga đã hoàn tất trước đó -> dùng СВ quá khứ (ушёл)." },
+          { q: "Он спросил меня, ___ я поеду на экскурсию.", options: ["поеду ли", "что", "как", "чтобы"], a: 0, ex: "Câu hỏi gián tiếp có/không -> dùng tiểu từ 'ли' đặt sau động từ." },
+          { q: "Если завтра будет хорошая погода, мы ___ за город.", options: ["поедем", "ехали", "ездим", "будем ехать"], a: 0, ex: "Điều kiện tương lai một lần -> dùng động từ chuyển động СВ 'поедем'." }
+        ]
+      },
+      {
+        id: "reading",
+        name: "Часть 2. Чтение",
+        vi: "Phần 2. Đọc hiểu",
+        text: {
+          ru: "Санкт-Петербург — один из самых красивых городов мира. Его основал царь Пётр Первый в 1703 году. Город называют 'Северной столицей' России. В Петербурге много музеев, театров и памятников архитектуры. Самый известный музей — Эрмитаж, в котором собраны миллионы произведений искусства. Каждый год миллионы туристов приезжают сюда, особенно летом во время знаменитых Белых ночей.",
+          vi: "Sankt-Peterburg là một trong những thành phố đẹp nhất thế giới. Sa hoàng Pyotr Đại đế đã thành lập thành phố vào năm 1703. Thành phố được gọi là 'Thủ đô phía Bắc' của nước Nga. Tại Peterburg có rất nhiều bảo tàng, nhà hát và di tích kiến trúc. Bảo tàng nổi tiếng nhất là Hermitage, nơi quy tụ hàng triệu tác phẩm nghệ thuật. Hàng năm có hàng triệu du khách đến đây, đặc biệt vào mùa hè trong dịp Đêm Trắng nổi tiếng."
+        },
+        questions: [
+          { q: "Кто и когда основал Санкт-Петербург?", options: ["Пётр Первый в 1703 году", "Екатерина Вторая в 1750 году", "Иван Грозный в 1650 году", "Александр Первый в 1812 году"], a: 0, ex: "'Его основал царь Пётр Первый в 1703 году.'" },
+          { q: "Как часто называют Санкт-Петербург?", options: ["Северной столицей", "Золотым кольцом", "Южной гаванью", "Старым кремлём"], a: 0, ex: "'Город называют Северной столицей России.'" },
+          { q: "Какой музей самый известный в городе?", options: ["Эрмитаж", "Третьяковская галерея", "Русский музей", "Пушкинский музей"], a: 0, ex: "'Самый известный музей — Эрмитаж.'" },
+          { q: "Когда особенно много туристов приезжает в город?", options: ["Летом во время Белых ночей", "Зимой на Новый год", "Осенью в октябре", "Весной в марте"], a: 0, ex: "'...особенно летом во время знаменитых Белых ночей.'" }
+        ]
+      },
+      {
+        id: "listening",
+        name: "Часть 3. Аудирование",
+        vi: "Phần 3. Nghe hiểu",
+        lines: [
+          { who: "Пассажир", ru: "Скажите, пожалуйста, как доехать до Красной площади?", vi: "Xin hỏi làm thế nào để đi tới Quảng trường Đỏ?" },
+          { who: "Дежурный", ru: "Вам нужно сесть на метро на станцию 'Университет' и доехать до станции 'Охотный ряд'.", vi: "Bạn cần lên tàu điện ngầm ở ga 'Đại học' và đi đến ga 'Okhotny Ryad'." },
+          { who: "Пассажир", ru: "Это прямая линия или нужно делать пересадку?", vi: "Đây là tuyến thẳng hay phải đổi chuyến ạ?" },
+          { who: "Дежурный", ru: "Это прямая Сокольническая линия, пересадка не нужна. Время в пути около 15 минут.", vi: "Đây là tuyến Sokolnicheskaya thẳng, không cần đổi tàu. Thời gian đi khoảng 15 phút." }
+        ],
+        questions: [
+          { q: "Куда хочет поехать пассажир?", options: ["На Красную площадь", "В университет", "В музей Эрмитаж", "На вокзал"], a: 0, ex: "'как доехать до Красной площади?'" },
+          { q: "На какую станцию метро нужно доехать?", options: ["Охотный ряд", "Университет", "Арбатская", "Театральная"], a: 0, ex: "'доехать до станции Охотный ряд'" },
+          { q: "Нужна ли пассажиру пересадка?", options: ["Нет, это прямая линия", "Да, одна пересадка", "Да, две пересадки", "Нужно ехать на автобусе"], a: 0, ex: "'пересадка не нужна'" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "trki_b1",
+    level: "B1 (ТРКИ-1)",
+    levelName: "Chứng chỉ ТРКИ-1 (Vào đại học)",
+    title: "Đề thi chuẩn quốc tế ТРКИ-1 (Đầu vào Đại học Nga)",
+    durationMin: 60,
+    passPercent: 66,
+    is_pro_only: true,
+    parts: [
+      {
+        id: "gram",
+        name: "Часть 1. Лексика и грамматика",
+        vi: "Phần 1. Từ vựng và ngữ pháp chuyên sâu",
+        questions: [
+          { q: "Несмотря на ___, студенты успешно сдали все экзамены.", options: ["трудности", "trudnostey", "трудностям", "трудностями"], a: 0, ex: "Несмотря на + cách 4 (трудности danh từ số nhiều bất động vật)." },
+          { q: "Благодаря ___ преподавателя группа отлично подготовилась к тесту.", options: ["помощи", "помощь", "помощью", "о помощи"], a: 0, ex: "Благодаря + cách 3 (помощь -> помощи)." },
+          { q: "Мы гордимся ___ нашей научной лаборатории.", options: ["достижениями", "достижения", "достижений", "достижениям"], a: 0, ex: "гордиться + cách 5 số nhiều (-ами/-ями)." }
+        ]
+      },
+      {
+        id: "reading",
+        name: "Часть 2. Чтение",
+        vi: "Phần 2. Đọc hiểu văn bản học thuật",
+        text: {
+          ru: "Научные исследования в области искусственного интеллекта в российских университетах развиваются стремительными темпами. Ведущие центры в Москве и Санкт-Петербурге разрабатывают новые модели машинного обучения для медицины, транспорта и лингвистики. Студенты бакалавриата и магистратуры имеют возможность участвовать в реальных проектах с первого года обучения.",
+          vi: "Các nghiên cứu khoa học trong lĩnh vực trí tuệ nhân tạo tại các trường đại học Nga đang phát triển với tốc độ nhanh chóng. Các trung tâm hàng đầu tại Moskva và Saint Petersburg đang phát triển các mô hình học máy mới cho y học, giao thông và ngôn ngữ học. Sinh viên đại học và cao học có cơ hội tham gia vào các dự án thực tế ngay từ năm thứ nhất."
+        },
+        questions: [
+          { q: "В каких сферах разрабатываются модели машинного обучения?", options: ["В медицине, транспорте и лингвистике", "В сельском хозяйстве и туризме", "Только в военной отрасли", "В строительстве дорог"], a: 0, ex: "'...для медицины, транспорта и лингвистики.'" },
+          { q: "С какого времени студенты могут участвовать в проектах?", options: ["С первого года обучения", "Только в аспирантуре", "После окончания университета", "С третьего курса"], a: 0, ex: "'...с первого года обучения.'" }
+        ]
+      },
+      {
+        id: "listening",
+        name: "Часть 3. Аудирование",
+        vi: "Phần 3. Nghe hiểu bài giảng",
+        lines: [
+          { who: "Профессор", ru: "Тема нашей сегодняшней лекции — структура научного доклада и требования к дипломной работе.", vi: "Chủ đề bài giảng hôm nay của chúng ta là cấu trúc báo cáo khoa học và yêu cầu đối với khóa luận tốt nghiệp." },
+          { who: "Студент", ru: "Профессор, каков рекомендуемый объём введения?", vi: "Thưa giáo sư, dung lượng khuyến nghị của phần mở đầu là bao nhiêu ạ?" },
+          { who: "Профессор", ru: "Введение должно составлять от трёх до пяти страниц печатного текста.", vi: "Phần mở đầu nên chiếm từ ba đến năm trang văn bản in." }
+        ],
+        questions: [
+          { q: "О чём лекция профессора?", options: ["О структуре научного доклада и диплома", "Об истории языка", "О правилах сдачи экзамена", "О поступлении в вуз"], a: 0, ex: "'Тема нашей сегодняшней лекции — структура научного доклада...'" },
+          { q: "Какой объём введения рекомендует профессор?", options: ["От 3 до 5 страниц", "Более 20 страниц", "Ровно 1 страницу", "10-15 страниц"], a: 0, ex: "'от трёх до пяти страниц печатного текста'" }
+        ]
+      }
+    ]
+  },
+  {
+    id: "trki_b2",
+    level: "B2 (ТРКИ-2)",
+    levelName: "Trình độ nâng cao B2",
+    title: "Đề thi nâng cao ТРКИ-2 (Tốt nghiệp Đại học / Thạc sĩ)",
+    durationMin: 75,
+    passPercent: 66,
+    is_pro_only: true,
+    parts: [
+      {
+        id: "gram",
+        name: "Часть 1. Лексика и грамматика",
+        vi: "Phần 1. Cấu trúc câu phức & thành ngữ",
+        questions: [
+          { q: "Вопреки ___ экспертов, экономика продемонстрировала устойчивый рост.", options: ["ожиданиям", "ожиданий", "ожиданиями", "ожидания"], a: 0, ex: "Вопреки + cách 3 số nhiều (-ам/-ям)." },
+          { q: "Статья посвящена проблеме, решение ___ имеет ключевое значение для науки.", options: ["которой", "которая", "которую", "о которой"], a: 0, ex: "решение (của cái gì -> cách 2 giống cái: которой)." }
+        ]
+      },
+      {
+        id: "reading",
+        name: "Часть 2. Чтение",
+        vi: "Phần 2. Đọc hiểu bài luận & phân tích",
+        text: {
+          ru: "Культурный диалог между Россией и Вьетнамом имеет глубокие исторические корни. Образовательные программы, межвузовские обмены и совместные научно-технические конференции служат прочным мостом дружбы. Выпускники российских вузов вносят весомый вклад в модернизацию ключевых отраслей промышленности Вьетнама.",
+          vi: "Đối thoại văn hóa giữa Nga và Việt Nam có nguồn gốc lịch sử sâu sắc. Các chương trình giáo dục, trao đổi giữa các trường đại học và hội nghị khoa học kỹ thuật chung đóng vai trò là cây cầu hữu nghị vững chắc. Cựu sinh viên các trường đại học Nga đóng góp to lớn vào công cuộc hiện đại hóa các ngành công nghiệp trọng điểm của Việt Nam."
+        },
+        questions: [
+          { q: "Что служит мостом дружбы между странами?", options: ["Образовательные программы и научные конференции", "Только коммерческая торговля", "Спортивные турниры", "Туристические агентства"], a: 0, ex: "'...Образовательные программы, межвузовские обмены и совместные научно-технические конференции...'" }
+        ]
+      },
+      {
+        id: "listening",
+        name: "Часть 3. Аудирование",
+        vi: "Phần 3. Nghe hiểu phỏng vấn chuyên gia",
+        lines: [
+          { who: "Ведущий", ru: "Сегодня у нас в студии эксперт по международным образовательным грантам.", vi: "Hôm nay trong trường quay của chúng ta có chuyên gia về học bổng giáo dục quốc tế." },
+          { who: "Эксперт", ru: "Главное требование к кандидатам — высокий уровень владения русским языком и сильная мотивация.", vi: "Yêu cầu hàng đầu đối với ứng viên là trình độ tiếng Nga vững vàng và động lực mạnh mẽ." }
+        ],
+        questions: [
+          { q: "Какое главное требование к кандидатам?", options: ["Высокий уровень языка и мотивация", "Наличие стажа работы от 10 лет", "Умение играть на инструментах", "Возраст старше 35 лет"], a: 0, ex: "'...высокий уровень владения русским языком и сильная мотивация.'" }
+        ]
+      }
+    ]
+  }
+];
+
+// =======================================================================
+// LỌ TỪ VỰNG CHỦ ĐỀ (VOCAB_JARS)
+// =======================================================================
+const VOCAB_JARS = [
+  {
+    id: "jar_auchan",
+    name: "Lọ mua sắm Auchan",
+    desc: "Từ vựng siêu thị, thực phẩm, cân đo, thanh toán sống còn khi mới sang Nga.",
+    icon: "🛒",
+    words: [
+      { ru: "хлеб", vi: "bánh mì", note: "danh từ giống đực (он)" },
+      { ru: "молоко", vi: "sữa tươi", note: "danh từ giống trung (оно)" },
+      { ru: "сыр", vi: "phô mai", note: "danh từ giống đực (он)" },
+      { ru: "колбаса", vi: "xúc xích, giò", note: "danh từ giống cái (она)" },
+      { ru: "чек", vi: "hóa đơn mua hàng", note: "cần giữ khi qua cổng bảo vệ" },
+      { ru: "пакет", vi: "túi nilông", note: "thu ngân thường hỏi: 'Пакет нужен?'" },
+      { ru: "карта", vi: "thẻ ngân hàng", note: "оплата картой (quẹt thẻ)" },
+      { ru: "скидка", vi: "giảm giá / khuyến mại", note: "thẻ tích điểm siêu thị" }
+    ]
+  },
+  {
+    id: "jar_chemodan",
+    name: "Lọ vali hành lý du học",
+    desc: "Đồ dùng cá nhân, quần áo giữ nhiệt, giấy tờ bắt buộc chuẩn bị từ Việt Nam sang.",
+    icon: "🧳",
+    words: [
+      { ru: "чемодан", vi: "vali hành lý", note: "chuẩn ký gửi 23kg" },
+      { ru: "паспорт", vi: "hộ chiếu quốc tế", note: "luôn mang bản gốc bên người" },
+      { ru: "виза", vi: "thị thực du học", note: "thời hạn nhập cảnh lần đầu 90 ngày" },
+      { ru: "куртка", vi: "áo khoác mùa đông", note: "áo lông vũ chịu -20°C" },
+      { ru: "шапка", vi: "mũ len che tai", note: "vật dụng bắt buộc mùa tuyết" },
+      { ru: "лекарство", vi: "thuốc men cá nhân", note: "thuốc cảm, kháng sinh quen dùng" }
+    ]
+  },
+  {
+    id: "jar_dorm",
+    name: "Lọ ký túc xá (Общежитие)",
+    desc: "Vật dụng phòng ở, nhà bếp chung, thủ tục đăng ký tạm trú với ban quản lý KTX.",
+    icon: "🏢",
+    words: [
+      { ru: "общежитие", vi: "ký túc xá (KTX)", note: "sinh viên gọi tắt là 'общага'" },
+      { ru: "комната", vi: "phòng ở", note: "thường ở 2-3 người một phòng" },
+      { ru: "вахтёр", vi: "bác bảo vệ / trực nhật", note: "quản lý cửa ra vào KTX" },
+      { ru: "пропуск", vi: "thẻ sinh viên / thẻ vào cửa", note: "phải quẹt thẻ khi vào cổng" },
+      { ru: "кухня", vi: "bếp chung tầng", note: "dùng xong phải tắt bếp và dọn dẹp" },
+      { ru: "сосед", vi: "bạn cùng phòng", note: "thường là du học sinh quốc tế" }
+    ]
+  },
+  {
+    id: "jar_cafe",
+    name: "Lọ căng tin & Trà bánh Nga",
+    desc: "Cách gọi món ở căng tin đại học (Столовая), quán trà bánh và nhà hàng Nga.",
+    icon: "☕",
+    words: [
+      { ru: "столовая", vi: "căng tin ăn trưa", note: "giá sinh viên, tự bưng khay" },
+      { ru: "борщ", vi: "súp củ dền đỏ Borodino", note: "ăn kèm kem chua сметана" },
+      { ru: "гречка", vi: "cháo kiều mạch", note: "món ăn quốc dân giàu dinh dưỡng" },
+      { ru: "чай", vi: "trà đen", note: "người Nga uống trà nóng quanh năm" },
+      { ru: "счёт", vi: "hóa đơn tính tiền", note: "'Дайте, пожалуйста, счёт'" }
+    ]
+  }
+];
+
+// =======================================================================
+// SẢN PHẨM SHOP NGA & DỊCH VỤ DU HỌC (SHOP_PRODUCTS)
+// =======================================================================
+const SHOP_PRODUCTS = [
+  {
+    id: "alenka-100g",
+    category: "banh_keo",
+    categoryName: "Bánh kẹo Nga",
+    title: "Socola Alenka truyền thống 100g",
+    desc: "Socola sữa béo ngậy biểu tượng nước Nga từ năm 1965, hình em bé quấn khăn quen thuộc.",
+    price: 45000,
+    image: "https://images.unsplash.com/photo-1548907040-4baa42d10919?auto=format&fit=crop&w=600&q=80",
+    badge: "Bán chạy"
+  },
+  {
+    id: "mishka-kosolapy",
+    category: "banh_keo",
+    categoryName: "Bánh kẹo Nga",
+    title: "Kẹo gấu Mishka Kosolapy Nga 250g",
+    desc: "Kẹo socola hạnh nhân giòn tan gắn liền với kiệt tác hội họa 'Buổi sáng trong rừng thông'.",
+    price: 85000,
+    image: "https://images.unsplash.com/photo-1582293041079-7814c2f12063?auto=format&fit=crop&w=600&q=80",
+    badge: "Truyền thống"
+  },
+  {
+    id: "korovka-waffle",
+    category: "banh_keo",
+    categoryName: "Bánh kẹo Nga",
+    title: "Bánh xốp sữa bò Korovka 150g",
+    desc: "Bánh xốp giòn rụm ngậy vị sữa tươi đun cô đặc vùng nông thôn Nga, hoàn hảo khi thưởng trà.",
+    price: 55000,
+    image: "https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: "siberia-cream",
+    category: "my_pham",
+    categoryName: "Mỹ phẩm Siberia",
+    title: "Kem dưỡng ẩm thảo mộc Siberia 75ml",
+    desc: "Chiết xuất hắc mai biển và tinh dầu thông tuyết Taiga, chống nẻ và dưỡng da mềm mịn mùa đông.",
+    price: 120000,
+    image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80",
+    badge: "Thảo mộc"
+  },
+  {
+    id: "babushka-shampoo",
+    category: "my_pham",
+    categoryName: "Mỹ phẩm Siberia",
+    title: "Dầu gội thảo dược Bà già Agafia 350ml",
+    desc: "Công thức cổ truyền 37 loại thảo mộc vùng Taiga, kích thích mọc tóc và nuôi dưỡng chân tóc dày khỏe.",
+    price: 175000,
+    image: "https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?auto=format&fit=crop&w=600&q=80",
+    badge: "Organic"
+  },
+  {
+    id: "matryoshka-5pcs",
+    category: "luu_niem",
+    categoryName: "Quà lưu niệm Nga",
+    title: "Búp bê Matryoshka vẽ tay truyền thống 5 lớp",
+    desc: "Gỗ bồ đề tự nhiên mài thủ công, sơn bóng hoa văn hoa cúc rực rỡ, biểu tượng may mắn gia đình.",
+    price: 290000,
+    image: "https://images.unsplash.com/photo-1572945753563-804f5e5d6674?auto=format&fit=crop&w=600&q=80",
+    badge: "Thủ công"
+  },
+  {
+    id: "cheburashka-plush",
+    category: "luu_niem",
+    categoryName: "Quà lưu niệm Nga",
+    title: "Gấu bông Cheburashka tai to 20cm",
+    desc: "Nhân vật hoạt hình quốc dân Nga với đôi tai to ngộ nghĩnh, chất lông mịn cao cấp an toàn.",
+    price: 210000,
+    image: "https://images.unsplash.com/photo-1559454403-b8fb88521f11?auto=format&fit=crop&w=600&q=80"
+  },
+  {
+    id: "tuvan-6730",
+    category: "dich_vu_du_hoc",
+    categoryName: "Dịch vụ du học 6730",
+    title: "Gói tư vấn & hỗ trợ hồ sơ Hiệp định 6730",
+    desc: "Định hướng chọn trường top (MGU, HSE, SPbGU), tối ưu bài luận và nộp hồ sơ chuẩn chỉ tiêu 1000 suất.",
+    price: 1500000,
+    image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80",
+    badge: "Hot"
+  },
+  {
+    id: "dich-thuat-nga",
+    category: "dich_vu_du_hoc",
+    categoryName: "Dịch vụ du học 6730",
+    title: "Dịch thuật công chứng hồ sơ sang tiếng Nga",
+    desc: "Dịch chuẩn xác học bạ, bằng tốt nghiệp, lý lịch tư pháp bởi dịch giả chuyên ngữ có dấu công chứng tư pháp.",
+    price: 350000,
+    image: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80"
+  }
+];
+
+// =======================================================================
+// BẢNG GÓI CƯỚC TÀI KHOẢN PRO (PACKAGES)
+// =======================================================================
+const PACKAGES = [
+  {
+    id: "pro_6m",
+    badge: "6 THÁNG",
+    title: "Gói Bứt Phá 6 Tháng",
+    desc: "Phù hợp cho học viên ôn thi cấp tốc chuẩn bị du học hoặc thi chứng chỉ ТЭУ/ТБУ.",
+    price: 299000,
+    priceOld: 590000,
+    popular: false,
+    features: [
+      "Mở khóa toàn bộ ngân hàng đề thi ТРКИ A1, A2",
+      "Đáp án giải thích ngữ pháp chi tiết từng câu",
+      "Luyện nghe 4 Part CEFR không giới hạn",
+      "Tạo không giới hạn Lọ từ vựng cá nhân",
+      "Phát hiện & sửa lỗi phát âm AI"
+    ]
+  },
+  {
+    id: "pro_1y",
+    badge: "1 NĂM",
+    title: "Gói Chuyên Nghiệp 1 Năm",
+    desc: "Lựa chọn hàng đầu cho sinh viên chuẩn bị sang Nga học dự bị và đại học.",
+    price: 499000,
+    priceOld: 990000,
+    popular: true,
+    features: [
+      "Mở khóa TOÀN BỘ ngân hàng đề thi ТРКИ A1, A2, B1, B2",
+      "Phân tích chuyên sâu đề thi & dự đoán điểm đỗ",
+      "Chấm bài tự luận Viết (Письмо) có nhận xét của giảng viên",
+      "Kho 100+ Lọ từ vựng chuyên ngành (Y khoa, Kỹ thuật, Kinh tế)",
+      "Ưu tiên hỗ trợ hồ sơ học bổng du học Nga 6730",
+      "Hỗ trợ 1-1 qua nhóm Zalo VIP"
+    ]
+  },
+  {
+    id: "pro_vip",
+    badge: "TRỌN ĐỜI",
+    title: "Gói VIP Trọn Đời",
+    desc: "Đồng hành trọn vẹn suốt 4-6 năm học tập và sinh sống tại Liên bang Nga.",
+    price: 899000,
+    priceOld: 1800000,
+    popular: false,
+    features: [
+      "Tất cả quyền lợi của gói 1 Năm vĩnh viễn",
+      "Cập nhật miễn phí đề thi ТРКИ mới nhất mỗi năm",
+      "Tặng Voucher 500k khi đặt dịch vụ du học & visa Nga",
+      "Tặng Hộp quà Nga đặc biệt (Socola Alenka + Trà Ivan-chay)",
+      "Cố vấn học thuật trực tiếp định kỳ"
+    ]
+  }
+];
+
+// =======================================================================
+// GẮN TẤT CẢ DỮ LIỆU LÊN WINDOW ĐỂ ĐỒNG BỘ RUNTIME TOÀN DỰ ÁN
+// =======================================================================
+if (typeof window !== "undefined") {
+  window.VOCAB_LESSONS = typeof VOCAB_LESSONS !== "undefined" ? VOCAB_LESSONS : [];
+  window.GRAMMAR_LESSONS = typeof GRAMMAR_LESSONS !== "undefined" ? GRAMMAR_LESSONS : [];
+  window.LISTENING_LESSONS = typeof LISTENING_LESSONS !== "undefined" ? LISTENING_LESSONS : [];
+  window.SPEAKING_SETS = typeof SPEAKING_SETS !== "undefined" ? SPEAKING_SETS : [];
+  window.WRITING_TASKS = typeof WRITING_TASKS !== "undefined" ? WRITING_TASKS : [];
+  window.MOCK_TEST = typeof MOCK_TEST !== "undefined" ? MOCK_TEST : {};
+  window.TRKI_BANK = typeof TRKI_BANK !== "undefined" ? TRKI_BANK : [];
+  window.VOCAB_JARS = typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : [];
+  window.SHOP_PRODUCTS = typeof SHOP_PRODUCTS !== "undefined" ? SHOP_PRODUCTS : [];
+  window.PACKAGES = typeof PACKAGES !== "undefined" ? PACKAGES : [];
+  window.BLOG_POSTS = typeof BLOG_POSTS !== "undefined" ? BLOG_POSTS : [];
+}

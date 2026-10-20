@@ -1,4 +1,4 @@
-/**
+﻿/**
  * auth.js — Module đăng nhập/đăng xuất bằng Google qua Firebase.
  *
  * Phụ thuộc:

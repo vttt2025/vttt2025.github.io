@@ -1,4 +1,4 @@
-/* =====================================================================
+﻿/* =====================================================================
  * SRS — Spaced Repetition System cho Rusi TRKI
  * Thuật toán lặp lại ngắt quãng theo phong cách Đậu TOEIC:
  *   - Từ mới: Again = xem lại sau 5 thẻ; Hard = 6 giờ; Good = 1 ngày; Easy = 3 ngày.

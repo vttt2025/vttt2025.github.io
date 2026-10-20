@@ -1,156 +1,248 @@
 /**
- * admin.js — Trang quản trị nội dung.
+ * admin.js — Hệ thống Quản trị Nội dung Toàn diện (CMS) cho RUSI TRKI.
  *
- * Yêu cầu đăng nhập Gmail (xem auth.js). Mọi thay đổi lưu localStorage.
- * Có nút Export ra file .js để paste vào data.js khi muốn commit.
+ * Hỗ trợ quản lý 9 bộ dữ liệu cốt lõi:
+ *   1. TRKI_BANK        : Ngân hàng đề thi TRKI A1, A2, B1, B2 chuẩn 
+ *   2. VOCAB_JARS       : Các lọ từ vựng chủ đề & mẩu giấy từ
+ *   3. SHOP_PRODUCTS    : Sản phẩm shop nội địa Nga & dịch vụ du học 6730
+ *   4. PACKAGES         : Bảng gói cước nâng cấp tài khoản PRO
+ *   5. BLOG_POSTS       : Cẩm nang du học, KTX, học bổng 6730 & kinh nghiệm
+ *   6. LISTENING_LESSONS: 4 Part luyện nghe chuẩn CEFR
+ *   7. SPEAKING_SETS    : Bộ câu luyện nói phản xạ & Shadowing
+ *   8. WRITING_TASKS    : Đề bài luyện viết Письмо theo chuẩn TRKI
+ *   9. VOCAB_LESSONS    : Series video hoạt hình «Хочу в Россию»
  *
- * Dữ liệu lưu ở: localStorage["trki_admin_data"] = {
- *   VOCAB_LESSONS:   [ { ...item, __admin: true } ],
- *   GRAMMAR_LESSONS: [ ... ],
- *   LISTENING_LESSONS: [ ... ],
- *   SPEAKING_SETS:   [ ... ],
- *   WRITING_TASKS:   [ ... ],
- *   BLOG_POSTS:      [ ... ],
- * }
- *
- * Khi các trang học load, app.js gọi mergeAdminData() để gộp item admin vào
- * mảng gốc theo id (item admin ghi đè nếu trùng id).
+ * Cơ chế đồng bộ dữ liệu:
+ *   - Lưu trữ tại: localStorage["trki_admin_data"]
+ *   - Gọi mergeAdminData() lập tức đột biến mảng runtime in-place (target.splice)
+ *   - Phát sự kiện "trki:data-updated" và đồng bộ qua "storage" event giữa các tab
+ *   - Có nút "Xem trên web" và "Đẩy dữ liệu về web" để kiểm tra trực tiếp
  */
 
 (function () {
   "use strict";
 
-  // ====== Schema khai báo form cho từng loại ======
-  // type: text | textarea | number | select | list | list-lines
-  const SCHEMAS = {
-    VOCAB_LESSONS: {
-      label: "📚 Từ vựng",
-      icon: "🎬",
-      source: () => VOCAB_LESSONS,
-      fields: [
-        { key: "id", label: "ID (không dấu, viết liền, ví dụ: ep7, transport)", type: "text", required: true },
-        { key: "type", label: "Loại", type: "select", options: [{ v: "series", l: "Series (tập)" }, { v: "topic", l: "Chủ đề" }] },
-        { key: "ep", label: "Số tập (chỉ với series)", type: "number" },
-        { key: "scene", label: "Emoji cảnh", type: "text" },
-        { key: "ru", label: "Tiêu đề tiếng Nga", type: "text" },
-        { key: "vi", label: "Tiêu đề tiếng Việt", type: "text" },
-        { key: "story", label: "Cốt truyện / mô tả ngắn", type: "textarea" },
+  // Mẫu cấu trúc 3 Part cho đề thi TRKI khi tạo đề mới
+  const SAMPLE_TRKI_PARTS = [
+    {
+      id: "gram",
+      name: "Часть 1. Лексика и грамматика",
+      vi: "Phần 1. Từ vựng và ngữ pháp",
+      questions: [
         {
-          key: "script", label: "Script hội thoại", type: "list",
-          item: [
-            { key: "ru", label: "Tiếng Nga", type: "textarea" },
-            { key: "vi", label: "Tiếng Việt", type: "textarea" }
+          q: "Мы познакомились с новым ___. (преподаватель)",
+          options: ["преподавателем", "преподавателя", "преподавателю", "преподаватель"],
+          a: 0,
+          ex: "с + cách 5 (danh từ đực mềm -ель -> -елем)."
+        },
+        {
+          q: "Антон звонит своей ___. (сестра)",
+          options: ["сестре", "сестру", "сестрой", "сестра"],
+          a: 0,
+          ex: "звонить + cách 3 (сестра -> сестре)."
+        }
+      ]
+    },
+    {
+      id: "reading",
+      name: "Часть 2. Чтение",
+      vi: "Phần 2. Đọc hiểu",
+      text: {
+        ru: "Москва — столица Российской Федерации. Это крупнейший культурный и научный центр страны. В Москве учится много иностранных студентов.",
+        vi: "Moskva là thủ đô của Liên bang Nga. Đây là trung tâm văn hóa và khoa học lớn nhất cả nước. Rất nhiều sinh viên quốc tế học tập tại Moskva."
+      },
+      questions: [
+        {
+          q: "Какой город является столицей России?",
+          options: ["Москва", "Санкт-Петербург", "Казань", "Новосибирск"],
+          a: 0,
+          ex: "'Москва — столица Российской Федерации.'"
+        }
+      ]
+    },
+    {
+      id: "listening",
+      name: "Часть 3. Аудирование",
+      vi: "Phần 3. Nghe hiểu",
+      lines: [
+        { who: "Анна", ru: "Привет! Куда ты идёшь?", vi: "Chào cậu! Cậu đang đi đâu thế?" },
+        { who: "Максим", ru: "Я иду в библиотеку готовиться к экзамену.", vi: "Mình đang đến thư viện ôn thi." }
+      ],
+      questions: [
+        {
+          q: "Куда идёт Максим?",
+          options: ["В библиотеку", "В общежитие", "В столовую", "В кино"],
+          a: 0,
+          ex: "'Я иду в библиотеку...'"
+        }
+      ]
+    }
+  ];
+
+  // ====== Schemas khai báo cho 9 phân hệ ======
+  const SCHEMAS = {
+    TRKI_BANK: {
+      label: "🎓 Đề thi TRKI",
+      icon: "🎓",
+      webUrl: "mock-test.html",
+      source: () => (window.TRKI_BANK || []),
+      fields: [
+        { key: "id", label: "Mã đề thi (ID duy nhất, ví dụ: trki_a1, trki_b1_de1)", type: "text", required: true },
+        { key: "level", label: "Cấp độ chuẩn (ví dụ: A1 (ТЭУ), A2 (ТБУ), B1 (ТРКИ-1), B2 (ТРКИ-2))", type: "text", required: true },
+        { key: "levelName", label: "Tên cấp độ hiển thị (ví dụ: Trình độ sơ cấp A1)", type: "text" },
+        { key: "title", label: "Tiêu đề đề thi", type: "text", required: true },
+        { key: "durationMin", label: "Thời gian làm bài (phút)", type: "number" },
+        { key: "passPercent", label: "Điểm chuẩn đạt (%)", type: "number" },
+        {
+          key: "is_pro_only",
+          label: "Quyền truy cập",
+          type: "select",
+          options: [
+            { v: "false", l: "Miễn phí (Free)" },
+            { v: "true", l: "Khóa VIP (Chỉ dành cho tài khoản PRO)" }
           ]
         },
         {
-          key: "words", label: "Từ vựng", type: "list",
+          key: "parts",
+          label: "Cấu trúc đề thi (3 Part: Ngữ pháp, Đọc hiểu, Nghe hiểu kèm câu hỏi & giải thích)",
+          type: "json",
+          sample: SAMPLE_TRKI_PARTS
+        }
+      ]
+    },
+    VOCAB_JARS: {
+      label: "🏺 Lọ từ vựng",
+      icon: "🏺",
+      webUrl: "vocabulary.html",
+      source: () => (window.VOCAB_JARS || []),
+      fields: [
+        { key: "id", label: "Mã lọ (ID, ví dụ: jar_auchan, jar_chemodan)", type: "text", required: true },
+        { key: "icon", label: "Icon Emoji (ví dụ: 🛒, 🧳, 🏢, ⚽)", type: "text" },
+        { key: "name", label: "Tên lọ từ vựng", type: "text", required: true },
+        { key: "desc", label: "Mô tả mục đích & ngữ cảnh sử dụng", type: "textarea" },
+        {
+          key: "words",
+          label: "Danh sách mẩu giấy từ vựng trong lọ",
+          type: "list",
           item: [
             { key: "ru", label: "Từ tiếng Nga", type: "text" },
             { key: "vi", label: "Nghĩa tiếng Việt", type: "text" },
-            { key: "note", label: "Ghi chú (giống, loại từ…)", type: "text" }
-          ]
-        },
-        {
-          key: "quiz", label: "Câu hỏi trắc nghiệm", type: "list",
-          item: [
-            { key: "q", label: "Câu hỏi (VI)", type: "textarea" },
-            { key: "ru", label: "Câu gốc tiếng Nga (tùy chọn)", type: "textarea" },
-            { key: "a0", label: "Đáp án 0 (đúng)", type: "text" },
-            { key: "a1", label: "Đáp án 1", type: "text" },
-            { key: "a2", label: "Đáp án 2", type: "text" },
-            { key: "a3", label: "Đáp án 3", type: "text" },
-            { key: "ex", label: "Giải thích (tùy chọn)", type: "textarea" }
+            { key: "note", label: "Ghi chú (giống, ngữ cảnh)", type: "text" }
           ]
         }
       ]
     },
-    GRAMMAR_LESSONS: {
-      label: "📐 Ngữ pháp",
-      icon: "📐",
-      source: () => GRAMMAR_LESSONS,
+    SHOP_PRODUCTS: {
+      label: "🛍️ Shop sản phẩm",
+      icon: "🛍️",
+      webUrl: "shop.html",
+      source: () => (window.SHOP_PRODUCTS || []),
       fields: [
-        { key: "id", label: "ID (không dấu, viết liền)", type: "text", required: true },
-        { key: "title", label: "Tiêu đề tiếng Nga", type: "text" },
-        { key: "vi", label: "Tiêu đề tiếng Việt", type: "text" },
-        { key: "topic", label: "Chủ đề liên quan", type: "text" },
+        { key: "id", label: "Mã sản phẩm (ví dụ: alenka-100g, mishka-candy)", type: "text", required: true },
         {
-          key: "rules", label: "Quy tắc (mỗi dòng 1 mục)", type: "list-lines"
-        },
-        {
-          key: "table", label: "Bảng tóm tắt", type: "group",
-          fields: [
-            { key: "head", label: "Tiêu đề cột (mỗi dòng 1)", type: "list-lines" },
-            {
-              key: "rows", label: "Các hàng (mỗi dòng = 1 hàng, các cột cách nhau bằng | )", type: "list-lines"
-            }
+          key: "category",
+          label: "Ngành hàng",
+          type: "select",
+          options: [
+            { v: "banh_keo", l: "🍬 Bánh kẹo Nga" },
+            { v: "my_pham", l: "🌿 Mỹ phẩm Siberia" },
+            { v: "luu_niem", l: "🪆 Quà lưu niệm Nga" },
+            { v: "dich_vu_du_hoc", l: "🎓 Dịch vụ du học 6730" }
           ]
         },
+        { key: "categoryName", label: "Tên ngành hàng hiển thị", type: "text" },
+        { key: "title", label: "Tên sản phẩm / dịch vụ", type: "text", required: true },
+        { key: "desc", label: "Mô tả sản phẩm", type: "textarea" },
+        { key: "price", label: "Giá bán (VNĐ)", type: "number", required: true },
+        { key: "image", label: "URL ảnh sản phẩm", type: "text" },
+        { key: "badge", label: "Huy hiệu (Bán chạy / Mới / Hot / Thủ công)", type: "text" }
+      ]
+    },
+    PACKAGES: {
+      label: "💎 Gói cước PRO",
+      icon: "💎",
+      webUrl: "index.html#pricing",
+      source: () => (window.PACKAGES || []),
+      fields: [
+        { key: "id", label: "Mã gói cước (ví dụ: pro_6m, pro_1y, pro_vip)", type: "text", required: true },
+        { key: "badge", label: "Huy hiệu thời hạn (ví dụ: 6 THÁNG, 1 NĂM, TRỌN ĐỜI)", type: "text" },
+        { key: "title", label: "Tên gói cước", type: "text", required: true },
+        { key: "desc", label: "Mô tả mục tiêu học tập", type: "textarea" },
+        { key: "price", label: "Giá ưu đãi (VNĐ)", type: "number", required: true },
+        { key: "priceOld", label: "Giá gốc niêm yết (VNĐ)", type: "number" },
         {
-          key: "questions", label: "Câu hỏi", type: "list",
-          item: [
-            { key: "q", label: "Câu hỏi (VI)", type: "textarea" },
-            { key: "ru", label: "Câu gốc tiếng Nga (tùy chọn)", type: "textarea" },
-            { key: "a0", label: "Đáp án 0 (đúng)", type: "text" },
-            { key: "a1", label: "Đáp án 1", type: "text" },
-            { key: "a2", label: "Đáp án 2", type: "text" },
-            { key: "a3", label: "Đáp án 3", type: "text" },
-            { key: "ex", label: "Giải thích (tùy chọn)", type: "textarea" }
+          key: "popular",
+          label: "Đánh dấu Phổ biến nhất",
+          type: "select",
+          options: [
+            { v: "false", l: "Gói tiêu chuẩn" },
+            { v: "true", l: "⭐ Gói phổ biến nhất (Nổi bật)" }
           ]
-        }
+        },
+        { key: "features", label: "Danh sách tính năng quyền lợi (mỗi dòng 1 tính năng)", type: "list-lines" }
+      ]
+    },
+    BLOG_POSTS: {
+      label: "📰 Cẩm nang Blog",
+      icon: "📰",
+      webUrl: "blog.html",
+      source: () => (window.BLOG_POSTS || []),
+      fields: [
+        { key: "title", label: "Tiêu đề bài viết", type: "text", required: true },
+        { key: "tag", label: "Chuyên mục (Lộ trình / KTX / Học bổng 6730 / Đời sống)", type: "text" },
+        { key: "date", label: "Thời gian đăng (ví dụ: Tháng 10, 2026)", type: "text" },
+        { key: "icon", label: "Emoji đại diện bài viết", type: "text" },
+        { key: "excerpt", label: "Tóm tắt ngắn hiển thị ngoài danh sách", type: "textarea" },
+        { key: "content", label: "Nội dung bài viết chi tiết", type: "textarea" }
       ]
     },
     LISTENING_LESSONS: {
-      label: "🎧 Nghe",
+      label: "🎧 Luyện nghe",
       icon: "🎧",
-      source: () => LISTENING_LESSONS,
+      webUrl: "listening.html",
+      source: () => (window.LISTENING_LESSONS || []),
       fields: [
-        { key: "id", label: "ID (không dấu, viết liền)", type: "text", required: true },
+        { key: "id", label: "ID bài nghe (ví dụ: l1, l2)", type: "text", required: true },
         { key: "title", label: "Tiêu đề tiếng Nga", type: "text" },
         { key: "vi", label: "Tiêu đề tiếng Việt", type: "text" },
         { key: "level", label: "Trình độ (ТЭУ / ТРКИ-1…)", type: "text" },
         {
-          key: "lines", label: "Các lượt hội thoại", type: "list",
+          key: "lines",
+          label: "Các lượt hội thoại",
+          type: "list",
           item: [
-            { key: "who", label: "Người nói (Anya / Nhân viên…)", type: "text" },
+            { key: "who", label: "Người nói", type: "text" },
             { key: "ru", label: "Tiếng Nga", type: "textarea" },
             { key: "vi", label: "Tiếng Việt", type: "textarea" }
           ]
         },
         {
-          key: "blanks", label: "Điền từ vào chỗ trống", type: "list",
-          item: [
-            { key: "before", label: "Phần trước chỗ trống", type: "textarea" },
-            { key: "blank", label: "Từ điền vào (đáp án)", type: "text" },
-            { key: "after", label: "Phần sau chỗ trống", type: "textarea" },
-            { key: "hint", label: "Gợi ý tiếng Việt", type: "text" }
-          ]
-        },
-        {
-          key: "dictation", label: "Câu chính tả (mỗi dòng 1 câu)", type: "list-lines"
-        },
-        {
-          key: "questions", label: "Câu hỏi trắc nghiệm", type: "list",
+          key: "questions",
+          label: "Câu hỏi trắc nghiệm nghe hiểu",
+          type: "list",
           item: [
             { key: "q", label: "Câu hỏi (VI)", type: "textarea" },
-            { key: "ru", label: "Câu gốc tiếng Nga (tùy chọn)", type: "textarea" },
-            { key: "a0", label: "Đáp án 0 (đúng)", type: "text" },
-            { key: "a1", label: "Đáp án 1", type: "text" },
-            { key: "a2", label: "Đáp án 2", type: "text" },
-            { key: "a3", label: "Đáp án 3", type: "text" },
-            { key: "ex", label: "Giải thích (tùy chọn)", type: "textarea" }
+            { key: "a0", label: "Đáp án đúng (A0)", type: "text" },
+            { key: "a1", label: "Đáp án sai 1", type: "text" },
+            { key: "a2", label: "Đáp án sai 2", type: "text" },
+            { key: "a3", label: "Đáp án sai 3", type: "text" },
+            { key: "ex", label: "Giải thích", type: "textarea" }
           ]
         }
       ]
     },
     SPEAKING_SETS: {
-      label: "🎙️ Nói",
+      label: "🎙️ Luyện nói",
       icon: "🎙️",
-      source: () => SPEAKING_SETS,
+      webUrl: "speaking.html",
+      source: () => (window.SPEAKING_SETS || []),
       fields: [
-        { key: "id", label: "ID (không dấu, viết liền)", type: "text", required: true },
-        { key: "title", label: "Tên bộ câu", type: "text" },
+        { key: "id", label: "ID bộ luyện nói (ví dụ: spk1, greeting)", type: "text", required: true },
+        { key: "title", label: "Tên chủ đề luyện nói", type: "text" },
         {
-          key: "items", label: "Các câu luyện nói", type: "list",
+          key: "items",
+          label: "Các câu luyện nói",
+          type: "list",
           item: [
             { key: "ru", label: "Tiếng Nga", type: "textarea" },
             { key: "vi", label: "Tiếng Việt", type: "textarea" }
@@ -159,37 +251,48 @@
       ]
     },
     WRITING_TASKS: {
-      label: "✍️ Viết",
+      label: "✍️ Luyện viết",
       icon: "✍️",
-      source: () => WRITING_TASKS,
+      webUrl: "writing.html",
+      source: () => (window.WRITING_TASKS || []),
       fields: [
-        { key: "id", label: "ID (không dấu, viết liền)", type: "text", required: true },
+        { key: "id", label: "ID đề bài viết", type: "text", required: true },
         { key: "level", label: "Cấp độ (ТЭУ / ТРКИ-1)", type: "text" },
         { key: "title", label: "Tên đề bài", type: "text" },
         { key: "prompt", label: "Đề bài tiếng Nga", type: "textarea" },
         { key: "vi", label: "Đề bài tiếng Việt", type: "textarea" },
         { key: "minWords", label: "Số từ tối thiểu", type: "number" },
-        {
-          key: "tips", label: "Mẹo làm bài (mỗi dòng 1)", type: "list-lines"
-        },
-        { key: "model", label: "Bài mẫu tiếng Nga", type: "textarea" }
+        { key: "tips", label: "Mẹo làm bài (mỗi dòng 1 mẹo)", type: "list-lines" },
+        { key: "model", label: "Bài viết mẫu tham khảo", type: "textarea" }
       ]
     },
-    BLOG_POSTS: {
-      label: "📰 Blog",
-      icon: "📰",
-      source: () => BLOG_POSTS,
+    VOCAB_LESSONS: {
+      label: "🎬 Series từ vựng",
+      icon: "🎬",
+      webUrl: "vocabulary.html",
+      source: () => (window.VOCAB_LESSONS || []),
       fields: [
-        { key: "title", label: "Tiêu đề", type: "text", required: true },
-        { key: "tag", label: "Tag (Lộ trình / Mẹo / Kinh nghiệm…)", type: "text" },
-        { key: "date", label: "Ngày (Tháng X, 2026)", type: "text" },
-        { key: "icon", label: "Icon emoji", type: "text" },
-        { key: "excerpt", label: "Tóm tắt ngắn", type: "textarea" }
+        { key: "id", label: "ID bài học (ví dụ: ep1, transport)", type: "text", required: true },
+        { key: "type", label: "Loại bài", type: "select", options: [{ v: "series", l: "Series (tập)" }, { v: "topic", l: "Chủ đề" }] },
+        { key: "ep", label: "Số tập (chỉ với series)", type: "number" },
+        { key: "scene", label: "Emoji cảnh", type: "text" },
+        { key: "ru", label: "Tiêu đề tiếng Nga", type: "text" },
+        { key: "vi", label: "Tiêu đề tiếng Việt", type: "text" },
+        { key: "story", label: "Cốt truyện / bối cảnh", type: "textarea" },
+        {
+          key: "words",
+          label: "Từ vựng trọng tâm",
+          type: "list",
+          item: [
+            { key: "ru", label: "Từ tiếng Nga", type: "text" },
+            { key: "vi", label: "Nghĩa tiếng Việt", type: "text" },
+            { key: "note", label: "Ghi chú", type: "text" }
+          ]
+        }
       ]
     }
   };
 
-  // ====== Lưu trữ ======
   const STORE_KEY = "trki_admin_data";
   const TYPE_KEYS = Object.keys(SCHEMAS);
 
@@ -200,12 +303,16 @@
       return {};
     }
   }
+
   function saveAdminStore(store) {
     localStorage.setItem(STORE_KEY, JSON.stringify(store));
   }
+
   function getAdminList(type) {
-    return loadAdminStore()[type] || [];
+    const store = loadAdminStore();
+    return Array.isArray(store[type]) ? store[type] : [];
   }
+
   function setAdminList(type, arr) {
     const store = loadAdminStore();
     store[type] = arr;
@@ -213,52 +320,94 @@
   }
 
   /**
-   * Trả về mảng đã gộp: gốc + admin (admin ghi đè theo id).
+   * Trả về mảng đã gộp: gốc + admin (admin ghi đè theo id/title, trừ đi các mục đã xoá).
    */
   function getMergedList(type) {
-    const original = SCHEMAS[type].source() || [];
-    const admin = getAdminList(type);
+    const original = (SCHEMAS[type] && SCHEMAS[type].source()) || [];
+    const store = loadAdminStore();
+    const admin = store[type] || [];
+    const deletedSet = new Set((store.__deleted && store.__deleted[type]) || []);
+
     const map = new Map();
-    original.forEach((it) => map.set(it.id || it.title, { ...it, __source: "original" }));
+    original.forEach((it) => {
+      const key = it.id || it.title;
+      if (key && !deletedSet.has(key)) {
+        map.set(key, { ...it, __source: "original" });
+      }
+    });
+
     admin.forEach((it) => {
       const clone = { ...it };
       delete clone.__admin;
-      map.set(it.id || it.title, { ...clone, __source: "admin" });
+      const key = clone.id || clone.title;
+      if (key && !deletedSet.has(key)) {
+        map.set(key, { ...clone, __source: "admin" });
+      }
     });
+
     return Array.from(map.values());
   }
 
-  // ====== Trạng thái admin ======
+  // ====== Trạng thái CMS ======
   let currentType = TYPE_KEYS[0];
-  let editingItem = null;   // item đang sửa (kèm __admin: true nếu là admin)
-  let isCreating = false;   // true nếu đang tạo mới
+  let editingItem = null;
+  let isCreating = false;
+  let searchQuery = "";
 
-  // ====== Khởi tạo giao diện ======
   function init() {
-    // Đợi Auth sẵn sàng
+    // Đợi module Auth sẵn sàng
     if (!window.Auth) {
       setTimeout(init, 100);
       return;
     }
+
     window.Auth.isReady().then(() => {
       applyAuthState(!!window.Auth.user);
       window.Auth.onChange((u) => applyAuthState(!!u));
     });
 
-    // Nút đăng nhập ở gate
+    // Các nút Gate
     const loginBtn = document.getElementById("adminLoginBtn");
     if (loginBtn) {
       loginBtn.addEventListener("click", () => window.Auth.signInWithGoogle());
     }
 
-    // Nút toolbar
+    const switchBtn = document.getElementById("btnSwitchAccount");
+    if (switchBtn) {
+      switchBtn.addEventListener("click", () => window.Auth.signInWithGoogle());
+    }
+
+    const devBtn1 = document.getElementById("btnDevBypass");
+    if (devBtn1) {
+      devBtn1.addEventListener("click", () => enableDevMode());
+    }
+
+    const devBtn2 = document.getElementById("btnDevBypass2");
+    if (devBtn2) {
+      devBtn2.addEventListener("click", () => enableDevMode());
+    }
+
+    // Toolbar buttons
     document.getElementById("btnAdd").addEventListener("click", () => openForm(currentType, null, true));
+    document.getElementById("btnSyncNow").addEventListener("click", () => {
+      syncDataToWeb();
+      toast("⚡ Đã cập nhật và đẩy dữ liệu trực tiếp về toàn bộ trang web!");
+    });
     document.getElementById("btnExport").addEventListener("click", exportData);
     document.getElementById("btnImport").addEventListener("click", () => document.getElementById("importFile").click());
     document.getElementById("importFile").addEventListener("change", onImportFile);
     document.getElementById("btnReset").addEventListener("click", resetAdmin);
 
-    // Modal
+    // Search filter
+    const searchInp = document.getElementById("adminSearch");
+    if (searchInp) {
+      searchInp.addEventListener("input", (e) => {
+        searchQuery = (e.target.value || "").trim().toLowerCase();
+        renderList();
+      });
+    }
+
+    // Modal controls
     document.getElementById("modalClose").addEventListener("click", closeForm);
     document.getElementById("modalCancel").addEventListener("click", closeForm);
     document.getElementById("modalSave").addEventListener("click", saveForm);
@@ -268,116 +417,170 @@
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && document.getElementById("modalBack").classList.contains("open")) closeForm();
     });
+
+    // Lắng nghe dữ liệu thay đổi từ tab khác
+    window.addEventListener("storage", (e) => {
+      if (e.key === STORE_KEY) {
+        renderTabs();
+        renderList();
+        renderStats();
+      }
+    });
+  }
+
+  function enableDevMode() {
+    localStorage.setItem("trki_admin_dev_mode", "true");
+    applyAuthState(true);
+    toast("⚡ Đã kích hoạt Chế độ Quản trị Dev Mode!");
+  }
+
+  function checkIsAdmin(user) {
+    if (localStorage.getItem("trki_admin_dev_mode") === "true") return true;
+    if (!user || !user.email) return false;
+    const list = Array.isArray(window.ADMIN_EMAILS) ? window.ADMIN_EMAILS : [];
+    if (list.length === 0) return false;
+    const email = String(user.email).trim().toLowerCase();
+    return list.some((e) => String(e).trim().toLowerCase() === email);
   }
 
   function applyAuthState(loggedIn) {
     const user = window.Auth && window.Auth.user;
     const isAdmin = loggedIn && checkIsAdmin(user);
 
-    document.getElementById("loginGate").style.display = loggedIn ? "none" : "block";
+    const loginGate = document.getElementById("loginGate");
+    const deniedGate = document.getElementById("deniedGate");
+    const adminArea = document.getElementById("adminArea");
 
-    const denied = document.getElementById("deniedGate");
-    const admin = document.getElementById("adminArea");
-    if (denied) denied.style.display = (loggedIn && !isAdmin) ? "block" : "none";
-    admin.style.display = isAdmin ? "block" : "none";
+    if (loginGate) loginGate.style.display = loggedIn ? "none" : "block";
+    if (deniedGate) deniedGate.style.display = loggedIn && !isAdmin ? "block" : "none";
+    if (adminArea) adminArea.style.display = isAdmin ? "block" : "none";
 
     if (isAdmin) {
       renderTabs();
       renderList();
       renderStats();
+      updateLiveViewLink();
     } else if (loggedIn) {
       const info = document.getElementById("deniedInfo");
-      if (info) info.textContent = `Đang đăng nhập: ${user.email}`;
+      if (info) info.textContent = `Tài khoản hiện tại: ${user.email}`;
     }
   }
 
-  /**
-   * Kiểm tra user hiện tại có trong ADMIN_EMAILS không.
-   * So sánh lowercase, bỏ qua khoảng trắng. Cho phép gọi nhiều lần an toàn.
-   */
-  function checkIsAdmin(user) {
-    if (!user || !user.email) return false;
-    const list = Array.isArray(window.ADMIN_EMAILS) ? window.ADMIN_EMAILS : [];
-    if (list.length === 0) return false; // danh sách rỗng = chặn hết
-    const email = String(user.email).trim().toLowerCase();
-    return list.some((e) => String(e).trim().toLowerCase() === email);
+  function updateLiveViewLink() {
+    const liveBtn = document.getElementById("btnLiveView");
+    if (liveBtn) {
+      const url = SCHEMAS[currentType]?.webUrl || "index.html";
+      liveBtn.href = url;
+    }
   }
 
   function renderTabs() {
     const host = document.getElementById("adminTabs");
+    if (!host) return;
     host.innerHTML = TYPE_KEYS.map((k) => {
-      const schema = SCHEMAS[k];
-      const cnt = getMergedList(k).length;
-      const adminCnt = getAdminList(k).length;
-      return `<button class="admin-tab ${k === currentType ? "active" : ""}" data-type="${k}">
-        ${schema.label}
-        <span style="opacity:.6;font-weight:400">(${cnt}${adminCnt ? ` <span style="color:var(--violet)">+${adminCnt}</span>` : ""})</span>
+      const s = SCHEMAS[k];
+      const merged = getMergedList(k);
+      return `<button class="admin-tab ${k === currentType ? "active" : ""}" data-tab="${k}">
+        ${esc(s.icon)} ${esc(s.label)} (${merged.length})
       </button>`;
     }).join("");
-    host.querySelectorAll(".admin-tab").forEach((b) => {
-      b.addEventListener("click", () => {
-        currentType = b.dataset.type;
+
+    host.querySelectorAll("[data-tab]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentType = btn.dataset.tab;
+        searchQuery = "";
+        const searchInp = document.getElementById("adminSearch");
+        if (searchInp) searchInp.value = "";
         renderTabs();
         renderList();
+        renderStats();
+        updateLiveViewLink();
       });
     });
   }
 
   function renderStats() {
     const host = document.getElementById("adminStats");
+    if (!host) return;
+    const orig = (SCHEMAS[currentType] && SCHEMAS[currentType].source()) || [];
+    const merged = getMergedList(currentType);
+    const adminList = getAdminList(currentType);
     const store = loadAdminStore();
-    const totals = TYPE_KEYS.map((k) => `${SCHEMAS[k].icon} ${getMergedList(k).length}`).join(" · ");
-    const adminTotal = Object.values(store).reduce((s, arr) => s + (Array.isArray(arr) ? arr.length : 0), 0);
+    const deletedCount = ((store.__deleted && store.__deleted[currentType]) || []).length;
+
     host.innerHTML = `
-      <span>Tổng: <b>${totals}</b></span>
-      <span>Admin đã thêm: <b style="color:var(--violet)">${adminTotal}</b> mục</span>
-      <span>Lưu tại: <code>localStorage["${STORE_KEY}"]</code></span>
+      <span>Đang xem: <b>${esc(SCHEMAS[currentType].label)}</b></span>
+      <span>Tổng số mục: <b>${merged.length}</b></span>
+      <span>Gốc: <b>${orig.length}</b></span>
+      <span>Admin chỉnh sửa/thêm: <b>${adminList.length}</b></span>
+      ${deletedCount > 0 ? `<span>Đã ẩn/xoá: <b style="color:var(--red)">${deletedCount}</b></span>` : ""}
+      <span style="color:var(--success);font-weight:600">🟢 Sẵn sàng đẩy về web</span>
     `;
   }
 
   function renderList() {
     const host = document.getElementById("adminList");
-    const list = getMergedList(currentType);
-    const adminIds = new Set(getAdminList(currentType).map((it) => it.id || it.title));
-    if (list.length === 0) {
-      host.innerHTML = `<div class="admin-empty">Chưa có mục nào. Bấm <b>➕ Thêm mới</b> để tạo.</div>`;
+    if (!host) return;
+
+    let items = getMergedList(currentType);
+
+    if (searchQuery) {
+      items = items.filter((it) => {
+        const str = JSON.stringify(it).toLowerCase();
+        return str.includes(searchQuery);
+      });
+    }
+
+    if (items.length === 0) {
+      host.innerHTML = `<div class="admin-empty">
+        <p>Chưa có mục nào ${searchQuery ? "khớp với từ khóa tìm kiếm" : "trong danh mục này"}.</p>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('btnAdd').click()">➕ Thêm mục đầu tiên</button>
+      </div>`;
       return;
     }
-    host.innerHTML = list.map((it) => {
-      const isAdmin = adminIds.has(it.id || it.title);
-      const title = it.title || it.vi || it.ru || it.id || "(không tiêu đề)";
-      const sub = it.vi && it.ru ? `${esc(it.ru)} · ${esc(it.vi)}` : (it.ru || it.vi || it.excerpt || "");
-      const counts = [];
-      if (Array.isArray(it.words)) counts.push(`${it.words.length} từ`);
-      if (Array.isArray(it.script)) counts.push(`${it.script.length} câu`);
-      if (Array.isArray(it.quiz)) counts.push(`${it.quiz.length} câu hỏi`);
-      if (Array.isArray(it.questions)) counts.push(`${it.questions.length} câu hỏi`);
-      if (Array.isArray(it.lines)) counts.push(`${it.lines.length} lượt`);
-      if (Array.isArray(it.items)) counts.push(`${it.items.length} câu`);
-      if (Array.isArray(it.rules)) counts.push(`${it.rules.length} quy tắc`);
-      if (Array.isArray(it.tips)) counts.push(`${it.tips.length} mẹo`);
+
+    host.innerHTML = items.map((it) => {
+      const idKey = it.id || it.title;
+      const isOriginal = it.__source === "original";
+      const isProBadge = it.is_pro_only === true || it.is_pro_only === "true" ? '<span class="admin-item-badge" style="background:#fef3c7;color:#b45309">PRO</span>' : "";
+      const popularBadge = it.popular === true || it.popular === "true" ? '<span class="admin-item-badge" style="background:#fee2e2;color:#b91c1c">⭐ Nổi bật</span>' : "";
+      
+      let sub = "";
+      if (it.level) sub += `[${esc(it.level)}] `;
+      if (it.categoryName) sub += `[${esc(it.categoryName)}] `;
+      if (it.price) sub += `${Number(it.price).toLocaleString("vi-VN")} đ · `;
+      if (it.desc) sub += `${esc(it.desc).slice(0, 75)}…`;
+      else if (it.vi) sub += `${esc(it.vi).slice(0, 75)}…`;
+      else if (it.excerpt) sub += `${esc(it.excerpt).slice(0, 75)}…`;
+
       return `
         <div class="admin-item">
           <div class="admin-item-meta">
             <div class="admin-item-title">
-              ${esc(title)}
-              <span class="admin-item-badge ${isAdmin ? "" : "original"}">${isAdmin ? "ADMIN" : "GỐC"}</span>
+              ${esc(it.title || it.name || it.ru || it.id)}
+              <span class="admin-item-badge ${isOriginal ? "original" : ""}">${isOriginal ? "Gốc" : "Admin"}</span>
+              ${isProBadge}
+              ${popularBadge}
             </div>
-            <div class="admin-item-sub">${esc(sub)}${counts.length ? " · " + counts.join(" · ") : ""}</div>
+            <div class="admin-item-sub">ID: <code>${esc(idKey)}</code> ${sub ? `· ${sub}` : ""}</div>
           </div>
-          <button class="btn btn-soft btn-sm" data-act="edit" data-id="${esc(it.id || it.title)}">Sửa</button>
-          <button class="btn btn-sm" style="background:var(--red-soft);color:var(--red)" data-act="del" data-id="${esc(it.id || it.title)}">Xoá</button>
-        </div>`;
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-soft btn-sm" data-edit="${escAttr(idKey)}">✏️ Sửa</button>
+            <button class="btn btn-soft btn-sm" style="color:var(--red)" data-del="${escAttr(idKey)}">🗑️ Xoá</button>
+          </div>
+        </div>
+      `;
     }).join("");
-    host.querySelectorAll("[data-act='edit']").forEach((b) =>
-      b.addEventListener("click", () => openForm(currentType, b.dataset.id, false))
-    );
-    host.querySelectorAll("[data-act='del']").forEach((b) =>
-      b.addEventListener("click", () => deleteItem(b.dataset.id))
-    );
+
+    host.querySelectorAll("[data-edit]").forEach((b) => {
+      b.addEventListener("click", () => openForm(currentType, b.dataset.edit, false));
+    });
+
+    host.querySelectorAll("[data-del]").forEach((b) => {
+      b.addEventListener("click", () => deleteItem(b.dataset.del));
+    });
   }
 
-  // ====== Form ======
   function openForm(type, idOrTitle, isNew) {
     const schema = SCHEMAS[type];
     editingItem = null;
@@ -394,6 +597,9 @@
       else editingItem = { ...initial, __adminNew: true };
     } else {
       if (schema.fields.find((f) => f.key === "type")) initial.type = "topic";
+      if (schema.fields.find((f) => f.key === "is_pro_only")) initial.is_pro_only = "false";
+      if (schema.fields.find((f) => f.key === "popular")) initial.popular = "false";
+      if (type === "TRKI_BANK") initial.parts = SAMPLE_TRKI_PARTS;
     }
 
     document.getElementById("modalBody").innerHTML = renderForm(schema.fields, initial);
@@ -406,17 +612,23 @@
     editingItem = null;
   }
 
-  /**
-   * Render form theo schema. Hỗ trợ các kiểu:
-   *   text / textarea / number / select / list / list-lines / group
-   */
   function renderForm(fields, data) {
     return fields.map((f) => {
       const val = data[f.key];
       const labelHtml = `<label class="form-label">${esc(f.label)}${f.required ? ' <span style="color:var(--red)">*</span>' : ""}</label>`;
-      if (f.type === "text") return `<div class="form-row"><div>${labelHtml}<input class="form-input" data-key="${f.key}" value="${escAttr(val || "")}" /></div></div>`;
-      if (f.type === "textarea") return `<div class="form-row"><div>${labelHtml}<textarea class="form-textarea" data-key="${f.key}">${esc(val || "")}</textarea></div></div>`;
-      if (f.type === "number") return `<div class="form-row"><div>${labelHtml}<input type="number" class="form-input" data-key="${f.key}" value="${escAttr(val ?? "")}" /></div></div>`;
+
+      if (f.type === "text") {
+        return `<div class="form-row"><div>${labelHtml}<input class="form-input" data-key="${f.key}" value="${escAttr(val || "")}" /></div></div>`;
+      }
+
+      if (f.type === "textarea") {
+        return `<div class="form-row"><div>${labelHtml}<textarea class="form-textarea" data-key="${f.key}">${esc(val || "")}</textarea></div></div>`;
+      }
+
+      if (f.type === "number") {
+        return `<div class="form-row"><div>${labelHtml}<input type="number" class="form-input" data-key="${f.key}" value="${escAttr(val ?? "")}" /></div></div>`;
+      }
+
       if (f.type === "select") {
         const opts = (f.options || []).map((o) => {
           const v = typeof o === "string" ? o : o.v;
@@ -425,23 +637,32 @@
         }).join("");
         return `<div class="form-row"><div>${labelHtml}<select class="form-select" data-key="${f.key}">${opts}</select></div></div>`;
       }
+
+      if (f.type === "json") {
+        const jsonStr = typeof val === "object" ? JSON.stringify(val, null, 2) : (val || "[]");
+        return `<div class="form-section">
+          <h4>
+            ${esc(f.label)}
+            ${f.sample ? `<button class="btn btn-soft btn-sm" type="button" data-fill-sample="${f.key}">📋 Nạp mẫu 3 Part</button>` : ""}
+          </h4>
+          <textarea class="form-textarea" data-key="${f.key}" data-mode="json" style="font-family:Consolas,monospace;font-size:0.83rem;min-height:240px;line-height:1.4">${esc(jsonStr)}</textarea>
+          <p class="form-help">Hỗ trợ soạn đề TRKI 3 phần (Ngữ pháp, Đọc, Nghe) theo định dạng JSON chuẩn. Hệ thống tự động kiểm tra cú pháp khi lưu.</p>
+        </div>`;
+      }
+
       if (f.type === "list-lines") {
-        // Mỗi mục có thể là chuỗi (rules/tips/dictation) hoặc MẢNG cell (table.rows) —
-        // mảng cell được nối bằng " | " để khớp với cách đọc lại khi lưu.
-        const arr = Array.isArray(val)
-          ? val.map((v) => (Array.isArray(v) ? v.join(" | ") : v))
-          : (val ? String(val).split("\n") : []);
+        const arr = Array.isArray(val) ? val : (val ? String(val).split("\n") : []);
         return `<div class="form-section">
           <h4>${esc(f.label)} <button class="btn btn-soft btn-sm" type="button" data-add="lines" data-key="${f.key}">+ Thêm dòng</button></h4>
           <div data-list="${f.key}" data-mode="lines">
             ${arr.map((line) => lineRow(f.key, line)).join("")}
           </div>
-          <p class="form-help">Mỗi dòng = 1 mục trong mảng.</p>
+          <p class="form-help">Mỗi dòng tương ứng 1 mục.</p>
         </div>`;
       }
+
       if (f.type === "list") {
         const arr = Array.isArray(val) ? val : [];
-        // Chuẩn hoá quiz options: a0..a3 thành mảng options + index a
         const normalized = arr.map((it) => normalizeQuizLike(it));
         return `<div class="form-section">
           <h4>${esc(f.label)} <button class="btn btn-soft btn-sm" type="button" data-add="list" data-key="${f.key}">+ Thêm mục</button></h4>
@@ -450,12 +671,7 @@
           </div>
         </div>`;
       }
-      if (f.type === "group") {
-        return `<div class="form-section">
-          <h4>${esc(f.label)}</h4>
-          ${renderForm(f.fields, val || {})}
-        </div>`;
-      }
+
       return "";
     }).join("");
   }
@@ -484,7 +700,6 @@
   }
 
   function wireFormAdds() {
-    // Nút "+ Thêm dòng" / "+ Thêm mục"
     document.querySelectorAll("[data-add]").forEach((b) => {
       b.addEventListener("click", () => {
         const key = b.dataset.key;
@@ -494,7 +709,6 @@
         if (mode === "lines") {
           list.insertAdjacentHTML("beforeend", lineRow(key, ""));
         } else {
-          // Tìm schema của trường để biết item con
           const schema = findSchema(currentType, key);
           if (schema && schema.item) {
             list.insertAdjacentHTML("beforeend", itemRow(key, list.children.length, schema.item, {}));
@@ -502,8 +716,18 @@
         }
       });
     });
-    // Nút xoá từng dòng (event delegation) — chỉ gắn MỘT lần trên modalBody
-    // (modalBody không bị thay thế nên gắn mỗi openForm sẽ tích tụ listener)
+
+    document.querySelectorAll("[data-fill-sample]").forEach((b) => {
+      b.addEventListener("click", () => {
+        const key = b.dataset.fillSample;
+        const tx = document.querySelector(`[data-key="${key}"][data-mode="json"]`);
+        if (tx) {
+          tx.value = JSON.stringify(SAMPLE_TRKI_PARTS, null, 2);
+          toast("Đã nạp mẫu đề thi TRKI 3 Part!");
+        }
+      });
+    });
+
     if (!wireFormAdds._delegated) {
       wireFormAdds._delegated = true;
       document.getElementById("modalBody").addEventListener("click", (e) => {
@@ -530,15 +754,23 @@
     return walk(SCHEMAS[type].fields);
   }
 
-  /**
-   * Đọc dữ liệu từ form thành object. Với quiz/question, options a0..a3 thành mảng options + a.
-   */
   function readForm(type) {
     const out = {};
     const body = document.getElementById("modalBody");
-    body.querySelectorAll("[data-key]").forEach((el) => {
+
+    body.querySelectorAll("[data-key]:not([data-mode='json'])").forEach((el) => {
       out[el.dataset.key] = el.value.trim();
     });
+
+    // JSON fields
+    body.querySelectorAll("[data-key][data-mode='json']").forEach((el) => {
+      try {
+        out[el.dataset.key] = JSON.parse(el.value.trim());
+      } catch (err) {
+        throw new Error(`Cú pháp JSON ở ô "${el.dataset.key}" không hợp lệ: ${err.message}`);
+      }
+    });
+
     // List lines
     body.querySelectorAll("[data-list][data-mode='lines']").forEach((el) => {
       const arr = [];
@@ -548,7 +780,8 @@
       });
       out[el.dataset.list] = arr;
     });
-    // List items (kể cả quiz)
+
+    // List items
     body.querySelectorAll("[data-list][data-mode='list']").forEach((el) => {
       const key = el.dataset.list;
       const arr = [];
@@ -564,142 +797,156 @@
       });
       out[key] = arr;
     });
-    // Sửa riêng table.group: head + rows là các list-lines lồng trong group,
-    // không được đọc qua [data-key] — gom về out.table và xoá key rác top-level.
-    const tableHeadEl = body.querySelector('[data-list="head"][data-mode="lines"]');
-    const tableRowsEl = body.querySelector('[data-list="rows"][data-mode="lines"]');
-    if (tableHeadEl || tableRowsEl) {
-      const head = tableHeadEl ? Array.from(tableHeadEl.querySelectorAll("[data-line]")).map((tx) => tx.value.trim()).filter(Boolean) : [];
-      const rowsRaw = tableRowsEl ? Array.from(tableRowsEl.querySelectorAll("[data-line]")).map((tx) => tx.value.trim()).filter(Boolean) : [];
-      const rows = rowsRaw.map((line) => line.split("|").map((s) => s.trim()));
-      out.table = { head, rows };
-      delete out.head;
-      delete out.rows;
-    }
 
-    // Ép kiểu số cho ep, minWords
-    ["ep", "minWords"].forEach((k) => {
+    // Ép kiểu số
+    ["ep", "minWords", "price", "priceOld", "durationMin", "passPercent"].forEach((k) => {
       if (out[k] !== undefined && out[k] !== "") out[k] = Number(out[k]);
     });
 
+    // Ép kiểu boolean
+    if (out.is_pro_only !== undefined) out.is_pro_only = out.is_pro_only === "true";
+    if (out.popular !== undefined) out.popular = out.popular === "true";
+
     return out;
   }
 
-  /**
-   * Dữ liệu gốc { q, ru, options: [...], a, ex } → dạng form { q, ru, a0..a3, ex }.
-   * Xoay mảng options để đáp án đúng (options[a]) luôn nằm ở a0 — vì form admin
-   * cố định "a0 = đáp án đúng". Khi lưu sẽ rotate lại thành a: 0.
-   */
   function normalizeQuizLike(obj) {
     const out = { ...obj };
     const opts = Array.isArray(out.options) ? out.options.map((x) => (x == null ? "" : String(x))) : null;
-    const aRaw = Math.round(+out.a || 0) || 0;
-    delete out.options;
-    delete out.a;
-    if (opts && opts.length >= 2) {
-      const a = Math.min(Math.max(aRaw, 0), opts.length - 1);
-      const rotated = opts.slice(a).concat(opts.slice(0, a));
-      while (rotated.length < 4) rotated.push("");
-      out.a0 = rotated[0] || "";
-      out.a1 = rotated[1] || "";
-      out.a2 = rotated[2] || "";
-      out.a3 = rotated[3] || "";
+    const aRaw = Math.round(Number(out.a));
+    const a = !isNaN(aRaw) && opts && aRaw >= 0 && aRaw < opts.length ? aRaw : 0;
+    if (opts && opts.length) {
+      out.a0 = opts[a] || "";
+      let slot = 1;
+      for (let i = 0; i < opts.length; i++) {
+        if (i !== a && slot <= 3) {
+          out[`a${slot}`] = opts[i] || "";
+          slot++;
+        }
+      }
+      delete out.options;
+      delete out.a;
     }
     return out;
   }
-  /** Ngược lại: { q, ru, a0..a3, ex } → { q, ru, options: [không rỗng], a: 0, ex }.
-   *  Trả về null nếu câu hỏi không đủ 2 đáp án (bỏ qua khi lưu). */
+
   function denormalizeQuizLike(obj) {
-    const out = { ...obj };
-    const has = "a0" in out || "a1" in out || "a2" in out || "a3" in out;
-    if (!has) return out;
-    const opts = [out.a0, out.a1, out.a2, out.a3].map((x) => String(x || "").trim()).filter(Boolean);
-    delete out.a0; delete out.a1; delete out.a2; delete out.a3;
-    if (opts.length < 2) return null; // câu hỏi hỏng — không lưu
-    out.options = opts;
-    out.a = 0; // a0 luôn là đáp án đúng trong form admin
-    return out;
+    if (!obj.a0 && !obj.q) return obj;
+    const { a0, a1, a2, a3, ...rest } = obj;
+    const options = [a0 || "", a1 || "", a2 || "", a3 || ""].filter((s) => s.length > 0);
+    if (!options.length) return rest;
+    return { ...rest, options, a: 0 };
   }
 
   function saveForm() {
-    const data = readForm(currentType);
-    // Validate id required
+    let data;
+    try {
+      data = readForm(currentType);
+    } catch (err) {
+      toast(err.message);
+      return;
+    }
+
     const idField = SCHEMAS[currentType].fields.find((f) => f.key === "id" || f.key === "title");
     if (idField && idField.required && !data[idField.key]) {
       toast(`${idField.label} là bắt buộc.`);
       return;
     }
+
+    const idKey = data.id || data.title;
     const adminList = getAdminList(currentType);
+
     if (isCreating) {
-      // Tránh trùng id
-      const idKey = data.id || data.title;
       const exists = getMergedList(currentType).some((it) => (it.id || it.title) === idKey);
       if (exists) {
-        toast(`ID "${idKey}" đã tồn tại — chọn ID khác.`);
+        toast(`Mã "${idKey}" đã tồn tại — vui lòng chọn mã khác.`);
         return;
       }
       adminList.push({ ...data, __admin: true });
     } else {
-      const newKey = data.id || data.title;
-      const oldKey = (editingItem && (editingItem.id || editingItem.title)) || newKey;
-      // Đổi ID của mục GỐC (data.js) sẽ tạo bản sao trùng vì không xoá được mục gốc
-      if (editingItem && editingItem.__adminNew && oldKey !== newKey) {
-        toast("Không thể đổi ID của mục gốc (data.js) — chỉ sửa được nội dung.");
+      const oldKey = (editingItem && (editingItem.id || editingItem.title)) || idKey;
+      if (editingItem && editingItem.__adminNew && oldKey !== idKey) {
+        toast("Không thể đổi ID của mục gốc trong data.js — chỉ sửa được nội dung.");
         return;
       }
       const idx = adminList.findIndex((it) => (it.id || it.title) === oldKey);
-      // Merge trên item gốc đang sửa: giữ lại các trường không có trong form
-      // (vd: blanks/dictation của listening, model của writing) khỏi bị mất.
       const item = { ...(editingItem || {}), ...data, __admin: true };
       delete item.__adminNew;
       delete item.__source;
       if (idx >= 0) adminList[idx] = item;
       else adminList.push(item);
     }
-    setAdminList(currentType, adminList);
+
+    // Nếu trước đó từng bị đánh dấu xoá thì khôi phục lại
+    const store = loadAdminStore();
+    store.__deleted = store.__deleted || {};
+    if (Array.isArray(store.__deleted[currentType])) {
+      store.__deleted[currentType] = store.__deleted[currentType].filter((k) => k !== idKey);
+    }
+    store[currentType] = adminList;
+    saveAdminStore(store);
+
+    // Đồng bộ lập tức sang runtime của trang web
+    syncDataToWeb();
+
     closeForm();
     renderTabs();
     renderList();
     renderStats();
-    toast(isCreating ? "Đã thêm!" : "Đã lưu!");
-    // Báo cho app.js merge ngay
-    if (typeof window.mergeAdminData === "function") window.mergeAdminData();
+    toast(isCreating ? "✅ Đã thêm mới và đồng bộ về trang web!" : "✅ Đã lưu và đẩy dữ liệu về trang web!");
   }
 
   function deleteItem(idOrTitle) {
-    const adminList = getAdminList(currentType);
-    const idx = adminList.findIndex((it) => (it.id || it.title) === idOrTitle);
-    if (idx === -1) {
-      toast("Mục này thuộc data.js gốc — chỉ xoá được mục do admin thêm.");
-      return;
+    if (!confirm(`Bạn có chắc chắn muốn xoá mục "${idOrTitle}"?`)) return;
+
+    const store = loadAdminStore();
+    store.__deleted = store.__deleted || {};
+    store.__deleted[currentType] = store.__deleted[currentType] || [];
+    if (!store.__deleted[currentType].includes(idOrTitle)) {
+      store.__deleted[currentType].push(idOrTitle);
     }
-    if (!confirm(`Xoá "${idOrTitle}" khỏi admin? (Mục gốc trong data.js không bị ảnh hưởng)`)) return;
-    adminList.splice(idx, 1);
-    setAdminList(currentType, adminList);
+
+    if (Array.isArray(store[currentType])) {
+      store[currentType] = store[currentType].filter((it) => (it.id || it.title) !== idOrTitle);
+    }
+
+    saveAdminStore(store);
+    syncDataToWeb();
+
     renderTabs();
     renderList();
     renderStats();
-    toast("Đã xoá.");
-    if (typeof window.mergeAdminData === "function") window.mergeAdminData();
+    toast(`🗑️ Đã xoá "${idOrTitle}". Dữ liệu trang web đã cập nhật.`);
+  }
+
+  function syncDataToWeb() {
+    if (typeof window.mergeAdminData === "function") {
+      window.mergeAdminData();
+    }
+    if (typeof window.dispatchEvent === "function") {
+      window.dispatchEvent(new CustomEvent("trki:data-updated", { detail: { type: currentType } }));
+    }
   }
 
   // ====== Export / Import ======
   function exportData() {
-    // Trả về file .js chứa tất cả mảng đã gộp, để paste thẳng vào data.js
     const payload = {};
     TYPE_KEYS.forEach((k) => {
       payload[k] = getMergedList(k).map(stripSource);
     });
+
     const body = TYPE_KEYS.map((k) => `const ${k} = ${JSON.stringify(payload[k], null, 2)};`).join("\n\n");
     const today = new Date().toISOString().slice(0, 10);
-    const content = `// Auto-generated by admin.html on ${today}\n// Ghi đè lên data.js (hoặc merge thủ công nếu muốn giữ data gốc).\n\n${body}\n`;
-    downloadFile(`data-export-${today}.js`, content, "application/javascript");
-    toast("Đã export. Mở file rồi copy nội dung vào data.js.");
+    const content = `// Auto-generated by admin.html on ${today}\n// Có thể dán trực tiếp vào data.js để lưu vĩnh viễn vào mã nguồn.\n\n${body}\n`;
+
+    downloadFile(`trki-data-export-${today}.js`, content, "application/javascript");
+    toast("📤 Đã tải về file export. Dán nội dung vào data.js khi muốn commit git.");
   }
 
   function stripSource(it) {
     const out = { ...it };
     delete out.__source;
+    delete out.__admin;
     return out;
   }
 
@@ -724,15 +971,9 @@
         let text = String(reader.result).trim();
         let obj;
         if (/^[\[{]/.test(text.replace(/^\s*\/\/.*$/gm, "").trim())) {
-          // File .json (hoặc JSON thuần) — bỏ dòng chú thích rồi parse
           obj = JSON.parse(text.replace(/^\s*\/\/.*$/gm, ""));
         } else {
-          // File .js do export tạo ra: `const NAME = [...];` — chạy trong sandbox
-          // function scope và lấy đúng các mảng thuộc TYPE_KEYS. Không dùng eval
-          // trên toàn cục để tránh ghi đè biến toàn cục.
-          const fn = new Function(
-            text + `\n;return { ${TYPE_KEYS.join(", ")} };`
-          );
+          const fn = new Function(text + `\n;return { ${TYPE_KEYS.join(", ")} };`);
           obj = fn();
         }
         importToStore(obj);
@@ -754,38 +995,35 @@
     let count = 0;
     TYPE_KEYS.forEach((k) => {
       if (Array.isArray(obj[k])) {
-        // Bỏ các mục đã có trong data.js gốc (theo id/title)
-        const origIds = new Set((SCHEMAS[k].source() || []).map((it) => it.id || it.title));
-        const adminIds = new Set((store[k] || []).map((it) => it.id || it.title));
+        store[k] = store[k] || [];
         obj[k].forEach((it) => {
           const idKey = it.id || it.title;
           if (!idKey) return;
-          if (origIds.has(idKey) || adminIds.has(idKey)) return;
-          store[k] = store[k] || [];
-          store[k].push({ ...it, __admin: true });
+          const idx = store[k].findIndex((x) => (x.id || x.title) === idKey);
+          if (idx >= 0) store[k][idx] = { ...it, __admin: true };
+          else store[k].push({ ...it, __admin: true });
           count++;
         });
       }
     });
     saveAdminStore(store);
+    syncDataToWeb();
     renderTabs();
     renderList();
     renderStats();
-    toast(`Đã import ${count} mục mới.`);
-    if (typeof window.mergeAdminData === "function") window.mergeAdminData();
+    toast(`📥 Đã import thành công ${count} mục và đẩy về trang web!`);
   }
 
   function resetAdmin() {
-    if (!confirm("Xoá TOÀN BỘ dữ liệu admin đã thêm? (data.js gốc không bị ảnh hưởng)")) return;
+    if (!confirm("Khôi phục TOÀN BỘ dữ liệu về mặc định gốc (từ data.js)? Tất cả chỉnh sửa admin sẽ được đặt lại.")) return;
     localStorage.removeItem(STORE_KEY);
+    syncDataToWeb();
     renderTabs();
     renderList();
     renderStats();
-    toast("Đã xoá sạch dữ liệu admin.");
-    if (typeof window.mergeAdminData === "function") window.mergeAdminData();
+    toast("🗑️ Đã khôi phục dữ liệu gốc từ data.js!");
   }
 
-  // ====== Helpers ======
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({
       "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -795,7 +1033,6 @@
     return esc(s);
   }
 
-  // ====== Khởi động ======
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {

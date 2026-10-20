@@ -345,12 +345,46 @@ const WordDetail = (() => {
           : card
           ? `<button class="btn btn-mastered btn-sm" id="wdMaster">✓ Tick · Đã thuộc</button>`
           : `<button class="btn btn-outline btn-sm" id="wdAdd">+ Thêm vào hàng đợi học</button>`}
+        <button class="btn btn-soft btn-sm" id="wdAddJar">🏺 Bỏ vào Lọ từ vựng</button>
         <button class="btn btn-soft btn-sm" id="wdStudy">📚 Học bằng flashcard</button>
       </div>`;
   }
 
+  function addToJar(entry) {
+    let customJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
+    if (!customJars.length) {
+      customJars = [{
+        id: "custom-jar-default",
+        name: "Lọ từ vựng của tôi 🇷🇺",
+        icon: "🏺",
+        desc: "Các từ vựng đã tra cứu trong từ điển",
+        words: [],
+        is_system: false
+      }];
+    }
+    const targetJar = customJars[0];
+    const exists = (targetJar.words || []).some(w => (w.ru || "").toLowerCase() === (entry.ru || "").toLowerCase());
+    if (exists) {
+      toast(`Từ "${entry.ru}" đã có trong "${targetJar.name}" rồi ✨`);
+      return;
+    }
+    targetJar.words = targetJar.words || [];
+    targetJar.words.push({
+      ru: entry.ru,
+      meaning: (entry.vi || "").split("\n")[0] || "",
+      trans: entry.pron || "",
+      ex: entry.ex || ""
+    });
+    if (typeof STORE !== "undefined") {
+      STORE.set("custom_jars", customJars);
+    }
+    toast(`🏺 Đã cuộn mẩu giấy "${entry.ru}" và bỏ vào "${targetJar.name}"!`);
+  }
+
   function bindSrs(root, entry) {
     if (!window.SRS) return;
+    const addJar = root.querySelector("#wdAddJar");
+    if (addJar) addJar.addEventListener("click", () => addToJar(entry));
     const add = root.querySelector("#wdAdd");
     if (add) add.addEventListener("click", () => {
       const r = SRS.addToQueue(entry.ru);

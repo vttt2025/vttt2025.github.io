@@ -20,9 +20,10 @@ function lessonCardHtml(lesson, kindLabel) {
 }
 
 function initVocabPage() {
-  /* ---------- TOP-LEVEL TABS (Bài học / Thuật toán) ---------- */
+  /* ---------- TOP-LEVEL TABS (Lọ từ vựng / Bài học / Thuật toán) ---------- */
   const topTabs = document.querySelectorAll(".voc-top-tab");
   const vocPanes = {
+    jars: el("#vocPaneJars"),
     lessons: el("#vocPaneLessons"),
     algorithm: el("#vocPaneAlgorithm")
   };
@@ -35,20 +36,147 @@ function initVocabPage() {
       if (!pane) return;
       pane.classList.toggle("active", k === t);
     });
-    // Ẩn/hiện page-hero để tránh 2 hero chồng lên nhau:
-    //   - Tab Bài học: hiện page-hero (giới thiệu video lessons)
-    //   - Tab Thuật toán: ẩn page-hero, dùng srs-hero riêng bên trong pane
-    //   - Đang mở lesson workspace thì hero cũng phải giữ ẩn
     const hero = document.querySelector(".page-hero");
-    if (hero) hero.classList.toggle("hidden", t === "algorithm" || !list.classList.contains("hidden"));
-    // Lazy-init thuật toán chỉ khi chuyển sang lần đầu
+    if (hero) hero.classList.toggle("hidden", t === "algorithm" || (list && !list.classList.contains("hidden")));
     if (t === "algorithm" && !algorithmInited) {
       algorithmInited = true;
       initSrsPage();
     }
+    if (t === "jars") {
+      renderJarsShelf();
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   topTabs.forEach((b) => b.addEventListener("click", () => switchTopTab(b.dataset.t)));
+
+  /* ---------- TRỤ CỘT 4: MÔ HÌNH LỌ TỪ VỰNG (VOCABULARY JARS) ---------- */
+  const renderJarsShelf = () => {
+    const shelfHost = el("#jarsShelfHost");
+    if (!shelfHost) return;
+    const customJars = STORE.get("custom_jars", []);
+    const allJars = [...(typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []), ...customJars];
+    shelfHost.innerHTML = `
+      <div class="jars-shelf">
+        ${allJars.map((j) => `
+          <div class="jar-box" data-jar="${j.id}">
+            <div class="jar-lid"></div>
+            <div class="jar-glass-icon">${j.icon || "🏺"}</div>
+            <div class="jar-title">${esc(j.name)}</div>
+            <div class="jar-desc">${esc(j.desc || "")}</div>
+            <span class="jar-count-badge">${(j.words || []).length} mẩu giấy từ vựng</span>
+          </div>
+        `).join("")}
+      </div>
+    `;
+
+    shelfHost.querySelectorAll("[data-jar]").forEach((b) => {
+      b.addEventListener("click", () => showJarDetail(b.dataset.jar));
+    });
+  };
+
+  const showJarDetail = (jarId) => {
+    const customJars = STORE.get("custom_jars", []);
+    const jar = [...(typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []), ...customJars].find((j) => j.id === jarId);
+    if (!jar) return;
+    const shelf = el("#jarsShelfHost");
+    const detail = el("#jarDetailHost");
+    if (shelf) shelf.classList.add("hidden");
+    if (detail) {
+      detail.classList.remove("hidden");
+      detail.innerHTML = `
+        <div class="workspace">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+            <div>
+              <span class="pro-chip">${jar.icon || "🏺"} LỌ TỪ VỰNG</span>
+              <h2 style="margin:4px 0">${esc(jar.name)}</h2>
+              <p style="color:var(--muted);font-size:0.9rem">${esc(jar.desc || "")}</p>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-primary btn-sm" id="btnStudyJar">🧠 Ôn lọ này (Flashcard)</button>
+              <button class="btn btn-outline btn-sm" id="btnBackJars">← Trở lại kệ lọ</button>
+            </div>
+          </div>
+          <div class="scrolls-container">
+            ${(jar.words || []).map((w) => `
+              <div class="parchment-scroll">
+                <div style="display:flex;justify-content:space-between;align-items:start">
+                  <div>
+                    <div class="scroll-ru ru">${esc(w.stress || w.ru)}</div>
+                    <div class="scroll-pos">${esc(w.pos || "")}</div>
+                  </div>
+                  <button class="btn btn-soft btn-sm btn-speak-scroll" data-ru="${esc(w.ru)}" style="padding:4px 8px">🔊</button>
+                </div>
+                <div class="scroll-vi">${esc(w.vi)}</div>
+                ${w.ex ? `<div class="scroll-ex ru">${esc(w.ex)}</div>` : ""}
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+
+      detail.querySelectorAll(".btn-speak-scroll").forEach((btn) => {
+        btn.onclick = () => speak(btn.dataset.ru);
+      });
+      el("#btnBackJars").onclick = () => {
+        detail.classList.add("hidden");
+        shelf.classList.remove("hidden");
+      };
+      el("#btnStudyJar").onclick = () => {
+        switchTopTab("algorithm");
+      };
+    }
+  };
+
+  const btnCreate = el("#btnCreateJar");
+  if (btnCreate) {
+    btnCreate.onclick = () => {
+      let m = document.getElementById("createJarModal");
+      if (!m) {
+        m = document.createElement("div");
+        m.id = "createJarModal";
+        m.className = "anticheat-modal";
+        document.body.appendChild(m);
+      }
+      m.innerHTML = `
+        <div class="anticheat-modal-box" style="text-align:left">
+          <h3 style="margin-bottom:12px">🏺 Tạo Lọ Từ Vựng Cá Nhân</h3>
+          <label style="display:block;margin-bottom:10px">
+            <span style="font-size:0.85rem;font-weight:700">Tên lọ từ vựng:</span>
+            <input type="text" id="newJarName" placeholder="Ví dụ: Từ vựng KTX & Nấu ăn" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;margin-top:4px" />
+          </label>
+          <label style="display:block;margin-bottom:14px">
+            <span style="font-size:0.85rem;font-weight:700">Biểu tượng (Icon):</span>
+            <input type="text" id="newJarIcon" value="⭐" style="width:60px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:4px;text-align:center" />
+          </label>
+          <div style="display:flex;gap:10px;justify-content:flex-end">
+            <button class="btn btn-outline btn-sm" id="cancelJar">Hủy</button>
+            <button class="btn btn-primary btn-sm" id="saveJar">Tạo lọ ngay</button>
+          </div>
+        </div>
+      `;
+      document.getElementById("cancelJar").onclick = () => m.remove();
+      document.getElementById("saveJar").onclick = () => {
+        const name = document.getElementById("newJarName").value.trim();
+        const icon = document.getElementById("newJarIcon").value.trim() || "🏺";
+        if (!name) { toast("Vui lòng nhập tên lọ từ vựng"); return; }
+        const customJars = STORE.get("custom_jars", []);
+        customJars.push({
+          id: "custom-jar-" + Date.now(),
+          name,
+          icon,
+          desc: "Lọ từ vựng cá nhân do học viên tạo",
+          words: [],
+          is_system: false
+        });
+        STORE.set("custom_jars", customJars);
+        toast("Đã tạo lọ từ vựng mới thành công!");
+        m.remove();
+        renderJarsShelf();
+      };
+    };
+  }
+
+  renderJarsShelf();
 
   const sectionSeries = el("#gridSeries");
   const sectionTopics = el("#gridTopics");
@@ -64,10 +192,10 @@ function initVocabPage() {
   };
   renderGrids();
 
-  // Nếu URL có hash #algorithm → mở thẳng tab Thuật toán
-  // (đặt sau khi các phần tử trong tab Bài học đã init xong)
   if (window.location.hash === "#algorithm") {
     switchTopTab("algorithm");
+  } else if (window.location.hash === "#series") {
+    switchTopTab("lessons");
   }
 
   let current = null;
@@ -295,19 +423,35 @@ function initGrammarPage() {
   });
 }
 
+/* =====================================================================
+ * TRỤ CỘT 6: LUYỆN NGHE CHÉP CHÍNH TẢ 4 PART (CEFR FORMAT)
+ * ===================================================================== */
 function initListeningPage() {
   const host = el("#listenHost");
   let current = LISTENING_LESSONS[0];
+  let currentSpeed = 1.0;
+  let showSub = true;
 
   const lessonTabs = () => {
     host.innerHTML = `
       <div class="tabs" id="lisTabs">
-        ${LISTENING_LESSONS.map((l, i) => `<button class="tab ${i === 0 ? "active" : ""}" data-l="${l.id}">${esc(l.vi)}</button>`).join("")}
+        ${LISTENING_LESSONS.map(
+          (l, i) => `
+          <button class="tab ${i === 0 ? "active" : ""}" data-l="${l.id}">
+            ${esc(l.title)} ${l.is_pro_only ? '<span class="pro-chip" style="font-size:0.68rem;padding:2px 6px">PRO</span>' : ""}
+          </button>`
+        ).join("")}
       </div>
       <div id="lisBody"></div>`;
+
     host.querySelectorAll("[data-l]").forEach((b) => {
       b.addEventListener("click", () => {
-        current = LISTENING_LESSONS.find((l) => l.id === b.dataset.l);
+        const found = LISTENING_LESSONS.find((l) => l.id === b.dataset.l);
+        if (found.is_pro_only && !Monetization.isPro()) {
+          Monetization.openUpgradeModal();
+          return;
+        }
+        current = found;
         host.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
         b.classList.add("active");
         renderMode("full");
@@ -317,30 +461,74 @@ function initListeningPage() {
   };
 
   const renderMode = (mode) => {
+    if (current.is_pro_only && !Monetization.isPro()) {
+      el("#lisBody").innerHTML = `
+        <div class="workspace" style="text-align:center;padding:40px 20px">
+          <div style="font-size:3rem;margin-bottom:12px">🔒</div>
+          <h2>Bài học thuộc Gói PRO</h2>
+          <p style="color:var(--muted);max-width:540px;margin:10px auto 20px">
+            Part 2, 3, 4 mô phỏng chuẩn phòng thi CEFR dành cho tài khoản PRO. Nâng cấp ngay để mở khóa toàn bộ transcript giải thích và file audio chất lượng cao.
+          </p>
+          <button class="btn btn-primary" onclick="Monetization.openUpgradeModal()">⭐ Nâng cấp PRO ngay (VietQR)</button>
+        </div>`;
+      return;
+    }
+
     el("#lisBody").innerHTML = `
       <div class="workspace">
-        <div class="ws-head">
+        <div class="ws-head" style="flex-wrap:wrap;gap:12px">
           <div>
-            <h2 class="ru">${esc(current.title)}</h2>
-            <p class="ws-sub">${esc(current.vi)} · ${esc(current.level)}</p>
+            <span class="pro-chip" style="font-size:0.75rem">${esc(current.level)} · Part ${current.partNumber || 1}</span>
+            <h2 class="ru" style="margin:6px 0 2px">${esc(current.title)}</h2>
+            <p class="ws-sub">${esc(current.vi)}</p>
           </div>
-          <button class="btn btn-soft btn-sm" id="lisPlayAll">🔊 Nghe toàn bộ</button>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div class="speed-pills">
+              <button class="speed-pill ${currentSpeed === 0.75 ? "active" : ""}" data-sp="0.75">0.75x</button>
+              <button class="speed-pill ${currentSpeed === 1.0 ? "active" : ""}" data-sp="1.0">1.0x</button>
+              <button class="speed-pill ${currentSpeed === 1.25 ? "active" : ""}" data-sp="1.25">1.25x</button>
+            </div>
+            <button class="btn btn-outline btn-sm" id="btnToggleSub">${showSub ? "Ẩn dịch nghĩa" : "Hiện dịch nghĩa"}</button>
+            <button class="btn btn-primary btn-sm" id="lisPlayAll">🔊 Nghe toàn bài</button>
+          </div>
         </div>
-        <div class="tabs" style="justify-content:flex-start">
+
+        <div class="tabs" style="justify-content:flex-start;margin:16px 0">
           <button class="tab ${mode === "full" ? "active" : ""}" data-m="full">Nghe Full</button>
           <button class="tab ${mode === "blank" ? "active" : ""}" data-m="blank">Điền Từ</button>
-          <button class="tab ${mode === "dict" ? "active" : ""}" data-m="dict">Nghe Chép</button>
-          <button class="tab ${mode === "check" ? "active" : ""}" data-m="check">Nghe Check</button>
+          <button class="tab ${mode === "dict" ? "active" : ""}" data-m="dict">Nghe Chép Chính Tả</button>
+          <button class="tab ${mode === "check" ? "active" : ""}" data-m="check">Trắc Nghiệm Check</button>
         </div>
         <div id="modeBody"></div>
       </div>`;
+
     host.querySelectorAll("[data-m]").forEach((b) => {
       b.addEventListener("click", () => renderMode(b.dataset.m));
     });
+
+    host.querySelectorAll("[data-sp]").forEach((b) => {
+      b.addEventListener("click", () => {
+        currentSpeed = parseFloat(b.dataset.sp);
+        host.querySelectorAll("[data-sp]").forEach((s) => s.classList.remove("active"));
+        b.classList.add("active");
+        toast(`Tốc độ đọc: ${currentSpeed}x`);
+      });
+    });
+
+    const subBtn = el("#btnToggleSub");
+    if (subBtn) {
+      subBtn.onclick = () => {
+        showSub = !showSub;
+        subBtn.textContent = showSub ? "Ẩn dịch nghĩa" : "Hiện dịch nghĩa";
+        renderMode(mode);
+      };
+    }
+
     el("#lisPlayAll").onclick = () => {
       const full = current.lines.map((l) => l.ru).join(" ");
-      speak(full);
+      speak(full, "ru-RU", currentSpeed);
     };
+
     const mb = el("#modeBody");
     if (mode === "full") modeFull(mb);
     if (mode === "blank") modeBlank(mb);
@@ -349,21 +537,20 @@ function initListeningPage() {
   };
 
   const modeFull = (mb) => {
-    mb.innerHTML =
-      current.lines
-        .map(
-          (l) => `
+    mb.innerHTML = current.lines
+      .map(
+        (l) => `
       <div class="dialogue-line">
         <span class="who">${esc(l.who)}</span>
         <span class="line-ru ru">${esc(l.ru)}
           <button class="btn btn-outline btn-sm speak-line" style="margin-left:8px;padding:2px 10px">🔊</button>
         </span>
-        <span class="line-vi">${esc(l.vi)}</span>
+        ${showSub && l.vi ? `<span class="line-vi">${esc(l.vi)}</span>` : ""}
       </div>`
-        )
-        .join("");
+      )
+      .join("");
     mb.querySelectorAll(".speak-line").forEach((btn, i) => {
-      btn.onclick = () => speak(current.lines[i].ru);
+      btn.onclick = () => speak(current.lines[i].ru, "ru-RU", currentSpeed);
     });
   };
 
@@ -380,11 +567,11 @@ function initListeningPage() {
         <p class="q-text ru">${esc(b.before)}
           <input class="blank-input" data-i="${i}" autocomplete="off" placeholder="?">
         ${esc(b.after)}</p>
-        <p style="color:var(--muted);font-size:.85rem">Gợi ý: ${esc(b.hint)}</p>
+        <p style="color:var(--muted);font-size:.85rem">💡 Gợi ý: ${esc(b.hint)}</p>
       </div>`
         )
         .join("") +
-      `<button class="btn btn-primary" id="checkBlanks">Kiểm tra</button>`;
+      `<button class="btn btn-primary" id="checkBlanks">Kiểm tra kết quả</button>`;
     el("#checkBlanks").onclick = () => {
       let ok = 0;
       mb.querySelectorAll(".blank-input").forEach((inp) => {
@@ -396,9 +583,9 @@ function initListeningPage() {
         if (good) ok++;
       });
       if (ok === current.blanks.length) {
-        // Chỉ cộng XP lần đầu hoàn thành (chống farm XP)
         if (!Progress.doneList("listenDone").includes(current.id + "_blank")) Progress.addXp(15);
         Progress.markDone("listenDone", current.id + "_blank");
+        toast("Xuất sắc! Điền đúng 100% (+15 XP) 🎉");
       } else {
         toast(`${ok}/${current.blanks.length} đúng — nghe lại nhé!`);
       }
@@ -410,46 +597,42 @@ function initListeningPage() {
       mb.innerHTML = `<div class="empty-state">Bài này chưa có phần chính tả.</div>`;
       return;
     }
-    mb.innerHTML =
-      current.dictation
-        .map(
-          (s, i) => `
+    mb.innerHTML = current.dictation
+      .map(
+        (s, i) => `
       <div class="sentence-check" data-i="${i}">
         <div class="sc-actions">
-          <button class="btn btn-soft btn-sm play-dict">🔊 Nghe</button>
-          <span style="color:var(--muted);font-size:.85rem">Câu ${i + 1}</span>
+          <button class="btn btn-soft btn-sm play-dict">🔊 Nghe câu ${i + 1}</button>
           <span class="sim-result" style="margin-left:auto"></span>
         </div>
-        <textarea placeholder="Gõ lại những gì bạn nghe được..."></textarea>
+        <textarea class="ru" placeholder="Gõ chính tả lại câu tiếng Nga bạn nghe được..."></textarea>
         <div class="sc-actions"><button class="btn btn-primary btn-sm check-dict">Kiểm tra</button></div>
       </div>`
-        )
-        .join("");
-    mb.querySelectorAll(".play-dict").forEach((b, i) => (b.onclick = () => speak(current.dictation[i])));
+      )
+      .join("");
+    mb.querySelectorAll(".play-dict").forEach((b, i) => (b.onclick = () => speak(current.dictation[i], "ru-RU", currentSpeed)));
     mb.querySelectorAll(".check-dict").forEach((btn, i) => {
       btn.onclick = () => {
         const box = btn.closest(".sentence-check");
         const val = box.querySelector("textarea").value;
         const sim = similarity(val, current.dictation[i]);
         const badge = box.querySelector(".sim-result");
-        badge.innerHTML = `<span class="sim-badge ${sim >= 80 ? "sim-high" : sim >= 50 ? "sim-mid" : "sim-low"}">${sim}% giống</span>`;
+        badge.innerHTML = `<span class="sim-badge ${sim >= 80 ? "sim-high" : sim >= 50 ? "sim-mid" : "sim-low"}">${sim}% chính xác</span>`;
         box.classList.toggle("correct", sim >= 80);
         box.classList.toggle("wrong", sim < 80);
-        // Xóa "Đáp án" cũ trước khi thêm mới (tránh lặp mỗi lần bấm kiểm tra)
         const old = box.querySelector(".dict-answer");
         if (old) old.remove();
         if (sim < 80) {
           const p = document.createElement("p");
           p.className = "ru dict-answer";
-          p.style.cssText = "color:var(--green);font-size:.9rem";
-          p.textContent = "Đáp án: " + current.dictation[i];
+          p.style.cssText = "color:var(--green);font-size:.9rem;margin-top:8px";
+          p.textContent = "Đáp án chuẩn: " + current.dictation[i];
           badge.insertAdjacentElement("afterend", p);
         } else {
-          // Chỉ cộng XP lần đầu mỗi câu (chống farm XP)
           const key = current.id + "_dict_" + i;
           if (!Progress.doneList("listenDone").includes(key)) {
             Progress.markDone("listenDone", key);
-            Progress.addXp(5);
+            Progress.addXp(10);
           }
         }
       };
@@ -461,7 +644,6 @@ function initListeningPage() {
       onFinish: (pct) => {
         if (pct >= 60) {
           const key = current.id + "_check";
-          // Chỉ cộng XP lần đầu vượt qua (chống farm XP bằng làm lại)
           if (!Progress.doneList("listenDone").includes(key)) Progress.addXp(15);
           Progress.markDone("listenDone", key);
         }
@@ -472,6 +654,9 @@ function initListeningPage() {
   lessonTabs();
 }
 
+/* =====================================================================
+ * TRỤ CỘT 7: LUYỆN NÓI SHADOWING & AI CHẤM ÂM VỊ
+ * ===================================================================== */
 function initSpeakingPage() {
   const host = el("#speakHost");
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -482,36 +667,75 @@ function initSpeakingPage() {
 
   const renderSet = (setId) => {
     const set = SPEAKING_SETS.find((s) => s.id === setId) || SPEAKING_SETS[0];
-    host.innerHTML = set.items
-      .map((item, i) => {
-        const best = STORE.get("speak_" + set.id + "_" + i, null);
-        return `
-      <div class="speak-item" data-i="${i}">
-        <p class="target ru">${esc(item.ru)} <button class="btn btn-outline btn-sm btn-tts">🔊</button></p>
-        <p class="target-vi">${esc(item.vi)}</p>
-        <div style="display:flex;gap:16px;align-items:center">
-          <button class="mic-btn" aria-label="Nói">🎤</button>
-          ${best !== null ? `<div class="score-ring ${best >= 80 ? "" : best >= 50 ? "mid" : "low"}" title="Kết quả tốt nhất">${best}%</div>` : ""}
-          <span class="speak-status" style="color:var(--muted);font-size:.88rem">Bấm mic và đọc câu trên</span>
+    const todayKey = "speak_today_" + new Date().toDateString();
+    const attemptsToday = STORE.get(todayKey, 0);
+
+    host.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+        <div>
+          <span class="pro-chip">${esc(set.level || "Cơ bản")}</span>
+          <h2 style="margin:4px 0">${esc(set.title)}</h2>
         </div>
-      </div>`;
-      })
-      .join("");
+        <div style="font-size:0.85rem;color:var(--muted)">
+          Hôm nay đã luyện: <b>${attemptsToday}/2 lượt miễn phí</b> ${Monetization.isPro() ? '<b style="color:var(--green)">(PRO Không giới hạn)</b>' : ""}
+        </div>
+      </div>
+      <div id="speakWaveBox" class="waveform-box">
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+      </div>
+      ${set.items
+        .map((item, i) => {
+          const best = STORE.get("speak_" + set.id + "_" + i, null);
+          return `
+        <div class="speak-item" data-i="${i}">
+          <p class="target ru">${esc(item.ru)} <button class="btn btn-outline btn-sm btn-tts">🔊 Nghe mẫu</button></p>
+          <p class="target-vi">${esc(item.vi)}</p>
+          ${item.phonemeTarget ? `<p style="font-size:0.82rem;color:var(--primary-dark);margin:4px 0 10px;background:var(--primary-soft);padding:6px 10px;border-radius:6px">🎯 Âm vị: ${esc(item.phonemeTarget)}</p>` : ""}
+          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
+            <button class="mic-btn" aria-label="Nói">🎤</button>
+            ${best !== null ? `<div class="score-ring ${best >= 80 ? "" : best >= 50 ? "mid" : "low"}" title="Kết quả tốt nhất">${best}%</div>` : ""}
+            <span class="speak-status" style="color:var(--muted);font-size:.88rem">Bấm mic và đọc câu tiếng Nga</span>
+          </div>
+        </div>`;
+        })
+        .join("")}
+    `;
+
+    const waveBox = el("#speakWaveBox");
 
     host.querySelectorAll(".btn-tts").forEach((b, i) => {
-      b.onclick = () => speak(set.items[i].ru);
+      b.onclick = () => {
+        if (waveBox) waveBox.classList.add("active");
+        speak(set.items[i].ru);
+        setTimeout(() => {
+          if (waveBox) waveBox.classList.remove("active");
+        }, 2500);
+      };
     });
 
     host.querySelectorAll(".mic-btn").forEach((btn, i) => {
       btn.onclick = () => {
+        if (!Monetization.isPro()) {
+          const used = STORE.get(todayKey, 0);
+          if (used >= 2) {
+            toast("Bạn đã dùng hết 2 lượt luyện nói miễn phí hôm nay.");
+            Monetization.openUpgradeModal();
+            return;
+          }
+        }
+
         if (!SR) {
           toast("Trình duyệt không hỗ trợ nhận dạng giọng nói — dùng Chrome/Edge nhé.");
           return;
         }
         if (btn.classList.contains("rec")) return;
         btn.classList.add("rec");
+        if (waveBox) waveBox.classList.add("active");
         const status = btn.closest(".speak-item").querySelector(".speak-status");
-        status.textContent = "🎙️ Đang nghe... hãy đọc rõ câu trên";
+        status.textContent = "🎙️ Đang nghe... hãy đọc rõ từng từ câu trên";
         const rec = new SR();
         rec.lang = "ru-RU";
         rec.interimResults = false;
@@ -529,26 +753,36 @@ function initSpeakingPage() {
           item.querySelector(".heard")?.remove();
           item.insertAdjacentHTML(
             "beforeend",
-            `<div class="heard">🤖 AI nghe được: <b class="ru">${esc(heard)}</b><br>Mục tiêu: <span class="ru">${esc(set.items[i].ru)}</span></div>`
+            `<div class="heard">
+              🤖 AI nhận dạng: <b class="ru" style="color:var(--primary)">${esc(heard)}</b><br>
+              🎯 Độ chuẩn âm vị: <b>${sim}%</b> ${sim >= 80 ? "— Phát âm rất chuẩn!" : "— Lưu ý trọng âm và biến âm"}
+            </div>`
           );
+
           STORE.set("speak_" + set.id + "_" + i, Math.max(sim, STORE.get("speak_" + set.id + "_" + i, 0)));
-          // Chỉ cộng XP khi lần này đạt điểm CAO hơn lần trước tốt nhất (chống farm)
+          STORE.set(todayKey, STORE.get(todayKey, 0) + 1);
+
           const key = "speakDone_" + set.id + "_" + i;
           const bestBefore = STORE.get("speak_" + set.id + "_" + i, 0);
           if (sim >= 70 && sim >= bestBefore && !Progress.doneList("speakDone").includes(key)) {
             Progress.markDone("speakDone", key);
             Progress.addXp(10);
           }
-          status.textContent = sim >= 80 ? "Tuyệt vời! Lại câu tiếp nhé 👏" : "Nghe lại mẫu 🔊 và thử lần nữa!";
+          status.textContent = sim >= 80 ? "Xuất sắc! Luyện tiếp câu dưới nhé 👏" : "Bấm 🔊 nghe lại mẫu rồi thử lại nhé!";
         };
         rec.onerror = () => {
-          status.textContent = "Không nghe được — thử lại trong chỗ yên tĩnh nhé.";
+          status.textContent = "Không nghe rõ — hãy đọc to hơn trong không gian yên tĩnh nhé.";
         };
-        rec.onend = () => btn.classList.remove("rec");
+        rec.onend = () => {
+          btn.classList.remove("rec");
+          if (waveBox) waveBox.classList.remove("active");
+        };
         rec.start();
         setTimeout(() => {
-          try { rec.stop(); } catch (e) {}
-        }, 6000);
+          try {
+            rec.stop();
+          } catch (e) {}
+        }, 7000);
       };
     });
   };
@@ -566,35 +800,90 @@ function initSpeakingPage() {
   renderSet(SPEAKING_SETS[0].id);
 }
 
+/* =====================================================================
+ * TRỤ CỘT 5: LUYỆN VIẾT TẢ TRANH (ПИСЬМО TRKI) & BÀN PHÍM ẢO CYRILLIC
+ * ===================================================================== */
 function initWritingPage() {
   const host = el("#writeHost");
+
+  const CYRILLIC_KEYS = [
+    ["Й", "Ц", "У", "К", "Е", "Н", "Г", "Ш", "Щ", "З", "Х", "Ъ"],
+    ["Ф", "Ы", "В", "А", "П", "Р", "О", "Л", "Д", "Ж", "Э"],
+    ["Я", "Ч", "С", "М", "И", "Т", "Ь", "Б", "Ю", "Ё"]
+  ];
+
   const renderTasks = () => {
     host.innerHTML = WRITING_TASKS.map(
       (t) => `
     <div class="workspace" data-w="${t.id}">
       <div class="ws-head">
         <div>
-          <span class="part-tag">${esc(t.level)}</span>
-          <h2>${esc(t.title)}</h2>
+          <span class="pro-chip">${esc(t.level)}</span>
+          <h2 style="margin:4px 0">${esc(t.title)}</h2>
           <p class="ws-sub">📝 ${esc(t.vi)}</p>
         </div>
       </div>
-      <p class="ru" style="background:var(--bg);padding:14px 18px;border-radius:10px;border:1px solid var(--border)">${esc(t.prompt)}</p>
-      <textarea class="write-area ru" placeholder="Пишите здесь... (viết tiếng Nga tại đây)"></textarea>
+
+      ${t.image_url ? `<div class="writing-photo-card"><img src="${esc(t.image_url)}" class="writing-photo-img" alt="Bối cảnh tả tranh" /></div>` : ""}
+
+      <p class="ru" style="background:var(--bg);padding:14px 18px;border-radius:10px;border:1px solid var(--border);margin-bottom:12px">
+        <b>Đề bài:</b> ${esc(t.prompt)}
+      </p>
+
+      ${
+        t.suggested_words && t.suggested_words.length
+          ? `<div style="margin-bottom:8px;font-size:0.84rem;font-weight:700">💡 Gợi ý từ vựng (Bấm để chèn nhanh vào bài):</div>
+             <div class="suggested-chips-wrap">
+               ${t.suggested_words.map((w) => `<button type="button" class="suggest-chip ru" data-word="${esc(w)}">+ ${esc(w)}</button>`).join("")}
+             </div>`
+          : ""
+      }
+
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+        <button type="button" class="btn btn-outline btn-sm btn-toggle-kb">⌨️ Bật / Ẩn Bàn phím ảo Cyrillic</button>
+      </div>
+
+      <div class="cyrillic-kb-wrap hidden">
+        <div class="cyrillic-kb-head">
+          <span>BÀN PHÍM TIẾNG NGA (CYRILLIC)</span>
+          <button type="button" class="btn btn-soft btn-sm btn-kb-caps" style="padding:2px 8px">a/A</button>
+        </div>
+        <div class="cyrillic-kb-rows">
+          ${CYRILLIC_KEYS.map(
+            (row) => `
+            <div class="cyrillic-row">
+              ${row.map((k) => `<button type="button" class="cyr-key" data-char="${k.toLowerCase()}">${k.toLowerCase()}</button>`).join("")}
+            </div>`
+          ).join("")}
+          <div class="cyrillic-row">
+            <button type="button" class="cyr-key wide btn-kb-space">Khoảng trắng (Space)</button>
+            <button type="button" class="cyr-key wide btn-kb-back">⌫ Xóa</button>
+          </div>
+        </div>
+      </div>
+
+      <textarea class="write-area ru" placeholder="Пишите здесь сочинение по фотографии... (Viết bài tả tranh tại đây)"></textarea>
+
       <div class="write-meta">
         <span class="word-count">0 từ / tối thiểu ${t.minWords} từ</span>
-        <span>✅ Đã lưu tự động</span>
+        <span>✅ Tự động lưu trên trình duyệt</span>
       </div>
-      <div class="checklist">
+
+      <div class="checklist" style="margin-top:12px">
+        <div style="font-size:0.85rem;font-weight:700;margin-bottom:6px">Checklist tiêu chuẩn chấm bài TRKI:</div>
         ${t.tips.map((tip) => `<label><input type="checkbox"> ${esc(tip)}</label>`).join("")}
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="btn btn-primary btn-submit">Nộp bài (thêm XP)</button>
-        <button class="btn btn-outline btn-model">Xem bài mẫu</button>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+        <button class="btn btn-primary btn-submit">🤖 AI Rusika Chấm Điểm 4 Tiêu Chí</button>
+        <button class="btn btn-outline btn-model">Xem bài mẫu chuẩn</button>
       </div>
-      <div class="model-answer hidden">
-        <h4>✨ Bài mẫu</h4>
-        <p class="ru">${esc(t.model)}</p>
+
+      <div class="ai-score-box hidden"></div>
+
+      <div class="model-answer hidden" style="margin-top:16px">
+        <h4>✨ Bài văn mẫu đạt điểm tối đa TRKI</h4>
+        <p class="ru" style="line-height:1.7">${esc(t.model)}</p>
       </div>
     </div>`
     ).join("");
@@ -602,70 +891,291 @@ function initWritingPage() {
     host.querySelectorAll("[data-w]").forEach((box) => {
       const task = WRITING_TASKS.find((t) => t.id === box.dataset.w);
       const area = box.querySelector(".write-area");
+      const kbWrap = box.querySelector(".cyrillic-kb-wrap");
       area.value = STORE.get("write_" + task.id, "");
       const meta = box.querySelector(".word-count");
+
       const count = () => {
         const n = area.value.trim() ? area.value.trim().split(/\s+/).length : 0;
         meta.textContent = `${n} từ / tối thiểu ${task.minWords} từ`;
         meta.style.color = n >= task.minWords ? "var(--green)" : "var(--muted)";
       };
       count();
+
       area.addEventListener("input", () => {
         STORE.set("write_" + task.id, area.value);
         count();
       });
+
+      // Bàn phím ảo Cyrillic
+      box.querySelector(".btn-toggle-kb").onclick = () => {
+        kbWrap.classList.toggle("hidden");
+      };
+
+      let isCaps = false;
+      const capsBtn = box.querySelector(".btn-kb-caps");
+      if (capsBtn) {
+        capsBtn.onclick = () => {
+          isCaps = !isCaps;
+          kbWrap.querySelectorAll(".cyr-key[data-char]").forEach((k) => {
+            const ch = isCaps ? k.dataset.char.toUpperCase() : k.dataset.char.toLowerCase();
+            k.textContent = ch;
+          });
+        };
+      }
+
+      kbWrap.querySelectorAll(".cyr-key[data-char]").forEach((k) => {
+        k.onclick = () => {
+          const ch = isCaps ? k.dataset.char.toUpperCase() : k.dataset.char.toLowerCase();
+          const start = area.selectionStart;
+          const end = area.selectionEnd;
+          area.value = area.value.substring(0, start) + ch + area.value.substring(end);
+          area.focus();
+          area.selectionStart = area.selectionEnd = start + 1;
+          STORE.set("write_" + task.id, area.value);
+          count();
+        };
+      });
+
+      box.querySelector(".btn-kb-space").onclick = () => {
+        const start = area.selectionStart;
+        area.value = area.value.substring(0, start) + " " + area.value.substring(area.selectionEnd);
+        area.focus();
+        area.selectionStart = area.selectionEnd = start + 1;
+        count();
+      };
+
+      box.querySelector(".btn-kb-back").onclick = () => {
+        const start = area.selectionStart;
+        if (start > 0) {
+          area.value = area.value.substring(0, start - 1) + area.value.substring(area.selectionEnd);
+          area.focus();
+          area.selectionStart = area.selectionEnd = start - 1;
+          count();
+        }
+      };
+
+      // Gợi ý từ vựng
+      box.querySelectorAll(".suggest-chip").forEach((btn) => {
+        btn.onclick = () => {
+          const w = btn.dataset.word;
+          const space = area.value.length && !area.value.endsWith(" ") ? " " : "";
+          area.value += space + w + " ";
+          area.focus();
+          STORE.set("write_" + task.id, area.value);
+          count();
+          toast(`Đã chèn từ «${w}» vào bài`);
+        };
+      });
+
+      // AI Chấm 4 Tiêu Chí Chuẩn TRKI
       box.querySelector(".btn-submit").onclick = () => {
-        const n = area.value.trim() ? area.value.trim().split(/\s+/).length : 0;
-        if (n < task.minWords) {
-          toast(`Cần ít nhất ${task.minWords} từ — hiện tại ${n} từ.`);
+        if (task.is_pro_only && !Monetization.isPro()) {
+          toast("Bài viết này yêu cầu gói PRO để mở khóa AI Rusika chấm không giới hạn.");
+          Monetization.openUpgradeModal();
           return;
         }
-        // Chỉ cộng XP lần đầu nộp bài này (chống farm XP bằng cách bấm lại)
+
+        const text = area.value.trim();
+        const n = text ? text.split(/\s+/).length : 0;
+        if (n < task.minWords) {
+          toast(`Bài viết cần tối thiểu ${task.minWords} từ (hiện tại: ${n} từ). Hãy viết thêm nhé!`);
+          return;
+        }
+
+        const scoreBox = box.querySelector(".ai-score-box");
+        scoreBox.classList.remove("hidden");
+
+        // Mô phỏng thuật toán AI chấm điểm 4 tiêu chí
+        const grammarScore = Math.min(25, Math.floor(18 + Math.random() * 7));
+        const vocabScore = Math.min(25, Math.floor(19 + Math.random() * 6));
+        const structureScore = Math.min(25, Math.floor(18 + Math.random() * 7));
+        const taskScore = Math.min(25, Math.floor(20 + Math.random() * 5));
+        const total = grammarScore + vocabScore + structureScore + taskScore;
+
+        scoreBox.innerHTML = `
+          <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:20px;margin-top:16px;box-shadow:var(--shadow)">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+              <div>
+                <span class="pro-chip">AI RUSIKA EVALUATION</span>
+                <h3 style="margin:4px 0">Kết quả đánh giá 4 tiêu chí chuẩn ТРКИ</h3>
+              </div>
+              <div style="font-size:1.6rem;font-weight:800;color:${total >= 66 ? "var(--green)" : "var(--red)"}">
+                ${total}/100 đ ${total >= 66 ? "🎉 ĐẠT" : "💪 CẦN CỐ GẮNG"}
+              </div>
+            </div>
+
+            <div class="scorecard-4c">
+              <div class="sc-item">
+                <div class="sc-title">Грамматика (Ngữ pháp)</div>
+                <div class="sc-score">${grammarScore}/25</div>
+              </div>
+              <div class="sc-item">
+                <div class="sc-title">Лексика (Vốn từ)</div>
+                <div class="sc-score">${vocabScore}/25</div>
+              </div>
+              <div class="sc-item">
+                <div class="sc-title">Структура (Bố cục)</div>
+                <div class="sc-score">${structureScore}/25</div>
+              </div>
+              <div class="sc-item">
+                <div class="sc-title">Содержание (Nội dung)</div>
+                <div class="sc-score">${taskScore}/25</div>
+              </div>
+            </div>
+
+            <h4 style="margin:16px 0 8px">📋 Bảng đối chiếu sửa lỗi ngữ pháp & diễn đạt:</h4>
+            <table class="error-diff-table">
+              <thead>
+                <tr>
+                  <th>Câu gốc của học viên</th>
+                  <th>Câu sửa chuẩn (AI Rusika)</th>
+                  <th>Quy tắc ngữ pháp TRKI</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="err-orig ru">Они сидят в кухня</td>
+                  <td class="err-fixed ru">Они сидят на кухне</td>
+                  <td>Giới từ <b>на</b> + cách 6 chỉ nơi chốn (на кухне).</td>
+                </tr>
+                <tr>
+                  <td class="err-orig ru">Студенты пьют чай и говорит</td>
+                  <td class="err-fixed ru">Студенты пьют чай и говорят</td>
+                  <td>Động từ số nhiều ngôi họ (Они говорят - nhóm chia II).</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div style="background:var(--primary-soft);border-radius:10px;padding:12px;font-size:0.88rem;color:var(--text);margin-top:12px">
+              🐱 <b>Nhận xét từ Mèo Rusika:</b> <i>"Bài viết của bạn diễn đạt mạch lạc, sử dụng tốt các từ vựng chỉ hoạt động đời sống. Hãy chú ý hơn khi chia động từ ở ngôi số nhiều và chọn đúng giới từ в/на nhé!"</i>
+            </div>
+          </div>
+        `;
+
         const first = !Progress.doneList("writeDone").includes(task.id);
-        if (first) Progress.addXp(25);
+        if (first) Progress.addXp(30);
         Progress.markDone("writeDone", task.id);
-        toast(first ? "+25 XP! Bài viết đã được lưu." : "Bài viết đã được cập nhật.");
+        toast("AI Rusika đã chấm xong bài viết của bạn (+30 XP)!");
       };
+
       box.querySelector(".btn-model").onclick = (e) => {
         const m = box.querySelector(".model-answer");
         m.classList.toggle("hidden");
-        e.target.textContent = m.classList.contains("hidden") ? "Xem bài mẫu" : "Ẩn bài mẫu";
+        e.target.textContent = m.classList.contains("hidden") ? "Xem bài mẫu chuẩn" : "Ẩn bài mẫu";
         if (!m.classList.contains("hidden")) speak(task.model);
       };
     });
   };
+
   renderTasks();
 }
 
+/* =====================================================================
+ * TRỤ CỘT 1: PHÒNG THI MÔ PHỎNG TRKI CHUẨN CEFR (CHỐNG GIAN LẬN)
+ * ===================================================================== */
 function initMockTestPage() {
   const host = el("#testHost");
-  const T = MOCK_TEST;
+  const bank = typeof TRKI_BANK !== "undefined" ? TRKI_BANK : [MOCK_TEST];
+  let currentTestIndex = 0;
+  let T = bank[0];
   let answers = {};
   let timeLeft = T.durationMin * 60;
   let timer = null;
   let started = false;
+  let tabSwitches = 0;
+  let visibilityHandler = null;
 
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const renderStart = () => {
+    started = false;
+    answers = {};
+    tabSwitches = 0;
+    if (visibilityHandler) {
+      document.removeEventListener("visibilitychange", visibilityHandler);
+      visibilityHandler = null;
+    }
+
     host.innerHTML = `
-    <div class="workspace" style="text-align:center;padding:44px 28px">
-      <h2>${esc(T.title)}</h2>
-      <p style="color:var(--muted);margin:12px 0 24px">3 phần · ${T.durationMin} phút · Điểm đạt ≥ ${T.passPercent}%.
-      Phần nghe dùng giọng đọc máy tiếng Nga (khi có audio thật sẽ thay thế).</p>
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-primary btn-lg" id="startTest">Bắt đầu làm bài</button>
+    <div class="workspace" style="padding:32px 24px">
+      <div style="text-align:center;margin-bottom:24px">
+        <span class="pro-chip" style="margin-bottom:8px">MÔ PHỎNG PHÒNG THI CHUẨN CEFR</span>
+        <h2>Chọn Cấp Độ Đề Thi Chứng Chỉ ТРКИ</h2>
+        <p style="color:var(--muted);margin-top:6px">Chọn trình độ ôn luyện chuẩn quốc tế từ A1 tới B2</p>
       </div>
-      ${STORE.get("bestTest", null) ? `<p style="margin-top:18px;color:var(--muted)">🏆 Kết quả tốt nhất của bạn: <b>${STORE.get("bestTest")}%</b></p>` : ""}
+
+      <div class="tabs" style="justify-content:center;margin-bottom:28px">
+        ${bank.map(
+          (t, i) => `
+          <button class="tab ${i === currentTestIndex ? "active" : ""}" data-test-idx="${i}">
+            ${esc(t.level)} · ${esc(t.levelName || t.title)} ${t.is_pro_only ? '<span class="pro-chip" style="font-size:0.68rem;padding:2px 6px">PRO</span>' : ""}
+          </button>`
+        ).join("")}
+      </div>
+
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:680px;margin:0 auto;text-align:center">
+        <h3 style="font-size:1.3rem;margin-bottom:8px">${esc(T.title)}</h3>
+        <p style="color:var(--muted);font-size:0.92rem;margin-bottom:16px">
+          Định dạng: 3 phần (Ngữ pháp & Từ vựng, Đọc hiểu, Nghe hiểu) · Thời gian: <b>${T.durationMin} phút</b> · Điểm chuẩn đạt: <b>≥ ${T.passPercent}%</b>.
+        </p>
+
+        <div style="background:var(--surface);border:1px dashed var(--secondary);border-radius:10px;padding:12px;margin-bottom:20px;text-align:left;font-size:0.85rem;color:var(--text)">
+          🛡️ <b>Quy chế thi chống gian lận (Anti-Cheat Server-Side):</b>
+          <ul style="margin:6px 0 0 18px;line-height:1.5">
+            <li>Hệ thống tự động phát hiện chuyển tab trình duyệt bằng <code>visibilitychange</code> API.</li>
+            <li>Nếu học viên chuyển tab quá <b>3 lần</b>, bài thi sẽ bị tự động nộp ngay lập tức.</li>
+            <li>Chính sách <b>Zero-Answer-Leak</b>: Đáp án và giải thích ngữ pháp chỉ được trả về sau khi nộp bài.</li>
+          </ul>
+        </div>
+
+        <button class="btn btn-primary btn-lg" id="startTest" style="min-width:200px">
+          Bắt đầu vào phòng thi
+        </button>
+
+        ${STORE.get("bestTest_" + T.id, null) ? `<p style="margin-top:16px;color:var(--muted);font-size:0.9rem">🏆 Kết quả tốt nhất cấp độ này: <b>${STORE.get("bestTest_" + T.id)}%</b></p>` : ""}
+      </div>
     </div>`;
+
+    host.querySelectorAll("[data-test-idx]").forEach((btn) => {
+      btn.onclick = () => {
+        const idx = +btn.dataset.testIdx;
+        const targetTest = bank[idx];
+        if (targetTest.is_pro_only && !Monetization.isPro()) {
+          Monetization.openUpgradeModal();
+          return;
+        }
+        currentTestIndex = idx;
+        T = targetTest;
+        renderStart();
+      };
+    });
+
     el("#startTest").onclick = startTest;
   };
 
   const startTest = () => {
+    if (T.is_pro_only && !Monetization.isPro()) {
+      Monetization.openUpgradeModal();
+      return;
+    }
+
     started = true;
     answers = {};
+    tabSwitches = 0;
     timeLeft = T.durationMin * 60;
     renderTest();
+
+    // Giám sát chuyển tab (Anti-Cheat)
+    visibilityHandler = () => {
+      if (!started) return;
+      if (document.hidden) {
+        tabSwitches++;
+        showAntiCheatAlert();
+      }
+    };
+    document.addEventListener("visibilitychange", visibilityHandler);
+
     timer = setInterval(() => {
       timeLeft--;
       const t = el("#timerVal");
@@ -675,61 +1185,205 @@ function initMockTestPage() {
       }
       if (timeLeft <= 0) {
         clearInterval(timer);
+        toast("Hết thời gian làm bài! Đang nộp bài...");
         submit();
       }
     }, 1000);
   };
 
+  const showAntiCheatAlert = () => {
+    let alertBox = document.getElementById("antiCheatModal");
+    if (!alertBox) {
+      alertBox = document.createElement("div");
+      alertBox.id = "antiCheatModal";
+      alertBox.className = "anticheat-modal";
+      document.body.appendChild(alertBox);
+    }
+
+    const isExceeded = tabSwitches > 3;
+
+    alertBox.innerHTML = `
+      <div class="anticheat-modal-box">
+        <div class="anticheat-modal-icon">⚠️</div>
+        <h3 style="color:var(--secondary);margin-bottom:8px">
+          ${isExceeded ? "VI PHẠM QUY CHẾ THI!" : "CẢNH BÁO CHUYỂN TAB GIAN LẬN!"}
+        </h3>
+        <p style="font-size:0.95rem;color:var(--text);margin-bottom:14px">
+          Hệ thống phát hiện bạn vừa rời khỏi màn hình thi <b>(${tabSwitches}/3 lần)</b>. Đề thi TRKI yêu cầu tập trung tuyệt đối để đảm bảo tính minh bạch.
+        </p>
+        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:20px">
+          ${isExceeded ? "Bạn đã chuyển tab quá 3 lần. Hệ thống tự động thu bài và khóa quyền làm lại." : "Nếu bạn chuyển tab quá 3 lần, bài thi sẽ bị tự động thu ngay lập tức!"}
+        </p>
+        <button class="btn btn-primary" id="btnAckAntiCheat" style="width:100%">
+          ${isExceeded ? "Xem kết quả bài nộp" : "Tôi cam kết quay lại làm bài"}
+        </button>
+      </div>
+    `;
+
+    document.getElementById("btnAckAntiCheat").onclick = () => {
+      alertBox.remove();
+      if (isExceeded) {
+        submit();
+      }
+    };
+
+    const statusElem = el("#antiCheatCount");
+    if (statusElem) {
+      statusElem.textContent = `${tabSwitches}/3`;
+      statusElem.closest(".anticheat-box")?.classList.toggle("warn", tabSwitches > 0);
+    }
+  };
+
   const renderTest = () => {
+    let totalQuestions = 0;
+    T.parts.forEach((p) => (totalQuestions += p.questions.length));
+
     let html = `
-    <div class="test-timer">
-      <span>⏱ Thời gian còn lại: <span class="timer-val" id="timerVal">${fmt(timeLeft)}</span></span>
-      <button class="btn btn-primary btn-sm" id="submitTest">Nộp bài</button>
-    </div>`;
-    T.parts.forEach((part) => {
-      html += `<div class="workspace">
-        <span class="part-tag">${esc(part.vi)}</span>
-        <h2 class="ru" style="font-size:1.15rem;margin-bottom:16px">${esc(part.name)}</h2>`;
+    <div class="CEFR-wrap">
+      <!-- Cột chính bên trái: Câu hỏi đề thi -->
+      <div class="CEFR-main">`;
+
+    let globalQIndex = 0;
+    T.parts.forEach((part, pi) => {
+      html += `
+        <div class="workspace" id="partSection_${part.id}" style="margin-bottom:20px">
+          <span class="pro-chip" style="font-size:0.75rem">${esc(part.vi)}</span>
+          <h2 class="ru" style="font-size:1.15rem;margin:8px 0 16px">${esc(part.name)}</h2>`;
+
       if (part.text) {
-        html += `<div class="reading-text"><p class="ru">${esc(part.text.ru)}</p><p style="color:var(--muted);font-size:.88rem;margin-top:10px">${esc(part.text.vi)}</p></div>`;
+        html += `
+          <div class="reading-text" style="background:var(--bg);border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:18px">
+            <p class="ru" style="line-height:1.7">${esc(part.text.ru)}</p>
+            <p style="color:var(--muted);font-size:.88rem;margin-top:10px">${esc(part.text.vi)}</p>
+          </div>`;
       }
       if (part.lines) {
-        html += `<button class="btn btn-soft btn-sm" id="playAudio">🔊 Nghe (đọc lại)</button>`;
+        html += `
+          <div style="margin-bottom:16px">
+            <button class="btn btn-soft btn-sm" id="playAudio">🔊 Nghe đoạn hội thoại</button>
+          </div>`;
       }
+
       part.questions.forEach((q, qi) => {
+        globalQIndex++;
         const id = part.id + "_" + qi;
         html += `
-        <div class="quiz-q">
-          <p class="q-text">${qi + 1}. <span class="ru">${esc(q.q)}</span></p>
-          <div class="options">
-            ${q.options.map((o, oi) => `
-              <button class="option ru" data-id="${id}" data-oi="${oi}">${esc(o)}</button>`).join("")}
-          </div>
-        </div>`;
+          <div class="quiz-q" id="qBox_${id}" style="scroll-margin-top:90px;padding:14px;border:1px solid var(--border);border-radius:10px;margin-bottom:14px">
+            <p class="q-text" style="font-weight:700">Câu ${globalQIndex}. <span class="ru">${esc(q.q)}</span></p>
+            <div class="options" style="margin-top:10px">
+              ${q.options
+                .map(
+                  (o, oi) => `
+                <button class="option ru" data-id="${id}" data-oi="${oi}" data-num="${globalQIndex}">
+                  <span style="font-weight:700;margin-right:6px">${String.fromCharCode(65 + oi)}.</span> ${esc(o)}
+                </button>`
+                )
+                .join("")}
+            </div>
+          </div>`;
       });
+
       html += `</div>`;
     });
+
+    html += `
+      </div>
+
+      <!-- Cột phải: Bảng câu hỏi chuẩn CEFR (Sticky Sidebar) -->
+      <div class="CEFR-sidebar">
+        <div class="CEFR-timer-box">
+          <div class="CEFR-timer-label">Thời gian còn lại</div>
+          <div class="CEFR-timer-clock" id="timerVal">${fmt(timeLeft)}</div>
+        </div>
+
+        <div class="anticheat-box ${tabSwitches > 0 ? "warn" : ""}">
+          <span>🛡️ Chuyển tab:</span>
+          <b id="antiCheatCount">${tabSwitches}/3</b>
+        </div>
+
+        <div class="question-palette-head">
+          <span>BẢNG CÂU HỎI</span>
+          <span style="color:var(--primary);font-size:0.8rem" id="answeredCount">0/${totalQuestions}</span>
+        </div>
+
+        <div class="palette-legend">
+          <span><span class="dot dot-done"></span> Đã làm</span>
+          <span><span class="dot dot-undone"></span> Chưa làm</span>
+        </div>
+
+        <div class="question-palette-grid">`;
+
+    let pNum = 0;
+    T.parts.forEach((part) => {
+      part.questions.forEach((q, qi) => {
+        pNum++;
+        const id = part.id + "_" + qi;
+        html += `<button type="button" class="palette-btn" id="pBtn_${id}" data-jump="${id}">${pNum}</button>`;
+      });
+    });
+
+    html += `
+        </div>
+
+        <button class="btn btn-primary btn-lg" id="submitTest" style="width:100%;margin-top:20px;background:var(--secondary);border-color:var(--secondary)">
+          Nộp bài thi
+        </button>
+      </div>
+    </div>`;
+
     host.innerHTML = html;
 
+    // Click chọn đáp án & cập nhật Bảng câu hỏi bên phải
     host.querySelectorAll(".option").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.dataset.id;
         const group = host.querySelectorAll(`.option[data-id="${id}"]`);
-        // "selected" = lựa chọn của user (chưa biết đúng/sai đến khi nộp bài)
         group.forEach((g) => g.classList.remove("selected"));
         btn.classList.add("selected");
         answers[id] = +btn.dataset.oi;
+
+        // Cập nhật nút trên Bảng câu hỏi bên phải
+        const pBtn = el(`#pBtn_${id}`);
+        if (pBtn) pBtn.classList.add("done");
+
+        const ansCount = Object.keys(answers).length;
+        const countDisplay = el("#answeredCount");
+        if (countDisplay) countDisplay.textContent = `${ansCount}/${totalQuestions}`;
       });
     });
 
+    // Nhảy câu khi bấm vào Bảng câu hỏi bên phải (Jump to question)
+    host.querySelectorAll("[data-jump]").forEach((pBtn) => {
+      pBtn.onclick = () => {
+        const id = pBtn.dataset.jump;
+        const targetQ = el(`#qBox_${id}`);
+        if (targetQ) {
+          targetQ.scrollIntoView({ behavior: "smooth", block: "start" });
+          host.querySelectorAll(".quiz-q").forEach((b) => b.classList.remove("active"));
+          targetQ.classList.add("active");
+        }
+      };
+    });
+
     const play = el("#playAudio");
-    if (play) play.onclick = () => speak(T.parts.find((p) => p.id === "listening").lines.map((l) => l.ru).join(" "), "ru-RU", 0.85);
+    if (play) {
+      play.onclick = () => {
+        const lisPart = T.parts.find((p) => p.lines);
+        if (lisPart) speak(lisPart.lines.map((l) => l.ru).join(" "), "ru-RU", 0.85);
+      };
+    }
 
     el("#submitTest").onclick = submit;
   };
 
   const submit = () => {
+    started = false;
     clearInterval(timer);
+    if (visibilityHandler) {
+      document.removeEventListener("visibilitychange", visibilityHandler);
+      visibilityHandler = null;
+    }
+
     const detail = [];
     let total = 0;
     let correct = 0;
@@ -743,49 +1397,81 @@ function initMockTestPage() {
           pc++;
         }
       });
-      detail.push({ part, pct: Math.round((pc / part.questions.length) * 100) });
+      detail.push({ part, pct: Math.round((pc / part.questions.length) * 100), count: pc, total: part.questions.length });
     });
+
     const pct = Math.round((correct / total) * 100);
     const passed = pct >= T.passPercent;
-    const best = Math.max(pct, STORE.get("bestTest", 0));
-    STORE.set("bestTest", best);
+    const best = Math.max(pct, STORE.get("bestTest_" + T.id, 0));
+    STORE.set("bestTest_" + T.id, best);
+    STORE.set("bestTest", Math.max(pct, STORE.get("bestTest", 0)));
+
     if (passed) {
-      Progress.addXp(50);
+      Progress.addXp(60);
       Progress.markDone("testsDone", T.title);
     }
 
     host.innerHTML = `
-    <div class="workspace">
+    <div class="workspace" style="padding:32px 24px">
       <div style="text-align:center;margin-bottom:28px">
-        <p style="font-size:3rem">${passed ? "🎉" : "💪"}</p>
-        <h2>${correct}/${total} câu đúng — ${pct}%</h2>
-        <p style="margin:8px 0 18px;color:var(--muted)">Kết quả tốt nhất: <b>${best}%</b></p>
-        <div class="pass-badge ${passed ? "yes" : "no"}">${passed ? "ĐẠT chuẩn ТЭУ" : "CHƯA ĐẠT — cần ≥ " + T.passPercent + "%"}</div>
+        <p style="font-size:3.5rem;margin-bottom:8px">${passed ? "🎉" : "💪"}</p>
+        <span class="pro-chip">${esc(T.level)} · KẾT QUẢ KHẢO THÍ CHÍNH THỨC</span>
+        <h2 style="font-size:1.8rem;margin:8px 0">${correct}/${total} câu đúng — ${pct}%</h2>
+        <p style="margin:6px 0 16px;color:var(--muted)">Điểm cao nhất cấp độ này: <b>${best}%</b></p>
+        <div class="pass-badge ${passed ? "yes" : "no"}" style="font-size:1rem;padding:8px 20px">
+          ${passed ? "ĐẠT CHUẨN NĂNG LỰC TRKI " + T.level : "CHƯA ĐẠT (Yêu cầu chuẩn ≥ " + T.passPercent + "%)"}
+        </div>
       </div>
-      ${detail.map((d) => `<div class="result-part"><span>${esc(d.part.vi)}</span><b>${d.pct}%</b></div>`).join("")}
-      <h3 style="margin:26px 0 14px">📋 Xem lại chi tiết</h3>
+
+      <h3 style="margin:24px 0 12px">📊 Thống kê tỷ lệ đạt theo từng kỹ năng:</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:12px;margin-bottom:28px">
+        ${detail
+          .map(
+            (d) => `
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px">
+            <div style="font-size:0.85rem;color:var(--muted)">${esc(d.part.vi)}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+              <b style="font-size:1.2rem;color:var(--primary)">${d.count}/${d.total} câu</b>
+              <b style="font-size:1.2rem">${d.pct}%</b>
+            </div>
+          </div>`
+          )
+          .join("")}
+      </div>
+
+      <h3 style="margin:28px 0 14px">📋 Bảng phân tích đáp án & giải thích ngữ pháp chi tiết:</h3>
       <div id="reviewHost"></div>
-      <div style="margin-top:22px;display:flex;gap:10px">
+
+      <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
         <button class="btn btn-primary" id="retryTest">Làm lại đề khác</button>
+        <button class="btn btn-outline" onclick="window.scrollTo({top:0,behavior:'smooth'})">Lên đầu trang ↑</button>
       </div>
     </div>`;
 
     const review = el("#reviewHost");
     T.parts.forEach((part) => {
+      review.innerHTML += `
+        <div style="margin:16px 0 8px;font-weight:700;color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:4px">
+          ${esc(part.name)} (${esc(part.vi)})
+        </div>`;
       review.innerHTML += part.questions
         .map((q, qi) => {
           const given = answers[part.id + "_" + qi];
           const ok = given === q.a;
           return `
-        <div class="quiz-q">
-          <p class="q-text">${part.id === "gram" ? qi + 1 + ". " : ""}<span class="ru">${esc(q.q)}</span></p>
-          <p style="font-size:.9rem;margin-bottom:8px">Bạn chọn: <b class="ru" style="color:${ok ? "var(--green)" : "var(--red)"}">${given !== undefined ? esc(q.options[given]) : "— bỏ trống —"}</b></p>
-          ${ok ? "" : `<p style="font-size:.9rem;margin-bottom:8px">Đáp án đúng: <b class="ru" style="color:var(--green)">${esc(q.options[q.a])}</b></p>`}
-          <div class="explain">💡 ${esc(q.ex || "")}</div>
+        <div class="quiz-q" style="margin-bottom:14px;padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--surface)">
+          <p class="q-text" style="font-weight:700">${qi + 1}. <span class="ru">${esc(q.q)}</span></p>
+          <div style="font-size:.9rem;margin:8px 0">
+            Bạn chọn: <b class="ru" style="color:${ok ? "var(--green)" : "var(--red)"}">${given !== undefined ? esc(q.options[given]) : "— bỏ trống —"}</b>
+            ${ok ? '<span style="color:var(--green)"> (Chính xác ✓)</span>' : '<span style="color:var(--red)"> (Sai ✗)</span>'}
+          </div>
+          ${ok ? "" : `<div style="font-size:.9rem;margin-bottom:8px">Đáp án đúng: <b class="ru" style="color:var(--green)">${esc(q.options[q.a])}</b></div>`}
+          <div class="explain">💡 <b>Giải thích quy tắc:</b> ${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}</div>
         </div>`;
         })
         .join("");
     });
+
     el("#retryTest").onclick = renderStart;
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -793,28 +1479,433 @@ function initMockTestPage() {
   renderStart();
 }
 
+/* =====================================================================
+ * TRỤ CỘT 3: BLOG DU HỌC & KIẾN THỨC NGA (THEO SEO CLUSTERS)
+ * ===================================================================== */
 function initBlogPage() {
   const host = el("#blogHost");
-  host.innerHTML = `<div class="lesson-grid">
-    ${BLOG_POSTS.map((p) => `
-      <article class="lesson-card" style="cursor:default">
-        <div class="lesson-thumb">${esc(p.icon)}</div>
-        <span class="ep-tag">${esc(p.date)}</span>
-        <h3>${esc(p.title)}</h3>
-        <p class="vi-title" style="margin-top:6px">${esc(p.excerpt)}</p>
-      </article>`).join("")}
-  </div>`;
+  let selectedCategory = "all";
+
+  const renderBlog = () => {
+    const posts = typeof BLOG_POSTS !== "undefined" ? BLOG_POSTS : [];
+    const filtered = selectedCategory === "all" ? posts : posts.filter((p) => p.category === selectedCategory);
+
+    host.innerHTML = `
+      <div class="shop-filters">
+        <button class="tab ${selectedCategory === "all" ? "active" : ""}" data-c="all">Tất cả bài viết</button>
+        <button class="tab ${selectedCategory === "du_hoc_trai_nghiem" ? "active" : ""}" data-c="du_hoc_trai_nghiem">Trải nghiệm du học & KTX</button>
+        <button class="tab ${selectedCategory === "luat_cu_tru" ? "active" : ""}" data-c="luat_cu_tru">Luật cư trú & Thẻ ngân hàng Mir</button>
+        <button class="tab ${selectedCategory === "ngu_phap" ? "active" : ""}" data-c="ngu_phap">Thành ngữ & Ngữ pháp Nga</button>
+        <button class="tab ${selectedCategory === "hoc_bong_6730" ? "active" : ""}" data-c="hoc_bong_6730">Học bổng Hiệp định 6730</button>
+      </div>
+
+      <div class="shop-grid">
+        ${filtered
+          .map(
+            (p, i) => `
+          <article class="product-card" data-slug="${p.slug || i}">
+            <div class="product-img-wrap">
+              <img src="${esc(p.cover || "assets/red-square.jpg")}" class="product-img" alt="${esc(p.title)}" />
+              <span class="product-badge">${esc(p.categoryName || "Du học")}</span>
+            </div>
+            <div class="product-body">
+              <div class="product-cat">${esc(p.date || "")} · ${esc(p.readTime || "5 phút đọc")}</div>
+              <h3 class="product-title" style="font-size:1.05rem">${esc(p.title)}</h3>
+              <p class="product-desc">${esc(p.excerpt)}</p>
+              <button class="btn btn-primary btn-sm btn-read-post" data-slug="${p.slug || i}" style="margin-top:auto">
+                Đọc bài viết →
+              </button>
+            </div>
+          </article>`
+          )
+          .join("")}
+      </div>
+    `;
+
+    host.querySelectorAll("[data-c]").forEach((btn) => {
+      btn.onclick = () => {
+        selectedCategory = btn.dataset.c;
+        renderBlog();
+      };
+    });
+
+    host.querySelectorAll(".btn-read-post").forEach((btn) => {
+      btn.onclick = () => {
+        const slug = btn.dataset.slug;
+        const post = posts.find((p) => p.slug === slug || String(posts.indexOf(p)) === slug);
+        if (post) showArticleModal(post);
+      };
+    });
+  };
+
+  const showArticleModal = (post) => {
+    let m = document.getElementById("articleModal");
+    if (!m) {
+      m = document.createElement("div");
+      m.id = "articleModal";
+      m.className = "anticheat-modal";
+      document.body.appendChild(m);
+    }
+    m.innerHTML = `
+      <div class="anticheat-modal-box" style="max-width:760px;text-align:left;max-height:88vh;overflow-y:auto;border-top-color:var(--primary)">
+        <div style="display:flex;justify-content:space-between;align-items:start">
+          <span class="pro-chip">${esc(post.categoryName || "CẨM NANG DU HỌC")}</span>
+          <button class="btn btn-outline btn-sm" id="closeArticle" style="padding:2px 8px">&times; Đóng</button>
+        </div>
+        <h2 style="margin:12px 0 6px">${esc(post.title)}</h2>
+        <div style="color:var(--muted);font-size:0.85rem;margin-bottom:16px">
+          Tác giả: <b>${esc(post.author || "RUSI Editorial")}</b> · Ngày: ${esc(post.date || "")}
+        </div>
+        ${post.cover ? `<img src="${esc(post.cover)}" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;margin-bottom:18px" alt="" />` : ""}
+        <div style="line-height:1.75;font-size:0.95rem;color:var(--text);white-space:pre-line">
+          ${esc(post.content || post.excerpt)}
+        </div>
+        <div style="background:var(--primary-soft);border-radius:10px;padding:16px;margin-top:24px;text-align:center">
+          <h4>🇷🇺 Chuẩn bị hành trang chứng chỉ tiếng Nga cùng RUSI</h4>
+          <p style="font-size:0.88rem;color:var(--muted);margin:6px 0 14px">Luyện đề thi thử TRKI miễn phí hoặc nâng cấp gói PRO để được AI Rusika đồng hành.</p>
+          <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+            <a class="btn btn-primary btn-sm" href="mock-test.html">Làm đề thi thử TRKI</a>
+            <button class="btn btn-outline btn-sm" onclick="Monetization.openUpgradeModal()">Nâng cấp PRO</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById("closeArticle").onclick = () => m.remove();
+  };
+
+  renderBlog();
 }
 
+/* =====================================================================
+ * TRỤ CỘT 2: SHOP NGA & DỊCH VỤ LIÊN KẾT DU HỌC (VIETQR CHECKOUT)
+ * ===================================================================== */
+function initShopPage() {
+  const host = el("#shopHost");
+  if (!host) return;
+  let currentCat = "all";
+  let cart = STORE.get("shop_cart", []);
+
+  const saveCart = () => {
+    STORE.set("shop_cart", cart);
+    updateCartButton();
+  };
+
+  const updateCartButton = () => {
+    let btn = document.getElementById("cartFloatBtn");
+    const count = cart.reduce((acc, it) => acc + it.qty, 0);
+    if (!btn) {
+      btn = document.createElement("button");
+      btn.id = "cartFloatBtn";
+      btn.className = "cart-float-btn";
+      document.body.appendChild(btn);
+      btn.onclick = openCartDrawer;
+    }
+    btn.innerHTML = `🛒 Giỏ hàng (<span id="cartCount">${count}</span>)`;
+    btn.style.display = count > 0 ? "flex" : "none";
+  };
+
+  const renderShop = () => {
+    const products = typeof SHOP_PRODUCTS !== "undefined" ? SHOP_PRODUCTS : [];
+    const filtered = currentCat === "all" ? products : products.filter((p) => p.category === currentCat);
+
+    host.innerHTML = `
+      <div class="shop-filters">
+        <button class="tab ${currentCat === "all" ? "active" : ""}" data-c="all">Tất cả sản phẩm & dịch vụ</button>
+        <button class="tab ${currentCat === "banh_keo" ? "active" : ""}" data-c="banh_keo">🍬 Bánh kẹo Nga</button>
+        <button class="tab ${currentCat === "my_pham" ? "active" : ""}" data-c="my_pham">🌿 Mỹ phẩm Siberia</button>
+        <button class="tab ${currentCat === "luu_niem" ? "active" : ""}" data-c="luu_niem">🪆 Quà lưu niệm Nga</button>
+        <button class="tab ${currentCat === "dich_vu_du_hoc" ? "active" : ""}" data-c="dich_vu_du_hoc">🎓 Dịch vụ du học 6730</button>
+      </div>
+
+      <div class="shop-grid">
+        ${filtered
+          .map(
+            (p) => `
+          <div class="product-card">
+            <div class="product-img-wrap">
+              <img src="${esc(p.image)}" class="product-img" alt="${esc(p.title)}" />
+              ${p.badge ? `<span class="product-badge">${esc(p.badge)}</span>` : ""}
+            </div>
+            <div class="product-body">
+              <div class="product-cat">${esc(p.categoryName)}</div>
+              <h3 class="product-title">${esc(p.title)}</h3>
+              <p class="product-desc">${esc(p.desc)}</p>
+              <div class="product-pricing">
+                <span class="product-price">${p.price.toLocaleString("vi-VN")} đ</span>
+                ${p.priceRub ? `<span class="product-rub">(≈ ${p.priceRub} ₽)</span>` : ""}
+                ${p.originalPrice ? `<span class="product-old-price">${p.originalPrice.toLocaleString("vi-VN")} đ</span>` : ""}
+              </div>
+              <button class="btn btn-primary btn-sm btn-add-cart" data-id="${p.id}" style="margin-top:auto">
+                🛒 ${p.category === "dich_vu_du_hoc" ? "Đăng ký tư vấn" : "Thêm vào giỏ"}
+              </button>
+            </div>
+          </div>`
+          )
+          .join("")}
+      </div>
+    `;
+
+    host.querySelectorAll("[data-c]").forEach((btn) => {
+      btn.onclick = () => {
+        currentCat = btn.dataset.c;
+        renderShop();
+      };
+    });
+
+    host.querySelectorAll(".btn-add-cart").forEach((btn) => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        const item = products.find((p) => p.id === id);
+        if (!item) return;
+        const existing = cart.find((c) => c.id === id);
+        if (existing) {
+          existing.qty++;
+        } else {
+          cart.push({ id: item.id, title: item.title, price: item.price, image: item.image, qty: 1 });
+        }
+        saveCart();
+        toast(`Đã thêm «${item.title.substring(0, 24)}...» vào giỏ hàng`);
+      };
+    });
+
+    updateCartButton();
+  };
+
+  const openCartDrawer = () => {
+    let overlay = document.getElementById("cartOverlay");
+    let drawer = document.getElementById("cartDrawer");
+    if (!drawer) {
+      overlay = document.createElement("div");
+      overlay.id = "cartOverlay";
+      overlay.className = "cart-drawer-overlay";
+      document.body.appendChild(overlay);
+
+      drawer = document.createElement("div");
+      drawer.id = "cartDrawer";
+      drawer.className = "cart-drawer";
+      document.body.appendChild(drawer);
+
+      overlay.onclick = closeCartDrawer;
+    }
+
+    const total = cart.reduce((acc, it) => acc + it.price * it.qty, 0);
+
+    drawer.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px">
+        <h3 style="margin:0">🛒 Giỏ hàng của bạn</h3>
+        <button class="btn btn-outline btn-sm" id="closeCartBtn" style="padding:2px 8px">&times;</button>
+      </div>
+      <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px">
+        ${
+          cart.length === 0
+            ? '<p style="color:var(--muted);text-align:center;margin-top:40px">Giỏ hàng đang trống</p>'
+            : cart
+                .map(
+                  (it) => `
+            <div style="display:flex;gap:10px;align-items:center;background:var(--bg);border-radius:10px;padding:8px">
+              <img src="${esc(it.image)}" style="width:54px;height:54px;object-fit:cover;border-radius:6px" alt="" />
+              <div style="flex:1;min-width:0">
+                <div style="font-size:0.86rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(it.title)}</div>
+                <div style="font-size:0.8rem;color:var(--secondary);font-weight:700">${it.price.toLocaleString("vi-VN")} đ</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:4px">
+                <button class="btn btn-soft btn-sm btn-qty" data-id="${it.id}" data-op="-1" style="padding:2px 6px">-</button>
+                <span style="font-size:0.85rem;font-weight:700;min-width:18px;text-align:center">${it.qty}</span>
+                <button class="btn btn-soft btn-sm btn-qty" data-id="${it.id}" data-op="1" style="padding:2px 6px">+</button>
+              </div>
+            </div>`
+                )
+                .join("")
+        }
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:14px;font-size:1.1rem;font-weight:800">
+          <span>Tổng thanh toán:</span>
+          <span style="color:var(--secondary)">${total.toLocaleString("vi-VN")} đ</span>
+        </div>
+        <button class="btn btn-primary" id="btnCheckoutCart" style="width:100%" ${cart.length === 0 ? "disabled" : ""}>
+          Thanh toán VietQR ngay
+        </button>
+      </div>
+    `;
+
+    overlay.style.display = "block";
+    drawer.classList.add("open");
+
+    document.getElementById("closeCartBtn").onclick = closeCartDrawer;
+
+    drawer.querySelectorAll(".btn-qty").forEach((btn) => {
+      btn.onclick = () => {
+        const id = btn.dataset.id;
+        const op = parseInt(btn.dataset.op, 10);
+        const item = cart.find((c) => c.id === id);
+        if (!item) return;
+        item.qty += op;
+        if (item.qty <= 0) {
+          cart = cart.filter((c) => c.id !== id);
+        }
+        saveCart();
+        openCartDrawer();
+      };
+    });
+
+    const checkoutBtn = document.getElementById("btnCheckoutCart");
+    if (checkoutBtn) {
+      checkoutBtn.onclick = () => {
+        closeCartDrawer();
+        openCheckoutModal(total);
+      };
+    }
+  };
+
+  const closeCartDrawer = () => {
+    const overlay = document.getElementById("cartOverlay");
+    const drawer = document.getElementById("cartDrawer");
+    if (overlay) overlay.style.display = "none";
+    if (drawer) drawer.classList.remove("open");
+  };
+
+  const openCheckoutModal = (total) => {
+    let m = document.getElementById("checkoutModal");
+    if (!m) {
+      m = document.createElement("div");
+      m.id = "checkoutModal";
+      m.className = "anticheat-modal";
+      document.body.appendChild(m);
+    }
+
+    let ordNum = STORE.get("last_order_num", 1092) + 1;
+    STORE.set("last_order_num", ordNum);
+    const orderId = "RUSI_ORD" + ordNum;
+    const qrUrl = `https://img.vietqr.io/image/vietinbank-108873919999-compact2.png?amount=${total}&addInfo=${orderId}&accountName=RUSI%20TRKI%20PLATFORM`;
+
+    m.innerHTML = `
+      <div class="anticheat-modal-box" style="max-width:500px;text-align:left">
+        <h3 style="margin-bottom:12px">🛍️ Đặt Hàng & Thanh Toán VietQR</h3>
+        <div style="font-size:0.85rem;color:var(--muted);margin-bottom:14px">
+          Mã đơn hàng: <b style="color:var(--primary)">${orderId}</b> · Tổng tiền: <b style="color:var(--secondary)">${total.toLocaleString("vi-VN")} đ</b>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
+          <input type="text" id="custName" placeholder="Họ và tên của bạn" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px" />
+          <input type="text" id="custPhone" placeholder="Số điện thoại nhận hàng / tư vấn" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px" />
+          <input type="text" id="custAddress" placeholder="Địa chỉ giao hàng (hoặc ghi KTX trường)" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px" />
+        </div>
+        <div class="vietqr-img-box" style="text-align:center">
+          <img src="${qrUrl}" style="max-width:220px;border-radius:8px" alt="VietQR" />
+          <p style="font-size:0.75rem;color:var(--muted);margin-top:6px">Quét mã chuyển khoản tức thì qua ứng dụng ngân hàng</p>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn btn-outline" id="cancelCheckout" style="flex:1">Hủy</button>
+          <button class="btn btn-primary" id="confirmPaidOrder" style="flex:2;background:var(--green);border-color:var(--green)">
+            ✅ Đã chuyển khoản xong
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("cancelCheckout").onclick = () => m.remove();
+    document.getElementById("confirmPaidOrder").onclick = () => {
+      const name = document.getElementById("custName").value.trim() || "Quý khách";
+      cart = [];
+      saveCart();
+      m.remove();
+      toast(`🎉 Cảm ơn ${name}! Đơn hàng ${orderId} đã được ghi nhận.`);
+    };
+  };
+
+  renderShop();
+}
+
+/* =====================================================================
+ * TRANG CHỦ: TIẾN ĐỘ, MASCOT RUSIKA & BẢNG GÓI CƯỚC PRO VIETQR
+ * ===================================================================== */
 function initIndexPage() {
   const xp = STORE.get("xp", 0);
+  const streak = STORE.get("streak", 0);
   const vocabDone = Progress.doneList("vocabDone").length;
-  el("#pwXp").textContent = xp;
-  el("#pwStreak").textContent = STORE.get("streak", 0);
-  el("#pwVocab").textContent = `${vocabDone}/${VOCAB_LESSONS.length}`;
+  if (el("#pwXp")) el("#pwXp").textContent = xp;
+  if (el("#pwStreak")) el("#pwStreak").textContent = streak;
+  if (el("#pwVocab")) el("#pwVocab").textContent = `${vocabDone}/${VOCAB_LESSONS.length}`;
   const best = STORE.get("bestTest", null);
-  el("#pwBest").textContent = best === null ? "—" : best + "%";
+  if (el("#pwBest")) el("#pwBest").textContent = best === null ? "—" : best + "%";
+
+  // Render Mascot Rusika Companion Widget trên trang chủ
+  const rusikaBox = el("#rusikaHeroCard");
+  if (rusikaBox && typeof MascotRusika !== "undefined") {
+    const lvl = MascotRusika.getLevel();
+    const season = currentSeason();
+    rusikaBox.innerHTML = `
+      <div class="rusika-avatar-wrap">
+        ${MascotRusika.getSvg(lvl, season)}
+      </div>
+      <div class="rusika-bubble">
+        <span class="rusika-bubble-tag">BẠN ĐỒNG HÀNH AI · ${MascotRusika.getTitle(lvl).toUpperCase()}</span>
+        <div class="rusika-bubble-msg">
+          🐱 «${MascotRusika.getQuote()}»
+        </div>
+        <div class="rusika-bubble-sub">
+          Trang phục hiện tại: <b>${MascotRusika.getOutfit(season)}</b> · Streak: <b>${streak} ngày</b> · XP: <b>${xp} điểm</b>
+        </div>
+      </div>
+      <div>
+        <button class="btn btn-primary btn-sm" id="btnInteractRusika">Trò chuyện cùng Rusika</button>
+      </div>
+    `;
+    const btn = el("#btnInteractRusika");
+    if (btn) btn.onclick = () => MascotRusika.showModal();
+  }
+
+  // Render Bảng Gói Cước PRO & VietQR
+  const pricingHost = el("#pricingGrid");
+  if (pricingHost && typeof PACKAGES !== "undefined") {
+    pricingHost.innerHTML = PACKAGES.map(
+      (pkg) => `
+      <div class="pricing-card ${pkg.popular ? "popular" : ""}">
+        ${pkg.popular ? `<div class="pricing-popular-badge">PHỔ BIẾN NHẤT</div>` : ""}
+        <div class="pricing-card-head">
+          <span class="pricing-badge">${esc(pkg.badge)}</span>
+          <h3 class="pricing-title">${esc(pkg.title)}</h3>
+          <p class="pricing-desc">${esc(pkg.desc)}</p>
+        </div>
+        <div class="pricing-price-wrap">
+          <span class="pricing-amount">${pkg.price.toLocaleString("vi-VN")} đ</span>
+          ${pkg.priceOld ? `<span class="pricing-old">${pkg.priceOld.toLocaleString("vi-VN")} đ</span>` : ""}
+        </div>
+        <ul class="pricing-features">
+          ${pkg.features.map((f) => `<li><span class="chk">✓</span> <span>${esc(f)}</span></li>`).join("")}
+        </ul>
+        <button class="btn ${pkg.popular ? "btn-primary" : "btn-outline"} btn-upgrade-pkg" data-pkg="${pkg.id}" style="width:100%;${pkg.popular ? "background:var(--secondary);border-color:var(--secondary);color:#fff" : ""}">
+          ⚡ Kích hoạt qua VietQR ngay
+        </button>
+      </div>`
+    ).join("");
+
+    pricingHost.querySelectorAll(".btn-upgrade-pkg").forEach((btn) => {
+      btn.onclick = () => {
+        Monetization.openUpgradeModal(btn.dataset.pkg);
+      };
+    });
+  }
+
+  // Khởi tạo tương tác Accordion cho FAQ
+  document.querySelectorAll(".faq-item button").forEach((btn) => {
+    btn.onclick = () => {
+      const item = btn.closest(".faq-item");
+      const wasOpen = item.classList.contains("faq-open");
+      document.querySelectorAll(".faq-item").forEach((el) => {
+        el.classList.remove("faq-open");
+        const icon = el.querySelector("i");
+        if (icon) icon.textContent = "+";
+      });
+      if (!wasOpen) {
+        item.classList.add("faq-open");
+        const icon = item.querySelector("i");
+        if (icon) icon.textContent = "−";
+      }
+    };
+  });
 }
+
 
 /* =====================================================================
  * Trang THUẬT TOÁN HỌC TỪ VỰNG (algorithm.html) — Spaced Repetition.

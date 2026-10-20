@@ -13,10 +13,11 @@ const RusiDict = {
   _cache: {},
   _loading: {},
 
-  /** Chuỗi so sánh: lowercase + bỏ dấu (đ, ô, ả... -> d, o, a). */
+  /** Chuỗi so sánh: lowercase + chuẩn hóa ё->е + bỏ dấu (đ, ô, ả... -> d, o, a). */
   fold(s) {
     return (s || "")
       .toLowerCase()
+      .replace(/ё/g, "е")
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/đ/g, "d");
@@ -114,10 +115,14 @@ const RusiDict = {
   lookup(word) {
     const key = (word || "").toLowerCase().trim();
     if (!key) return null;
+    const normKey = key.replace(/ё/g, "е");
     for (const dir of ["ru-vi", "vi-ru"]) {
       const c = this._cache[dir];
       if (c) {
-        const e = c.map.get(key);
+        let e = c.map.get(key);
+        if (!e && normKey !== key) {
+          e = c.map.get(normKey);
+        }
         if (e) return e;
       }
     }

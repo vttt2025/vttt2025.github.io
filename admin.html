@@ -57,8 +57,8 @@
 
   <section class="page-hero">
     <div class="container">
-      <h1>🛠️ Quản trị nội dung</h1>
-      <p>Thêm, sửa, xoá bài học cho toàn bộ trang. Cần đăng nhập Gmail để truy cập.</p>
+      <h1>🛠️ Quản trị nội dung (CMS)</h1>
+      <p>Quản lý toàn bộ 7 trụ cột: Đề thi TRKI, Lọ từ vựng, Shop hàng Nga, Gói PRO, Blog & Kỹ năng. Dữ liệu được đồng bộ trực tiếp về trang web.</p>
     </div>
   </section>
 
@@ -67,29 +67,52 @@
     <!-- Gate đăng nhập — ẩn khi đã đăng nhập -->
     <div id="loginGate" class="login-gate" style="display:none">
       <h2>🔒 Vui lòng đăng nhập</h2>
-      <p>Trang quản trị yêu cầu đăng nhập bằng tài khoản Google.</p>
-      <button class="btn btn-google" id="adminLoginBtn" type="button">
-        <svg class="g-icon" viewBox="0 0 48 48" aria-hidden="true">
-          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8a12 12 0 1 1 7.9-21l5.7-5.7A20 20 0 1 0 44 24c0-1.2-.1-2.4-.4-3.5z"/>
-          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7A20 20 0 0 0 6.3 14.7z"/>
-          <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2A12 12 0 0 1 12.7 28l-6.6 5.1A20 20 0 0 0 24 44z"/>
-          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.6l6.2 5.2C41 36.7 44 31 44 24c0-1.2-.1-2.4-.4-3.5z"/>
-        </svg>
-        Đăng nhập bằng Google
-      </button>
+      <p>Trang quản trị yêu cầu tài khoản Quản trị viên (Google Auth).</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-google" id="adminLoginBtn" type="button">
+          <svg class="g-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8a12 12 0 1 1 7.9-21l5.7-5.7A20 20 0 1 0 44 24c0-1.2-.1-2.4-.4-3.5z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7A20 20 0 0 0 6.3 14.7z"/>
+            <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2A12 12 0 0 1 12.7 28l-6.6 5.1A20 20 0 0 0 24 44z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.6l6.2 5.2C41 36.7 44 31 44 24c0-1.2-.1-2.4-.4-3.5z"/>
+          </svg>
+          Đăng nhập bằng Google
+        </button>
+        <button class="btn btn-soft" id="btnDevBypass" type="button" title="Dành cho kiểm thử cục bộ offline">
+          ⚡ Vào nhanh chế độ Dev Mode
+        </button>
+      </div>
     </div>
 
-    <!-- Khu vực admin — ẩn khi chưa đăng nhập -->
+    <!-- Gate từ chối quyền — hiển thị khi đã đăng nhập nhưng email không thuộc ADMIN_EMAILS -->
+    <div id="deniedGate" class="login-gate" style="display:none">
+      <h2>🚫 Từ chối truy cập</h2>
+      <p id="deniedInfo" style="color:var(--text);font-weight:600;margin-bottom:8px"></p>
+      <p style="color:var(--muted);margin-bottom:20px">Tài khoản này chưa được cấu hình quyền Admin trong <code>firebase-config.js</code>.</p>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-primary btn-sm" id="btnSwitchAccount" type="button">🔄 Đổi tài khoản Gmail khác</button>
+        <button class="btn btn-soft btn-sm" id="btnDevBypass2" type="button">⚡ Mở bằng Dev Mode (Cục bộ)</button>
+      </div>
+    </div>
+
+    <!-- Khu vực admin — ẩn khi chưa đăng nhập hoặc không đủ quyền -->
     <div id="adminArea" style="display:none">
 
       <div class="admin-stats" id="adminStats"></div>
 
-      <div class="admin-toolbar">
-        <button class="btn btn-primary btn-sm" id="btnAdd" type="button">➕ Thêm mới</button>
-        <button class="btn btn-soft btn-sm" id="btnExport" type="button">📤 Export JSON</button>
-        <button class="btn btn-soft btn-sm" id="btnImport" type="button">📥 Import JSON</button>
-        <input type="file" id="importFile" accept="application/json,.json" style="display:none" />
-        <button class="btn btn-soft btn-sm" id="btnReset" type="button">🗑️ Xoá hết admin</button>
+      <div class="admin-toolbar" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="btn btn-primary btn-sm" id="btnAdd" type="button">➕ Thêm mới</button>
+          <a class="btn btn-outline btn-sm" id="btnLiveView" href="#" target="_blank" title="Mở trang tương ứng của học viên trên tab mới">👁️ Xem trên web</a>
+          <button class="btn btn-primary btn-sm" id="btnSyncNow" type="button" style="background:var(--success);border-color:var(--success)" title="Cập nhật và kích hoạt tức thì dữ liệu trên toàn website">⚡ Đẩy dữ liệu về web</button>
+          <button class="btn btn-soft btn-sm" id="btnExport" type="button">📤 Export JSON / data.js</button>
+          <button class="btn btn-soft btn-sm" id="btnImport" type="button">📥 Import JSON</button>
+          <input type="file" id="importFile" accept="application/json,.json,.js" style="display:none" />
+          <button class="btn btn-soft btn-sm" id="btnReset" type="button" title="Khôi phục dữ liệu nguyên bản từ data.js">🗑️ Khôi phục gốc</button>
+        </div>
+        <div>
+          <input type="text" id="adminSearch" class="form-input" placeholder="🔍 Tìm kiếm bài / đề thi..." style="width:240px;padding:6px 12px;font-size:0.85rem" />
+        </div>
       </div>
 
       <div class="admin-tabs" id="adminTabs"></div>
