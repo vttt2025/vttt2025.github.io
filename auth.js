@@ -1,4 +1,4 @@
-﻿/**
+/**
  * auth.js — Module đăng nhập/đăng xuất bằng Google qua Firebase.
  *
  * Phụ thuộc:
@@ -93,11 +93,11 @@
         if (typeof toast === "function") {
           toast("Chưa cấu hình Firebase — mở firebase-config.js để bật đăng nhập Gmail.");
         }
-        return;
+        return { user: null, error: { message: "Firebase chưa được bật." } };
       }
       if (!window.firebase || !window.firebase.auth) {
         if (typeof toast === "function") toast("Firebase chưa tải xong, thử lại sau giây lát.");
-        return;
+        return { user: null, error: { message: "Firebase chưa tải xong." } };
       }
       try {
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -107,18 +107,117 @@
         if (typeof toast === "function") {
           toast(`Xin chào ${result.user.displayName || "bạn"}! 👋`);
         }
+        return { user: result.user, error: null };
       } catch (err) {
         // Người dùng tự đóng popup — không coi là lỗi.
-        if (err && err.code === "auth/popup-closed-by-user") return;
+        if (err && err.code === "auth/popup-closed-by-user") return { user: null, error: null };
         console.error("[Auth] signIn error:", err);
-        if (typeof toast === "function") {
-          const msg =
-            err && err.code === "auth/unauthorized-domain"
-              ? "Domain này chưa được phép — thêm vào Firebase > Authentication > Authorized domains."
-              : "Đăng nhập thất bại, thử lại sau.";
-          toast(msg);
+        let msg = "Đăng nhập thất bại, thử lại sau.";
+        if (err && err.code === "auth/unauthorized-domain") {
+          msg = "Domain này chưa được phép — thêm vào Firebase > Authentication > Authorized domains.";
         }
+        if (typeof toast === "function") toast(msg);
+        return { user: null, error: { message: msg, code: err && err.code } };
       }
+    },
+
+    /** Đăng nhập bằng Email & Mật khẩu */
+    async signInWithEmail(email, password) {
+      if (!email || !password) {
+        return { user: null, error: { message: "Vui lòng nhập đầy đủ email và mật khẩu." } };
+      }
+      if (!window.FIREBASE_ENABLED || !window.firebase || !window.firebase.auth) {
+        const guestName = email.split("@")[0];
+        const simulatedUser = {
+          uid: "local_" + btoa(encodeURIComponent(email)).slice(0, 12),
+          name: guestName,
+          email: email,
+          photo: "",
+          provider: "password"
+        };
+        this.user = simulatedUser;
+        if (window.STORE) window.STORE.set("auth_user", simulatedUser);
+        this._emit(this.user);
+        if (typeof toast === "function") toast(`Xin chào ${guestName}! 👋`);
+        return { user: this.user, error: null };
+      }
+      try {
+        const result = await firebase.auth().signInWithEmailAndPassword(email, password);
+        if (typeof toast === "function") {
+          toast(`Xin chào ${result.user.displayName || result.user.email}! 👋`);
+        }
+        return { user: result.user, error: null };
+      } catch (err) {
+        console.error("[Auth] signInWithEmail error:", err);
+        let msg = "Đăng nhập thất bại, vui lòng thử lại.";
+        if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password" || err.code === "auth/invalid-credential") {
+          msg = "Email hoặc mật khẩu không chính xác.";
+        } else if (err.code === "auth/invalid-email") {
+          msg = "Địa chỉ email không hợp lệ.";
+        } else if (err.code === "auth/too-many-requests") {
+          msg = "Quá nhiều lần thử thất bại. Vui lòng thử lại sau ít phút.";
+        }
+        return { user: null, error: { message: msg, code: err.code } };
+      }
+    },
+
+    /** Đăng ký tài khoản mới bằng Email & Mật khẩu */
+    async signUpWithEmail(email, password) {
+      if (!email || !password) {
+        return { user: null, error: { message: "Vui lòng nhập đầy đủ email và mật khẩu." } };
+      }
+      if (password.length < 6) {
+        return { user: null, error: { message: "Mật khẩu phải có tối thiểu 6 ký tự." } };
+      }
+      if (!window.FIREBASE_ENABLED || !window.firebase || !window.firebase.auth) {
+        const guestName = email.split("@")[0];
+        const simulatedUser = {
+          uid: "local_" + btoa(encodeURIComponent(email)).slice(0, 12),
+          name: guestName,
+          email: email,
+          photo: "",
+          provider: "password"
+        };
+        this.user = simulatedUser;
+        if (window.STORE) window.STORE.set("auth_user", simulatedUser);
+        this._emit(this.user);
+        if (typeof toast === "function") toast(`Tạo tài khoản thành công! Xin chào ${guestName}! 👋`);
+        return { user: this.user, error: null };
+      }
+      try {
+        const result = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        if (typeof toast === "function") {
+          toast("Tạo tài khoản thành công! Chào mừng bạn! 🎉");
+        }
+        return { user: result.user, error: null };
+      } catch (err) {
+        console.error("[Auth] signUpWithEmail error:", err);
+        let msg = "Đăng ký thất bại, vui lòng thử lại.";
+        if (err.code === "auth/email-already-in-use") {
+          msg = "Email này đã được sử dụng. Vui lòng chuyển sang Đăng nhập.";
+        } else if (err.code === "auth/weak-password") {
+          msg = "Mật khẩu quá yếu (cần tối thiểu 6 ký tự).";
+        } else if (err.code === "auth/invalid-email") {
+          msg = "Địa chỉ email không hợp lệ.";
+        }
+        return { user: null, error: { message: msg, code: err.code } };
+      }
+    },
+
+    /** Đăng nhập nhanh với tư cách Khách */
+    continueAsGuest() {
+      const guest = {
+        uid: "guest_" + Date.now(),
+        name: "Học viên Khách",
+        email: "khach@rusitrki.com",
+        photo: "",
+        provider: "guest"
+      };
+      this.user = guest;
+      if (window.STORE) window.STORE.set("auth_user", guest);
+      this._emit(guest);
+      if (typeof toast === "function") toast("Chào mừng bạn trải nghiệm với tư cách Khách! 👋");
+      return guest;
     },
 
     /** Đăng xuất khỏi Firebase. */

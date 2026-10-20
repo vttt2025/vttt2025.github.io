@@ -755,12 +755,41 @@ CREATE POLICY "Super Admins view audit logs" ON admin_audit_logs FOR SELECT USIN
 
 9. **Quy chuẩn Deploy GitHub Pages & Cloudflare Cache Invalidation**:
 * **Bắt buộc file `.nojekyll`**: Tại thư mục gốc của repository phải luôn duy trì tệp `.nojekyll` (dung lượng 0 bytes) nhằm chỉ thị GitHub Pages bỏ qua bộ xử lý Jekyll, chuyển trực tiếp các file tĩnh HTML/JS/CSS và tránh lỗi build / 403.
-* **Cache-Busting Query Parameter (`?v=X.Y`)**: Mọi file HTML khi nhúng tài nguyên nội bộ (`styles.css`, `data.js`, `auth.js`, `app.js`, `pages.js`, `admin.js`, `srs.js`) bắt buộc phải gắn tham số phiên bản (hiện tại: `?v=2.6`). Do Cloudflare và GitHub Pages cấu hình `Cache-Control: max-age=14400` (4 tiếng), việc gắn query parameter buộc trình duyệt và CDN nạp ngay phiên bản mới nhất, tránh tình trạng local hiển thị một kiểu nhưng website trên mạng vẫn hiện phiên bản cũ.
+* **Cache-Busting Query Parameter (`?v=X.Y`)**: Mọi file HTML khi nhúng tài nguyên nội bộ (`styles.css`, `data.js`, `auth.js`, `app.js`, `pages.js`, `admin.js`, `srs.js`) bắt buộc phải gắn tham số phiên bản (hiện tại: `?v=2.7`). Do Cloudflare và GitHub Pages cấu hình `Cache-Control: max-age=14400` (4 tiếng), việc gắn query parameter buộc trình duyệt và CDN nạp ngay phiên bản mới nhất, tránh tình trạng local hiển thị một kiểu nhưng website trên mạng vẫn hiện phiên bản cũ.
 * **Thao tác Hard Reload cho người dùng**: Sau mỗi lần `git push`, hướng dẫn người dùng nhấn `Ctrl + F5` (hoặc `Cmd + Shift + R` trên Mac) hoặc mở tab Ẩn danh (Incognito) nếu trình duyệt còn lưu cache từ phiên trước.
 
 10. **Quy chuẩn Typography & Xử lý Font tiếng Việt / tiếng Nga**:
-* **Phông chữ chủ đạo**: Tải đầy đủ bộ ký tự `Inter` (weights 300 đến 900) đồng bộ trên **toàn bộ 9 trang HTML** qua thẻ `<link>` và nạp dự phòng qua `@import` tại đầu tệp `styles.css`. Đảm bảo font chữ thương hiệu `RusiTRKI` ở Header và toàn bộ văn bản luôn cố định 100%, tuyệt đối không bị nhảy phông sang Arial/Segoe UI khi chuyển trang qua Viết, Nghe, Nói, Shop, Blog,...
+* **Phông chữ chủ đạo**: Tải đầy đủ bộ ký tự `Inter` (weights 300 đến 900) đồng bộ trên **toàn bộ các trang HTML** qua thẻ `<link>` và nạp dự phòng qua `@import` tại đầu tệp `styles.css`. Đảm bảo font chữ thương hiệu `RusiTRKI` ở Header và toàn bộ văn bản luôn cố định 100%, tuyệt đối không bị nhảy phông sang Arial/Segoe UI khi chuyển trang qua Viết, Nghe, Nói, Shop, Blog,...
 * **Quy chuẩn nút bấm CTA (`.button`, `.button-primary`, `.button-light`)**: Các nút bấm hành động chính như "Bắt đầu học ngay", "Luyện thi thử miễn phí" bắt buộc phải có `display: inline-flex; align-items: center; justify-content: center; gap: 12px;` kèm định kiểu kích thước icon SVG (`width: 18px; height: 18px; stroke: currentColor; fill: none;`), đảm bảo độ cao chuẩn `min-height: 56px`, căn giữa chữ và mũi tên hoàn hảo.
 * **Cấm negative pixel tracking trên tiêu đề**: Tuyệt đối không dùng các giá trị `letter-spacing` âm theo đơn vị pixel cố định (như `-3.5px`, `-3.2px`, `-2.5px`). Trong tiếng Việt và tiếng Nga Cyrillic, việc thu hẹp khoảng cách bằng pixel cố định sẽ khiến các nguyên âm có dấu đôi (`Ễ, Ế, Ể, Ộ, Ứ, Ử, Ữ`) và các phụ âm Nga bè rộng (`Ж, Ш, Щ, Ю`) bị đè dính hoặc đâm vào nhau gây vỡ phông. Chỉ sử dụng khoảng cách tương đối nhẹ (`letter-spacing: -0.015em;` hoặc `normal`).
 * **Chiều cao dòng (`line-height`) an toàn**: `line-height` của các thẻ tiêu đề `h1, h2` tối thiểu phải đạt `1.15` đến `1.22` để đảm bảo các dấu thanh tiếng Việt nằm trên cao (`~`, `^`, `?`, `'`) có đủ không gian hiển thị, không bị cắt ngọn (clipping) bởi đường bao của dòng trên.
+
+11. **Phân hệ Xác thực Chuyên biệt — Trang Đăng nhập & Đăng ký (Chuẩn dauenglish.com)**:
+* **Đường dẫn chuẩn**: `login.html?redirect=...` và `signup.html?redirect=...` (hỗ trợ cả alias `/login` và `/signup` qua cấu trúc thư mục tĩnh & `404.html` SPA fallback).
+* **Kiến trúc bố cục 2 cột (Split-Screen Architecture)**:
+  - **Cột trái (`.auth-col-form`, 50% desktop, 100% mobile)**:
+    - Logo thương hiệu `Я RusiTRKI` với biểu tượng nghiêng -6° chuẩn hệ thống.
+    - Tiêu đề & phụ đề:
+      - Đăng nhập: *"Chào mừng trở lại"* — *"Đăng nhập nhanh bằng Google để tiếp tục học."*
+      - Đăng ký: *"Tạo tài khoản"* — *"Đăng ký nhanh chóng và an toàn bằng tài khoản Google của bạn."*
+    - Nút Google Sign-In 1-click kích thước lớn, hiệu ứng đổ bóng mượt mà.
+    - Accordion mở rộng Email & Mật khẩu:
+      - Mặc định thu gọn tinh gọn với icon chevron quay 180° khi mở (`aria-expanded`).
+      - Hỗ trợ đầy đủ đăng nhập / đăng ký qua Firebase Email Auth và chế độ mô phỏng offline.
+    - Nút trải nghiệm nhanh với tư cách Khách (`Auth.continueAsGuest()`).
+    - Liên kết chéo bảo lưu tham số điều hướng: `Chưa có tài khoản? Đăng ký` <-> `Đã có tài khoản? Đăng nhập`.
+    - Liên kết quay về trang chủ: `← Quay lại trang chủ`.
+  - **Cột phải (`.auth-col-showcase`, ẩn trên mobile, 50% desktop)**:
+    - Nền gradient Russian Winter sâu thẳm (`#091326` -> `#0d2042` -> `#17386d`) cùng 2 khối cầu phát sáng Radial Orb.
+    - Biểu tượng thương hiệu `Я` kích thước 52x52px.
+    - Tiêu đề: *"Luyện thi TRKI & Tiếng Nga toàn diện"*.
+    - Lưới 4 thẻ tính năng 2x2 frosted glass: Đề thi TRKI chuẩn CEFR, Lọ từ vựng Spaced Repetition, Trợ lý AI luyện Nói & Viết, Đồng bộ đa thiết bị.
+    - Danh sách 3 cam kết học tập (tính năng miễn phí, không cần thẻ tín dụng, lưu tiến độ đa nền tảng).
+    - Huy hiệu minh chứng xã hội: *"5,000+ học viên đang đồng hành cùng RusiTRKI"*.
+* **Cơ chế Điều hướng Tự động (`?redirect=...`)**:
+  - Trích xuất tham số `redirect` từ URL hoặc lấy từ `localStorage.getItem("auth_redirect")`, mặc định về `index.html`.
+  - Chống vòng lặp redirect (loại trừ các URL `/login`, `/signup`, `login.html`, `signup.html`).
+  - Tự động chuyển hướng ngay lập tức khi phát hiện phiên đăng nhập thành công.
+* **Tương thích toàn diện GitHub Pages**:
+  - Tích hợp `login/index.html`, `signup/index.html` và `404.html` để tiếp nhận mọi định dạng đường dẫn (`/login`, `/login/`, `login.html?redirect=%2F`, `/signup?redirect=%2F`).
 ```

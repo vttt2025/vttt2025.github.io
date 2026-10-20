@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Đang chuyển hướng — RusiTRKI</title>
+  <script>
+    (function() {
+      var path = window.location.pathname;
+      var search = window.location.search;
+      var hash = window.location.hash;
+
+      // Xử lý các đường dẫn phổ biến
+      if (path.endsWith('/login') || path.endsWith('/login/')) {
+        window.location.replace('login.html' + search + hash);
+        return;
+      }
+      if (path.endsWith('/signup') || path.endsWith('/signup/')) {
+        window.location.replace('signup.html' + search + hash);
+        return;
+      }
+
+      // Mặc định về trang chủ
+      window.location.replace('index.html');
+    })();
+  </script>
+</head>
+<body>
+  <p>Đang tìm trang và chuyển hướng bạn đến RusiTRKI...</p>
+</body>
+</html>

@@ -667,13 +667,13 @@ function renderUserArea() {
   const user = (window.Auth && window.Auth.user) || STORE.get("auth_user", null);
 
   if (!user) {
+    const pageName = window.location.pathname.split("/").pop() || "index.html";
+    const currentRedirect = encodeURIComponent(pageName + window.location.search);
     host.innerHTML = `
       <div class="auth-buttons-group">
-        <button class="btn-auth-login" id="btnLogin" type="button">Đăng nhập</button>
-        <button class="btn-auth-register" id="btnRegister" type="button">Đăng ký</button>
+        <a class="btn-auth-login" id="btnLogin" href="login.html?redirect=${currentRedirect}">Đăng nhập</a>
+        <a class="btn-auth-register" id="btnRegister" href="signup.html?redirect=${currentRedirect}">Đăng ký</a>
       </div>`;
-    host.querySelector("#btnLogin").addEventListener("click", () => AuthModal.open("login"));
-    host.querySelector("#btnRegister").addEventListener("click", () => AuthModal.open("register"));
     return;
   }
 
