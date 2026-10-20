@@ -1,7 +1,7 @@
 Dưới đây là bản cập nhật toàn diện cho tệp **`PROJECT_SPEC.md`**, bổ sung **Phân hệ Quản trị CMS & Giám sát Học viên (Admin Dashboard System)**, mở rộng **Database Schema (RBAC, Audit Logs, Analytics)**, và tích hợp các chính sách **Bảo mật RLS cho Quản trị viên**:
 
 ```markdown
-# 🇷🇺 RUSI TRKI — ARCHITECTURE, DATABASE, SECURITY & ADMIN CMS SPECIFICATION
+# RUSI TRKI — ARCHITECTURE, DATABASE, SECURITY & ADMIN CMS SPECIFICATION
 
 > **Target Audience**: AI Coding Agents (Cursor Composer, Windsurf Cascade, Claude Code, Copilot)[cite: 6].  
 > **Objective**: Context-injection spec for building and operating RUSI TRKI Platform serving 10,000+ concurrent learners[cite: 3, 5].  
@@ -10,65 +10,18 @@ Dưới đây là bản cập nhật toàn diện cho tệp **`PROJECT_SPEC.md`*
 
 ---
 
-## 1. HỆ THỐNG 7 TRỤ CỘT CHÍNH (THEO BẢN VẼ TỪ TRANG CHỦ)
+## 1. HỆ THỐNG 7 CHUYÊN MỤC CỐT LÕI (THEO THỨ TỰ ĐIỀU HƯỚNG CHUẨN)
 
 ```text
-                           [TRANG CHỦ]
+                                [TRANG CHỦ]
       ┌───────────┬──────────────┼──────────────┬───────────┐
       │           │              │              │           │
- [1. TRKI]     [2. SHOP]      [3. BLOG]     [4. TỪ VỰNG]  [5. LUYỆN VIẾT]
+ [1. TỪ VỰNG]  [2. VIẾT]      [3. NGHE]      [4. NÓI]     [5. TRKI]
       │                                                     │
- [7. LUYỆN NÓI] ─────────────────────────────── [6. LUYỆN NGHE]
-
+ [7. SHOP] ────────────────────────────────────────── [6. BLOG]
 ```
 
-### [Trụ Cột 1] Luyện Thi TRKI (ТРКИ Exam Simulation)
-
-* **Mục tiêu**: Ôn luyện và thi thử chứng chỉ tiếng Nga chuẩn quốc tế theo cấp độ (A1, A2, B1/TRKI-1, B2/TRKI-2).
-
-
-* **Bộ ngân hàng câu hỏi**:
-* Giao diện mô phỏng phòng thi chuẩn CEFR: Bảng câu hỏi bên phải, đồng hồ đếm ngược server-side, tự động thu bài khi hết giờ, phát hiện chuyển tab gian lận.
-
-
-* Báo cáo kết quả: Điểm dự đoán TRKI, thống kê tỷ lệ đúng theo từng kỹ năng, phân tích đáp án ngữ pháp chi tiết sau nộp.
-
-
-
-
-* **Paywall / Gói PRO**:
-* Miễn phí: Được làm 1 đề thi mẫu Part Ngữ pháp A1/A2.
-
-
-* PRO: Mở khóa trọn bộ ngân hàng đề B1/B2 và kho đáp án giải thích chi tiết.
-
-
-
-
-
-### [Trụ Cột 2] Shop (Bán Hàng Từ Nga & Dịch Vụ)
-
-* **Kinh doanh nội địa Nga**: Bánh kẹo Alenka, mỹ phẩm Siberia, quà lưu niệm Matryoshka...
-* **Dịch vụ liên kết du học**: Cổng tư vấn hồ sơ du học Nga (hợp tác chỉ tiêu hiệp định 6730).
-* **Tính năng**: Giỏ hàng rút gọn, form đặt mua nhanh, tích hợp thanh toán chuyển khoản nội địa.
-
-
-
-### [Trụ Cột 3] Blog (Chia Sẻ Du Học & Kiến Thức Nga)
-
-* **Kênh kéo SEO tự nhiên**:
-* **Trải nghiệm du học**: Ký túc xá (KTX), review trường đại học (MGU, HSE, RUDN...), cơ sở vật chất.
-* **Luật pháp & Đời sống**: Cư trú, đăng ký tạm trú, luật làm thêm, thẻ ngân hàng Mir/Sberbank.
-* **Văn hóa & Ngữ pháp**: Thành ngữ thông dụng, tiếng lóng, văn hóa ứng xử Nga.
-
-
-* **SEO Cluster**: Phễu dẫn link nội bộ đăng ký thi thử hoặc mua khóa học PRO.
-
-
-
-
-
-### [Trụ Cột 4] Từ Vựng (Lọ Từ Vựng & Chuỗi Hành Động Video)
+### [Chuyên Mục 1] Từ Vựng (Lọ Từ Vựng & Video Hoạt Hình)
 
 * **Mô hình "Lọ từ vựng" (Vocabulary Jars)**:
 * Mỗi chủ đề là một "Lọ" (Lọ mua sắm Auchan, Thể thao, Ăn uống, Hành lý du học...).
@@ -83,72 +36,78 @@ Dưới đây là bản cập nhật toàn diện cho tệp **`PROJECT_SPEC.md`*
 
 
 
-### [Trụ Cột 5] Luyện Viết (Tả Tranh Chuẩn TRKI)
+### [Chuyên Mục 2] Luyện Viết (Tả Tranh Chuẩn TRKI)
 
 * **Format Письмо TRKI**: Đưa ra 1 hình ảnh/bối cảnh thực tế.
 
-
 * **Tính năng**: Bàn phím ảo Cyrillic trên web, gợi ý từ vựng trọng tâm cần có trong bài viết.
-
 
 * **AI Chấm điểm theo 4 tiêu chí**:
 1. Ngữ pháp & Biến cách (Грамматика)
-
-
 2. Vốn từ & Cụm từ liên kết (Лексика)
-
-
 3. Bố cục bài viết (Структура)
-
-
 4. Trả lời đúng trọng tâm đề (Содержание)
 
-
-
-
 * Bảng đối chiếu: `[Câu gốc lỗi] ➔ [Câu sửa chuẩn] ➔ [Quy tắc ngữ pháp]`.
-
-
-
 
 * **Paywall / Gói PRO**: Bản Free chấm 1 bài mẫu; gói PRO chấm không giới hạn cùng AI Rusika.
 
 
 
-### [Trụ Cột 6] Luyện Nghe (Nghe Chép Chính Tả 4 Part Kiểu CEFR)
+### [Chuyên Mục 3] Luyện Nghe (Nghe Chép Chính Tả 4 Part Kiểu CEFR)
 
 * **Phân cấp 4 Part bài bản**:
 * **Part 1**: Nghe hiểu từng câu đơn lẻ (gõ chép chính tả từng từ).
-
-
 * **Part 2**: Nghe hội thoại ngắn (đời sống du học sinh).
-
-
 * **Part 3**: Nghe đoạn văn tường thuật đơn giản.
-
-
 * **Part 4**: Nghe đoạn văn chuyên ngành, tin tức báo chí phức tạp.
-
-
-
 
 * **Video cắt ngắn 1–2 phút**: Cắt từ YouTube/phim thực tế, phát xong hiện bài tập trắc nghiệm nghe hiểu.
 * **Trình phát**: Tách audio từng câu, ẩn/hiện phụ đề song ngữ, tua chậm 0.75x–1.25x.
-
 
 * **Paywall / Gói PRO**: Free nghe thử Part 1; PRO mở khóa full Part 1–4 và full transcript giải thích.
 
 
 
-### [Trụ Cột 7] Luyện Nói (Shadowing & AI Chấm Phát Âm)
+### [Chuyên Mục 4] Luyện Nói (Shadowing & AI Chấm Phát Âm)
 
 * **Phương pháp Shadowing**: Nghe câu nói mẫu từ video/YouTube, thu âm nhại theo tốc độ và ngữ điệu người bản xứ kèm sóng âm trực quan (Audio Waveform).
 
-
 * **AI Chấm phát âm**: Thu âm qua MediaStream API, so sánh âm vị (Phoneme matching) để chỉ ra chính xác từ nào sai trọng âm hoặc phát âm sai phụ âm cứng/mềm.
 
-
 * **Paywall / Gói PRO**: Free 2 lượt phát âm thử mỗi ngày; PRO mở khóa không giới hạn lượt nói với AI.
+
+
+
+### [Chuyên Mục 5] Luyện Thi TRKI (ТРКИ Exam Simulation)
+
+* **Mục tiêu**: Ôn luyện và thi thử chứng chỉ tiếng Nga chuẩn quốc tế theo cấp độ (A1, A2, B1/TRKI-1, B2/TRKI-2).
+
+* **Bộ ngân hàng câu hỏi**:
+* Giao diện mô phỏng phòng thi chuẩn CEFR: Bảng câu hỏi bên phải, đồng hồ đếm ngược server-side, tự động thu bài khi hết giờ, phát hiện chuyển tab gian lận.
+* Báo cáo kết quả: Điểm dự đoán TRKI, thống kê tỷ lệ đúng theo từng kỹ năng, phân tích đáp án ngữ pháp chi tiết sau nộp.
+
+* **Paywall / Gói PRO**:
+* Miễn phí: Được làm 1 đề thi mẫu Part Ngữ pháp A1/A2.
+* PRO: Mở khóa trọn bộ ngân hàng đề B1/B2 và kho đáp án giải thích chi tiết.
+
+
+
+### [Chuyên Mục 6] Blog (Chia Sẻ Du Học & Đời Sống Nga)
+
+* **Kênh kéo SEO tự nhiên**:
+* **Trải nghiệm du học**: Ký túc xá (KTX), review trường đại học (MGU, HSE, RUDN...), cơ sở vật chất.
+* **Luật pháp & Đời sống**: Cư trú, đăng ký tạm trú, luật làm thêm, thẻ ngân hàng Mir/Sberbank.
+* **Văn hóa & Ngữ pháp**: Thành ngữ thông dụng, tiếng lóng, văn hóa ứng xử Nga.
+* **SEO Cluster**: Phễu dẫn link nội bộ đăng ký thi thử hoặc mua khóa học PRO.
+
+
+
+### [Chuyên Mục 7] Shop (Bán Hàng Từ Nga & Dịch Vụ Du Học)
+
+* **Kinh doanh nội địa Nga**: Bánh kẹo Alenka, mỹ phẩm Siberia, quà lưu niệm Matryoshka...
+* **Dịch vụ liên kết du học**: Cổng tư vấn hồ sơ du học Nga (hợp tác chỉ tiêu hiệp định 6730).
+* **Tính năng**: Giỏ hàng rút gọn, form đặt mua nhanh, tích hợp thanh toán chuyển khoản nội địa.
 
 
 
@@ -739,11 +698,22 @@ CREATE POLICY "Super Admins view audit logs" ON admin_audit_logs FOR SELECT USIN
 6. **Quy chuẩn bố cục Header Navigation (Chuẩn dauenglish.com)**:
 * **Cấu trúc 3 khu vực cân đối (Grid `1fr auto 1fr`)**:
   - **Bên trái (`.header-left`)**: Logo & Thương hiệu `Я RusiTRKI` cố định sát mép trái, không bị khoảng đệm trống đẩy vào giữa.
-  - **Chính giữa (`.header-center`)**: Cố định đúng 7 chuyên mục cân đối hoàn hảo ở trung tâm: `TRKI | Từ vựng | Nghe | Nói | Viết | Shop | Blog`. Nếu số lượng liên kết nhiều hơn 7, hệ thống tự động gom các mục thừa vào menu dropdown `More ▾` (Thêm).
+  - **Chính giữa (`.header-center`)**: Cố định đúng 7 chuyên mục cân đối hoàn hảo ở trung tâm: `Từ vựng | Viết | Nghe | Nói | TRKI | Blog | Shop`. Nếu số lượng liên kết nhiều hơn 7, hệ thống tự động gom các mục thừa vào menu dropdown `More ▾` (Thêm).
   - **Bên phải (`.header-right`)**:
     - Nút / Huy hiệu Gói PRO.
     - **Khi chưa đăng nhập**: Bỏ nút "Học miễn phí". Hiển thị 2 nút rõ ràng: **Đăng nhập** (nút outline/ghost) và **Đăng ký** (nút primary đỏ nổi bật). Tuyệt đối **không hiển thị mặc định điểm XP và chuỗi Streak** ra ngoài thanh header khi chưa đăng nhập.
     - **Khi đã đăng nhập**: Hiển thị Avatar + Tên + Dropdown tài khoản. **Điểm XP và chuỗi ngày Streak được hiển thị trang trọng, đẹp mắt bên trong menu tài khoản học viên**.
+* **Đồng bộ Learning Hub 7 Khối Kỹ Năng (`.hub-grid`) & Chân trang (`footer-links`)**:
+  - Thứ tự 7 khối nội dung trên trang chủ:
+    - **Card 01**: Lọ Từ Vựng & Video (`vocabulary.html`)
+    - **Card 02**: Luyện Viết Tả Tranh (`writing.html`)
+    - **Card 03**: Luyện Nghe 4 Part (`listening.html`)
+    - **Card 04**: Luyện Nói Shadowing (`speaking.html`)
+    - **Card 05**: Luyện Thi TRKI (`mock-test.html` — thẻ lớn màu đỏ tiêu điểm, chiếm 2 cột `grid-column: span 2`)
+    - **Card 06**: Blog Du Học & Đời Sống (`blog.html`)
+    - **Card 07**: Shop Hàng Nga & Du Học (`shop.html` — thẻ màu xanh Baltic Navy)
+  - Hệ lưới 4 cột desktop cân bằng tuyệt đối: Hàng 1 gồm 4 thẻ kỹ năng nền tảng (1x4 = 4 cột); Hàng 2 gồm TRKI (2 cột) + Blog (1 cột) + Shop (1 cột) = 4 cột, lấp đầy 8 ô trên 2 hàng gọn gàng.
+  - Toàn bộ liên kết chân trang `footer-links` tuân thủ đồng nhất 100% thứ tự này.
 
 7. **Quy chuẩn Giao diện Sáng cố định (Russian Winter Cool Blue)**:
 * **Chỉ sử dụng giao diện Sáng**: Loại bỏ hoàn toàn tính năng đổi sáng/tối để mang lại trải nghiệm học tập nhất quán, tinh tế và tập trung cao độ.
@@ -755,14 +725,18 @@ CREATE POLICY "Super Admins view audit logs" ON admin_audit_logs FOR SELECT USIN
 
 9. **Quy chuẩn Deploy GitHub Pages & Cloudflare Cache Invalidation**:
 * **Bắt buộc file `.nojekyll`**: Tại thư mục gốc của repository phải luôn duy trì tệp `.nojekyll` (dung lượng 0 bytes) nhằm chỉ thị GitHub Pages bỏ qua bộ xử lý Jekyll, chuyển trực tiếp các file tĩnh HTML/JS/CSS và tránh lỗi build / 403.
-* **Cache-Busting Query Parameter (`?v=X.Y`)**: Mọi file HTML khi nhúng tài nguyên nội bộ (`styles.css`, `data.js`, `auth.js`, `app.js`, `pages.js`, `admin.js`, `srs.js`) bắt buộc phải gắn tham số phiên bản (hiện tại: `?v=2.7`). Do Cloudflare và GitHub Pages cấu hình `Cache-Control: max-age=14400` (4 tiếng), việc gắn query parameter buộc trình duyệt và CDN nạp ngay phiên bản mới nhất, tránh tình trạng local hiển thị một kiểu nhưng website trên mạng vẫn hiện phiên bản cũ.
+* **Cache-Busting Query Parameter (`?v=X.Y`)**: Mọi file HTML khi nhúng tài nguyên nội bộ (`styles.css`, `data.js`, `auth.js`, `app.js`, `pages.js`, `admin.js`, `srs.js`) bắt buộc phải gắn tham số phiên bản (hiện tại: `?v=2.8`). Do Cloudflare và GitHub Pages cấu hình `Cache-Control: max-age=14400` (4 tiếng), việc gắn query parameter buộc trình duyệt và CDN nạp ngay phiên bản mới nhất, tránh tình trạng local hiển thị một kiểu nhưng website trên mạng vẫn hiện phiên bản cũ.
 * **Thao tác Hard Reload cho người dùng**: Sau mỗi lần `git push`, hướng dẫn người dùng nhấn `Ctrl + F5` (hoặc `Cmd + Shift + R` trên Mac) hoặc mở tab Ẩn danh (Incognito) nếu trình duyệt còn lưu cache từ phiên trước.
 
 10. **Quy chuẩn Typography & Xử lý Font tiếng Việt / tiếng Nga**:
 * **Phông chữ chủ đạo**: Tải đầy đủ bộ ký tự `Inter` (weights 300 đến 900) đồng bộ trên **toàn bộ các trang HTML** qua thẻ `<link>` và nạp dự phòng qua `@import` tại đầu tệp `styles.css`. Đảm bảo font chữ thương hiệu `RusiTRKI` ở Header và toàn bộ văn bản luôn cố định 100%, tuyệt đối không bị nhảy phông sang Arial/Segoe UI khi chuyển trang qua Viết, Nghe, Nói, Shop, Blog,...
 * **Quy chuẩn nút bấm CTA (`.button`, `.button-primary`, `.button-light`)**: Các nút bấm hành động chính như "Bắt đầu học ngay", "Luyện thi thử miễn phí" bắt buộc phải có `display: inline-flex; align-items: center; justify-content: center; gap: 12px;` kèm định kiểu kích thước icon SVG (`width: 18px; height: 18px; stroke: currentColor; fill: none;`), đảm bảo độ cao chuẩn `min-height: 56px`, căn giữa chữ và mũi tên hoàn hảo.
-* **Cấm negative pixel tracking trên tiêu đề**: Tuyệt đối không dùng các giá trị `letter-spacing` âm theo đơn vị pixel cố định (như `-3.5px`, `-3.2px`, `-2.5px`). Trong tiếng Việt và tiếng Nga Cyrillic, việc thu hẹp khoảng cách bằng pixel cố định sẽ khiến các nguyên âm có dấu đôi (`Ễ, Ế, Ể, Ộ, Ứ, Ử, Ữ`) và các phụ âm Nga bè rộng (`Ж, Ш, Щ, Ю`) bị đè dính hoặc đâm vào nhau gây vỡ phông. Chỉ sử dụng khoảng cách tương đối nhẹ (`letter-spacing: -0.015em;` hoặc `normal`).
-* **Chiều cao dòng (`line-height`) an toàn**: `line-height` của các thẻ tiêu đề `h1, h2` tối thiểu phải đạt `1.15` đến `1.22` để đảm bảo các dấu thanh tiếng Việt nằm trên cao (`~`, `^`, `?`, `'`) có đủ không gian hiển thị, không bị cắt ngọn (clipping) bởi đường bao của dòng trên.
+* **Cấm negative pixel tracking trên tiêu đề**: Tuyệt đối không dùng các giá trị `letter-spacing` âm theo đơn vị pixel cố định (như `-3.5px`, `-3.2px`, `-2.5px`). Trong tiếng Việt và tiếng Nga Cyrillic, việc thu hẹp khoảng cách bằng pixel cố định sẽ khiến các nguyên âm có dấu đôi (`Ễ, Ế, Ể, Ộ, Ứ, Ử, Ữ`) và các phụ âm Nga bè rộng (`Ж, Ш, Щ, Ю`) bị đè dính hoặc đâm vào nhau gây vỡ phông. Chỉ sử dụng khoảng cách tương đối nhẹ (`letter-spacing: -0.005em;` hoặc `normal`).
+* **Chiều cao dòng (`line-height`) an toàn**: `line-height` của các thẻ tiêu đề `h1, h2` tối thiểu phải đạt `1.22` đến `1.26` để đảm bảo các dấu thanh tiếng Việt nằm trên cao (`~`, `^`, `?`, `'`) có đủ không gian hiển thị, không bị cắt ngọn (clipping) bởi đường bao của dòng trên hoặc dính vào dòng dưới.
+* **Quy chuẩn Tiêu đề Hero `<h1>` (Chống dính & rối chữ)**:
+  - **Sentence Case thanh thoát**: Tiêu đề trang chủ sử dụng Sentence Case (`Học tiếng Nga có hệ thống<br /><span>cùng RUSI</span>`), tuyệt đối không viết HOA toàn bộ câu tiếng Việt có nhiều dấu kép (`Ọ, Ế, Ó, Ệ, Ố`) vì sẽ tạo thành mảng mực đặc gây rối mắt và nặng nề.
+  - **Cỡ chữ vừa vặn khung hình**: Sử dụng `font-size: clamp(36px, 4.8vw, 60px)` kết hợp `text-wrap: balance`, giúp dòng 1 không vượt quá `max-width: 720px` và không bị rớt chữ lẻ loi xuống dòng thứ 2.
+  - **Nhịp thở thị giác**: Thẻ `span` có `display: block; margin-top: 6px;` để tách biệt rõ ràng 2 vế tiêu đề.
 
 11. **Phân hệ Xác thực Chuyên biệt — Trang Đăng nhập & Đăng ký (Chuẩn dauenglish.com)**:
 * **Đường dẫn chuẩn**: `login.html?redirect=...` và `signup.html?redirect=...` (hỗ trợ cả alias `/login` và `/signup` qua cấu trúc thư mục tĩnh & `404.html` SPA fallback).
@@ -779,17 +753,25 @@ CREATE POLICY "Super Admins view audit logs" ON admin_audit_logs FOR SELECT USIN
     - Nút trải nghiệm nhanh với tư cách Khách (`Auth.continueAsGuest()`).
     - Liên kết chéo bảo lưu tham số điều hướng: `Chưa có tài khoản? Đăng ký` <-> `Đã có tài khoản? Đăng nhập`.
     - Liên kết quay về trang chủ: `← Quay lại trang chủ`.
+    - **Tối ưu Mobile Responsive (`max-width: 480px`)**: Thu hẹp đệm `.auth-col-form` về `30px 18px`, cỡ chữ tiêu đề `24px` và nút bấm Google `14.5px`, không gây tràn màn hình thiết bị nhỏ.
   - **Cột phải (`.auth-col-showcase`, ẩn trên mobile, 50% desktop)**:
     - Nền gradient Russian Winter sâu thẳm (`#091326` -> `#0d2042` -> `#17386d`) cùng 2 khối cầu phát sáng Radial Orb.
     - Biểu tượng thương hiệu `Я` kích thước 52x52px.
-    - Tiêu đề: *"Luyện thi TRKI & Tiếng Nga toàn diện"*.
-    - Lưới 4 thẻ tính năng 2x2 frosted glass: Đề thi TRKI chuẩn CEFR, Lọ từ vựng Spaced Repetition, Trợ lý AI luyện Nói & Viết, Đồng bộ đa thiết bị.
-    - Danh sách 3 cam kết học tập (tính năng miễn phí, không cần thẻ tín dụng, lưu tiến độ đa nền tảng).
+    - Tiêu đề: *"Luyện tập khoa học và phát triển tiếng Nga toàn diện"*.
+    - Mô tả: *"Từ cơ bản đến nâng cao. Từ 'priviet' đến chinh phục chứng chỉ TRKI (TORFL — Test of Russian as a Foreign Language)."*.
+    - Lưới 4 thẻ tính năng 2x2 frosted glass: Học từ vựng bằng phương pháp khoa học, Phát triển toàn diện 4 kỹ năng, Trợ lý AI luyện Nói & Viết, Đồng bộ đa thiết bị.
+    - Danh sách 3 cam kết học tập (tính năng thông minh & không ngừng nâng cấp, không cần thẻ tín dụng, lưu tiến độ đa nền tảng).
     - Huy hiệu minh chứng xã hội: *"5,000+ học viên đang đồng hành cùng RusiTRKI"*.
-* **Cơ chế Điều hướng Tự động (`?redirect=...`)**:
+* **Cơ chế Điều hướng Tự động (`?redirect=...`) & Chống Flash**:
   - Trích xuất tham số `redirect` từ URL hoặc lấy từ `localStorage.getItem("auth_redirect")`, mặc định về `index.html`.
   - Chống vòng lặp redirect (loại trừ các URL `/login`, `/signup`, `login.html`, `signup.html`).
-  - Tự động chuyển hướng ngay lập tức khi phát hiện phiên đăng nhập thành công.
-* **Tương thích toàn diện GitHub Pages**:
-  - Tích hợp `login/index.html`, `signup/index.html` và `404.html` để tiếp nhận mọi định dạng đường dẫn (`/login`, `/login/`, `login.html?redirect=%2F`, `/signup?redirect=%2F`).
+  - **Chống Flash nút Đăng nhập**: Ngay khi đăng nhập thành công qua Google hoặc Email, lưu phiên `STORE.set("auth_user", user)` trực tiếp vào `localStorage` TRƯỚC KHI chuyển hướng, đảm bảo trang đích nạp avatar ngay lập tức.
+  - **Toàn cục hóa `window.STORE`**: Khai báo `window.STORE = STORE;` trong `app.js` để các module xác thực hoạt động ổn định mọi thời điểm.
+* **Xử lý Phiên Khách & Đổi Tài Khoản (Guest Resilience & Account Switch)**:
+  - **Bảo lưu phiên Khách**: Khi Firebase khởi tạo và kích hoạt `onAuthStateChanged(null)`, hệ thống không ghi đè xóa phiên khách cục bộ; chỉ đăng xuất khi người dùng chủ động bấm "Đăng xuất".
+  - **Chống bẫy Khách trên trang Auth**: Người dùng Khách mở `login.html` / `signup.html` sẽ không bị ép chuyển hướng, mà nhận được lời nhắc nhẹ nhàng hướng dẫn nâng cấp tài khoản chính thức.
+  - **Đổi tài khoản linh hoạt**: Nếu tài khoản thật đã đăng nhập mà người dùng mở `login.html`, giao diện cung cấp nút *"Đổi tài khoản"* (gọi `Auth.signOut()` tại chỗ) và nút *"Tiếp tục học →"* kèm hẹn giờ tự chuyển tiếp 1.5s.
+* **Xử lý Lỗi & Tương thích Toàn diện**:
+  - Bắt các lỗi Firebase chi tiết: `auth/operation-not-allowed` (hướng dẫn bật Email/Password trên Firebase Console), `auth/network-request-failed` và regex kiểm tra email client-side.
+  - SPA Fallback trong `404.html`: Sử dụng đường dẫn tương đối gốc (`/login.html`, `/signup.html`) thay vì relative URL để an toàn tuyệt đối kể cả khi URL có dấu gạch chéo cuối (`/login/`).
 ```

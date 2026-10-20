@@ -9,10 +9,15 @@ const STORE = {
   },
   set(key, val) {
     try {
-      localStorage.setItem("trki_" + key, JSON.stringify(val));
+      if (val === null || val === undefined) {
+        localStorage.removeItem("trki_" + key);
+      } else {
+        localStorage.setItem("trki_" + key, JSON.stringify(val));
+      }
     } catch (e) {}
   }
 };
+window.STORE = STORE;
 
 const Progress = {
   addXp(n) {
@@ -376,13 +381,13 @@ function esc(s) {
  * Sub-items có thể trỏ đến hash trên cùng trang (vd "vocabulary.html#algorithm").
  */
 const NAV_LINKS = [
-  ["mock-test.html", "TRKI"],
   ["vocabulary.html", "Từ vựng"],
+  ["writing.html", "Viết"],
   ["listening.html", "Nghe"],
   ["speaking.html", "Nói"],
-  ["writing.html", "Viết"],
-  ["shop.html", "Shop"],
-  ["blog.html", "Blog"]
+  ["mock-test.html", "TRKI"],
+  ["blog.html", "Blog"],
+  ["shop.html", "Shop"]
 ];
 
 const SEASON_ORDER = ["winter"];
@@ -804,13 +809,13 @@ function renderFooter() {
     </a>
     <p>Học tiếng Nga hiện đại, dễ hiểu và đầy cảm hứng. Hệ sinh thái học tập toàn diện phục vụ luyện thi chứng chỉ, du học và đời sống tại Liên bang Nga.</p>
     <div class="footer-links">
-      <a href="mock-test.html">TRKI</a>
       <a href="vocabulary.html">Từ vựng</a>
+      <a href="writing.html">Viết</a>
       <a href="listening.html">Nghe</a>
       <a href="speaking.html">Nói</a>
-      <a href="writing.html">Viết</a>
-      <a href="shop.html">Shop</a>
+      <a href="mock-test.html">TRKI</a>
       <a href="blog.html">Blog</a>
+      <a href="shop.html">Shop</a>
       <a href="admin.html">Quản trị</a>
     </div>
     <small>© 2026 RUSI TRKI. Made for curious minds. Đồng hành cùng Mascot Rusika mắt xanh.</small>

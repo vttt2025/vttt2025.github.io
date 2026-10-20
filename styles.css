@@ -358,8 +358,8 @@ button {
 
 .hero h1 {
   font-size: clamp(2.1rem, 5vw, 3.2rem);
-  line-height: 1.2;
-  letter-spacing: -0.025em;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
   font-weight: 800;
   color: var(--text);
 }
@@ -5573,16 +5573,18 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
   box-shadow: 0 0 14px rgba(23, 87, 166, 0.65);
 }
 .hero h1 {
-  letter-spacing: -0.015em;
-  margin: 28px 0 24px;
+  letter-spacing: -0.005em;
+  margin: 24px 0 20px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: clamp(44px, 5.5vw, 76px);
-  line-height: 1.18;
+  font-size: clamp(36px, 4.8vw, 60px);
+  line-height: 1.25;
   font-weight: 800;
+  text-wrap: balance;
 }
 .hero h1 span {
   color: var(--russia-red);
   display: block;
+  margin-top: 6px;
 }
 .hero-content > p {
   color: #5b6878;
@@ -6092,8 +6094,8 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
   width: 23px;
   height: 23px;
 }
-.hub-card:nth-child(3) .hub-icon,
-.hub-card:nth-child(4) .hub-icon {
+.hub-card-listening .hub-icon,
+.hub-card-speaking .hub-icon {
   color: var(--russia-red);
   background: #f9e8ea;
 }
@@ -6863,8 +6865,8 @@ footer > small {
     padding: 120px 24px 80px;
   }
   .hero h1 {
-    letter-spacing: -0.015em;
-    line-height: 1.18;
+    letter-spacing: -0.005em;
+    line-height: 1.24;
   }
   .hero-visual {
     transform-origin: top;
@@ -6940,9 +6942,9 @@ footer > small {
     padding-right: 16px;
   }
   .hero h1 {
-    letter-spacing: -0.015em;
-    line-height: 1.18;
-    font-size: clamp(32px, 8vw, 42px);
+    letter-spacing: -0.005em;
+    line-height: 1.22;
+    font-size: clamp(30px, 7.5vw, 38px);
   }
   .hero-content > p {
     font-size: 15px;
@@ -7069,6 +7071,19 @@ footer > small {
   .auth-col-form {
     width: 50%;
     padding: 60px 48px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-col-form {
+    padding: 30px 18px;
+  }
+  .auth-title {
+    font-size: 24px;
+  }
+  .btn-auth-google {
+    font-size: 14.5px;
+    padding: 12px 14px;
   }
 }
 

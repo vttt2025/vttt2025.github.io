@@ -17,6 +17,37 @@
     "signup"
   ];
 
+  let isRedirecting = false;
+  let autoRedirectTimer = null;
+
+  function isGuestUser(u) {
+    return Boolean(u && (u.provider === "guest" || String(u.uid || "").startsWith("guest_")));
+  }
+
+  function getStore() {
+    if (typeof window !== "undefined" && window.STORE) return window.STORE;
+    if (typeof STORE !== "undefined") return STORE;
+    return {
+      get(key, fallback) {
+        try {
+          const v = localStorage.getItem("trki_" + key);
+          return v === null ? fallback : JSON.parse(v);
+        } catch (_) {
+          return fallback;
+        }
+      },
+      set(key, val) {
+        try {
+          if (val === null || val === undefined) {
+            localStorage.removeItem("trki_" + key);
+          } else {
+            localStorage.setItem("trki_" + key, JSON.stringify(val));
+          }
+        } catch (_) {}
+      }
+    };
+  }
+
   /** Lấy URL cần chuyển tiếp tới sau khi đăng nhập */
   function getRedirectTarget() {
     const params = new URLSearchParams(window.location.search);
@@ -28,7 +59,7 @@
 
     let target = param || saved || "index.html";
 
-    // Tránh vòng lặp redirect vô tận vào trang login / signup
+    // Tránh vòng lặp redirect vô tận vào chính trang login / signup
     for (const ign of IGNORED_REDIRECTS) {
       if (
         target === ign ||
@@ -59,6 +90,12 @@
 
   /** Điều hướng sang trang đích sau khi xác thực thành công */
   function executeRedirect() {
+    if (isRedirecting) return;
+    isRedirecting = true;
+    if (autoRedirectTimer) {
+      clearTimeout(autoRedirectTimer);
+      autoRedirectTimer = null;
+    }
     const target = getRedirectTarget();
     try {
       localStorage.removeItem("auth_redirect");
@@ -80,29 +117,76 @@
     if (linkLogin) linkLogin.href = `login.html${query}`;
   }
 
+  function escapeHtml(str) {
+    return String(str || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
   /** Khởi tạo trang Auth */
   function initAuthPage() {
     saveRedirectFromUrl();
     updateCrossLinks();
 
     const isSignupPage = document.body.dataset.page === "signup";
+    const store = getStore();
 
-    // 1. Nếu đã đăng nhập từ trước, tự động chuyển tiếp
-    const currentUser = (window.Auth && window.Auth.user) || (window.STORE && STORE.get("auth_user", null));
+    // 1. Kiểm tra trạng thái đăng nhập hiện tại
+    const currentUser = (window.Auth && window.Auth.user) || store.get("auth_user", null);
+
     if (currentUser) {
       const banner = document.getElementById("alreadyLoggedInBanner");
       if (banner) {
-        banner.style.display = "block";
-        banner.innerHTML = `Bạn đang đăng nhập với <strong>${currentUser.email || currentUser.name}</strong>. Đang chuyển hướng...`;
+        if (isGuestUser(currentUser)) {
+          // Người dùng đang ở chế độ Khách: KHÔNG tự động redirect mà hướng dẫn đăng nhập chính thức
+          banner.style.display = "block";
+          banner.style.background = "#eff6ff";
+          banner.style.borderColor = "#93c5fd";
+          banner.style.color = "#1e40af";
+          banner.innerHTML = `💡 Bạn đang trải nghiệm với tư cách <strong>Học viên Khách</strong>. Hãy đăng nhập tài khoản Google hoặc Email bên dưới để lưu trữ chuỗi ngày Streak và tiến độ TRKI vĩnh viễn.`;
+        } else {
+          // Người dùng đã có tài khoản thực tế: hiển thị thông báo với tuỳ chọn đổi tài khoản
+          banner.style.display = "block";
+          const userName = escapeHtml(currentUser.email || currentUser.name || "bạn");
+          banner.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+              <span>Bạn đang đăng nhập với <strong>${userName}</strong>.</span>
+              <div style="display:flex;align-items:center;gap:10px">
+                <button type="button" id="btnSwitchAccountInBanner" style="background:none;border:none;color:var(--russia-red);font-weight:700;cursor:pointer;padding:0;text-decoration:underline;font-family:inherit;font-size:13px">Đổi tài khoản</button>
+                <button type="button" id="btnProceedInBanner" style="background:var(--russia-blue);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">Tiếp tục học →</button>
+              </div>
+            </div>`;
+
+          const btnSwitch = document.getElementById("btnSwitchAccountInBanner");
+          if (btnSwitch) {
+            btnSwitch.addEventListener("click", () => {
+              if (autoRedirectTimer) {
+                clearTimeout(autoRedirectTimer);
+                autoRedirectTimer = null;
+              }
+              if (window.Auth) window.Auth.signOut();
+              banner.style.display = "none";
+            });
+          }
+
+          const btnProceed = document.getElementById("btnProceedInBanner");
+          if (btnProceed) {
+            btnProceed.addEventListener("click", () => executeRedirect());
+          }
+
+          // Tự động chuyển tiếp sau 1.5 giây nếu người dùng không thao tác đổi tài khoản
+          autoRedirectTimer = setTimeout(executeRedirect, 1500);
+          return;
+        }
       }
-      setTimeout(executeRedirect, 700);
-      return;
     }
 
     // Lắng nghe sự kiện đăng nhập từ Firebase Auth
     if (window.Auth && typeof window.Auth.onChange === "function") {
       window.Auth.onChange((u) => {
-        if (u) {
+        if (u && !isGuestUser(u)) {
           executeRedirect();
         }
       });
@@ -137,8 +221,8 @@
       btnGuest.addEventListener("click", () => {
         if (window.Auth && typeof window.Auth.continueAsGuest === "function") {
           window.Auth.continueAsGuest();
-        } else if (window.STORE) {
-          window.STORE.set("auth_user", {
+        } else {
+          store.set("auth_user", {
             uid: "guest_" + Date.now(),
             name: "Học viên Khách",
             email: "khach@rusitrki.com",
@@ -188,6 +272,12 @@
 
         if (!email || !password) {
           showError("Vui lòng nhập đầy đủ Email và Mật khẩu.");
+          return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          showError("Địa chỉ email không đúng định dạng (ví dụ: you@example.com).");
           return;
         }
 

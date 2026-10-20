@@ -9,18 +9,24 @@
       var search = window.location.search;
       var hash = window.location.hash;
 
+      // Tìm prefix thư mục gốc (hỗ trợ cả custom domain rusitrki.com và github.io/rusitrki/)
+      var root = '/';
+      if (path.indexOf('/rusitrki/') === 0) {
+        root = '/rusitrki/';
+      }
+
       // Xử lý các đường dẫn phổ biến
       if (path.endsWith('/login') || path.endsWith('/login/')) {
-        window.location.replace('login.html' + search + hash);
+        window.location.replace(root + 'login.html' + search + hash);
         return;
       }
       if (path.endsWith('/signup') || path.endsWith('/signup/')) {
-        window.location.replace('signup.html' + search + hash);
+        window.location.replace(root + 'signup.html' + search + hash);
         return;
       }
 
       // Mặc định về trang chủ
-      window.location.replace('index.html');
+      window.location.replace(root + 'index.html');
     })();
   </script>
 </head>

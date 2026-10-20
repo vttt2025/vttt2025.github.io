@@ -1561,7 +1561,7 @@ function initBlogPage() {
           ${esc(post.content || post.excerpt)}
         </div>
         <div style="background:var(--primary-soft);border-radius:10px;padding:16px;margin-top:24px;text-align:center">
-          <h4>🇷🇺 Chuẩn bị hành trang chứng chỉ tiếng Nga cùng RUSI</h4>
+          <h4>Chuẩn bị hành trang chứng chỉ tiếng Nga cùng RUSI</h4>
           <p style="font-size:0.88rem;color:var(--muted);margin:6px 0 14px">Luyện đề thi thử TRKI miễn phí hoặc nâng cấp gói PRO để được AI Rusika đồng hành.</p>
           <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
             <a class="btn btn-primary btn-sm" href="mock-test.html">Làm đề thi thử TRKI</a>
