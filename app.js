@@ -399,62 +399,12 @@ function currentSeason() {
   return "winter";
 }
 
-/** Quản lý giao diện Sáng / Tối / Hệ thống (Light / Dark / System) */
-const ThemeManager = {
-  KEY: "trki_theme_mode",
-  getMode() {
-    return STORE.get(this.KEY, "system"); // 'system' | 'light' | 'dark'
-  },
-  setMode(mode) {
-    STORE.set(this.KEY, mode);
-    this.apply();
-  },
-  cycle() {
-    const modes = ["system", "light", "dark"];
-    const cur = this.getMode();
-    const next = modes[(modes.indexOf(cur) + 1) % modes.length];
-    this.setMode(next);
-    const msgs = {
-      system: "🖥️ Giao diện: Tự động theo hệ thống",
-      light: "☀️ Giao diện: Sáng (Xanh mùa đông)",
-      dark: "🌙 Giao diện: Tối (Đêm Bắc Cực)"
-    };
-    if (typeof toast === "function") toast(msgs[next]);
-  },
-  apply() {
-    const mode = this.getMode();
-    const isSysDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const isDark = mode === "dark" || (mode === "system" && isSysDark);
-
-    document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
-    document.body.setAttribute("data-theme", isDark ? "dark" : "light");
-    document.body.dataset.season = "winter"; // Luôn giữ màu xanh mùa đông nước Nga
-    this.updateButton();
-  },
-  updateButton() {
-    const btn = document.getElementById("themeToggleBtn");
-    if (!btn) return;
-    const mode = this.getMode();
-    if (mode === "light") {
-      btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
-      btn.title = "Giao diện: Sáng (Bấm để chuyển Tối / Hệ thống)";
-    } else if (mode === "dark") {
-      btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
-      btn.title = "Giao diện: Tối (Bấm để chuyển Hệ thống / Sáng)";
-    } else {
-      btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`;
-      btn.title = "Giao diện: Theo hệ thống (Bấm để chuyển Sáng / Tối)";
-    }
-  },
-  init() {
-    this.apply();
-    if (window.matchMedia) {
-      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-        if (this.getMode() === "system") this.apply();
-      });
-    }
-  }
-};
+/** Giao diện Sáng cố định (Russian Winter Cool Blue) */
+function applyLightTheme() {
+  document.documentElement.setAttribute("data-theme", "light");
+  document.body.setAttribute("data-theme", "light");
+  document.body.dataset.season = "winter";
+}
 
 function applySeason(season = "winter") {
   document.body.dataset.season = "winter";
@@ -482,9 +432,7 @@ function applySeason(season = "winter") {
   }
 }
 
-function cycleSeason() {
-  ThemeManager.cycle();
-}
+function cycleSeason() {}
 
 /** Hộp thoại Đăng nhập / Đăng ký hiện đại */
 const AuthModal = {
@@ -639,7 +587,6 @@ function renderHeader() {
       </nav>
 
       <div class="header-right header-actions">
-        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Đổi giao diện Sáng/Tối/Hệ thống"></button>
         ${proButtonHtml}
         <div id="userArea" class="user-area"></div>
         <button class="menu-button" id="mobileMenuBtn" type="button" aria-label="Mở menu" aria-expanded="false">
@@ -649,10 +596,6 @@ function renderHeader() {
       </div>
     </div>
   </header>`;
-
-  ThemeManager.updateButton();
-  const themeBtn = document.getElementById("themeToggleBtn");
-  if (themeBtn) themeBtn.addEventListener("click", () => ThemeManager.cycle());
 
   const mobileBtn = document.getElementById("mobileMenuBtn");
   const nav = document.getElementById("mainNav");
@@ -940,7 +883,7 @@ function quizEngine(container, questions, { onFinish } = {}) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  ThemeManager.init();
+  applyLightTheme();
   renderHeader();
   renderFooter();
   applySeason("winter");
