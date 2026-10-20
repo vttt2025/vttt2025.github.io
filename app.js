@@ -385,31 +385,79 @@ const NAV_LINKS = [
   ["blog.html", "Blog"]
 ];
 
-const SEASON_ORDER = ["spring", "summer", "autumn", "winter"];
+const SEASON_ORDER = ["winter"];
 
 const SEASON_META = {
-  spring: { icon: "🪻", label: "Mùa xuân", fx: ["🌹", "🪆", "🌹", "🪆"] },
-  summer: { icon: "☀️", label: "Mùa hè", fx: ["✨", "☀️", "✨", "🌞", "✨"] },
-  autumn: { icon: "🍂", label: "Mùa thu", fx: ["🍂", "🍁", "🍂", "🍃"] },
-  winter: { icon: "❄️", label: "Mùa đông", fx: ["❄️", "dot", "❄️", "dot", "dot"] }
+  winter: { icon: "❄️", label: "Mùa đông", fx: ["❄️", "•", "❄️", "•"] }
 };
 
 function autoSeason() {
-  const m = new Date().getMonth() + 1;
-  if (m >= 3 && m <= 5) return "spring";
-  if (m >= 6 && m <= 8) return "summer";
-  if (m >= 9 && m <= 11) return "autumn";
   return "winter";
 }
 
 function currentSeason() {
-  const saved = STORE.get("season", null);
-  return SEASON_ORDER.includes(saved) ? saved : autoSeason();
+  return "winter";
 }
 
-function applySeason(season) {
-  const meta = SEASON_META[season] || SEASON_META[autoSeason()];
-  document.body.dataset.season = season;
+/** Quản lý giao diện Sáng / Tối / Hệ thống (Light / Dark / System) */
+const ThemeManager = {
+  KEY: "trki_theme_mode",
+  getMode() {
+    return STORE.get(this.KEY, "system"); // 'system' | 'light' | 'dark'
+  },
+  setMode(mode) {
+    STORE.set(this.KEY, mode);
+    this.apply();
+  },
+  cycle() {
+    const modes = ["system", "light", "dark"];
+    const cur = this.getMode();
+    const next = modes[(modes.indexOf(cur) + 1) % modes.length];
+    this.setMode(next);
+    const msgs = {
+      system: "🖥️ Giao diện: Tự động theo hệ thống",
+      light: "☀️ Giao diện: Sáng (Xanh mùa đông)",
+      dark: "🌙 Giao diện: Tối (Đêm Bắc Cực)"
+    };
+    if (typeof toast === "function") toast(msgs[next]);
+  },
+  apply() {
+    const mode = this.getMode();
+    const isSysDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const isDark = mode === "dark" || (mode === "system" && isSysDark);
+
+    document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+    document.body.setAttribute("data-theme", isDark ? "dark" : "light");
+    document.body.dataset.season = "winter"; // Luôn giữ màu xanh mùa đông nước Nga
+    this.updateButton();
+  },
+  updateButton() {
+    const btn = document.getElementById("themeToggleBtn");
+    if (!btn) return;
+    const mode = this.getMode();
+    if (mode === "light") {
+      btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`;
+      btn.title = "Giao diện: Sáng (Bấm để chuyển Tối / Hệ thống)";
+    } else if (mode === "dark") {
+      btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+      btn.title = "Giao diện: Tối (Bấm để chuyển Hệ thống / Sáng)";
+    } else {
+      btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>`;
+      btn.title = "Giao diện: Theo hệ thống (Bấm để chuyển Sáng / Tối)";
+    }
+  },
+  init() {
+    this.apply();
+    if (window.matchMedia) {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+        if (this.getMode() === "system") this.apply();
+      });
+    }
+  }
+};
+
+function applySeason(season = "winter") {
+  document.body.dataset.season = "winter";
 
   let fx = document.getElementById("seasonFx");
   if (!fx) {
@@ -421,80 +469,191 @@ function applySeason(season) {
   }
   fx.innerHTML = "";
 
-  const isSummer = season === "summer";
-  const count = isSummer ? 18 : season === "autumn" ? 4 : 10;
-  for (let i = 0; i < count; i++) {
+  for (let i = 0; i < 8; i++) {
     const s = document.createElement("span");
-    const kind = meta.fx[Math.floor(Math.random() * meta.fx.length)];
-    if (kind === "dot") {
-      s.className = "fx-dot";
-      s.style.fontSize = 4 + Math.random() * 4 + "px";
-    } else {
-      s.textContent = kind;
-      s.style.fontSize = 10 + Math.random() * 10 + "px";
-    }
+    s.textContent = i % 2 === 0 ? "❄️" : "•";
+    s.style.fontSize = i % 2 === 0 ? (9 + Math.random() * 8 + "px") : "5px";
     s.style.left = Math.random() * 100 + "vw";
-    s.style.setProperty("--drift", Math.round(Math.random() * 120 - 60) + "px");
-    const dur = isSummer ? 2.5 + Math.random() * 3 : 6 + Math.random() * 6;
+    s.style.setProperty("--drift", Math.round(Math.random() * 100 - 50) + "px");
+    const dur = 7 + Math.random() * 6;
     s.style.animationDuration = dur.toFixed(2) + "s";
     s.style.animationDelay = (-Math.random() * dur).toFixed(2) + "s";
-    if (isSummer) s.style.top = Math.random() * 90 + "vh";
     fx.appendChild(s);
-  }
-
-  const btn = document.getElementById("seasonBtn");
-  if (btn) {
-    btn.textContent = meta.icon;
-    const tip = "Đổi mùa — hiện tại: " + meta.label;
-    btn.title = tip;
-    btn.setAttribute("aria-label", tip);
   }
 }
 
 function cycleSeason() {
-  const next = SEASON_ORDER[(SEASON_ORDER.indexOf(currentSeason()) + 1) % SEASON_ORDER.length];
-  STORE.set("season", next);
-  applySeason(next);
-  toast(SEASON_META[next].icon + " Đã chuyển sang " + SEASON_META[next].label);
+  ThemeManager.cycle();
 }
+
+/** Hộp thoại Đăng nhập / Đăng ký hiện đại */
+const AuthModal = {
+  open(initialTab = "login") {
+    let modal = document.getElementById("authModal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "authModal";
+      modal.className = "modal-overlay";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+      <div class="modal-card auth-modal-card">
+        <button class="modal-close" id="authModalClose" type="button" aria-label="Đóng">&times;</button>
+        <div class="auth-modal-header">
+          <div class="auth-modal-logo">
+            <span class="brand-mark">Я</span>
+            <span class="brand-text">Rusi<span>TRKI</span></span>
+          </div>
+          <h2 id="authModalTitle">${initialTab === "register" ? "Đăng ký tài khoản học viên" : "Đăng nhập Rusi TRKI"}</h2>
+          <p id="authModalDesc">Luyện thi TRKI & học tiếng Nga toàn diện chuẩn CEFR</p>
+        </div>
+
+        <div class="auth-modal-tabs">
+          <button class="auth-tab ${initialTab === "login" ? "active" : ""}" id="tabAuthLogin" type="button">Đăng nhập</button>
+          <button class="auth-tab ${initialTab === "register" ? "active" : ""}" id="tabAuthRegister" type="button">Đăng ký mới</button>
+        </div>
+
+        <div class="auth-modal-body">
+          <div class="auth-features-preview">
+            <div class="auth-feat-item">⚡ <span>Lưu chuỗi ngày Streak & tích lũy XP</span></div>
+            <div class="auth-feat-item">🏺 <span>Đồng bộ Lọ từ vựng Spaced Repetition (SM-2)</span></div>
+            <div class="auth-feat-item">📝 <span>Lưu kết quả & báo cáo làm bài thi thử TRKI</span></div>
+          </div>
+
+          <button class="btn-google-auth" id="btnGoogleAction" type="button">
+            <svg class="g-icon" viewBox="0 0 48 48" aria-hidden="true" width="22" height="22">
+              <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8a12 12 0 1 1 7.9-21l5.7-5.7A20 20 0 1 0 44 24c0-1.2-.1-2.4-.4-3.5z"/>
+              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7A20 20 0 0 0 6.3 14.7z"/>
+              <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2A12 12 0 0 1 12.7 28l-6.6 5.1A20 20 0 0 0 24 44z"/>
+              <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.6l6.2 5.2C41 36.7 44 31 44 24c0-1.2-.1-2.4-.4-3.5z"/>
+            </svg>
+            <span id="googleActionText">${initialTab === "register" ? "Đăng ký nhanh với Google" : "Đăng nhập nhanh với Google"}</span>
+          </button>
+
+          <div class="auth-divider"><span>hoặc</span></div>
+
+          <button class="btn btn-outline btn-block" id="btnGuestAction" type="button" style="width:100%;justify-content:center;padding:10px 14px;border-radius:10px;font-weight:600">
+            👤 Trải nghiệm nhanh với tư cách Khách
+          </button>
+        </div>
+      </div>
+    `;
+
+    modal.classList.add("open");
+
+    const closeBtn = modal.querySelector("#authModalClose");
+    closeBtn.addEventListener("click", () => modal.classList.remove("open"));
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) modal.classList.remove("open");
+    });
+
+    const tabLogin = modal.querySelector("#tabAuthLogin");
+    const tabRegister = modal.querySelector("#tabAuthRegister");
+    const title = modal.querySelector("#authModalTitle");
+    const gText = modal.querySelector("#googleActionText");
+
+    tabLogin.addEventListener("click", () => {
+      tabLogin.classList.add("active");
+      tabRegister.classList.remove("active");
+      title.textContent = "Đăng nhập Rusi TRKI";
+      gText.textContent = "Đăng nhập nhanh với Google";
+    });
+
+    tabRegister.addEventListener("click", () => {
+      tabRegister.classList.add("active");
+      tabLogin.classList.remove("active");
+      title.textContent = "Đăng ký tài khoản học viên";
+      gText.textContent = "Đăng ký nhanh với Google";
+    });
+
+    modal.querySelector("#btnGoogleAction").addEventListener("click", () => {
+      modal.classList.remove("open");
+      if (window.Auth) window.Auth.signInWithGoogle();
+    });
+
+    modal.querySelector("#btnGuestAction").addEventListener("click", () => {
+      const guest = {
+        uid: "guest_" + Date.now(),
+        name: "Học viên Khách",
+        email: "khach@rusitrki.com",
+        photo: "",
+        provider: "guest"
+      };
+      STORE.set("auth_user", guest);
+      if (window.Auth) window.Auth.user = guest;
+      renderUserArea();
+      modal.classList.remove("open");
+      if (typeof toast === "function") toast("Chào mừng bạn trải nghiệm với tư cách Khách! 👋");
+    });
+  }
+};
 
 function renderHeader() {
   const host = document.getElementById("app-header");
   if (!host) return;
   const page = document.body.dataset.page;
-  const links = NAV_LINKS.map((item) => renderNavLink(item, page)).join("");
   const isPro = Monetization.isPro();
   const proButtonHtml = isPro
-    ? `<span class="pro-chip" style="font-size:0.75rem;padding:4px 8px" title="Tài khoản PRO đã kích hoạt">⭐ PRO</span>`
+    ? `<span class="pro-chip" style="font-size:0.75rem;padding:5px 9px" title="Tài khoản PRO đã kích hoạt">⭐ PRO</span>`
     : `<button class="btn btn-sm" id="btnUpgradeHeader" type="button" style="background:var(--russia-red);color:#fff;border-color:var(--russia-red);font-size:0.8rem;padding:6px 12px;border-radius:10px">⭐ Gói PRO</button>`;
+
+  const MAX_PRIMARY = 7;
+  const primaryLinks = NAV_LINKS.slice(0, MAX_PRIMARY);
+  const overflowLinks = NAV_LINKS.slice(MAX_PRIMARY);
+
+  let navLinksHtml = primaryLinks.map((item) => renderNavLink(item, page)).join("");
+
+  if (overflowLinks.length > 0) {
+    const moreItems = overflowLinks.map(([href, label]) => {
+      const isActive = page && (href === page + ".html" || href.startsWith(page + ".html"));
+      return `<a class="nav-dropdown-item ${isActive ? "active" : ""}" href="${href}">${label}</a>`;
+    }).join("");
+    navLinksHtml += `
+      <div class="nav-dropdown nav-more" id="navMoreDropdown">
+        <button class="nav-dropdown-trigger" type="button" aria-haspopup="true" aria-expanded="false">
+          <span>More</span>
+          <svg viewBox="0 0 16 16" width="12" height="12"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+        <div class="nav-dropdown-menu">
+          ${moreItems}
+        </div>
+      </div>
+    `;
+  }
 
   host.innerHTML = `
   <header class="header">
-    <a class="brand" href="index.html" aria-label="Rusi TRKI - Trang chủ">
-      <span class="brand-mark">Я</span>
-      <span>Rusi<span>TRKI</span></span>
-    </a>
+    <div class="header-inner">
+      <div class="header-left">
+        <a class="brand" href="index.html" aria-label="Rusi TRKI - Trang chủ">
+          <span class="brand-mark">Я</span>
+          <span class="brand-text">Rusi<span>TRKI</span></span>
+        </a>
+      </div>
 
-    <button class="menu-button" id="mobileMenuBtn" type="button" aria-label="Mở menu" aria-expanded="false">
-      <span></span>
-      <span></span>
-    </button>
+      <nav class="nav header-center" id="mainNav" aria-label="Điều hướng chính">
+        ${navLinksHtml}
+      </nav>
 
-    <nav class="nav" id="mainNav" aria-label="Điều hướng chính">
-      ${links}
-    </nav>
-
-    <div class="header-actions" style="display:flex;align-items:center;gap:10px">
-      <button class="mascot-chip" id="chipMascot" type="button" aria-label="Mascot Rusika"></button>
-      <span class="xp-chip" id="chipXp" style="display:inline-flex;align-items:center;padding:5px 11px;background:#fff;border:1px solid var(--border);border-radius:999px;font-size:0.8rem;font-weight:700">⚡ ${STORE.get("xp", 0)} XP</span>
-      <span class="streak-chip" id="chipStreak" style="display:inline-flex;align-items:center;padding:5px 11px;background:#fff;border:1px solid var(--border);border-radius:999px;font-size:0.8rem;font-weight:700;color:var(--russia-red)">🔥 ${STORE.get("streak", 0)} ngày</span>
-      <button class="season-btn" id="seasonBtn" type="button">🌸</button>
-      ${proButtonHtml}
-      <div id="userArea" class="user-area" style="display:flex;align-items:center"></div>
-      <a class="header-cta" href="mock-test.html">Học miễn phí <svg viewBox="0 0 20 20"><path d="M4 10h12M11.5 5.5 16 10l-4.5 4.5"/></svg></a>
+      <div class="header-right header-actions">
+        <button class="theme-toggle-btn" id="themeToggleBtn" type="button" aria-label="Đổi giao diện Sáng/Tối/Hệ thống"></button>
+        ${proButtonHtml}
+        <div id="userArea" class="user-area"></div>
+        <button class="menu-button" id="mobileMenuBtn" type="button" aria-label="Mở menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+        </button>
+      </div>
     </div>
   </header>`;
-  updateHeaderChips();
+
+  ThemeManager.updateButton();
+  const themeBtn = document.getElementById("themeToggleBtn");
+  if (themeBtn) themeBtn.addEventListener("click", () => ThemeManager.cycle());
+
   const mobileBtn = document.getElementById("mobileMenuBtn");
   const nav = document.getElementById("mainNav");
   if (mobileBtn && nav) {
@@ -503,12 +662,11 @@ function renderHeader() {
       mobileBtn.setAttribute("aria-expanded", String(open));
     });
   }
-  const seasonBtn = document.getElementById("seasonBtn");
-  if (seasonBtn) seasonBtn.addEventListener("click", cycleSeason);
-  const mascotBtn = document.getElementById("chipMascot");
-  if (mascotBtn) mascotBtn.addEventListener("click", () => MascotRusika.showModal());
+
   const upgradeBtn = document.getElementById("btnUpgradeHeader");
   if (upgradeBtn) upgradeBtn.addEventListener("click", () => Monetization.openUpgradeModal());
+
+  initNavDropdowns();
   renderUserArea();
 }
 
@@ -526,7 +684,6 @@ function initNavDropdowns() {
     if (!trigger) return;
     let hoverTimer = null;
     const open = () => {
-      // Đóng các dropdown khác
       document.querySelectorAll(".nav-dropdown.open").forEach((o) => {
         if (o !== dd) o.classList.remove("open");
       });
@@ -550,42 +707,34 @@ function initNavDropdowns() {
       hoverTimer = setTimeout(close, 180);
     });
   });
-  // Click ngoài dropdown để đóng
   document.addEventListener("click", () => {
     document.querySelectorAll(".nav-dropdown.open").forEach((o) => o.classList.remove("open"));
   });
 }
 
 /**
- * Render khu vực tài khoản ở header: nút đăng nhập (khi chưa login) hoặc
- * avatar + menu thả xuống (khi đã login). Được gọi lại khi trạng thái auth đổi.
+ * Render khu vực tài khoản ở header:
+ * - Khi CHƯA login: 2 nút [Đăng nhập] và [Đăng ký] (Bỏ nút học miễn phí, không hiện XP/streak ra ngoài)
+ * - Khi ĐÃ login: avatar + tên + dropdown chứa XP, Streak và menu quản lý cá nhân.
  */
 function renderUserArea() {
   const host = document.getElementById("userArea");
   if (!host) return;
-  // Ưu tiên trạng thái thật từ Firebase; nếu chưa kịp phản hồi thì dùng cache
-  // từ lần đăng nhập trước để header không bị nhảy nút Đăng nhập ↔ avatar.
+
   const user = (window.Auth && window.Auth.user) || STORE.get("auth_user", null);
 
   if (!user) {
-    // Chưa đăng nhập: hiển thị nút Google.
     host.innerHTML = `
-      <button class="btn btn-outline btn-sm btn-google" id="btnLogin" type="button">
-        <svg class="g-icon" viewBox="0 0 48 48" aria-hidden="true">
-          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8a12 12 0 1 1 7.9-21l5.7-5.7A20 20 0 1 0 44 24c0-1.2-.1-2.4-.4-3.5z"/>
-          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7A20 20 0 0 0 6.3 14.7z"/>
-          <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2A12 12 0 0 1 12.7 28l-6.6 5.1A20 20 0 0 0 24 44z"/>
-          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.6l6.2 5.2C41 36.7 44 31 44 24c0-1.2-.1-2.4-.4-3.5z"/>
-        </svg>
-        <span>Đăng nhập</span>
-      </button>`;
-    host.querySelector("#btnLogin").addEventListener("click", () => {
-      if (window.Auth) window.Auth.signInWithGoogle();
-    });
+      <div class="auth-buttons-group">
+        <button class="btn-auth-login" id="btnLogin" type="button">Đăng nhập</button>
+        <button class="btn-auth-register" id="btnRegister" type="button">Đăng ký</button>
+      </div>`;
+    host.querySelector("#btnLogin").addEventListener("click", () => AuthModal.open("login"));
+    host.querySelector("#btnRegister").addEventListener("click", () => AuthModal.open("register"));
     return;
   }
 
-  // Đã đăng nhập: avatar + menu thả xuống.
+  // Đã đăng nhập: avatar + menu thả xuống chứa điểm XP & chuỗi Streak
   const initials = (user.name || user.email || "?")
     .split(/\s+/)
     .map((s) => s[0])
@@ -595,28 +744,70 @@ function renderUserArea() {
   const avatar = user.photo
     ? `<img class="user-avatar" src="${esc(user.photo)}" alt="${esc(user.name)}" referrerpolicy="no-referrer" />`
     : `<span class="user-avatar user-avatar-fallback">${esc(initials)}</span>`;
+  const shortName = (user.name || "Học viên").split(/\s+/)[0];
+
+  const adminEmails = (window.ADMIN_EMAILS || []).map(e => String(e).toLowerCase().trim());
+  const isAdmin = user.email && adminEmails.includes(String(user.email).toLowerCase().trim());
 
   host.innerHTML = `
     <div class="user-menu" id="userMenu">
       <button class="user-trigger" id="userTrigger" type="button" aria-haspopup="true" aria-expanded="false">
         ${avatar}
+        <span class="user-name-short">${esc(shortName)}</span>
         <span class="caret" aria-hidden="true">▾</span>
       </button>
       <div class="user-dropdown" id="userDropdown" role="menu">
         <div class="user-dropdown-head">
           ${avatar}
           <div class="user-head-info">
-            <div class="user-fullname">${esc(user.name)}</div>
-            <div class="user-email">${esc(user.email)}</div>
+            <div class="user-fullname">${esc(user.name || "Học viên Rusi")}</div>
+            <div class="user-email">${esc(user.email || "")}</div>
           </div>
         </div>
 
-        <a class="user-dropdown-item" href="index.html#progress" role="menuitem">📊 Tiến độ của tôi</a>
-        <a class="user-dropdown-item" href="vocabulary.html" role="menuitem">🏺 Lọ từ vựng & Flashcard</a>
-        <a class="user-dropdown-item" href="mock-test.html" role="menuitem">📝 Luyện thi TRKI</a>
-        <a class="user-dropdown-item" href="admin.html" role="menuitem">🛠️ Quản trị nội dung</a>
+        <!-- PHẦN ĐIỂM XP VÀ CHUỖI STREAK HIỂN THỊ TRANG TRỌNG TRONG MENU TÀI KHOẢN -->
+        <div class="user-stats-bar">
+          <div class="user-stat-card">
+            <span class="user-stat-icon">⚡</span>
+            <div>
+              <div class="user-stat-val" id="userMenuXp">${STORE.get("xp", 0)} XP</div>
+              <div class="user-stat-lbl">Kinh nghiệm</div>
+            </div>
+          </div>
+          <div class="user-stat-card">
+            <span class="user-stat-icon">🔥</span>
+            <div>
+              <div class="user-stat-val" id="userMenuStreak">${STORE.get("streak", 0)} ngày</div>
+              <div class="user-stat-lbl">Chuỗi học Streak</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="user-dropdown-divider"></div>
+
+        <a class="user-dropdown-item" href="index.html#progress" role="menuitem">
+          <span>📊</span>
+          <span>Tiến độ của tôi</span>
+        </a>
+        <a class="user-dropdown-item" href="vocabulary.html" role="menuitem">
+          <span>🏺</span>
+          <span>Lọ từ vựng & Flashcard</span>
+        </a>
+        <a class="user-dropdown-item" href="mock-test.html" role="menuitem">
+          <span>📝</span>
+          <span>Luyện thi TRKI</span>
+        </a>
+        ${isAdmin ? `
+        <a class="user-dropdown-item" href="admin.html" role="menuitem">
+          <span>🛠️</span>
+          <span>Quản trị hệ thống</span>
+        </a>` : ""}
+
+        <div class="user-dropdown-divider"></div>
+
         <button class="user-dropdown-item user-dropdown-signout" id="btnSignOut" type="button" role="menuitem">
-          🚪 Đăng xuất
+          <span>🚪</span>
+          <span>Đăng xuất</span>
         </button>
       </div>
     </div>`;
@@ -628,7 +819,7 @@ function renderUserArea() {
     const open = dropdown.classList.toggle("open");
     trigger.setAttribute("aria-expanded", open ? "true" : "false");
   });
-  // Gỡ listener "click ngoài" của lần render trước để không tích tụ mỗi lần auth đổi
+
   if (renderUserArea._outsideClick) {
     document.removeEventListener("click", renderUserArea._outsideClick);
   }
@@ -637,8 +828,10 @@ function renderUserArea() {
     trigger.setAttribute("aria-expanded", "false");
   };
   document.addEventListener("click", renderUserArea._outsideClick);
+
   host.querySelector("#btnSignOut").addEventListener("click", () => {
     dropdown.classList.remove("open");
+    STORE.set("auth_user", null);
     if (window.Auth) window.Auth.signOut();
   });
 }
@@ -666,7 +859,7 @@ function renderFooter() {
       <span class="brand-mark">Я</span>
       <span>Rusi<span style="color:#8dbcef">TRKI</span></span>
     </a>
-    <p>Học tiếng Nga hiện đại, dễ hiểu và đầy cảm hứng. Hệ sinh thái 7 trụ cột chuẩn hoá phục vụ du học và đời sống tại Liên bang Nga.</p>
+    <p>Học tiếng Nga hiện đại, dễ hiểu và đầy cảm hứng. Hệ sinh thái học tập toàn diện phục vụ luyện thi chứng chỉ, du học và đời sống tại Liên bang Nga.</p>
     <div class="footer-links">
       <a href="mock-test.html">TRKI</a>
       <a href="vocabulary.html">Từ vựng</a>
@@ -747,9 +940,10 @@ function quizEngine(container, questions, { onFinish } = {}) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  ThemeManager.init();
   renderHeader();
   renderFooter();
-  applySeason(currentSeason());
+  applySeason("winter");
   Progress.touchStreak();
   bindAuthToHeader();
   mergeAdminData();

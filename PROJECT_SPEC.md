@@ -736,10 +736,26 @@ CREATE POLICY "Super Admins view audit logs" ON admin_audit_logs FOR SELECT USIN
 5. **Ghi nhận Audit Log**: Mọi thao tác cập nhật dữ liệu của Admin (Thêm/Sửa/Xóa Đề, Kích hoạt đơn PRO thủ công) bắt buộc phải ghi 1 bản ghi vào bảng `admin_audit_logs`.
 
 
-6. **Quy chuẩn thanh điều hướng (Header Navigation)**: Thanh tiêu đề chính (Navbar) là cấu trúc phẳng, tuyệt đối không có phần con (dropdown submenu), chỉ gồm đúng 7 liên kết đơn tương ứng 7 trụ cột: `TRKI | Từ vựng | Nghe | Nói | Viết | Shop | Blog`.
+6. **Quy chuẩn bố cục Header Navigation (Chuẩn dauenglish.com)**:
+* **Cấu trúc 3 khu vực cân đối (Grid `1fr auto 1fr`)**:
+  - **Bên trái (`.header-left`)**: Logo & Thương hiệu `Я RusiTRKI` cố định sát mép trái, không bị khoảng đệm trống đẩy vào giữa.
+  - **Chính giữa (`.header-center`)**: Cố định đúng 7 chuyên mục cân đối hoàn hảo ở trung tâm: `TRKI | Từ vựng | Nghe | Nói | Viết | Shop | Blog`. Nếu số lượng liên kết nhiều hơn 7, hệ thống tự động gom các mục thừa vào menu dropdown `More ▾` (Thêm).
+  - **Bên phải (`.header-right`)**:
+    - Nút chuyển đổi giao diện: Sáng ☀️ / Tối 🌙 / Theo hệ thống 💻.
+    - Nút / Huy hiệu Gói PRO.
+    - **Khi chưa đăng nhập**: Bỏ nút "Học miễn phí". Hiển thị 2 nút rõ ràng: **Đăng nhập** (nút outline/ghost) và **Đăng ký** (nút primary đỏ nổi bật). Tuyệt đối **không hiển thị mặc định điểm XP và chuỗi Streak** ra ngoài thanh header khi chưa đăng nhập.
+    - **Khi đã đăng nhập**: Hiển thị Avatar + Tên + Dropdown tài khoản. **Điểm XP và chuỗi ngày Streak được hiển thị trang trọng, đẹp mắt bên trong menu tài khoản học viên**.
 
-7. **Quy chuẩn Deploy GitHub Pages & Cloudflare Cache Invalidation**:
+7. **Quy chuẩn Mùa nền giao diện & Bộ chuyển đổi Sáng / Tối**:
+* **Nền mùa đông màu xanh (Winter Cool Blue)**: Luôn giữ sắc xanh mát mẻ của tuyết mùa đông nước Nga (`--bg: #eef4fb;` cho Light mode và `--bg: #0a1120;` cho Dark mode đêm Bắc Cực). Không tự động nhảy sang màu các mùa khác làm mất bản sắc giao diện.
+* **Bộ chuyển đổi ThemeManager**: Tích hợp nút chuyển đổi trực quan 3 chế độ: `light` (Sáng ☀️), `dark` (Tối 🌙), và `system` (Tự động theo hệ điều hành 💻). Lưu cấu hình người dùng vào `localStorage` (`trki_theme_mode`).
+
+8. **Quy tắc bảo vệ ngôn từ UI — Cấm hiển thị từ "Trụ Cột"**:
+* Khái niệm "7 Trụ cột" là kiến trúc tư duy, phân hệ module logic trong tài liệu kỹ thuật dành cho đội ngũ phát triển; **tuyệt đối không hiển thị các từ ngữ "Trụ cột" / "7 trụ cột" / "Trụ cột 1:..." ra giao diện người dùng (Learner UI)**.
+* Các tiêu đề, chip, banner chỉ gọi trực tiếp tên kỹ năng hoặc nghiệp vụ: `Luyện thi TRKI`, `Lọ từ vựng & Video`, `Luyện nghe chép chính tả`, `Luyện nói Shadowing`, `Luyện viết tả tranh`, `Shop Hàng Nga`, `Cẩm nang Du học`.
+
+9. **Quy chuẩn Deploy GitHub Pages & Cloudflare Cache Invalidation**:
 * **Bắt buộc file `.nojekyll`**: Tại thư mục gốc của repository phải luôn duy trì tệp `.nojekyll` (dung lượng 0 bytes) nhằm chỉ thị GitHub Pages bỏ qua bộ xử lý Jekyll, chuyển trực tiếp các file tĩnh HTML/JS/CSS và tránh lỗi build / 403.
-* **Cache-Busting Query Parameter (`?v=X.Y`)**: Mọi file HTML khi nhúng tài nguyên nội bộ (`styles.css`, `data.js`, `auth.js`, `app.js`, `pages.js`, `admin.js`, `srs.js`) bắt buộc phải gắn tham số phiên bản `?v=2.2` (hoặc mới hơn). Do Cloudflare và GitHub Pages cấu hình `Cache-Control: max-age=14400` (4 tiếng), việc gắn query parameter buộc trình duyệt và CDN nạp ngay phiên bản mới nhất, tránh tình trạng local hiển thị một kiểu nhưng website trên mạng vẫn hiện phiên bản cũ.
+* **Cache-Busting Query Parameter (`?v=X.Y`)**: Mọi file HTML khi nhúng tài nguyên nội bộ (`styles.css`, `data.js`, `auth.js`, `app.js`, `pages.js`, `admin.js`, `srs.js`) bắt buộc phải gắn tham số phiên bản (hiện tại: `?v=2.3`). Do Cloudflare và GitHub Pages cấu hình `Cache-Control: max-age=14400` (4 tiếng), việc gắn query parameter buộc trình duyệt và CDN nạp ngay phiên bản mới nhất, tránh tình trạng local hiển thị một kiểu nhưng website trên mạng vẫn hiện phiên bản cũ.
 * **Thao tác Hard Reload cho người dùng**: Sau mỗi lần `git push`, hướng dẫn người dùng nhấn `Ctrl + F5` (hoặc `Cmd + Shift + R` trên Mac) hoặc mở tab Ẩn danh (Incognito) nếu trình duyệt còn lưu cache từ phiên trước.
 ```
