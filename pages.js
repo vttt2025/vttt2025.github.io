@@ -1507,22 +1507,6 @@ function initVocabPage() {
     });
 
     shelfHost.innerHTML = `
-      <!-- DAUENGLISH HUB HEADER -->
-      <div class="dau-hub-header">
-        <span class="dau-kicker">🏺 KHO TỪ VỰNG TIẾNG NGA · DAUENGLISH HUB</span>
-        <h2 class="dau-hub-title">Kho Lọ Từ Vựng & Chuỗi Bài Học Thực Tế</h2>
-        <p class="dau-hub-desc">
-          Học từ vựng theo mô hình <b>"Lọ từ vựng theo tình huống"</b> kết hợp <b>Series du học Nga</b> và <b>Flashcard Spaced Repetition</b>. Ghi nhớ sâu danh từ, động từ và trọng âm trong ngữ cảnh đời sống.
-        </p>
-        <div class="dau-hub-stats">
-          <div class="dau-hub-stat-item">📚 Tổng số bộ từ: <b>${allItems.length}</b></div>
-          <div class="dau-hub-stat-item">🟢 Sơ cấp A1: <b>${countA1}</b></div>
-          <div class="dau-hub-stat-item">🟠 Cơ bản A2: <b>${countA2}</b></div>
-          <div class="dau-hub-stat-item">🔵 Trung cấp B1: <b>${countB1}</b></div>
-          <div class="dau-hub-stat-item">🟣 Nâng cao B2: <b>${countB2}</b></div>
-        </div>
-      </div>
-
       <!-- DAUENGLISH SMART FILTER BAR -->
       <div class="dau-filter-bar">
         <div class="dau-level-pills-wrap">
@@ -2047,22 +2031,6 @@ function initListeningPage() {
     });
 
     host.innerHTML = `
-      <!-- DAUENGLISH HUB HEADER -->
-      <div class="dau-hub-header">
-        <span class="dau-kicker">🎧 KỸ NĂNG NGHE · CEFR 4 PART NATIVE AUDIO</span>
-        <h2 class="dau-hub-title">Luyện Nghe Tiếng Nga 4 Part Chuẩn CEFR</h2>
-        <p class="dau-hub-desc">
-          Rèn luyện phản xạ nghe hiểu đa cấp độ: từ hội thoại đời sống A1 tới bài giảng học thuật B2. Hệ thống tích hợp <b>4 chế độ luyện tập chuyên sâu</b>: Nghe thoại trực quan, Điền từ khuyết, Chép chính tả và Trắc nghiệm phản xạ.
-        </p>
-        <div class="dau-hub-stats">
-          <div class="dau-hub-stat-item">🎧 Tổng số bài nghe: <b>${all.length}</b></div>
-          <div class="dau-hub-stat-item">🟢 Sơ cấp A1: <b>${countA1}</b></div>
-          <div class="dau-hub-stat-item">🟠 Cơ bản A2: <b>${countA2}</b></div>
-          <div class="dau-hub-stat-item">🔵 Trung cấp B1: <b>${countB1}</b></div>
-          <div class="dau-hub-stat-item">🟣 Nâng cao B2: <b>${countB2}</b></div>
-        </div>
-      </div>
-
       <!-- DAUENGLISH SMART FILTER BAR -->
       <div class="dau-filter-bar">
         <div class="dau-level-pills-wrap">
@@ -2459,22 +2427,6 @@ function initSpeakingPage() {
     });
 
     host.innerHTML = `
-      <!-- DAUENGLISH HUB HEADER -->
-      <div class="dau-hub-header">
-        <span class="dau-kicker">🎙️ KỸ NĂNG NÓI · AI PHONEME SHADOWING</span>
-        <h2 class="dau-hub-title">Luyện Nói & Nhại Giọng Chuẩn Ngữ Điệu Nga</h2>
-        <p class="dau-hub-desc">
-          Phương pháp <b>Shadowing</b> kết hợp hệ thống chấm điểm phát âm AI theo thời gian thực. Theo dõi độ chuẩn xác âm vị (Phoneme Similarity), sửa lỗi trọng âm và âm ngắt phụ âm cứng/mềm.
-        </p>
-        <div class="dau-hub-stats">
-          <div class="dau-hub-stat-item">🎙️ Tổng số bộ nói: <b>${all.length}</b></div>
-          <div class="dau-hub-stat-item">🟢 Sơ cấp A1: <b>${countA1}</b></div>
-          <div class="dau-hub-stat-item">🟠 Cơ bản A2: <b>${countA2}</b></div>
-          <div class="dau-hub-stat-item">🔵 Trung cấp B1: <b>${countB1}</b></div>
-          <div class="dau-hub-stat-item">🟣 Nâng cao B2: <b>${countB2}</b></div>
-        </div>
-      </div>
-
       <!-- DAUENGLISH SMART FILTER BAR -->
       <div class="dau-filter-bar">
         <div class="dau-level-pills-wrap">
@@ -2808,22 +2760,6 @@ function initWritingPage() {
     });
 
     host.innerHTML = `
-      <!-- DAUENGLISH HUB HEADER -->
-      <div class="dau-hub-header">
-        <span class="dau-kicker">✍️ KỸ NĂNG VIẾT · PISMO CHUẨN TRKI & AI RUSIKA</span>
-        <h2 class="dau-hub-title">Phòng Luyện Viết Tiếng Nga (Письмо)</h2>
-        <p class="dau-hub-desc">
-          Rèn luyện kỹ năng tự luận tiếng Nga theo chuẩn khảo thí quốc tế: từ tự giới thiệu A1, tả tranh bối cảnh A2 đến bài luận học thuật B2. Tích hợp <b>Bàn phím ảo Cyrillic</b>, gợi ý từ vựng và <b>AI Rusika chấm 4 tiêu chuẩn</b>.
-        </p>
-        <div class="dau-hub-stats">
-          <div class="dau-hub-stat-item">📝 Tổng số đề viết: <b>${all.length}</b></div>
-          <div class="dau-hub-stat-item">🟢 Sơ cấp A1: <b>${countA1}</b></div>
-          <div class="dau-hub-stat-item">🟠 Cơ bản A2: <b>${countA2}</b></div>
-          <div class="dau-hub-stat-item">🔵 Trung cấp B1: <b>${countB1}</b></div>
-          <div class="dau-hub-stat-item">🟣 Nâng cao B2: <b>${countB2}</b></div>
-        </div>
-      </div>
-
       <!-- DAUENGLISH SMART FILTER BAR -->
       <div class="dau-filter-bar">
         <div class="dau-level-pills-wrap">
@@ -3279,22 +3215,6 @@ function initMockTestPage() {
     });
 
     host.innerHTML = `
-      <!-- DAUENGLISH HUB HEADER -->
-      <div class="dau-hub-header">
-        <span class="dau-kicker">🏛️ CHỨNG CHỈ QUỐC TẾ · ТРКИ / TORFL SIMULATION</span>
-        <h2 class="dau-hub-title">Ngân Hàng Đề Thi Thử ТРКИ Chuẩn Quốc Tế</h2>
-        <p class="dau-hub-desc">
-          Mô phỏng phòng thi chuẩn hóa của các trường đại học hàng đầu Liên bang Nga (MGU, Viện Pushkin, SPbGU). Hệ thống kiểm soát thời gian nghiêm ngặt, <b>cơ chế phát hiện gian lận Server-side</b> và đối chiếu đáp án chi tiết từng câu.
-        </p>
-        <div class="dau-hub-stats">
-          <div class="dau-hub-stat-item">📋 Tổng số đề thi: <b>${bank.length}</b></div>
-          <div class="dau-hub-stat-item">🟢 Sơ cấp A1: <b>${countA1}</b></div>
-          <div class="dau-hub-stat-item">🟠 Cơ bản A2: <b>${countA2}</b></div>
-          <div class="dau-hub-stat-item">🔵 Trung cấp B1: <b>${countB1}</b></div>
-          <div class="dau-hub-stat-item">🟣 Nâng cao B2: <b>${countB2}</b></div>
-        </div>
-      </div>
-
       <!-- DAUENGLISH SMART FILTER BAR -->
       <div class="dau-filter-bar">
         <div class="dau-level-pills-wrap">
