@@ -1431,46 +1431,127 @@ function initVocabPage() {
   };
 
   /* ---------- BỘ LỌC THÔNG MINH CHO TỪ VỰNG ---------- */
+  /* ---------- DANH SÁCH LỌ TỪ VỰNG ---------- */
   let currentLevel = "all";
-  let currentCategory = "all";
   let searchQuery = "";
   let currentStatus = "all";
 
-  const getCombinedVocabItems = () => {
+  const getVocabJars = () => {
     const customJars = STORE.get("custom_jars", []);
     const jars = [...(typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []), ...customJars].map(j => ({
       id: j.id,
       kind: "jar",
       level: j.level || "A1",
-      levelName: j.levelName || "Sơ cấp A1",
-      category: "jar",
-      categoryName: "Lọ từ vựng",
+      levelName: j.levelName || (j.level === "B2" ? "Nâng cao B2" : j.level === "B1" ? "Trung cấp B1" : j.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
       title: j.name,
-      ru: j.name,
-      vi: j.desc || "Bộ từ vựng theo tình huống",
       desc: j.desc || "",
       icon: j.icon || "🏺",
       wordsCount: (j.words || []).length,
       raw: j
     }));
+    return jars;
+  };
 
-    const lessons = (typeof VOCAB_LESSONS !== "undefined" ? VOCAB_LESSONS : []).map(l => ({
-      id: l.id,
-      kind: l.type === "series" ? "series" : "topic",
-      level: l.level || "A1",
-      levelName: l.level === "B2" ? "Nâng cao B2" : l.level === "B1" ? "Trung cấp B1" : l.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1",
-      category: l.type === "series" ? "series" : "topic",
-      categoryName: l.type === "series" ? "Series du học" : "Chủ đề đời thường",
-      title: l.ru,
-      ru: l.ru,
-      vi: l.vi,
-      desc: l.story || "",
-      icon: l.scene || (l.type === "series" ? "📚" : "🏷️"),
-      wordsCount: (l.words || []).length,
-      raw: l
-    }));
+  const renderVocabCards = () => {
+    const gridHost = el("#vocabCardsGrid");
+    if (!gridHost) return;
 
-    return [...jars, ...lessons];
+    const allItems = getVocabJars();
+    const countA1 = allItems.filter(i => i.level === "A1").length;
+    const countA2 = allItems.filter(i => i.level === "A2").length;
+    const countB1 = allItems.filter(i => i.level === "B1").length;
+    const countB2 = allItems.filter(i => i.level === "B2").length;
+
+    // Cập nhật số lượng trên các nút cấp độ
+    const cAll = el("#countAll"); if (cAll) cAll.textContent = allItems.length;
+    const cA1 = el("#countA1"); if (cA1) cA1.textContent = countA1;
+    const cA2 = el("#countA2"); if (cA2) cA2.textContent = countA2;
+    const cB1 = el("#countB1"); if (cB1) cB1.textContent = countB1;
+    const cB2 = el("#countB2"); if (cB2) cB2.textContent = countB2;
+
+    const qNorm = dauNormalize(searchQuery);
+    const filtered = allItems.filter(item => {
+      if (currentLevel !== "all" && item.level !== currentLevel) return false;
+      if (currentStatus === "completed") {
+        const isDone = Progress.doneList("vocabDone").includes(item.id);
+        if (!isDone) return false;
+      } else if (currentStatus === "not_started") {
+        const isDone = Progress.doneList("vocabDone").includes(item.id);
+        if (isDone) return false;
+      }
+      if (qNorm) {
+        const hay = dauNormalize(item.title + " " + item.desc);
+        const matchWords = (item.raw.words || []).some(w => dauNormalize(w.ru + " " + (w.vi || "") + " " + (w.note || "")).includes(qNorm));
+        if (!hay.includes(qNorm) && !matchWords) return false;
+      }
+      return true;
+    });
+
+    const sumCount = el("#vocabSummaryCount");
+    if (sumCount) {
+      sumCount.innerHTML = `Đang hiển thị <b>${filtered.length}</b> / ${allItems.length} lọ từ vựng`;
+    }
+
+    if (filtered.length === 0) {
+      gridHost.innerHTML = `
+        <div class="dau-empty-state" style="grid-column:1/-1;text-align:center;padding:40px 20px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius)">
+          <div style="font-size:2.4rem;margin-bottom:8px">🔍</div>
+          <h3 style="margin:0 0 6px">Không tìm thấy lọ từ vựng phù hợp</h3>
+          <p style="color:var(--muted);font-size:0.9rem;margin:0">Hãy thử tìm bằng từ khóa khác hoặc chuyển sang cấp độ A1/A2.</p>
+        </div>
+      `;
+    } else {
+      gridHost.innerHTML = filtered.map(item => {
+        const isDone = Progress.doneList("vocabDone").includes(item.id);
+        const badgeClass = item.level === "A1" ? "dau-badge-a1" : item.level === "A2" ? "dau-badge-a2" : item.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
+        return `
+          <div class="dau-card" data-vocab-id="${item.id}" data-kind="jar">
+            <div class="dau-card-top">
+              <div class="dau-card-badges">
+                <span class="dau-badge ${badgeClass}">${esc(item.level)}</span>
+              </div>
+              ${item.raw.is_pro_only ? '<span class="dau-badge-pro">PRO</span>' : ""}
+            </div>
+
+            <div class="dau-card-body">
+              <div class="dau-card-icon-wrap">
+                <div class="dau-card-icon ${item.level === "A2" ? "warm" : item.level === "B1" ? "" : item.level === "B2" ? "purple" : "green"}">
+                  ${item.icon}
+                </div>
+                <div>
+                  <h3 class="dau-card-ru ru" style="font-size:1.05rem;margin:0 0 4px">${esc(item.title)}</h3>
+                  <div class="dau-card-vi" style="font-size:0.86rem;color:var(--muted)">${esc(item.desc || "Lọ từ vựng tình huống")}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="dau-card-meta">
+              <span class="dau-meta-pill">📝 <b>${item.wordsCount}</b> từ vựng</span>
+              <span class="dau-meta-pill">⏱️ <b>15</b> phút</span>
+              <span class="dau-meta-pill">🔊 Audio bản xứ</span>
+            </div>
+
+            <div class="dau-card-footer">
+              <span class="dau-status-pill ${isDone ? "done" : ""}">
+                ${isDone ? "✅ Đã học thuộc" : "⏳ Chưa học"}
+              </span>
+              <button type="button" class="btn btn-primary btn-sm dau-card-cta">
+                Mở lọ từ →
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      gridHost.querySelectorAll(".dau-card").forEach(card => {
+        card.onclick = () => {
+          const id = card.dataset.vocabId;
+          showJarDetail(id);
+        };
+      });
+    }
+
+    renderVocabSidebar();
   };
 
   const renderVocabHub = () => {
@@ -1484,226 +1565,97 @@ function initVocabPage() {
     if (srsPane) srsPane.classList.add("hidden");
     shelfHost.classList.remove("hidden");
 
-    const allItems = getCombinedVocabItems();
-    const countA1 = allItems.filter(i => i.level === "A1").length;
-    const countA2 = allItems.filter(i => i.level === "A2").length;
-    const countB1 = allItems.filter(i => i.level === "B1").length;
-    const countB2 = allItems.filter(i => i.level === "B2").length;
-
-    // Lọc theo đa tiêu chí
-    const qNorm = dauNormalize(searchQuery);
-    const filtered = allItems.filter(item => {
-      if (currentLevel !== "all" && item.level !== currentLevel) return false;
-      if (currentCategory !== "all" && item.category !== currentCategory) return false;
-      if (currentStatus === "completed") {
-        const isDone = Progress.doneList("vocabDone").includes(item.id);
-        if (!isDone) return false;
-      } else if (currentStatus === "not_started") {
-        const isDone = Progress.doneList("vocabDone").includes(item.id);
-        if (isDone) return false;
-      }
-      if (qNorm) {
-        const hay = dauNormalize(item.title + " " + item.ru + " " + item.vi + " " + item.desc);
-        const matchWords = (item.raw.words || []).some(w => dauNormalize(w.ru + " " + w.vi).includes(qNorm));
-        if (!hay.includes(qNorm) && !matchWords) return false;
-      }
-      return true;
-    });
-
-    shelfHost.innerHTML = `
-      <!-- DAUENGLISH SMART FILTER BAR -->
-      <div class="dau-filter-bar">
-        <div class="dau-level-pills-wrap">
-          <div class="dau-level-pills">
-            <button type="button" class="dau-level-pill ${currentLevel === "all" ? "active" : ""}" data-level="all">
-              Tất cả cấp độ <span class="dau-pill-count">${allItems.length}</span>
-            </button>
-            <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
-              A1 · Sơ cấp <span class="dau-pill-count">${countA1}</span>
-            </button>
-            <button type="button" class="dau-level-pill ${currentLevel === "A2" ? "active" : ""}" data-level="A2">
-              A2 · Cơ bản <span class="dau-pill-count">${countA2}</span>
-            </button>
-            <button type="button" class="dau-level-pill ${currentLevel === "B1" ? "active" : ""}" data-level="B1">
-              B1 · Trung cấp <span class="dau-pill-count">${countB1}</span>
-            </button>
-            <button type="button" class="dau-level-pill ${currentLevel === "B2" ? "active" : ""}" data-level="B2">
-              B2 · Nâng cao <span class="dau-pill-count">${countB2}</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="dau-filter-controls">
-          <div class="dau-search-box ${searchQuery ? "has-text" : ""}">
-            <span class="dau-search-icon">🔍</span>
-            <input type="text" class="dau-search-input" id="vocabSearchInput" value="${esc(searchQuery)}" placeholder="Tìm theo từ tiếng Nga, tiếng Việt, chủ đề..." />
-            <button type="button" class="dau-search-clear" id="vocabSearchClear">×</button>
-          </div>
-
-          <select class="dau-select" id="vocabCatSelect">
-            <option value="all" ${currentCategory === "all" ? "selected" : ""}>Tất cả danh mục</option>
-            <option value="jar" ${currentCategory === "jar" ? "selected" : ""}>🏺 Lọ từ vựng đời sống</option>
-            <option value="series" ${currentCategory === "series" ? "selected" : ""}>📚 Series du học Nga</option>
-            <option value="topic" ${currentCategory === "topic" ? "selected" : ""}>🏷️ Chủ đề đời thường</option>
-          </select>
-
-          <select class="dau-select" id="vocabStatusSelect">
-            <option value="all" ${currentStatus === "all" ? "selected" : ""}>Tất cả trạng thái</option>
-            <option value="not_started" ${currentStatus === "not_started" ? "selected" : ""}>Chưa học</option>
-            <option value="completed" ${currentStatus === "completed" ? "selected" : ""}>Đã hoàn thành</option>
-          </select>
-
-          <button type="button" class="dau-reset-btn" id="vocabResetFilter">↺ Đặt lại bộ lọc</button>
-          <button type="button" class="btn btn-primary btn-sm" id="btnCreateJar" style="margin-left:auto">+ Tạo lọ cá nhân</button>
-        </div>
-
-        <div class="dau-filter-summary">
-          <div class="dau-summary-count">
-            Đang hiển thị <b>${filtered.length}</b> / ${allItems.length} bộ từ vựng
-          </div>
-          <div class="dau-active-tags">
-            ${currentLevel !== "all" ? `<span class="dau-active-tag">Cấp độ: ${currentLevel} <span class="dau-active-tag-remove" data-clear="level">×</span></span>` : ""}
-            ${currentCategory !== "all" ? `<span class="dau-active-tag">Phân loại: ${currentCategory === "jar" ? "Lọ từ" : currentCategory === "series" ? "Series" : "Chủ đề"} <span class="dau-active-tag-remove" data-clear="cat">×</span></span>` : ""}
-            ${searchQuery ? `<span class="dau-active-tag">Từ khóa: "${esc(searchQuery)}" <span class="dau-active-tag-remove" data-clear="search">×</span></span>` : ""}
-          </div>
-        </div>
-      </div>
-
-      <!-- DAUENGLISH CARDS GRID -->
-      <div class="dau-cards-grid">
-        ${filtered.length === 0 ? `
-          <div class="dau-empty-state">
-            <div class="dau-empty-icon">🔍</div>
-            <h3>Không tìm thấy bộ từ vựng phù hợp</h3>
-            <p>Hãy thử thay đổi từ khóa tìm kiếm hoặc chọn lại cấp độ TRKI.</p>
-            <button class="btn btn-outline btn-sm" id="emptyResetBtn">Đặt lại tất cả bộ lọc</button>
-          </div>
-        ` : filtered.map(item => {
-          const isDone = Progress.doneList("vocabDone").includes(item.id);
-          const badgeClass = item.level === "A1" ? "dau-badge-a1" : item.level === "A2" ? "dau-badge-a2" : item.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
-          return `
-            <div class="dau-card" data-vocab-id="${item.id}" data-kind="${item.kind}">
-              <div class="dau-card-top">
-                <div class="dau-card-badges">
-                  <span class="dau-badge ${badgeClass}">${esc(item.level)}</span>
-                  <span class="dau-badge-cat">${esc(item.categoryName)}</span>
-                </div>
-                ${item.raw.is_pro_only ? '<span class="dau-badge-pro">PRO</span>' : ""}
-              </div>
-
-              <div class="dau-card-body">
-                <div class="dau-card-icon-wrap">
-                  <div class="dau-card-icon ${item.level === "A2" ? "warm" : item.level === "B1" ? "" : item.level === "B2" ? "purple" : "green"}">
-                    ${item.icon}
-                  </div>
-                  <div>
-                    <h3 class="dau-card-ru ru">${esc(item.title)}</h3>
-                    <div class="dau-card-vi">${esc(item.vi)}</div>
-                  </div>
-                </div>
-                <div class="dau-card-desc">${esc(item.desc)}</div>
-              </div>
-
-              <div class="dau-card-meta">
-                <span class="dau-meta-pill">📝 <b>${item.wordsCount}</b> từ vựng</span>
-                <span class="dau-meta-pill">⏱️ <b>15</b> phút</span>
-                <span class="dau-meta-pill">🔊 Audio bản xứ</span>
-              </div>
-
-              <div class="dau-card-footer">
-                <span class="dau-status-pill ${isDone ? "done" : ""}">
-                  ${isDone ? "✅ Đã học thuộc" : "⏳ Chưa học"}
-                </span>
-                <button type="button" class="btn btn-primary btn-sm dau-card-cta">
-                  ${item.kind === "jar" ? "Mở lọ từ →" : "Học bài này →"}
-                </button>
-              </div>
+    let filterBar = el("#vocabFilterBar");
+    if (!filterBar) {
+      shelfHost.innerHTML = `
+        <div class="dau-filter-bar" id="vocabFilterBar">
+          <div class="dau-level-pills-wrap">
+            <div class="dau-level-pills" id="vocabLevelPills">
+              <button type="button" class="dau-level-pill ${currentLevel === "all" ? "active" : ""}" data-level="all">
+                Tất cả cấp độ <span class="dau-pill-count" id="countAll">0</span>
+              </button>
+              <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
+                A1 · Sơ cấp <span class="dau-pill-count" id="countA1">0</span>
+              </button>
+              <button type="button" class="dau-level-pill ${currentLevel === "A2" ? "active" : ""}" data-level="A2">
+                A2 · Cơ bản <span class="dau-pill-count" id="countA2">0</span>
+              </button>
+              <button type="button" class="dau-level-pill ${currentLevel === "B1" ? "active" : ""}" data-level="B1">
+                B1 · Trung cấp <span class="dau-pill-count" id="countB1">0</span>
+              </button>
+              <button type="button" class="dau-level-pill ${currentLevel === "B2" ? "active" : ""}" data-level="B2">
+                B2 · Nâng cao <span class="dau-pill-count" id="countB2">0</span>
+              </button>
             </div>
-          `;
-        }).join("")}
-      </div>
-    `;
+          </div>
 
-    // Gắn sự kiện Level Pills
-    shelfHost.querySelectorAll(".dau-level-pill").forEach(btn => {
-      btn.onclick = () => {
-        currentLevel = btn.dataset.level;
-        renderVocabHub();
-      };
-    });
+          <div class="dau-filter-controls" style="margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+            <div class="dau-search-box" style="flex:1;min-width:200px">
+              <span class="dau-search-icon">🔍</span>
+              <input type="text" class="dau-search-input" id="vocabSearchInput" placeholder="Tìm theo tên lọ hoặc từ vựng..." />
+              <button type="button" class="dau-search-clear" id="vocabSearchClear" style="display:none">×</button>
+            </div>
 
-    // Search input
-    const searchInp = el("#vocabSearchInput");
-    if (searchInp) {
-      searchInp.oninput = (e) => {
-        searchQuery = e.target.value;
-        const box = el(".dau-search-box");
-        if (box) box.classList.toggle("has-text", Boolean(searchQuery));
-        renderVocabHub();
-      };
+            <select class="dau-select" id="vocabStatusSelect" style="min-width:160px">
+              <option value="all">Tất cả trạng thái</option>
+              <option value="not_started">Chưa học</option>
+              <option value="completed">Đã hoàn thành</option>
+            </select>
+          </div>
+
+          <div class="dau-filter-summary" style="margin-top:10px">
+            <div class="dau-summary-count" id="vocabSummaryCount"></div>
+          </div>
+        </div>
+
+        <div class="dau-cards-grid" id="vocabCardsGrid"></div>
+      `;
+
+      // Event listener Level pills
+      shelfHost.querySelectorAll(".dau-level-pill").forEach(btn => {
+        btn.onclick = () => {
+          currentLevel = btn.dataset.level;
+          shelfHost.querySelectorAll(".dau-level-pill").forEach(b => {
+            b.classList.toggle("active", b.dataset.level === currentLevel);
+          });
+          renderVocabCards();
+        };
+      });
+
+      // Search input (Real-time, không phá hủy DOM input, không giật mất focus)
+      const searchInp = el("#vocabSearchInput");
+      const clearBtn = el("#vocabSearchClear");
+      const sBox = el(".dau-search-box");
+      if (searchInp) {
+        searchInp.oninput = (e) => {
+          searchQuery = e.target.value.trim();
+          if (clearBtn) clearBtn.style.display = searchQuery ? "block" : "none";
+          if (sBox) sBox.classList.toggle("has-text", Boolean(searchQuery));
+          renderVocabCards();
+        };
+      }
+      if (clearBtn && searchInp) {
+        clearBtn.onclick = () => {
+          searchQuery = "";
+          searchInp.value = "";
+          clearBtn.style.display = "none";
+          if (sBox) sBox.classList.remove("has-text");
+          searchInp.focus();
+          renderVocabCards();
+        };
+      }
+
+      // Status dropdown
+      const stSel = el("#vocabStatusSelect");
+      if (stSel) {
+        stSel.onchange = (e) => {
+          currentStatus = e.target.value;
+          renderVocabCards();
+        };
+      }
     }
-    const clearBtn = el("#vocabSearchClear");
-    if (clearBtn) {
-      clearBtn.onclick = () => {
-        searchQuery = "";
-        renderVocabHub();
-      };
-    }
 
-    // Dropdowns
-    const catSel = el("#vocabCatSelect");
-    if (catSel) catSel.onchange = (e) => { currentCategory = e.target.value; renderVocabHub(); };
-    const stSel = el("#vocabStatusSelect");
-    if (stSel) stSel.onchange = (e) => { currentStatus = e.target.value; renderVocabHub(); };
-
-    // Reset buttons
-    const resetBtn = el("#vocabResetFilter");
-    if (resetBtn) resetBtn.onclick = () => {
-      currentLevel = "all";
-      currentCategory = "all";
-      searchQuery = "";
-      currentStatus = "all";
-      renderVocabHub();
-    };
-    const emptyReset = el("#emptyResetBtn");
-    if (emptyReset) emptyReset.onclick = () => {
-      currentLevel = "all";
-      currentCategory = "all";
-      searchQuery = "";
-      currentStatus = "all";
-      renderVocabHub();
-    };
-
-    // Remove active tags
-    shelfHost.querySelectorAll("[data-clear]").forEach(btn => {
-      btn.onclick = () => {
-        const type = btn.dataset.clear;
-        if (type === "level") currentLevel = "all";
-        if (type === "cat") currentCategory = "all";
-        if (type === "search") searchQuery = "";
-        renderVocabHub();
-      };
-    });
-
-    // Tạo lọ từ cá nhân
-    const createBtn = el("#btnCreateJar");
-    if (createBtn) createBtn.onclick = openCreateJarModal;
-
-    // Click vào Card
-    shelfHost.querySelectorAll(".dau-card").forEach(card => {
-      card.onclick = () => {
-        const id = card.dataset.vocabId;
-        const kind = card.dataset.kind;
-        if (kind === "jar") {
-          showJarDetail(id);
-        } else {
-          showLesson(id);
-        }
-      };
-    });
-
-    // Render sidebar (Tiến độ học & Lọ từ của bạn)
-    renderVocabSidebar();
+    renderVocabCards();
   };
 
   const renderVocabSidebar = () => {
@@ -1738,13 +1690,12 @@ function initVocabPage() {
     }
 
     sidebarHost.innerHTML = `
-      <!-- KHỐI 1: TIẾN ĐỘ HỌC (SRS) -->
+      <!-- KHỐI 1: TIẾN ĐỘ HỌC -->
       <div class="voc-sidebar-card">
         <div class="voc-sidebar-header">
           <h3 class="voc-sidebar-title">
             <span>📈</span> Tiến độ học từ vựng
           </h3>
-          <span class="dau-badge dau-badge-a1" style="font-size:0.72rem">THUẬT TOÁN SRS</span>
         </div>
 
         <div class="voc-stat-grid">
@@ -1766,12 +1717,9 @@ function initVocabPage() {
           </div>
         </div>
 
-        <div style="display:flex;flex-direction:column;gap:8px">
+        <div>
           <button type="button" class="btn btn-primary btn-sm" id="btnSidebarQuickSrs" style="width:100%;font-weight:700">
             ⚡ Ôn tập flashcard ngay
-          </button>
-          <button type="button" class="btn btn-soft btn-sm" id="btnSidebarFullSrs" style="width:100%">
-            📊 Xem chi tiết thuật toán SRS
           </button>
         </div>
       </div>
@@ -1829,20 +1777,12 @@ function initVocabPage() {
       </div>
     `;
 
-    // Event listeners
     const btnQuick = el("#btnSidebarQuickSrs");
     if (btnQuick) {
       btnQuick.onclick = () => {
         showSrsWorkspace();
         const quick = el("#quickSession") || el("#startSession");
         if (quick) quick.click();
-      };
-    }
-
-    const btnFull = el("#btnSidebarFullSrs");
-    if (btnFull) {
-      btnFull.onclick = () => {
-        showSrsWorkspace();
       };
     }
 
@@ -1866,7 +1806,7 @@ function initVocabPage() {
           jars = jars.filter(j => j.id !== jId);
           STORE.set("custom_jars", jars);
           toast(`Đã xóa lọ «${jName}»`);
-          renderVocabHub();
+          renderVocabCards();
         }
       };
     });
