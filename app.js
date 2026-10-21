@@ -1343,6 +1343,7 @@ function esc(s) {
  * Sub-items có thể trỏ đến hash trên cùng trang (vd "vocabulary.html#algorithm").
  */
 const NAV_LINKS = [
+  ["how-to-study.html", "Cách học"],
   ["vocabulary.html", "Từ vựng"],
   ["writing.html", "Viết"],
   ["listening.html", "Nghe"],
@@ -1490,7 +1491,7 @@ function renderHeader() {
   if (!host) return;
   const page = document.body.dataset.page;
 
-  const MAX_PRIMARY = 7;
+  const MAX_PRIMARY = 8;
   const primaryLinks = NAV_LINKS.slice(0, MAX_PRIMARY);
   const overflowLinks = NAV_LINKS.slice(MAX_PRIMARY);
 
@@ -1836,6 +1837,7 @@ function renderFooter() {
     </a>
     <p>Học tiếng Nga hiện đại, dễ hiểu và đầy cảm hứng. Hệ sinh thái học tập toàn diện phục vụ luyện thi chứng chỉ, du học và đời sống tại Liên bang Nga.</p>
     <div class="footer-links">
+      <a href="how-to-study.html">Cách học cùng RUSI</a>
       <a href="vocabulary.html">Từ vựng</a>
       <a href="writing.html">Viết</a>
       <a href="listening.html">Nghe</a>
