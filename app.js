@@ -1343,7 +1343,6 @@ function esc(s) {
  * Sub-items có thể trỏ đến hash trên cùng trang (vd "vocabulary.html#algorithm").
  */
 const NAV_LINKS = [
-  ["how-to-study.html", "Cách học"],
   ["vocabulary.html", "Từ vựng"],
   ["writing.html", "Viết"],
   ["listening.html", "Nghe"],
@@ -1491,7 +1490,7 @@ function renderHeader() {
   if (!host) return;
   const page = document.body.dataset.page;
 
-  const MAX_PRIMARY = 8;
+  const MAX_PRIMARY = 7;
   const primaryLinks = NAV_LINKS.slice(0, MAX_PRIMARY);
   const overflowLinks = NAV_LINKS.slice(MAX_PRIMARY);
 
