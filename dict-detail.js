@@ -351,6 +351,15 @@ const WordDetail = (() => {
   }
 
   function addToJar(entry) {
+    if (typeof window.openAddToJarModal === "function") {
+      window.openAddToJarModal({
+        ru: entry.ru,
+        vi: (entry.vi || "").split("\n")[0] || "",
+        note: entry.pron || entry.pos || "",
+        ex: entry.ex || ""
+      });
+      return;
+    }
     let customJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
     if (!customJars.length) {
       customJars = [{

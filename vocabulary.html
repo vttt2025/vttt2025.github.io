@@ -13,29 +13,20 @@
 <body data-page="vocabulary">
   <div id="app-header"></div>
 
-  <section class="page-hero">
-    <div class="container">
-      <span class="pro-chip" style="margin-bottom:10px">TỪ VỰNG</span>
-      <h1>🏺 Lọ từ vựng theo chủ đề</h1>
-      <p>Học từ vựng tiếng Nga theo chủ đề đời sống hằng ngày kết hợp với các danh từ và động từ liên quan tới nhau, giúp ghi nhớ từ vựng theo ngữ cảnh và vận dụng vào giao tiếp thực tế tốt hơn.</p>
+  <main class="container" style="padding-top:24px;padding-bottom:60px">
+    <!-- ============== TOP-LEVEL TABS ============== -->
+    <div class="voc-top-tabs-wrap" style="margin:0 0 20px">
+      <nav class="voc-top-tabs">
+        <button class="voc-top-tab active" data-t="jars">
+          <span class="voc-top-icon">🏺</span>
+          <span class="voc-top-label">Lọ từ vựng & Flashcard Quizlet</span>
+        </button>
+        <button class="voc-top-tab" data-t="algorithm" id="vocTopAlgorithm">
+          <span class="voc-top-icon">🧠</span>
+          <span class="voc-top-label">Thuật toán lặp lại SRS (SM-2)</span>
+        </button>
+      </nav>
     </div>
-  </section>
-
-  <!-- ============== TOP-LEVEL TABS ============== -->
-  <div class="container voc-top-tabs-wrap">
-    <nav class="voc-top-tabs">
-      <button class="voc-top-tab active" data-t="jars">
-        <span class="voc-top-icon">🏺</span>
-        <span class="voc-top-label">Lọ từ vựng</span>
-      </button>
-      <button class="voc-top-tab" data-t="algorithm" id="vocTopAlgorithm">
-        <span class="voc-top-icon">🧠</span>
-        <span class="voc-top-label">Flashcard</span>
-      </button>
-    </nav>
-  </div>
-
-  <main class="container" style="padding-bottom:60px">
 
     <!-- ============== TAB: VOCABULARY JARS ============== -->
     <div id="vocPaneJars" class="voc-top-pane active">
@@ -64,20 +55,18 @@
     <!-- ============== TAB: ALGORITHM (SRS) ============== -->
     <div id="vocPaneAlgorithm" class="voc-top-pane">
 
-      <!-- SRS HERO -->
-      <section class="srs-hero">
-        <div class="container">
-          <span class="srs-tag">🧠 Spaced Repetition System</span>
-          <h1 style="font-size:1.7rem">Chinh phục từ vựng <span class="hl">bằng thuật toán</span></h1>
-          <p class="srs-sub">Học theo phương pháp <b>lặp lại ngắt quãng</b> — đẩy đúng từ vào đúng thời điểm não sắp quên. Nhớ lâu, tốn ít công sức.</p>
-          <div class="srs-hero-stats">
-            <div><b id="heroNew">0</b><span>Từ mới hôm nay</span></div>
-            <div><b id="heroDue">0</b><span>Từ tới hạn ôn</span></div>
-            <div><b id="heroMastered">0</b><span>Đã thuộc</span></div>
-            <div><b id="heroStreak">0</b><span>Ngày liên tục</span></div>
-          </div>
+      <!-- SRS HERO (Fixed layout, no nested container) -->
+      <div class="srs-hero-card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;box-shadow:var(--shadow)">
+        <span class="srs-tag">🧠 Spaced Repetition System</span>
+        <h2 style="font-size:1.7rem;margin:8px 0">Chinh phục từ vựng <span class="hl">bằng thuật toán</span></h2>
+        <p class="srs-sub" style="max-width:700px;margin-bottom:16px">Học theo phương pháp <b>lặp lại ngắt quãng</b> — đẩy đúng từ vào đúng thời điểm não sắp quên. Nhớ lâu, tốn ít công sức.</p>
+        <div class="srs-hero-stats">
+          <div><b id="heroNew">0</b><span>Từ mới hôm nay</span></div>
+          <div><b id="heroDue">0</b><span>Từ tới hạn ôn</span></div>
+          <div><b id="heroMastered">0</b><span>Đã thuộc</span></div>
+          <div><b id="heroStreak">0</b><span>Ngày liên tục</span></div>
         </div>
-      </section>
+      </div>
 
       <!-- SRS INNER TABS -->
       <div class="srs-tabs">

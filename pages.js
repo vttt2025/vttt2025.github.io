@@ -31,6 +31,1375 @@ function lessonCardHtml(lesson, kindLabel) {
   </article>`;
 }
 
+/* =====================================================================
+ * QUIZLET STUDY ENGINE & UNIVERSAL PERSONAL JAR ADDER
+ * ===================================================================== */
+
+function playQuizletSound(type) {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    if (!window._qAudioCtx) window._qAudioCtx = new AudioCtx();
+    const ctx = window._qAudioCtx;
+    if (ctx.state === "suspended") ctx.resume();
+    const now = ctx.currentTime;
+    if (type === "flip") {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.exponentialRampToValueAtTime(130, now + 0.08);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.08);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.08);
+    } else if (type === "correct" || type === "match") {
+      const notes = [523.25, 659.25, 783.99];
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        const t = now + idx * 0.07;
+        osc.frequency.setValueAtTime(freq, t);
+        gain.gain.setValueAtTime(0.12, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.18);
+      });
+    } else if (type === "wrong") {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(170, now);
+      osc.frequency.exponentialRampToValueAtTime(85, now + 0.22);
+      gain.gain.setValueAtTime(0.14, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.22);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.22);
+    } else if (type === "star") {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(1320, now + 0.12);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.12);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    }
+  } catch (e) {
+    // Non-fatal if browser limits audio context
+  }
+}
+window.playQuizletSound = playQuizletSound;
+
+function getQuizletStarred() {
+  return (typeof STORE !== "undefined") ? STORE.get("quizlet_starred", []) : [];
+}
+
+function toggleQuizletStarred(ruWord) {
+  if (!ruWord) return false;
+  let starred = getQuizletStarred();
+  const norm = ruWord.toLowerCase();
+  const idx = starred.findIndex(w => (w || "").toLowerCase() === norm);
+  let isStarred = false;
+  if (idx >= 0) {
+    starred.splice(idx, 1);
+    isStarred = false;
+  } else {
+    starred.push(ruWord);
+    isStarred = true;
+    playQuizletSound("star");
+  }
+  if (typeof STORE !== "undefined") STORE.set("quizlet_starred", starred);
+  return isStarred;
+}
+
+function qShuffleArray(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function getQuizletDistractors(currentWord, allWords, count = 3) {
+  const fallbacks = [
+    "xin chào, chào bạn", "tạm biệt, hẹn gặp lại", "cảm ơn bạn nhiều",
+    "làm ơn, xin vui lòng", "thành phố, đô thị", "trường đại học tổng hợp",
+    "ký túc xá sinh viên", "phòng học, giảng đường", "thư viện nghiên cứu",
+    "bữa ăn sáng", "bữa trưa truyền thống", "bữa tối ấm cúng",
+    "bánh mì Nga", "trà đen nóng", "quán cà phê", "nhà ga xe lửa",
+    "sân bay quốc tế", "xe buýt thành phố", "tàu điện ngầm metro",
+    "quyển sách hay", "từ điển tiếng Nga", "bài tập ngữ pháp"
+  ];
+  const targetVi = (currentWord.vi || "").toLowerCase().trim();
+  const pool = allWords
+    .filter(w => (w.vi || "").toLowerCase().trim() !== targetVi)
+    .map(w => w.vi)
+    .concat(fallbacks);
+
+  const seen = new Set();
+  const result = [];
+  for (const item of pool) {
+    if (result.length >= count) break;
+    const norm = (item || "").toLowerCase().trim();
+    if (norm && norm !== targetVi && !seen.has(norm)) {
+      seen.add(norm);
+      result.push(item);
+    }
+  }
+  return result;
+}
+
+window.openAddToJarModal = function(wordData) {
+  if (!wordData) return;
+  const ru = (wordData.ru || "").trim();
+  const vi = (wordData.vi || wordData.meaning || "").trim();
+  const stress = wordData.stress || ru;
+  const note = wordData.note || wordData.pos || wordData.trans || "";
+  const ex = wordData.ex || "";
+  const ex_vi = wordData.ex_vi || "";
+
+  let customJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
+  if (!customJars || !customJars.length) {
+    customJars = [{
+      id: "custom-jar-default",
+      name: "Lọ từ vựng yêu thích ⭐",
+      icon: "⭐",
+      desc: "Lọ chứa các từ vựng bạn yêu thích và đã lưu",
+      words: [],
+      level: "A1",
+      is_system: false
+    }];
+    if (typeof STORE !== "undefined") STORE.set("custom_jars", customJars);
+  }
+
+  const oldModal = document.getElementById("universalAddJarModal");
+  if (oldModal) oldModal.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "universalAddJarModal";
+  modal.className = "add-jar-modal";
+  modal.innerHTML = `
+    <div class="add-jar-box">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <h3 style="margin:0;font-size:1.15rem;display:flex;align-items:center;gap:8px">
+          <span>🏺</span> Lưu vào Lọ từ vựng cá nhân
+        </h3>
+        <button type="button" class="btn btn-soft btn-sm" id="closeAddJarModal" style="padding:4px 8px;border-radius:50%;font-size:1rem;line-height:1">✕</button>
+      </div>
+
+      <div class="add-jar-preview">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div class="ru-word ru">${esc(stress || ru)}</div>
+            ${note ? `<span style="display:inline-block;font-size:0.75rem;padding:2px 8px;border-radius:6px;background:var(--primary-soft);color:var(--primary);margin-top:4px;font-weight:600">${esc(note)}</span>` : ""}
+          </div>
+          <button type="button" class="btn btn-soft btn-sm" id="previewSpeakBtn" style="padding:6px 10px;border-radius:50%">🔊</button>
+        </div>
+        <div class="vi-word">${esc(vi)}</div>
+        ${ex ? `<div style="font-size:0.82rem;color:var(--muted);margin-top:6px;border-top:1px dashed var(--border);padding-top:6px;font-style:italic">«${esc(ex)}»</div>` : ""}
+      </div>
+
+      <label style="display:block;margin-bottom:12px">
+        <span style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px">Chọn Lọ từ vựng muốn lưu vào:</span>
+        <select id="selectTargetJar" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.92rem;background:var(--surface);color:var(--text)">
+          ${customJars.map(j => `
+            <option value="${esc(j.id)}">${esc(j.icon || "🏺")} ${esc(j.name)} (${(j.words || []).length} từ)</option>
+          `).join("")}
+          <option value="__NEW_JAR__">➕ [Tạo Lọ mới ngay...]</option>
+        </select>
+      </label>
+
+      <div id="inlineNewJarGroup" style="display:none;background:var(--bg);border:1px dashed var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px">
+        <span style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:4px">Tên Lọ mới:</span>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="inlineNewJarIcon" value="⭐" style="width:46px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:8px;font-size:1rem" />
+          <input type="text" id="inlineNewJarName" placeholder="Ví dụ: Từ vựng thi TRKI 1..." style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem" />
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px">
+        <button type="button" class="btn btn-outline btn-sm" id="btnCancelAddJar">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" id="btnConfirmAddJar">💾 Lưu vào Lọ</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const sel = modal.querySelector("#selectTargetJar");
+  const newGroup = modal.querySelector("#inlineNewJarGroup");
+  const newName = modal.querySelector("#inlineNewJarName");
+  const newIcon = modal.querySelector("#inlineNewJarIcon");
+
+  sel.onchange = () => {
+    newGroup.style.display = sel.value === "__NEW_JAR__" ? "block" : "none";
+    if (sel.value === "__NEW_JAR__") newName.focus();
+  };
+
+  modal.querySelector("#previewSpeakBtn").onclick = () => speak(ru);
+  modal.querySelector("#closeAddJarModal").onclick = () => modal.remove();
+  modal.querySelector("#btnCancelAddJar").onclick = () => modal.remove();
+  modal.onclick = (e) => {
+    if (e.target === modal) modal.remove();
+  };
+
+  modal.querySelector("#btnConfirmAddJar").onclick = () => {
+    let jarId = sel.value;
+    let currentCustomJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
+
+    if (jarId === "__NEW_JAR__") {
+      const createdName = (newName.value || "").trim();
+      const createdIcon = (newIcon.value || "").trim() || "⭐";
+      if (!createdName) {
+        toast("Vui lòng nhập tên cho Lọ từ vựng mới!");
+        newName.focus();
+        return;
+      }
+      jarId = "custom-jar-" + Date.now();
+      const newJar = {
+        id: jarId,
+        name: createdName,
+        icon: createdIcon,
+        desc: "Lọ từ vựng cá nhân",
+        words: [],
+        level: "A1",
+        is_system: false
+      };
+      currentCustomJars.push(newJar);
+    }
+
+    const jar = currentCustomJars.find(j => j.id === jarId);
+    if (!jar) {
+      toast("Không tìm thấy lọ được chọn!");
+      return;
+    }
+
+    jar.words = jar.words || [];
+    const existingIdx = jar.words.findIndex(w => (w.ru || "").toLowerCase() === ru.toLowerCase());
+    const wordPayload = {
+      ru: ru,
+      vi: vi,
+      stress: stress,
+      note: note,
+      ex: ex,
+      ex_vi: ex_vi
+    };
+
+    if (existingIdx >= 0) {
+      jar.words[existingIdx] = Object.assign({}, jar.words[existingIdx], wordPayload);
+      toast(`✨ Đã cập nhật từ «${ru}» trong lọ «${jar.name}»!`);
+    } else {
+      jar.words.push(wordPayload);
+      toast(`🏺 Đã lưu «${ru}» vào «${jar.name}» thành công! 🎉`);
+    }
+
+    if (typeof STORE !== "undefined") {
+      STORE.set("custom_jars", currentCustomJars);
+    }
+    playQuizletSound("correct");
+    modal.remove();
+
+    if (typeof window.refreshVocabViews === "function") {
+      window.refreshVocabViews();
+    }
+  };
+};
+
+function openAddWordToJarModal(jarId, onSuccess) {
+  let m = document.getElementById("addWordToJarModal");
+  if (m) m.remove();
+  m = document.createElement("div");
+  m.id = "addWordToJarModal";
+  m.className = "add-jar-modal";
+  m.innerHTML = `
+    <div class="add-jar-box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <h3 style="margin:0;font-size:1.15rem">➕ Thêm từ mới vào Lọ</h3>
+        <button type="button" class="btn btn-soft btn-sm" id="closeAddWordModal" style="padding:4px 8px;border-radius:50%">✕</button>
+      </div>
+
+      <label style="display:block;margin-bottom:10px">
+        <span style="font-size:0.85rem;font-weight:700">Từ tiếng Nga (*):</span>
+        <input type="text" id="newWordRu" placeholder="Ví dụ: спасибо" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;margin-top:4px" />
+      </label>
+
+      <label style="display:block;margin-bottom:10px">
+        <span style="font-size:0.85rem;font-weight:700">Trọng âm (tùy chọn):</span>
+        <input type="text" id="newWordStress" placeholder="Ví dụ: спаси́бо" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;margin-top:4px" />
+      </label>
+
+      <label style="display:block;margin-bottom:10px">
+        <span style="font-size:0.85rem;font-weight:700">Nghĩa tiếng Việt (*):</span>
+        <input type="text" id="newWordVi" placeholder="Ví dụ: cảm ơn" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;margin-top:4px" />
+      </label>
+
+      <label style="display:block;margin-bottom:10px">
+        <span style="font-size:0.85rem;font-weight:700">Từ loại / Ghi chú:</span>
+        <input type="text" id="newWordNote" placeholder="Ví dụ: thán từ lịch sự" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;margin-top:4px" />
+      </label>
+
+      <label style="display:block;margin-bottom:14px">
+        <span style="font-size:0.85rem;font-weight:700">Câu ví dụ thực tế:</span>
+        <input type="text" id="newWordEx" placeholder="Ví dụ: Большое спасибо за помощь!" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:8px;margin-top:4px" />
+      </label>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end">
+        <button type="button" class="btn btn-outline btn-sm" id="cancelAddWord">Hủy</button>
+        <button type="button" class="btn btn-primary btn-sm" id="saveAddWord">💾 Lưu từ này</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(m);
+
+  m.querySelector("#closeAddWordModal").onclick = () => m.remove();
+  m.querySelector("#cancelAddWord").onclick = () => m.remove();
+  m.onclick = (e) => { if (e.target === m) m.remove(); };
+
+  m.querySelector("#saveAddWord").onclick = () => {
+    const ru = (m.querySelector("#newWordRu").value || "").trim();
+    const stress = (m.querySelector("#newWordStress").value || "").trim() || ru;
+    const vi = (m.querySelector("#newWordVi").value || "").trim();
+    const note = (m.querySelector("#newWordNote").value || "").trim();
+    const ex = (m.querySelector("#newWordEx").value || "").trim();
+
+    if (!ru) { toast("Vui lòng nhập từ tiếng Nga"); return; }
+    if (!vi) { toast("Vui lòng nhập nghĩa tiếng Việt"); return; }
+
+    const customJars = STORE.get("custom_jars", []);
+    const jar = customJars.find(j => j.id === jarId);
+    if (!jar) { toast("Không tìm thấy lọ!"); return; }
+
+    jar.words = jar.words || [];
+    jar.words.push({ ru, stress, vi, note, ex });
+    STORE.set("custom_jars", customJars);
+    playQuizletSound("correct");
+    toast(`Đã thêm từ «${ru}» vào lọ thành công! 🎉`);
+    m.remove();
+    if (onSuccess) onSuccess();
+  };
+}
+window.openAddWordToJarModal = openAddWordToJarModal;
+
+window.initQuizletSuite = function(container, rawWords, options = {}) {
+  if (!container) return;
+  const jarId = options.jarId || "jar-default";
+  const jarTitle = options.jarTitle || "Lọ từ vựng";
+  const isCustomJar = Boolean(options.isCustomJar);
+  const onWordListChange = options.onWordListChange;
+
+  const words = (rawWords || []).map((w, idx) => ({
+    id: w.id || "w-" + idx,
+    ru: (w.ru || "").trim(),
+    stress: (w.stress || w.ru || "").trim(),
+    vi: (w.vi || w.meaning || "").trim(),
+    note: (w.note || w.pos || w.trans || "").trim(),
+    ex: (w.ex || "").trim(),
+    ex_vi: (w.ex_vi || "").trim()
+  }));
+
+  if (words.length === 0) {
+    container.innerHTML = `
+      <div class="quizlet-empty-jar">
+        <div style="font-size:3rem;margin-bottom:12px">🏺</div>
+        <h3 style="margin-bottom:8px">Lọ từ vựng này đang trống</h3>
+        <p style="color:var(--muted);max-width:460px;margin:0 auto 20px;font-size:0.95rem">
+          Bạn chưa có từ vựng nào trong lọ này. Hãy nhấn nút bên dưới để thêm từ mới, hoặc nhấn nút <b>🏺 + Lưu</b> từ bất kỳ bài học nào trên hệ thống!
+        </p>
+        ${isCustomJar ? `<button class="btn btn-primary btn-sm" id="btnEmptyAddWord">➕ Thêm từ mới thủ công ngay</button>` : ""}
+      </div>
+    `;
+    const btnAdd = container.querySelector("#btnEmptyAddWord");
+    if (btnAdd) {
+      btnAdd.onclick = () => openAddWordToJarModal(jarId, onWordListChange);
+    }
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="quizlet-suite">
+      <div class="quizlet-mode-bar">
+        <button type="button" class="quizlet-mode-btn active" data-mode="flashcard">
+          <span>🃏</span> Thẻ ghi nhớ
+        </button>
+        <button type="button" class="quizlet-mode-btn" data-mode="learn">
+          <span>🎯</span> Học thông minh
+        </button>
+        <button type="button" class="quizlet-mode-btn" data-mode="write">
+          <span>✍️</span> Gõ từ & Chính tả
+        </button>
+        <button type="button" class="quizlet-mode-btn" data-mode="match">
+          <span>⚡</span> Ghép thẻ
+        </button>
+        <button type="button" class="quizlet-mode-btn" data-mode="test">
+          <span>📝</span> Kiểm tra
+        </button>
+        <button type="button" class="quizlet-mode-btn" data-mode="list">
+          <span>📜</span> Danh sách (${words.length})
+        </button>
+      </div>
+
+      <div class="qmode-pane active" id="paneFlashcard"></div>
+      <div class="qmode-pane" id="paneLearn"></div>
+      <div class="qmode-pane" id="paneWrite"></div>
+      <div class="qmode-pane" id="paneMatch"></div>
+      <div class="qmode-pane" id="paneTest"></div>
+      <div class="qmode-pane" id="paneList"></div>
+    </div>
+  `;
+
+  // Mode switching
+  let currentMode = "flashcard";
+  let matchTimerInterval = null;
+
+  const modeBtns = container.querySelectorAll(".quizlet-mode-btn");
+  const panes = {
+    flashcard: container.querySelector("#paneFlashcard"),
+    learn: container.querySelector("#paneLearn"),
+    write: container.querySelector("#paneWrite"),
+    match: container.querySelector("#paneMatch"),
+    test: container.querySelector("#paneTest"),
+    list: container.querySelector("#paneList")
+  };
+
+  const switchMode = (mode) => {
+    if (matchTimerInterval) {
+      clearInterval(matchTimerInterval);
+      matchTimerInterval = null;
+    }
+    currentMode = mode;
+    modeBtns.forEach(btn => btn.classList.toggle("active", btn.dataset.mode === mode));
+    Object.keys(panes).forEach(k => {
+      if (panes[k]) panes[k].classList.toggle("active", k === mode);
+    });
+
+    if (mode === "flashcard") renderFlashcardMode();
+    if (mode === "learn") renderLearnMode();
+    if (mode === "write") renderWriteMode();
+    if (mode === "match") renderMatchMode();
+    if (mode === "test") renderTestMode();
+    if (mode === "list") renderListMode();
+  };
+
+  modeBtns.forEach(btn => {
+    btn.onclick = () => switchMode(btn.dataset.mode);
+  });
+
+  /* ---------------- MODE 1: FLASHCARD ---------------- */
+  let fActiveWords = [...words];
+  let fIdx = 0;
+  let fFlipped = false;
+  let fShuffled = false;
+  let fStarredOnly = false;
+  let fAutoAudio = (typeof STORE !== "undefined") ? STORE.get("quizlet_auto_audio", true) : true;
+
+  const renderFlashcardMode = () => {
+    const pane = panes.flashcard;
+    if (!pane) return;
+
+    if (fStarredOnly) {
+      const starred = getQuizletStarred().map(s => s.toLowerCase());
+      fActiveWords = words.filter(w => starred.includes(w.ru.toLowerCase()));
+      if (fActiveWords.length === 0) {
+        toast("Chưa có từ nào được gắn sao ⭐! Hãy bấm ⭐ trên thẻ để đánh dấu từ khó.");
+        fStarredOnly = false;
+        fActiveWords = [...words];
+      }
+    }
+
+    if (fIdx >= fActiveWords.length) fIdx = 0;
+    const currentWord = fActiveWords[fIdx] || words[0];
+    const isStarred = getQuizletStarred().map(s => s.toLowerCase()).includes(currentWord.ru.toLowerCase());
+    const progressPct = ((fIdx + 1) / fActiveWords.length) * 100;
+
+    pane.innerHTML = `
+      <div class="quizlet-progress-bar">
+        <div class="quizlet-progress-fill" style="width:${progressPct}%"></div>
+      </div>
+
+      <div class="quizlet-card-container" id="qCardContainer">
+        <div class="quizlet-card ${fFlipped ? "flipped" : ""}" id="qCard">
+          <!-- FRONT FACE (RU) -->
+          <div class="quizlet-card-face quizlet-card-front">
+            <div class="qcard-top-row">
+              <span class="qcard-badge">🇷🇺 Tiếng Nga</span>
+              <div class="qcard-actions">
+                <button type="button" class="qcard-btn-star ${isStarred ? "starred" : ""}" id="qStarFront" title="Đánh dấu từ khó (Phím S)">⭐</button>
+                <button type="button" class="qcard-btn-addjar" id="qAddJarFront" title="Lưu vào Lọ cá nhân">🏺 + Lưu</button>
+              </div>
+            </div>
+
+            <div class="qcard-main">
+              <div class="qcard-word ru">${esc(currentWord.stress || currentWord.ru)}</div>
+              ${currentWord.note ? `<div class="scroll-pos">${esc(currentWord.note)}</div>` : ""}
+              <button type="button" class="qcard-audio-btn" id="qAudioFront" title="Phát âm tiếng Nga">🔊</button>
+            </div>
+
+            <div class="qcard-hint">
+              <span>↷ Nhấn thẻ hoặc phím [Space] để lật xem nghĩa</span>
+            </div>
+          </div>
+
+          <!-- BACK FACE (VI) -->
+          <div class="quizlet-card-face quizlet-card-back">
+            <div class="qcard-top-row">
+              <span class="qcard-badge vi">🇻🇳 Tiếng Việt</span>
+              <div class="qcard-actions">
+                <button type="button" class="qcard-btn-star ${isStarred ? "starred" : ""}" id="qStarBack" title="Đánh dấu từ khó (Phím S)">⭐</button>
+                <button type="button" class="qcard-btn-addjar" id="qAddJarBack" title="Lưu vào Lọ cá nhân">🏺 + Lưu</button>
+              </div>
+            </div>
+
+            <div class="qcard-main">
+              <div class="qcard-meaning">${esc(currentWord.vi)}</div>
+              ${currentWord.ex ? `
+                <div class="qcard-ex-wrap">
+                  <div class="qcard-ex ru">«${esc(currentWord.ex)}»</div>
+                  ${currentWord.ex_vi ? `<div class="qcard-ex-vi">${esc(currentWord.ex_vi)}</div>` : ""}
+                </div>
+              ` : ""}
+              ${currentWord.ex ? `<button type="button" class="qcard-audio-btn" id="qAudioBackEx" title="Phát âm câu ví dụ" style="margin-top:6px">🔊</button>` : ""}
+            </div>
+
+            <div class="qcard-hint">
+              <span>↶ Nhấn thẻ để lật lại tiếng Nga</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTROLS -->
+      <div class="quizlet-controls">
+        <div class="quizlet-nav-wrap">
+          <button type="button" class="quizlet-nav-btn" id="qNavPrev" title="Thẻ trước (Phím ←)">‹</button>
+          <div class="quizlet-counter">${fIdx + 1} / ${fActiveWords.length}</div>
+          <button type="button" class="quizlet-nav-btn" id="qNavNext" title="Thẻ sau (Phím →)">›</button>
+        </div>
+
+        <div class="quizlet-tools">
+          <button type="button" class="quizlet-tool-btn ${fShuffled ? "active" : ""}" id="qToolShuffle">
+            <span>🔀</span> Xáo trộn
+          </button>
+          <button type="button" class="quizlet-tool-btn ${fStarredOnly ? "active" : ""}" id="qToolStar">
+            <span>⭐</span> Chỉ từ khó
+          </button>
+          <button type="button" class="quizlet-tool-btn ${fAutoAudio ? "active" : ""}" id="qToolAudio">
+            <span>🔊</span> Tự đọc: ${fAutoAudio ? "Bật" : "Tắt"}
+          </button>
+          <button type="button" class="quizlet-tool-btn" id="qToolFullscreen">
+            <span>⛶</span> Toàn màn hình
+          </button>
+        </div>
+      </div>
+    `;
+
+    // Bind card flip
+    const card = pane.querySelector("#qCard");
+    card.onclick = (e) => {
+      if (e.target.closest("button")) return;
+      fFlipped = !fFlipped;
+      card.classList.toggle("flipped", fFlipped);
+      playQuizletSound("flip");
+    };
+
+    // Navigation
+    const nextCard = () => {
+      fIdx = (fIdx + 1) % fActiveWords.length;
+      fFlipped = false;
+      renderFlashcardMode();
+      if (fAutoAudio) speak(fActiveWords[fIdx].ru);
+    };
+    const prevCard = () => {
+      fIdx = (fIdx - 1 + fActiveWords.length) % fActiveWords.length;
+      fFlipped = false;
+      renderFlashcardMode();
+      if (fAutoAudio) speak(fActiveWords[fIdx].ru);
+    };
+
+    pane.querySelector("#qNavNext").onclick = nextCard;
+    pane.querySelector("#qNavPrev").onclick = prevCard;
+
+    // Audio
+    pane.querySelector("#qAudioFront").onclick = (e) => {
+      e.stopPropagation();
+      speak(currentWord.ru);
+    };
+    const audioEx = pane.querySelector("#qAudioBackEx");
+    if (audioEx) {
+      audioEx.onclick = (e) => {
+        e.stopPropagation();
+        speak(currentWord.ex);
+      };
+    }
+
+    // Star
+    const toggleStarCurrent = (e) => {
+      if (e) e.stopPropagation();
+      const starred = toggleQuizletStarred(currentWord.ru);
+      pane.querySelectorAll(".qcard-btn-star").forEach(b => b.classList.toggle("starred", starred));
+      toast(starred ? `⭐ Đã gắn sao từ «${currentWord.ru}»` : `Đã bỏ gắn sao từ «${currentWord.ru}»`);
+    };
+    pane.querySelector("#qStarFront").onclick = toggleStarCurrent;
+    pane.querySelector("#qStarBack").onclick = toggleStarCurrent;
+
+    // Add to jar
+    const addJarCurrent = (e) => {
+      e.stopPropagation();
+      window.openAddToJarModal(currentWord);
+    };
+    pane.querySelector("#qAddJarFront").onclick = addJarCurrent;
+    pane.querySelector("#qAddJarBack").onclick = addJarCurrent;
+
+    // Shuffle
+    pane.querySelector("#qToolShuffle").onclick = () => {
+      fShuffled = !fShuffled;
+      if (fShuffled) {
+        fActiveWords = qShuffleArray(fActiveWords);
+        toast("🔀 Đã xáo trộn danh sách thẻ!");
+      } else {
+        fActiveWords = fStarredOnly
+          ? words.filter(w => getQuizletStarred().map(s => s.toLowerCase()).includes(w.ru.toLowerCase()))
+          : [...words];
+        toast("Đã khôi phục thứ tự ban đầu");
+      }
+      fIdx = 0;
+      fFlipped = false;
+      renderFlashcardMode();
+    };
+
+    // Star filter
+    pane.querySelector("#qToolStar").onclick = () => {
+      fStarredOnly = !fStarredOnly;
+      fIdx = 0;
+      fFlipped = false;
+      renderFlashcardMode();
+    };
+
+    // Auto audio
+    pane.querySelector("#qToolAudio").onclick = () => {
+      fAutoAudio = !fAutoAudio;
+      if (typeof STORE !== "undefined") STORE.set("quizlet_auto_audio", fAutoAudio);
+      toast(fAutoAudio ? "🔊 Đã bật tự động đọc từ khi chuyển thẻ" : "Đã tắt tự động đọc");
+      renderFlashcardMode();
+    };
+
+    // Fullscreen
+    pane.querySelector("#qToolFullscreen").onclick = () => {
+      const container = pane.querySelector("#qCardContainer");
+      const isFull = container.classList.toggle("fullscreen");
+      if (isFull) {
+        let exitBtn = container.querySelector("#qExitFullscreen");
+        if (!exitBtn) {
+          exitBtn = document.createElement("button");
+          exitBtn.id = "qExitFullscreen";
+          exitBtn.className = "btn btn-soft btn-sm";
+          exitBtn.style.position = "absolute";
+          exitBtn.style.top = "20px";
+          exitBtn.style.right = "24px";
+          exitBtn.style.zIndex = "10001";
+          exitBtn.innerHTML = "✕ Thu nhỏ (Esc)";
+          exitBtn.onclick = () => {
+            container.classList.remove("fullscreen");
+            exitBtn.remove();
+          };
+          container.appendChild(exitBtn);
+        }
+      } else {
+        const exitBtn = container.querySelector("#qExitFullscreen");
+        if (exitBtn) exitBtn.remove();
+      }
+    };
+  };
+
+  // Keyboard shortcut listener for Flashcards
+  const handleKeydown = (e) => {
+    if (currentMode !== "flashcard") return;
+    const isEditing = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+    if (isEditing) return;
+
+    if (e.code === "Space") {
+      e.preventDefault();
+      const card = container.querySelector("#qCard");
+      if (card) {
+        fFlipped = !fFlipped;
+        card.classList.toggle("flipped", fFlipped);
+        playQuizletSound("flip");
+      }
+    } else if (e.code === "ArrowRight") {
+      e.preventDefault();
+      const nextBtn = container.querySelector("#qNavNext");
+      if (nextBtn) nextBtn.click();
+    } else if (e.code === "ArrowLeft") {
+      e.preventDefault();
+      const prevBtn = container.querySelector("#qNavPrev");
+      if (prevBtn) prevBtn.click();
+    } else if (e.code === "KeyS") {
+      e.preventDefault();
+      const starBtn = container.querySelector("#qStarFront");
+      if (starBtn) starBtn.click();
+    } else if (e.code === "KeyR") {
+      e.preventDefault();
+      if (fActiveWords[fIdx]) speak(fActiveWords[fIdx].ru);
+    } else if (e.code === "Escape") {
+      const cardCont = container.querySelector("#qCardContainer");
+      if (cardCont && cardCont.classList.contains("fullscreen")) {
+        cardCont.classList.remove("fullscreen");
+        const exitBtn = cardCont.querySelector("#qExitFullscreen");
+        if (exitBtn) exitBtn.remove();
+      }
+    }
+  };
+  document.removeEventListener("keydown", handleKeydown);
+  document.addEventListener("keydown", handleKeydown);
+
+  /* ---------------- MODE 2: LEARN (4 OPTIONS) ---------------- */
+  let lQueue = [];
+  let lIdx = 0;
+  let lScore = 0;
+  let lWrongWords = [];
+
+  const startLearn = (customList = null) => {
+    lQueue = customList ? [...customList] : qShuffleArray([...words]);
+    lIdx = 0;
+    lScore = 0;
+    lWrongWords = [];
+    renderLearnStep();
+  };
+
+  const renderLearnMode = () => {
+    startLearn();
+  };
+
+  const renderLearnStep = () => {
+    const pane = panes.learn;
+    if (!pane) return;
+
+    if (lIdx >= lQueue.length) {
+      const pct = Math.round((lScore / lQueue.length) * 100);
+      if (pct >= 70 && typeof Progress !== "undefined") {
+        Progress.addXp(15);
+      }
+      pane.innerHTML = `
+        <div class="quizlet-summary-box">
+          <div class="quizlet-summary-trophy">${pct >= 80 ? "🏆" : pct >= 50 ? "🎉" : "📚"}</div>
+          <h2 style="margin:0 0 8px">Hoàn thành bài Học thông minh!</h2>
+          <p style="color:var(--muted);font-size:1.1rem;margin:0 0 20px">
+            Bạn đạt <b>${lScore}</b> / ${lQueue.length} câu chính xác (${pct}%)
+            ${pct >= 70 ? ` · <span style="color:#16a34a;font-weight:700">+15 XP 🌟</span>` : ""}
+          </p>
+
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            ${lWrongWords.length > 0 ? `
+              <button class="btn btn-primary" id="btnLearnRetryWrong">🔁 Ôn lại ${lWrongWords.length} từ chưa nhớ</button>
+            ` : ""}
+            <button class="btn btn-outline" id="btnLearnRestart">🔄 Học lại tất cả</button>
+            <button class="btn btn-soft" id="btnLearnToFlash">🃏 Về thẻ ghi nhớ</button>
+          </div>
+        </div>
+      `;
+
+      const btnWrong = pane.querySelector("#btnLearnRetryWrong");
+      if (btnWrong) btnWrong.onclick = () => startLearn(lWrongWords);
+      pane.querySelector("#btnLearnRestart").onclick = () => startLearn();
+      pane.querySelector("#btnLearnToFlash").onclick = () => switchMode("flashcard");
+      return;
+    }
+
+    const currentWord = lQueue[lIdx];
+    const distractors = getQuizletDistractors(currentWord, words, 3);
+    const optionsList = qShuffleArray([currentWord.vi, ...distractors]);
+    let answered = false;
+
+    pane.innerHTML = `
+      <div class="quizlet-learn-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:0.85rem;font-weight:700;color:var(--muted)">HỌC THÔNG MINH · CÂU ${lIdx + 1} / ${lQueue.length}</span>
+          <span style="font-size:0.85rem;font-weight:700;color:var(--primary)">Điểm: ${lScore}</span>
+        </div>
+
+        <div class="quizlet-progress-bar" style="margin-bottom:20px">
+          <div class="quizlet-progress-fill" style="width:${((lIdx + 1) / lQueue.length) * 100}%"></div>
+        </div>
+
+        <div class="learn-q-card">
+          <div class="learn-q-word ru">${esc(currentWord.stress || currentWord.ru)}</div>
+          <button type="button" class="btn btn-soft btn-sm" id="btnLearnAudio" style="margin-top:6px">🔊 Nghe phát âm</button>
+        </div>
+
+        <p style="font-size:0.9rem;font-weight:700;color:var(--muted);margin-bottom:12px">Chọn nghĩa tiếng Việt chính xác (Phím 1-4):</p>
+        <div class="learn-options-grid" id="learnOptions">
+          ${optionsList.map((opt, i) => `
+            <button type="button" class="learn-opt-btn" data-opt="${esc(opt)}" data-key="${i + 1}">
+              <span style="display:inline-block;width:24px;height:24px;line-height:22px;text-align:center;border-radius:6px;background:var(--surface);border:1px solid var(--border);margin-right:8px;font-size:0.8rem;font-weight:700">${i + 1}</span>
+              ${esc(opt)}
+            </button>
+          `).join("")}
+        </div>
+
+        <div id="learnFeedback" style="display:none;margin-top:18px;padding:14px;border-radius:10px;text-align:center"></div>
+      </div>
+    `;
+
+    pane.querySelector("#btnLearnAudio").onclick = () => speak(currentWord.ru);
+
+    const checkAnswer = (chosenOpt, btnElem) => {
+      if (answered) return;
+      answered = true;
+
+      const isCorrect = chosenOpt.trim().toLowerCase() === currentWord.vi.trim().toLowerCase();
+      const fbBox = pane.querySelector("#learnFeedback");
+
+      if (isCorrect) {
+        if (btnElem) btnElem.classList.add("correct");
+        playQuizletSound("correct");
+        lScore++;
+        setTimeout(() => {
+          lIdx++;
+          renderLearnStep();
+        }, 650);
+      } else {
+        if (btnElem) btnElem.classList.add("wrong");
+        pane.querySelectorAll(".learn-opt-btn").forEach(b => {
+          if (b.dataset.opt.trim().toLowerCase() === currentWord.vi.trim().toLowerCase()) {
+            b.classList.add("correct");
+          }
+        });
+        playQuizletSound("wrong");
+        lWrongWords.push(currentWord);
+
+        fbBox.style.display = "block";
+        fbBox.style.background = "var(--red-soft)";
+        fbBox.style.color = "var(--red)";
+        fbBox.innerHTML = `
+          <div style="font-weight:700;margin-bottom:4px">Chưa chính xác! Hãy ghi nhớ:</div>
+          <div style="font-size:1.15rem;font-weight:800;color:var(--text)">${esc(currentWord.ru)} = ${esc(currentWord.vi)}</div>
+          <button type="button" class="btn btn-primary btn-sm" id="btnLearnNext" style="margin-top:12px">Tiếp tục →</button>
+        `;
+        pane.querySelector("#btnLearnNext").onclick = () => {
+          lIdx++;
+          renderLearnStep();
+        };
+      }
+    };
+
+    pane.querySelectorAll(".learn-opt-btn").forEach(btn => {
+      btn.onclick = () => checkAnswer(btn.dataset.opt, btn);
+    });
+
+    const learnKeydown = (e) => {
+      if (currentMode !== "learn" || answered) return;
+      if (["1", "2", "3", "4"].includes(e.key)) {
+        const btn = pane.querySelector(`.learn-opt-btn[data-key="${e.key}"]`);
+        if (btn) btn.click();
+      }
+    };
+    document.addEventListener("keydown", learnKeydown, { once: true });
+  };
+
+  /* ---------------- MODE 3: WRITE & SPELL ---------------- */
+  let wQueue = [];
+  let wIdx = 0;
+  let wCorrect = 0;
+
+  const renderWriteMode = () => {
+    wQueue = [...words];
+    wIdx = 0;
+    wCorrect = 0;
+    renderWriteStep();
+  };
+
+  const renderWriteStep = () => {
+    const pane = panes.write;
+    if (!pane) return;
+
+    if (wIdx >= wQueue.length) {
+      const pct = Math.round((wCorrect / wQueue.length) * 100);
+      if (pct >= 70 && typeof Progress !== "undefined") Progress.addXp(20);
+      pane.innerHTML = `
+        <div class="quizlet-summary-box">
+          <div class="quizlet-summary-trophy">✍️</div>
+          <h2 style="margin:0 0 8px">Hoàn thành phần Gõ từ & Chính tả!</h2>
+          <p style="color:var(--muted);font-size:1.1rem;margin:0 0 20px">
+            Bạn đã gõ đúng <b>${wCorrect}</b> / ${wQueue.length} từ vựng (${pct}%)
+          </p>
+          <div style="display:flex;gap:12px;justify-content:center">
+            <button class="btn btn-primary" id="btnWriteRestart">🔄 Luyện lại từ đầu</button>
+            <button class="btn btn-soft" id="btnWriteToFlash">🃏 Về thẻ ghi nhớ</button>
+          </div>
+        </div>
+      `;
+      pane.querySelector("#btnWriteRestart").onclick = () => renderWriteMode();
+      pane.querySelector("#btnWriteToFlash").onclick = () => switchMode("flashcard");
+      return;
+    }
+
+    const currentWord = wQueue[wIdx];
+    let submitted = false;
+
+    pane.innerHTML = `
+      <div class="quizlet-write-box">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <span style="font-size:0.85rem;font-weight:700;color:var(--muted)">GÕ TỪ & CHÍNH TẢ · ${wIdx + 1} / ${wQueue.length}</span>
+          <span style="font-size:0.85rem;font-weight:700;color:var(--primary)">Chính xác: ${wCorrect}</span>
+        </div>
+
+        <div class="quizlet-progress-bar">
+          <div class="quizlet-progress-fill" style="width:${((wIdx + 1) / wQueue.length) * 100}%"></div>
+        </div>
+
+        <div style="margin:20px 0 10px">
+          <div class="write-prompt-meaning">${esc(currentWord.vi)}</div>
+          ${currentWord.note ? `<div class="scroll-pos" style="display:inline-block;margin-bottom:10px">${esc(currentWord.note)}</div>` : ""}
+          <div style="margin-top:6px">
+            <button type="button" class="btn btn-soft btn-sm" id="btnWriteSpeak">🔊 Nghe phát âm gợi ý</button>
+          </div>
+        </div>
+
+        <!-- Cyrillic Virtual Keyboard -->
+        <div class="cyrillic-keyboard">
+          ${["ё", "й", "ъ", "ы", "ь", "э", "щ", "ж", "ц", "ч", "ш", "ю", "я"].map(k => `
+            <button type="button" class="cyrillic-key" data-char="${k}">${k}</button>
+          `).join("")}
+        </div>
+
+        <form id="writeForm" onsubmit="return false;">
+          <div class="write-input-row">
+            <input type="text" class="write-input ru" id="writeInput" placeholder="Gõ từ tiếng Nga vào đây..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+            <button type="submit" class="btn btn-primary" id="btnWriteSubmit">Kiểm tra ↵</button>
+          </div>
+        </form>
+
+        <div id="writeResult" style="display:none;margin-top:16px;padding:14px;border-radius:10px;text-align:center"></div>
+      </div>
+    `;
+
+    const inp = pane.querySelector("#writeInput");
+    inp.focus();
+
+    pane.querySelector("#btnWriteSpeak").onclick = () => speak(currentWord.ru);
+
+    // Cyrillic keys insert
+    pane.querySelectorAll(".cyrillic-key").forEach(kBtn => {
+      kBtn.onclick = () => {
+        const char = kBtn.dataset.char;
+        const start = inp.selectionStart || inp.value.length;
+        const end = inp.selectionEnd || inp.value.length;
+        const val = inp.value;
+        inp.value = val.substring(0, start) + char + val.substring(end);
+        inp.focus();
+        inp.setSelectionRange(start + char.length, start + char.length);
+      };
+    });
+
+    const form = pane.querySelector("#writeForm");
+    form.onsubmit = () => {
+      if (submitted) return;
+      submitted = true;
+
+      const userVal = inp.value.trim();
+      const normUser = dauNormalize(userVal);
+      const normTarget = dauNormalize(currentWord.ru);
+      const resBox = pane.querySelector("#writeResult");
+
+      if (normUser === normTarget && normUser.length > 0) {
+        wCorrect++;
+        playQuizletSound("correct");
+        resBox.style.display = "block";
+        resBox.style.background = "#dcfce7";
+        resBox.style.color = "#15803d";
+        resBox.innerHTML = `<b>🎉 Tuyệt vời! Hoàn toàn chính xác!</b>`;
+        setTimeout(() => {
+          wIdx++;
+          renderWriteStep();
+        }, 750);
+      } else {
+        playQuizletSound("wrong");
+        resBox.style.display = "block";
+        resBox.style.background = "var(--red-soft)";
+        resBox.style.color = "var(--red)";
+        resBox.innerHTML = `
+          <div style="font-weight:700;margin-bottom:6px">Chưa đúng chính tả!</div>
+          <div style="color:var(--text);font-size:0.95rem">Bạn đã gõ: <span style="text-decoration:line-through">${esc(userVal || "(bỏ trống)")}</span></div>
+          <div style="font-size:1.2rem;font-weight:800;color:var(--primary);margin:6px 0">Đáp án đúng: ${esc(currentWord.ru)}</div>
+          <button type="button" class="btn btn-primary btn-sm" id="btnWriteNext" style="margin-top:10px">Tiếp tục →</button>
+        `;
+        pane.querySelector("#btnWriteNext").onclick = () => {
+          wIdx++;
+          renderWriteStep();
+        };
+      }
+    };
+  };
+
+  /* ---------------- MODE 4: MATCH GAME (QUIZLET MATCH) ---------------- */
+  let matchStartTime = null;
+  let matchSelected = null;
+  let matchMatchedCount = 0;
+  let matchTotalPairs = 0;
+
+  const renderMatchMode = () => {
+    const pane = panes.match;
+    if (!pane) return;
+
+    if (matchTimerInterval) clearInterval(matchTimerInterval);
+
+    const sampleWords = qShuffleArray([...words]).slice(0, 6);
+    matchTotalPairs = sampleWords.length;
+    matchMatchedCount = 0;
+    matchSelected = null;
+
+    const tiles = [];
+    sampleWords.forEach((w, idx) => {
+      tiles.push({ id: `ru-${idx}`, wordIdx: idx, text: w.stress || w.ru, type: "ru" });
+      tiles.push({ id: `vi-${idx}`, wordIdx: idx, text: w.vi, type: "vi" });
+    });
+    const shuffledTiles = qShuffleArray(tiles);
+
+    const bestRecord = (typeof STORE !== "undefined") ? STORE.get("quizlet_match_best_" + jarId, null) : null;
+
+    pane.innerHTML = `
+      <div class="quizlet-match-game">
+        <div class="match-header">
+          <div>
+            <div style="font-size:0.85rem;font-weight:700;color:var(--muted)">GHÉP THẺ QUIZLET</div>
+            <div style="font-size:0.9rem;font-weight:600">Ghép từ tiếng Nga với nghĩa tiếng Việt tương ứng</div>
+          </div>
+          <div class="match-timer" id="matchTimer">⏱️ 0.0s</div>
+        </div>
+
+        <div class="match-grid" id="matchGrid">
+          ${shuffledTiles.map(t => `
+            <div class="match-card ${t.type === "ru" ? "ru" : ""}" data-id="${t.id}" data-widx="${t.wordIdx}" data-type="${t.type}">
+              ${esc(t.text)}
+            </div>
+          `).join("")}
+        </div>
+
+        <div id="matchVictory" style="display:none;margin-top:24px"></div>
+      </div>
+    `;
+
+    matchStartTime = Date.now();
+    const timerElem = pane.querySelector("#matchTimer");
+    matchTimerInterval = setInterval(() => {
+      const elapsed = ((Date.now() - matchStartTime) / 1000).toFixed(1);
+      if (timerElem) timerElem.textContent = `⏱️ ${elapsed}s`;
+    }, 100);
+
+    const grid = pane.querySelector("#matchGrid");
+    grid.querySelectorAll(".match-card").forEach(card => {
+      card.onclick = () => {
+        if (card.classList.contains("matched") || card.classList.contains("selected")) return;
+
+        if (!matchSelected) {
+          matchSelected = card;
+          card.classList.add("selected");
+        } else {
+          const first = matchSelected;
+          const isMatch = first.dataset.widx === card.dataset.widx && first.dataset.type !== card.dataset.type;
+
+          if (isMatch) {
+            first.classList.remove("selected");
+            first.classList.add("matched");
+            card.classList.add("matched");
+            playQuizletSound("match");
+            matchMatchedCount++;
+            matchSelected = null;
+
+            if (matchMatchedCount >= matchTotalPairs) {
+              clearInterval(matchTimerInterval);
+              const finalTime = ((Date.now() - matchStartTime) / 1000).toFixed(1);
+              let isNewRecord = false;
+              if (!bestRecord || parseFloat(finalTime) < parseFloat(bestRecord)) {
+                isNewRecord = true;
+                if (typeof STORE !== "undefined") STORE.set("quizlet_match_best_" + jarId, finalTime);
+              }
+              if (typeof Progress !== "undefined") Progress.addXp(25);
+
+              grid.style.display = "none";
+              const vic = pane.querySelector("#matchVictory");
+              vic.style.display = "block";
+              vic.innerHTML = `
+                <div class="quizlet-summary-box">
+                  <div class="quizlet-summary-trophy">⚡</div>
+                  <h2 style="margin:0 0 8px">${isNewRecord ? "🎉 KỶ LỤC MỚI CỦA BẠN!" : "Tuyệt vời! Hoàn thành xuất sắc!"}</h2>
+                  <p style="font-size:1.4rem;font-weight:800;color:var(--secondary);margin:10px 0">
+                    ⏱️ Thời gian: ${finalTime} giây
+                  </p>
+                  <p style="color:var(--muted);margin-bottom:20px">+25 XP thưởng tốc độ 🌟</p>
+                  <div style="display:flex;gap:12px;justify-content:center">
+                    <button class="btn btn-primary" id="btnMatchAgain">🔄 Chơi lại ván mới</button>
+                    <button class="btn btn-soft" id="btnMatchToFlash">🃏 Về thẻ ghi nhớ</button>
+                  </div>
+                </div>
+              `;
+              pane.querySelector("#btnMatchAgain").onclick = () => renderMatchMode();
+              pane.querySelector("#btnMatchToFlash").onclick = () => switchMode("flashcard");
+            }
+          } else {
+            card.classList.add("wrong");
+            first.classList.add("wrong");
+            playQuizletSound("wrong");
+            setTimeout(() => {
+              first.classList.remove("selected", "wrong");
+              card.classList.remove("wrong");
+              matchSelected = null;
+            }, 420);
+          }
+        }
+      };
+    });
+  };
+
+  /* ---------------- MODE 5: TEST ---------------- */
+  const renderTestMode = () => {
+    const pane = panes.test;
+    if (!pane) return;
+
+    const testPool = qShuffleArray([...words]).slice(0, Math.min(8, words.length));
+    const questions = testPool.map((w, idx) => {
+      const isChoice = idx % 2 === 0;
+      if (isChoice) {
+        const distractors = getQuizletDistractors(w, words, 3);
+        const options = qShuffleArray([w.vi, ...distractors]);
+        return {
+          id: idx,
+          type: "choice",
+          ru: w.stress || w.ru,
+          correct: w.vi,
+          options
+        };
+      } else {
+        const isTrue = Math.random() > 0.5;
+        const fakeMeaning = isTrue ? w.vi : (getQuizletDistractors(w, words, 1)[0] || "nghĩa khác");
+        return {
+          id: idx,
+          type: "tf",
+          ru: w.stress || w.ru,
+          statement: fakeMeaning,
+          isTrue,
+          correct: isTrue ? "true" : "false"
+        };
+      }
+    });
+
+    pane.innerHTML = `
+      <div class="quizlet-learn-box" style="max-width:720px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px">
+          <div>
+            <h3 style="margin:0">📝 Bài kiểm tra từ vựng: ${esc(jarTitle)}</h3>
+            <span style="font-size:0.85rem;color:var(--muted)">Gồm ${questions.length} câu hỏi trắc nghiệm & đúng/sai</span>
+          </div>
+          <span class="dau-badge dau-badge-a1">${questions.length} câu</span>
+        </div>
+
+        <form id="quizletTestForm">
+          ${questions.map((q, idx) => `
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
+              <div style="font-size:0.85rem;font-weight:700;color:var(--muted);margin-bottom:6px">CÂU ${idx + 1}:</div>
+              ${q.type === "choice" ? `
+                <div style="font-size:1.25rem;font-weight:800;margin-bottom:10px" class="ru">
+                  «${esc(q.ru)}» có nghĩa là gì?
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:8px">
+                  ${q.options.map((opt) => `
+                    <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.92rem">
+                      <input type="radio" name="q_${q.id}" value="${esc(opt)}" required />
+                      <span>${esc(opt)}</span>
+                    </label>
+                  `).join("")}
+                </div>
+              ` : `
+                <div style="font-size:1.25rem;font-weight:800;margin-bottom:10px" class="ru">
+                  «${esc(q.ru)}» có nghĩa là «${esc(q.statement)}»?
+                </div>
+                <div style="display:flex;gap:12px">
+                  <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer">
+                    <input type="radio" name="q_${q.id}" value="true" required />
+                    <span>✓ Đúng</span>
+                  </label>
+                  <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer">
+                    <input type="radio" name="q_${q.id}" value="false" required />
+                    <span>✕ Sai</span>
+                  </label>
+                </div>
+              `}
+            </div>
+          `).join("")}
+
+          <div style="text-align:center;margin-top:20px">
+            <button type="submit" class="btn btn-primary btn-lg">Nộp bài kiểm tra 📋</button>
+          </div>
+        </form>
+
+        <div id="testResultBox" style="display:none;margin-top:20px"></div>
+      </div>
+    `;
+
+    const form = pane.querySelector("#quizletTestForm");
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      let correct = 0;
+      const formData = new FormData(form);
+
+      questions.forEach(q => {
+        const val = formData.get("q_" + q.id);
+        if (q.type === "choice") {
+          if (val === q.correct) correct++;
+        } else {
+          if (val === q.correct) correct++;
+        }
+      });
+
+      const pct = Math.round((correct / questions.length) * 100);
+      if (pct >= 70 && typeof Progress !== "undefined") Progress.addXp(25);
+
+      form.style.display = "none";
+      const resBox = pane.querySelector("#testResultBox");
+      resBox.style.display = "block";
+      resBox.innerHTML = `
+        <div class="quizlet-summary-box">
+          <div class="quizlet-summary-trophy">${pct >= 80 ? "🏆" : pct >= 50 ? "🎉" : "📚"}</div>
+          <h2 style="margin:0 0 8px">Kết quả: ${pct}% (${correct}/${questions.length} câu đúng)</h2>
+          <p style="color:var(--muted);margin-bottom:20px">
+            ${pct >= 80 ? "Xuất sắc! Bạn đã làm chủ rất tốt các từ vựng này." : pct >= 50 ? "Khá tốt! Hãy ôn lại các từ chưa vững nhé." : "Cần rèn luyện thêm, hãy dùng thẻ ghi nhớ để ôn lại."}
+          </p>
+          <div style="display:flex;gap:12px;justify-content:center">
+            <button class="btn btn-primary" id="btnTestAgain">🔄 Làm lại bài kiểm tra</button>
+            <button class="btn btn-soft" id="btnTestToFlash">🃏 Về thẻ ghi nhớ</button>
+          </div>
+        </div>
+      `;
+      pane.querySelector("#btnTestAgain").onclick = () => renderTestMode();
+      pane.querySelector("#btnTestToFlash").onclick = () => switchMode("flashcard");
+    };
+  };
+
+  /* ---------------- MODE 6: WORD LIST ---------------- */
+  const renderListMode = () => {
+    const pane = panes.list;
+    if (!pane) return;
+
+    let searchTxt = "";
+
+    const renderList = () => {
+      const qNorm = dauNormalize(searchTxt);
+      const filtered = words.filter(w => {
+        if (!qNorm) return true;
+        const hay = dauNormalize(w.ru + " " + w.vi + " " + (w.note || "") + " " + (w.ex || ""));
+        return hay.includes(qNorm);
+      });
+
+      pane.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+          <div style="flex:1;max-width:360px" class="dau-search-box ${searchTxt ? "has-text" : ""}">
+            <span class="dau-search-icon">🔍</span>
+            <input type="text" class="dau-search-input" id="listSearchInput" value="${esc(searchTxt)}" placeholder="Tìm trong lọ này..." />
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="font-size:0.85rem;color:var(--muted)">Đang hiện <b>${filtered.length}</b> / ${words.length} từ</span>
+            ${isCustomJar ? `<button class="btn btn-primary btn-sm" id="btnListAddWord">+ Thêm từ mới</button>` : ""}
+          </div>
+        </div>
+
+        <div class="scrolls-container">
+          ${filtered.length === 0 ? `
+            <div style="text-align:center;padding:32px;color:var(--muted)">Không tìm thấy từ vựng phù hợp</div>
+          ` : filtered.map(w => {
+            const isStarred = getQuizletStarred().map(s => s.toLowerCase()).includes(w.ru.toLowerCase());
+            return `
+              <div class="parchment-scroll" data-ru="${esc(w.ru)}">
+                <div style="display:flex;justify-content:space-between;align-items:start">
+                  <div>
+                    <div class="scroll-ru ru">${esc(w.stress || w.ru)}</div>
+                    ${w.note ? `<div class="scroll-pos">${esc(w.note)}</div>` : ""}
+                  </div>
+                  <div style="display:flex;gap:6px;align-items:center">
+                    <button type="button" class="btn btn-soft btn-sm btn-speak-item" data-ru="${esc(w.ru)}" title="Phát âm">🔊</button>
+                    <button type="button" class="btn btn-soft btn-sm btn-star-item ${isStarred ? "starred" : ""}" data-ru="${esc(w.ru)}" title="Gắn sao">⭐</button>
+                    <button type="button" class="btn btn-soft btn-sm btn-addjar-item" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" data-ex="${esc(w.ex || "")}" title="Lưu vào Lọ cá nhân">🏺 + Lưu</button>
+                    ${isCustomJar ? `<button type="button" class="btn btn-soft btn-sm btn-delword-item" data-ru="${esc(w.ru)}" style="color:var(--red)" title="Xóa từ khỏi lọ này">🗑️</button>` : ""}
+                  </div>
+                </div>
+                <div class="scroll-vi">${esc(w.vi)}</div>
+                ${w.ex ? `<div class="scroll-ex ru">«${esc(w.ex)}»</div>` : ""}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+
+      const sinp = pane.querySelector("#listSearchInput");
+      if (sinp) {
+        sinp.oninput = (e) => {
+          searchTxt = e.target.value;
+          renderList();
+        };
+      }
+
+      if (isCustomJar) {
+        const btnAdd = pane.querySelector("#btnListAddWord");
+        if (btnAdd) {
+          btnAdd.onclick = () => openAddWordToJarModal(jarId, onWordListChange);
+        }
+      }
+
+      pane.querySelectorAll(".btn-speak-item").forEach(b => {
+        b.onclick = () => speak(b.dataset.ru);
+      });
+
+      pane.querySelectorAll(".btn-star-item").forEach(b => {
+        b.onclick = () => {
+          const starred = toggleQuizletStarred(b.dataset.ru);
+          b.classList.toggle("starred", starred);
+        };
+      });
+
+      pane.querySelectorAll(".btn-addjar-item").forEach(b => {
+        b.onclick = () => window.openAddToJarModal({
+          ru: b.dataset.ru,
+          vi: b.dataset.vi,
+          note: b.dataset.note,
+          ex: b.dataset.ex
+        });
+      });
+
+      if (isCustomJar) {
+        pane.querySelectorAll(".btn-delword-item").forEach(b => {
+          b.onclick = () => {
+            const wordRu = b.dataset.ru;
+            if (confirm(`Bạn có chắc muốn xóa từ «${wordRu}» khỏi lọ này không?`)) {
+              let jars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
+              const target = jars.find(j => j.id === jarId);
+              if (target) {
+                target.words = (target.words || []).filter(w => (w.ru || "").toLowerCase() !== wordRu.toLowerCase());
+                STORE.set("custom_jars", jars);
+                toast(`Đã xóa từ «${wordRu}» khỏi lọ!`);
+                if (onWordListChange) onWordListChange();
+              }
+            }
+          };
+        });
+      }
+    };
+
+    renderList();
+  };
+
+  renderFlashcardMode();
+};
+
 function initVocabPage() {
   /* ---------- TOP-LEVEL TABS (Lọ từ vựng / Flashcard SRS) ---------- */
   const topTabs = document.querySelectorAll(".voc-top-tab");
@@ -402,53 +1771,87 @@ function initVocabPage() {
     if (shelf) shelf.classList.add("hidden");
     if (detail) {
       detail.classList.remove("hidden");
+      const isCustom = !jar.is_system && String(jar.id).startsWith("custom-");
+
       detail.innerHTML = `
         <!-- STICKY TOP BACK BAR -->
         <div class="dau-workspace-back-bar">
           <button type="button" class="dau-back-btn" id="btnBackJars">
-            ← Quay lại danh sách từ vựng
+            ← Quay lại kho Lọ từ vựng
           </button>
           <div class="dau-workspace-info">
             <span class="dau-badge ${jar.level === "A2" ? "dau-badge-a2" : jar.level === "B1" ? "dau-badge-b1" : jar.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${jar.level || "A1"}</span>
             <span class="dau-workspace-title">${jar.icon || "🏺"} ${esc(jar.name)}</span>
           </div>
-          <button class="btn btn-primary btn-sm" id="btnStudyJar">🧠 Ôn lọ này (Flashcard)</button>
+          <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+            ${isCustom ? `
+              <button type="button" class="btn btn-outline btn-sm" id="btnAddWordCustom">+ Thêm từ mới</button>
+              <button type="button" class="btn btn-soft btn-sm" id="btnDeleteCustomJar" style="color:var(--red)" title="Xóa lọ này">🗑️</button>
+            ` : ""}
+            <button type="button" class="btn btn-primary btn-sm" id="btnStudyJar">⚡ Ôn luyện Quizlet</button>
+          </div>
         </div>
 
-        <div class="workspace">
-          <div style="margin-bottom:16px">
-            <h2 style="margin:4px 0">${jar.icon || "🏺"} ${esc(jar.name)}</h2>
-            <p style="color:var(--muted);font-size:0.92rem">${esc(jar.desc || "")}</p>
+        <div class="workspace" style="padding-top:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
+            <div>
+              <h2 style="margin:4px 0;display:flex;align-items:center;gap:10px">
+                <span>${jar.icon || "🏺"}</span> ${esc(jar.name)}
+              </h2>
+              <p style="color:var(--muted);font-size:0.92rem;margin:0">${esc(jar.desc || "Bộ từ vựng theo tình huống thực tế")}</p>
+            </div>
           </div>
-          <div class="scrolls-container">
-            ${(jar.words || []).map((w) => `
-              <div class="parchment-scroll">
-                <div style="display:flex;justify-content:space-between;align-items:start">
-                  <div>
-                    <div class="scroll-ru ru">${esc(w.stress || w.ru)}</div>
-                    <div class="scroll-pos">${esc(w.note || w.pos || "")}</div>
-                  </div>
-                  <button class="btn btn-soft btn-sm btn-speak-scroll" data-ru="${esc(w.ru)}" style="padding:4px 8px">🔊</button>
-                </div>
-                <div class="scroll-vi">${esc(w.vi)}</div>
-                ${w.ex ? `<div class="scroll-ex ru">${esc(w.ex)}</div>` : ""}
-              </div>
-            `).join("")}
-          </div>
+
+          <!-- QUIZLET STUDY ENGINE HOST -->
+          <div id="jarQuizletSuiteHost"></div>
         </div>
       `;
 
-      detail.querySelectorAll(".btn-speak-scroll").forEach((btn) => {
-        btn.onclick = () => speak(btn.dataset.ru);
-      });
       el("#btnBackJars").onclick = () => {
         detail.classList.add("hidden");
         shelf.classList.remove("hidden");
+        renderVocabHub();
         window.scrollTo({ top: 0, behavior: "smooth" });
       };
+
+      if (isCustom) {
+        const btnAdd = el("#btnAddWordCustom");
+        if (btnAdd) {
+          btnAdd.onclick = () => openAddWordToJarModal(jar.id, () => showJarDetail(jar.id));
+        }
+        const btnDel = el("#btnDeleteCustomJar");
+        if (btnDel) {
+          btnDel.onclick = () => {
+            if (confirm(`Bạn có chắc muốn xóa lọ «${jar.name}» không?`)) {
+              let jars = STORE.get("custom_jars", []);
+              jars = jars.filter(j => j.id !== jar.id);
+              STORE.set("custom_jars", jars);
+              toast(`Đã xóa lọ «${jar.name}» thành công!`);
+              detail.classList.add("hidden");
+              shelf.classList.remove("hidden");
+              renderVocabHub();
+            }
+          };
+        }
+      }
+
       el("#btnStudyJar").onclick = () => {
-        switchTopTab("algorithm");
+        const firstModeBtn = detail.querySelector(".quizlet-mode-btn[data-mode='flashcard']");
+        if (firstModeBtn) firstModeBtn.click();
+        const cardElem = detail.querySelector(".quizlet-card-container");
+        if (cardElem) cardElem.scrollIntoView({ behavior: "smooth", block: "center" });
       };
+
+      // Khởi động Quizlet Suite
+      initQuizletSuite(el("#jarQuizletSuiteHost"), jar.words || [], {
+        jarId: jar.id,
+        jarTitle: jar.name,
+        isCustomJar: isCustom,
+        onWordListChange: () => {
+          showJarDetail(jar.id);
+        }
+      });
+
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
@@ -569,7 +1972,10 @@ function initVocabPage() {
                     <div class="scroll-ru ru">${esc(w.ru)}</div>
                     <div class="scroll-pos">${esc(w.note || "")}</div>
                   </div>
-                  <button class="btn btn-soft btn-sm btn-speak-w" data-ru="${esc(w.ru)}" style="padding:4px 8px">🔊</button>
+                  <div style="display:flex;gap:6px">
+                    <button type="button" class="btn btn-soft btn-sm btn-speak-w" data-ru="${esc(w.ru)}" style="padding:4px 8px" title="Phát âm">🔊</button>
+                    <button type="button" class="btn btn-soft btn-sm btn-add-w-jar" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" style="padding:4px 8px" title="Lưu vào Lọ cá nhân">🏺 + Lưu</button>
+                  </div>
                 </div>
                 <div class="scroll-vi">${esc(w.vi)}</div>
               </div>
@@ -578,6 +1984,13 @@ function initVocabPage() {
         `;
         body.querySelectorAll(".btn-speak-w").forEach(btn => {
           btn.onclick = () => speak(btn.dataset.ru);
+        });
+        body.querySelectorAll(".btn-add-w-jar").forEach(btn => {
+          btn.onclick = () => window.openAddToJarModal({
+            ru: btn.dataset.ru,
+            vi: btn.dataset.vi,
+            note: btn.dataset.note
+          });
         });
       } else if (activeTab === "quiz") {
         quizEngine(body, found.quiz, {
@@ -596,6 +2009,7 @@ function initVocabPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  window.refreshVocabViews = renderVocabHub;
   renderVocabHub();
 }
 
@@ -3560,6 +4974,7 @@ function initSrsPage() {
         <div class="srs-quick-actions">
           <button class="btn btn-soft btn-sm" id="speakNow">🔊 Nghe phát âm</button>
           <button class="btn btn-soft btn-sm" id="wordDetail">📖 Chi tiết từ</button>
+          <button class="btn btn-soft btn-sm" id="srsAddJar">🏺 Lưu vào Lọ</button>
         </div>
       </div>`;
     const f = el("#srsFlash");
@@ -3579,6 +4994,13 @@ function initSrsPage() {
       e.stopPropagation();
       WordDetail.open(card.ru, { ru: card.ru, vi: card.vi, pos: card.pos, ex: card.ex, level: card.level, dir: "ru-vi" });
     };
+    const addJarBtn = el("#srsAddJar");
+    if (addJarBtn) {
+      addJarBtn.onclick = (e) => {
+        e.stopPropagation();
+        window.openAddToJarModal(card);
+      };
+    }
     showControls();
   }
 
