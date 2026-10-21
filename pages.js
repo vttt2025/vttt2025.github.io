@@ -1470,10 +1470,28 @@ function initVocabPage() {
   let currentLevel = "all";
   let searchQuery = "";
   let currentStatus = "all";
+  let cloudJars = null;
+
+  const loadCloudJars = async () => {
+    if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
+      try {
+        const remote = await window.RusiSupabase.jars.getSystemJars();
+        if (remote && remote.length) {
+          cloudJars = remote;
+          console.log(`⚡ [Supabase] Đã kết nối & lấy ${remote.length} lọ từ vựng từ Database!`);
+          renderVocabCards();
+        }
+      } catch (err) {
+        console.warn("[Supabase] Không thể tải dữ liệu từ vựng đám mây, sử dụng bộ nhớ cục bộ:", err);
+      }
+    }
+  };
+  loadCloudJars();
 
   const getVocabJars = () => {
     const customJars = STORE.get("custom_jars", []);
-    const jars = [...(typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []), ...customJars].map(j => ({
+    const baseJars = (cloudJars && cloudJars.length) ? cloudJars : (typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []);
+    const jars = [...baseJars, ...customJars].map(j => ({
       id: j.id,
       kind: "jar",
       level: j.level || "A1",
@@ -1894,7 +1912,8 @@ function initVocabPage() {
 
   const showJarDetail = (jarId) => {
     const customJars = STORE.get("custom_jars", []);
-    const jar = [...(typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []), ...customJars].find((j) => j.id === jarId);
+    const baseJars = (cloudJars && cloudJars.length) ? cloudJars : (typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []);
+    const jar = [...baseJars, ...customJars].find((j) => j.id === jarId);
     if (!jar) return;
     const mainLayout = el("#vocMainLayout");
     if (mainLayout) mainLayout.classList.add("hidden");

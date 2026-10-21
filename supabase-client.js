@@ -170,6 +170,29 @@
      * 2. LỌ TỪ VỰNG CÁ NHÂN & SPACED REPETITION (VOCAB JARS)
      * ========================================================================= */
     jars: {
+      getSystemJars: async function () {
+        var sb = getClient();
+        if (!sb) return [];
+        try {
+          var res = await sb.from("vocab_jars").select("*").eq("is_system", true).order("created_at", { ascending: true });
+          if (res.error || !res.data) return [];
+          return (res.data || []).map(function (row) {
+            return {
+              id: row.id,
+              name: row.jar_name,
+              level: row.level || "A1",
+              levelName: row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1",
+              desc: row.description || "",
+              icon: row.icon || "🏺",
+              is_system: true,
+              words: Array.isArray(row.words) ? row.words : []
+            };
+          });
+        } catch (_) {
+          return [];
+        }
+      },
+
       getAll: async function (userId) {
         var sb = getClient();
         if (!sb || !userId) return [];
@@ -266,7 +289,24 @@
     },
 
     /* =========================================================================
-     * 4. SUPABASE AUTH BRIDGES
+     * 4. GÓI DỊCH VỤ & KHÓA HỌC PRO (PACKAGES)
+     * ========================================================================= */
+    packages: {
+      getAll: async function () {
+        var sb = getClient();
+        if (!sb) return [];
+        try {
+          var res = await sb.from("packages").select("*").order("price", { ascending: true });
+          if (res.error || !res.data) return [];
+          return res.data;
+        } catch (_) {
+          return [];
+        }
+      }
+    },
+
+    /* =========================================================================
+     * 5. SUPABASE AUTH BRIDGES
      * ========================================================================= */
     auth: {
       signInGoogle: async function (redirectTo) {
