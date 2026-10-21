@@ -14,6 +14,79 @@ function el(sel) {
   return document.querySelector(sel);
 }
 
+function renderDauPagination(containerEl, currentPage, totalPages, onPageChange) {
+  if (!containerEl) return;
+  if (!totalPages || totalPages <= 1) {
+    containerEl.innerHTML = "";
+    containerEl.style.display = "none";
+    return;
+  }
+  containerEl.style.display = "flex";
+
+  const pages = [];
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+  } else {
+    pages.push(1);
+    if (currentPage > 3) pages.push("...");
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (currentPage < totalPages - 2) pages.push("...");
+    pages.push(totalPages);
+  }
+
+  let html = `
+    <button type="button" class="dau-page-btn dau-page-prev" ${currentPage <= 1 ? "disabled" : ""} aria-label="Trang trước">
+      ‹ Trang trước
+    </button>
+  `;
+
+  pages.forEach(p => {
+    if (p === "...") {
+      html += `<span class="dau-page-ellipsis">…</span>`;
+    } else {
+      html += `
+        <button type="button" class="dau-page-btn dau-page-num ${p === currentPage ? "active" : ""}" data-page="${p}">
+          ${p}
+        </button>
+      `;
+    }
+  });
+
+  html += `
+    <button type="button" class="dau-page-btn dau-page-next" ${currentPage >= totalPages ? "disabled" : ""} aria-label="Trang sau">
+      Trang sau ›
+    </button>
+  `;
+
+  containerEl.innerHTML = html;
+
+  const prevBtn = containerEl.querySelector(".dau-page-prev");
+  if (prevBtn) {
+    prevBtn.onclick = (e) => {
+      e.preventDefault();
+      if (currentPage > 1) onPageChange(currentPage - 1);
+    };
+  }
+
+  const nextBtn = containerEl.querySelector(".dau-page-next");
+  if (nextBtn) {
+    nextBtn.onclick = (e) => {
+      e.preventDefault();
+      if (currentPage < totalPages) onPageChange(currentPage + 1);
+    };
+  }
+
+  containerEl.querySelectorAll(".dau-page-num").forEach(btn => {
+    btn.onclick = (e) => {
+      e.preventDefault();
+      const page = parseInt(btn.dataset.page, 10);
+      if (page && page !== currentPage) onPageChange(page);
+    };
+  });
+}
+
 function lessonCardHtml(lesson, kindLabel) {
   const done = Progress.doneList("vocabDone").includes(lesson.id) ? 100 : 0;
   return `
@@ -1467,9 +1540,9 @@ function initVocabPage() {
 
   /* ---------- BỘ LỌC THÔNG MINH CHO TỪ VỰNG ---------- */
   /* ---------- DANH SÁCH LỌ TỪ VỰNG ---------- */
-  let currentLevel = "all";
-  let searchQuery = "";
-  let currentStatus = "all";
+  let currentLevel = "A1";
+  let currentPage = 1;
+  const PAGE_SIZE = 6;
   let cloudJars = null;
 
   const loadCloudJars = async () => {
@@ -1516,45 +1589,37 @@ function initVocabPage() {
     const countB2 = allItems.filter(i => i.level === "B2").length;
 
     // Cập nhật số lượng trên các nút cấp độ
-    const cAll = el("#countAll"); if (cAll) cAll.textContent = allItems.length;
     const cA1 = el("#countA1"); if (cA1) cA1.textContent = countA1;
     const cA2 = el("#countA2"); if (cA2) cA2.textContent = countA2;
     const cB1 = el("#countB1"); if (cB1) cB1.textContent = countB1;
     const cB2 = el("#countB2"); if (cB2) cB2.textContent = countB2;
 
-    const qNorm = dauNormalize(searchQuery);
-    const filtered = allItems.filter(item => {
-      if (currentLevel !== "all" && item.level !== currentLevel) return false;
-      if (currentStatus === "completed") {
-        const isDone = Progress.doneList("vocabDone").includes(item.id);
-        if (!isDone) return false;
-      } else if (currentStatus === "not_started") {
-        const isDone = Progress.doneList("vocabDone").includes(item.id);
-        if (isDone) return false;
-      }
-      if (qNorm) {
-        const hay = dauNormalize(item.title + " " + item.desc);
-        const matchWords = (item.raw.words || []).some(w => dauNormalize(w.ru + " " + (w.vi || "") + " " + (w.note || "")).includes(qNorm));
-        if (!hay.includes(qNorm) && !matchWords) return false;
-      }
-      return true;
-    });
-
-    const sumCount = el("#vocabSummaryCount");
-    if (sumCount) {
-      sumCount.innerHTML = `Đang hiển thị <b>${filtered.length}</b> / ${allItems.length} lọ từ vựng`;
+    const shelfHost = el("#jarsShelfHost");
+    if (shelfHost) {
+      shelfHost.querySelectorAll(".dau-level-pill").forEach(b => {
+        b.classList.toggle("active", b.dataset.level === currentLevel);
+      });
     }
+
+    const filtered = allItems.filter(item => item.level === currentLevel);
+
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE);
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
         <div class="dau-empty-state" style="grid-column:1/-1;text-align:center;padding:40px 20px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius)">
-          <div style="font-size:2.4rem;margin-bottom:8px">🔍</div>
-          <h3 style="margin:0 0 6px">Không tìm thấy lọ từ vựng phù hợp</h3>
-          <p style="color:var(--muted);font-size:0.9rem;margin:0">Hãy thử tìm bằng từ khóa khác hoặc chuyển sang cấp độ A1/A2.</p>
+          <div style="font-size:2.4rem;margin-bottom:8px">🏺</div>
+          <h3 style="margin:0 0 6px">Chưa có lọ từ vựng cho cấp độ này</h3>
+          <p style="color:var(--muted);font-size:0.9rem;margin:0">Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
         </div>
       `;
     } else {
-      gridHost.innerHTML = filtered.map(item => {
+      gridHost.innerHTML = pageItems.map(item => {
         const isDone = Progress.doneList("vocabDone").includes(item.id);
         const badgeClass = item.level === "A1" ? "dau-badge-a1" : item.level === "A2" ? "dau-badge-a2" : item.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
         return `
@@ -1604,6 +1669,13 @@ function initVocabPage() {
       });
     }
 
+    renderDauPagination(el("#vocabPagination"), currentPage, totalPages, (newPage) => {
+      currentPage = newPage;
+      renderVocabCards();
+      const topEl = el("#vocabFilterBar") || el("#jarsShelfHost");
+      if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
     renderVocabSidebar();
   };
 
@@ -1624,9 +1696,6 @@ function initVocabPage() {
         <div class="dau-filter-bar" id="vocabFilterBar">
           <div class="dau-level-pills-wrap">
             <div class="dau-level-pills" id="vocabLevelPills">
-              <button type="button" class="dau-level-pill ${currentLevel === "all" ? "active" : ""}" data-level="all">
-                Tất cả cấp độ <span class="dau-pill-count" id="countAll">0</span>
-              </button>
               <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
                 A1 · Sơ cấp <span class="dau-pill-count" id="countA1">0</span>
               </button>
@@ -1641,71 +1710,20 @@ function initVocabPage() {
               </button>
             </div>
           </div>
-
-          <div class="dau-filter-controls" style="margin-top:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-            <div class="dau-search-box" style="flex:1;min-width:200px">
-              <span class="dau-search-icon">🔍</span>
-              <input type="text" class="dau-search-input" id="vocabSearchInput" placeholder="Tìm theo tên lọ hoặc từ vựng..." />
-              <button type="button" class="dau-search-clear" id="vocabSearchClear" style="display:none">×</button>
-            </div>
-
-            <select class="dau-select" id="vocabStatusSelect" style="min-width:160px">
-              <option value="all">Tất cả trạng thái</option>
-              <option value="not_started">Chưa học</option>
-              <option value="completed">Đã hoàn thành</option>
-            </select>
-          </div>
-
-          <div class="dau-filter-summary" style="margin-top:10px">
-            <div class="dau-summary-count" id="vocabSummaryCount"></div>
-          </div>
         </div>
 
         <div class="dau-cards-grid" id="vocabCardsGrid"></div>
+        <div class="dau-pagination" id="vocabPagination"></div>
       `;
 
       // Event listener Level pills
       shelfHost.querySelectorAll(".dau-level-pill").forEach(btn => {
         btn.onclick = () => {
           currentLevel = btn.dataset.level;
-          shelfHost.querySelectorAll(".dau-level-pill").forEach(b => {
-            b.classList.toggle("active", b.dataset.level === currentLevel);
-          });
+          currentPage = 1;
           renderVocabCards();
         };
       });
-
-      // Search input (Real-time, không phá hủy DOM input, không giật mất focus)
-      const searchInp = el("#vocabSearchInput");
-      const clearBtn = el("#vocabSearchClear");
-      const sBox = el(".dau-search-box");
-      if (searchInp) {
-        searchInp.oninput = (e) => {
-          searchQuery = e.target.value;
-          if (clearBtn) clearBtn.style.display = searchQuery ? "block" : "none";
-          if (sBox) sBox.classList.toggle("has-text", Boolean(searchQuery));
-          renderVocabCards();
-        };
-      }
-      if (clearBtn && searchInp) {
-        clearBtn.onclick = () => {
-          searchQuery = "";
-          searchInp.value = "";
-          clearBtn.style.display = "none";
-          if (sBox) sBox.classList.remove("has-text");
-          searchInp.focus();
-          renderVocabCards();
-        };
-      }
-
-      // Status dropdown
-      const stSel = el("#vocabStatusSelect");
-      if (stSel) {
-        stSel.onchange = (e) => {
-          currentStatus = e.target.value;
-          renderVocabCards();
-        };
-      }
     }
 
     renderVocabCards();
@@ -2171,9 +2189,9 @@ function initVocabPage() {
  * ===================================================================== */
 function initListeningPage() {
   const host = el("#listenHost");
-  let currentLevel = "all";
-  let currentCategory = "all";
-  let searchQuery = "";
+  let currentLevel = "A1";
+  let currentPage = 1;
+  const PAGE_SIZE = 6;
   let currentSpeed = 1.0;
   let showSub = true;
   let currentLesson = null;
@@ -2189,7 +2207,6 @@ function initListeningPage() {
     const countB2 = all.filter(l => l.level === "B2").length;
 
     // Cập nhật số lượng trên các nút cấp độ
-    const cAll = el("#lisCountAll"); if (cAll) cAll.textContent = all.length;
     const cA1 = el("#lisCountA1"); if (cA1) cA1.textContent = countA1;
     const cA2 = el("#lisCountA2"); if (cA2) cA2.textContent = countA2;
     const cB1 = el("#lisCountB1"); if (cB1) cB1.textContent = countB1;
@@ -2200,80 +2217,25 @@ function initListeningPage() {
       b.classList.toggle("active", b.dataset.level === currentLevel);
     });
 
-    const qNorm = dauNormalize(searchQuery);
-    const filtered = all.filter(l => {
-      if (currentLevel !== "all" && l.level !== currentLevel) return false;
-      if (currentCategory !== "all" && l.category !== currentCategory) return false;
-      if (qNorm) {
-        const hay = dauNormalize(l.title + " " + l.vi + " " + (l.categoryName || ""));
-        const matchLines = (l.lines || []).some(line => dauNormalize(line.ru + " " + line.vi).includes(qNorm));
-        if (!hay.includes(qNorm) && !matchLines) return false;
-      }
-      return true;
-    });
+    const filtered = all.filter(l => l.level === currentLevel);
 
-    const sumCount = el("#lisSummaryCount");
-    if (sumCount) {
-      sumCount.innerHTML = `Đang hiển thị <b>${filtered.length}</b> / ${all.length} bài nghe`;
-    }
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
 
-    const activeTagsEl = el("#lisActiveTags");
-    if (activeTagsEl) {
-      activeTagsEl.innerHTML = `
-        ${currentLevel !== "all" ? `<span class="dau-active-tag">Cấp độ: ${currentLevel} <span class="dau-active-tag-remove" data-clear="level">×</span></span>` : ""}
-        ${currentCategory !== "all" ? `<span class="dau-active-tag">Bối cảnh: ${currentCategory} <span class="dau-active-tag-remove" data-clear="cat">×</span></span>` : ""}
-        ${searchQuery ? `<span class="dau-active-tag">Từ khóa: "${esc(searchQuery)}" <span class="dau-active-tag-remove" data-clear="search">×</span></span>` : ""}
-      `;
-      activeTagsEl.querySelectorAll("[data-clear]").forEach(btn => {
-        btn.onclick = () => {
-          if (btn.dataset.clear === "level") currentLevel = "all";
-          if (btn.dataset.clear === "cat") {
-            currentCategory = "all";
-            const catSel = el("#lisCatSelect");
-            if (catSel) catSel.value = "all";
-          }
-          if (btn.dataset.clear === "search") {
-            searchQuery = "";
-            const searchInp = el("#lisSearchInput");
-            const clearBtn = el("#lisSearchClear");
-            const sBox = el("#lisSearchBox");
-            if (searchInp) searchInp.value = "";
-            if (clearBtn) clearBtn.style.display = "none";
-            if (sBox) sBox.classList.remove("has-text");
-          }
-          renderListeningCards();
-        };
-      });
-    }
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE);
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
         <div class="dau-empty-state">
           <div class="dau-empty-icon">🎧</div>
-          <h3>Không tìm thấy bài nghe phù hợp</h3>
-          <p>Hãy thử thay đổi từ khóa tìm kiếm hoặc bấm đặt lại bộ lọc.</p>
-          <button class="btn btn-outline btn-sm" id="emptyLisReset">Đặt lại tất cả bộ lọc</button>
+          <h3>Chưa có bài nghe cho cấp độ này</h3>
+          <p>Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
         </div>
       `;
-      const emptyReset = el("#emptyLisReset");
-      if (emptyReset) {
-        emptyReset.onclick = () => {
-          currentLevel = "all";
-          currentCategory = "all";
-          searchQuery = "";
-          const searchInp = el("#lisSearchInput");
-          const clearBtn = el("#lisSearchClear");
-          const sBox = el("#lisSearchBox");
-          const catSel = el("#lisCatSelect");
-          if (searchInp) searchInp.value = "";
-          if (clearBtn) clearBtn.style.display = "none";
-          if (sBox) sBox.classList.remove("has-text");
-          if (catSel) catSel.value = "all";
-          renderListeningCards();
-        };
-      }
     } else {
-      gridHost.innerHTML = filtered.map(l => {
+      gridHost.innerHTML = pageItems.map(l => {
         const badgeClass = l.level === "A1" ? "dau-badge-a1" : l.level === "A2" ? "dau-badge-a2" : l.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
         const isDone = Progress.doneList("listenDone").includes(l.id + "_check");
         return `
@@ -2331,6 +2293,13 @@ function initListeningPage() {
         };
       });
     }
+
+    renderDauPagination(el("#lisPagination"), currentPage, totalPages, (newPage) => {
+      currentPage = newPage;
+      renderListeningCards();
+      const topEl = el("#lisFilterBar") || host;
+      if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const renderHub = () => {
@@ -2348,9 +2317,6 @@ function initListeningPage() {
         <div class="dau-filter-bar" id="lisFilterBar">
           <div class="dau-level-pills-wrap">
             <div class="dau-level-pills">
-              <button type="button" class="dau-level-pill ${currentLevel === "all" ? "active" : ""}" data-level="all">
-                Tất cả cấp độ <span class="dau-pill-count" id="lisCountAll">${all.length}</span>
-              </button>
               <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
                 A1 · Sơ cấp <span class="dau-pill-count" id="lisCountA1">${countA1}</span>
               </button>
@@ -2365,92 +2331,21 @@ function initListeningPage() {
               </button>
             </div>
           </div>
-
-          <div class="dau-filter-controls">
-            <div class="dau-search-box ${searchQuery ? "has-text" : ""}" id="lisSearchBox">
-              <span class="dau-search-icon">🔍</span>
-              <input type="text" class="dau-search-input" id="lisSearchInput" value="${esc(searchQuery)}" placeholder="Tìm bài nghe theo tiêu đề, nội dung thoại..." />
-              <button type="button" class="dau-search-clear" id="lisSearchClear" style="${searchQuery ? "" : "display:none"}">×</button>
-            </div>
-
-            <select class="dau-select" id="lisCatSelect">
-              <option value="all" ${currentCategory === "all" ? "selected" : ""}>Tất cả bối cảnh</option>
-              <option value="airport" ${currentCategory === "airport" ? "selected" : ""}>✈️ Sân bay & Du lịch</option>
-              <option value="shop" ${currentCategory === "shop" ? "selected" : ""}>🛒 Siêu thị & Mua sắm</option>
-              <option value="dorm" ${currentCategory === "dorm" ? "selected" : ""}>🏢 Ký túc xá & Đời sống</option>
-              <option value="cafe" ${currentCategory === "cafe" ? "selected" : ""}>🥞 Ẩm thực & Quán ăn</option>
-              <option value="campus" ${currentCategory === "campus" ? "selected" : ""}>📚 Trường học & Thư viện</option>
-              <option value="metro" ${currentCategory === "metro" ? "selected" : ""}>🚇 Giao thông & Tàu điện</option>
-              <option value="interview" ${currentCategory === "interview" ? "selected" : ""}>🚀 Phỏng vấn chuyên sâu</option>
-            </select>
-
-            <button type="button" class="dau-reset-btn" id="lisResetFilter">↺ Đặt lại bộ lọc</button>
-          </div>
-
-          <div class="dau-filter-summary">
-            <div class="dau-summary-count" id="lisSummaryCount"></div>
-            <div class="dau-active-tags" id="lisActiveTags"></div>
-          </div>
         </div>
 
         <!-- DAUENGLISH CARDS GRID -->
         <div class="dau-cards-grid" id="lisCardsGrid"></div>
+        <div class="dau-pagination" id="lisPagination"></div>
       `;
 
       // Level pills
       host.querySelectorAll(".dau-level-pill").forEach(btn => {
         btn.onclick = () => {
           currentLevel = btn.dataset.level;
+          currentPage = 1;
           renderListeningCards();
         };
       });
-
-      // Real-time search
-      const searchInp = el("#lisSearchInput");
-      const clearBtn = el("#lisSearchClear");
-      const sBox = el("#lisSearchBox");
-      if (searchInp) {
-        searchInp.oninput = (e) => {
-          searchQuery = e.target.value;
-          if (clearBtn) clearBtn.style.display = searchQuery ? "block" : "none";
-          if (sBox) sBox.classList.toggle("has-text", Boolean(searchQuery));
-          renderListeningCards();
-        };
-      }
-      if (clearBtn && searchInp) {
-        clearBtn.onclick = () => {
-          searchQuery = "";
-          searchInp.value = "";
-          clearBtn.style.display = "none";
-          if (sBox) sBox.classList.remove("has-text");
-          searchInp.focus();
-          renderListeningCards();
-        };
-      }
-
-      // Category select
-      const catSel = el("#lisCatSelect");
-      if (catSel) {
-        catSel.onchange = (e) => {
-          currentCategory = e.target.value;
-          renderListeningCards();
-        };
-      }
-
-      // Reset button
-      const resetBtn = el("#lisResetFilter");
-      if (resetBtn) {
-        resetBtn.onclick = () => {
-          currentLevel = "all";
-          currentCategory = "all";
-          searchQuery = "";
-          if (searchInp) searchInp.value = "";
-          if (clearBtn) clearBtn.style.display = "none";
-          if (sBox) sBox.classList.remove("has-text");
-          if (catSel) catSel.value = "all";
-          renderListeningCards();
-        };
-      }
     }
 
     renderListeningCards();
@@ -2671,9 +2566,9 @@ function initSpeakingPage() {
     el("#srWarn").classList.remove("hidden");
   }
 
-  let currentLevel = "all";
-  let currentCategory = "all";
-  let searchQuery = "";
+  let currentLevel = "A1";
+  let currentPage = 1;
+  const PAGE_SIZE = 6;
 
   const renderSpeakingCards = () => {
     const gridHost = el("#spCardsGrid");
@@ -2686,7 +2581,6 @@ function initSpeakingPage() {
     const countB2 = all.filter(s => s.level === "B2").length;
 
     // Cập nhật số lượng trên các nút cấp độ
-    const cAll = el("#spCountAll"); if (cAll) cAll.textContent = all.length;
     const cA1 = el("#spCountA1"); if (cA1) cA1.textContent = countA1;
     const cA2 = el("#spCountA2"); if (cA2) cA2.textContent = countA2;
     const cB1 = el("#spCountB1"); if (cB1) cB1.textContent = countB1;
@@ -2697,80 +2591,25 @@ function initSpeakingPage() {
       b.classList.toggle("active", b.dataset.level === currentLevel);
     });
 
-    const qNorm = dauNormalize(searchQuery);
-    const filtered = all.filter(s => {
-      if (currentLevel !== "all" && s.level !== currentLevel) return false;
-      if (currentCategory !== "all" && s.category !== currentCategory) return false;
-      if (qNorm) {
-        const hay = dauNormalize(s.title + " " + (s.phonemeTarget || "") + " " + (s.categoryName || ""));
-        const matchItems = (s.items || []).some(item => dauNormalize(item.ru + " " + item.vi).includes(qNorm));
-        if (!hay.includes(qNorm) && !matchItems) return false;
-      }
-      return true;
-    });
+    const filtered = all.filter(s => s.level === currentLevel);
 
-    const sumCount = el("#spSummaryCount");
-    if (sumCount) {
-      sumCount.innerHTML = `Đang hiển thị <b>${filtered.length}</b> / ${all.length} chủ đề nói`;
-    }
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
 
-    const activeTagsEl = el("#spActiveTags");
-    if (activeTagsEl) {
-      activeTagsEl.innerHTML = `
-        ${currentLevel !== "all" ? `<span class="dau-active-tag">Cấp độ: ${currentLevel} <span class="dau-active-tag-remove" data-clear="level">×</span></span>` : ""}
-        ${currentCategory !== "all" ? `<span class="dau-active-tag">Tình huống: ${currentCategory} <span class="dau-active-tag-remove" data-clear="cat">×</span></span>` : ""}
-        ${searchQuery ? `<span class="dau-active-tag">Từ khóa: "${esc(searchQuery)}" <span class="dau-active-tag-remove" data-clear="search">×</span></span>` : ""}
-      `;
-      activeTagsEl.querySelectorAll("[data-clear]").forEach(btn => {
-        btn.onclick = () => {
-          if (btn.dataset.clear === "level") currentLevel = "all";
-          if (btn.dataset.clear === "cat") {
-            currentCategory = "all";
-            const catSel = el("#spCatSelect");
-            if (catSel) catSel.value = "all";
-          }
-          if (btn.dataset.clear === "search") {
-            searchQuery = "";
-            const searchInp = el("#spSearchInput");
-            const clearBtn = el("#spSearchClear");
-            const sBox = el("#spSearchBox");
-            if (searchInp) searchInp.value = "";
-            if (clearBtn) clearBtn.style.display = "none";
-            if (sBox) sBox.classList.remove("has-text");
-          }
-          renderSpeakingCards();
-        };
-      });
-    }
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE);
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
         <div class="dau-empty-state">
           <div class="dau-empty-icon">🎙️</div>
-          <h3>Không tìm thấy chủ đề nói phù hợp</h3>
-          <p>Hãy thử thay đổi từ khóa hoặc đặt lại bộ lọc.</p>
-          <button class="btn btn-outline btn-sm" id="emptySpReset">Đặt lại tất cả bộ lọc</button>
+          <h3>Chưa có chủ đề nói cho cấp độ này</h3>
+          <p>Vui lòng chọn cấp độ khác để tiếp tục luyện phát âm.</p>
         </div>
       `;
-      const emptyReset = el("#emptySpReset");
-      if (emptyReset) {
-        emptyReset.onclick = () => {
-          currentLevel = "all";
-          currentCategory = "all";
-          searchQuery = "";
-          const searchInp = el("#spSearchInput");
-          const clearBtn = el("#spSearchClear");
-          const sBox = el("#spSearchBox");
-          const catSel = el("#spCatSelect");
-          if (searchInp) searchInp.value = "";
-          if (clearBtn) clearBtn.style.display = "none";
-          if (sBox) sBox.classList.remove("has-text");
-          if (catSel) catSel.value = "all";
-          renderSpeakingCards();
-        };
-      }
     } else {
-      gridHost.innerHTML = filtered.map(s => {
+      gridHost.innerHTML = pageItems.map(s => {
         const badgeClass = s.level === "A1" ? "dau-badge-a1" : s.level === "A2" ? "dau-badge-a2" : s.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
         let highest = 0;
         (s.items || []).forEach((_, i) => {
@@ -2825,6 +2664,13 @@ function initSpeakingPage() {
         };
       });
     }
+
+    renderDauPagination(el("#spPagination"), currentPage, totalPages, (newPage) => {
+      currentPage = newPage;
+      renderSpeakingCards();
+      const topEl = el("#spFilterBar") || host;
+      if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const renderHub = () => {
@@ -2841,9 +2687,6 @@ function initSpeakingPage() {
         <div class="dau-filter-bar" id="spFilterBar">
           <div class="dau-level-pills-wrap">
             <div class="dau-level-pills">
-              <button type="button" class="dau-level-pill ${currentLevel === "all" ? "active" : ""}" data-level="all">
-                Tất cả cấp độ <span class="dau-pill-count" id="spCountAll">${all.length}</span>
-              </button>
               <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
                 A1 · Sơ cấp <span class="dau-pill-count" id="spCountA1">${countA1}</span>
               </button>
@@ -2858,91 +2701,21 @@ function initSpeakingPage() {
               </button>
             </div>
           </div>
-
-          <div class="dau-filter-controls">
-            <div class="dau-search-box ${searchQuery ? "has-text" : ""}" id="spSearchBox">
-              <span class="dau-search-icon">🔍</span>
-              <input type="text" class="dau-search-input" id="spSearchInput" value="${esc(searchQuery)}" placeholder="Tìm chủ đề nói, mẫu câu, âm vị cần luyện..." />
-              <button type="button" class="dau-search-clear" id="spSearchClear" style="${searchQuery ? "" : "display:none"}">×</button>
-            </div>
-
-            <select class="dau-select" id="spCatSelect">
-              <option value="all" ${currentCategory === "all" ? "selected" : ""}>Tất cả tình huống</option>
-              <option value="greeting" ${currentCategory === "greeting" ? "selected" : ""}>🤝 Chào hỏi cơ bản</option>
-              <option value="travel" ${currentCategory === "travel" ? "selected" : ""}>✈️ Du lịch & Sân bay</option>
-              <option value="campus" ${currentCategory === "campus" ? "selected" : ""}>🎓 Ký túc xá & Trường học</option>
-              <option value="dining" ${currentCategory === "dining" ? "selected" : ""}>🍽️ Gọi món & Quán ăn</option>
-              <option value="direction" ${currentCategory === "direction" ? "selected" : ""}>🗺️ Hỏi đường & Giao thông</option>
-              <option value="academic" ${currentCategory === "academic" ? "selected" : ""}>🎤 Thuyết trình học thuật</option>
-            </select>
-
-            <button type="button" class="dau-reset-btn" id="spResetFilter">↺ Đặt lại bộ lọc</button>
-          </div>
-
-          <div class="dau-filter-summary">
-            <div class="dau-summary-count" id="spSummaryCount"></div>
-            <div class="dau-active-tags" id="spActiveTags"></div>
-          </div>
         </div>
 
         <!-- DAUENGLISH CARDS GRID -->
         <div class="dau-cards-grid" id="spCardsGrid"></div>
+        <div class="dau-pagination" id="spPagination"></div>
       `;
 
       // Level pills
       host.querySelectorAll(".dau-level-pill").forEach(btn => {
         btn.onclick = () => {
           currentLevel = btn.dataset.level;
+          currentPage = 1;
           renderSpeakingCards();
         };
       });
-
-      // Real-time search
-      const searchInp = el("#spSearchInput");
-      const clearBtn = el("#spSearchClear");
-      const sBox = el("#spSearchBox");
-      if (searchInp) {
-        searchInp.oninput = (e) => {
-          searchQuery = e.target.value;
-          if (clearBtn) clearBtn.style.display = searchQuery ? "block" : "none";
-          if (sBox) sBox.classList.toggle("has-text", Boolean(searchQuery));
-          renderSpeakingCards();
-        };
-      }
-      if (clearBtn && searchInp) {
-        clearBtn.onclick = () => {
-          searchQuery = "";
-          searchInp.value = "";
-          clearBtn.style.display = "none";
-          if (sBox) sBox.classList.remove("has-text");
-          searchInp.focus();
-          renderSpeakingCards();
-        };
-      }
-
-      // Category select
-      const catSel = el("#spCatSelect");
-      if (catSel) {
-        catSel.onchange = (e) => {
-          currentCategory = e.target.value;
-          renderSpeakingCards();
-        };
-      }
-
-      // Reset button
-      const resetBtn = el("#spResetFilter");
-      if (resetBtn) {
-        resetBtn.onclick = () => {
-          currentLevel = "all";
-          currentCategory = "all";
-          searchQuery = "";
-          if (searchInp) searchInp.value = "";
-          if (clearBtn) clearBtn.style.display = "none";
-          if (sBox) sBox.classList.remove("has-text");
-          if (catSel) catSel.value = "all";
-          renderSpeakingCards();
-        };
-      }
     }
 
     renderSpeakingCards();
@@ -3101,13 +2874,12 @@ function initWritingPage() {
   const CYRILLIC_KEYS = [
     ["Й", "Ц", "У", "К", "Е", "Н", "Г", "Ш", "Щ", "З", "Х", "Ъ"],
     ["Ф", "Ы", "В", "А", "П", "Р", "О", "Л", "Д", "Ж", "Э"],
-    ["Я", "Ч", "С", "М", "И", "Т", "Ь", "Б", "Ю", "Ё"]
+    ["Я", "CH", "С", "М", "И", "Т", "Ь", "Б", "Ю", "Ё"]
   ];
 
-  let currentLevel = "all";
-  let currentCategory = "all";
-  let searchQuery = "";
-  let currentStatus = "all";
+  let currentLevel = "A1";
+  let currentPage = 1;
+  const PAGE_SIZE = 6;
 
   const renderWritingCards = () => {
     const gridHost = el("#wCardsGrid");
@@ -3120,7 +2892,6 @@ function initWritingPage() {
     const countB2 = all.filter(t => t.level === "B2").length;
 
     // Cập nhật số lượng trên các nút cấp độ
-    const cAll = el("#wCountAll"); if (cAll) cAll.textContent = all.length;
     const cA1 = el("#wCountA1"); if (cA1) cA1.textContent = countA1;
     const cA2 = el("#wCountA2"); if (cA2) cA2.textContent = countA2;
     const cB1 = el("#wCountB1"); if (cB1) cB1.textContent = countB1;
@@ -3131,91 +2902,25 @@ function initWritingPage() {
       b.classList.toggle("active", b.dataset.level === currentLevel);
     });
 
-    const qNorm = dauNormalize(searchQuery);
-    const filtered = all.filter(t => {
-      if (currentLevel !== "all" && t.level !== currentLevel) return false;
-      if (currentCategory !== "all" && t.category !== currentCategory) return false;
-      const isDone = Progress.doneList("writeDone").includes(t.id);
-      if (currentStatus === "completed" && !isDone) return false;
-      if (currentStatus === "not_started" && isDone) return false;
-      if (qNorm) {
-        const hay = dauNormalize(t.title + " " + t.prompt + " " + t.vi + " " + (t.suggested_words || []).join(" "));
-        if (!hay.includes(qNorm)) return false;
-      }
-      return true;
-    });
+    const filtered = all.filter(t => t.level === currentLevel);
 
-    const sumCount = el("#wSummaryCount");
-    if (sumCount) {
-      sumCount.innerHTML = `Đang hiển thị <b>${filtered.length}</b> / ${all.length} bài viết`;
-    }
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
 
-    const activeTagsEl = el("#wActiveTags");
-    if (activeTagsEl) {
-      activeTagsEl.innerHTML = `
-        ${currentLevel !== "all" ? `<span class="dau-active-tag">Cấp độ: ${currentLevel} <span class="dau-active-tag-remove" data-clear="level">×</span></span>` : ""}
-        ${currentCategory !== "all" ? `<span class="dau-active-tag">Dạng bài: ${currentCategory} <span class="dau-active-tag-remove" data-clear="cat">×</span></span>` : ""}
-        ${currentStatus !== "all" ? `<span class="dau-active-tag">Trạng thái: ${currentStatus === "completed" ? "Đã xong" : "Chưa viết"} <span class="dau-active-tag-remove" data-clear="status">×</span></span>` : ""}
-        ${searchQuery ? `<span class="dau-active-tag">Từ khóa: "${esc(searchQuery)}" <span class="dau-active-tag-remove" data-clear="search">×</span></span>` : ""}
-      `;
-      activeTagsEl.querySelectorAll("[data-clear]").forEach(btn => {
-        btn.onclick = () => {
-          if (btn.dataset.clear === "level") currentLevel = "all";
-          if (btn.dataset.clear === "cat") {
-            currentCategory = "all";
-            const catSel = el("#wCatSelect");
-            if (catSel) catSel.value = "all";
-          }
-          if (btn.dataset.clear === "status") {
-            currentStatus = "all";
-            const stSel = el("#wStatusSelect");
-            if (stSel) stSel.value = "all";
-          }
-          if (btn.dataset.clear === "search") {
-            searchQuery = "";
-            const searchInp = el("#wSearchInput");
-            const clearBtn = el("#wSearchClear");
-            const sBox = el("#wSearchBox");
-            if (searchInp) searchInp.value = "";
-            if (clearBtn) clearBtn.style.display = "none";
-            if (sBox) sBox.classList.remove("has-text");
-          }
-          renderWritingCards();
-        };
-      });
-    }
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE);
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
         <div class="dau-empty-state">
-          <div class="dau-empty-icon">📝</div>
-          <h3>Không tìm thấy đề viết phù hợp</h3>
-          <p>Hãy thử thay đổi từ khóa tìm kiếm hoặc bấm đặt lại bộ lọc.</p>
-          <button class="btn btn-outline btn-sm" id="emptyWReset">Đặt lại tất cả bộ lọc</button>
+          <div class="dau-empty-icon">✍️</div>
+          <h3>Chưa có bài viết cho cấp độ này</h3>
+          <p>Vui lòng chọn cấp độ khác để tiếp tục luyện viết.</p>
         </div>
       `;
-      const emptyReset = el("#emptyWReset");
-      if (emptyReset) {
-        emptyReset.onclick = () => {
-          currentLevel = "all";
-          currentCategory = "all";
-          searchQuery = "";
-          currentStatus = "all";
-          const searchInp = el("#wSearchInput");
-          const clearBtn = el("#wSearchClear");
-          const sBox = el("#wSearchBox");
-          const catSel = el("#wCatSelect");
-          const stSel = el("#wStatusSelect");
-          if (searchInp) searchInp.value = "";
-          if (clearBtn) clearBtn.style.display = "none";
-          if (sBox) sBox.classList.remove("has-text");
-          if (catSel) catSel.value = "all";
-          if (stSel) stSel.value = "all";
-          renderWritingCards();
-        };
-      }
     } else {
-      gridHost.innerHTML = filtered.map(t => {
+      gridHost.innerHTML = pageItems.map(t => {
         const badgeClass = t.level === "A1" ? "dau-badge-a1" : t.level === "A2" ? "dau-badge-a2" : t.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
         const isDone = Progress.doneList("writeDone").includes(t.id);
         const savedText = STORE.get("write_" + t.id, "");
@@ -3268,6 +2973,13 @@ function initWritingPage() {
         };
       });
     }
+
+    renderDauPagination(el("#wPagination"), currentPage, totalPages, (newPage) => {
+      currentPage = newPage;
+      renderWritingCards();
+      const topEl = el("#wFilterBar") || host;
+      if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const renderHub = () => {
@@ -3284,9 +2996,6 @@ function initWritingPage() {
         <div class="dau-filter-bar" id="wFilterBar">
           <div class="dau-level-pills-wrap">
             <div class="dau-level-pills">
-              <button type="button" class="dau-level-pill ${currentLevel === "all" ? "active" : ""}" data-level="all">
-                Tất cả cấp độ <span class="dau-pill-count" id="wCountAll">${all.length}</span>
-              </button>
               <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
                 A1 · Sơ cấp <span class="dau-pill-count" id="wCountA1">${countA1}</span>
               </button>
@@ -3301,107 +3010,21 @@ function initWritingPage() {
               </button>
             </div>
           </div>
-
-          <div class="dau-filter-controls">
-            <div class="dau-search-box ${searchQuery ? "has-text" : ""}" id="wSearchBox">
-              <span class="dau-search-icon">🔍</span>
-              <input type="text" class="dau-search-input" id="wSearchInput" value="${esc(searchQuery)}" placeholder="Tìm đề bài, dạng bài viết, từ vựng gợi ý..." />
-              <button type="button" class="dau-search-clear" id="wSearchClear" style="${searchQuery ? "" : "display:none"}">×</button>
-            </div>
-
-            <select class="dau-select" id="wCatSelect">
-              <option value="all" ${currentCategory === "all" ? "selected" : ""}>Tất cả dạng bài</option>
-              <option value="intro" ${currentCategory === "intro" ? "selected" : ""}>📝 Tự giới thiệu</option>
-              <option value="daily" ${currentCategory === "daily" ? "selected" : ""}>⏰ Sinh hoạt hằng ngày</option>
-              <option value="photo" ${currentCategory === "photo" ? "selected" : ""}>🖼️ Tả tranh bối cảnh</option>
-              <option value="letter" ${currentCategory === "letter" ? "selected" : ""}>✉️ Tin nhắn & Thư từ</option>
-              <option value="essay" ${currentCategory === "essay" ? "selected" : ""}>🏅 Nghị luận & Học thuật</option>
-            </select>
-
-            <select class="dau-select" id="wStatusSelect">
-              <option value="all" ${currentStatus === "all" ? "selected" : ""}>Tất cả trạng thái</option>
-              <option value="not_started" ${currentStatus === "not_started" ? "selected" : ""}>Chưa viết</option>
-              <option value="completed" ${currentStatus === "completed" ? "selected" : ""}>Đã hoàn thành</option>
-            </select>
-
-            <button type="button" class="dau-reset-btn" id="wResetFilter">↺ Đặt lại bộ lọc</button>
-          </div>
-
-          <div class="dau-filter-summary">
-            <div class="dau-summary-count" id="wSummaryCount"></div>
-            <div class="dau-active-tags" id="wActiveTags"></div>
-          </div>
         </div>
 
         <!-- DAUENGLISH CARDS GRID -->
         <div class="dau-cards-grid" id="wCardsGrid"></div>
+        <div class="dau-pagination" id="wPagination"></div>
       `;
 
       // Level pills
       host.querySelectorAll(".dau-level-pill").forEach(btn => {
         btn.onclick = () => {
           currentLevel = btn.dataset.level;
+          currentPage = 1;
           renderWritingCards();
         };
       });
-
-      // Real-time search
-      const searchInp = el("#wSearchInput");
-      const clearBtn = el("#wSearchClear");
-      const sBox = el("#wSearchBox");
-      if (searchInp) {
-        searchInp.oninput = (e) => {
-          searchQuery = e.target.value;
-          if (clearBtn) clearBtn.style.display = searchQuery ? "block" : "none";
-          if (sBox) sBox.classList.toggle("has-text", Boolean(searchQuery));
-          renderWritingCards();
-        };
-      }
-      if (clearBtn && searchInp) {
-        clearBtn.onclick = () => {
-          searchQuery = "";
-          searchInp.value = "";
-          clearBtn.style.display = "none";
-          if (sBox) sBox.classList.remove("has-text");
-          searchInp.focus();
-          renderWritingCards();
-        };
-      }
-
-      // Category select
-      const catSel = el("#wCatSelect");
-      if (catSel) {
-        catSel.onchange = (e) => {
-          currentCategory = e.target.value;
-          renderWritingCards();
-        };
-      }
-
-      // Status select
-      const stSel = el("#wStatusSelect");
-      if (stSel) {
-        stSel.onchange = (e) => {
-          currentStatus = e.target.value;
-          renderWritingCards();
-        };
-      }
-
-      // Reset button
-      const resetBtn = el("#wResetFilter");
-      if (resetBtn) {
-        resetBtn.onclick = () => {
-          currentLevel = "all";
-          currentCategory = "all";
-          searchQuery = "";
-          currentStatus = "all";
-          if (searchInp) searchInp.value = "";
-          if (clearBtn) clearBtn.style.display = "none";
-          if (sBox) sBox.classList.remove("has-text");
-          if (catSel) catSel.value = "all";
-          if (stSel) stSel.value = "all";
-          renderWritingCards();
-        };
-      }
     }
 
     renderWritingCards();
@@ -3666,9 +3289,9 @@ function initMockTestPage() {
   const host = el("#testHost");
   const bank = typeof TRKI_BANK !== "undefined" ? TRKI_BANK : [MOCK_TEST];
 
-  let currentLevel = "all";
-  let currentCategory = "all";
-  let searchQuery = "";
+  let currentLevel = "A1";
+  let currentPage = 1;
+  const PAGE_SIZE = 6;
 
   let currentTest = bank[0];
   let answers = {};
@@ -3690,7 +3313,6 @@ function initMockTestPage() {
     const countB2 = bank.filter(t => t.level === "B2").length;
 
     // Cập nhật số lượng trên các nút cấp độ
-    const cAll = el("#trkiCountAll"); if (cAll) cAll.textContent = bank.length;
     const cA1 = el("#trkiCountA1"); if (cA1) cA1.textContent = countA1;
     const cA2 = el("#trkiCountA2"); if (cA2) cA2.textContent = countA2;
     const cB1 = el("#trkiCountB1"); if (cB1) cB1.textContent = countB1;
@@ -3701,79 +3323,25 @@ function initMockTestPage() {
       b.classList.toggle("active", b.dataset.level === currentLevel);
     });
 
-    const qNorm = dauNormalize(searchQuery);
-    const filtered = bank.filter(t => {
-      if (currentLevel !== "all" && t.level !== currentLevel) return false;
-      if (currentCategory !== "all" && t.category !== currentCategory) return false;
-      if (qNorm) {
-        const hay = dauNormalize(t.title + " " + (t.desc || "") + " " + (t.categoryName || ""));
-        if (!hay.includes(qNorm)) return false;
-      }
-      return true;
-    });
+    const filtered = bank.filter(t => t.level === currentLevel);
 
-    const sumCount = el("#trkiSummaryCount");
-    if (sumCount) {
-      sumCount.innerHTML = `Đang hiển thị <b>${filtered.length}</b> / ${bank.length} bộ đề thi`;
-    }
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
 
-    const activeTagsEl = el("#trkiActiveTags");
-    if (activeTagsEl) {
-      activeTagsEl.innerHTML = `
-        ${currentLevel !== "all" ? `<span class="dau-active-tag">Cấp độ: ${currentLevel} <span class="dau-active-tag-remove" data-clear="level">×</span></span>` : ""}
-        ${currentCategory !== "all" ? `<span class="dau-active-tag">Định dạng: ${currentCategory} <span class="dau-active-tag-remove" data-clear="cat">×</span></span>` : ""}
-        ${searchQuery ? `<span class="dau-active-tag">Từ khóa: "${esc(searchQuery)}" <span class="dau-active-tag-remove" data-clear="search">×</span></span>` : ""}
-      `;
-      activeTagsEl.querySelectorAll("[data-clear]").forEach(btn => {
-        btn.onclick = () => {
-          if (btn.dataset.clear === "level") currentLevel = "all";
-          if (btn.dataset.clear === "cat") {
-            currentCategory = "all";
-            const catSel = el("#trkiCatSelect");
-            if (catSel) catSel.value = "all";
-          }
-          if (btn.dataset.clear === "search") {
-            searchQuery = "";
-            const searchInp = el("#trkiSearchInput");
-            const clearBtn = el("#trkiSearchClear");
-            const sBox = el("#trkiSearchBox");
-            if (searchInp) searchInp.value = "";
-            if (clearBtn) clearBtn.style.display = "none";
-            if (sBox) sBox.classList.remove("has-text");
-          }
-          renderTrkiCards();
-        };
-      });
-    }
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE);
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
         <div class="dau-empty-state">
-          <div class="dau-empty-icon">📝</div>
-          <h3>Không tìm thấy đề thi phù hợp</h3>
-          <p>Hãy thử thay đổi từ khóa tìm kiếm hoặc đặt lại bộ lọc.</p>
-          <button class="btn btn-outline btn-sm" id="emptyTrkiReset">Đặt lại tất cả bộ lọc</button>
+          <div class="dau-empty-icon">🏛️</div>
+          <h3>Chưa có đề thi cho cấp độ này</h3>
+          <p>Vui lòng chọn cấp độ khác để tiếp tục luyện thi.</p>
         </div>
       `;
-      const emptyReset = el("#emptyTrkiReset");
-      if (emptyReset) {
-        emptyReset.onclick = () => {
-          currentLevel = "all";
-          currentCategory = "all";
-          searchQuery = "";
-          const searchInp = el("#trkiSearchInput");
-          const clearBtn = el("#trkiSearchClear");
-          const sBox = el("#trkiSearchBox");
-          const catSel = el("#trkiCatSelect");
-          if (searchInp) searchInp.value = "";
-          if (clearBtn) clearBtn.style.display = "none";
-          if (sBox) sBox.classList.remove("has-text");
-          if (catSel) catSel.value = "all";
-          renderTrkiCards();
-        };
-      }
     } else {
-      gridHost.innerHTML = filtered.map(t => {
+      gridHost.innerHTML = pageItems.map(t => {
         const badgeClass = t.level === "A1" ? "dau-badge-a1" : t.level === "A2" ? "dau-badge-a2" : t.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
         const best = STORE.get("bestTest_" + t.id, null);
         return `
@@ -3830,6 +3398,13 @@ function initMockTestPage() {
         };
       });
     }
+
+    renderDauPagination(el("#trkiPagination"), currentPage, totalPages, (newPage) => {
+      currentPage = newPage;
+      renderTrkiCards();
+      const topEl = el("#trkiFilterBar") || host;
+      if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
   };
 
   const renderHub = () => {
@@ -3854,9 +3429,6 @@ function initMockTestPage() {
         <div class="dau-filter-bar" id="trkiFilterBar">
           <div class="dau-level-pills-wrap">
             <div class="dau-level-pills">
-              <button type="button" class="dau-level-pill ${currentLevel === "all" ? "active" : ""}" data-level="all">
-                Tất cả cấp độ <span class="dau-pill-count" id="trkiCountAll">${bank.length}</span>
-              </button>
               <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
                 A1 · ТЭУ <span class="dau-pill-count" id="trkiCountA1">${countA1}</span>
               </button>
@@ -3871,88 +3443,21 @@ function initMockTestPage() {
               </button>
             </div>
           </div>
-
-          <div class="dau-filter-controls">
-            <div class="dau-search-box ${searchQuery ? "has-text" : ""}" id="trkiSearchBox">
-              <span class="dau-search-icon">🔍</span>
-              <input type="text" class="dau-search-input" id="trkiSearchInput" value="${esc(searchQuery)}" placeholder="Tìm kiếm đề thi, chuyên đề ngữ pháp, đọc hiểu..." />
-              <button type="button" class="dau-search-clear" id="trkiSearchClear" style="${searchQuery ? "" : "display:none"}">×</button>
-            </div>
-
-            <select class="dau-select" id="trkiCatSelect">
-              <option value="all" ${currentCategory === "all" ? "selected" : ""}>Tất cả định dạng</option>
-              <option value="full" ${currentCategory === "full" ? "selected" : ""}>🏛️ Đề thi toàn diện (3 phần)</option>
-              <option value="grammar" ${currentCategory === "grammar" ? "selected" : ""}>📖 Chuyên đề Ngữ pháp</option>
-              <option value="reading" ${currentCategory === "reading" ? "selected" : ""}>📰 Chuyên đề Đọc hiểu</option>
-            </select>
-
-            <button type="button" class="dau-reset-btn" id="trkiResetFilter">↺ Đặt lại bộ lọc</button>
-          </div>
-
-          <div class="dau-filter-summary">
-            <div class="dau-summary-count" id="trkiSummaryCount"></div>
-            <div class="dau-active-tags" id="trkiActiveTags"></div>
-          </div>
         </div>
 
         <!-- DAUENGLISH CARDS GRID -->
         <div class="dau-cards-grid" id="trkiCardsGrid"></div>
+        <div class="dau-pagination" id="trkiPagination"></div>
       `;
 
       // Level pills
       host.querySelectorAll(".dau-level-pill").forEach(btn => {
         btn.onclick = () => {
           currentLevel = btn.dataset.level;
+          currentPage = 1;
           renderTrkiCards();
         };
       });
-
-      // Real-time search
-      const searchInp = el("#trkiSearchInput");
-      const clearBtn = el("#trkiSearchClear");
-      const sBox = el("#trkiSearchBox");
-      if (searchInp) {
-        searchInp.oninput = (e) => {
-          searchQuery = e.target.value;
-          if (clearBtn) clearBtn.style.display = searchQuery ? "block" : "none";
-          if (sBox) sBox.classList.toggle("has-text", Boolean(searchQuery));
-          renderTrkiCards();
-        };
-      }
-      if (clearBtn && searchInp) {
-        clearBtn.onclick = () => {
-          searchQuery = "";
-          searchInp.value = "";
-          clearBtn.style.display = "none";
-          if (sBox) sBox.classList.remove("has-text");
-          searchInp.focus();
-          renderTrkiCards();
-        };
-      }
-
-      // Category select
-      const catSel = el("#trkiCatSelect");
-      if (catSel) {
-        catSel.onchange = (e) => {
-          currentCategory = e.target.value;
-          renderTrkiCards();
-        };
-      }
-
-      // Reset button
-      const resetBtn = el("#trkiResetFilter");
-      if (resetBtn) {
-        resetBtn.onclick = () => {
-          currentLevel = "all";
-          currentCategory = "all";
-          searchQuery = "";
-          if (searchInp) searchInp.value = "";
-          if (clearBtn) clearBtn.style.display = "none";
-          if (sBox) sBox.classList.remove("has-text");
-          if (catSel) catSel.value = "all";
-          renderTrkiCards();
-        };
-      }
     }
 
     renderTrkiCards();
@@ -4458,10 +3963,10 @@ function initShopPage() {
     host.innerHTML = `
       <div class="shop-filters">
         <button class="tab ${currentCat === "all" ? "active" : ""}" data-c="all">Tất cả sản phẩm & dịch vụ</button>
-        <button class="tab ${currentCat === "banh_keo" ? "active" : ""}" data-c="banh_keo">🍬 Bánh kẹo Nga</button>
-        <button class="tab ${currentCat === "my_pham" ? "active" : ""}" data-c="my_pham">🌿 Mỹ phẩm Siberia</button>
-        <button class="tab ${currentCat === "luu_niem" ? "active" : ""}" data-c="luu_niem">🪆 Quà lưu niệm Nga</button>
-        <button class="tab ${currentCat === "dich_vu_du_hoc" ? "active" : ""}" data-c="dich_vu_du_hoc">🎓 Dịch vụ du học 6730</button>
+        <button class="tab ${currentCat === "banh_keo" ? "active" : ""}" data-c="banh_keo">Bánh kẹo Nga</button>
+        <button class="tab ${currentCat === "my_pham" ? "active" : ""}" data-c="my_pham">Mỹ phẩm Siberia</button>
+        <button class="tab ${currentCat === "luu_niem" ? "active" : ""}" data-c="luu_niem">Quà lưu niệm Nga</button>
+        <button class="tab ${currentCat === "dich_vu_du_hoc" ? "active" : ""}" data-c="dich_vu_du_hoc">Dịch vụ du học Nga</button>
       </div>
 
       <div class="shop-grid">

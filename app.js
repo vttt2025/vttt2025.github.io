@@ -87,11 +87,11 @@ const MascotRusika = {
     const currentXp = xp !== null ? xp : (typeof STORE !== "undefined" ? STORE.get("xp", 0) : 0);
     const lvl = this.getLevel(currentXp);
     const thresholds = [
-      { lvl: 1, min: 0, next: 100, title: "Mèo con Rusika (Cấp 1)", shortTitle: "Mèo con", badge: "Sơ cấp 🌱", desc: "Mèo con đeo chuông đỏ đáng yêu, tò mò khám phá bảng chữ cái Cyrillic" },
-      { lvl: 2, min: 100, next: 300, title: "Mèo học trò Rusika (Cấp 2)", shortTitle: "Mèo học trò", badge: "Tập sự 📚", desc: "Đeo kính vàng thông thái & cà vạt Nga, nắm vững từ vựng A1 và ngữ pháp căn bản" },
-      { lvl: 3, min: 300, next: 700, title: "Mèo thông thái Rusika (Cấp 3)", shortTitle: "Mèo thông thái", badge: "Thông thái 🎓", desc: "Đội mũ cử nhân & nơ xanh lịch lãm, làm chủ 6 Cách và luyện nghe 4 Part CEFR" },
-      { lvl: 4, min: 700, next: 1500, title: "Học sĩ Rusika (Cấp 4)", shortTitle: "Học sĩ Nga", badge: "Chuyên gia ❄️", desc: "Đội mũ lông Ushanka ấm áp & khăn len tuyết, tự tin giải trọn bộ đề thi TRKI B1" },
-      { lvl: 5, min: 1500, next: null, title: "Đại hiệp Mèo Nga Rusika (Cấp 5)", shortTitle: "Đại hiệp Mèo", badge: "Huyền thoại 👑", desc: "Đội vương miện Sa hoàng rực rỡ & áo choàng hoàng gia, bậc thầy TRKI đỉnh cao" }
+      { lvl: 1, min: 0, next: 100, title: "Mèo con Rusika (Cấp 1)", shortTitle: "Mèo con", badge: "Sơ cấp", desc: "Mèo con đeo chuông đỏ đáng yêu, tò mò khám phá bảng chữ cái Cyrillic" },
+      { lvl: 2, min: 100, next: 300, title: "Mèo học trò Rusika (Cấp 2)", shortTitle: "Mèo học trò", badge: "Tập sự", desc: "Đeo kính vàng thông thái & cà vạt Nga, nắm vững từ vựng A1 và ngữ pháp căn bản" },
+      { lvl: 3, min: 300, next: 700, title: "Mèo thông thái Rusika (Cấp 3)", shortTitle: "Mèo thông thái", badge: "Thông thái", desc: "Đội mũ cử nhân & nơ xanh lịch lãm, làm chủ 6 Cách và luyện nghe 4 Part CEFR" },
+      { lvl: 4, min: 700, next: 1500, title: "Học sĩ Rusika (Cấp 4)", shortTitle: "Học sĩ Nga", badge: "Chuyên gia", desc: "Đội mũ lông Ushanka ấm áp & khăn len tuyết, tự tin giải trọn bộ đề thi TRKI B1" },
+      { lvl: 5, min: 1500, next: null, title: "Đại hiệp Mèo Nga Rusika (Cấp 5)", shortTitle: "Đại hiệp Mèo", badge: "Huyền thoại", desc: "Đội vương miện Sa hoàng rực rỡ & áo choàng hoàng gia, bậc thầy TRKI đỉnh cao" }
     ];
     const item = thresholds[lvl - 1];
     let percent = 100;
@@ -315,11 +315,11 @@ const MascotRusika = {
             <div class="rusika-quick-prompts">
               <span class="prompts-label">Gợi ý chủ đề:</span>
               <div class="prompts-pills">
-                <button type="button" class="btn-prompt-chip" data-prompt="Gợi ý đề thi TRKI A1–B2 phù hợp cho mình">🎯 Đề thi TRKI</button>
-                <button type="button" class="btn-prompt-chip" data-prompt="Quy tắc đánh trọng âm và phát âm tiếng Nga chuẩn">🗣️ Luyện phát âm</button>
-                <button type="button" class="btn-prompt-chip" data-prompt="Giải thích 6 Cách trong tiếng Nga ngắn gọn dễ hiểu">🇷🇺 6 Cách tiếng Nga</button>
-                <button type="button" class="btn-prompt-chip" data-prompt="Cách chia động từ tiếng Nga theo ngôi và thể">✍️ Chia động từ</button>
-                <button type="button" class="btn-prompt-chip" data-prompt="Điều kiện và kinh nghiệm xin học bổng du học Nga 6730">🎓 Học bổng Nga 6730</button>
+                <button type="button" class="btn-prompt-chip" data-prompt="Gợi ý đề thi TRKI A1–B2 phù hợp cho mình">Đề thi TRKI</button>
+                <button type="button" class="btn-prompt-chip" data-prompt="Quy tắc đánh trọng âm và phát âm tiếng Nga chuẩn">Luyện phát âm</button>
+                <button type="button" class="btn-prompt-chip" data-prompt="Giải thích 6 Cách trong tiếng Nga ngắn gọn dễ hiểu">6 Cách tiếng Nga</button>
+                <button type="button" class="btn-prompt-chip" data-prompt="Cách chia động từ tiếng Nga theo ngôi và thể">Chia động từ</button>
+                <button type="button" class="btn-prompt-chip" data-prompt="Điều kiện và kinh nghiệm xin học bổng du học Nga 6730">Học bổng Nga 6730</button>
               </div>
             </div>
 
@@ -430,17 +430,17 @@ const MascotRusika = {
               <div class="msg-avatar" id="msgAvatarInitial">${this.getSvg(lvl, season, 32)}</div>
               <div class="msg-bubble">
                 <p><b>Привет!</b> Mình là <b>Mèo Rusika AI</b> — bạn đồng hành luyện thi tiếng Nga của bạn 🐱.</p>
-                <p>Hôm nay bạn muốn luyện nghe, giải thích ngữ pháp hay tìm đề thi TRKI nào? Hãy nhấn gợi ý bên dưới hoặc gõ tin nhắn cho mình nhé! 🐾</p>
+                <p>Hôm nay bạn muốn luyện nghe, giải thích ngữ pháp hay tìm đề thi TRKI nào? Hãy nhấn gợi ý bên dưới hoặc gõ tin nhắn cho mình nhé!</p>
               </div>
             </div>
 
             <div class="chat-chips-container" id="chatQuickChips">
-              <button type="button" class="chat-chip-btn" data-query="Gợi ý đề thi TRKI A1–B2 phù hợp cho mình">🎯 Đề thi TRKI</button>
-              <button type="button" class="chat-chip-btn" data-query="Quy tắc đánh trọng âm và phát âm tiếng Nga">🗣️ Luyện phát âm</button>
-              <button type="button" class="chat-chip-btn" data-query="Giải thích 6 Cách trong tiếng Nga ngắn gọn">🇷🇺 6 Cách tiếng Nga</button>
-              <button type="button" class="chat-chip-btn" data-query="Cách chia động từ tiếng Nga theo ngôi">✍️ Chia động từ</button>
-              <button type="button" class="chat-chip-btn" data-query="Điều kiện và kinh nghiệm xin học bổng du học Nga 6730">🎓 Học bổng Nga</button>
-              <button type="button" class="chat-chip-btn" data-query="Làm thế nào để mèo Rusika tăng cấp XP?">🐱 Tăng cấp Mèo</button>
+              <button type="button" class="chat-chip-btn" data-query="Gợi ý đề thi TRKI A1–B2 phù hợp cho mình">Đề thi TRKI</button>
+              <button type="button" class="chat-chip-btn" data-query="Quy tắc đánh trọng âm và phát âm tiếng Nga">Luyện phát âm</button>
+              <button type="button" class="chat-chip-btn" data-query="Giải thích 6 Cách trong tiếng Nga ngắn gọn">6 Cách tiếng Nga</button>
+              <button type="button" class="chat-chip-btn" data-query="Cách chia động từ tiếng Nga theo ngôi">Chia động từ</button>
+              <button type="button" class="chat-chip-btn" data-query="Điều kiện và kinh nghiệm xin học bổng du học Nga 6730">Học bổng Nga</button>
+              <button type="button" class="chat-chip-btn" data-query="Làm thế nào để mèo Rusika tăng cấp XP?">Tăng cấp Mèo</button>
             </div>
           </div>
 
