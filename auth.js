@@ -105,6 +105,14 @@
             if (u) {
               this.user = formatFirebaseUser(u);
               store.set("auth_user", this.user);
+              if (window.RusiSupabase && window.RusiSupabase.isReady() && this.user && this.user.uid) {
+                window.RusiSupabase.profile.upsert({
+                  id: this.user.uid,
+                  email: this.user.email,
+                  full_name: this.user.name,
+                  avatar_url: this.user.photo
+                }).catch(() => {});
+              }
             } else {
               // Khi Firebase không có phiên đăng nhập
               this.user = null;

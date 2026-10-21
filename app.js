@@ -25,6 +25,9 @@ const Progress = {
     STORE.set("xp", xp);
     updateHeaderChips();
     toast(`+${n} XP! 🎉`);
+    if (window.RusiSupabase && window.RusiSupabase.isReady() && window.Auth && window.Auth.user && window.Auth.user.uid) {
+      window.RusiSupabase.profile.syncGamification(window.Auth.user.uid, STORE.get("streak", 0), xp).catch(() => {});
+    }
   },
   touchStreak() {
     const today = new Date().toDateString();
@@ -32,9 +35,13 @@ const Progress = {
     if (last === today) return;
     const yesterday = new Date(Date.now() - 86400000).toDateString();
     const streak = STORE.get("streak", 0);
-    STORE.set("streak", last === yesterday ? streak + 1 : 1);
+    const newStreak = last === yesterday ? streak + 1 : 1;
+    STORE.set("streak", newStreak);
     STORE.set("lastDay", today);
     updateHeaderChips();
+    if (window.RusiSupabase && window.RusiSupabase.isReady() && window.Auth && window.Auth.user && window.Auth.user.uid) {
+      window.RusiSupabase.profile.syncGamification(window.Auth.user.uid, newStreak, STORE.get("xp", 0)).catch(() => {});
+    }
   },
   markDone(kind, id) {
     const done = STORE.get(kind, []);

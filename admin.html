@@ -108,6 +108,9 @@
           <button class="btn btn-primary btn-sm" id="btnAdd" type="button">➕ Thêm mới</button>
           <a class="btn btn-outline btn-sm" id="btnLiveView" href="#" target="_blank" title="Mở trang tương ứng của học viên trên tab mới">👁️ Xem trên web</a>
           <button class="btn btn-primary btn-sm" id="btnSyncNow" type="button" style="background:var(--success);border-color:var(--success)" title="Cập nhật và kích hoạt tức thì dữ liệu trên toàn website">⚡ Đẩy dữ liệu về web</button>
+          <button class="btn btn-outline btn-sm" id="btnSupabase" type="button" style="border-color:#10b981;color:#10b981;display:inline-flex;align-items:center;gap:6px" title="Cấu hình và kiểm tra kết nối Supabase">
+            <span style="font-size:1rem">⚡</span> Kết nối Supabase
+          </button>
           <button class="btn btn-soft btn-sm" id="btnExport" type="button">📤 Export JSON / data.js</button>
           <button class="btn btn-soft btn-sm" id="btnImport" type="button">📥 Import JSON</button>
           <input type="file" id="importFile" accept="application/json,.json,.js" style="display:none" />
@@ -140,7 +143,60 @@
     </div>
   </div>
 
+  <!-- Modal Supabase Connection -->
+  <div class="admin-modal-back" id="modalSupabase">
+    <div class="admin-modal" style="max-width:580px">
+      <div class="admin-modal-head">
+        <h3>⚡ Kết nối Cơ sở dữ liệu Supabase</h3>
+        <button class="admin-modal-close" id="modalSbClose" type="button" aria-label="Đóng">×</button>
+      </div>
+      <div class="admin-modal-body" style="padding:20px;font-size:0.92rem;line-height:1.6">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-weight:600;color:var(--text)">Trạng thái kết nối:</span>
+            <span id="sbConnStatusBadge" style="padding:3px 10px;border-radius:20px;font-size:0.8rem;background:#fef3c7;color:#92400e;font-weight:600">Đang kiểm tra...</span>
+          </div>
+          <div id="sbConnMessage" style="font-size:0.85rem;color:var(--muted)">Đang kiểm tra thông tin cấu hình...</div>
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px">
+          <label style="display:block;font-weight:600;margin-bottom:4px">Supabase URL (Đã kết nối):</label>
+          <input type="text" class="form-input" id="sbUrlInput" value="https://nrhtdwjihnlaxrbitmcf.supabase.co" readonly style="background:var(--bg);font-family:monospace" />
+        </div>
+
+        <div class="form-group" style="margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <label style="font-weight:600;margin:0">Supabase Anon Key (Public API Key):</label>
+            <a href="https://supabase.com/dashboard/project/nrhtdwjihnlaxrbitmcf/settings/api" target="_blank" style="font-size:0.8rem;color:var(--primary);text-decoration:underline">Lấy khoá trên Supabase ↗</a>
+          </div>
+          <textarea class="form-input" id="sbAnonKeyInput" rows="3" placeholder="Dán khoá anon key vào đây (bắt đầu bằng eyJhbGciOi... hoặc sb_publishable_...)" style="font-family:monospace;font-size:0.82rem;resize:vertical"></textarea>
+          <small style="color:var(--muted);display:block;margin-top:4px">Khoá này an toàn để dùng ở trình duyệt client với Row Level Security (RLS).</small>
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+          <button class="btn btn-primary btn-sm" id="btnSaveSbKey" type="button">💾 Lưu khoá & Kiểm tra kết nối</button>
+          <button class="btn btn-soft btn-sm" id="btnTestSbConn" type="button">🔄 Thử kết nối lại</button>
+        </div>
+
+        <div style="border-top:1px dashed var(--border);padding-top:14px;margin-top:14px">
+          <div style="font-weight:600;margin-bottom:6px">Khởi tạo bảng cơ sở dữ liệu:</div>
+          <p style="font-size:0.85rem;color:var(--muted);margin:0 0 10px">Nếu dự án Supabase mới tạo chưa có các bảng (<code>profiles</code>, <code>trki_tests</code>, <code>vocab_jars</code>...), hãy mở SQL Editor và chạy tệp <code>supabase-schema.sql</code>.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <a href="https://supabase.com/dashboard/project/nrhtdwjihnlaxrbitmcf/sql/new" target="_blank" class="btn btn-outline btn-sm">Mở Supabase SQL Editor ↗</a>
+            <a href="supabase-schema.sql" target="_blank" class="btn btn-soft btn-sm">Xem file supabase-schema.sql</a>
+          </div>
+        </div>
+      </div>
+      <div class="admin-modal-foot">
+        <button class="btn btn-soft btn-sm" id="modalSbCancel" type="button">Đóng</button>
+      </div>
+    </div>
+  </div>
+
   <div id="app-footer"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>

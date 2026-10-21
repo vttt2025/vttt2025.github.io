@@ -426,6 +426,102 @@
         renderStats();
       }
     });
+
+    // Supabase Modal
+    initSupabaseModal();
+  }
+
+  function initSupabaseModal() {
+    const btnSb = document.getElementById("btnSupabase");
+    const modal = document.getElementById("modalSupabase");
+    const closeBtn = document.getElementById("modalSbClose");
+    const cancelBtn = document.getElementById("modalSbCancel");
+    const saveKeyBtn = document.getElementById("btnSaveSbKey");
+    const testBtn = document.getElementById("btnTestSbConn");
+    const anonInp = document.getElementById("sbAnonKeyInput");
+    const statusBadge = document.getElementById("sbConnStatusBadge");
+    const msgEl = document.getElementById("sbConnMessage");
+
+    if (!modal) return;
+
+    const updateStatusUI = async () => {
+      if (statusBadge) {
+        statusBadge.textContent = "Đang kiểm tra...";
+        statusBadge.style.background = "#fef3c7";
+        statusBadge.style.color = "#92400e";
+      }
+      if (msgEl) msgEl.textContent = "Đang gửi yêu cầu kiểm tra tới Supabase...";
+
+      if (!window.RusiSupabase) {
+        if (statusBadge) {
+          statusBadge.textContent = "Chưa nạp SDK";
+          statusBadge.style.background = "#fee2e2";
+          statusBadge.style.color = "#991b1b";
+        }
+        if (msgEl) msgEl.textContent = "Thư viện Supabase SDK chưa tải xong.";
+        return;
+      }
+
+      const res = await window.RusiSupabase.testConnection();
+      if (res.ok) {
+        if (statusBadge) {
+          statusBadge.textContent = res.tablesMissing ? "🟢 Đã kết nối (Chưa có bảng)" : "🟢 Sẵn sàng";
+          statusBadge.style.background = "#dcfce7";
+          statusBadge.style.color = "#166534";
+        }
+        if (msgEl) msgEl.textContent = res.message;
+      } else {
+        if (statusBadge) {
+          statusBadge.textContent = res.needsKey ? "🟡 Cần Anon Key" : "🔴 Lỗi kết nối";
+          statusBadge.style.background = res.needsKey ? "#fef3c7" : "#fee2e2";
+          statusBadge.style.color = res.needsKey ? "#92400e" : "#991b1b";
+        }
+        if (msgEl) msgEl.textContent = res.message;
+      }
+    };
+
+    const openModal = () => {
+      modal.classList.add("open");
+      if (anonInp) {
+        anonInp.value = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.anonKey !== "YOUR_SUPABASE_ANON_KEY")
+          ? window.SUPABASE_CONFIG.anonKey
+          : "";
+      }
+      updateStatusUI();
+    };
+
+    const closeModal = () => {
+      modal.classList.remove("open");
+    };
+
+    if (btnSb) btnSb.onclick = openModal;
+    if (closeBtn) closeBtn.onclick = closeModal;
+    if (cancelBtn) cancelBtn.onclick = closeModal;
+    if (modal) {
+      modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
+      };
+    }
+
+    if (saveKeyBtn) {
+      saveKeyBtn.onclick = () => {
+        const key = (anonInp.value || "").trim();
+        if (!key) {
+          toast("Vui lòng nhập Supabase Anon Key");
+          return;
+        }
+        localStorage.setItem("rusi_supabase_anon_key", key);
+        if (window.SUPABASE_CONFIG) {
+          window.SUPABASE_CONFIG.anonKey = key;
+        }
+        toast("Đã lưu Supabase Anon Key!");
+        updateStatusUI();
+      };
+    }
+
+    if (testBtn) {
+      testBtn.onclick = updateStatusUI;
+    }
   }
 
   function enableDevMode() {
