@@ -22,8 +22,8 @@
 
   window.SUPABASE_CONFIG = {
     url: "https://nrhtdwjihnlaxrbitmcf.supabase.co",
-    // Dán anon key vào đây hoặc lưu qua giao diện Admin
-    anonKey: storedAnon || "YOUR_SUPABASE_ANON_KEY"
+    // Khoá Publishable / Anon Key công khai của dự án
+    anonKey: storedAnon || "sb_publishable_uH04ZRxHiAX8bCSXORUzyA_epTAsHsh"
   };
 
   /** Kiểm tra xem đã cấu hình khoá Anon Key hợp lệ chưa */
