@@ -50,7 +50,7 @@
     if (!u) return null;
     const providerId =
       (u.providerData && u.providerData[0] && u.providerData[0].providerId) ||
-      (u.email ? "password" : "guest");
+      (u.email ? "password" : "custom");
     const defaultName =
       providerId === "google.com"
         ? "Người dùng Google"
@@ -79,7 +79,12 @@
         // Nạp phiên đăng nhập đã lưu trong cache để hiển thị avatar ngay (chống flash)
         const cached = store.get("auth_user", null);
         if (cached) {
-          this.user = cached;
+          if (cached.provider === "guest" || String(cached.uid || "").startsWith("guest_")) {
+            store.set("auth_user", null);
+            this.user = null;
+          } else {
+            this.user = cached;
+          }
         }
 
         // Nếu không bật Firebase (chưa cấu hình), báo ready ngay với user trong cache.
@@ -101,15 +106,9 @@
               this.user = formatFirebaseUser(u);
               store.set("auth_user", this.user);
             } else {
-              // Khi Firebase không có phiên đăng nhập:
-              // Nếu người dùng đang ở chế độ Khách cục bộ, giữ nguyên không xóa!
-              const current = this.user || store.get("auth_user", null);
-              if (current && (current.provider === "guest" || String(current.uid).startsWith("guest_"))) {
-                this.user = current;
-              } else {
-                this.user = null;
-                store.set("auth_user", null);
-              }
+              // Khi Firebase không có phiên đăng nhập
+              this.user = null;
+              store.set("auth_user", null);
             }
             this._isReadyState = true;
             this._emit(this.user);

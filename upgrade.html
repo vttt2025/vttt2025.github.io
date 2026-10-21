@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nâng Cấp Tài Khoản PRO — RusiTRKI</title>
+  <meta name="description" content="Nâng cấp tài khoản RusiTRKI PRO để mở khóa trọn bộ ngân hàng đề thi ТРКИ A1–B2, AI Rusika sửa phát âm và chấm bài viết, 100+ Lọ từ vựng chuyên ngành và hỗ trợ hồ sơ học bổng du học Nga 6730." />
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="styles.css?v=3.1" />
+  <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
+</head>
+<body data-page="upgrade">
+
+  <div id="app-header"></div>
+
+  <main class="container" style="padding-bottom:80px">
+    <div id="upgradeHost"></div>
+  </main>
+
+  <div id="app-footer"></div>
+
+  <!-- Firebase Auth SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <!-- Core App Scripts -->
+  <script src="data.js?v=3.0"></script>
+  <script src="auth.js?v=3.0"></script>
+  <script src="app.js?v=3.0"></script>
+  <script src="pages.js?v=3.0"></script>
+  <script>
+    function initPage() {
+      if (typeof initUpgradePage === "function") {
+        initUpgradePage();
+      }
+    }
+  </script>
+</body>
+</html>

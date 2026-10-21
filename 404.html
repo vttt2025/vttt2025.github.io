@@ -1,36 +1,449 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <title>Đang chuyển hướng — RusiTRKI</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — Không tìm thấy trang | RusiTRKI</title>
+  <meta name="description" content="Trang bạn đang tìm kiếm không tồn tại hoặc đã được chuyển đi trên nền tảng học tiếng Nga RusiTRKI." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css?v=3.1" />
+  <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
+
   <script>
     (function() {
       var path = window.location.pathname;
       var search = window.location.search;
       var hash = window.location.hash;
 
-      // Tìm prefix thư mục gốc (hỗ trợ cả custom domain rusitrki.com và github.io/rusitrki/)
+      // Xác định tiền tố thư mục gốc (hỗ trợ cả root domain rusitrki.com và github.io/rusitrki/)
       var root = '/';
       if (path.indexOf('/rusitrki/') === 0) {
         root = '/rusitrki/';
       }
 
-      // Xử lý các đường dẫn phổ biến
-      if (path.endsWith('/login') || path.endsWith('/login/')) {
-        window.location.replace(root + 'login.html' + search + hash);
-        return;
+      // Chuẩn hóa đường dẫn tương đối từ root
+      var relPath = path;
+      if (root !== '/' && relPath.indexOf(root) === 0) {
+        relPath = '/' + relPath.slice(root.length);
       }
-      if (path.endsWith('/signup') || path.endsWith('/signup/')) {
-        window.location.replace(root + 'signup.html' + search + hash);
+
+      // Bỏ dấu gạch chéo cuối nếu có
+      var clean = relPath.replace(/\/+$/, '');
+      if (clean === '' || clean === '/') {
+        window.location.replace(root + 'index.html');
         return;
       }
 
-      // Mặc định về trang chủ
-      window.location.replace(root + 'index.html');
+      var slug = clean.split('/').pop().toLowerCase();
+
+      // Bản đồ các đường dẫn hợp lệ (Clean URLs không cần đuôi .html)
+      var cleanRoutes = {
+        'login': 'login.html',
+        'signup': 'signup.html',
+        'vocabulary': 'vocabulary.html',
+        'tu-vung': 'vocabulary.html',
+        'writing': 'writing.html',
+        'viet': 'writing.html',
+        'listening': 'listening.html',
+        'nghe': 'listening.html',
+        'speaking': 'speaking.html',
+        'noi': 'speaking.html',
+        'mock-test': 'mock-test.html',
+        'trki': 'mock-test.html',
+        'blog': 'blog.html',
+        'shop': 'shop.html',
+        'admin': 'admin.html',
+        'upgrade': 'upgrade.html',
+        'nang-cap': 'upgrade.html',
+        'pricing': 'upgrade.html',
+        'index': 'index.html',
+        'home': 'index.html'
+      };
+
+      // 1. Nếu là đường dẫn sạch hợp lệ -> chuyển tiếp đúng đến file .html tương ứng
+      if (cleanRoutes[slug]) {
+        window.location.replace(root + cleanRoutes[slug] + search + hash);
+        return;
+      }
+
+      // 2. Nếu người dùng tìm/nhập đường dẫn không đúng:
+      // Chuyển hướng trình duyệt về đúng trang 404.html (tránh lặp vô tận nếu đã ở 404.html)
+      var is404 = slug === '404' || slug === '404.html';
+      if (!is404) {
+        var queryStr = search ? search : '';
+        // Nếu đường dẫn ban đầu là một từ/cụm từ tìm kiếm (ví dụ /tim-kiem, /hello), giữ lại gợi ý
+        if (!queryStr && slug && slug !== 'index') {
+          queryStr = '?q=' + encodeURIComponent(slug);
+        }
+        window.location.replace(root + '404.html' + queryStr + hash);
+        return;
+      }
     })();
   </script>
+
+  <style>
+    .error-page-main {
+      min-height: calc(100vh - 220px);
+      padding: 60px 20px 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .error-container {
+      max-width: 820px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .error-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 18px;
+      border-radius: 999px;
+      background: var(--red-soft, #fdeced);
+      color: var(--russia-red, #c52233);
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 20px;
+      border: 1px solid rgba(197, 34, 51, 0.16);
+    }
+    .error-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--russia-red, #c52233);
+      animation: pulseDot 1.8s infinite ease-in-out;
+    }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(1.3); }
+    }
+    .error-code-wrapper {
+      margin-bottom: 12px;
+    }
+    .error-code-glitch {
+      font-size: clamp(84px, 14vw, 150px);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -4px;
+      background: linear-gradient(135deg, var(--russia-red, #c52233) 0%, var(--russia-blue, #1757a6) 55%, var(--russia-navy, #102a4c) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+      user-select: none;
+    }
+    .error-title {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 800;
+      color: var(--text, #0f1f38);
+      margin-bottom: 14px;
+      line-height: 1.25;
+    }
+    .error-description {
+      font-size: 1.05rem;
+      color: var(--muted, #53657a);
+      max-width: 600px;
+      margin: 0 auto 28px;
+      line-height: 1.6;
+    }
+    .error-mascot-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--surface, #ffffff);
+      border: 1px solid var(--border, #d2e0f0);
+      border-radius: 16px;
+      padding: 16px 22px;
+      max-width: 580px;
+      margin: 0 auto 32px;
+      text-align: left;
+      box-shadow: var(--shadow, 0 4px 20px rgba(16, 42, 76, 0.08));
+    }
+    .mascot-avatar-wrap {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--primary-soft, #e3effc);
+      border-radius: 12px;
+    }
+    .mascot-avatar-wrap svg {
+      width: 36px !important;
+      height: 36px !important;
+    }
+    .mascot-speech .mascot-name {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--russia-blue, #1757a6);
+      margin-bottom: 3px;
+    }
+    .mascot-speech p {
+      font-size: 0.92rem;
+      color: var(--text, #0f1f38);
+      margin: 0;
+      line-height: 1.45;
+    }
+    .error-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+      margin-bottom: 48px;
+    }
+    .error-actions .button {
+      padding: 12px 24px;
+      min-height: 48px;
+      font-size: 0.95rem;
+      text-decoration: none;
+    }
+    .error-btn-home {
+      background: var(--russia-red, #c52233) !important;
+      color: #fff !important;
+      box-shadow: 0 10px 25px rgba(197, 34, 51, 0.28) !important;
+    }
+    .error-btn-home:hover {
+      background: var(--russia-red-dark, #991b2b) !important;
+    }
+    .error-btn-outline {
+      background: var(--surface, #ffffff);
+      color: var(--russia-navy, #102a4c);
+      border: 1px solid var(--border, #d2e0f0);
+    }
+    .error-btn-outline:hover {
+      border-color: var(--russia-blue, #1757a6);
+      background: var(--surface-hover, #e5effa);
+    }
+    .error-shortcuts-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--muted, #53657a);
+      margin-bottom: 18px;
+    }
+    .error-hub-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      text-align: left;
+    }
+    .error-hub-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface, #ffffff);
+      border: 1px solid var(--border, #d2e0f0);
+      border-radius: 12px;
+      padding: 14px 16px;
+      text-decoration: none;
+      color: var(--text, #0f1f38);
+      transition: all 0.2s ease;
+    }
+    .error-hub-card:hover {
+      border-color: var(--russia-blue, #1757a6);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(23, 87, 166, 0.12);
+    }
+    .error-hub-icon {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+    .error-hub-text strong {
+      display: block;
+      font-size: 0.92rem;
+      color: var(--text, #0f1f38);
+    }
+    .error-hub-text small {
+      display: block;
+      font-size: 0.78rem;
+      color: var(--muted, #53657a);
+      margin-top: 2px;
+    }
+    @media (max-width: 640px) {
+      .error-mascot-card {
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+      }
+      .error-hub-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
-<body>
-  <p>Đang tìm trang và chuyển hướng bạn đến RusiTRKI...</p>
+<body data-page="404">
+  <div class="site-shell">
+    <div id="app-header"></div>
+
+    <main class="error-page-main">
+      <div class="container error-container">
+        <!-- Floating badge -->
+        <div class="error-badge">
+          <span class="error-dot"></span>
+          <span id="errorBadgeText">Ошибка 404 · Trang không tồn tại</span>
+        </div>
+
+        <!-- Big 404 Number -->
+        <div class="error-code-wrapper">
+          <span class="error-code-glitch">404</span>
+        </div>
+
+        <h1 class="error-title" id="errorTitle">
+          Không tìm thấy trang bạn đang tìm kiếm
+        </h1>
+        
+        <p class="error-description" id="errorDesc">
+          Đường dẫn bạn vừa truy cập không tồn tại, đã bị đổi tên hoặc đã được gỡ bỏ khỏi hệ thống <strong>RusiTRKI</strong>. Đừng lo lắng, hãy để chúng mình đưa bạn quay lại lộ trình học nhé!
+        </p>
+
+        <!-- Mascot Rusika Speech -->
+        <div class="error-mascot-card">
+          <div class="mascot-avatar-wrap" id="mascot404Avatar">
+            <!-- Rusika SVG -->
+            <svg viewBox="0 0 48 48" style="width:36px;height:36px;display:inline-block;vertical-align:middle" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <polygon points="10,22 16,6 23,17" fill="#94a3b8" />
+              <polygon points="12,20 16,9 21,17" fill="#f472b6" />
+              <polygon points="38,22 32,6 25,17" fill="#94a3b8" />
+              <polygon points="36,20 32,9 27,17" fill="#f472b6" />
+              <ellipse cx="24" cy="27" rx="16" ry="14" fill="#94a3b8" />
+              <ellipse cx="14" cy="30" rx="3" ry="2" fill="#fbcfe8" opacity="0.6"/>
+              <ellipse cx="34" cy="30" rx="3" ry="2" fill="#fbcfe8" opacity="0.6"/>
+              <circle cx="18" cy="24" r="3.6" fill="#0284c7" />
+              <circle cx="30" cy="24" r="3.6" fill="#0284c7" />
+              <circle cx="19" cy="23" r="1.3" fill="#ffffff" />
+              <circle cx="31" cy="23" r="1.3" fill="#ffffff" />
+              <polygon points="24,28 22,30 26,30" fill="#f43f5e" />
+              <path d="M21 32 Q24 34 27 32" stroke="#475569" stroke-width="1.2" stroke-linecap="round" fill="none" />
+              <path d="M10 13 Q24 7 38 13 L39 19 Q24 15 9 19 Z" fill="#334155"/>
+              <rect x="21" y="9" width="6" height="6" rx="1.5" fill="#D52B1E"/>
+              <polygon points="24,10 24.8,11.8 26.5,11.8 25.2,12.8 25.8,14.5 24,13.5 22.2,14.5 22.8,12.8 21.5,11.8 23.2,11.8" fill="#ffffff"/>
+            </svg>
+          </div>
+          <div class="mascot-speech">
+            <div class="mascot-name">Mèo Rusika nhắn nhủ:</div>
+            <p>«Не вешай нос!» (Đừng nản lòng nhé!) Hãy chọn một kỹ năng bên dưới để tiếp tục hành trình làm chủ tiếng Nga nào!</p>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="error-actions">
+          <a class="button error-btn-home" href="index.html">
+            <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m3 9 7-7 7 7v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9Z"/>
+              <path d="M9 19V12h2v7"/>
+            </svg>
+            Về trang chủ
+          </a>
+          <a class="button error-btn-outline" href="vocabulary.html">
+            <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            </svg>
+            Học từ vựng
+          </a>
+          <a class="button error-btn-outline" href="mock-test.html">
+            <svg viewBox="0 0 20 20" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11l3 3L22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            Luyện thi TRKI
+          </a>
+        </div>
+
+        <!-- Quick 7-Hub Shortcuts -->
+        <div class="error-hub-shortcuts">
+          <h2 class="error-shortcuts-title">Hoặc chuyển nhanh đến 7 chuyên mục học tập:</h2>
+          <div class="error-hub-grid">
+            <a class="error-hub-card" href="vocabulary.html">
+              <span class="error-hub-icon">📚</span>
+              <div class="error-hub-text">
+                <strong>1. Từ Vựng</strong>
+                <small>Lọ từ vựng SM-2 & video</small>
+              </div>
+            </a>
+            <a class="error-hub-card" href="writing.html">
+              <span class="error-hub-icon">✍️</span>
+              <div class="error-hub-text">
+                <strong>2. Luyện Viết</strong>
+                <small>Tả tranh & AI chấm lỗi</small>
+              </div>
+            </a>
+            <a class="error-hub-card" href="listening.html">
+              <span class="error-hub-icon">🎧</span>
+              <div class="error-hub-text">
+                <strong>3. Luyện Nghe</strong>
+                <small>Nghe chép chính tả 4 Part</small>
+              </div>
+            </a>
+            <a class="error-hub-card" href="speaking.html">
+              <span class="error-hub-icon">🎙️</span>
+              <div class="error-hub-text">
+                <strong>4. Luyện Nói</strong>
+                <small>Shadowing & AI phát âm</small>
+              </div>
+            </a>
+            <a class="error-hub-card" href="mock-test.html">
+              <span class="error-hub-icon">🎯</span>
+              <div class="error-hub-text">
+                <strong>5. Thi ТРКИ</strong>
+                <small>Phòng thi A1–B2 chuẩn CEFR</small>
+              </div>
+            </a>
+            <a class="error-hub-card" href="blog.html">
+              <span class="error-hub-icon">📖</span>
+              <div class="error-hub-text">
+                <strong>6. Blog Du Học</strong>
+                <small>Kinh nghiệm & đời sống Nga</small>
+              </div>
+            </a>
+            <a class="error-hub-card" href="shop.html">
+              <span class="error-hub-icon">🛍️</span>
+              <div class="error-hub-text">
+                <strong>7. Rusi Shop</strong>
+                <small>Giáo trình & quà lưu niệm</small>
+              </div>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <div id="app-footer"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="data.js?v=3.0"></script>
+  <script src="auth.js?v=3.0"></script>
+  <script src="app.js?v=3.0"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const avatarEl = document.getElementById("mascot404Avatar");
+      if (avatarEl && typeof MascotRusika !== "undefined") {
+        const lvl = MascotRusika.getLevel();
+        const season = typeof currentSeason === "function" ? currentSeason() : "winter";
+        avatarEl.innerHTML = MascotRusika.getSvg(lvl, season);
+      }
+
+      // Xử lý hiển thị từ khóa nếu người dùng tìm kiếm từ khóa không có kết quả
+      const params = new URLSearchParams(window.location.search);
+      const q = params.get("q") || params.get("search") || params.get("query") || params.get("timkiem");
+      if (q) {
+        const titleEl = document.getElementById("errorTitle");
+        const descEl = document.getElementById("errorDesc");
+        const badgeEl = document.getElementById("errorBadgeText");
+        const decoded = decodeURIComponent(q).replace(/\+/g, " ");
+        if (titleEl) titleEl.textContent = `Không tìm thấy kết quả cho "${decoded}"`;
+        if (descEl) descEl.innerHTML = `Hệ thống không tìm thấy bài học hay từ vựng nào khớp với từ khóa <strong>"${decoded}"</strong>. Hãy thử kiểm tra lại chính tả hoặc chọn một chuyên mục bên dưới nhé!`;
+        if (badgeEl) badgeEl.textContent = `Ошибка 404 · Không tìm thấy: ${decoded}`;
+      }
+    });
+  </script>
 </body>
 </html>

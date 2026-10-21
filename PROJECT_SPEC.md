@@ -113,32 +113,40 @@ Dưới đây là bản cập nhật toàn diện cho tệp **`PROJECT_SPEC.md`*
 
 ---
 
-## 2. PHÂN HỆ NÂNG CẤP TRẢ TIỀN & VIETQR (MONETIZATION)
+## 2. PHÂN HỆ NÂNG CẤP TRẢ TIỀN & VIETQR (MONETIZATION 2.0 CHUẨN HIỆN NAY)
 
-### Bảng gói cước:
+### 2.1. Bảng gói cước chuẩn:
+1. **Gói 6 Tháng (PRO-6M)**: Mở khóa full ngân hàng đề thi TRKI A1–A2, luyện nghe 4 Part CEFR, không giới hạn lọ từ vựng.
+2. **Gói 1 Năm (PRO-1Y - Phổ biến nhất 🔥)**: Mở khóa TOÀN BỘ ngân hàng đề thi TRKI A1, A2, B1, B2 + AI Rusika chấm tự luận Viết (Письmo) + AI luyện nói & sửa lỗi phát âm + Hỗ trợ học bổng 6730.
+3. **Gói Trọn Đời (PRO-VIP 💎)**: Quyền truy cập VIP vĩnh viễn không giới hạn thời gian + Tặng Hộp quà Nga đặc biệt (Socola Alenka + Trà Ivan-chay) + Voucher 500k dịch vụ du học & visa Nga.
 
-1. **Gói 6 Tháng (PRO-6M)**: Mở khóa full ngân hàng đề thi TRKI A1–B1, luyện nghe Part 1–4, không giới hạn lọ từ vựng.
+### 2.2. Cơ chế phân quyền hiển thị theo phiên đăng nhập (Auth-Aware Upgrade Flow):
+* **Khi CHƯA đăng nhập (Guest)**:
+  * **Header**: Tuyệt đối **không hiển thị** nút Nâng cấp PRO bừa bãi. Chỉ hiển thị nhóm nút `[Đăng nhập]` và `[Đăng ký]` chuẩn giao diện EdTech quốc tế (Coursera, Duolingo, ELSA).
+  * **Bảng giá trang chủ (`index.html#pricing`)**: **Ẩn hoàn toàn (`display: none`) khi người dùng chưa đăng nhập**, giữ giao diện trang chủ tinh gọn, tập trung vào khám phá tính năng học tập. Khi người dùng đăng nhập, phần `#pricing` mới xuất hiện cùng định danh học viên và liên kết tới trang `upgrade.html`.
+  * **Trang Nâng Cấp Chuyên Biệt (`upgrade.html` — Chuẩn DauEnglish)**: Khi khách vào thẳng `upgrade.html`, hiển thị khối yêu cầu đăng nhập thân thiện. Khi học viên đăng nhập, trang mở khóa toàn bộ giao diện: Hero, User Strip, Bảng 3 gói cước, Bảng so sánh 12 tiêu chí chi tiết Free vs PRO, Quy trình 3 bước VietQR, 4 Khối cam kết và FAQ Accordion.
+  * **Paywall trên toàn hệ thống**: Khi khách bấm vào bài thi VIP TRKI, bài nghe/nói/viết giới hạn, hệ thống mở **Modal Yêu cầu Đăng nhập (Auth Required Modal)** với 3 lựa chọn nhanh: Đăng nhập Google/Email, Đăng ký tài khoản, hoặc *"⚡ Trải nghiệm nhanh với tư cách Khách"* (tự động tạo phiên và mở ngay thanh toán).
+* **Khi ĐÃ đăng nhập (Authenticated User)**:
+  * **Học viên Free (chưa nâng cấp)**:
+    * **Header**: Hiển thị nổi bật nút **`[⚡ Nâng cấp PRO]`** (bấm vào điều hướng thẳng tới `upgrade.html`).
+    * **User Dropdown Menu**: Hiển thị huy hiệu `Free` bên cạnh tên, kèm thẻ CTA sang trọng: `👑 Nâng cấp PRO VIP — Mở khóa 100% đề thi TRKI & AI` (dẫn tới `upgrade.html`).
+    * **Bảng giá trang chủ**: Hiển thị khi đã login: `👤 Đang chọn gói cho tài khoản: [Tên] ([Email])` kèm nút `⚡ Kích hoạt qua VietQR ngay` và liên kết xem bảng so sánh chi tiết.
+  * **Học viên ĐÃ LÀ PRO (Active Member)**:
+    * **Header**: Hiển thị huy hiệu danh dự **`[👑 PRO MEMBER]`** (gold gradient sang trọng). Bấm vào mở Modal Quản lý gói PRO.
+    * **User Dropdown Menu**: Hiển thị huy hiệu `PRO` vàng kim, kèm thẻ trạng thái: `👑 Gói PRO VIP — Hạn dùng đến dd/mm/yyyy (hoặc Trọn Đời)`.
+    * **Bảng giá trang chủ & upgrade.html**: Đánh dấu huy hiệu `GÓI ĐANG DÙNG ✓` và nút `✓ Gói bạn đang sử dụng`.
 
-
-2. **Gói 1 Năm (PRO-1Y)**: Đầy đủ tính năng + 100 lượt AI chấm Writing tả tranh + AI luyện nói.
-
-
-3. **Gói Trọn Đời (PRO-VIP)**: Toàn quyền truy cập vĩnh viễn mọi cấp độ + Tặng quà từ Shop Nga.
-
-
-
-### Quy trình thanh toán tự động (Instant VietQR Activation):
-
-1. **Tạo đơn**: Client chọn gói ➔ Backend tạo đơn `status: 'PENDING'` trong Supabase ➔ Sinh mã QR VietQR (kèm cú pháp định danh: `RUSI_ORD1092`).
-
-
-2. **Webhook**: Học viên quét mã chuyển khoản ➔ Cổng thanh toán (PayOS/Casso/SeAPay) bắn HTTP POST Webhook về Backend.
-
-
-3. **Kích hoạt tức thì**: Backend xác thực Signature, cập nhật trạng thái đơn thành `PAID` và cập nhật trường `is_pro = true` trong `profiles`.
-
-
-4. **Realtime UI**: Supabase Realtime thông báo cho trình duyệt của học viên mở khóa tài khoản ngay lập tức mà không cần F5 hay chờ duyệt tay.
+### 2.3. Cổng thanh toán VietQR Checkout 2.0 (Instant Activation Standard):
+1. **Gắn kết danh tính học viên**: Mã đơn hàng sinh tự động kèm định danh tài khoản (`RUSI_[ordNum]_[userTag]`), đảm bảo số tiền chuyển khoản được gán chính xác vào UID người học.
+2. **Bộ chuyển đổi gói tương tác (Interactive Plan Switcher)**: Cho phép học viên chuyển đổi mượt mà giữa 3 gói cước (6 Tháng, 1 Năm, Trọn Đời) ngay trong modal thanh toán. Cập nhật realtime giá, mã VietQR và cú pháp chuyển khoản.
+3. **Bộ đếm thời gian phiên (Session Countdown 15:00)**: Đếm ngược chuyên nghiệp chuẩn Napas / VietinBank.
+4. **Sao chép 1-chạm thông minh**: Nút copy cho Số tài khoản (`108873919999`), Số tiền và Cú pháp chuyển khoản kèm thông báo `✓ Đã chép`.
+5. **Kích hoạt tự động thời gian thực (Simulated Signature Verification)**:
+   * Trạng thái nhấp nháy `🟢 Đang chờ nhận tiền chuyển khoản...`.
+   * Bấm `⚡ Tôi đã chuyển khoản xong (Kích hoạt ngay)` ➔ Kích hoạt hiệu ứng kiểm tra chữ ký điện tử trong 1.2s ➔ Kích hoạt quyền PRO thành công.
+   * Hiển thị màn hình chúc mừng (Celebration Confetti Screen) và cập nhật giao diện toàn trang tức thì không cần F5.
+6. **Lưu trữ PRO độc lập theo tài khoản (Per-User PRO Persistence)**:
+   * Lưu trạng thái vào `trki_pro_${user.uid}`, tránh tình trạng dùng chung hoặc mất gói khi chuyển đổi tài khoản. Hỗ trợ đầy đủ tính toán thời hạn hết hạn và đặc quyền Vĩnh viễn (Trọn đời).
 
 
 
@@ -773,5 +781,5 @@ CREATE POLICY "Super Admins view audit logs" ON admin_audit_logs FOR SELECT USIN
   - **Đổi tài khoản linh hoạt**: Nếu tài khoản thật đã đăng nhập mà người dùng mở `login.html`, giao diện cung cấp nút *"Đổi tài khoản"* (gọi `Auth.signOut()` tại chỗ) và nút *"Tiếp tục học →"* kèm hẹn giờ tự chuyển tiếp 1.5s.
 * **Xử lý Lỗi & Tương thích Toàn diện**:
   - Bắt các lỗi Firebase chi tiết: `auth/operation-not-allowed` (hướng dẫn bật Email/Password trên Firebase Console), `auth/network-request-failed` và regex kiểm tra email client-side.
-  - SPA Fallback trong `404.html`: Sử dụng đường dẫn tương đối gốc (`/login.html`, `/signup.html`) thay vì relative URL để an toàn tuyệt đối kể cả khi URL có dấu gạch chéo cuối (`/login/`).
+  - SPA Fallback & 404 Routing trong `404.html`: Hỗ trợ Clean URLs cho tất cả chuyên mục chính (`/login`, `/signup`, `/vocabulary`, `/writing`, `/listening`, `/speaking`, `/mock-test`, `/blog`, `/shop`, `/admin`). Khi người dùng nhập sai đường dẫn hoặc tìm kiếm trang không tồn tại, tự động chuyển hướng và giữ chân tại giao diện chuyên biệt `404.html` với đầy đủ Brand Russian Header/Footer, Mascot Rusika và phím tắt điều hướng nhanh về 7 phân hệ.
 ```

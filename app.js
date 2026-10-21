@@ -67,14 +67,48 @@ function updateHeaderChips() {
 // MASCOT RUSIKA (BLUE-EYED RUSSIAN CAT) & 4-SEASON DYNAMIC OUTFIT
 // ============================================================================
 const MascotRusika = {
-  getLevel() {
-    const xp = STORE.get("xp", 0);
-    if (xp >= 1500) return 5;
-    if (xp >= 700) return 4;
-    if (xp >= 300) return 3;
-    if (xp >= 100) return 2;
+  getLevel(xp = null) {
+    const val = xp !== null ? xp : (typeof STORE !== "undefined" ? STORE.get("xp", 0) : 0);
+    if (val >= 1500) return 5;
+    if (val >= 700) return 4;
+    if (val >= 300) return 3;
+    if (val >= 100) return 2;
     return 1;
   },
+
+  getLevelInfo(xp = null) {
+    const currentXp = xp !== null ? xp : (typeof STORE !== "undefined" ? STORE.get("xp", 0) : 0);
+    const lvl = this.getLevel(currentXp);
+    const thresholds = [
+      { lvl: 1, min: 0, next: 100, title: "Mèo con Rusika (Cấp 1)", shortTitle: "Mèo con", badge: "Sơ cấp 🌱", desc: "Mèo con đeo chuông đỏ đáng yêu, tò mò khám phá bảng chữ cái Cyrillic" },
+      { lvl: 2, min: 100, next: 300, title: "Mèo học trò Rusika (Cấp 2)", shortTitle: "Mèo học trò", badge: "Tập sự 📚", desc: "Đeo kính vàng thông thái & cà vạt Nga, nắm vững từ vựng A1 và ngữ pháp căn bản" },
+      { lvl: 3, min: 300, next: 700, title: "Mèo thông thái Rusika (Cấp 3)", shortTitle: "Mèo thông thái", badge: "Thông thái 🎓", desc: "Đội mũ cử nhân & nơ xanh lịch lãm, làm chủ 6 Cách và luyện nghe 4 Part CEFR" },
+      { lvl: 4, min: 700, next: 1500, title: "Học sĩ Rusika (Cấp 4)", shortTitle: "Học sĩ Nga", badge: "Chuyên gia ❄️", desc: "Đội mũ lông Ushanka ấm áp & khăn len tuyết, tự tin giải trọn bộ đề thi TRKI B1" },
+      { lvl: 5, min: 1500, next: null, title: "Đại hiệp Mèo Nga Rusika (Cấp 5)", shortTitle: "Đại hiệp Mèo", badge: "Huyền thoại 👑", desc: "Đội vương miện Sa hoàng rực rỡ & áo choàng hoàng gia, bậc thầy TRKI đỉnh cao" }
+    ];
+    const item = thresholds[lvl - 1];
+    let percent = 100;
+    let remaining = 0;
+    if (item.next !== null) {
+      const range = item.next - item.min;
+      const progress = Math.max(0, currentXp - item.min);
+      percent = Math.min(100, Math.round((progress / range) * 100));
+      remaining = Math.max(0, item.next - currentXp);
+    }
+    return {
+      level: lvl,
+      xp: currentXp,
+      title: item.title,
+      shortTitle: item.shortTitle,
+      badge: item.badge,
+      desc: item.desc,
+      minXp: item.min,
+      nextXp: item.next,
+      percent,
+      remaining
+    };
+  },
+
   getTitle(level) {
     const titles = {
       1: "Mèo con Rusika (Cấp 1)",
@@ -85,6 +119,18 @@ const MascotRusika = {
     };
     return titles[level] || titles[1];
   },
+
+  getShortTitle(level) {
+    const titles = {
+      1: "Mèo con",
+      2: "Mèo học trò",
+      3: "Mèo thông thái",
+      4: "Học sĩ Nga",
+      5: "Đại hiệp Mèo"
+    };
+    return titles[level] || titles[1];
+  },
+
   getOutfit(season) {
     const outfits = {
       winter: "Mũ lông Ushanka & Áo len tuyết ấm áp ❄️",
@@ -94,122 +140,790 @@ const MascotRusika = {
     };
     return outfits[season] || outfits.winter;
   },
+
   getQuote() {
     const quotes = [
       "«Повторение — мать учения!» (Ôn tập là mẹ của sự học thành công!)",
       "Hôm nay bạn đã ôn tập các từ trong Lọ từ vựng chưa nào?",
       "Luyện phát âm câu nói mỗi ngày để ngữ điệu mềm mại chuẩn người Moskva nhé!",
       "Chứng chỉ ТРКИ không hề khó khi bạn luyện đề đều đặn với Rusika!",
-      "«Терпение и труд всё перетрут» (Có công mài sắt, có ngày nên kim)!"
+      "«Терпение и труд всё перетрут» (Có công mài sắt, có ngày nên kim)!",
+      "Mỗi ngày một chút, tiếng Nga sẽ trở thành người bạn thân của bạn! 🐾"
     ];
     return quotes[Math.floor(Math.random() * quotes.length)];
   },
-  getSvg(level, season) {
-    const eyeColor = "#0284c7";
-    const furColor = "#94a3b8";
-    const earInner = "#f472b6";
-    let accessory = "";
-    if (season === "winter") {
-      accessory = `<path d="M10 13 Q24 7 38 13 L39 19 Q24 15 9 19 Z" fill="#334155"/><rect x="21" y="9" width="6" height="6" rx="1.5" fill="#D52B1E"/><polygon points="24,10 24.8,11.8 26.5,11.8 25.2,12.8 25.8,14.5 24,13.5 22.2,14.5 22.8,12.8 21.5,11.8 23.2,11.8" fill="#ffffff"/>`;
-    } else if (season === "summer") {
-      accessory = `<rect x="13" y="19" width="9" height="6" rx="2" fill="#0f172a"/><rect x="26" y="19" width="9" height="6" rx="2" fill="#0f172a"/><line x1="22" y1="22" x2="26" y2="22" stroke="#0f172a" stroke-width="2"/>`;
-    } else if (season === "autumn") {
-      accessory = `<path d="M14 36 Q24 40 34 36 Q32 44 24 43 Q16 44 14 36 Z" fill="#d97706"/><circle cx="34" cy="38" r="4" fill="#b45309"/>`;
+
+  getSvg(level = 1, season = "winter", size = 64) {
+    const uid = Math.random().toString(36).substring(2, 7);
+    const lvl = Number(level) || 1;
+    let accessorySvg = "";
+    let auraSvg = "";
+
+    if (lvl === 1) {
+      accessorySvg = `
+        <path d="M30 73 Q50 82 70 73" stroke="#e11d48" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+        <circle cx="50" cy="78" r="4.5" fill="#f59e0b" stroke="#b45309" stroke-width="1"/>
+        <circle cx="50" cy="79" r="1.2" fill="#78350f"/>
+      `;
+    } else if (lvl === 2) {
+      accessorySvg = `
+        <circle cx="37" cy="49" r="10.5" stroke="#f59e0b" stroke-width="2.2" fill="rgba(254,243,199,0.25)"/>
+        <circle cx="63" cy="49" r="10.5" stroke="#f59e0b" stroke-width="2.2" fill="rgba(254,243,199,0.25)"/>
+        <path d="M47.5 49 Q50 46 52.5 49" stroke="#f59e0b" stroke-width="2.2" fill="none"/>
+        <path d="M32 73 Q50 81 68 73" stroke="#1757a6" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+        <polygon points="46,75 54,75 52,89 48,89" fill="#dc2626"/>
+        <rect x="47" y="75" width="6" height="4" fill="#ffffff"/>
+      `;
+    } else if (lvl === 3) {
+      accessorySvg = `
+        <polygon points="50,11 78,21 50,30 22,21" fill="#1e293b"/>
+        <polygon points="36,25 64,25 61,33 39,33" fill="#0f172a"/>
+        <circle cx="50" cy="20.5" r="2.2" fill="#f59e0b"/>
+        <path d="M50 20.5 Q66 22 72 32" stroke="#f59e0b" stroke-width="2" fill="none"/>
+        <polygon points="70,32 74,32 72,39" fill="#f59e0b"/>
+        <polygon points="43,72 43,82 50,77" fill="#1757a6"/>
+        <polygon points="57,72 57,82 50,77" fill="#1757a6"/>
+        <circle cx="50" cy="77" r="3" fill="#f59e0b"/>
+      `;
+    } else if (lvl === 4) {
+      accessorySvg = `
+        <path d="M24 35 Q50 16 76 35 L78 44 Q50 38 22 44 Z" fill="#334155"/>
+        <path d="M18 39 Q20 59 27 57 Q30 45 29 39 Z" fill="#475569"/>
+        <path d="M82 39 Q80 59 73 57 Q70 45 71 39 Z" fill="#475569"/>
+        <circle cx="50" cy="31" r="5" fill="#dc2626"/>
+        <polygon points="50,27.5 51.5,30 54.5,30 52,31.8 53,34.5 50,32.8 47,34.5 48,31.8 45.5,30 48.5,30" fill="#fef08a"/>
+        <path d="M25 71 Q50 84 75 71" stroke="#dc2626" stroke-width="7" stroke-linecap="round" fill="none"/>
+        <path d="M29 71 Q50 84 71 71" stroke="#ffffff" stroke-width="2" stroke-dasharray="3,3" fill="none"/>
+      `;
     } else {
-      accessory = `<circle cx="16" cy="12" r="3" fill="#ec4899"/><circle cx="24" cy="10" r="3.5" fill="#f43f5e"/><circle cx="32" cy="12" r="3" fill="#ec4899"/>`;
+      auraSvg = `
+        <circle cx="16" cy="26" r="2" fill="#f59e0b" opacity="0.8"/>
+        <circle cx="84" cy="26" r="2" fill="#f59e0b" opacity="0.8"/>
+        <polygon points="85,38 87,42 91,42 88,44 89,48 85,46 81,48 82,44 79,42 83,42" fill="#f59e0b" opacity="0.75"/>
+        <polygon points="15,38 17,42 21,42 18,44 19,48 15,46 11,48 12,44 9,42 13,42" fill="#f59e0b" opacity="0.75"/>
+      `;
+      accessorySvg = `
+        <polygon points="32,24 38,9 50,17 62,9 68,24" fill="#f59e0b" stroke="#b45309" stroke-width="1.5"/>
+        <circle cx="38" cy="9" r="2.4" fill="#ef4444"/>
+        <circle cx="50" cy="17" r="2.4" fill="#0284c7"/>
+        <circle cx="62" cy="9" r="2.4" fill="#ef4444"/>
+        <rect x="34" y="22" width="32" height="4.5" rx="1.5" fill="#b45309"/>
+        <path d="M24 70 Q50 86 76 70" stroke="#991b1b" stroke-width="8" stroke-linecap="round" fill="none"/>
+        <path d="M27 70 Q50 84 73 70" stroke="#f59e0b" stroke-width="2" fill="none"/>
+        <circle cx="50" cy="80" r="5" fill="#f59e0b" stroke="#b45309" stroke-width="1.2"/>
+        <polygon points="50,77 51,79 53,79 51.5,80.5 52,82.5 50,81.5 48,82.5 48.5,80.5 47,79 49,79" fill="#991b1b"/>
+      `;
     }
+
+    const svgStyle = size ? `width:${size}px;height:${size}px;display:inline-block;vertical-align:middle;flex-shrink:0` : `width:100%;height:100%;display:block`;
+
     return `
-    <svg viewBox="0 0 48 48" style="width:24px;height:24px;display:inline-block;vertical-align:middle" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <polygon points="10,22 16,6 23,17" fill="${furColor}" />
-      <polygon points="12,20 16,9 21,17" fill="${earInner}" />
-      <polygon points="38,22 32,6 25,17" fill="${furColor}" />
-      <polygon points="36,20 32,9 27,17" fill="${earInner}" />
-      <ellipse cx="24" cy="27" rx="16" ry="14" fill="${furColor}" />
-      <ellipse cx="14" cy="30" rx="3" ry="2" fill="#fbcfe8" opacity="0.6"/>
-      <ellipse cx="34" cy="30" rx="3" ry="2" fill="#fbcfe8" opacity="0.6"/>
-      <circle cx="18" cy="24" r="3.6" fill="${eyeColor}" />
-      <circle cx="30" cy="24" r="3.6" fill="${eyeColor}" />
-      <circle cx="19" cy="23" r="1.3" fill="#ffffff" />
-      <circle cx="31" cy="23" r="1.3" fill="#ffffff" />
-      <polygon points="23,28 25,28 24,29.5" fill="#f43f5e" />
-      <path d="M21 31 Q24 33 24 30 Q24 33 27 31" stroke="#334155" stroke-width="1.2" stroke-linecap="round" />
-      <line x1="8" y1="26" x2="14" y2="27" stroke="#64748b" stroke-width="1"/>
-      <line x1="8" y1="29" x2="14" y2="29" stroke="#64748b" stroke-width="1"/>
-      <line x1="40" y1="26" x2="34" y2="27" stroke="#64748b" stroke-width="1"/>
-      <line x1="40" y1="29" x2="34" y2="29" stroke="#64748b" stroke-width="1"/>
-      ${accessory}
+    <svg viewBox="0 0 100 100" style="${svgStyle}" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mascot Rusika Cấp ${lvl}">
+      <defs>
+        <linearGradient id="fur_${uid}" x1="20" y1="20" x2="80" y2="90" gradientUnits="userSpaceOnUse">
+          <stop stop-color="#94a3b8"/>
+          <stop offset="1" stop-color="#64748b"/>
+        </linearGradient>
+        <linearGradient id="eye_${uid}" x1="0" y1="0" x2="0" y2="1">
+          <stop stop-color="#38bdf8"/>
+          <stop offset="1" stop-color="#0284c7"/>
+        </linearGradient>
+      </defs>
+      ${auraSvg}
+      <polygon points="22,42 30,13 46,31" fill="url(#fur_${uid})" stroke="#475569" stroke-width="0.8"/>
+      <polygon points="26,38 32,19 42,31" fill="#f472b6" opacity="0.8"/>
+      <polygon points="78,42 70,13 54,31" fill="url(#fur_${uid})" stroke="#475569" stroke-width="0.8"/>
+      <polygon points="74,38 68,19 58,31" fill="#f472b6" opacity="0.8"/>
+      <ellipse cx="50" cy="54" rx="34" ry="29" fill="url(#fur_${uid})" stroke="#475569" stroke-width="0.8"/>
+      <ellipse cx="29" cy="62" rx="7" ry="4.5" fill="#fbcfe8" opacity="0.65"/>
+      <ellipse cx="71" cy="62" rx="7" ry="4.5" fill="#fbcfe8" opacity="0.65"/>
+      <ellipse cx="37" cy="49" rx="7.5" ry="8.5" fill="url(#eye_${uid})"/>
+      <ellipse cx="63" cy="49" rx="7.5" ry="8.5" fill="url(#eye_${uid})"/>
+      <ellipse cx="37" cy="49" rx="4.5" ry="6" fill="#0369a1"/>
+      <ellipse cx="63" cy="49" rx="4.5" ry="6" fill="#0369a1"/>
+      <circle cx="39.5" cy="46" r="2.8" fill="#ffffff"/>
+      <circle cx="65.5" cy="46" r="2.8" fill="#ffffff"/>
+      <circle cx="34.5" cy="52" r="1.3" fill="#ffffff"/>
+      <circle cx="60.5" cy="52" r="1.3" fill="#ffffff"/>
+      <polygon points="48,58 52,58 50,61" fill="#f43f5e"/>
+      <path d="M44 63 Q47 66.5 50 63 Q53 66.5 56 63" stroke="#334155" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      <line x1="15" y1="58" x2="28" y2="60" stroke="#cbd5e1" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="14" y1="64" x2="28" y2="63" stroke="#cbd5e1" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="85" y1="58" x2="72" y2="60" stroke="#cbd5e1" stroke-width="1.8" stroke-linecap="round"/>
+      <line x1="86" y1="64" x2="72" y2="63" stroke="#cbd5e1" stroke-width="1.8" stroke-linecap="round"/>
+      <ellipse cx="34" cy="80" rx="9" ry="6" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+      <ellipse cx="66" cy="80" rx="9" ry="6" fill="#cbd5e1" stroke="#94a3b8" stroke-width="1"/>
+      ${accessorySvg}
     </svg>`;
   },
-  showModal() {
-    const lvl = this.getLevel();
-    const season = currentSeason();
-    let m = document.getElementById("mascotModal");
-    if (!m) {
-      m = document.createElement("div");
-      m.id = "mascotModal";
-      m.className = "anticheat-modal";
-      document.body.appendChild(m);
+
+  renderHeroCard(container) {
+    if (!container) return;
+    const xp = STORE.get("xp", 0);
+    const streak = STORE.get("streak", 0);
+    const lvl = this.getLevel(xp);
+    const info = this.getLevelInfo(xp);
+    const season = typeof currentSeason === "function" ? currentSeason() : "winter";
+
+    container.innerHTML = `
+      <div class="rusika-card-inner">
+        <!-- CỘT CON MÈO RUSIKA TIẾN HÓA THEO XP -->
+        <div class="rusika-character-col">
+          <div class="rusika-avatar-stage" id="rusikaAvatarStage" title="Bấm để trò chuyện với Mèo Rusika">
+            <div class="rusika-avatar-glow"></div>
+            <div class="rusika-avatar-svg-wrap">
+              ${this.getSvg(lvl, season, 96)}
+            </div>
+            <span class="rusika-online-badge">
+              <span class="online-dot"></span> Đang trực tuyến
+            </span>
+          </div>
+          <div class="rusika-level-pill">
+            <span class="pill-lvl">Cấp ${lvl}</span>
+            <span class="pill-name">${esc(info.shortTitle)}</span>
+          </div>
+          <div class="rusika-xp-progress-wrap" title="${info.nextXp ? `Cần thêm ${info.remaining} XP để lên Cấp ${lvl + 1}` : 'Đã đạt cấp tối thượng!'}">
+            <div class="rusika-xp-bar">
+              <div class="rusika-xp-fill" style="width:${info.percent}%"></div>
+            </div>
+            <div class="rusika-xp-text">
+              <span>⭐ ${xp} XP</span>
+              <span>${info.nextXp ? `${info.percent}% (${info.remaining} XP lên Lv.${lvl + 1})` : 'MAX 👑'}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- BONG BÓNG CHAT RUSIKA -->
+        <div class="rusika-bubble-col">
+          <div class="rusika-comic-bubble">
+            <div class="rusika-bubble-header">
+              <span class="bubble-tag">🐾 BẠN ĐỒNG HÀNH AI · ${this.getTitle(lvl).toUpperCase()}</span>
+              <span class="bubble-streak">🔥 Chuỗi học: <b>${streak} ngày</b></span>
+            </div>
+            <div class="rusika-bubble-message">
+              «Привет! Mình là mèo Rusika 🐱. Hôm nay bạn muốn luyện từ vựng, nghe 4 Part CEFR hay sửa phát âm cùng mình? Nhấn vào đây để trò chuyện nhé! 🐾»
+            </div>
+
+            <!-- GỢI Ý CÂU HỎI TRỰC QUAN -->
+            <div class="rusika-quick-prompts">
+              <span class="prompts-label">Gợi ý chủ đề:</span>
+              <div class="prompts-pills">
+                <button type="button" class="btn-prompt-chip" data-prompt="Gợi ý đề thi TRKI A1–B2 phù hợp cho mình">🎯 Đề thi TRKI</button>
+                <button type="button" class="btn-prompt-chip" data-prompt="Quy tắc đánh trọng âm và phát âm tiếng Nga chuẩn">🗣️ Luyện phát âm</button>
+                <button type="button" class="btn-prompt-chip" data-prompt="Giải thích 6 Cách trong tiếng Nga ngắn gọn dễ hiểu">🇷🇺 6 Cách tiếng Nga</button>
+                <button type="button" class="btn-prompt-chip" data-prompt="Cách chia động từ tiếng Nga theo ngôi và thể">✍️ Chia động từ</button>
+                <button type="button" class="btn-prompt-chip" data-prompt="Điều kiện và kinh nghiệm xin học bổng du học Nga 6730">🎓 Học bổng Nga 6730</button>
+              </div>
+            </div>
+
+            <div class="rusika-bubble-cta-row">
+              <button class="btn btn-primary btn-chat-trigger" id="btnInteractRusika" type="button">
+                <span>💬 Mở cửa sổ trò chuyện với Rusika</span>
+                <span class="cta-arrow">→</span>
+              </button>
+              <span class="cta-hint">Hoàn toàn miễn phí · Phản hồi tức thì</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const btn = container.querySelector("#btnInteractRusika");
+    if (btn) btn.onclick = () => this.openChat();
+
+    const stage = container.querySelector("#rusikaAvatarStage");
+    if (stage) stage.onclick = () => this.openChat();
+
+    container.querySelectorAll(".btn-prompt-chip").forEach((chip) => {
+      chip.onclick = (e) => {
+        e.stopPropagation();
+        this.openChat(chip.dataset.prompt);
+      };
+    });
+  },
+
+  renderFloatingWidget() {
+    let widget = document.getElementById("rusikaFloatingWidget");
+    if (!widget) {
+      widget = document.createElement("div");
+      widget.id = "rusikaFloatingWidget";
+      widget.className = "rusika-floating-widget";
+      document.body.appendChild(widget);
     }
-    m.innerHTML = `
-    <div class="anticheat-modal-box" style="border-top-color:var(--primary);text-align:left">
-      <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
-        <div style="width:72px;height:72px;flex-shrink:0">
-          ${this.getSvg(lvl, season)}
+    const xp = STORE.get("xp", 0);
+    const lvl = this.getLevel(xp);
+    const season = typeof currentSeason === "function" ? currentSeason() : "winter";
+
+    widget.innerHTML = `
+      <div class="rusika-float-tooltip" id="rusikaFloatTooltip">
+        <span>Мяу! Trò chuyện cùng Rusika nhé 💬</span>
+        <button class="rusika-tooltip-close" id="rusikaTooltipClose" type="button" aria-label="Đóng">&times;</button>
+      </div>
+      <button class="rusika-float-btn" id="rusikaFloatBtn" type="button" title="Mở hộp trò chuyện với Mèo Rusika (Lv.${lvl})">
+        <div class="rusika-float-avatar">
+          ${this.getSvg(lvl, season, 52)}
         </div>
-        <div>
-          <span class="pro-chip" style="font-size:0.75rem">BẠN ĐỒNG HÀNH AI</span>
-          <h3 style="margin:4px 0 2px">${this.getTitle(lvl)}</h3>
-          <p style="font-size:0.85rem;color:var(--muted)">Trang phục: ${this.getOutfit(season)}</p>
+        <span class="rusika-float-badge">Lv.${lvl}</span>
+        <span class="rusika-float-pulse"></span>
+      </button>
+    `;
+
+    const btn = widget.querySelector("#rusikaFloatBtn");
+    if (btn) {
+      btn.onclick = () => this.toggleChat();
+    }
+    const closeBtn = widget.querySelector("#rusikaTooltipClose");
+    if (closeBtn) {
+      closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        const tooltip = document.getElementById("rusikaFloatTooltip");
+        if (tooltip) tooltip.style.display = "none";
+      };
+    }
+  },
+
+  openChat(initialPrompt = null) {
+    let overlay = document.getElementById("rusikaChatOverlay");
+    if (!overlay) {
+      overlay = document.createElement("div");
+      overlay.id = "rusikaChatOverlay";
+      overlay.className = "rusika-chat-overlay";
+      document.body.appendChild(overlay);
+
+      const xp = STORE.get("xp", 0);
+      const lvl = this.getLevel(xp);
+      const info = this.getLevelInfo(xp);
+      const season = typeof currentSeason === "function" ? currentSeason() : "winter";
+
+      overlay.innerHTML = `
+        <div class="rusika-chat-window" id="rusikaChatWindow">
+          <div class="rusika-chat-drag-handle"></div>
+          <div class="rusika-chat-header">
+            <div class="rusika-chat-header-info">
+              <div class="rusika-chat-avatar-mini" id="chatHeaderAvatar">
+                ${this.getSvg(lvl, season, 42)}
+              </div>
+              <div>
+                <div class="chat-header-title">
+                  <b>Mèo Rusika AI</b>
+                  <span class="chat-online-dot" title="Đang trực tuyến"></span>
+                </div>
+                <div class="chat-header-sub" id="chatHeaderSub">
+                  <span>${esc(info.shortTitle)} · Cấp ${lvl}</span> • <span>⭐ ${info.xp} XP</span>
+                </div>
+              </div>
+            </div>
+            <div class="rusika-chat-header-actions">
+              <button class="chat-action-btn" id="closeRusikaChat" type="button" aria-label="Đóng">&times;</button>
+            </div>
+          </div>
+
+          <div class="rusika-chat-body" id="rusikaChatMessages">
+            <div class="chat-msg msg-ai">
+              <div class="msg-avatar" id="msgAvatarInitial">${this.getSvg(lvl, season, 32)}</div>
+              <div class="msg-bubble">
+                <p><b>Привет!</b> Mình là <b>Mèo Rusika AI</b> — bạn đồng hành luyện thi tiếng Nga của bạn 🐱.</p>
+                <p>Hôm nay bạn muốn luyện nghe, giải thích ngữ pháp hay tìm đề thi TRKI nào? Hãy nhấn gợi ý bên dưới hoặc gõ tin nhắn cho mình nhé! 🐾</p>
+              </div>
+            </div>
+
+            <div class="chat-chips-container" id="chatQuickChips">
+              <button type="button" class="chat-chip-btn" data-query="Gợi ý đề thi TRKI A1–B2 phù hợp cho mình">🎯 Đề thi TRKI</button>
+              <button type="button" class="chat-chip-btn" data-query="Quy tắc đánh trọng âm và phát âm tiếng Nga">🗣️ Luyện phát âm</button>
+              <button type="button" class="chat-chip-btn" data-query="Giải thích 6 Cách trong tiếng Nga ngắn gọn">🇷🇺 6 Cách tiếng Nga</button>
+              <button type="button" class="chat-chip-btn" data-query="Cách chia động từ tiếng Nga theo ngôi">✍️ Chia động từ</button>
+              <button type="button" class="chat-chip-btn" data-query="Điều kiện và kinh nghiệm xin học bổng du học Nga 6730">🎓 Học bổng Nga</button>
+              <button type="button" class="chat-chip-btn" data-query="Làm thế nào để mèo Rusika tăng cấp XP?">🐱 Tăng cấp Mèo</button>
+            </div>
+          </div>
+
+          <form class="rusika-chat-footer" id="rusikaChatForm">
+            <input type="text" id="rusikaChatInput" placeholder="Nhập câu hỏi bằng tiếng Việt hoặc tiếng Nga..." autocomplete="off" />
+            <button type="submit" id="btnSendRusikaChat" aria-label="Gửi tin nhắn">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+              </svg>
+            </button>
+          </form>
+        </div>
+      `;
+
+      overlay.querySelector("#closeRusikaChat").onclick = () => this.closeChat();
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) this.closeChat();
+      });
+
+      const form = overlay.querySelector("#rusikaChatForm");
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const input = overlay.querySelector("#rusikaChatInput");
+        const val = input.value.trim();
+        if (val) {
+          input.value = "";
+          this.sendUserMessage(val);
+        }
+      };
+
+      overlay.querySelectorAll(".chat-chip-btn").forEach((chip) => {
+        chip.onclick = () => {
+          this.sendUserMessage(chip.dataset.query);
+        };
+      });
+    }
+
+    overlay.style.display = "flex";
+    document.body.classList.add("rusika-chat-open");
+
+    const tooltip = document.getElementById("rusikaFloatTooltip");
+    if (tooltip) tooltip.style.display = "none";
+
+    const messages = document.getElementById("rusikaChatMessages");
+    if (messages) messages.scrollTop = messages.scrollHeight;
+
+    const input = document.getElementById("rusikaChatInput");
+    if (input) {
+      if (initialPrompt) {
+        input.value = initialPrompt;
+        const form = document.getElementById("rusikaChatForm");
+        if (form) form.dispatchEvent(new Event("submit"));
+      } else {
+        setTimeout(() => input.focus(), 150);
+      }
+    }
+  },
+
+  closeChat() {
+    const overlay = document.getElementById("rusikaChatOverlay");
+    if (overlay) overlay.style.display = "none";
+    document.body.classList.remove("rusika-chat-open");
+  },
+
+  toggleChat() {
+    const overlay = document.getElementById("rusikaChatOverlay");
+    if (overlay && overlay.style.display === "flex") {
+      this.closeChat();
+    } else {
+      this.openChat();
+    }
+  },
+
+  showModal() {
+    this.openChat();
+  },
+
+  sendUserMessage(text) {
+    const messages = document.getElementById("rusikaChatMessages");
+    if (!messages) return;
+
+    // 1. Thêm tin nhắn của người dùng
+    const userMsg = document.createElement("div");
+    userMsg.className = "chat-msg msg-user";
+    userMsg.innerHTML = `<div class="msg-bubble">${esc(text)}</div>`;
+    messages.appendChild(userMsg);
+    messages.scrollTop = messages.scrollHeight;
+
+    // 2. Thêm chỉ báo Rusika đang gõ
+    const xp = STORE.get("xp", 0);
+    const oldLvl = this.getLevel(xp);
+    const season = typeof currentSeason === "function" ? currentSeason() : "winter";
+
+    const typingMsg = document.createElement("div");
+    typingMsg.className = "chat-msg msg-ai msg-typing";
+    typingMsg.id = "rusikaTypingIndicator";
+    typingMsg.innerHTML = `
+      <div class="msg-avatar">${this.getSvg(oldLvl, season, 32)}</div>
+      <div class="msg-bubble">
+        <div class="rusika-typing-dots">
+          <span></span><span></span><span></span>
         </div>
       </div>
-      <div style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:16px">
-        <div style="font-size:0.88rem;color:var(--text);font-style:italic">
-          💬 ${this.getQuote()}
+    `;
+    messages.appendChild(typingMsg);
+    messages.scrollTop = messages.scrollHeight;
+
+    // 3. Phản hồi thông minh sau 400ms
+    setTimeout(() => {
+      const typing = document.getElementById("rusikaTypingIndicator");
+      if (typing) typing.remove();
+
+      const reply = this.generateAiReply(text);
+
+      // Thưởng +5 XP khi học tập tương tác cùng AI
+      const newXp = xp + 5;
+      STORE.set("xp", newXp);
+      const newLvl = this.getLevel(newXp);
+      const levelUp = newLvl > oldLvl;
+
+      const aiMsg = document.createElement("div");
+      aiMsg.className = "chat-msg msg-ai";
+      aiMsg.innerHTML = `
+        <div class="msg-avatar">${this.getSvg(newLvl, season, 32)}</div>
+        <div class="msg-bubble">
+          <div class="reply-title"><b>${esc(reply.title)}</b></div>
+          <div class="reply-text">${reply.text.replace(/\n/g, "<br>")}</div>
+          <div class="reply-xp-tag">✨ +5 XP tương tác học cùng Rusika! (Tổng: ${newXp} XP)</div>
         </div>
-      </div>
-      <div style="font-size:0.85rem;color:var(--muted);line-height:1.5;margin-bottom:20px">
-        <b>Hệ thống cấp bậc Rusika:</b><br>
-        • Cấp 1: 0 – 99 XP (Mèo con)<br>
-        • Cấp 2: 100 – 299 XP (Mèo học trò)<br>
-        • Cấp 3: 300 – 699 XP (Mèo thông thái)<br>
-        • Cấp 4: 700 – 1499 XP (Học sĩ Rusika)<br>
-        • Cấp 5: 1500+ XP (Đại hiệp Mèo Nga)<br>
-        <i>Tiếp tục luyện tập từ vựng, nghe, nói, viết và thi thử TRKI để mèo Rusika lớn dần!</i>
-      </div>
-      <button class="btn btn-primary" style="width:100%" id="closeMascotModal">Đóng</button>
-    </div>`;
-    document.getElementById("closeMascotModal").onclick = () => m.remove();
+      `;
+      messages.appendChild(aiMsg);
+
+      // Nếu lên cấp -> Bắn pháo hoa chúc mừng tiến hóa
+      if (levelUp) {
+        const evoInfo = this.getLevelInfo(newXp);
+        const evoMsg = document.createElement("div");
+        evoMsg.className = "chat-msg msg-levelup";
+        evoMsg.innerHTML = `
+          <div class="levelup-card">
+            <div class="levelup-cat">${this.getSvg(newLvl, season, 64)}</div>
+            <div class="levelup-title">🎉 CHÚC MỪNG! MÈO RUSIKA ĐÃ TIẾN HÓA! 🎉</div>
+            <div class="levelup-desc">Bạn đã đạt <b>${newXp} XP</b> và mở khóa <b>${esc(evoInfo.title)}</b>! ${esc(evoInfo.badge)}</div>
+          </div>
+        `;
+        messages.appendChild(evoMsg);
+        if (typeof toast === "function") toast(`🎉 Mèo Rusika đã tiến hóa lên Cấp ${newLvl}!`);
+      }
+
+      this.updateAllViews();
+      messages.scrollTop = messages.scrollHeight;
+    }, 450);
+  },
+
+  generateAiReply(q) {
+    const query = (q || "").toLowerCase().trim();
+    if (/trki|đề thi|thi thử|chứng chỉ|torfl/i.test(query)) {
+      return {
+        title: "Cẩm nang Đề thi TRKI chuẩn quốc tế 🎯",
+        text: "Hệ thống chứng chỉ TRKI (TORFL) gồm các cấp độ từ A1 đến B2:\n• <b>TRKI A1 (Элементарный)</b>: Yêu cầu ~780 từ vựng, giao tiếp sinh hoạt và xã hội căn bản.\n• <b>TRKI A2 (Базовый)</b>: ~1.300 từ vựng, chuẩn đủ điều kiện học khoa dự bị tại các trường ĐH Nga.\n• <b>TRKI B1 (Первый)</b>: ~2.300 từ vựng, điều kiện bắt buộc nhập học Đại học chính quy tại LB Nga.\n• <b>TRKI B2 (Второй)</b>: ~10.000 từ vựng, chuẩn tốt nghiệp cử nhân và thạc sĩ tại Nga.\n\n👉 Điểm đạt là <b>66%</b> trên mỗi bài thi con. Hãy vào mục <b>«Thi thử TRKI»</b> trên website để làm quen với ngân hàng đề thi chuẩn nhé!"
+      };
+    } else if (/phát âm|trọng âm|ударение|đọc/i.test(query)) {
+      return {
+        title: "Quy tắc Phát âm & Trọng âm tiếng Nga 🗣️",
+        text: "Trọng âm (Ударение) là linh hồn của phát âm tiếng Nga:\n1. <b>Biến âm chữ О</b>: Khi có trọng âm phát âm rõ [O]. Khi không mang trọng âm giảm thành âm [A] ngắn (vd: молоко đọc là [mə-la-kó]).\n2. <b>Biến âm chữ Е/Я</b>: Khi không mang trọng âm phát âm nhẹ gần như âm [I] (vd: река đọc là [ri-ká]).\n3. <b>Âm câm & biến đổi cuối từ</b>: Các phụ âm vang (звонкие: б, в, г, д, ж, з) đứng cuối từ sẽ bị vô thanh hóa (г -> к, д -> т, б -> п, vd: хлеб đọc là [khlep]).\n\n👉 Hãy vào mục <b>«Luyện nói & AI Rusika»</b> để Rusika trực tiếp sửa lỗi phát âm cho bạn nhé!"
+      };
+    } else if (/chia động từ|động từ|ngôi|спряжение/i.test(query)) {
+      return {
+        title: "Cách chia Động từ tiếng Nga (Спряжение) ✍️",
+        text: "Tiếng Nga có 2 nhóm chia động từ chính theo ngôi:\n• <b>Nhóm I (Спряжение I)</b>: Tận cùng -ать, -ять, -еть -> đuôi chia: <b>-ю/-у, -ешь, -ет, -ем, -ете, -ют/-ут</b> (Ví dụ: Читать -> читаю, читаешь, читает, читаем, читаете, читают).\n• <b>Nhóm II (Спряжение II)</b>: Thường tận cùng -ить -> đuôi chia: <b>-ю/-у, -ишь, -ит, -им, -ите, -ят/-ат</b> (Ví dụ: Говорить -> говорю, говоришь, говорит, говорим, говорите, говорят).\n\n💡 Lưu ý cặp thể động từ <b>НСВ</b> (chưa hoàn thành: quá trình, lặp đi lặp lại) và <b>СВ</b> (hoàn thành: kết quả duy nhất)!"
+      };
+    } else if (/cách|падеж|biến cách|danh từ/i.test(query)) {
+      return {
+        title: "Hệ thống 6 Cách trong tiếng Nga (6 Падежей) 🇷🇺",
+        text: "6 Cách là xương sống của ngữ pháp tiếng Nga:\n• <b>Cách 1 (Именительный)</b>: Chủ ngữ trong câu (Кто? Что?)\n• <b>Cách 2 (Родительный)</b>: Sở hữu, phủ định 'нет', số lượng (Кого? Чего? Откуда?)\n• <b>Cách 3 (Дательный)</b>: Người nhận, tuổi tác, gián tiếp (Кому? Чему?)\n• <b>Cách 4 (Винительный)</b>: Bổ ngữ trực tiếp, hướng chuyển động (Кого? Что? Куда?)\n• <b>Cách 5 (Творительный)</b>: Phương tiện, công cụ, nghề nghiệp, đi cùng ai (Кем? Чем? С кем?)\n• <b>Cách 6 (Предложный)</b>: Địa điểm ở đâu, chủ đề suy nghĩ/nói (Где? О ком? О чём?)"
+      };
+    } else if (/học bổng|du học|6730|nga/i.test(query)) {
+      return {
+        title: "Học bổng Hiệp định du học Nga 6730 🎓",
+        text: "Học bổng Hiệp định giữa Bộ GD&ĐT Việt Nam và Liên bang Nga:\n• <b>Quyền lợi</b>: Miễn 100% học phí suốt 4–6 năm, đài thọ ký túc xá, bảo hiểm y tế và cấp sinh hoạt phí hàng tháng song phương (từ cả phía Nga và phía Việt Nam).\n• <b>Tiêu chuẩn</b>: Điểm trung bình GPA THPT hoặc Đại học từ 7.0+ (khuyên dùng 8.0+ để cạnh tranh hồ sơ).\n• <b>Trình độ tiếng</b>: Chưa biết tiếng Nga vẫn nộp được vì bạn sẽ được đài thọ 1 năm học tiếng Nga dự bị tại các trường danh tiếng như MGU, SPbU, Bauman, HSE..."
+      };
+    } else if (/tăng cấp|tiến hóa|xp|cấp độ|mèo/i.test(query)) {
+      return {
+        title: "Hệ thống Tiến hóa của Mèo Rusika 🐾",
+        text: "Rusika sẽ lớn lên và thay đổi trang phục theo điểm XP của bạn:\n• <b>Cấp 1 (0–99 XP)</b>: Mèo con đeo chuông đỏ đáng yêu 🌱\n• <b>Cấp 2 (100–299 XP)</b>: Mèo học trò kính vàng & cà vạt Nga 📚\n• <b>Cấp 3 (300–699 XP)</b>: Mèo thông thái mũ cử nhân & nơ xanh 🎓\n• <b>Cấp 4 (700–1499 XP)</b>: Học sĩ Mũ lông Ushanka ấm áp ❄️\n• <b>Cấp 5 (1500+ XP)</b>: Đại hiệp Mèo Vương miện Hoàng gia Sa hoàng 👑\n\n👉 Nhận XP bằng cách: Học Lọ từ vựng (+10 XP), làm bài thi thử (+50 XP), viết bài luận (+30 XP) và mỗi câu hỏi trò chuyện (+5 XP)!"
+      };
+    } else {
+      return {
+        title: "Rusika luôn sẵn sàng hỗ trợ bạn! 🐾",
+        text: "Мяу! Rất vui được đồng hành cùng bạn học tiếng Nga! Phương pháp tốt nhất là <b>học đều đặn 15 phút mỗi ngày</b>.\n\nBạn có thể hỏi Rusika về <b>Đề thi TRKI</b>, <b>Ngữ pháp 6 Cách</b>, <b>Cách chia động từ</b>, <b>Quy tắc trọng âm</b> hoặc kinh nghiệm <b>Du học Nga</b> nhé! Rusika luôn sẵn sàng giải đáp! ✨"
+      };
+    }
+  },
+
+  updateAllViews() {
+    const xp = STORE.get("xp", 0);
+    const lvl = this.getLevel(xp);
+    const info = this.getLevelInfo(xp);
+    const season = typeof currentSeason === "function" ? currentSeason() : "winter";
+
+    // 1. Cập nhật chip header
+    const chipXp = document.getElementById("chipXp");
+    if (chipXp) chipXp.textContent = "⭐ " + xp + " XP";
+    const chipMascot = document.getElementById("chipMascot");
+    if (chipMascot) {
+      chipMascot.innerHTML = `${this.getSvg(lvl, season, 22)} <span>Rusika Lv.${lvl}</span>`;
+      chipMascot.title = this.getTitle(lvl);
+    }
+
+    // 2. Cập nhật hero card nếu đang ở index
+    const heroCard = document.getElementById("rusikaHeroCard");
+    if (heroCard) {
+      this.renderHeroCard(heroCard);
+    }
+
+    // 3. Cập nhật floating widget
+    const floatBtn = document.getElementById("rusikaFloatBtn");
+    if (floatBtn) {
+      const avatarWrap = floatBtn.querySelector(".rusika-float-avatar");
+      if (avatarWrap) avatarWrap.innerHTML = this.getSvg(lvl, season, 52);
+      const badge = floatBtn.querySelector(".rusika-float-badge");
+      if (badge) badge.textContent = `Lv.${lvl}`;
+    }
+
+    // 4. Cập nhật chat header
+    const chatAvatar = document.getElementById("chatHeaderAvatar");
+    if (chatAvatar) chatAvatar.innerHTML = this.getSvg(lvl, season, 42);
+    const chatSub = document.getElementById("chatHeaderSub");
+    if (chatSub) chatSub.innerHTML = `<span>${esc(info.shortTitle)} · Cấp ${lvl}</span> • <span>⭐ ${info.xp} XP</span>`;
+
+    // 5. Cập nhật pwXp nếu có
+    const pwXp = document.getElementById("pwXp");
+    if (pwXp) pwXp.textContent = xp;
   }
 };
 
 // ============================================================================
-// HỆ THỐNG GÓI CƯỚC & THANH TOÁN VIETQR TỰ ĐỘNG (INSTANT VIETQR ACTIVATION)
+// HỆ THỐNG GÓI CƯỚC & THANH TOÁN VIETQR TỰ ĐỘNG CHUẨN HIỆN NAY (MONETIZATION 2.0)
 // ============================================================================
 const Monetization = {
-  isPro() {
-    return Boolean(STORE.get("is_pro", false));
+  _timerInterval: null,
+
+  /** Lấy thông tin người dùng hiện tại (từ Auth hoặc STORE) */
+  getCurrentUser() {
+    return (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
   },
-  setPro(status = true) {
+
+  /** Kiểm tra trạng thái PRO của người dùng hiện tại */
+  isPro() {
+    const user = this.getCurrentUser();
+    // 1. Kiểm tra trạng thái PRO gắn liền theo tài khoản (UID)
+    if (user && user.uid) {
+      const userPro = STORE.get("pro_user_" + user.uid, null);
+      if (userPro && userPro.active) {
+        if (userPro.expiresAt && !userPro.isLifetime) {
+          if (new Date(userPro.expiresAt).getTime() < Date.now()) {
+            return false;
+          }
+        }
+        return true;
+      }
+    }
+    // 2. Fallback tương thích ngược với khóa cục bộ
+    const legacy = Boolean(STORE.get("is_pro", false));
+    if (legacy) {
+      const exp = STORE.get("pro_expires", null);
+      if (exp && new Date(exp).getTime() < Date.now()) {
+        return false;
+      }
+      return true;
+    }
+    return false;
+  },
+
+  /** Lấy thông tin chi tiết gói PRO đã kích hoạt */
+  getProInfo() {
+    if (!this.isPro()) return null;
+    const user = this.getCurrentUser();
+    let proData = null;
+    if (user && user.uid) {
+      proData = STORE.get("pro_user_" + user.uid, null);
+    }
+    if (!proData && STORE.get("is_pro", false)) {
+      proData = {
+        active: true,
+        pkgId: STORE.get("pro_active_pkg", "pro_1y"),
+        pkgTitle: "Gói Chuyên Nghiệp 1 Năm",
+        expiresAt: STORE.get("pro_expires", new Date(Date.now() + 365 * 86400000).toISOString()),
+        isLifetime: false,
+        activatedAt: new Date().toISOString()
+      };
+    }
+    if (!proData) return null;
+
+    let expiresFormatted = "Đang kích hoạt";
+    if (proData.isLifetime || proData.pkgId === "pro_vip") {
+      expiresFormatted = "Vĩnh viễn (Trọn đời)";
+    } else if (proData.expiresAt) {
+      try {
+        const d = new Date(proData.expiresAt);
+        expiresFormatted = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}/${d.getFullYear()}`;
+      } catch (_) {}
+    }
+
+    return {
+      active: true,
+      pkgId: proData.pkgId || "pro_1y",
+      pkgTitle: proData.pkgTitle || "Gói PRO",
+      expiresAt: proData.expiresAt,
+      expiresFormatted,
+      isLifetime: Boolean(proData.isLifetime || proData.pkgId === "pro_vip"),
+      activatedAt: proData.activatedAt
+    };
+  },
+
+  /** Kích hoạt hoặc hủy kích hoạt gói PRO */
+  setPro(status = true, pkgId = "pro_1y") {
+    const user = this.getCurrentUser();
+    const pkgs = this.getPackages();
+    const normId = (pkgId || "pro_1y").toLowerCase();
+    const pkg = pkgs.find((p) => (p.id || "").toLowerCase() === normId) || {
+      id: pkgId,
+      title: "Gói PRO",
+      badge: "PRO"
+    };
+
+    let expiresAt = null;
+    let isLifetime = false;
+    if (normId === "pro_vip") {
+      isLifetime = true;
+      expiresAt = new Date(Date.now() + 100 * 365 * 86400000).toISOString();
+    } else if (normId === "pro_6m") {
+      expiresAt = new Date(Date.now() + 180 * 86400000).toISOString();
+    } else {
+      expiresAt = new Date(Date.now() + 365 * 86400000).toISOString();
+    }
+
+    const proData = {
+      active: status,
+      pkgId: pkg.id,
+      pkgTitle: pkg.title,
+      isLifetime,
+      expiresAt,
+      activatedAt: new Date().toISOString()
+    };
+
+    if (user && user.uid) {
+      STORE.set("pro_user_" + user.uid, status ? proData : null);
+    }
     STORE.set("is_pro", status);
     if (status) {
-      STORE.set("pro_expires", new Date(Date.now() + 365 * 86400000).toISOString());
+      STORE.set("pro_expires", expiresAt);
+      STORE.set("pro_active_pkg", pkg.id);
+    } else {
+      STORE.set("pro_expires", null);
+      STORE.set("pro_active_pkg", null);
     }
+
+    // Cập nhật giao diện toàn hệ thống
     updateHeaderChips();
-    const btn = document.getElementById("btnUpgradeHeader");
-    if (btn) {
-      btn.outerHTML = `<span class="pro-chip" title="Tài khoản PRO đã kích hoạt">⭐ PRO MEMBER</span>`;
-    }
+    if (typeof renderUserArea === "function") renderUserArea();
+    if (typeof window.renderPricingGrid === "function") window.renderPricingGrid();
+
+    // Bắn sự kiện đồng bộ đa tab & các component
+    try {
+      window.dispatchEvent(new CustomEvent("trki:pro-updated", { detail: proData }));
+    } catch (_) {}
   },
-  openUpgradeModal(pkgId = "PRO_1Y") {
+
+  /** Lấy danh sách gói cước chuẩn */
+  getPackages() {
+    if (typeof window !== "undefined" && window.PACKAGES && window.PACKAGES.length > 0) {
+      return window.PACKAGES;
+    }
+    if (typeof PACKAGES !== "undefined" && PACKAGES.length > 0) {
+      return PACKAGES;
+    }
+    return [
+      {
+        id: "pro_6m",
+        badge: "6 THÁNG",
+        title: "Gói Bứt Phá 6 Tháng",
+        desc: "Phù hợp cho học viên ôn thi cấp tốc chuẩn bị du học hoặc thi chứng chỉ ТЭУ/ТБУ.",
+        price: 299000,
+        priceOld: 590000,
+        popular: false,
+        features: [
+          "Mở khóa toàn bộ ngân hàng đề thi ТРКИ A1, A2",
+          "Đáp án giải thích ngữ pháp chi tiết từng câu",
+          "Luyện nghe 4 Part CEFR không giới hạn",
+          "Tạo không giới hạn Lọ từ vựng cá nhân",
+          "Phát hiện & sửa lỗi phát âm AI"
+        ]
+      },
+      {
+        id: "pro_1y",
+        badge: "1 NĂM",
+        title: "Gói Chuyên Nghiệp 1 Năm",
+        desc: "Lựa chọn hàng đầu cho sinh viên chuẩn bị sang Nga học dự bị và đại học.",
+        price: 499000,
+        priceOld: 990000,
+        popular: true,
+        features: [
+          "Mở khóa TOÀN BỘ ngân hàng đề thi ТРКИ A1, A2, B1, B2",
+          "Phân tích chuyên sâu đề thi & dự đoán điểm đỗ",
+          "Chấm bài tự luận Viết (Письмо) có nhận xét của giảng viên",
+          "Kho 100+ Lọ từ vựng chuyên ngành (Y khoa, Kỹ thuật, Kinh tế)",
+          "Ưu tiên hỗ trợ hồ sơ học bổng du học Nga 6730",
+          "Hỗ trợ 1-1 qua nhóm Zalo VIP"
+        ]
+      },
+      {
+        id: "pro_vip",
+        badge: "TRỌN ĐỜI",
+        title: "Gói VIP Trọn Đời",
+        desc: "Đồng hành trọn vẹn suốt 4-6 năm học tập và sinh sống tại Liên bang Nga.",
+        price: 899000,
+        priceOld: 1800000,
+        popular: false,
+        features: [
+          "Tất cả quyền lợi của gói 1 Năm vĩnh viễn",
+          "Cập nhật miễn phí đề thi ТРКИ mới nhất mỗi năm",
+          "Tặng Voucher 500k khi đặt dịch vụ du học & visa Nga",
+          "Tặng Hộp quà Nga đặc biệt (Socola Alenka + Trà Ivan-chay)",
+          "Cố vấn học thuật trực tiếp định kỳ"
+        ]
+      }
+    ];
+  },
+
+  /** Modal nhắc nhở người dùng chưa đăng nhập khi bấm vào tính năng nâng cấp / paywall */
+  showAuthRequiredModal(title = "Nâng cấp tài khoản PRO", reason = "Vui lòng đăng nhập để gắn quyền PRO vào tài khoản và bảo lưu quyền lợi trọn đời.") {
+    let modal = document.getElementById("authReqModal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "authReqModal";
+      modal.className = "vietqr-overlay";
+      document.body.appendChild(modal);
+    }
+
+    const pageName = window.location.pathname.split("/").pop() || "index.html";
+    const currentRedirect = encodeURIComponent(pageName + window.location.search + window.location.hash);
+
+    modal.innerHTML = `
+      <div class="vietqr-card" style="max-width:480px">
+        <button class="vietqr-close" id="closeAuthReq">&times;</button>
+        <div class="auth-req-card">
+          <div class="auth-req-icon">🔐</div>
+          <h3>${esc(title)}</h3>
+          <p>${esc(reason)}</p>
+          <div class="auth-req-buttons">
+            <a class="btn btn-primary btn-lg" href="login.html?redirect=${currentRedirect}" style="text-decoration:none">
+              👉 Đăng nhập tài khoản
+            </a>
+            <a class="btn btn-outline" href="signup.html?redirect=${currentRedirect}" style="text-decoration:none">
+              ✨ Đăng ký tài khoản mới
+            </a>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("closeAuthReq").onclick = () => modal.remove();
+  },
+
+  /**
+   * Mở Modal Thanh Toán VietQR 2.0 Chuẩn Hiện Nay:
+   * - Hiển thị tài khoản người dùng thụ hưởng
+   * - Hỗ trợ Tabs chuyển đổi linh hoạt 3 gói cước (6 Tháng / 1 Năm / Trọn Đời)
+   * - Sinh mã QR và cú pháp định danh theo tài khoản
+   * - Bộ đếm ngược 15:00
+   * - Sao chép 1-chạm thông minh
+   * - Kích hoạt tự động kèm hiệu ứng chúc mừng (Confetti)
+   */
+  openUpgradeModal(pkgId = "pro_1y") {
+    const user = this.getCurrentUser();
+    // Chuẩn hiện nay: Nâng cấp yêu cầu phiên đăng nhập để gắn quyền PRO
+    if (!user) {
+      this.showAuthRequiredModal("Đăng nhập để Nâng cấp PRO", "Để kích hoạt và bảo lưu gói PRO vĩnh viễn trên mọi thiết bị, bạn cần đăng nhập tài khoản trước.");
+      return;
+    }
+
+    const pkgs = this.getPackages();
+    let normId = (pkgId || "pro_1y").toLowerCase();
+    let currentPkg = pkgs.find((p) => (p.id || "").toLowerCase() === normId) || pkgs[1] || pkgs[0];
+
+    // Tạo mã đơn có gắn nhận diện học viên
     let ordNum = STORE.get("last_order_num", 1092) + 1;
     STORE.set("last_order_num", ordNum);
-    const orderId = "RUSI_ORD" + ordNum;
-    const pkg = (typeof PACKAGES !== "undefined" ? PACKAGES : []).find((p) => p.id === pkgId) || {
-      id: "PRO_1Y",
-      title: "Gói 1 Năm (PRO-1Y)",
-      price: 699000
-    };
-    const qrUrl = `https://img.vietqr.io/image/vietinbank-108873919999-compact2.png?amount=${pkg.price}&addInfo=${orderId}&accountName=RUSI%20TRKI%20PLATFORM`;
+    const userTag = (user.email ? user.email.split("@")[0] : (user.name || "USER")).replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 8);
+    const orderId = `RUSI_${ordNum}_${userTag || "PRO"}`;
 
     let modal = document.getElementById("vietqrModal");
     if (!modal) {
@@ -218,47 +932,295 @@ const Monetization = {
       modal.className = "vietqr-overlay";
       document.body.appendChild(modal);
     }
-    modal.innerHTML = `
-    <div class="vietqr-card">
-      <button class="vietqr-close" id="closeVietQr">&times;</button>
-      <div style="text-align:center;margin-bottom:12px">
-        <span class="pro-chip">⚡ NÂNG CẤP PRO KÍCH HOẠT TỨC THÌ</span>
-        <h3 style="margin:8px 0 4px;font-size:1.3rem">${esc(pkg.title)}</h3>
-        <p style="color:var(--muted);font-size:0.88rem">Quét mã VietQR bằng app ngân hàng bất kỳ để mở khóa trọn bộ tính năng</p>
-      </div>
-      <div class="vietqr-img-box">
-        <img class="vietqr-img" src="${qrUrl}" alt="VietQR Payment" />
-      </div>
-      <div style="margin-bottom:16px">
-        <div class="vietqr-info-row"><span>Ngân hàng:</span><b>VietinBank (Ngân hàng Công Thương)</b></div>
-        <div class="vietqr-info-row"><span>Số tài khoản:</span><b>108873919999</b></div>
-        <div class="vietqr-info-row"><span>Chủ tài khoản:</span><b>RUSI TRKI PLATFORM</b></div>
-        <div class="vietqr-info-row"><span>Số tiền:</span><b style="color:var(--secondary);font-size:1.15rem">${pkg.price.toLocaleString("vi-VN")} đ</b></div>
-        <div class="vietqr-info-row"><span>Cú pháp CK:</span><span class="vietqr-code-copy" id="btnCopyOrderId">${orderId} 📋</span></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <button class="btn btn-primary btn-lg" id="btnConfirmPaid" style="background:var(--green);border-color:var(--green)">
-          ✅ Tôi đã chuyển khoản xong (Kích hoạt ngay)
-        </button>
-        <p style="text-align:center;font-size:0.78rem;color:var(--muted)">Xác thực tự động (Signature Verification) kích hoạt tức thì không cần F5 hay chờ duyệt tay.</p>
-      </div>
-    </div>`;
 
-    document.getElementById("closeVietQr").onclick = () => modal.remove();
-    document.getElementById("btnCopyOrderId").onclick = () => {
-      navigator.clipboard?.writeText(orderId);
-      toast("Đã sao chép mã đơn: " + orderId);
+    // Thời gian phiên thanh toán 15 phút
+    let timeLeft = 15 * 60;
+    if (this._timerInterval) clearInterval(this._timerInterval);
+
+    const renderModalContent = () => {
+      const qrUrl = `https://img.vietqr.io/image/vietinbank-108873919999-compact2.png?amount=${currentPkg.price}&addInfo=${orderId}&accountName=RUSI%20TRKI%20PLATFORM`;
+      const formatTime = (sec) => {
+        const m = Math.floor(sec / 60).toString().padStart(2, "0");
+        const s = (sec % 60).toString().padStart(2, "0");
+        return `${m}:${s}`;
+      };
+
+      modal.innerHTML = `
+      <div class="vietqr-card">
+        <button class="vietqr-close" id="closeVietQr" title="Đóng">&times;</button>
+        
+        <div class="vietqr-header">
+          <span class="vietqr-chip-kicker">⚡ NÂNG CẤP TÀI KHOẢN PRO • KÍCH HOẠT TỨC THÌ</span>
+          <h3>Cổng Thanh Toán Tự Động VietQR</h3>
+          <div class="vietqr-user-context">
+            <span>👤 Kích hoạt cho:</span>
+            <b>${esc(user.name || "Học viên")}</b>
+            <span style="color:#64748B">(${esc(user.email || "Tài khoản Khách")})</span>
+          </div>
+        </div>
+
+        <!-- BỘ CHỌN 3 GÓI CƯỚC LINH HOẠT -->
+        <div class="vietqr-pkg-tabs" role="tablist">
+          ${pkgs.map((p) => {
+            const isActive = (p.id || "").toLowerCase() === (currentPkg.id || "").toLowerCase();
+            return `
+            <button type="button" class="vietqr-pkg-tab ${isActive ? "active" : ""}" data-pkg-select="${p.id}">
+              ${p.popular ? `<span class="vietqr-pkg-tab-hot">HOT 🔥</span>` : ""}
+              <span class="vietqr-pkg-tab-badge">${esc(p.badge || "PRO")}</span>
+              <span class="vietqr-pkg-tab-title">${esc(p.title)}</span>
+              <span class="vietqr-pkg-tab-price">${p.price.toLocaleString("vi-VN")} đ</span>
+            </button>`;
+          }).join("")}
+        </div>
+
+        <!-- KHUNG 2 CỘT QUÉT QR & THÔNG TIN CHUYỂN KHOẢN -->
+        <div class="vietqr-body-grid">
+          <!-- CỘT 1: ẢNH QR & ĐỒNG HỒ PHIÊN -->
+          <div class="vietqr-scan-card">
+            <div class="vietqr-timer-badge">
+              <span>⏱️ Phiên hết hạn:</span>
+              <b id="vietqrTimerDisplay">${formatTime(timeLeft)}</b>
+            </div>
+            <div class="vietqr-scan-box">
+              <img class="vietqr-img" id="vietqrImgTag" src="${qrUrl}" alt="VietQR Thanh toán Rusi TRKI" />
+            </div>
+            <div class="vietqr-live-status">
+              <span class="vietqr-pulse-dot"></span>
+              <span>Đang chờ quét mã từ Mobile Banking</span>
+            </div>
+          </div>
+
+          <!-- CỘT 2: CHI TIẾT CHUYỂN KHOẢN & 1-CLICK COPY -->
+          <div class="vietqr-details-card">
+            <div class="vietqr-info-table">
+              <div class="vietqr-info-row">
+                <span class="lbl">Ngân hàng:</span>
+                <span class="val">VietinBank (Công Thương)</span>
+              </div>
+              <div class="vietqr-info-row">
+                <span class="lbl">Số tài khoản:</span>
+                <span class="val">
+                  <b>108873919999</b>
+                  <button class="vietqr-copy-btn" data-copy="108873919999" type="button">📋 Chép</button>
+                </span>
+              </div>
+              <div class="vietqr-info-row">
+                <span class="lbl">Chủ tài khoản:</span>
+                <span class="val">RUSI TRKI PLATFORM</span>
+              </div>
+              <div class="vietqr-info-row">
+                <span class="lbl">Số tiền:</span>
+                <span class="val" style="color:var(--secondary);font-size:1.08rem">
+                  <b>${currentPkg.price.toLocaleString("vi-VN")} đ</b>
+                  <button class="vietqr-copy-btn" data-copy="${currentPkg.price}" type="button">📋 Chép</button>
+                </span>
+              </div>
+              <div class="vietqr-info-row">
+                <span class="lbl">Cú pháp CK:</span>
+                <span class="val">
+                  <code style="background:var(--primary-soft);color:var(--primary-dark);padding:2px 6px;border-radius:4px;font-weight:800">${orderId}</code>
+                  <button class="vietqr-copy-btn" data-copy="${orderId}" type="button">📋 Chép</button>
+                </span>
+              </div>
+            </div>
+
+            <!-- QUYỀN LỢI GÓI NỔI BẬT -->
+            <div class="vietqr-perks-box">
+              <div class="vietqr-perks-title">🎁 Quyền lợi nổi bật (${esc(currentPkg.badge || "PRO")}):</div>
+              <ul class="vietqr-perks-list">
+                ${(currentPkg.features || []).slice(0, 3).map((f) => `<li><span class="chk">✓</span> <span>${esc(f)}</span></li>`).join("")}
+              </ul>
+            </div>
+
+            <!-- NÚT KÍCH HOẠT & CAM KẾT AN TOÀN -->
+            <div>
+              <button class="btn-confirm-vietqr" id="btnConfirmPaid" type="button">
+                ⚡ Tôi đã chuyển khoản xong (Kích hoạt ngay)
+              </button>
+              <div class="vietqr-guarantee">
+                🔒 Tự động đối soát chữ ký số (Signature Verification) 24/7. Tài khoản được kích hoạt ngay lập tức mà không cần chờ duyệt tay.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+
+      // Đóng modal
+      document.getElementById("closeVietQr").onclick = () => {
+        clearInterval(this._timerInterval);
+        modal.remove();
+      };
+
+      // Xử lý chuyển đổi gói cước tương tác
+      modal.querySelectorAll("[data-pkg-select]").forEach((tabBtn) => {
+        tabBtn.onclick = () => {
+          const chosenId = tabBtn.dataset.pkgSelect;
+          const found = pkgs.find((p) => p.id === chosenId);
+          if (found && found.id !== currentPkg.id) {
+            currentPkg = found;
+            renderModalContent();
+          }
+        };
+      });
+
+      // Xử lý 1-click copy
+      modal.querySelectorAll(".vietqr-copy-btn").forEach((copyBtn) => {
+        copyBtn.onclick = () => {
+          const text = copyBtn.dataset.copy;
+          navigator.clipboard?.writeText(text);
+          const original = copyBtn.innerHTML;
+          copyBtn.innerHTML = "✓ Đã chép";
+          copyBtn.classList.add("copied");
+          toast("Đã sao chép: " + text);
+          setTimeout(() => {
+            copyBtn.innerHTML = original;
+            copyBtn.classList.remove("copied");
+          }, 1800);
+        };
+      });
+
+      // Xử lý xác thực tự động (Simulation Webhook Instant Verification)
+      const confirmBtn = document.getElementById("btnConfirmPaid");
+      if (confirmBtn) {
+        confirmBtn.onclick = () => {
+          confirmBtn.disabled = true;
+          confirmBtn.innerHTML = `<span class="vietqr-spinner"></span> Đang xác thực chữ ký số VietinBank...`;
+
+          setTimeout(() => {
+            // Kích hoạt PRO thành công
+            Monetization.setPro(true, currentPkg.id);
+            clearInterval(Monetization._timerInterval);
+
+            // Hiển thị màn hình chúc mừng (Celebration)
+            modal.innerHTML = `
+              <div class="vietqr-card" style="max-width:540px">
+                <div class="vietqr-success-card">
+                  <div class="vietqr-success-icon">🎉</div>
+                  <h3>Nâng Cấp PRO Thành Công!</h3>
+                  <p>Chúc mừng <b>${esc(user.name || user.email)}</b>! Tài khoản của bạn đã được nâng cấp lên <b>${esc(currentPkg.title)}</b>.</p>
+                  
+                  <div class="vietqr-success-box">
+                    <div class="vietqr-success-row"><span>Gói kích hoạt:</span><b>${esc(currentPkg.title)}</b></div>
+                    <div class="vietqr-success-row"><span>Thời hạn:</span><b>${currentPkg.id === "pro_vip" ? "Vĩnh viễn (Trọn đời)" : "Đã kích hoạt 365 ngày"}</b></div>
+                    <div class="vietqr-success-row"><span>Mã giao dịch:</span><code>${orderId}</code></div>
+                    <div class="vietqr-success-row"><span>Trạng thái:</span><b style="color:#059669">✓ ĐÃ KÍCH HOẠT TỨC THÌ</b></div>
+                  </div>
+
+                  <button class="btn btn-primary btn-lg" id="btnVietQrFinish" style="width:100%;margin-top:20px;background:var(--primary);border-color:var(--primary)">
+                    🚀 Bắt đầu trải nghiệm các tính năng PRO ngay
+                  </button>
+                </div>
+              </div>
+            `;
+
+            toast(`🎉 Chúc mừng ${user.name || "bạn"}! Tài khoản đã là PRO VIP.`);
+            document.getElementById("btnVietQrFinish").onclick = () => modal.remove();
+          }, 1200);
+        };
+      }
     };
-    document.getElementById("btnConfirmPaid").onclick = () => {
-      Monetization.setPro(true);
-      modal.remove();
-      toast("🎉 Chúc mừng! Tài khoản đã được nâng cấp lên PRO thành công.");
-      setTimeout(() => {
-        if (typeof renderUserArea === "function") renderUserArea();
-      }, 300);
-    };
+
+    renderModalContent();
+
+    // Đồng hồ đếm ngược phiên
+    this._timerInterval = setInterval(() => {
+      timeLeft--;
+      const disp = document.getElementById("vietqrTimerDisplay");
+      if (disp) {
+        const m = Math.floor(timeLeft / 60).toString().padStart(2, "0");
+        const s = (timeLeft % 60).toString().padStart(2, "0");
+        disp.textContent = `${m}:${s}`;
+      }
+      if (timeLeft <= 0) {
+        clearInterval(this._timerInterval);
+        toast("Phiên thanh toán đã hết hạn — Vui lòng tạo lại mã đơn mới.");
+        modal.remove();
+      }
+    }, 1000);
+  },
+
+  /** Modal Quản Lý Gói PRO (Dành cho thành viên đã là PRO) */
+  openManageModal() {
+    const user = this.getCurrentUser();
+    const proInfo = this.getProInfo();
+    if (!proInfo) {
+      this.openUpgradeModal();
+      return;
+    }
+
+    let modal = document.getElementById("manageProModal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "manageProModal";
+      modal.className = "vietqr-overlay";
+      document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+      <div class="vietqr-card manage-pro-card" style="max-width:580px">
+        <button class="vietqr-close" id="closeManagePro">&times;</button>
+        <div style="text-align:center;margin-bottom:20px">
+          <span class="vietqr-chip-kicker">💎 QUẢN LÝ GÓI CƯỚC HỌC VIÊN</span>
+          <h3 style="margin:4px 0">${esc(proInfo.pkgTitle)}</h3>
+          <p style="color:var(--muted);font-size:0.86rem">Tài khoản: <b>${esc((user && user.email) || (user && user.name) || "Học viên")}</b></p>
+        </div>
+
+        <div class="manage-pro-hero">
+          <div>
+            <div class="manage-pro-title">👑 Trạng thái Thành viên PRO</div>
+            <div class="manage-pro-meta">
+              ${proInfo.isLifetime ? "✨ Bạn đang sở hữu đặc quyền VIP Vĩnh Viễn" : `⏳ Hạn sử dụng: <b>${esc(proInfo.expiresFormatted)}</b>`}
+            </div>
+          </div>
+          <span class="manage-pro-status">🟢 ĐANG HOẠT ĐỘNG</span>
+        </div>
+
+        <div class="vietqr-perks-box" style="margin-bottom:20px">
+          <div class="vietqr-perks-title">Các đặc quyền VIP đang kích hoạt:</div>
+          <ul class="vietqr-perks-list">
+            <li><span class="chk">✓</span> Mở khóa 100% ngân hàng đề thi ТРКИ A1, A2, B1, B2</li>
+            <li><span class="chk">✓</span> Không giới hạn lượt luyện nói & sửa lỗi phát âm AI Rusika</li>
+            <li><span class="chk">✓</span> Chấm bài viết Письмо theo 4 tiêu chí TRKI chuẩn quốc tế</li>
+            <li><span class="chk">✓</span> Luyện nghe 4 Part CEFR kèm transcript chi tiết</li>
+            <li><span class="chk">✓</span> Mở khóa toàn bộ 100+ Lọ từ vựng chuyên ngành</li>
+            <li><span class="chk">✓</span> Ưu tiên hỗ trợ hồ sơ học bổng Hiệp định du học Nga 6730</li>
+          </ul>
+        </div>
+
+        ${!proInfo.isLifetime ? `
+          <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div style="font-weight:800;font-size:0.86rem;color:#166534">Nâng cấp lên VIP Trọn Đời?</div>
+              <div style="font-size:0.78rem;color:#15803D">Đồng hành trọn vẹn suốt thời gian du học Nga với giá ưu đãi.</div>
+            </div>
+            <button class="btn btn-sm btn-primary" id="btnExtendLifetime" style="background:#059669;border-color:#059669;white-space:nowrap">
+              💎 Nâng cấp Trọn Đời
+            </button>
+          </div>
+        ` : ""}
+
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn btn-outline btn-sm" id="btnCloseManageProBtn">Đóng</button>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("closeManagePro").onclick = () => modal.remove();
+    document.getElementById("btnCloseManageProBtn").onclick = () => modal.remove();
+    const extendBtn = document.getElementById("btnExtendLifetime");
+    if (extendBtn) {
+      extendBtn.onclick = () => {
+        modal.remove();
+        Monetization.openUpgradeModal("pro_vip");
+      };
+    }
   }
 };
+
+// Gắn đối tượng toàn cục
+if (typeof window !== "undefined") {
+  window.Monetization = Monetization;
+}
 
 function toast(msg) {
   let t = document.querySelector(".toast");
@@ -485,12 +1447,6 @@ const AuthModal = {
             </svg>
             <span id="googleActionText">${initialTab === "register" ? "Đăng ký nhanh với Google" : "Đăng nhập nhanh với Google"}</span>
           </button>
-
-          <div class="auth-divider"><span>hoặc</span></div>
-
-          <button class="btn btn-outline btn-block" id="btnGuestAction" type="button" style="width:100%;justify-content:center;padding:10px 14px;border-radius:10px;font-weight:600">
-            👤 Trải nghiệm nhanh với tư cách Khách
-          </button>
         </div>
       </div>
     `;
@@ -526,21 +1482,6 @@ const AuthModal = {
       modal.classList.remove("open");
       if (window.Auth) window.Auth.signInWithGoogle();
     });
-
-    modal.querySelector("#btnGuestAction").addEventListener("click", () => {
-      const guest = {
-        uid: "guest_" + Date.now(),
-        name: "Học viên Khách",
-        email: "khach@rusitrki.com",
-        photo: "",
-        provider: "guest"
-      };
-      STORE.set("auth_user", guest);
-      if (window.Auth) window.Auth.user = guest;
-      renderUserArea();
-      modal.classList.remove("open");
-      if (typeof toast === "function") toast("Chào mừng bạn trải nghiệm với tư cách Khách! 👋");
-    });
   }
 };
 
@@ -548,10 +1489,6 @@ function renderHeader() {
   const host = document.getElementById("app-header");
   if (!host) return;
   const page = document.body.dataset.page;
-  const isPro = Monetization.isPro();
-  const proButtonHtml = isPro
-    ? `<span class="pro-chip" style="font-size:0.75rem;padding:5px 9px" title="Tài khoản PRO đã kích hoạt">⭐ PRO</span>`
-    : `<button class="btn btn-sm" id="btnUpgradeHeader" type="button" style="background:var(--russia-red);color:#fff;border-color:var(--russia-red);font-size:0.8rem;padding:6px 12px;border-radius:10px">⭐ Gói PRO</button>`;
 
   const MAX_PRIMARY = 7;
   const primaryLinks = NAV_LINKS.slice(0, MAX_PRIMARY);
@@ -592,7 +1529,6 @@ function renderHeader() {
       </nav>
 
       <div class="header-right header-actions">
-        ${proButtonHtml}
         <div id="userArea" class="user-area"></div>
         <button class="menu-button" id="mobileMenuBtn" type="button" aria-label="Mở menu" aria-expanded="false">
           <span></span>
@@ -610,9 +1546,6 @@ function renderHeader() {
       mobileBtn.setAttribute("aria-expanded", String(open));
     });
   }
-
-  const upgradeBtn = document.getElementById("btnUpgradeHeader");
-  if (upgradeBtn) upgradeBtn.addEventListener("click", () => Monetization.openUpgradeModal());
 
   initNavDropdowns();
   renderUserArea();
@@ -661,19 +1594,24 @@ function initNavDropdowns() {
 }
 
 /**
- * Render khu vực tài khoản ở header:
- * - Khi CHƯA login: 2 nút [Đăng nhập] và [Đăng ký] (Bỏ nút học miễn phí, không hiện XP/streak ra ngoài)
- * - Khi ĐÃ login: avatar + tên + dropdown chứa XP, Streak và menu quản lý cá nhân.
+ * Render khu vực tài khoản ở header theo chuẩn hiện đại:
+ * - Khi CHƯA login: 2 nút [Đăng nhập] và [Đăng ký]. KHÔNG hiển thị nút nâng cấp PRO bừa bãi.
+ * - Khi ĐÃ login:
+ *     + Nếu Free: Hiển thị nút nổi bật [⚡ Nâng cấp PRO] + Avatar + Dropdown có Card CTA VIP
+ *     + Nếu PRO: Hiển thị Huy hiệu danh dự [👑 PRO MEMBER] + Avatar + Dropdown có Card quản lý PRO
  */
 function renderUserArea() {
   const host = document.getElementById("userArea");
   if (!host) return;
 
   const user = (window.Auth && window.Auth.user) || STORE.get("auth_user", null);
+  const isPro = Monetization.isPro();
+  const proInfo = Monetization.getProInfo();
 
+  // 1. KHI CHƯA ĐĂNG NHẬP: Duy nhất 2 nút Đăng nhập & Đăng ký
   if (!user) {
     const pageName = window.location.pathname.split("/").pop() || "index.html";
-    const currentRedirect = encodeURIComponent(pageName + window.location.search);
+    const currentRedirect = encodeURIComponent(pageName + window.location.search + window.location.hash);
     host.innerHTML = `
       <div class="auth-buttons-group">
         <a class="btn-auth-login" id="btnLogin" href="login.html?redirect=${currentRedirect}">Đăng nhập</a>
@@ -682,7 +1620,7 @@ function renderUserArea() {
     return;
   }
 
-  // Đã đăng nhập: avatar + menu thả xuống chứa điểm XP & chuỗi Streak
+  // 2. KHI ĐÃ ĐĂNG NHẬP: Avatar + Tên + Nút Nâng cấp PRO / Huy hiệu PRO
   const initials = (user.name || user.email || "?")
     .split(/\s+/)
     .map((s) => s[0])
@@ -694,94 +1632,172 @@ function renderUserArea() {
     : `<span class="user-avatar user-avatar-fallback">${esc(initials)}</span>`;
   const shortName = (user.name || "Học viên").split(/\s+/)[0];
 
-  const adminEmails = (window.ADMIN_EMAILS || []).map(e => String(e).toLowerCase().trim());
+  const adminEmails = (window.ADMIN_EMAILS || []).map((e) => String(e).toLowerCase().trim());
   const isAdmin = user.email && adminEmails.includes(String(user.email).toLowerCase().trim());
 
   host.innerHTML = `
-    <div class="user-menu" id="userMenu">
-      <button class="user-trigger" id="userTrigger" type="button" aria-haspopup="true" aria-expanded="false">
-        ${avatar}
-        <span class="user-name-short">${esc(shortName)}</span>
-        <span class="caret" aria-hidden="true">▾</span>
-      </button>
-      <div class="user-dropdown" id="userDropdown" role="menu">
-        <div class="user-dropdown-head">
-          ${avatar}
-          <div class="user-head-info">
-            <div class="user-fullname">${esc(user.name || "Học viên Rusi")}</div>
-            <div class="user-email">${esc(user.email || "")}</div>
-          </div>
-        </div>
-
-        <!-- PHẦN ĐIỂM XP VÀ CHUỖI STREAK HIỂN THỊ TRANG TRỌNG TRONG MENU TÀI KHOẢN -->
-        <div class="user-stats-bar">
-          <div class="user-stat-card">
-            <span class="user-stat-icon">⚡</span>
-            <div>
-              <div class="user-stat-val" id="userMenuXp">${STORE.get("xp", 0)} XP</div>
-              <div class="user-stat-lbl">Kinh nghiệm</div>
-            </div>
-          </div>
-          <div class="user-stat-card">
-            <span class="user-stat-icon">🔥</span>
-            <div>
-              <div class="user-stat-val" id="userMenuStreak">${STORE.get("streak", 0)} ngày</div>
-              <div class="user-stat-lbl">Chuỗi học Streak</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="user-dropdown-divider"></div>
-
-        <a class="user-dropdown-item" href="index.html#progress" role="menuitem">
-          <span>📊</span>
-          <span>Tiến độ của tôi</span>
-        </a>
-        <a class="user-dropdown-item" href="vocabulary.html" role="menuitem">
-          <span>🏺</span>
-          <span>Lọ từ vựng & Flashcard</span>
-        </a>
-        <a class="user-dropdown-item" href="mock-test.html" role="menuitem">
-          <span>📝</span>
-          <span>Luyện thi TRKI</span>
-        </a>
-        ${isAdmin ? `
-        <a class="user-dropdown-item" href="admin.html" role="menuitem">
-          <span>🛠️</span>
-          <span>Quản trị hệ thống</span>
-        </a>` : ""}
-
-        <div class="user-dropdown-divider"></div>
-
-        <button class="user-dropdown-item user-dropdown-signout" id="btnSignOut" type="button" role="menuitem">
-          <span>🚪</span>
-          <span>Đăng xuất</span>
+    <div class="user-area-authenticated">
+      <!-- PHẦN NÂNG CẤP PRO HIỂN THỊ KHI NGƯỜI DÙNG ĐĂNG NHẬP -->
+      ${isPro ? `
+        <button class="pro-chip-header" id="btnManageProHeader" type="button" title="Gói PRO đang kích hoạt — Bấm để xem và quản lý">
+          <span>👑</span>
+          <span>PRO MEMBER</span>
         </button>
+      ` : `
+        <button class="btn-upgrade-pro-header" id="btnUpgradeHeader" type="button" title="Mở khóa 100% đề thi TRKI và AI">
+          <span class="btn-upgrade-icon">⚡</span>
+          <span class="btn-upgrade-text">Nâng cấp PRO</span>
+        </button>
+      `}
+
+      <div class="user-menu" id="userMenu">
+        <button class="user-trigger" id="userTrigger" type="button" aria-haspopup="true" aria-expanded="false">
+          ${avatar}
+          <span class="user-name-short">${esc(shortName)}</span>
+          <span class="caret" aria-hidden="true">▾</span>
+        </button>
+        <div class="user-dropdown" id="userDropdown" role="menu">
+          <div class="user-dropdown-head">
+            ${avatar}
+            <div class="user-head-info">
+              <div style="display:flex;align-items:center;gap:6px">
+                <div class="user-fullname">${esc(user.name || "Học viên Rusi")}</div>
+                ${isPro ? `<span class="user-tier-badge tier-pro">PRO</span>` : `<span class="user-tier-badge tier-free">Free</span>`}
+              </div>
+              <div class="user-email">${esc(user.email || "")}</div>
+            </div>
+          </div>
+
+          <!-- CARD NÂNG CẤP HOẶC QUẢN LÝ PRO TRONG USER MENU -->
+          ${isPro ? `
+            <div class="user-pro-vip-card" id="btnUserMenuManagePro" title="Xem quyền lợi và quản lý gói PRO">
+              <div class="user-pro-vip-head">
+                <span class="user-pro-vip-badge">👑 ${esc(proInfo ? proInfo.pkgTitle : "PRO VIP")}</span>
+                <span class="user-pro-vip-action">Quản lý →</span>
+              </div>
+              <div class="user-pro-vip-time">
+                ${proInfo && proInfo.isLifetime ? "✨ Đặc quyền VIP Trọn Đời" : `⏳ Hạn dùng: ${esc((proInfo && proInfo.expiresFormatted) || "Đang kích hoạt")}`}
+              </div>
+            </div>
+          ` : `
+            <div class="user-pro-cta-card" id="btnUserMenuUpgrade" title="Nâng cấp tài khoản PRO ngay">
+              <div class="user-pro-cta-left">
+                <span class="user-pro-cta-icon">👑</span>
+                <div>
+                  <div class="user-pro-cta-title">Nâng cấp PRO VIP</div>
+                  <div class="user-pro-cta-desc">Mở khóa 100% đề thi TRKI & AI</div>
+                </div>
+              </div>
+              <span class="user-pro-cta-btn">Nâng cấp</span>
+            </div>
+          `}
+
+          <!-- PHẦN ĐIỂM XP VÀ CHUỖI STREAK HIỂN THỊ TRANG TRỌNG -->
+          <div class="user-stats-bar">
+            <div class="user-stat-card">
+              <span class="user-stat-icon">⚡</span>
+              <div>
+                <div class="user-stat-val" id="userMenuXp">${STORE.get("xp", 0)} XP</div>
+                <div class="user-stat-lbl">Kinh nghiệm</div>
+              </div>
+            </div>
+            <div class="user-stat-card">
+              <span class="user-stat-icon">🔥</span>
+              <div>
+                <div class="user-stat-val" id="userMenuStreak">${STORE.get("streak", 0)} ngày</div>
+                <div class="user-stat-lbl">Chuỗi Streak</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="user-dropdown-divider"></div>
+
+          <a class="user-dropdown-item" href="index.html#progress" role="menuitem">
+            <span>📊</span>
+            <span>Tiến độ của tôi</span>
+          </a>
+          <a class="user-dropdown-item" href="vocabulary.html" role="menuitem">
+            <span>🏺</span>
+            <span>Lọ từ vựng & Flashcard</span>
+          </a>
+          <a class="user-dropdown-item" href="mock-test.html" role="menuitem">
+            <span>📝</span>
+            <span>Luyện thi TRKI</span>
+          </a>
+          ${isAdmin ? `
+          <a class="user-dropdown-item" href="admin.html" role="menuitem">
+            <span>🛠️</span>
+            <span>Quản trị hệ thống</span>
+          </a>` : ""}
+
+          <div class="user-dropdown-divider"></div>
+
+          <button class="user-dropdown-item user-dropdown-signout" id="btnSignOut" type="button" role="menuitem">
+            <span>🚪</span>
+            <span>Đăng xuất</span>
+          </button>
+        </div>
       </div>
     </div>`;
 
+  // Gắn sự kiện cho nút Upgrade / Manage ở Header
+  const upgradeBtn = host.querySelector("#btnUpgradeHeader");
+  if (upgradeBtn) {
+    upgradeBtn.addEventListener("click", () => {
+      window.location.href = "upgrade.html";
+    });
+  }
+  const manageBtn = host.querySelector("#btnManageProHeader");
+  if (manageBtn) {
+    manageBtn.addEventListener("click", () => Monetization.openManageModal());
+  }
+
+  // Gắn sự kiện cho các Card trong Dropdown
+  const cardUpgrade = host.querySelector("#btnUserMenuUpgrade");
+  if (cardUpgrade) {
+    cardUpgrade.addEventListener("click", () => {
+      const dd = host.querySelector("#userDropdown");
+      if (dd) dd.classList.remove("open");
+      window.location.href = "upgrade.html";
+    });
+  }
+  const cardManage = host.querySelector("#btnUserMenuManagePro");
+  if (cardManage) {
+    cardManage.addEventListener("click", () => {
+      const dd = host.querySelector("#userDropdown");
+      if (dd) dd.classList.remove("open");
+      Monetization.openManageModal();
+    });
+  }
+
+  // Tương tác Dropdown
   const trigger = host.querySelector("#userTrigger");
   const dropdown = host.querySelector("#userDropdown");
-  trigger.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const open = dropdown.classList.toggle("open");
-    trigger.setAttribute("aria-expanded", open ? "true" : "false");
-  });
+  if (trigger && dropdown) {
+    trigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const open = dropdown.classList.toggle("open");
+      trigger.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  }
 
   if (renderUserArea._outsideClick) {
     document.removeEventListener("click", renderUserArea._outsideClick);
   }
   renderUserArea._outsideClick = () => {
-    dropdown.classList.remove("open");
-    trigger.setAttribute("aria-expanded", "false");
+    if (dropdown) dropdown.classList.remove("open");
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
   };
   document.addEventListener("click", renderUserArea._outsideClick);
 
-  host.querySelector("#btnSignOut").addEventListener("click", () => {
-    dropdown.classList.remove("open");
-    STORE.set("auth_user", null);
-    if (window.Auth) window.Auth.signOut();
-  });
+  const signOutBtn = host.querySelector("#btnSignOut");
+  if (signOutBtn) {
+    signOutBtn.addEventListener("click", () => {
+      if (dropdown) dropdown.classList.remove("open");
+      STORE.set("auth_user", null);
+      if (window.Auth) window.Auth.signOut();
+    });
+  }
 }
 
 /**
@@ -795,6 +1811,17 @@ function bindAuthToHeader() {
     // không phải chờ Firebase phản hồi (tránh header nhảy nút Đăng nhập ↔ avatar).
     STORE.set("auth_user", u || null);
     renderUserArea();
+    if (typeof window.renderPricingGrid === "function") {
+      window.renderPricingGrid();
+    }
+  });
+
+  // Lắng nghe sự kiện cập nhật trạng thái PRO
+  window.addEventListener("trki:pro-updated", () => {
+    renderUserArea();
+    if (typeof window.renderPricingGrid === "function") {
+      window.renderPricingGrid();
+    }
   });
 }
 
@@ -816,7 +1843,6 @@ function renderFooter() {
       <a href="mock-test.html">TRKI</a>
       <a href="blog.html">Blog</a>
       <a href="shop.html">Shop</a>
-      <a href="admin.html">Quản trị</a>
     </div>
     <small>© 2026 RUSI TRKI. Made for curious minds. Đồng hành cùng Mascot Rusika mắt xanh.</small>
   </footer>`;

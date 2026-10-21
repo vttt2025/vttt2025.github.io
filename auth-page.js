@@ -136,51 +136,45 @@
     // 1. Kiểm tra trạng thái đăng nhập hiện tại
     const currentUser = (window.Auth && window.Auth.user) || store.get("auth_user", null);
 
-    if (currentUser) {
+    if (currentUser && !isGuestUser(currentUser)) {
       const banner = document.getElementById("alreadyLoggedInBanner");
       if (banner) {
-        if (isGuestUser(currentUser)) {
-          // Người dùng đang ở chế độ Khách: KHÔNG tự động redirect mà hướng dẫn đăng nhập chính thức
-          banner.style.display = "block";
-          banner.style.background = "#eff6ff";
-          banner.style.borderColor = "#93c5fd";
-          banner.style.color = "#1e40af";
-          banner.innerHTML = `💡 Bạn đang trải nghiệm với tư cách <strong>Học viên Khách</strong>. Hãy đăng nhập tài khoản Google hoặc Email bên dưới để lưu trữ chuỗi ngày Streak và tiến độ TRKI vĩnh viễn.`;
-        } else {
-          // Người dùng đã có tài khoản thực tế: hiển thị thông báo với tuỳ chọn đổi tài khoản
-          banner.style.display = "block";
-          const userName = escapeHtml(currentUser.email || currentUser.name || "bạn");
-          banner.innerHTML = `
-            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-              <span>Bạn đang đăng nhập với <strong>${userName}</strong>.</span>
-              <div style="display:flex;align-items:center;gap:10px">
-                <button type="button" id="btnSwitchAccountInBanner" style="background:none;border:none;color:var(--russia-red);font-weight:700;cursor:pointer;padding:0;text-decoration:underline;font-family:inherit;font-size:13px">Đổi tài khoản</button>
-                <button type="button" id="btnProceedInBanner" style="background:var(--russia-blue);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">Tiếp tục học →</button>
-              </div>
-            </div>`;
+        banner.style.display = "block";
+        const userName = escapeHtml(currentUser.email || currentUser.name || "bạn");
+        banner.innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <span>Bạn đang đăng nhập với <strong>${userName}</strong>.</span>
+            <div style="display:flex;align-items:center;gap:10px">
+              <button type="button" id="btnSwitchAccountInBanner" style="background:none;border:none;color:var(--russia-red);font-weight:700;cursor:pointer;padding:0;text-decoration:underline;font-family:inherit;font-size:13px">Đổi tài khoản</button>
+              <button type="button" id="btnProceedInBanner" style="background:var(--russia-blue);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit">Tiếp tục học →</button>
+            </div>
+          </div>`;
 
-          const btnSwitch = document.getElementById("btnSwitchAccountInBanner");
-          if (btnSwitch) {
-            btnSwitch.addEventListener("click", () => {
-              if (autoRedirectTimer) {
-                clearTimeout(autoRedirectTimer);
-                autoRedirectTimer = null;
-              }
-              if (window.Auth) window.Auth.signOut();
-              banner.style.display = "none";
-            });
-          }
-
-          const btnProceed = document.getElementById("btnProceedInBanner");
-          if (btnProceed) {
-            btnProceed.addEventListener("click", () => executeRedirect());
-          }
-
-          // Tự động chuyển tiếp sau 1.5 giây nếu người dùng không thao tác đổi tài khoản
-          autoRedirectTimer = setTimeout(executeRedirect, 1500);
-          return;
+        const btnSwitch = document.getElementById("btnSwitchAccountInBanner");
+        if (btnSwitch) {
+          btnSwitch.addEventListener("click", () => {
+            if (autoRedirectTimer) {
+              clearTimeout(autoRedirectTimer);
+              autoRedirectTimer = null;
+            }
+            if (window.Auth) window.Auth.signOut();
+            banner.style.display = "none";
+          });
         }
+
+        const btnProceed = document.getElementById("btnProceedInBanner");
+        if (btnProceed) {
+          btnProceed.addEventListener("click", () => executeRedirect());
+        }
+
+        // Tự động chuyển tiếp sau 1.5 giây nếu người dùng không thao tác đổi tài khoản
+        autoRedirectTimer = setTimeout(executeRedirect, 1500);
+        return;
       }
+    } else if (currentUser && isGuestUser(currentUser)) {
+      // Xóa phiên Khách cũ nếu có để người dùng đăng nhập chính thống
+      store.set("auth_user", null);
+      if (window.Auth) window.Auth.user = null;
     }
 
     // Lắng nghe sự kiện đăng nhập từ Firebase Auth
@@ -215,26 +209,7 @@
       });
     }
 
-    // 3. Xử lý Trải nghiệm Khách (Guest mode)
-    const btnGuest = document.getElementById("btnGuestAction");
-    if (btnGuest) {
-      btnGuest.addEventListener("click", () => {
-        if (window.Auth && typeof window.Auth.continueAsGuest === "function") {
-          window.Auth.continueAsGuest();
-        } else {
-          store.set("auth_user", {
-            uid: "guest_" + Date.now(),
-            name: "Học viên Khách",
-            email: "khach@rusitrki.com",
-            photo: "",
-            provider: "guest"
-          });
-        }
-        executeRedirect();
-      });
-    }
-
-    // 4. Xử lý Accordion ẩn/hiện form Email & Mật khẩu
+    // 2. Xử lý Accordion ẩn/hiện form Email & Mật khẩu
     const btnToggleEmail = document.getElementById("btnToggleEmail");
     const emailForm = document.getElementById("emailAuthForm");
     if (btnToggleEmail && emailForm) {

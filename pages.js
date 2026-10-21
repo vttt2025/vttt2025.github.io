@@ -1239,9 +1239,9 @@ function initMockTestPage() {
     T.parts.forEach((p) => (totalQuestions += p.questions.length));
 
     let html = `
-    <div class="CEFR-wrap">
+    <div class="cefr-wrap">
       <!-- Cột chính bên trái: Câu hỏi đề thi -->
-      <div class="CEFR-main">`;
+      <div class="cefr-main">`;
 
     let globalQIndex = 0;
     T.parts.forEach((part, pi) => {
@@ -1290,10 +1290,10 @@ function initMockTestPage() {
       </div>
 
       <!-- Cột phải: Bảng câu hỏi chuẩn CEFR (Sticky Sidebar) -->
-      <div class="CEFR-sidebar">
-        <div class="CEFR-timer-box">
-          <div class="CEFR-timer-label">Thời gian còn lại</div>
-          <div class="CEFR-timer-clock" id="timerVal">${fmt(timeLeft)}</div>
+      <div class="cefr-sidebar">
+        <div class="cefr-timer-box">
+          <div class="cefr-timer-label">Thời gian còn lại</div>
+          <div class="cefr-timer-clock" id="timerVal">${fmt(timeLeft)}</div>
         </div>
 
         <div class="anticheat-box ${tabSwitches > 0 ? "warn" : ""}">
@@ -1829,41 +1829,74 @@ function initIndexPage() {
   const best = STORE.get("bestTest", null);
   if (el("#pwBest")) el("#pwBest").textContent = best === null ? "—" : best + "%";
 
-  // Render Mascot Rusika Companion Widget trên trang chủ
+  // Render Mascot Rusika Companion Widget trên trang chủ (Bong bóng Chat & Con mèo theo XP)
   const rusikaBox = el("#rusikaHeroCard");
   if (rusikaBox && typeof MascotRusika !== "undefined") {
-    const lvl = MascotRusika.getLevel();
-    const season = currentSeason();
-    rusikaBox.innerHTML = `
-      <div class="rusika-avatar-wrap">
-        ${MascotRusika.getSvg(lvl, season)}
-      </div>
-      <div class="rusika-bubble">
-        <span class="rusika-bubble-tag">BẠN ĐỒNG HÀNH AI · ${MascotRusika.getTitle(lvl).toUpperCase()}</span>
-        <div class="rusika-bubble-msg">
-          🐱 «${MascotRusika.getQuote()}»
-        </div>
-        <div class="rusika-bubble-sub">
-          Trang phục hiện tại: <b>${MascotRusika.getOutfit(season)}</b> · Streak: <b>${streak} ngày</b> · XP: <b>${xp} điểm</b>
-        </div>
-      </div>
-      <div>
-        <button class="btn btn-primary btn-sm" id="btnInteractRusika">Trò chuyện cùng Rusika</button>
-      </div>
-    `;
-    const btn = el("#btnInteractRusika");
-    if (btn) btn.onclick = () => MascotRusika.showModal();
+    MascotRusika.renderHeroCard(rusikaBox);
+  }
+  if (typeof MascotRusika !== "undefined") {
+    MascotRusika.renderFloatingWidget();
   }
 
-  // Render Bảng Gói Cước PRO & VietQR
-  const pricingHost = el("#pricingGrid");
-  if (pricingHost && typeof PACKAGES !== "undefined") {
-    pricingHost.innerHTML = PACKAGES.map(
-      (pkg) => `
-      <div class="pricing-card ${pkg.popular ? "popular" : ""}">
-        ${pkg.popular ? `<div class="pricing-popular-badge">PHỔ BIẾN NHẤT</div>` : ""}
+  // Render Bảng Gói Cước PRO & VietQR (Chuẩn hiện nay)
+  window.renderPricingGrid = function () {
+    const pricingHost = el("#pricingGrid");
+    const pricingSection = document.getElementById("pricing");
+    if (!pricingHost) return;
+
+    const user = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
+    
+    // YÊU CẦU: Không hiển thị phần nâng cấp tài khoản PRO ở index.html khi KHÔNG đăng nhập
+    if (!user) {
+      if (pricingSection) pricingSection.style.display = "none";
+      pricingHost.innerHTML = "";
+      return;
+    }
+
+    if (pricingSection) pricingSection.style.display = "block";
+
+    const isPro = typeof Monetization !== "undefined" ? Monetization.isPro() : false;
+    const proInfo = typeof Monetization !== "undefined" ? Monetization.getProInfo() : null;
+    const pkgs = typeof Monetization !== "undefined" ? Monetization.getPackages() : (typeof PACKAGES !== "undefined" ? PACKAGES : []);
+
+    // Banner thông tin trạng thái học viên phía trên bảng giá
+    const alertBannerHtml = `
+      <div class="pricing-auth-banner logged-in" style="grid-column:1/-1">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span>👤</span>
+          <span>Đang chọn gói cho tài khoản: <b>${esc(user.name || "Học viên")}</b> <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px">${esc(user.email || "Khách")}</code></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${isPro ? `<span class="pro-chip-header" style="font-size:0.75rem;padding:3px 10px">👑 PRO VIP (${esc(proInfo ? proInfo.pkgTitle : "Active")})</span>` : `<span class="user-tier-badge tier-free" style="font-size:0.75rem;padding:3px 9px">Học viên Free</span>`}
+          <a href="upgrade.html" class="btn btn-sm btn-outline" style="font-size:0.78rem;padding:3px 10px;text-decoration:none">
+            Xem bảng so sánh chi tiết →
+          </a>
+        </div>
+      </div>
+    `;
+
+    pricingHost.innerHTML = alertBannerHtml + pkgs.map((pkg) => {
+      const isCurrentPlan = isPro && proInfo && (pkg.id || "").toLowerCase() === (proInfo.pkgId || "").toLowerCase();
+      
+      // Nút hành động chuẩn theo trạng thái auth & pro
+      let actionBtnHtml = "";
+      if (isCurrentPlan) {
+        actionBtnHtml = `
+          <button class="btn btn-outline" disabled style="width:100%;background:rgba(16,185,129,0.1);color:#059669;border-color:#10b981;cursor:default;font-weight:800">
+            ✓ Gói bạn đang sử dụng
+          </button>`;
+      } else {
+        actionBtnHtml = `
+          <button class="btn ${pkg.popular ? "btn-primary" : "btn-outline"} btn-upgrade-pkg" data-pkg="${pkg.id}" style="width:100%;${pkg.popular ? "background:var(--secondary);border-color:var(--secondary);color:#fff" : ""}">
+            ⚡ Kích hoạt qua VietQR ngay
+          </button>`;
+      }
+
+      return `
+      <div class="pricing-card ${pkg.popular ? "popular" : ""} ${isCurrentPlan ? "is-current" : ""}">
+        ${isCurrentPlan ? `<div class="pricing-current-badge">GÓI ĐANG DÙNG ✓</div>` : (pkg.popular ? `<div class="pricing-popular-badge">PHỔ BIẾN NHẤT</div>` : "")}
         <div class="pricing-card-head">
-          <span class="pricing-badge">${esc(pkg.badge)}</span>
+          <span class="pricing-badge">${esc(pkg.badge || "PRO")}</span>
           <h3 class="pricing-title">${esc(pkg.title)}</h3>
           <p class="pricing-desc">${esc(pkg.desc)}</p>
         </div>
@@ -1872,20 +1905,22 @@ function initIndexPage() {
           ${pkg.priceOld ? `<span class="pricing-old">${pkg.priceOld.toLocaleString("vi-VN")} đ</span>` : ""}
         </div>
         <ul class="pricing-features">
-          ${pkg.features.map((f) => `<li><span class="chk">✓</span> <span>${esc(f)}</span></li>`).join("")}
+          ${(pkg.features || []).map((f) => `<li><span class="chk">✓</span> <span>${esc(f)}</span></li>`).join("")}
         </ul>
-        <button class="btn ${pkg.popular ? "btn-primary" : "btn-outline"} btn-upgrade-pkg" data-pkg="${pkg.id}" style="width:100%;${pkg.popular ? "background:var(--secondary);border-color:var(--secondary);color:#fff" : ""}">
-          ⚡ Kích hoạt qua VietQR ngay
-        </button>
-      </div>`
-    ).join("");
+        ${actionBtnHtml}
+      </div>`;
+    }).join("");
 
     pricingHost.querySelectorAll(".btn-upgrade-pkg").forEach((btn) => {
       btn.onclick = () => {
-        Monetization.openUpgradeModal(btn.dataset.pkg);
+        if (typeof Monetization !== "undefined") {
+          Monetization.openUpgradeModal(btn.dataset.pkg);
+        }
       };
     });
-  }
+  };
+
+  window.renderPricingGrid();
 
   // Khởi tạo tương tác Accordion cho FAQ
   document.querySelectorAll(".faq-item button").forEach((btn) => {
@@ -1905,6 +1940,354 @@ function initIndexPage() {
     };
   });
 }
+
+/* =====================================================================
+ * TRANG NÂNG CẤP TÀI KHOẢN PRO (upgrade.html - Chuẩn DauEnglish)
+ * ===================================================================== */
+function initUpgradePage() {
+  const host = el("#upgradeHost");
+  if (!host) return;
+
+  const render = () => {
+    const user = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
+    const isPro = typeof Monetization !== "undefined" ? Monetization.isPro() : false;
+    const proInfo = typeof Monetization !== "undefined" ? Monetization.getProInfo() : null;
+    const pkgs = typeof Monetization !== "undefined" ? Monetization.getPackages() : (typeof PACKAGES !== "undefined" ? PACKAGES : []);
+
+    // 1. KHI CHƯA ĐĂNG NHẬP: Hiển thị giao diện mời đăng nhập chuẩn
+    if (!user) {
+      host.innerHTML = `
+        <div class="upgrade-hero">
+          <span class="upgrade-kicker">👑 NÂNG CẤP TÀI KHOẢN PRO</span>
+          <h1>Mở Khóa Toàn Bộ Đề Thi TRKI & Đồng Hành Cùng AI Rusika</h1>
+          <p>Trang nâng cấp tài khoản dành cho học viên RusiTRKI. Vui lòng đăng nhập để xem thông tin gói cước và ưu đãi dành riêng cho bạn.</p>
+        </div>
+
+        <div class="upgrade-auth-box">
+          <div class="upgrade-auth-icon">🔐</div>
+          <h2>Đăng nhập để xem bảng giá & ưu đãi</h2>
+          <p>Để lưu trữ trọn đời kết quả luyện thi, đồng bộ tiến độ trên mọi thiết bị và gắn quyền PRO vào tài khoản chính chủ, vui lòng đăng nhập trước.</p>
+          <div class="upgrade-auth-actions">
+            <a class="btn btn-primary btn-lg" href="login.html?redirect=upgrade.html" style="text-decoration:none">
+              👉 Đăng nhập với Google / Email
+            </a>
+            <a class="btn btn-outline btn-lg" href="signup.html?redirect=upgrade.html" style="text-decoration:none">
+              ✨ Đăng ký tài khoản mới
+            </a>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // 2. KHI ĐÃ ĐĂNG NHẬP: Hiển thị đầy đủ trang Nâng cấp chuẩn DauEnglish
+    const initials = (user.name || user.email || "?")
+      .split(/\s+/)
+      .map((s) => s[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+    const avatar = user.photo
+      ? `<img src="${esc(user.photo)}" alt="" referrerpolicy="no-referrer" />`
+      : initials;
+
+    host.innerHTML = `
+      <!-- HERO SECTION -->
+      <div class="upgrade-hero">
+        <span class="upgrade-kicker">👑 BẢNG GIÁ DỊCH VỤ & GÓI HỌC VIÊN PRO</span>
+        <h1>Mở Khóa Toàn Diện — Bứt Phá Chứng Chỉ TRKI</h1>
+        <p>Đầu tư thông minh một lần, đồng hành trọn vẹn suốt quá trình luyện thi chứng chỉ ТРКИ và chinh phục học bổng du học Liên bang Nga.</p>
+      </div>
+
+      <!-- USER STRIP -->
+      <div class="upgrade-user-strip">
+        <div class="upgrade-user-info">
+          <div class="user-avatar-small">${avatar}</div>
+          <div>
+            <div class="upgrade-user-name">
+              <span>Học viên:</span> <b>${esc(user.name || "Bạn")}</b>
+              <code class="upgrade-user-email">${esc(user.email || "Khách")}</code>
+            </div>
+            <div class="upgrade-user-tier">
+              Cấp độ tài khoản: ${isPro ? `<span class="user-tier-badge tier-pro">⭐ PRO MEMBER (${esc(proInfo ? proInfo.pkgTitle : "Active")})</span>` : `<span class="user-tier-badge tier-free">Học viên Free</span>`}
+            </div>
+          </div>
+        </div>
+
+        ${isPro ? `
+          <div class="upgrade-pro-active-box">
+            <span>🟢 Gói đang dùng: <b>${esc(proInfo ? proInfo.pkgTitle : "PRO VIP")}</b> (${esc((proInfo && proInfo.expiresFormatted) || "Đang kích hoạt")})</span>
+            <button class="btn btn-sm btn-outline" id="btnManageUpgradePage" style="white-space:nowrap">Quản lý gói</button>
+          </div>
+        ` : `
+          <div class="upgrade-discount-countdown">
+            🔥 Ưu đãi 50% dành riêng cho tài khoản của bạn hôm nay
+          </div>
+        `}
+      </div>
+
+      <!-- PRICING CARDS GRID -->
+      <div class="pricing-grid" style="margin-bottom:60px">
+        ${pkgs.map((pkg) => {
+          const isCurrent = isPro && proInfo && (pkg.id || "").toLowerCase() === (proInfo.pkgId || "").toLowerCase();
+          return `
+          <div class="pricing-card ${pkg.popular ? "popular" : ""} ${isCurrent ? "is-current" : ""}">
+            ${isCurrent ? `<div class="pricing-current-badge">GÓI ĐANG DÙNG ✓</div>` : (pkg.popular ? `<div class="pricing-popular-badge">PHỔ BIẾN NHẤT</div>` : "")}
+            <div class="pricing-card-head">
+              <span class="pricing-badge">${esc(pkg.badge || "PRO")}</span>
+              <h3 class="pricing-title">${esc(pkg.title)}</h3>
+              <p class="pricing-desc">${esc(pkg.desc)}</p>
+            </div>
+            <div class="pricing-price-wrap">
+              <span class="pricing-amount">${pkg.price.toLocaleString("vi-VN")} đ</span>
+              ${pkg.priceOld ? `<span class="pricing-old">${pkg.priceOld.toLocaleString("vi-VN")} đ</span>` : ""}
+            </div>
+            <ul class="pricing-features">
+              ${(pkg.features || []).map((f) => `<li><span class="chk">✓</span> <span>${esc(f)}</span></li>`).join("")}
+            </ul>
+            ${isCurrent ? `
+              <button class="btn btn-outline" disabled style="width:100%;background:rgba(16,185,129,0.1);color:#059669;border-color:#10b981;cursor:default;font-weight:800">
+                ✓ Gói bạn đang sử dụng
+              </button>
+            ` : `
+              <button class="btn ${pkg.popular ? "btn-primary" : "btn-outline"} btn-select-upgrade" data-pkg="${pkg.id}" style="width:100%;${pkg.popular ? "background:var(--secondary);border-color:var(--secondary);color:#fff" : ""}">
+                ⚡ Kích hoạt qua VietQR ngay
+              </button>
+            `}
+          </div>`;
+        }).join("")}
+      </div>
+
+      <!-- BẢNG SO SÁNH CHI TIẾT TÍNH NĂNG (CHUẨN DAUENGLISH FREE VS PRO) -->
+      <section class="comparison-section">
+        <div class="comparison-heading">
+          <span class="section-kicker">SO SÁNH CHI TIẾT</span>
+          <h2>Bảng So Sánh Quyền Lợi: Gói Free vs Gói PRO</h2>
+          <p>Xem toàn bộ danh sách tính năng và sự khác biệt giữa hai tài khoản</p>
+        </div>
+
+        <div class="comparison-table-wrap">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th class="col-feature">Tính năng / Nội dung học</th>
+                <th class="col-free">Tài khoản FREE</th>
+                <th class="col-pro"><span class="pro-crown">👑</span> Gói PRO VIP (Khuyên dùng)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="col-feature"><b>Ngân hàng đề thi thử TRKI</b></td>
+                <td class="col-free">1 đề thi mẫu Part Ngữ pháp A1/A2</td>
+                <td class="col-pro"><b>TOÀN BỘ</b> ngân hàng đề ТРКИ A1, A2, B1, B2 chuẩn quốc tế</td>
+              </tr>
+              <tr>
+                <td class="col-feature"><b>Đáp án & Giải thích chi tiết</b></td>
+                <td class="col-free">Chỉ xem số điểm tổng</td>
+                <td class="col-pro"><b>Chi tiết từng câu</b>: Phân tích ngữ pháp, bẫy trắc nghiệm & dẫn chứng</td>
+              </tr>
+              <tr>
+                <td class="col-feature"><b>Luyện nghe 4 Part CEFR</b></td>
+                <td class="col-free">Nghe thử Part 1</td>
+                <td class="col-pro"><b>Trọn bộ Part 1–4</b>, chỉnh tốc độ 0.75x–1.25x & full transcript song ngữ</td>
+              </tr>
+              <tr>
+                <td class="col-feature"><b>AI Chấm phát âm & Luyện nói</b></td>
+                <td class="col-free">Giới hạn 2 lượt thử/ngày</td>
+                <td class="col-pro"><b>Không giới hạn</b> cùng AI Rusika, so sánh âm vị chuẩn bản xứ</td>
+              </tr>
+              <tr>
+                <td class="col-feature"><b>Luyện viết tự luận (Письмо)</b></td>
+                <td class="col-free">Chấm 1 bài mẫu</td>
+                <td class="col-pro"><b>Không giới hạn</b>, AI chấm 4 tiêu chuẩn TRKI (Ngữ pháp, Từ vựng, Bố cục)</td>
+              </tr>
+              <tr>
+                <td class="col-feature"><b>Kho Lọ từ vựng Spaced Repetition</b></td>
+                <td class="col-free">2 Lọ từ cơ bản</td>
+                <td class="col-pro"><b>Kho 100+ Lọ từ chuyên ngành</b> (Y khoa, Kỹ thuật, Kinh tế, KTX, Du học Nga)</td>
+              </tr>
+              <tr>
+                <td class="col-feature"><b>Series hoạt hình «Хочу в Россию»</b></td>
+                <td class="col-free">2 tập xem thử</td>
+                <td class="col-pro"><b>Trọn bộ các tập độc quyền</b> kèm kịch bản hội thoại và bài tập trắc nghiệm</td>
+              </tr>
+              <tr>
+                <td class="col-feature"><b>Tư vấn du học Nga diện Hiệp định 6730</b></td>
+                <td class="col-free"><span style="color:#94a3b8">✕ Không hỗ trợ</span></td>
+                <td class="col-pro"><b style="color:#059669">✓ Ưu tiên hỗ trợ 1-1</b> qua nhóm Zalo VIP cùng cựu du học sinh</td>
+              </tr>
+              <tr>
+                <td class="col-feature"><b>Ghi chú & Note câu hỏi trong đề</b></td>
+                <td class="col-free">Tối đa 10 câu</td>
+                <td class="col-pro"><b>Tối đa 5.000 câu</b> ghi chú cá nhân</td>
+              </tr>
+              <tr>
+                <td class="col-feature"><b>Kho Từ vựng của tôi (Flashcards)</b></td>
+                <td class="col-free">Tối đa 50 từ</td>
+                <td class="col-pro"><b>Tối đa 10.000 từ</b> ôn tập thuật toán ngắt quãng SM-2</td>
+              </tr>
+              <tr>
+                <td class="col-feature"><b>Trải nghiệm học tập & Tốc độ tải</b></td>
+                <td class="col-free">Băng thông tiêu chuẩn</td>
+                <td class="col-pro"><b>100% Không quảng cáo</b>, máy chủ VIP ưu tiên tốc độ cao</td>
+              </tr>
+              <tr>
+                <td class="col-feature"><b>Đồng bộ dữ liệu đa thiết bị</b></td>
+                <td class="col-free">1 thiết bị duy nhất</td>
+                <td class="col-pro"><b>Đồng bộ đám mây trọn đời</b> (Web, Điện thoại, Máy tính bảng)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- QUY TRÌNH 3 BƯỚC THANH TOÁN VIETQR -->
+      <section class="steps-section">
+        <div style="text-align:center">
+          <span class="section-kicker">KÍCH HOẠT TỨC THÌ</span>
+          <h2 style="font-size:1.6rem;font-weight:800;color:var(--text);margin-bottom:6px">Quy Trình 3 Bước Kích Hoạt Tự Động</h2>
+          <p style="color:var(--muted);font-size:0.92rem">Không cần chụp biên lai hay chờ duyệt thủ công. Hệ thống đối soát tự động 24/7.</p>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <span class="step-num step-card-num">01</span>
+            <div class="step-icon">🎯</div>
+            <div class="step-title">Chọn Gói Cước</div>
+            <div class="step-desc">Chọn gói 6 Tháng, 1 Năm hoặc Trọn Đời phù hợp nhất với mục tiêu học tập của bạn.</div>
+          </div>
+          <div class="step-card">
+            <span class="step-num step-card-num">02</span>
+            <div class="step-icon">📱</div>
+            <div class="step-title">Quét Mã VietQR</div>
+            <div class="step-desc">Mở app Mobile Banking bất kỳ, quét mã VietQR tự động điền sẵn số tài khoản và cú pháp.</div>
+          </div>
+          <div class="step-card">
+            <span class="step-num step-card-num">03</span>
+            <div class="step-icon">⚡</div>
+            <div class="step-title">Mở Khóa Tức Thì</div>
+            <div class="step-desc">Hệ thống xác thực chữ ký điện tử và kích hoạt tài khoản PRO ngay trong 3 giây.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CAM KẾT & ĐẢM BẢO -->
+      <div class="guarantees-grid">
+        <div class="guarantee-card">
+          <div class="guarantee-icon">⚡</div>
+          <div class="guarantee-title">Kích Hoạt Tức Thì</div>
+          <div class="guarantee-desc">Tự động 24/7 kể cả ban đêm và ngày nghỉ.</div>
+        </div>
+        <div class="guarantee-card">
+          <div class="guarantee-icon">🔒</div>
+          <div class="guarantee-title">An Toàn Tuyệt Đối</div>
+          <div class="guarantee-desc">Cổng VietinBank chuẩn bảo mật liên ngân hàng NAPAS.</div>
+        </div>
+        <div class="guarantee-card">
+          <div class="guarantee-icon">🤝</div>
+          <div class="guarantee-title">Hỗ Trợ 1-1</div>
+          <div class="guarantee-desc">Giảng viên và cựu du học sinh Nga trực tiếp đồng hành.</div>
+        </div>
+        <div class="guarantee-card">
+          <div class="guarantee-icon">💎</div>
+          <div class="guarantee-title">Bảo Lưu Trọn Đời</div>
+          <div class="guarantee-desc">Tiến độ học tập và quyền PRO luôn được gắn với email của bạn.</div>
+        </div>
+      </div>
+
+      <!-- FAQ ACCORDION -->
+      <section style="margin:60px 0">
+        <div style="text-align:center;margin-bottom:30px">
+          <span class="section-kicker">HỎI ĐÁP</span>
+          <h2 style="font-size:1.6rem;font-weight:800;color:var(--text);margin-bottom:6px">Câu Hỏi Thường Gặp Về Gói PRO</h2>
+        </div>
+        <div class="faq-list" style="max-width:760px;margin:0 auto">
+          <div class="faq-item">
+            <button type="button">
+              <span>Thanh toán xong thì bao lâu tài khoản được kích hoạt?</span>
+              <i>+</i>
+            </button>
+            <div class="faq-answer">
+              <p>Hệ thống tích hợp cổng thanh toán VietQR tự động của VietinBank. Ngay sau khi bạn quét mã và hoàn tất chuyển khoản, hệ thống sẽ xác thực chữ ký số và kích hoạt tài khoản PRO trong vòng 3 đến 5 giây mà bạn không cần phải F5 hay chờ duyệt tay.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button type="button">
+              <span>Tôi có thể học trên nhiều thiết bị (điện thoại, máy tính) không?</span>
+              <i>+</i>
+            </button>
+            <div class="faq-answer">
+              <p>Có! Quyền lợi PRO và toàn bộ lịch sử thi thử, chuỗi Streak, lọ từ vựng cá nhân được gắn cố định vào tài khoản email của bạn. Bạn có thể đăng nhập trên máy tính xách tay, điện thoại hay iPad và dữ liệu luôn được đồng bộ mượt mà.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button type="button">
+              <span>Gói VIP Trọn Đời có thời hạn như thế nào?</span>
+              <i>+</i>
+            </button>
+            <div class="faq-answer">
+              <p>Gói VIP Trọn Đời không có ngày hết hạn. Bạn sở hữu quyền truy cập vĩnh viễn vào tất cả đề thi hiện tại cũng như toàn bộ đề thi mới được cập nhật hàng năm, kèm theo Hộp quà Nga đặc biệt và Voucher 500k du học Nga.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button type="button">
+              <span>Nếu tôi chuyển khoản sai cú pháp thì xử lý thế nào?</span>
+              <i>+</i>
+            </button>
+            <div class="faq-answer">
+              <p>Đừng lo lắng! Đội ngũ Admin và cựu du học sinh RUSI luôn túc trực hỗ trợ 24/7. Bạn chỉ cần gửi ảnh chụp biên lai qua nhóm Zalo VIP hoặc Fanpage để được kích hoạt thủ công trong 5 phút.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    `;
+
+    // Gắn sự kiện chọn gói cước mở VietQR
+    host.querySelectorAll(".btn-select-upgrade").forEach((btn) => {
+      btn.onclick = () => {
+        if (typeof Monetization !== "undefined") {
+          Monetization.openUpgradeModal(btn.dataset.pkg);
+        }
+      };
+    });
+
+    const manageBtn = host.querySelector("#btnManageUpgradePage");
+    if (manageBtn) {
+      manageBtn.onclick = () => {
+        if (typeof Monetization !== "undefined") {
+          Monetization.openManageModal();
+        }
+      };
+    }
+
+    // Tương tác Accordion FAQ
+    host.querySelectorAll(".faq-item button").forEach((btn) => {
+      btn.onclick = () => {
+        const item = btn.closest(".faq-item");
+        const wasOpen = item.classList.contains("faq-open");
+        host.querySelectorAll(".faq-item").forEach((el) => {
+          el.classList.remove("faq-open");
+          const icon = el.querySelector("i");
+          if (icon) icon.textContent = "+";
+        });
+        if (!wasOpen) {
+          item.classList.add("faq-open");
+          const icon = item.querySelector("i");
+          if (icon) icon.textContent = "−";
+        }
+      };
+    });
+  };
+
+  render();
+
+  // Lắng nghe sự kiện Auth và PRO để re-render tự động
+  if (window.Auth && typeof window.Auth.onChange === "function") {
+    window.Auth.onChange(() => render());
+  }
+  window.addEventListener("trki:pro-updated", () => render());
+}
+window.initUpgradePage = initUpgradePage;
 
 
 /* =====================================================================
@@ -2071,6 +2454,20 @@ function initSrsPage() {
     });
   }
   el("#vocabSearch").addEventListener("input", renderVocabTab);
+  el("#vocabSearch").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const q = (el("#vocabSearch").value || "").trim().toLowerCase();
+      if (!q) return;
+      const allCards = SRS.getCards();
+      const hasMatch = allCards.some(
+        (c) => (c.ru && c.ru.toLowerCase().includes(q)) || (c.vi && c.vi.toLowerCase().includes(q))
+      );
+      if (!hasMatch) {
+        window.location.href = `404.html?q=${encodeURIComponent(q)}&from=vocab`;
+      }
+    }
+  });
   el("#vocabFilter").addEventListener("change", renderVocabTab);
   el("#vocabLevel").addEventListener("change", renderVocabTab);
 
