@@ -1836,7 +1836,6 @@ function renderFooter() {
     </a>
     <p>Học tiếng Nga hiện đại, dễ hiểu và đầy cảm hứng. Hệ sinh thái học tập toàn diện phục vụ luyện thi chứng chỉ, du học và đời sống tại Liên bang Nga.</p>
     <div class="footer-links">
-      <a href="how-to-study.html">Cách học cùng RUSI</a>
       <a href="vocabulary.html">Từ vựng</a>
       <a href="writing.html">Viết</a>
       <a href="listening.html">Nghe</a>
