@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Từ vựng tiếng Nga qua video — Rusi TRKI</title>
+  <title>Kho từ vựng & Lọ từ tiếng Nga — Rusi TRKI</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -13,47 +13,43 @@
 <body data-page="vocabulary">
   <div id="app-header"></div>
 
-  <main class="container" style="padding-top:24px;padding-bottom:60px">
-    <!-- ============== TOP-LEVEL TABS ============== -->
-    <div class="voc-top-tabs-wrap" style="margin:0 0 20px">
-      <nav class="voc-top-tabs">
-        <button class="voc-top-tab active" data-t="jars">
-          <span class="voc-top-icon">🏷️</span>
-          <span class="voc-top-label">Chủ đề</span>
+  <section class="page-hero">
+    <div class="container">
+      <span class="pro-chip" style="margin-bottom:10px">KHO TỪ VỰNG TIẾNG NGA</span>
+      <h1>🏺 Lọ Từ Vựng Theo Chủ Đề</h1>
+      <p>Học từ vựng tiếng Nga theo chủ đề đời sống, kết hợp hệ thống Lọ từ cá nhân và thuật toán Spaced Repetition (SRS) giúp ghi nhớ sâu sắc, phản xạ tự nhiên.</p>
+    </div>
+  </section>
+
+  <main class="container" style="padding-bottom:80px">
+    <!-- ========================================================
+         MAIN DASHBOARD: 1 BÊN CHỦ ĐỀ, 1 BÊN LỌ TỪ CỦA BẠN
+         ======================================================== -->
+    <div class="voc-layout-grid" id="vocMainLayout">
+      <!-- CỘT 1: CHỦ ĐỀ TỪ VỰNG -->
+      <div class="voc-col-main" id="vocColMain">
+        <div id="jarsShelfHost"></div>
+      </div>
+
+      <!-- CỘT 2: LỌ TỪ CỦA BẠN (TIẾN ĐỘ HỌC & CÁC LỌ TỪ TỰ TẠO) -->
+      <aside class="voc-col-sidebar" id="vocSidebarHost"></aside>
+    </div>
+
+    <!-- KHÔNG GIAN HỌC CHI TIẾT (QUIZLET FLASHCARDS / SERIES) -->
+    <div id="jarDetailHost" class="hidden"></div>
+
+    <!-- KHU VỰC THUẬT TOÁN SRS CHUYÊN SÂU -->
+    <div id="vocPaneAlgorithm" class="hidden">
+      <!-- STICKY TOP BACK BAR -->
+      <div class="dau-workspace-back-bar" style="margin-bottom:20px">
+        <button type="button" class="dau-back-btn" id="btnBackFromSrs">
+          ← Quay lại kho từ vựng
         </button>
-        <button class="voc-top-tab" data-t="algorithm" id="vocTopAlgorithm">
-          <span class="voc-top-icon">🗂️</span>
-          <span class="voc-top-label">Lọ từ của bạn</span>
-        </button>
-      </nav>
-    </div>
-
-    <!-- ============== TAB: VOCABULARY JARS ============== -->
-    <div id="vocPaneJars" class="voc-top-pane active">
-      <div id="jarsShelfHost"></div>
-      <div id="jarDetailHost" class="hidden"></div>
-    </div>
-
-    <!-- ============== TAB: LESSONS ============== -->
-    <div id="vocPaneLessons" class="voc-top-pane">
-      <div id="lessonList" class="hidden">
-        <div id="wsTabs"></div>
-        <div class="workspace" id="wsBody"></div>
+        <div class="dau-workspace-info">
+          <span class="dau-badge dau-badge-a1">SPACED REPETITION</span>
+          <span class="dau-workspace-title">🧠 Thuật toán ôn tập ngắt quãng (SM-2)</span>
+        </div>
       </div>
-
-      <div id="gridSeries">
-        <h2 class="grid-title">📚 Series «Хочу в Россию» — hành trình du học sinh</h2>
-        <div class="lesson-grid" id="gridSeriesGrid"></div>
-      </div>
-
-      <div id="gridTopics" class="topic-section">
-        <h2 class="grid-title">🏷️ Chủ đề đời thường</h2>
-        <div class="lesson-grid" id="gridTopicsGrid"></div>
-      </div>
-    </div>
-
-    <!-- ============== TAB: ALGORITHM (SRS) ============== -->
-    <div id="vocPaneAlgorithm" class="voc-top-pane">
 
       <!-- SRS HERO (Fixed layout, no nested container) -->
       <div class="srs-hero-card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;box-shadow:var(--shadow)">

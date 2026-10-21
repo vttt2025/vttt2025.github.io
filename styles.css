@@ -2653,64 +2653,153 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
   min-height: 60px;
 }
 
-/* ============ Vocabulary top tabs (Bài học / Thuật toán) ============ */
-.voc-top-tabs-wrap {
-  display: flex;
-  justify-content: center;
-  margin: 24px 0 20px;
+/* =====================================================================
+ * VOCABULARY UNIFIED 2-COLUMN DASHBOARD (CHỦ ĐỀ & LỌ TỪ CỦA BẠN)
+ * ===================================================================== */
+.voc-layout-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 350px;
+  gap: 28px;
+  align-items: start;
 }
-.voc-top-tabs {
-  display: flex;
-  gap: 6px;
-  background: var(--surface);
-  padding: 6px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  width: 100%;
-  max-width: 560px;
-  box-shadow: var(--shadow);
-}
-.voc-top-tab {
-  flex: 1 1 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  background: transparent;
-  border: none;
-  padding: 12px 16px;
-  border-radius: 10px;
-  font-weight: 600;
-  color: var(--muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-size: 0.94rem;
-  white-space: nowrap;
+
+.voc-col-main {
   min-width: 0;
 }
-.voc-top-icon {
-  font-size: 1.05rem;
+
+.voc-col-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 84px;
+}
+
+.voc-sidebar-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: 0 4px 16px rgba(16, 42, 76, 0.04);
+}
+
+.voc-sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.voc-sidebar-title {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.voc-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.voc-stat-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 10px;
+  text-align: center;
+}
+
+.voc-stat-val {
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.voc-stat-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 600;
+  margin-top: 3px;
+}
+
+.voc-user-jars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.voc-user-jar-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  transition: all 0.2s ease;
+  gap: 10px;
+}
+
+.voc-user-jar-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(23, 87, 166, 0.08);
+}
+
+.voc-user-jar-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.voc-user-jar-icon {
+  font-size: 1.35rem;
   flex-shrink: 0;
 }
-.voc-top-label {
+
+.voc-user-jar-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.voc-user-jar-name {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.voc-top-tab.active {
-  background: var(--primary);
-  color: white;
-  box-shadow: 0 4px 14px rgba(236, 72, 153, 0.25);
-}
-.voc-top-tab:hover:not(.active) {
-  background: var(--primary-soft);
-  color: var(--primary);
-}
-.voc-top-pane { display: none; }
-.voc-top-pane.active { display: block; }
 
-@media (max-width: 560px) {
-  .voc-top-tab { font-size: 0.85rem; padding: 10px 8px; gap: 5px; }
-  .voc-top-label { font-size: 0.85rem; }
+.voc-user-jar-count {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.voc-user-jar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 991px) {
+  .voc-layout-grid {
+    grid-template-columns: 1fr;
+  }
+  .voc-col-sidebar {
+    position: static;
+  }
 }
 
 /* ============ Dictionary (dictionary.html) ============ */

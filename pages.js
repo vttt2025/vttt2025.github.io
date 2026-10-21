@@ -1401,36 +1401,36 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 };
 
 function initVocabPage() {
-  /* ---------- TOP-LEVEL TABS (Lọ từ vựng / Flashcard SRS) ---------- */
-  const topTabs = document.querySelectorAll(".voc-top-tab");
-  const vocPanes = {
-    jars: el("#vocPaneJars"),
-    lessons: el("#vocPaneLessons"),
-    algorithm: el("#vocPaneAlgorithm")
-  };
   let algorithmInited = false;
 
-  const switchTopTab = (t) => {
-    topTabs.forEach((b) => b.classList.toggle("active", b.dataset.t === t));
-    Object.keys(vocPanes).forEach((k) => {
-      const pane = vocPanes[k];
-      if (!pane) return;
-      pane.classList.toggle("active", k === t);
-    });
-    const hero = document.querySelector(".page-hero");
-    if (hero) hero.classList.toggle("hidden", t === "algorithm");
-    if (t === "algorithm" && !algorithmInited) {
+  const showMainLayout = () => {
+    const mainLayout = el("#vocMainLayout");
+    if (mainLayout) mainLayout.classList.remove("hidden");
+    const detail = el("#jarDetailHost");
+    if (detail) detail.classList.add("hidden");
+    const srsPane = el("#vocPaneAlgorithm");
+    if (srsPane) srsPane.classList.add("hidden");
+    renderVocabHub();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const showSrsWorkspace = () => {
+    const mainLayout = el("#vocMainLayout");
+    if (mainLayout) mainLayout.classList.add("hidden");
+    const detail = el("#jarDetailHost");
+    if (detail) detail.classList.add("hidden");
+    const srsPane = el("#vocPaneAlgorithm");
+    if (srsPane) srsPane.classList.remove("hidden");
+    if (!algorithmInited) {
       algorithmInited = true;
       initSrsPage();
     }
-    if (t === "jars") {
-      renderVocabHub();
-    }
+    const backBtn = el("#btnBackFromSrs");
+    if (backBtn) backBtn.onclick = showMainLayout;
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  topTabs.forEach((b) => b.addEventListener("click", () => switchTopTab(b.dataset.t)));
 
-  /* ---------- BỘ LỌC THÔNG MINH DAUENGLISH CHO TỪ VỰNG ---------- */
+  /* ---------- BỘ LỌC THÔNG MINH CHO TỪ VỰNG ---------- */
   let currentLevel = "all";
   let currentCategory = "all";
   let searchQuery = "";
@@ -1478,6 +1478,10 @@ function initVocabPage() {
     if (!shelfHost) return;
     const detail = el("#jarDetailHost");
     if (detail) detail.classList.add("hidden");
+    const mainLayout = el("#vocMainLayout");
+    if (mainLayout) mainLayout.classList.remove("hidden");
+    const srsPane = el("#vocPaneAlgorithm");
+    if (srsPane) srsPane.classList.add("hidden");
     shelfHost.classList.remove("hidden");
 
     const allItems = getCombinedVocabItems();
@@ -1697,6 +1701,175 @@ function initVocabPage() {
         }
       };
     });
+
+    // Render sidebar (Tiến độ học & Lọ từ của bạn)
+    renderVocabSidebar();
+  };
+
+  const renderVocabSidebar = () => {
+    const sidebarHost = el("#vocSidebarHost");
+    if (!sidebarHost) return;
+
+    let stats = { newCount: 0, reviewing: 0, learning: 0, mastered: 0 };
+    let dueCount = 0;
+    if (typeof SRS !== "undefined" && SRS.getState) {
+      try {
+        const st = SRS.getState();
+        stats = SRS.getStats(st);
+        dueCount = SRS.getDueCards(st, 9999).length;
+      } catch (e) {
+        console.warn("SRS stats error:", e);
+      }
+    }
+    const streak = (typeof STORE !== "undefined") ? STORE.get("streak", 0) : 0;
+
+    let customJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
+    if (!customJars || !customJars.length) {
+      customJars = [{
+        id: "custom-jar-default",
+        name: "Lọ từ vựng yêu thích ⭐",
+        icon: "⭐",
+        desc: "Lọ chứa các từ vựng bạn yêu thích và đã lưu",
+        words: [],
+        level: "A1",
+        is_system: false
+      }];
+      if (typeof STORE !== "undefined") STORE.set("custom_jars", customJars);
+    }
+
+    sidebarHost.innerHTML = `
+      <!-- KHỐI 1: TIẾN ĐỘ HỌC (SRS) -->
+      <div class="voc-sidebar-card">
+        <div class="voc-sidebar-header">
+          <h3 class="voc-sidebar-title">
+            <span>📈</span> Tiến độ học từ vựng
+          </h3>
+          <span class="dau-badge dau-badge-a1" style="font-size:0.72rem">THUẬT TOÁN SRS</span>
+        </div>
+
+        <div class="voc-stat-grid">
+          <div class="voc-stat-box">
+            <div class="voc-stat-val" style="color:var(--green, #16a34a)">${stats.mastered || 0}</div>
+            <div class="voc-stat-label">🟢 Đã thuộc</div>
+          </div>
+          <div class="voc-stat-box">
+            <div class="voc-stat-val" style="color:var(--orange, #ea580c)">${dueCount}</div>
+            <div class="voc-stat-label">🔄 Cần ôn tập</div>
+          </div>
+          <div class="voc-stat-box">
+            <div class="voc-stat-val" style="color:var(--blue, #2563eb)">${stats.newCount || 0}</div>
+            <div class="voc-stat-label">🆕 Từ mới</div>
+          </div>
+          <div class="voc-stat-box">
+            <div class="voc-stat-val" style="color:var(--russia-red, #c52233)">🔥 ${streak}</div>
+            <div class="voc-stat-label">Chuỗi ngày</div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <button type="button" class="btn btn-primary btn-sm" id="btnSidebarQuickSrs" style="width:100%;font-weight:700">
+            ⚡ Ôn tập flashcard ngay
+          </button>
+          <button type="button" class="btn btn-soft btn-sm" id="btnSidebarFullSrs" style="width:100%">
+            📊 Xem chi tiết thuật toán SRS
+          </button>
+        </div>
+      </div>
+
+      <!-- KHỐI 2: LỌ TỪ CỦA BẠN (CÁC LỌ DO NGƯỜI DÙNG TẠO) -->
+      <div class="voc-sidebar-card">
+        <div class="voc-sidebar-header">
+          <h3 class="voc-sidebar-title">
+            <span>🏺</span> Lọ từ của bạn
+          </h3>
+          <button type="button" class="btn btn-outline btn-sm" id="btnSidebarCreateJar" style="font-size:0.78rem;padding:3px 8px">
+            + Tạo lọ mới
+          </button>
+        </div>
+
+        <p style="font-size:0.83rem;color:var(--muted);margin:0 0 12px;line-height:1.45">
+          Tập hợp các lọ từ cá nhân bạn đã tạo để gom nhóm từ và ôn luyện riêng.
+        </p>
+
+        <div class="voc-user-jars-list">
+          ${customJars.map(j => {
+            const wCount = (j.words || []).length;
+            const isDefault = j.id === "custom-jar-default";
+            return `
+              <div class="voc-user-jar-item" data-jar-id="${esc(j.id)}">
+                <div class="voc-user-jar-info">
+                  <span class="voc-user-jar-icon">${esc(j.icon || "🏺")}</span>
+                  <div class="voc-user-jar-meta">
+                    <div class="voc-user-jar-name" title="${esc(j.name)}">${esc(j.name)}</div>
+                    <div class="voc-user-jar-count">${wCount} từ vựng</div>
+                  </div>
+                </div>
+                <div class="voc-user-jar-actions">
+                  <button type="button" class="btn btn-soft btn-sm voc-btn-study-jar" data-jar-id="${esc(j.id)}" title="Học lọ này">
+                    Học
+                  </button>
+                  ${!isDefault ? `
+                    <button type="button" class="btn btn-soft btn-sm voc-btn-del-jar" data-jar-id="${esc(j.id)}" data-jar-name="${esc(j.name)}" style="color:var(--red);padding:4px 6px" title="Xóa lọ này">
+                      ✕
+                    </button>
+                  ` : ""}
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+
+        <button type="button" class="btn btn-soft btn-sm" id="btnSidebarCreateJarBottom" style="width:100%;margin-top:12px;border:1px dashed var(--border)">
+          ➕ Thêm lọ từ vựng mới
+        </button>
+
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:10px;text-align:center;line-height:1.4">
+          💡 <i>Nhấn biểu tượng 🏺 trên bất kỳ từ nào để lưu vào lọ</i>
+        </div>
+      </div>
+    `;
+
+    // Event listeners
+    const btnQuick = el("#btnSidebarQuickSrs");
+    if (btnQuick) {
+      btnQuick.onclick = () => {
+        showSrsWorkspace();
+        const quick = el("#quickSession") || el("#startSession");
+        if (quick) quick.click();
+      };
+    }
+
+    const btnFull = el("#btnSidebarFullSrs");
+    if (btnFull) {
+      btnFull.onclick = () => {
+        showSrsWorkspace();
+      };
+    }
+
+    [el("#btnSidebarCreateJar"), el("#btnSidebarCreateJarBottom")].forEach(b => {
+      if (b) b.onclick = () => openCreateJarModal();
+    });
+
+    sidebarHost.querySelectorAll(".voc-btn-study-jar").forEach(btn => {
+      btn.onclick = () => {
+        const jId = btn.dataset.jarId;
+        if (jId) showJarDetail(jId);
+      };
+    });
+
+    sidebarHost.querySelectorAll(".voc-btn-del-jar").forEach(btn => {
+      btn.onclick = () => {
+        const jId = btn.dataset.jarId;
+        const jName = btn.dataset.jarName || "lọ từ này";
+        if (confirm(`Bạn có chắc muốn xóa lọ «${jName}» không?`)) {
+          let jars = STORE.get("custom_jars", []);
+          jars = jars.filter(j => j.id !== jId);
+          STORE.set("custom_jars", jars);
+          toast(`Đã xóa lọ «${jName}»`);
+          renderVocabHub();
+        }
+      };
+    });
   };
 
   const openCreateJarModal = () => {
@@ -1750,6 +1923,10 @@ function initVocabPage() {
     const customJars = STORE.get("custom_jars", []);
     const jar = [...(typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []), ...customJars].find((j) => j.id === jarId);
     if (!jar) return;
+    const mainLayout = el("#vocMainLayout");
+    if (mainLayout) mainLayout.classList.add("hidden");
+    const srsPane = el("#vocPaneAlgorithm");
+    if (srsPane) srsPane.classList.add("hidden");
     const shelf = el("#jarsShelfHost");
     const detail = el("#jarDetailHost");
     if (shelf) shelf.classList.add("hidden");
@@ -1792,10 +1969,7 @@ function initVocabPage() {
       `;
 
       el("#btnBackJars").onclick = () => {
-        detail.classList.add("hidden");
-        shelf.classList.remove("hidden");
-        renderVocabHub();
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        showMainLayout();
       };
 
       if (isCustom) {
@@ -1843,6 +2017,10 @@ function initVocabPage() {
   const showLesson = (id) => {
     const found = VOCAB_LESSONS.find(l => l.id === id);
     if (!found) return;
+    const mainLayout = el("#vocMainLayout");
+    if (mainLayout) mainLayout.classList.add("hidden");
+    const srsPane = el("#vocPaneAlgorithm");
+    if (srsPane) srsPane.classList.add("hidden");
     const shelf = el("#jarsShelfHost");
     const detail = el("#jarDetailHost");
     if (shelf) shelf.classList.add("hidden");
@@ -1886,9 +2064,7 @@ function initVocabPage() {
 
       el("#btnBackLessons").onclick = () => {
         if (playTimer) clearInterval(playTimer);
-        detail.classList.add("hidden");
-        shelf.classList.remove("hidden");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        showMainLayout();
       };
 
       detail.querySelectorAll("[data-lt]").forEach(btn => {
