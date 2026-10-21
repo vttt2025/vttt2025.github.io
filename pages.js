@@ -1410,9 +1410,10 @@ function initVocabPage() {
     if (detail) detail.classList.add("hidden");
     const srsPane = el("#vocPaneAlgorithm");
     if (srsPane) srsPane.classList.add("hidden");
-    renderVocabHub();
+    renderVocabCards();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+  window.exitSrsToVocab = showMainLayout;
 
   const showSrsWorkspace = () => {
     const mainLayout = el("#vocMainLayout");
@@ -1427,7 +1428,9 @@ function initVocabPage() {
     }
     const backBtn = el("#btnBackFromSrs");
     if (backBtn) backBtn.onclick = showMainLayout;
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window.startSrsFlashcardDirectly === "function") {
+      window.startSrsFlashcardDirectly();
+    }
   };
 
   /* ---------- BỘ LỌC THÔNG MINH CHO TỪ VỰNG ---------- */
@@ -1781,8 +1784,6 @@ function initVocabPage() {
     if (btnQuick) {
       btnQuick.onclick = () => {
         showSrsWorkspace();
-        const quick = el("#quickSession") || el("#startSession");
-        if (quick) quick.click();
       };
     }
 
@@ -4844,6 +4845,61 @@ function initSrsPage() {
    * Queue thực sự nằm ở SRS state (state.sessionQueue) — đây là nguồn duy nhất.
    * Khi user chấm Again, _reinsertAfter chèn card lại vào queue thực.
    * showNextCard luôn đọc state.sessionQueue[0] làm thẻ hiện tại. */
+  window.startSrsFlashcardDirectly = function() {
+    document.querySelectorAll(".srs-tab").forEach(b => b.classList.toggle("active", b.dataset.t === "study"));
+    document.querySelectorAll(".srs-tab-pane").forEach(p => p.classList.toggle("active", p.id === "tab-study"));
+    const heroCard = document.querySelector("#vocPaneAlgorithm .srs-hero-card");
+    if (heroCard) heroCard.classList.add("hidden");
+    const srsTabs = document.querySelector("#vocPaneAlgorithm .srs-tabs");
+    if (srsTabs) srsTabs.classList.add("hidden");
+
+    let st = SRS.getState();
+    // 1. Lấy tất cả từ tới hạn ôn theo thuật toán SRS (dueDate <= now)
+    let due = SRS.getDueCards(st, 30);
+    // 2. Tự động tính toán số từ cần học (mục tiêu 10 từ/phiên)
+    let news = [];
+    const targetSessionSize = 10;
+    if (due.length < targetSessionSize) {
+      const neededNew = targetSessionSize - due.length;
+      news = SRS.getNewCards(st, "all", neededNew);
+    }
+    // 3. Nếu cả due và news đều trống (đã học hết kho từ), lấy các từ đang học sắp tới hạn
+    if (due.length === 0 && news.length === 0) {
+      const allCards = Object.values(st.cards).filter(c => !c.mastered);
+      if (allCards.length > 0) {
+        due = allCards.sort((a, b) => (a.dueDate || 0) - (b.dueDate || 0)).slice(0, targetSessionSize);
+      } else {
+        news = (typeof SRS_WORDS !== "undefined" ? SRS_WORDS : []).slice(0, targetSessionSize);
+      }
+    }
+
+    // Đưa từ mới vào danh sách thẻ
+    news.forEach(w => SRS.ensureCard(w));
+    st = SRS.getState();
+
+    const queue = [...due.map(c => c.id), ...news.map(w => SRS.cardId(w))];
+    st.sessionQueue = queue;
+    st.sessionInserted = [];
+    st.sessionDone = [];
+    SRS.saveState(st);
+
+    sessionCtx = {
+      mode: "flashcard",
+      totalAtStart: queue.length,
+      results: [],
+      doneAt: { again: 0, hard: 0, good: 0, easy: 0, mastered: 0 },
+      startedAt: Date.now()
+    };
+
+    el("#studySetup").classList.add("hidden");
+    el("#studySession").classList.remove("hidden");
+    el("#studyDone").classList.add("hidden");
+    el("#modeLabel").textContent = "🃏 Flashcard Ôn tập";
+
+    showNextCard();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   function startSession({ level, newLimit, mode, onlyDue = false }) {
     let st = SRS.getState();
     let due = SRS.getDueCards(st, 50);
@@ -5194,7 +5250,13 @@ function initSrsPage() {
 
   /* ---------- BUTTONS ---------- */
   el("#exitSession").onclick = () => {
-    if (confirm("Thoát phiên học? Tiến độ đã chấm sẽ được lưu.")) endSession();
+    if (confirm("Thoát phiên học? Tiến độ đã chấm sẽ được lưu.")) {
+      if (typeof window.exitSrsToVocab === "function") {
+        window.exitSrsToVocab();
+      } else {
+        endSession();
+      }
+    }
   };
 
   document.querySelectorAll(".rate-btn").forEach((btn) => {
@@ -5226,10 +5288,20 @@ function initSrsPage() {
   }
   el("#doneAgain").onclick = () => {
     el("#studyDone").classList.add("hidden");
-    const lastMode = sessionCtx ? sessionCtx.mode : "flashcard";
-    startSession({ level: el("#setupLevel").value, newLimit: +el("#setupNew").value || 8, mode: lastMode });
+    if (typeof window.startSrsFlashcardDirectly === "function") {
+      window.startSrsFlashcardDirectly();
+    } else {
+      const lastMode = sessionCtx ? sessionCtx.mode : "flashcard";
+      startSession({ level: el("#setupLevel").value, newLimit: +el("#setupNew").value || 8, mode: lastMode });
+    }
   };
-  el("#doneBack").onclick = endSession;
+  el("#doneBack").onclick = () => {
+    if (typeof window.exitSrsToVocab === "function") {
+      window.exitSrsToVocab();
+    } else {
+      endSession();
+    }
+  };
 
   /* ---------- RESET ---------- */
   el("#resetSrs").onclick = () => {
