@@ -2,6 +2,7 @@ const VOCAB_LESSONS = [
   {
     id: "ep1",
     type: "series",
+    level: "A1",
     ep: 1,
     ru: "Собираю чемодан",
     vi: "Tập 1 — Chuẩn bị hành lý",
@@ -38,6 +39,7 @@ const VOCAB_LESSONS = [
   {
     id: "ep2",
     type: "series",
+    level: "A1",
     ep: 2,
     ru: "В самолёте",
     vi: "Tập 2 — Trên chuyến bay",
@@ -74,6 +76,7 @@ const VOCAB_LESSONS = [
   {
     id: "ep3",
     type: "series",
+    level: "A2",
     ep: 3,
     ru: "Первый день в университете",
     vi: "Tập 3 — Ngày đầu nhập học",
@@ -110,6 +113,7 @@ const VOCAB_LESSONS = [
   {
     id: "sport",
     type: "topic",
+    level: "A1",
     ru: "Спорт",
     vi: "Chủ đề — Thể thao",
     scene: "⚽",
@@ -144,6 +148,7 @@ const VOCAB_LESSONS = [
   {
     id: "food",
     type: "topic",
+    level: "A1",
     ru: "Готовим обед",
     vi: "Chủ đề — Ăn uống, nấu ăn",
     scene: "🍲",
@@ -178,6 +183,7 @@ const VOCAB_LESSONS = [
   {
     id: "shop",
     type: "topic",
+    level: "A2",
     ru: "В магазине",
     vi: "Chủ đề — Mua sắm",
     scene: "🛒",
@@ -207,6 +213,139 @@ const VOCAB_LESSONS = [
       { ru: "Я ___ хлеб и молоко.", q: "Chọn từ đúng: Я ___ хлеб и молоко. (tôi mua bánh mì và sữa)", options: ["покупаю", "плачу", "стою", "иду"], a: 0, ex: "покупать = mua; платить = trả tiền" },
       { q: "«дёшево» nghĩa là gì?", options: ["Đắt", "Rẻ", "Giảm giá", "Miễn phí"], a: 1 },
       { ru: "Я плачу ___ кассе.", q: "Chọn giới từ đúng: Я плачу ___ кассе. (tôi thanh toán ở quầy)", options: ["на", "в", "о", "за"], a: 0, ex: "на кассе — cách 6, nơi chốn" }
+    ]
+  },
+  {
+    id: "ep4",
+    type: "series",
+    level: "B1",
+    ep: 4,
+    ru: "В поликлинике и аптеке",
+    vi: "Tập 4 — Khám bệnh & Mua thuốc",
+    scene: "🏥",
+    story: "Mùa đông tuyết rơi, Anya bị cảm sốt và đến phòng khám sinh viên khám, sau đó ra hiệu thuốc mua thuốc theo đơn.",
+    script: [
+      { ru: "На улице мороз минус двадцать градусов. Аня простудилась.", vi: "Ngoài trời rét âm 20 độ. Anya bị cảm lạnh." },
+      { ru: "У неё высокая температура, болит горло и сильный кашель.", vi: "Cô bị sốt cao, đau họng và ho nhiều." },
+      { ru: "Она берёт студенческий полис и идёт в поликлинику к терапевту.", vi: "Cô cầm thẻ bảo hiểm y tế sinh viên và tới phòng khám gặp bác sĩ đa khoa." },
+      { ru: "Врач слушает лёгкие и выписывает рецепт на антибиотики и сироп.", vi: "Bác sĩ nghe phổi và kê đơn thuốc kháng sinh cùng si-rô ho." },
+      { ru: "В аптеке фармацевт объясняет, как принимать лекарство: два раза в день после еды.", vi: "Ở hiệu thuốc, dược sĩ hướng dẫn cách uống thuốc: 2 lần mỗi ngày sau ăn." },
+      { ru: "Через три дня Ане стало намного лучше!", vi: "Sau ba ngày, Anya đã đỡ hơn rất nhiều!" }
+    ],
+    words: [
+      { ru: "простудиться", vi: "bị cảm lạnh", note: "động từ hoàn thành thể" },
+      { ru: "температура", vi: "nhiệt độ, sốt", note: "высокая температура = sốt cao" },
+      { ru: "болеть", vi: "bị đau / ốm", note: "у меня болит голова/горло" },
+      { ru: "терапевт", vi: "bác sĩ nội khoa", note: "danh từ nam" },
+      { ru: "выписать рецепт", vi: "kê đơn thuốc", note: "cụm động từ" },
+      { ru: "аптека", vi: "hiệu thuốc", note: "danh từ nữ" },
+      { ru: "лекарство", vi: "thuốc men", note: "danh từ trung" },
+      { ru: "принимать лекарство", vi: "uống thuốc", note: "принимать два раза в день" },
+      { ru: "выздороветь", vi: "khỏi bệnh", note: "động từ hoàn thành thể" },
+      { ru: "кашель / насморк", vi: "cơn ho / sổ mũi", note: "triệu chứng cảm lạnh" }
+    ],
+    quiz: [
+      { q: "«болит горло» nghĩa là gì?", options: ["đau bụng", "đau họng", "đau đầu", "đau chân"], a: 1 },
+      { q: "«выписать рецепт» là hành động của ai?", options: ["bệnh nhân", "bác sĩ", "dược sĩ", "lễ tân"], a: 1 },
+      { ru: "Нужно принимать лекарство два раза в день ___ еды.", q: "Điền giới từ đúng: ... ___ еды. (sau bữa ăn)", options: ["после", "до", "во время", "без"], a: 0, ex: "после + cách 2: sau khi..." },
+      { q: "Anya đi đâu mua thuốc?", options: ["В магазин", "В аптеку", "В деканат", "В библиотеку"], a: 1 }
+    ]
+  },
+  {
+    id: "ep5",
+    type: "series",
+    level: "B1",
+    ep: 5,
+    ru: "Оформление визы и регистрации",
+    vi: "Tập 5 — Gia hạn Visa & Thủ tục cư trú",
+    scene: "🏛️",
+    story: "Hết hạn visa 90 ngày, Anya lên phòng quan hệ quốc tế làm thủ tục gia hạn visa du học 1 năm và đăng ký tạm trú.",
+    script: [
+      { ru: "Первая учебная виза выдаётся только на девяносто дней.", vi: "Thị thực du học ban đầu chỉ có giá trị 90 ngày." },
+      { ru: "Аня идёт в отдел международных связей университета.", vi: "Anya đến phòng hợp tác quốc tế của trường." },
+      { ru: "Инспектор проверяет миграционную карту, паспорт и договор на обучение.", vi: "Chuyên viên kiểm tra tờ khai di trú, hộ chiếu và hợp đồng đào tạo." },
+      { ru: "Нужно оплатить госпошлину за многократную визу в банке.", vi: "Cần nộp lệ phí nhà nước cho thị thực nhiều lần tại ngân hàng." },
+      { ru: "Через две недели Аня получает паспорт с новой годовой визой.", vi: "Sau hai tuần, Anya nhận lại hộ chiếu với visa mới thời hạn 1 năm." },
+      { ru: "Теперь она может спокойно учиться и путешествовать по России!", vi: "Giờ cô có thể yên tâm học tập và du lịch khắp nước Nga!" }
+    ],
+    words: [
+      { ru: "виза", vi: "thị thực, visa", note: "учебная виза = visa du học" },
+      { ru: "регистрация", vi: "đăng ký tạm trú", note: "thủ tục bắt buộc tại Nga" },
+      { ru: "миграционная карта", vi: "tờ khai xuất nhập cảnh", note: "cần giữ cẩn thận" },
+      { ru: "продление", vi: "sự gia hạn", note: "продление визы" },
+      { ru: "госпошлина", vi: "lệ phí nhà nước", note: "nộp qua ngân hàng Sber" },
+      { ru: "многократная виза", vi: "visa nhiều lần", note: "cho phép xuất nhập cảnh tự do" },
+      { ru: "паспортный стол", vi: "bộ phận quản lý cư trú", note: "tại ký túc xá hoặc trường" },
+      { ru: "срок действия", vi: "thời hạn hiệu lực", note: "hạn sử dụng của visa" }
+    ],
+    quiz: [
+      { q: "«многократная виза» cho phép điều gì?", options: ["Chỉ nhập cảnh 1 lần", "Xuất nhập cảnh nhiều lần", "Không cần hộ chiếu", "Miễn thị thực"], a: 1 },
+      { q: "«госпошлина» là gì?", options: ["Lệ phí nhà nước", "Học phí", "Tiền ký túc xá", "Tiền bảo hiểm"], a: 0 },
+      { q: "Tờ giấy nào được phát khi nhập cảnh ở sân bay Nga?", options: ["Thẻ sinh viên", "Миграционная карта", "Bằng tốt nghiệp", "Hóa đơn"], a: 1 }
+    ]
+  },
+  {
+    id: "culture",
+    type: "topic",
+    level: "B2",
+    ru: "Русский балет и Большой театр",
+    vi: "Chủ đề — Nghệ thuật & Nhà hát Bolshoi",
+    scene: "🎭",
+    story: "Khám phá cái nôi của nghệ thuật kinh điển Nga: từ vở ba lê Hồ Thiên Nga đến kiến trúc tráng lệ của Nhà hát Lớn Moskva.",
+    script: [
+      { ru: "Большой театр — один из старейших и самых знаменитых театров оперы и балета в мире.", vi: "Nhà hát Lớn là một trong những nhà hát opera và ballet cổ kính và nổi tiếng nhất thế giới." },
+      { ru: "Здание театра украшает знаменитая квадрига Аполлона скульптора Клодта.", vi: "Tòa nhà nhà hát được trang trí bởi cỗ xe tứ mã nổi tiếng của thần Apollo do nhà điêu khắc Klodt tạo tác." },
+      { ru: "Сегодня дают балет Петра Ильича Чайковского «Лебединое озеро».", vi: "Hôm nay công diễn vở múa ba lê «Hồ thiên nga» của Pyotr Ilyich Tchaikovsky." },
+      { ru: "Зрители в вечерних нарядах занимают места в партере и ложах.", vi: "Khán giả trong trang phục dạ hội trang trọng ngồi vào ghế ở tầng trệt và các khán phòng riêng." },
+      { ru: "Великолепная музыка оркестра и грация балерин вызывают бурные аплодисменты.", vi: "Âm nhạc tuyệt mỹ của dàn nhạc giao hưởng và nét duyên dáng của các vũ công tạo nên tràng pháo tay vang dội." },
+      { ru: "В антракте посетители прогуливаются по залам и пьют кофе в буфете.", vi: "Trong giờ giải lao, du khách dạo bước quanh các đại sảnh và thưởng thức cà phê tại quầy trà." }
+    ],
+    words: [
+      { ru: "балет", vi: "vở ba-lê", note: "nghệ thuật múa cổ điển Nga" },
+      { ru: "партер", vi: "tầng trệt rạp hát", note: "vị trí hàng ghế chính" },
+      { ru: "ложа", vi: "khán phòng riêng", note: "danh từ nữ" },
+      { ru: "антракт", vi: "giờ nghỉ giữa hiệp", note: "giải lao trong kịch" },
+      { ru: "аплодисменты", vi: "tràng vỗ tay", note: "danh từ số nhiều" },
+      { ru: "оркестр", vi: "dàn nhạc giao hưởng", note: "danh từ nam" },
+      { ru: "премьера", vi: "buổi công chiếu đầu tiên", note: "danh từ nữ" },
+      { ru: "восторженный", vi: "hào hứng, say mê", note: "tính từ" }
+    ],
+    quiz: [
+      { q: "Ai sáng tác vở ba-lê «Лебединое озеро»?", options: ["П. И. Чайковский", "А. С. Пушкин", "Л. Н. Толстой", "С. В. Рахманинов"], a: 0 },
+      { q: "«антракт» trong rạp hát là gì?", options: ["Màn mở đầu", "Giờ giải lao giữa các hồi", "Buổi biểu diễn lại", "Vé mời"], a: 1 },
+      { q: "«партер» là vị trí nào?", options: ["Hàng ghế dưới mặt sàn rạp", "Trên ban công cao nhất", "Hậu trường", "Sân khấu"], a: 0 }
+    ]
+  },
+  {
+    id: "career",
+    type: "topic",
+    level: "B2",
+    ru: "Собеседование и резюме",
+    vi: "Chủ đề — Phỏng vấn & Hồ sơ việc làm",
+    scene: "💼",
+    story: "Kinh nghiệm phỏng vấn tuyển dụng, viết резюме chuẩn Nga và đàm phán hợp đồng lao động tại các tập đoàn quốc tế.",
+    script: [
+      { ru: "Перед собеседованием важно грамотно составить резюме на русском языке.", vi: "Trước buổi phỏng vấn, điều cốt yếu là soạn thảo một bản CV chuẩn mực bằng tiếng Nga." },
+      { ru: "В резюме указывают образование, опыт работы, ключевые навыки и знание языков.", vi: "Trong CV nêu rõ học vấn, kinh nghiệm công tác, kỹ năng trọng tâm và trình độ ngoại ngữ." },
+      { ru: "Рекрутер задаёт вопросы о ваших профессиональных достижениях и сильных сторонах.", vi: "Nhà tuyển dụng đặt câu hỏi về thành tựu chuyên môn và thế mạnh của bạn." },
+      { ru: "«Почему вы хотите работать именно в нашей IT-компании?» — стандартный вопрос.", vi: "«Vì sao bạn muốn cống hiến cho công ty công nghệ của chúng tôi?» — một câu hỏi điển hình." },
+      { ru: "Кандидат уверенно рассказывает о своих успешных проектах и готовности развиваться.", vi: "Ứng viên tự tin thuyết minh về những dự án thành công và tinh thần học hỏi." },
+      { ru: "После встречи стороны обсуждают испытательный срок и уровень заработной платы.", vi: "Sau cuộc trao đổi, hai bên thảo luận về thời gian thử việc và mức lương đãi ngộ." }
+    ],
+    words: [
+      { ru: "собеседование", vi: "buổi phỏng vấn xin việc", note: "danh từ trung" },
+      { ru: "резюме", vi: "sơ yếu lý lịch, CV", note: "không biến cách" },
+      { ru: "вакансия", vi: "vị trí tuyển dụng còn trống", note: "danh từ nữ" },
+      { ru: "работодатель", vi: "nhà tuyển dụng", note: "danh từ nam" },
+      { ru: "испытательный срок", vi: "thời gian thử việc", note: "thường là 3 tháng" },
+      { ru: "заработная плата", vi: "tiền lương (зарплата)", note: "danh từ nữ" },
+      { ru: "навык", vi: "kỹ năng", note: "профессиональные навыки" },
+      { ru: "достижение", vi: "thành tích, thành tựu", note: "danh từ trung" }
+    ],
+    quiz: [
+      { q: "«резюме» trong ngữ cảnh tìm việc là gì?", options: ["Đơn xin nghỉ phép", "CV / Sơ yếu lý lịch ứng tuyển", "Hợp đồng thuê nhà", "Bằng lái xe"], a: 1 },
+      { q: "«испытательный срок» nghĩa là gì?", options: ["Thời gian thử việc", "Hạn nộp hồ sơ", "Giờ làm thêm", "Kỳ nghỉ phép năm"], a: 0 },
+      { ru: "Кандидат успешно прошёл ___.", q: "Điền từ đúng: ... прошёл ___. (vượt qua buổi phỏng vấn)", options: ["собеседование", "билет", "чемодан", "вокзал"], a: 0 }
     ]
   }
 ];
@@ -351,8 +490,15 @@ const LISTENING_LESSONS = [
   {
     id: "lis-airport",
     title: "В аэропорту",
-    vi: "Ở sân bay — hội thoại nhập môn",
-    level: "ТРКИ ТЭУ (Sơ cấp)",
+    vi: "Ở sân bay — làm thủ tục, kiểm tra an ninh",
+    level: "A1",
+    levelName: "Sơ cấp A1",
+    category: "airport",
+    categoryName: "Sân bay & Du lịch",
+    estMinutes: 12,
+    icon: "✈️",
+    partNumber: 1,
+    is_pro_only: false,
     lines: [
       { who: "Nhân viên", ru: "Ваш паспорт и билет, пожалуйста.", vi: "Xin hộ chiếu và vé của anh/chị." },
       { who: "Аня", ru: "Вот, пожалуйста.", vi: "Đây ạ." },
@@ -384,8 +530,15 @@ const LISTENING_LESSONS = [
   {
     id: "lis-shop",
     title: "В магазине",
-    vi: "Ở cửa hàng — hỏi giá, mua đồ",
-    level: "ТРКИ ТЭУ (Sơ cấp)",
+    vi: "Ở siêu thị — hỏi giá hàng & thanh toán",
+    level: "A1",
+    levelName: "Sơ cấp A1",
+    category: "shop",
+    categoryName: "Mua sắm & Siêu thị",
+    estMinutes: 12,
+    icon: "🛒",
+    partNumber: 1,
+    is_pro_only: false,
     lines: [
       { who: "Аня", ru: "Извините, сколько стоит хлеб?", vi: "Xin lỗi, bánh mì giá bao nhiêu ạ?" },
       { who: "Nhân viên", ru: "Хлеб стоит 50 рублей.", vi: "Bánh mì giá 50 rúp." },
@@ -410,44 +563,289 @@ const LISTENING_LESSONS = [
       { q: "Sữa ở đâu trong cửa hàng?", options: ["Bên phải", "Bên trái", "Ở quầy thu ngân", "Tầng hai"], a: 1 },
       { q: "Khách thanh toán ở đâu?", options: ["Tại chỗ", "Ở cửa ra", "Ở quầy thu ngân (касса)", "Gửi tiền trước"], a: 2 }
     ]
+  },
+  {
+    id: "lis-dorm",
+    title: "В общежитии",
+    vi: "Tại ký túc xá — nhận chìa khóa, nội quy sinh hoạt",
+    level: "A2",
+    levelName: "Cơ bản A2",
+    category: "dorm",
+    categoryName: "Ký túc xá & Đời sống",
+    estMinutes: 15,
+    icon: "🏢",
+    partNumber: 2,
+    is_pro_only: false,
+    lines: [
+      { who: "Комендант", ru: "Здравствуйте! Вот ваш ключ от комнаты 412.", vi: "Chào em! Đây là chìa khóa phòng 412 của em." },
+      { who: "Студент", ru: "Спасибо! А на каком этаже прачечная?", vi: "Cảm ơn cô! Còn phòng giặt là ở tầng mấy ạ?" },
+      { who: "Комендант", ru: "Прачечная на цокольном этаже, работает с восьми утра до десяти вечера.", vi: "Phòng giặt ở tầng bán hầm, mở từ 8h sáng tới 10h tối." },
+      { who: "Студент", ru: "Нужно ли записываться заранее?", vi: "Có cần đăng ký trước không ạ?" },
+      { who: "Комендант", ru: "Да, журнал записи лежит у дежурного на вахте.", vi: "Có, sổ đăng ký để ở chỗ bảo vệ trực cổng." },
+      { who: "Студент", ru: "Понятно, спасибо за информацию!", vi: "Em hiểu rồi, cảm ơn cô đã hướng dẫn!" }
+    ],
+    blanks: [
+      { before: "Вот ваш ключ от", blank: "комнаты", after: "412.", hint: "phòng" },
+      { before: "Прачечная на", blank: "цокольном", after: "этаже.", hint: "bán hầm" },
+      { before: "Журнал записи лежит у", blank: "дежурного", after: "на вахте.", hint: "người trực" }
+    ],
+    dictation: [
+      "Вот ваш ключ от комнаты 412.",
+      "Прачечная на цокольном этаже.",
+      "Спасибо за информацию!"
+    ],
+    questions: [
+      { q: "Phòng của sinh viên ở số mấy?", options: ["312", "412", "512", "214"], a: 1 },
+      { q: "Phòng giặt là mở cửa đến mấy giờ?", options: ["Đến 20:00", "Đến 21:00", "Đến 22:00 (mười giờ tối)", "Mở 24/7"], a: 2 },
+      { q: "Sổ đăng ký giặt nằm ở đâu?", options: ["Trong phòng sinh viên", "Ở phòng dekanat", "Ở quầy trực bảo vệ (вахта)", "Trên tầng 4"], a: 2 }
+    ]
+  },
+  {
+    id: "lis-cafe",
+    title: "В кафе «Теремок»",
+    vi: "Tại quán ăn Nga — gọi bánh xèo blini & nước uống",
+    level: "A2",
+    levelName: "Cơ bản A2",
+    category: "cafe",
+    categoryName: "Ẩm thực & Quán ăn",
+    estMinutes: 15,
+    icon: "🥞",
+    partNumber: 2,
+    is_pro_only: false,
+    lines: [
+      { who: "Кассир", ru: "Добрый день! Что будете заказывать?", vi: "Kính chào quý khách! Quý khách muốn dùng gì ạ?" },
+      { who: "Аня", ru: "Мне, пожалуйста, блин с ветчиной и сыром, и тарелку борща.", vi: "Cho tôi một bánh blini kẹp giăm bông phô mai và một bát súp củ dền borscht." },
+      { who: "Кассир", ru: "Сметану к борщу добавить?", vi: "Có cho thêm váng sữa smetana vào súp không ạ?" },
+      { who: "Аня", ru: "Да, обязательно. И горячий морс, пожалуйста.", vi: "Vâng, chắc chắn rồi ạ. Và một ly nước ép quả mọng nóng nữa." },
+      { who: "Кассир", ru: "С вас 480 рублей. Оплата картой?", vi: "Của bạn hết 480 rúp. Bạn thanh toán thẻ chứ ạ?" },
+      { who: "Аня", ru: "Да, приложила карту. Спасибо!", vi: "Vâng, tôi đã chạm thẻ. Cảm ơn bạn!" }
+    ],
+    blanks: [
+      { before: "Мне, пожалуйста,", blank: "блин", after: "с ветчиной и сыром.", hint: "bánh xèo blini" },
+      { before: "Сметану к борщу", blank: "добавить", after: "?", hint: "thêm vào" },
+      { before: "И горячий", blank: "морс", after: ", пожалуйста.", hint: "nước quả mọng" }
+    ],
+    dictation: [
+      "Что будете заказывать?",
+      "Мне, пожалуйста, тарелку борща.",
+      "С вас 480 рублей."
+    ],
+    questions: [
+      { q: "Anya gọi loại bánh xèo blini nào?", options: ["Nhân ngọt mật ong", "Nhân cá hồi", "Nhân giăm bông & phô mai", "Nhân nấm"], a: 2 },
+      { q: "Món đồ uống nào được gọi kèm?", options: ["Trà đen", "Cà phê sữa", "Mors nóng (nước quả mọng)", "Nước khoáng"], a: 2 },
+      { q: "Tổng số tiền bữa ăn là bao nhiêu?", options: ["350 rúp", "480 rúp", "520 rúp", "600 rúp"], a: 1 }
+    ]
+  },
+  {
+    id: "lis-campus",
+    title: "В деканате и библиотеке",
+    vi: "Tại phòng giáo vụ & thư viện — làm thẻ bạn đọc",
+    level: "B1",
+    levelName: "Trung cấp B1",
+    category: "campus",
+    categoryName: "Trường học & Thư viện",
+    estMinutes: 18,
+    icon: "📚",
+    partNumber: 3,
+    is_pro_only: true,
+    lines: [
+      { who: "Сотрудник", ru: "Здравствуйте! Для оформления читательского билета нужен студенческий билет и одна фотография.", vi: "Chào bạn! Để làm thẻ thư viện cần thẻ sinh viên và một tấm ảnh." },
+      { who: "Студент", ru: "Вот документы. Скажите, на какой срок выдаются учебники?", vi: "Đây là giấy tờ ạ. Xin hỏi giáo trình được mượn trong bao lâu?" },
+      { who: "Сотрудник", ru: "Учебная литература выдаётся на весь семестр, а художественная — на две недели с правом продления.", vi: "Sách giáo trình được mượn trọn học kỳ, còn tác phẩm văn học là 2 tuần và có thể gia hạn." },
+      { who: "Студент", ru: "Есть ли доступ к электронным базам данных?", vi: "Thư viện có quyền truy cập cơ sở dữ liệu điện tử không ạ?" },
+      { who: "Сотрудник", ru: "Да, логин и пароль вы получите по университетской электронной почте.", vi: "Có, bạn sẽ nhận được tài khoản và mật khẩu qua email sinh viên của trường." }
+    ],
+    blanks: [
+      { before: "Для оформления", blank: "читательского билета", after: "нужен студенческий.", hint: "thẻ bạn đọc" },
+      { before: "Учебная литература выдаётся на весь", blank: "семестр", after: ".", hint: "học kỳ" },
+      { before: "Есть ли доступ к электронным", blank: "базам данных", after: "?", hint: "cơ sở dữ liệu" }
+    ],
+    dictation: [
+      "Для оформления читательского билета нужен студенческий.",
+      "Учебная литература выдаётся на весь семестр.",
+      "Логин и пароль вы получите по почте."
+    ],
+    questions: [
+      { q: "Giấy tờ nào cần thiết để làm thẻ thư viện?", options: ["Hộ chiếu và visa", "Thẻ sinh viên và một bức ảnh", "Học bạ THPT", "Giấy khám sức khỏe"], a: 1 },
+      { q: "Sách giáo trình được mượn trong thời hạn bao lâu?", options: ["1 tháng", "2 tuần", "Suốt cả học kỳ", "1 năm"], a: 2 },
+      { q: "Thông tin đăng nhập thư viện số được gửi qua đâu?", options: ["Qua tin nhắn SMS", "Trực tiếp qua thư ký", "Qua email của trường", "Qua Zalo"], a: 2 }
+    ]
+  },
+  {
+    id: "lis-metro",
+    title: "Объявления в метро",
+    vi: "Thông báo trên tàu điện ngầm Moskva — đổi tuyến & hướng đi",
+    level: "B1",
+    levelName: "Trung cấp B1",
+    category: "metro",
+    categoryName: "Giao thông công cộng",
+    estMinutes: 15,
+    icon: "🚇",
+    partNumber: 3,
+    is_pro_only: true,
+    lines: [
+      { who: "Диктор", ru: "Осторожно, двери закрываются. Следующая станция — «Театральная».", vi: "Xin chú ý, cửa đang đóng. Ga tiếp theo là «Teatralnaya»." },
+      { who: "Диктор", ru: "Станция «Театральная». Переход на станции «Охотный ряд» и «Площадь Революции».", vi: "Ga «Teatralnaya». Chuyển sang tuyến ga «Okhotny Ryad» và ga «Quảng trường Cách mạng»." },
+      { who: "Пассажир", ru: "Молодой человек, вы выходите на следующей станции?", vi: "Bạn trẻ ơi, bạn có xuống ở ga tiếp theo không?" },
+      { who: "Студент", ru: "Да, выхожу. Проходите, пожалуйста.", vi: "Dạ có, cháu xuống ạ. Xin mời bác đi lên trước." }
+    ],
+    blanks: [
+      { before: "Осторожно,", blank: "двери закрываются", after: ".", hint: "cửa đang đóng" },
+      { before: "Переход на станции", blank: "Охотный ряд", after: ".", hint: "tên ga chuyển" },
+      { before: "Вы выходите на", blank: "следующей", after: "станции?", hint: "tiếp theo" }
+    ],
+    dictation: [
+      "Осторожно, двери закрываются.",
+      "Следующая станция — Театральная.",
+      "Переход на станцию Охотный ряд."
+    ],
+    questions: [
+      { q: "Câu nói quen thuộc của loa phát thanh tàu điện ngầm là gì?", options: ["Поезд прибывает", "Осторожно, двери закрываются", "Вход свободный", "Конечная остановка"], a: 1 },
+      { q: "Ở ga Teatralnaya có thể chuyển sang tuyến ga nào?", options: ["Arbatskaya", "Okhotny Ryad & Ploshchad Revolyutsii", "Universitet", "VDNKh"], a: 1 },
+      { q: "Hành khách thường hỏi câu gì khi chuẩn bị xuống ga đông người?", options: ["Сколько времени?", "Вы выходите на следующей станции?", "Где метро?", "Как дела?"], a: 1 }
+    ]
+  },
+  {
+    id: "lis-interview",
+    title: "Интервью о космонавтике",
+    vi: "Phỏng vấn giáo sư Đại học Quốc gia Nga — ngành vũ trụ",
+    level: "B2",
+    levelName: "Nâng cao B2",
+    category: "interview",
+    categoryName: "Phỏng vấn chuyên sâu",
+    estMinutes: 20,
+    icon: "🚀",
+    partNumber: 4,
+    is_pro_only: true,
+    lines: [
+      { who: "Ведущий", ru: "Здравствуйте, уважаемые радиослушатели! Сегодня наш гость — профессор МГУ, специалист по астрофизике.", vi: "Kính chào quý thính giả! Vị khách hôm nay là giáo sư MGU, chuyên gia vật lý thiên văn." },
+      { who: "Профессор", ru: "Добрый день! Освоение космоса остаётся одним из главных приоритетов фундаментальной науки в России.", vi: "Chào quý vị! Chinh phục không gian vẫn là một trong những ưu tiên hàng đầu của khoa học cơ bản tại Nga." },
+      { who: "Ведущий", ru: "Какие перспективы открываются для иностранных студентов, обучающихся по техническим специальностям?", vi: "Có những triển vọng nào mở ra cho sinh viên quốc tế theo học các khối ngành kỹ thuật?" },
+      { who: "Профессор", ru: "Наши лаборатории оснащены новейшим оборудованием, и студенты имеют доступ к реальным спутниковым данным.", vi: "Phòng thí nghiệm của chúng tôi trang bị thiết bị hiện đại nhất, sinh viên được tiếp cận dữ liệu vệ tinh thực tế." },
+      { who: "Ведущий", ru: "Благодарим вас за содержательную и вдохновляющую беседу!", vi: "Xin chân thành cảm ơn giáo sư vì buổi đàm thoại sâu sắc và đầy cảm hứng!" }
+    ],
+    blanks: [
+      { before: "Освоение космоса остаётся одним из главных", blank: "приоритетов", after: "науки.", hint: "ưu tiên" },
+      { before: "Студенты имеют доступ к реальным", blank: "спутниковым данным", after: ".", hint: "dữ liệu vệ tinh" },
+      { before: "Благодарим вас за", blank: "содержательную", after: "беседу!", hint: "sâu sắc, bổ ích" }
+    ],
+    dictation: [
+      "Освоение космоса остаётся главным приоритетом науки.",
+      "Наши лаборатории оснащены новейшим оборудованием.",
+      "Студенты имеют доступ к реальным данным."
+    ],
+    questions: [
+      { q: "Chuyên môn nghiên cứu của giáo sư là gì?", options: ["Lịch sử văn học", "Vật lý thiên văn & vũ trụ", "Kinh tế đối ngoại", "Y sinh"], a: 1 },
+      { q: "Sinh viên ngành kỹ thuật có cơ hội tiếp cận điều gì?", options: ["Chỉ lý thuyết sách giáo khoa", "Dữ liệu vệ tinh thực tế và phòng lab hiện đại", "Chuyến bay vũ trụ du lịch", "Thực tập ở nước ngoài"], a: 1 },
+      { q: "Nhận xét của người dẫn chương trình về cuộc trò chuyện là gì?", options: ["Nhàm chán", "Khó hiểu", "Sâu sắc và truyền cảm hứng (содержательная и вдохновляющая)", "Quá ngắn"], a: 2 }
+    ]
   }
 ];
 
 const SPEAKING_SETS = [
   {
     id: "sp-basic",
-    title: "Chào hỏi & giới thiệu",
+    title: "Chào hỏi & Giới thiệu bản thân",
+    level: "A1",
+    levelName: "Sơ cấp A1",
+    category: "greeting",
+    categoryName: "Chào hỏi cơ bản",
+    phonemeTarget: "Luyện âm ngắt và trọng âm cơ bản: [прив'эт], [зват']",
+    icon: "🤝",
     items: [
       { ru: "Привет! Меня зовут Аня.", vi: "Chào bạn! Mình tên là Anya." },
-      { ru: "Очень приятно!", vi: "Rất vui được gặp bạn!" },
+      { ru: "Очень приятно познакомиться!", vi: "Rất vui được làm quen với bạn!" },
       { ru: "Я студентка из Вьетнама.", vi: "Mình là sinh viên đến từ Việt Nam." },
-      { ru: "Я изучаю русский язык.", vi: "Mình đang học tiếng Nga." },
+      { ru: "Я изучаю русский язык в университете.", vi: "Mình đang học tiếng Nga tại trường đại học." },
       { ru: "Как вас зовут?", vi: "Bạn tên là gì ạ?" },
-      { ru: "Спасибо большое!", vi: "Cảm ơn nhiều!" }
+      { ru: "Спасибо большое, до свидания!", vi: "Cảm ơn nhiều, tạm biệt bạn!" }
     ]
   },
   {
     id: "sp-travel",
-    title: "Ở sân bay & trên máy bay",
+    title: "Ở sân bay & Trên chuyến bay",
+    level: "A1",
+    levelName: "Sơ cấp A1",
+    category: "travel",
+    categoryName: "Du lịch & Sân bay",
+    phonemeTarget: "Luyện phát âm phụ âm mềm [л'], [р'], [т']: [б'ил'эт], [м'эста]",
+    icon: "✈️",
     items: [
-      { ru: "Вот мой паспорт и билет.", vi: "Đây là hộ chiếu và vé của tôi." },
-      { ru: "У меня один чемодан.", vi: "Tôi có một cái vali." },
-      { ru: "Где паспортный контроль?", vi: "Kiểm tra hộ chiếu ở đâu ạ?" },
-      { ru: "Я лечу в Москву с пересадкой.", vi: "Tôi bay tới Moskva với một điểm quá cảnh." },
-      { ru: "Моё место — двадцать один А.", vi: "Chỗ của tôi là 21A." },
-      { ru: "Спасибо, всего доброго!", vi: "Cảm ơn, chào tạm biệt!" }
+      { ru: "Вот мой паспорт и посадочный талон.", vi: "Đây là hộ chiếu và thẻ lên máy bay của tôi." },
+      { ru: "У меня только один чемодан и ручная кладь.", vi: "Tôi chỉ có một vali và hành lý xách tay." },
+      { ru: "Подскажите, где паспортный контроль?", vi: "Xin hỏi kiểm tra hộ chiếu ở đâu ạ?" },
+      { ru: "Я лечу в Москву с пересадкой.", vi: "Tôi bay tới Moskva có điểm quá cảnh." },
+      { ru: "Моё место двадцать один А около окна.", vi: "Chỗ của tôi là 21A cạnh cửa sổ." },
+      { ru: "Спасибо за помощь, всего доброго!", vi: "Cảm ơn bạn đã hỗ trợ, chúc mọi điều tốt lành!" }
     ]
   },
   {
     id: "sp-campus",
-    title: "Ở trường & ký túc xá",
+    title: "Ở trường học & Ký túc xá",
+    level: "A2",
+    levelName: "Cơ bản A2",
+    category: "campus",
+    categoryName: "Ký túc xá & Trường học",
+    phonemeTarget: "Phân biệt phụ âm [ж] và [ш]: [апщ'ижыт'ийэ], [страхофка]",
+    icon: "🎓",
     items: [
-      { ru: "Я живу в общежитии.", vi: "Tôi sống ở ký túc xá." },
-      { ru: "Сегодня у нас медосмотр.", vi: "Hôm nay chúng tôi có khám sức khỏe." },
-      { ru: "Где деканат университета?", vi: "Phòng dekanat của trường ở đâu ạ?" },
-      { ru: "У меня есть медицинская страховка.", vi: "Tôi có bảo hiểm y tế." },
-      { ru: "Когда начинается занятие?", vi: "Khi nào tiết học bắt đầu ạ?" },
-      { ru: "Мне нужно расписание.", vi: "Tôi cần thời khóa biểu." }
+      { ru: "Я живу в студенческом общежитии на четвёртом этаже.", vi: "Tôi sống ở ký túc xá sinh viên trên tầng bốn." },
+      { ru: "Сегодня у нашей группы медосмотр в поликлинике.", vi: "Hôm nay nhóm chúng tôi có buổi khám sức khỏe ở phòng khám." },
+      { ru: "Подскажите, пожалуйста, где находится деканат?", vi: "Xin hỏi phòng giáo vụ (dekanat) nằm ở đâu ạ?" },
+      { ru: "У меня есть годовая медицинская страховка.", vi: "Tôi có thẻ bảo hiểm y tế thời hạn một năm." },
+      { ru: "Когда начинается первая пара по расписанию?", vi: "Khi nào tiết học đầu tiên bắt đầu theo thời khóa biểu?" },
+      { ru: "Мне нужно взять учебники в библиотеке.", vi: "Tôi cần mượn giáo trình trong thư viện." }
+    ]
+  },
+  {
+    id: "sp-dining",
+    title: "Gọi món & Ẩm thực Nga",
+    level: "A2",
+    levelName: "Cơ bản A2",
+    category: "dining",
+    categoryName: "Gọi món & Quán ăn",
+    phonemeTarget: "Luyện nguyên âm căng [ы]: [сыр], [рыба], [быстро]",
+    icon: "🍽️",
+    items: [
+      { ru: "Дайте, пожалуйста, меню на русском языке.", vi: "Xin vui lòng cho tôi xem thực đơn tiếng Nga." },
+      { ru: "Что вы посоветуете из традиционных русских блюд?", vi: "Bạn có gợi ý món nào trong ẩm thực truyền thống Nga không?" },
+      { ru: "Я хочу заказать тарелку горячего борща и блинчики.", vi: "Tôi muốn gọi một đĩa súp củ dền nóng và bánh blini." },
+      { ru: "Принесите, пожалуйста, счёт.", vi: "Xin vui lòng mang cho tôi hóa đơn tính tiền." },
+      { ru: "Всё было очень вкусно, спасибо шеф-повару!", vi: "Mọi món đều rất ngon, cảm ơn đầu bếp!" }
+    ]
+  },
+  {
+    id: "sp-direction",
+    title: "Hỏi đường & Đi lại ở Moskva",
+    level: "B1",
+    levelName: "Trung cấp B1",
+    category: "direction",
+    categoryName: "Hỏi đường & Giao thông",
+    phonemeTarget: "Phát âm chuẩn âm rung [р]: [красная], [площад'], [переход]",
+    icon: "🗺️",
+    items: [
+      { ru: "Извините, как быстрее добраться до Красной площади?", vi: "Xin lỗi, làm cách nào nhanh nhất đến Quảng trường Đỏ?" },
+      { ru: "Вам нужно доехать на метро до станции Охотный ряд.", vi: "Bạn cần đi tàu điện ngầm tới ga Okhotny Ryad." },
+      { ru: "Где здесь вход в метро и переход на другую линию?", vi: "Ở đây lối vào tàu điện ngầm và lối chuyển tuyến ở đâu ạ?" },
+      { ru: "Вы можете пополнить карту Тройка в автомате.", vi: "Bạn có thể nạp tiền vào thẻ Troika tại cây bán vé tự động." },
+      { ru: "Идите прямо два квартала, затем поверните направо.", vi: "Hãy đi thẳng hai khối nhà, sau đó rẽ phải." }
+    ]
+  },
+  {
+    id: "sp-presentation",
+    title: "Thuyết trình & Ý kiến học thuật",
+    level: "B2",
+    levelName: "Nâng cao B2",
+    category: "academic",
+    categoryName: "Thuyết trình học thuật",
+    phonemeTarget: "Ngữ điệu khẳng định IK-1 và nghi vấn IK-3 chuẩn ngữ âm Nga",
+    icon: "🎤",
+    items: [
+      { ru: "Тема моего сегодняшнего доклада посвящена развитию науки.", vi: "Chủ đề bài báo cáo hôm nay của tôi dành cho sự phát triển khoa học." },
+      { ru: "Позвольте обратить ваше внимание на приведённые графики.", vi: "Cho phép tôi hướng sự chú ý của quý vị vào các biểu đồ dưới đây." },
+      { ru: "Исходя из полученных данных, мы можем сделать следующий вывод.", vi: "Xuất phát từ các dữ liệu thu được, chúng ta có thể rút ra kết luận sau." },
+      { ru: "Я готов ответить на все ваши вопросы и комментарии.", vi: "Tôi sẵn sàng giải đáp tất cả câu hỏi và đóng góp ý kiến của quý vị." },
+      { ru: "Благодарю аудиторию за проявленное внимание и интерес!", vi: "Xin chân thành cảm ơn khán phòng đã quan tâm theo dõi!" }
     ]
   }
 ];
@@ -455,11 +853,17 @@ const SPEAKING_SETS = [
 const WRITING_TASKS = [
   {
     id: "w1",
-    level: "ТЭУ — Sơ cấp",
-    title: "Bức tự giới thiệu ngắn",
+    level: "A1",
+    levelName: "Sơ cấp A1",
+    category: "intro",
+    categoryName: "Tự giới thiệu",
+    icon: "📝",
+    estMinutes: 15,
+    title: "Bức tự giới thiệu ngắn (Меня зовут...)",
     prompt: "Расскажите о себе: как вас зовут, откуда вы, где вы живёте и что вы изучаете. (4–6 câu)",
     vi: "Giới thiệu về bản thân: tên, quê quán, đang sống ở đâu, đang học gì. (4–6 câu)",
     minWords: 20,
+    suggested_words: ["Меня зовут", "Я из Вьетнама", "Я студент", "Я изучаю", "Я живу в Москве"],
     tips: [
       "Dùng cấu trúc: Меня зовут... (tôi tên là...)",
       "Dùng Я живу в... + cách 6 (в общежитии, в Ханое)",
@@ -469,11 +873,17 @@ const WRITING_TASKS = [
   },
   {
     id: "w2",
-    level: "ТЭУ — Sơ cấp",
-    title: "Mô tả một ngày của bạn",
+    level: "A1",
+    levelName: "Sơ cấp A1",
+    category: "daily",
+    categoryName: "Sinh hoạt hằng ngày",
+    icon: "⏰",
+    estMinutes: 15,
+    title: "Mô tả một ngày của bạn (Мой день)",
     prompt: "Напишите о вашем дне: во сколько вы встаёте, что вы делаете утром, днём и вечером.",
     vi: "Viết về một ngày của bạn: mấy giờ dậy, buổi sáng/trưa/tối làm gì.",
     minWords: 30,
+    suggested_words: ["утром", "завтракать", "университет", "библиотека", "готовить ужин"],
     tips: [
       "Dùng trạng từ thời gian: утром, днём, вечером",
       "Dùng động từ: вставать, завтракать, учиться, готовить, смотреть",
@@ -482,32 +892,125 @@ const WRITING_TASKS = [
     model: "Я встаю в семь часов. Сначала я завтракаю: я ем хлеб с сыром и пью чай. Потом я иду в университет. Днём я занимаюсь в библиотеке. Вечером я готовлю ужин и смотрю фильм."
   },
   {
-    id: "w3",
-    level: "ТРКИ-1 — Trung cấp thấp",
-    title: "Thư cho bạn kể về việc mua sắm",
-    prompt: "Напишите другу письмо о том, как вы ходили в магазин вчера. Что вы покупали? Сколько стоили продукты?",
-    vi: "Viết thư cho bạn kể về buổi đi mua sắm hôm qua. Mua gì? Giá bao nhiêu?",
-    minWords: 40,
+    id: "w5",
+    level: "A2",
+    levelName: "Cơ bản A2",
+    category: "photo",
+    categoryName: "Tả tranh bối cảnh",
+    icon: "🖼️",
+    estMinutes: 20,
+    title: "Tả tranh: Buổi sáng ở ký túc xá",
+    prompt: "Опишите картинку: комната общежития, за столом сидят студенты, пьют чай и готовятся к экзамену. (6–8 câu)",
+    vi: "Mô tả bức tranh: phòng ký túc xá, sinh viên ngồi quanh bàn uống trà và ôn thi. (6–8 câu)",
+    minWords: 35,
+    image_url: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80",
+    suggested_words: ["на картинке видно", "за столом", "готовятся к тесту", "пьют горячий чай", "дружная атмосфера"],
     tips: [
-      "Mở thư: Привет,... / Здравствуй,...",
-      "Dùng quá khứ СВ: купил(а), заплатил(а)",
-      "Dùng: Мне нравится... / Это было дёшево, но вкусно"
+      "Mở đầu bằng: На этой фотографии я вижу...",
+      "Sử dụng vị trí nơi chốn: справа, слева, в центре, на столе",
+      "Dùng thì hiện tại của động từ: сидят, разговаривают, читают"
     ],
-    model: "Привет, Лан! Вчера я ходила в магазин около общежития. Я купила хлеб, молоко, сыр и яблоки. Хлеб стоил 50 рублей, это дёшево. Яблоки были дорогие, но очень вкусные. Я заплатила 400 рублей. Мне нравится этот магазин. До встречи!"
+    model: "На этой фотографии я вижу уютную комнату в студенческом общежитии. В центре комнаты стоит большой стол. За столом сидят двое студентов. Они пьют горячий чай и читают учебник по русскому языку. Справа на столе лежит ноутбук и словарь. Студенты готовятся к трудному экзамену. В комнате царит тёплая и дружеская атмосфера."
+  },
+  {
+    id: "w6",
+    level: "A2",
+    levelName: "Cơ bản A2",
+    category: "letter",
+    categoryName: "Tin nhắn & Ghi chú",
+    icon: "📌",
+    estMinutes: 20,
+    title: "Viết mẩu giấy để lại cho bạn cùng phòng (Записка)",
+    prompt: "Напишите записку соседу по комнате: вы ушли в библиотеку, вернётесь в 18:00, попросите его купить хлеб и молоко. (4–5 câu)",
+    vi: "Viết mẩu giấy cho bạn cùng phòng: bạn đi thư viện, 18h về, nhờ bạn mua bánh mì và sữa.",
+    minWords: 30,
+    suggested_words: ["Привет!", "Я ушёл в библиотеку", "Купи, пожалуйста", "Вернусь в", "Спасибо!"],
+    tips: [
+      "Chào thân mật: Привет,... / Здравствуй,...",
+      "Dùng thể mệnh lệnh lịch sự: Купи, пожалуйста... / Не забудь...",
+      "Ký tên ở cuối mẩu giấy"
+    ],
+    model: "Привет, Антон! Я ушёл в университетскую библиотеку заниматься. Я вернусь домой около шести часов вечера. Купи, пожалуйста, в магазине свежий хлеб и пакет молока. Деньги лежат на столе около ноутбука. Большое спасибо! До вечера, Минь."
+  },
+  {
+    id: "w3",
+    level: "B1",
+    levelName: "Trung cấp B1",
+    category: "letter",
+    categoryName: "Email & Thư từ",
+    icon: "✉️",
+    estMinutes: 25,
+    title: "Thư cho bạn kể về chuyến du lịch Peterburg",
+    prompt: "Напишите другу письмо о вашей поездке в Санкт-Петербург: что вы видели, какая была погода, что вам больше всего понравилось. (8–10 câu)",
+    vi: "Viết thư cho bạn kể về chuyến đi Sankt-Peterburg: đã tham quan gì, thời tiết ra sao, thích điều gì nhất.",
+    minWords: 50,
+    suggested_words: ["Дорогой друг", "Северная столица", "Эрмитаж", "Белые ночи", "Незабываемо"],
+    tips: [
+      "Mở thư: Здравствуй, дорогой друг! / Как твои дела?",
+      "Dùng quá khứ hoàn thành СВ: посетил, увидел, сфотографировал",
+      "Bày tỏ cảm xúc: Это произвело на меня огромное впечатление"
+    ],
+    model: "Здравствуй, Денис! На прошлых выходных я ездил в Санкт-Петербург. Это потрясающий город с богатой историей. Погода была солнечной и тёплой. Я побывал в Эрмитаже и увидел шедевры мирового искусства. Вечером мы катались на теплоходе по рекам и каналам и любовались разводными мостами. Петербург оставил незабываемые впечатления! А как твои дела? Напиши мне. До скорой встречи!"
   },
   {
     id: "w4",
-    level: "ТРКИ-1 — Trung cấp thấp",
-    title: "Bài viết ngắn về chủ đề «Thể thao và sức khỏe»",
-    prompt: "Напишите небольшой текст о спорте в вашей жизни. Каким спортом вы занимались? Почему спорт важен?",
-    vi: "Viết đoạn văn ngắn về thể thao trong cuộc sống của bạn. Bạn từng chơi môn gì? Vì sao thể thao quan trọng?",
-    minWords: 50,
+    level: "B1",
+    levelName: "Trung cấp B1",
+    category: "essay",
+    categoryName: "Nghị luận xã hội",
+    icon: "🏅",
+    estMinutes: 25,
+    title: "Nghị luận: Thể thao và lối sống lành mạnh của sinh viên",
+    prompt: "Напишите небольшой текст о спорте в жизни студента: почему важно заниматься физической культурой при высокой учебной нагрузке? (70–90 từ)",
+    vi: "Viết đoạn văn về thể thao trong đời sống sinh viên: vì sao rèn luyện thân thể quan trọng khi áp lực học tập cao?",
+    minWords: 60,
+    suggested_words: ["здоровый образ жизни", "учебная нагрузка", "заниматься спортом", "энергия и бодрость", "по моему мнению"],
     tips: [
-      "Dùng играть В + cách 4: играть в футбол, в волейбол",
-      "Dùng НСВ для thói quen: я бегаю, я плаваю",
-      "Kết bài với ý kiến: Я думаю, что спорт очень важен, потому что..."
+      "Dùng từ nối lập luận: Во-первых, во-вторых, кроме того, следовательно",
+      "Nêu dẫn chứng bản thân: Например, я играю в волейбол два раза в неделю",
+      "Kết luận khẳng định tầm quan trọng của thể dục"
     ],
-    model: "Я очень люблю спорт. В школе я играл(а) в футбол, а сейчас я играю в волейбол с друзьями из общежития. Мы тренируемся два раза в неделю. Спорт помогает мне быть здоровым и весёлым. Я думаю, что каждый студент должен заниматься спортом, потому что учёба — это тоже большая нагрузка."
+    model: "Спорт играет ключевую роль в жизни современного студента. Учёба в университете требует огромных интеллектуальных усилий и связана со стрессом. Физические упражнения помогают не только поддерживать тело в тонусе, но и отлично снимают умственную усталость. Например, регулярные пробежки или игра в волейбол заряжают энергией и улучшают концентрацию. По моему мнению, каждый студент должен находить время для спорта, ведь здоровье — основа будущих успехов."
+  },
+  {
+    id: "w7",
+    level: "B2",
+    levelName: "Nâng cao B2",
+    category: "essay",
+    categoryName: "Luận học thuật",
+    icon: "🤖",
+    estMinutes: 30,
+    title: "Bài luận học thuật: Trí tuệ nhân tạo (AI) trong giáo dục",
+    prompt: "Напишите эссе на тему: «Плюсы и минусы использования искусственного интеллекта в университетском образовании». Аргументируйте свою позицию. (100–120 từ)",
+    vi: "Viết bài luận: «Ưu và nhược điểm của việc ứng dụng AI trong giáo dục đại học». Lập luận bảo vệ quan điểm.",
+    minWords: 90,
+    suggested_words: ["искусственный интеллект", "автоматизация", "критическое мышление", "с одной стороны", "с другой стороны", "в заключение"],
+    tips: [
+      "Cấu trúc học thuật: Đặt vấn đề (Введение) -> 2 luận điểm đối lập -> Kết luận tổng hòa",
+      "Dùng quán ngữ học thuật: Нельзя отрицать тот факт, что... / Возникает вопрос...",
+      "Giữ thái độ khách quan, khoa học"
+    ],
+    model: "Внедрение искусственного интеллекта в систему высшего образования вызывает оживлённые научные дискуссии. С одной стороны, интеллектуальные алгоритмы открывают невероятные возможности: они персонализируют процесс обучения, мгновенно проверяют задания и помогают находить релевантную научную литературу. С другой стороны, чрезмерное доверие нейросетям может снизить уровень критического мышления студентов и привести к плагиату. В заключение хочу подчеркнуть, что искусственный интеллект должен служить эффективным инструментом исследователя, но не заменять живой творческий поиск и глубокий самостоятельный анализ."
+  },
+  {
+    id: "w8",
+    level: "B2",
+    levelName: "Nâng cao B2",
+    category: "letter",
+    categoryName: "Thư ứng tuyển",
+    icon: "💼",
+    estMinutes: 30,
+    title: "Thư động lực ứng tuyển thực tập sinh IT (Мотивационное письмо)",
+    prompt: "Напишите официальное мотивационное письмо в компанию для прохождения стажировки: образование, навыки, почему именно вы подходите на эту роль. (90–110 từ)",
+    vi: "Viết thư động lực trang trọng xin thực tập tại công ty: học vấn, kỹ năng, vì sao bạn phù hợp với vị trí.",
+    minWords: 80,
+    suggested_words: ["Уважаемые господа", "прошу рассмотреть мою кандидатуру", "профессиональные навыки", "готов внести вклад", "С уважением"],
+    tips: [
+      "Văn phong hành chính công vụ trang trọng: Уважаемый(ая)... / С уважением",
+      "Khẳng định điểm mạnh và sự nhiệt huyết đối với dự án",
+      "Lời kết mong đợi buổi phỏng vấn trực tiếp"
+    ],
+    model: "Уважаемый руководитель отдела кадров! Прошу рассмотреть мою кандидатуру на позицию стажёра-разработчика. В настоящее время я обучаюсь на третьем курсе факультета вычислительной математики. В ходе учёбы я успешно освоил современные языки программирования и участвовал в командной разработке веб-сервисов. Меня вдохновляют инновационные проекты вашей компании, и я готов применить свои знания для решения практических задач. Буду искренне признателен за возможность пройти личное собеседование. С уважением, Нгуен Ван Минь."
   }
 ];
 
@@ -602,22 +1105,32 @@ const BLOG_POSTS = [
 const TRKI_BANK = [
   {
     id: "trki_a1",
-    level: "A1 (ТЭУ)",
-    levelName: "Trình độ sơ cấp A1",
-    title: "Đề thi thử ТРКИ ТЭУ (Trình độ sơ cấp)",
+    level: "A1",
+    levelName: "Sơ cấp A1 (ТЭУ)",
+    category: "full",
+    categoryName: "Đề thi toàn diện (3 phần)",
+    title: "Đề thi thử ТРКИ ТЭУ (Trình độ sơ cấp A1)",
+    desc: "Mô phỏng đầy đủ 3 phần thi: Từ vựng & Ngữ pháp, Đọc hiểu, Nghe hiểu theo chuẩn Viện Pushkin.",
     durationMin: 45,
     passPercent: 60,
+    questionsCount: 21,
     is_pro_only: false,
+    icon: "🥉",
     parts: MOCK_TEST.parts
   },
   {
     id: "trki_a2",
-    level: "A2 (ТБУ)",
-    levelName: "Trình độ cơ bản A2",
-    title: "Đề thi thử ТРКИ ТБУ (Trình độ cơ bản)",
+    level: "A2",
+    levelName: "Cơ bản A2 (ТБУ)",
+    category: "full",
+    categoryName: "Đề thi toàn diện (3 phần)",
+    title: "Đề thi thử ТРКИ ТБУ (Trình độ cơ bản A2)",
+    desc: "Chứng chỉ điều kiện tốt nghiệp hệ dự bị đại học Nga. Bao gồm các chủ đề du lịch Sankt-Peterburg.",
     durationMin: 50,
     passPercent: 66,
+    questionsCount: 13,
     is_pro_only: false,
+    icon: "🥈",
     parts: [
       {
         id: "gram",
@@ -666,20 +1179,56 @@ const TRKI_BANK = [
     ]
   },
   {
+    id: "trki_gram_a1a2",
+    level: "A2",
+    levelName: "Cơ bản A1-A2",
+    category: "grammar",
+    categoryName: "Chuyên đề Ngữ pháp",
+    title: "Chuyên đề: 6 Cách & Động từ chuyển động (A1-A2)",
+    desc: "Bộ 15 câu hỏi trọng điểm kiểm tra hệ thống 6 cách, biến cách tính từ và cặp động từ đi bộ / đi xe.",
+    durationMin: 35,
+    passPercent: 70,
+    questionsCount: 8,
+    is_pro_only: false,
+    icon: "📖",
+    parts: [
+      {
+        id: "gram",
+        name: "Часть 1. Лексика и грамматика",
+        vi: "Phần 1. Trắc nghiệm ngữ pháp chuyên đề",
+        questions: [
+          { q: "Мария подарила цветы своей любимой ___. (подруга)", options: ["подруге", "подругу", "подругой", "подруги"], a: 0, ex: "подарить + cách 3 (подруга -> подруге)." },
+          { q: "Мы часто гуляем по ___ парку. (красивый)", options: ["красивому", "красивым", "красивом", "красивого"], a: 0, ex: "по + cách 3 số ít giống đực (-ому)." },
+          { q: "Летом студенты поедут ___ море.", options: ["на", "в", "к", "по"], a: 0, ex: "ехать на море (hướng đi với danh từ biển dùng giới từ на)." },
+          { q: "Каждое утро мой отец ___ пешком на работу.", options: ["ходит", "идёт", "пошёл", "ездит"], a: 0, ex: "Thói quen lặp lại thường xuyên bằng chân -> dùng НСВ đa hướng: ходить (ходит)." },
+          { q: "После школы брат поступил в ___. (университет)", options: ["университет", "университете", "университету", "университетом"], a: 0, ex: "поступить В + cách 4 bất động vật -> giữ nguyên." },
+          { q: "Антон увлекается ___. (классическая музыка)", options: ["классической музыкой", "классическую музыку", "классической музыки", "классическая музыка"], a: 0, ex: "увлекаться + cách 5 giống cái (-ой/-ей)." },
+          { q: "Сколько ___ прошло с тех пор?", options: ["лет", "года", "год", "годы"], a: 0, ex: "Сколько + cách 2 số nhiều (лет)." },
+          { q: "Я хочу пожелать вам крепкого ___. (здоровье)", options: ["здоровья", "здоровью", "здоровьем", "здоровье"], a: 0, ex: "пожелать + cách 2 (здоровье -> здоровья)." }
+        ]
+      }
+    ]
+  },
+  {
     id: "trki_b1",
-    level: "B1 (ТРКИ-1)",
-    levelName: "Chứng chỉ ТРКИ-1 (Vào đại học)",
+    level: "B1",
+    levelName: "Trung cấp B1 (ТРКИ-1)",
+    category: "full",
+    categoryName: "Đề thi toàn diện (3 phần)",
     title: "Đề thi chuẩn quốc tế ТРКИ-1 (Đầu vào Đại học Nga)",
+    desc: "Chứng chỉ chuẩn quốc gia Liên bang Nga đủ điều kiện nhập học Cử nhân/Thạc sĩ bằng tiếng Nga.",
     durationMin: 60,
     passPercent: 66,
+    questionsCount: 8,
     is_pro_only: true,
+    icon: "🥇",
     parts: [
       {
         id: "gram",
         name: "Часть 1. Лексика и грамматика",
         vi: "Phần 1. Từ vựng và ngữ pháp chuyên sâu",
         questions: [
-          { q: "Несмотря на ___, студенты успешно сдали все экзамены.", options: ["трудности", "trudnostey", "трудностям", "трудностями"], a: 0, ex: "Несмотря на + cách 4 (трудности danh từ số nhiều bất động vật)." },
+          { q: "Несмотря на ___, студенты успешно сдали все экзамены.", options: ["трудности", "трудностей", "трудностям", "трудностями"], a: 0, ex: "Несмотря на + cách 4 (трудности danh từ số nhiều bất động vật)." },
           { q: "Благодаря ___ преподавателя группа отлично подготовилась к тесту.", options: ["помощи", "помощь", "помощью", "о помощи"], a: 0, ex: "Благодаря + cách 3 (помощь -> помощи)." },
           { q: "Мы гордимся ___ нашей научной лаборатории.", options: ["достижениями", "достижения", "достижений", "достижениям"], a: 0, ex: "гордиться + cách 5 số nhiều (-ами/-ями)." }
         ]
@@ -714,13 +1263,49 @@ const TRKI_BANK = [
     ]
   },
   {
+    id: "trki_reading_b1",
+    level: "B1",
+    levelName: "Trung cấp B1",
+    category: "reading",
+    categoryName: "Chuyên đề Đọc hiểu",
+    title: "Chuyên đề: Đọc hiểu văn bản xã hội & Báo chí Nga (Чтение B1)",
+    desc: "Phát triển kỹ năng đọc lướt (skimming) và đọc chi tiết (scanning) đối với các bài báo về văn hóa, xã hội và công nghệ.",
+    durationMin: 40,
+    passPercent: 66,
+    questionsCount: 4,
+    is_pro_only: true,
+    icon: "📰",
+    parts: [
+      {
+        id: "reading",
+        name: "Часть 2. Чтение",
+        vi: "Phần 2. Đọc hiểu báo chí",
+        text: {
+          ru: "Транспортная система Москвы за последние десять лет претерпела масштабную модернизацию. Запуск Московских центральных диаметров (МЦД) и Большой кольцевой линии (БКЛ) связал отдалённые районы столицы с Подмосковьем. Пассажиры отмечают удобство единой системы оплаты, современные поезда с климат-контролем и бесплатный Wi-Fi на всём протяжении пути.",
+          vi: "Hệ thống giao thông của Moskva trong mười năm qua đã trải qua quá trình hiện đại hóa quy mô lớn. Việc đưa vào vận hành Tuyến đường kính trung tâm (MCD) và Tuyến vành đai lớn (BKL) đã kết nối các khu vực xa xôi của thủ đô với vùng ngoại ô Podmoskovye. Hành khách đánh giá cao sự tiện lợi của hệ thống vé tích hợp đồng nhất, các đoàn tàu hiện đại có điều hòa không khí và Wi-Fi miễn phí trên suốt hành trình."
+        },
+        questions: [
+          { q: "Что связало отдалённые районы столицы с Подмосковьем?", options: ["МЦД и БКЛ", "Только речные трамваи", "Новая автомагистраль", "Канатная дорога"], a: 0, ex: "'Запуск Московских центральных диаметров (МЦД) и Большой кольцевой линии (БКЛ)...'" },
+          { q: "Что отмечают пассажиры в современных поездах?", options: ["Климат-контроль и бесплатный Wi-Fi", "Бесплатную еду", "Телевизоры в каждом купе", "Библиотеку"], a: 0, ex: "'...современные поезда с климат-контролем и бесплатный Wi-Fi...'" },
+          { q: "За какой период произошла модернизация системы?", options: ["За последние 10 лет", "За 50 лет", "За один год", "В прошлом веке"], a: 0, ex: "'...за последние десять лет...'" },
+          { q: "Какова главная мысль текста?", options: ["Giao thông Moskva hiện đại, đồng bộ và tiện nghi vượt bậc", "Vé tàu ngày càng đắt đỏ", "Ngoại ô không có tàu điện", "Tàu điện ngầm quá tải"], a: 0, ex: "Bài viết tổng quan về những thành tựu hiện đại hóa hệ thống giao thông thủ đô." }
+        ]
+      }
+    ]
+  },
+  {
     id: "trki_b2",
-    level: "B2 (ТРКИ-2)",
-    levelName: "Trình độ nâng cao B2",
+    level: "B2",
+    levelName: "Nâng cao B2 (ТРКИ-2)",
+    category: "full",
+    categoryName: "Đề thi toàn diện (3 phần)",
     title: "Đề thi nâng cao ТРКИ-2 (Tốt nghiệp Đại học / Thạc sĩ)",
+    desc: "Trình độ cao cấp dành cho giảng viên, nghiên cứu sinh, chuyên viên dịch thuật tiếng Nga chuyên nghiệp.",
     durationMin: 75,
     passPercent: 66,
+    questionsCount: 6,
     is_pro_only: true,
+    icon: "💎",
     parts: [
       {
         id: "gram",
@@ -766,6 +1351,8 @@ const VOCAB_JARS = [
   {
     id: "jar_auchan",
     name: "Lọ mua sắm Auchan",
+    level: "A1",
+    levelName: "Sơ cấp A1",
     desc: "Từ vựng siêu thị, thực phẩm, cân đo, thanh toán sống còn khi mới sang Nga.",
     icon: "🛒",
     words: [
@@ -782,42 +1369,101 @@ const VOCAB_JARS = [
   {
     id: "jar_chemodan",
     name: "Lọ vali hành lý du học",
+    level: "A1",
+    levelName: "Sơ cấp A1",
     desc: "Đồ dùng cá nhân, quần áo giữ nhiệt, giấy tờ bắt buộc chuẩn bị từ Việt Nam sang.",
     icon: "🧳",
     words: [
       { ru: "чемодан", vi: "vali hành lý", note: "chuẩn ký gửi 23kg" },
       { ru: "паспорт", vi: "hộ chiếu quốc tế", note: "luôn mang bản gốc bên người" },
       { ru: "виза", vi: "thị thực du học", note: "thời hạn nhập cảnh lần đầu 90 ngày" },
-      { ru: "куртка", vi: "áo khoác mùa đông", note: "áo lông vũ chịu -20°C" },
-      { ru: "шапка", vi: "mũ len che tai", note: "vật dụng bắt buộc mùa tuyết" },
-      { ru: "лекарство", vi: "thuốc men cá nhân", note: "thuốc cảm, kháng sinh quen dùng" }
+      { ru: "билет", vi: "vé máy bay", note: "vé điện tử in sẵn giấy" },
+      { ru: "тёплая куртка", vi: "áo khoác ấm đại hàn", note: "chịu nhiệt độ âm 20 độ" },
+      { ru: "шапка", vi: "mũ len trùm tai", note: "bảo vệ đầu chống viêm xoang lạnh" },
+      { ru: "перчатки", vi: "găng tay ấm", note: "loại chống gió tuyết" },
+      { ru: "лекарства", vi: "thuốc men dự phòng", note: "hạ sốt, cảm cúm, men tiêu hóa" }
     ]
   },
   {
     id: "jar_dorm",
-    name: "Lọ ký túc xá (Общежитие)",
-    desc: "Vật dụng phòng ở, nhà bếp chung, thủ tục đăng ký tạm trú với ban quản lý KTX.",
+    name: "Lọ ký túc xá & phòng ở",
+    level: "A2",
+    levelName: "Cơ bản A2",
+    desc: "Cuộc sống tự lập ở KTX Nga: chìa khóa, nội quy, giặt giũ, nấu nướng.",
     icon: "🏢",
     words: [
-      { ru: "общежитие", vi: "ký túc xá (KTX)", note: "sinh viên gọi tắt là 'общага'" },
-      { ru: "комната", vi: "phòng ở", note: "thường ở 2-3 người một phòng" },
-      { ru: "вахтёр", vi: "bác bảo vệ / trực nhật", note: "quản lý cửa ra vào KTX" },
-      { ru: "пропуск", vi: "thẻ sinh viên / thẻ vào cửa", note: "phải quẹt thẻ khi vào cổng" },
-      { ru: "кухня", vi: "bếp chung tầng", note: "dùng xong phải tắt bếp và dọn dẹp" },
-      { ru: "сосед", vi: "bạn cùng phòng", note: "thường là du học sinh quốc tế" }
+      { ru: "общежитие", vi: "ký túc xá", note: "viết tắt thường gọi: общага" },
+      { ru: "комната", vi: "phòng ở", note: "thường xếp 2-3 bạn một phòng" },
+      { ru: "ключ", vi: "chìa khóa phòng", note: "gửi chìa khóa ở quầy trực khi ra ngoài" },
+      { ru: "сосед", vi: "bạn cùng phòng nam", note: "соседка (nữ)" },
+      { ru: "кухня", vi: "bếp ăn chung", note: "mỗi tầng thường có 1-2 bếp chung" },
+      { ru: "прачечная", vi: "phòng giặt là", note: "máy giặt công cộng đặt dưới tầng hầm" },
+      { ru: "дежурный", vi: "bác bảo vệ / quản lý trực", note: "người quản lý cổng ra vào" },
+      { ru: "пропуск", vi: "thẻ ra vào KTX", note: "quẹt thẻ từ khi qua cửa kiểm soát" }
     ]
   },
   {
-    id: "jar_cafe",
-    name: "Lọ căng tin & Trà bánh Nga",
-    desc: "Cách gọi món ở căng tin đại học (Столовая), quán trà bánh và nhà hàng Nga.",
-    icon: "☕",
+    id: "jar_kafe",
+    name: "Lọ quán ăn & gọi món",
+    level: "A2",
+    levelName: "Cơ bản A2",
+    desc: "Thực đơn món Nga truyền thống, cách gọi món và tính tiền lịch sự.",
+    icon: "🍽️",
     words: [
-      { ru: "столовая", vi: "căng tin ăn trưa", note: "giá sinh viên, tự bưng khay" },
-      { ru: "борщ", vi: "súp củ dền đỏ Borodino", note: "ăn kèm kem chua сметана" },
-      { ru: "гречка", vi: "cháo kiều mạch", note: "món ăn quốc dân giàu dinh dưỡng" },
-      { ru: "чай", vi: "trà đen", note: "người Nga uống trà nóng quanh năm" },
+      { ru: "меню", vi: "thực đơn", note: "'Дайте, пожалуйста, меню'" },
+      { ru: "борщ", vi: "súp củ dền truyền thống", note: "ăn kèm váng sữa сметана" },
+      { ru: "блины", vi: "bánh xèo blini", note: "nhân mặn thịt băm hoặc nhân ngọt mật ong" },
+      { ru: "пельмени", vi: "sủi cảo thịt kiểu Nga", note: "món ăn nhanh phổ biến nhất của sinh viên" },
+      { ru: "чай с лимоном", vi: "trà đen kèm lát chanh", note: "thức uống sưởi ấm mùa đông" },
       { ru: "счёт", vi: "hóa đơn tính tiền", note: "'Дайте, пожалуйста, счёт'" }
+    ]
+  },
+  {
+    id: "jar_metro",
+    name: "Lọ tàu điện ngầm Moskva",
+    level: "A2",
+    levelName: "Cơ bản A2",
+    desc: "Bản đồ ngầm, quẹt thẻ Troika, chuyển tuyến đường tròn Koltsevaya.",
+    icon: "🚇",
+    words: [
+      { ru: "станция", vi: "nhà ga tàu điện", note: "ga tàu điện ngầm" },
+      { ru: "переход", vi: "lối chuyển tuyến giữa các ga", note: "theo dõi biển chỉ dẫn màu sắc" },
+      { ru: "карта Тройка", vi: "thẻ giao thông Troika", note: "thẻ tích hợp đi tàu, xe buýt" },
+      { ru: "турникет", vi: "cổng kiểm soát vé tự động", note: "chạm thẻ vào vòng tròn sáng xanh" },
+      { ru: "эскалатор", vi: "thang cuốn dài xuống lòng đất", note: "quy tắc: đứng bên phải, đi bên trái" },
+      { ru: "выход в город", vi: "lối ra khỏi ga lên mặt đất", note: "xem số thứ tự cửa ra" }
+    ]
+  },
+  {
+    id: "jar_hospital",
+    name: "Lọ y tế & phòng khám",
+    level: "B1",
+    levelName: "Trung cấp B1",
+    desc: "Bảo hiểm y tế, mô tả bệnh án, đơn thuốc bác sĩ và tiêm phòng.",
+    icon: "💊",
+    words: [
+      { ru: "поликлиника", vi: "phòng khám đa khoa sinh viên", note: "nơi khám chữa bệnh ban đầu" },
+      { ru: "медицинский полис", vi: "thẻ bảo hiểm y tế", note: "bắt buộc mang khi đi khám" },
+      { ru: "терапевт", vi: "bác sĩ nội khoa tổng quát", note: "khám và chuyển tuyến chuyên khoa" },
+      { ru: "рецепт", vi: "đơn thuốc kê bởi bác sĩ", note: "nhiều loại thuốc chỉ bán khi có đơn" },
+      { ru: "симптомы", vi: "các triệu chứng bệnh", note: "sốt, ho, nhức đầu" },
+      { ru: "справка", vi: "giấy chứng nhận nghỉ ốm", note: "nộp cho dekanat để miễn điểm danh" }
+    ]
+  },
+  {
+    id: "jar_academic",
+    name: "Lọ học thuật & nghiên cứu",
+    level: "B2",
+    levelName: "Nâng cao B2",
+    desc: "Thuật ngữ luận văn, bảo vệ đề tài, phản biện khoa học và trích dẫn.",
+    icon: "🎓",
+    words: [
+      { ru: "дипломная работа", vi: "khóa luận tốt nghiệp đại học", note: "công trình bảo vệ năm cuối" },
+      { ru: "научный руководитель", vi: "giáo viên hướng dẫn khoa học", note: "giáo sư định hướng đề tài" },
+      { ru: "актуальность", vi: "tính cấp thiết của đề tài", note: "phần mở đầu bắt buộc của luận văn" },
+      { ru: "библиография", vi: "danh mục tài liệu tham khảo", note: "trích dẫn theo chuẩn GOST" },
+      { ru: "защита диплома", vi: "buổi bảo vệ đồ án tốt nghiệp", note: "trước hội đồng giám khảo" },
+      { ru: "рецензия", vi: "bài nhận xét, phản biện khoa học", note: "đánh giá từ chuyên gia độc lập" }
     ]
   }
 ];

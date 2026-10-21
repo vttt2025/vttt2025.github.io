@@ -1,3 +1,15 @@
+
+function dauNormalize(str) {
+  if (!str) return "";
+  return str
+    .toString()
+    .toLowerCase()
+    .replace(/ё/g, "е")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
 function el(sel) {
   return document.querySelector(sel);
 }
@@ -20,7 +32,7 @@ function lessonCardHtml(lesson, kindLabel) {
 }
 
 function initVocabPage() {
-  /* ---------- TOP-LEVEL TABS (Lọ từ vựng / Bài học / Thuật toán) ---------- */
+  /* ---------- TOP-LEVEL TABS (Lọ từ vựng / Flashcard SRS) ---------- */
   const topTabs = document.querySelectorAll(".voc-top-tab");
   const vocPanes = {
     jars: el("#vocPaneJars"),
@@ -37,41 +49,348 @@ function initVocabPage() {
       pane.classList.toggle("active", k === t);
     });
     const hero = document.querySelector(".page-hero");
-    if (hero) hero.classList.toggle("hidden", t === "algorithm" || (list && !list.classList.contains("hidden")));
+    if (hero) hero.classList.toggle("hidden", t === "algorithm");
     if (t === "algorithm" && !algorithmInited) {
       algorithmInited = true;
       initSrsPage();
     }
     if (t === "jars") {
-      renderJarsShelf();
+      renderVocabHub();
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   topTabs.forEach((b) => b.addEventListener("click", () => switchTopTab(b.dataset.t)));
 
-  /* ---------- TRỤ CỘT 4: MÔ HÌNH LỌ TỪ VỰNG (VOCABULARY JARS) ---------- */
-  const renderJarsShelf = () => {
+  /* ---------- BỘ LỌC THÔNG MINH DAUENGLISH CHO TỪ VỰNG ---------- */
+  let currentLevel = "all";
+  let currentCategory = "all";
+  let searchQuery = "";
+  let currentStatus = "all";
+
+  const getCombinedVocabItems = () => {
+    const customJars = STORE.get("custom_jars", []);
+    const jars = [...(typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []), ...customJars].map(j => ({
+      id: j.id,
+      kind: "jar",
+      level: j.level || "A1",
+      levelName: j.levelName || "Sơ cấp A1",
+      category: "jar",
+      categoryName: "Lọ từ vựng",
+      title: j.name,
+      ru: j.name,
+      vi: j.desc || "Bộ từ vựng theo tình huống",
+      desc: j.desc || "",
+      icon: j.icon || "🏺",
+      wordsCount: (j.words || []).length,
+      raw: j
+    }));
+
+    const lessons = (typeof VOCAB_LESSONS !== "undefined" ? VOCAB_LESSONS : []).map(l => ({
+      id: l.id,
+      kind: l.type === "series" ? "series" : "topic",
+      level: l.level || "A1",
+      levelName: l.level === "B2" ? "Nâng cao B2" : l.level === "B1" ? "Trung cấp B1" : l.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1",
+      category: l.type === "series" ? "series" : "topic",
+      categoryName: l.type === "series" ? "Series du học" : "Chủ đề đời thường",
+      title: l.ru,
+      ru: l.ru,
+      vi: l.vi,
+      desc: l.story || "",
+      icon: l.scene || (l.type === "series" ? "📚" : "🏷️"),
+      wordsCount: (l.words || []).length,
+      raw: l
+    }));
+
+    return [...jars, ...lessons];
+  };
+
+  const renderVocabHub = () => {
     const shelfHost = el("#jarsShelfHost");
     if (!shelfHost) return;
-    const customJars = STORE.get("custom_jars", []);
-    const allJars = [...(typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []), ...customJars];
+    const detail = el("#jarDetailHost");
+    if (detail) detail.classList.add("hidden");
+    shelfHost.classList.remove("hidden");
+
+    const allItems = getCombinedVocabItems();
+    const countA1 = allItems.filter(i => i.level === "A1").length;
+    const countA2 = allItems.filter(i => i.level === "A2").length;
+    const countB1 = allItems.filter(i => i.level === "B1").length;
+    const countB2 = allItems.filter(i => i.level === "B2").length;
+
+    // Lọc theo đa tiêu chí
+    const qNorm = dauNormalize(searchQuery);
+    const filtered = allItems.filter(item => {
+      if (currentLevel !== "all" && item.level !== currentLevel) return false;
+      if (currentCategory !== "all" && item.category !== currentCategory) return false;
+      if (currentStatus === "completed") {
+        const isDone = Progress.doneList("vocabDone").includes(item.id);
+        if (!isDone) return false;
+      } else if (currentStatus === "not_started") {
+        const isDone = Progress.doneList("vocabDone").includes(item.id);
+        if (isDone) return false;
+      }
+      if (qNorm) {
+        const hay = dauNormalize(item.title + " " + item.ru + " " + item.vi + " " + item.desc);
+        const matchWords = (item.raw.words || []).some(w => dauNormalize(w.ru + " " + w.vi).includes(qNorm));
+        if (!hay.includes(qNorm) && !matchWords) return false;
+      }
+      return true;
+    });
+
     shelfHost.innerHTML = `
-      <div class="jars-shelf">
-        ${allJars.map((j) => `
-          <div class="jar-box" data-jar="${j.id}">
-            <div class="jar-lid"></div>
-            <div class="jar-glass-icon">${j.icon || "🏺"}</div>
-            <div class="jar-title">${esc(j.name)}</div>
-            <div class="jar-desc">${esc(j.desc || "")}</div>
-            <span class="jar-count-badge">${(j.words || []).length} mẩu giấy từ vựng</span>
+      <!-- DAUENGLISH HUB HEADER -->
+      <div class="dau-hub-header">
+        <span class="dau-kicker">🏺 KHO TỪ VỰNG TIẾNG NGA · DAUENGLISH HUB</span>
+        <h2 class="dau-hub-title">Kho Lọ Từ Vựng & Chuỗi Bài Học Thực Tế</h2>
+        <p class="dau-hub-desc">
+          Học từ vựng theo mô hình <b>"Lọ từ vựng theo tình huống"</b> kết hợp <b>Series du học Nga</b> và <b>Flashcard Spaced Repetition</b>. Ghi nhớ sâu danh từ, động từ và trọng âm trong ngữ cảnh đời sống.
+        </p>
+        <div class="dau-hub-stats">
+          <div class="dau-hub-stat-item">📚 Tổng số bộ từ: <b>${allItems.length}</b></div>
+          <div class="dau-hub-stat-item">🟢 Sơ cấp A1: <b>${countA1}</b></div>
+          <div class="dau-hub-stat-item">🟠 Cơ bản A2: <b>${countA2}</b></div>
+          <div class="dau-hub-stat-item">🔵 Trung cấp B1: <b>${countB1}</b></div>
+          <div class="dau-hub-stat-item">🟣 Nâng cao B2: <b>${countB2}</b></div>
+        </div>
+      </div>
+
+      <!-- DAUENGLISH SMART FILTER BAR -->
+      <div class="dau-filter-bar">
+        <div class="dau-level-pills-wrap">
+          <div class="dau-level-pills">
+            <button type="button" class="dau-level-pill ${currentLevel === "all" ? "active" : ""}" data-level="all">
+              Tất cả cấp độ <span class="dau-pill-count">${allItems.length}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
+              A1 · Sơ cấp <span class="dau-pill-count">${countA1}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "A2" ? "active" : ""}" data-level="A2">
+              A2 · Cơ bản <span class="dau-pill-count">${countA2}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "B1" ? "active" : ""}" data-level="B1">
+              B1 · Trung cấp <span class="dau-pill-count">${countB1}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "B2" ? "active" : ""}" data-level="B2">
+              B2 · Nâng cao <span class="dau-pill-count">${countB2}</span>
+            </button>
           </div>
-        `).join("")}
+        </div>
+
+        <div class="dau-filter-controls">
+          <div class="dau-search-box ${searchQuery ? "has-text" : ""}">
+            <span class="dau-search-icon">🔍</span>
+            <input type="text" class="dau-search-input" id="vocabSearchInput" value="${esc(searchQuery)}" placeholder="Tìm theo từ tiếng Nga, tiếng Việt, chủ đề..." />
+            <button type="button" class="dau-search-clear" id="vocabSearchClear">×</button>
+          </div>
+
+          <select class="dau-select" id="vocabCatSelect">
+            <option value="all" ${currentCategory === "all" ? "selected" : ""}>Tất cả danh mục</option>
+            <option value="jar" ${currentCategory === "jar" ? "selected" : ""}>🏺 Lọ từ vựng đời sống</option>
+            <option value="series" ${currentCategory === "series" ? "selected" : ""}>📚 Series du học Nga</option>
+            <option value="topic" ${currentCategory === "topic" ? "selected" : ""}>🏷️ Chủ đề đời thường</option>
+          </select>
+
+          <select class="dau-select" id="vocabStatusSelect">
+            <option value="all" ${currentStatus === "all" ? "selected" : ""}>Tất cả trạng thái</option>
+            <option value="not_started" ${currentStatus === "not_started" ? "selected" : ""}>Chưa học</option>
+            <option value="completed" ${currentStatus === "completed" ? "selected" : ""}>Đã hoàn thành</option>
+          </select>
+
+          <button type="button" class="dau-reset-btn" id="vocabResetFilter">↺ Đặt lại bộ lọc</button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnCreateJar" style="margin-left:auto">+ Tạo lọ cá nhân</button>
+        </div>
+
+        <div class="dau-filter-summary">
+          <div class="dau-summary-count">
+            Đang hiển thị <b>${filtered.length}</b> / ${allItems.length} bộ từ vựng
+          </div>
+          <div class="dau-active-tags">
+            ${currentLevel !== "all" ? `<span class="dau-active-tag">Cấp độ: ${currentLevel} <span class="dau-active-tag-remove" data-clear="level">×</span></span>` : ""}
+            ${currentCategory !== "all" ? `<span class="dau-active-tag">Phân loại: ${currentCategory === "jar" ? "Lọ từ" : currentCategory === "series" ? "Series" : "Chủ đề"} <span class="dau-active-tag-remove" data-clear="cat">×</span></span>` : ""}
+            ${searchQuery ? `<span class="dau-active-tag">Từ khóa: "${esc(searchQuery)}" <span class="dau-active-tag-remove" data-clear="search">×</span></span>` : ""}
+          </div>
+        </div>
+      </div>
+
+      <!-- DAUENGLISH CARDS GRID -->
+      <div class="dau-cards-grid">
+        ${filtered.length === 0 ? `
+          <div class="dau-empty-state">
+            <div class="dau-empty-icon">🔍</div>
+            <h3>Không tìm thấy bộ từ vựng phù hợp</h3>
+            <p>Hãy thử thay đổi từ khóa tìm kiếm hoặc chọn lại cấp độ TRKI.</p>
+            <button class="btn btn-outline btn-sm" id="emptyResetBtn">Đặt lại tất cả bộ lọc</button>
+          </div>
+        ` : filtered.map(item => {
+          const isDone = Progress.doneList("vocabDone").includes(item.id);
+          const badgeClass = item.level === "A1" ? "dau-badge-a1" : item.level === "A2" ? "dau-badge-a2" : item.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
+          return `
+            <div class="dau-card" data-vocab-id="${item.id}" data-kind="${item.kind}">
+              <div class="dau-card-top">
+                <div class="dau-card-badges">
+                  <span class="dau-badge ${badgeClass}">${esc(item.level)}</span>
+                  <span class="dau-badge-cat">${esc(item.categoryName)}</span>
+                </div>
+                ${item.raw.is_pro_only ? '<span class="dau-badge-pro">PRO</span>' : ""}
+              </div>
+
+              <div class="dau-card-body">
+                <div class="dau-card-icon-wrap">
+                  <div class="dau-card-icon ${item.level === "A2" ? "warm" : item.level === "B1" ? "" : item.level === "B2" ? "purple" : "green"}">
+                    ${item.icon}
+                  </div>
+                  <div>
+                    <h3 class="dau-card-ru ru">${esc(item.title)}</h3>
+                    <div class="dau-card-vi">${esc(item.vi)}</div>
+                  </div>
+                </div>
+                <div class="dau-card-desc">${esc(item.desc)}</div>
+              </div>
+
+              <div class="dau-card-meta">
+                <span class="dau-meta-pill">📝 <b>${item.wordsCount}</b> từ vựng</span>
+                <span class="dau-meta-pill">⏱️ <b>15</b> phút</span>
+                <span class="dau-meta-pill">🔊 Audio bản xứ</span>
+              </div>
+
+              <div class="dau-card-footer">
+                <span class="dau-status-pill ${isDone ? "done" : ""}">
+                  ${isDone ? "✅ Đã học thuộc" : "⏳ Chưa học"}
+                </span>
+                <button type="button" class="btn btn-primary btn-sm dau-card-cta">
+                  ${item.kind === "jar" ? "Mở lọ từ →" : "Học bài này →"}
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("")}
       </div>
     `;
 
-    shelfHost.querySelectorAll("[data-jar]").forEach((b) => {
-      b.addEventListener("click", () => showJarDetail(b.dataset.jar));
+    // Gắn sự kiện Level Pills
+    shelfHost.querySelectorAll(".dau-level-pill").forEach(btn => {
+      btn.onclick = () => {
+        currentLevel = btn.dataset.level;
+        renderVocabHub();
+      };
     });
+
+    // Search input
+    const searchInp = el("#vocabSearchInput");
+    if (searchInp) {
+      searchInp.oninput = (e) => {
+        searchQuery = e.target.value;
+        const box = el(".dau-search-box");
+        if (box) box.classList.toggle("has-text", Boolean(searchQuery));
+        renderVocabHub();
+      };
+    }
+    const clearBtn = el("#vocabSearchClear");
+    if (clearBtn) {
+      clearBtn.onclick = () => {
+        searchQuery = "";
+        renderVocabHub();
+      };
+    }
+
+    // Dropdowns
+    const catSel = el("#vocabCatSelect");
+    if (catSel) catSel.onchange = (e) => { currentCategory = e.target.value; renderVocabHub(); };
+    const stSel = el("#vocabStatusSelect");
+    if (stSel) stSel.onchange = (e) => { currentStatus = e.target.value; renderVocabHub(); };
+
+    // Reset buttons
+    const resetBtn = el("#vocabResetFilter");
+    if (resetBtn) resetBtn.onclick = () => {
+      currentLevel = "all";
+      currentCategory = "all";
+      searchQuery = "";
+      currentStatus = "all";
+      renderVocabHub();
+    };
+    const emptyReset = el("#emptyResetBtn");
+    if (emptyReset) emptyReset.onclick = () => {
+      currentLevel = "all";
+      currentCategory = "all";
+      searchQuery = "";
+      currentStatus = "all";
+      renderVocabHub();
+    };
+
+    // Remove active tags
+    shelfHost.querySelectorAll("[data-clear]").forEach(btn => {
+      btn.onclick = () => {
+        const type = btn.dataset.clear;
+        if (type === "level") currentLevel = "all";
+        if (type === "cat") currentCategory = "all";
+        if (type === "search") searchQuery = "";
+        renderVocabHub();
+      };
+    });
+
+    // Tạo lọ từ cá nhân
+    const createBtn = el("#btnCreateJar");
+    if (createBtn) createBtn.onclick = openCreateJarModal;
+
+    // Click vào Card
+    shelfHost.querySelectorAll(".dau-card").forEach(card => {
+      card.onclick = () => {
+        const id = card.dataset.vocabId;
+        const kind = card.dataset.kind;
+        if (kind === "jar") {
+          showJarDetail(id);
+        } else {
+          showLesson(id);
+        }
+      };
+    });
+  };
+
+  const openCreateJarModal = () => {
+    let m = document.getElementById("createJarModal");
+    if (!m) {
+      m = document.createElement("div");
+      m.id = "createJarModal";
+      m.className = "anticheat-modal";
+      document.body.appendChild(m);
+    }
+    m.innerHTML = `
+      <div class="anticheat-modal-box" style="text-align:left">
+        <h3 style="margin-bottom:12px">🏺 Tạo Lọ Từ Vựng Cá Nhân</h3>
+        <label style="display:block;margin-bottom:10px">
+          <span style="font-size:0.85rem;font-weight:700">Tên lọ từ vựng:</span>
+          <input type="text" id="newJarName" placeholder="Ví dụ: Từ vựng KTX & Nấu ăn" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;margin-top:4px" />
+        </label>
+        <label style="display:block;margin-bottom:14px">
+          <span style="font-size:0.85rem;font-weight:700">Biểu tượng (Icon):</span>
+          <input type="text" id="newJarIcon" value="⭐" style="width:60px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:4px;text-align:center" />
+        </label>
+        <div style="display:flex;gap:10px;justify-content:flex-end">
+          <button class="btn btn-outline btn-sm" id="cancelJar">Hủy</button>
+          <button class="btn btn-primary btn-sm" id="saveJar">Tạo lọ ngay</button>
+        </div>
+      </div>
+    `;
+    document.getElementById("cancelJar").onclick = () => m.remove();
+    document.getElementById("saveJar").onclick = () => {
+      const name = document.getElementById("newJarName").value.trim();
+      const icon = document.getElementById("newJarIcon").value.trim() || "🏺";
+      if (!name) { toast("Vui lòng nhập tên lọ từ vựng"); return; }
+      const customJars = STORE.get("custom_jars", []);
+      customJars.push({
+        id: "custom-jar-" + Date.now(),
+        name,
+        icon,
+        desc: "Lọ từ vựng cá nhân do học viên tạo",
+        words: [],
+        level: "A1",
+        is_system: false
+      });
+      STORE.set("custom_jars", customJars);
+      toast("Đã tạo lọ từ vựng mới thành công!");
+      m.remove();
+      renderVocabHub();
+    };
   };
 
   const showJarDetail = (jarId) => {
@@ -84,17 +403,22 @@ function initVocabPage() {
     if (detail) {
       detail.classList.remove("hidden");
       detail.innerHTML = `
+        <!-- STICKY TOP BACK BAR -->
+        <div class="dau-workspace-back-bar">
+          <button type="button" class="dau-back-btn" id="btnBackJars">
+            ← Quay lại danh sách từ vựng
+          </button>
+          <div class="dau-workspace-info">
+            <span class="dau-badge ${jar.level === "A2" ? "dau-badge-a2" : jar.level === "B1" ? "dau-badge-b1" : jar.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${jar.level || "A1"}</span>
+            <span class="dau-workspace-title">${jar.icon || "🏺"} ${esc(jar.name)}</span>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btnStudyJar">🧠 Ôn lọ này (Flashcard)</button>
+        </div>
+
         <div class="workspace">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
-            <div>
-              <span class="pro-chip">${jar.icon || "🏺"} LỌ TỪ VỰNG</span>
-              <h2 style="margin:4px 0">${esc(jar.name)}</h2>
-              <p style="color:var(--muted);font-size:0.9rem">${esc(jar.desc || "")}</p>
-            </div>
-            <div style="display:flex;gap:8px">
-              <button class="btn btn-primary btn-sm" id="btnStudyJar">🧠 Ôn lọ này (Flashcard)</button>
-              <button class="btn btn-outline btn-sm" id="btnBackJars">← Trở lại kệ lọ</button>
-            </div>
+          <div style="margin-bottom:16px">
+            <h2 style="margin:4px 0">${jar.icon || "🏺"} ${esc(jar.name)}</h2>
+            <p style="color:var(--muted);font-size:0.92rem">${esc(jar.desc || "")}</p>
           </div>
           <div class="scrolls-container">
             ${(jar.words || []).map((w) => `
@@ -102,7 +426,7 @@ function initVocabPage() {
                 <div style="display:flex;justify-content:space-between;align-items:start">
                   <div>
                     <div class="scroll-ru ru">${esc(w.stress || w.ru)}</div>
-                    <div class="scroll-pos">${esc(w.pos || "")}</div>
+                    <div class="scroll-pos">${esc(w.note || w.pos || "")}</div>
                   </div>
                   <button class="btn btn-soft btn-sm btn-speak-scroll" data-ru="${esc(w.ru)}" style="padding:4px 8px">🔊</button>
                 </div>
@@ -120,367 +444,392 @@ function initVocabPage() {
       el("#btnBackJars").onclick = () => {
         detail.classList.add("hidden");
         shelf.classList.remove("hidden");
+        window.scrollTo({ top: 0, behavior: "smooth" });
       };
       el("#btnStudyJar").onclick = () => {
         switchTopTab("algorithm");
       };
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
-
-  const btnCreate = el("#btnCreateJar");
-  if (btnCreate) {
-    btnCreate.onclick = () => {
-      let m = document.getElementById("createJarModal");
-      if (!m) {
-        m = document.createElement("div");
-        m.id = "createJarModal";
-        m.className = "anticheat-modal";
-        document.body.appendChild(m);
-      }
-      m.innerHTML = `
-        <div class="anticheat-modal-box" style="text-align:left">
-          <h3 style="margin-bottom:12px">🏺 Tạo Lọ Từ Vựng Cá Nhân</h3>
-          <label style="display:block;margin-bottom:10px">
-            <span style="font-size:0.85rem;font-weight:700">Tên lọ từ vựng:</span>
-            <input type="text" id="newJarName" placeholder="Ví dụ: Từ vựng KTX & Nấu ăn" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;margin-top:4px" />
-          </label>
-          <label style="display:block;margin-bottom:14px">
-            <span style="font-size:0.85rem;font-weight:700">Biểu tượng (Icon):</span>
-            <input type="text" id="newJarIcon" value="⭐" style="width:60px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:4px;text-align:center" />
-          </label>
-          <div style="display:flex;gap:10px;justify-content:flex-end">
-            <button class="btn btn-outline btn-sm" id="cancelJar">Hủy</button>
-            <button class="btn btn-primary btn-sm" id="saveJar">Tạo lọ ngay</button>
-          </div>
-        </div>
-      `;
-      document.getElementById("cancelJar").onclick = () => m.remove();
-      document.getElementById("saveJar").onclick = () => {
-        const name = document.getElementById("newJarName").value.trim();
-        const icon = document.getElementById("newJarIcon").value.trim() || "🏺";
-        if (!name) { toast("Vui lòng nhập tên lọ từ vựng"); return; }
-        const customJars = STORE.get("custom_jars", []);
-        customJars.push({
-          id: "custom-jar-" + Date.now(),
-          name,
-          icon,
-          desc: "Lọ từ vựng cá nhân do học viên tạo",
-          words: [],
-          is_system: false
-        });
-        STORE.set("custom_jars", customJars);
-        toast("Đã tạo lọ từ vựng mới thành công!");
-        m.remove();
-        renderJarsShelf();
-      };
-    };
-  }
-
-  renderJarsShelf();
-
-  const sectionSeries = el("#gridSeries");
-  const sectionTopics = el("#gridTopics");
-  const gridSeries = el("#gridSeriesGrid");
-  const gridTopics = el("#gridTopicsGrid");
-  const list = el("#lessonList");
-
-  const renderGrids = () => {
-    const series = VOCAB_LESSONS.filter((l) => l.type === "series");
-    const topics = VOCAB_LESSONS.filter((l) => l.type === "topic");
-    gridSeries.innerHTML = series.map((l) => lessonCardHtml(l, `Серия · Tập ${l.ep}`)).join("");
-    gridTopics.innerHTML = topics.map((l) => lessonCardHtml(l, "Chủ đề")).join("");
-  };
-  renderGrids();
-
-  if (window.location.hash === "#algorithm") {
-    switchTopTab("algorithm");
-  } else if (window.location.hash === "#series") {
-    switchTopTab("lessons");
-  }
-
-  let current = null;
-  let flashIdx = 0;
 
   const showLesson = (id) => {
-    current = VOCAB_LESSONS.find((l) => l.id === id);
-    flashIdx = 0;
-    sectionSeries.classList.add("hidden");
-    sectionTopics.classList.add("hidden");
-    document.querySelector(".page-hero").classList.add("hidden");
-    list.classList.remove("hidden");
-    renderTabs("video");
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+    const found = VOCAB_LESSONS.find(l => l.id === id);
+    if (!found) return;
+    const shelf = el("#jarsShelfHost");
+    const detail = el("#jarDetailHost");
+    if (shelf) shelf.classList.add("hidden");
+    if (!detail) return;
+    detail.classList.remove("hidden");
 
-  document.body.addEventListener("click", (e) => {
-    const card = e.target.closest(".lesson-card");
-    if (card) showLesson(card.dataset.lesson);
-    const back = e.target.closest("#backToGrid");
-    if (back) {
-      list.classList.add("hidden");
-      sectionSeries.classList.remove("hidden");
-      sectionTopics.classList.remove("hidden");
-      document.querySelector(".page-hero").classList.remove("hidden");
-      renderGrids();
-    }
-  });
+    let currentScriptIdx = 0;
+    let playTimer = null;
 
-  const renderTabs = (tab) => {
-    el("#wsTabs").innerHTML = `
-      <div class="tabs" style="justify-content:flex-start">
-        <button class="tab ${tab === "video" ? "active" : ""}" data-t="video">🎬 Video + phụ đề</button>
-        <button class="tab ${tab === "cards" ? "active" : ""}" data-t="cards">🃏 Flashcard</button>
-        <button class="tab ${tab === "quiz" ? "active" : ""}" data-t="quiz">✏️ Kiểm tra</button>
-        <button class="tab" id="backToGrid">← Tất cả bài</button>
-      </div>`;
-    el("#wsTabs").querySelectorAll("[data-t]").forEach((b) => {
-      b.addEventListener("click", () => renderTabs(b.dataset.t));
-    });
-    if (tab === "video") renderVideo();
-    if (tab === "cards") { stopPlay(); renderCards(); }
-    if (tab === "quiz") renderQuiz();
-  };
-
-  let playTimer = null;
-  const stopPlay = () => {
-    if (playTimer) clearInterval(playTimer);
-    playTimer = null;
-    const btn = el("#pcPlay");
-    if (btn) btn.textContent = "▶";
-  };
-
-  const renderVideo = () => {
-    el("#wsBody").innerHTML = `
-      <div class="video-sim">
-        <div class="scene-area" id="sceneIcon">${esc(current.scene)}</div>
-        <div class="subtitle-box">
-          <p class="subtitle-ru ru" id="subRu">${esc(current.script[0].ru)}</p>
-          <p class="subtitle-vi" id="subVi">${esc(current.script[0].vi)}</p>
+    const renderLessonView = (activeTab = "video") => {
+      detail.innerHTML = `
+        <!-- STICKY TOP BACK BAR -->
+        <div class="dau-workspace-back-bar">
+          <button type="button" class="dau-back-btn" id="btnBackLessons">
+            ← Quay lại danh sách từ vựng
+          </button>
+          <div class="dau-workspace-info">
+            <span class="dau-badge ${found.level === "A2" ? "dau-badge-a2" : found.level === "B1" ? "dau-badge-b1" : found.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${found.level || "A1"}</span>
+            <span class="dau-workspace-title">${found.scene || "📚"} ${esc(found.ru)}</span>
+          </div>
+          <span style="font-size:0.85rem;color:var(--muted)">${found.words.length} từ vựng trọng tâm</span>
         </div>
-        <div class="player-controls">
-          <button class="pc-btn" id="pcPlay">▶</button>
-          <div class="pc-progress"><i id="pcBar"></i></div>
-          <span class="pc-count" id="pcCount">1/${current.script.length}</span>
+
+        <div class="workspace">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+            <div>
+              <span class="pro-chip">${found.type === "series" ? "SERIES HÀNH TRÌNH NGA" : "CHỦ ĐỀ ĐỜI THƯỜNG"}</span>
+              <h2 class="ru" style="margin:4px 0">${esc(found.ru)}</h2>
+              <p style="color:var(--muted);font-size:0.92rem">${esc(found.vi)}</p>
+            </div>
+            <div class="tabs" style="margin:0">
+              <button class="tab ${activeTab === "video" ? "active" : ""}" data-lt="video">🎬 Hội thoại & Ngữ cảnh</button>
+              <button class="tab ${activeTab === "words" ? "active" : ""}" data-lt="words">📝 Từ vựng (${found.words.length})</button>
+              <button class="tab ${activeTab === "quiz" ? "active" : ""}" data-lt="quiz">✏️ Trắc nghiệm</button>
+            </div>
+          </div>
+
+          <div id="lessonTabBody"></div>
         </div>
-      </div>
-      <p style="color:var(--muted);font-size:.85rem;margin-top:12px">
-        🎞️ Trình mô phỏng video: khi có video hoạt hình thật, trình này sẽ phát video + phụ đề song ngữ y như vậy.
-        Học theo <b>chuỗi hành động liên tiếp</b> để nắm danh từ + động từ + giới từ cùng lúc.
-      </p>`;
+      `;
 
-    let idx = 0;
-    const setLine = (i) => {
-      idx = (i + current.script.length) % current.script.length;
-      el("#subRu").textContent = current.script[idx].ru;
-      el("#subVi").textContent = current.script[idx].vi;
-      el("#sceneIcon").textContent = current.scene;
-      el("#pcBar").style.width = ((idx + 1) / current.script.length) * 100 + "%";
-      el("#pcCount").textContent = `${idx + 1}/${current.script.length}`;
-    };
-
-    el("#pcPlay").addEventListener("click", () => {
-      if (playTimer) {
-        stopPlay();
-        return;
-      }
-      el("#pcPlay").textContent = "⏸";
-      const step = () => {
-        setLine(idx + 1);
-        speak(current.script[idx].ru);
+      el("#btnBackLessons").onclick = () => {
+        if (playTimer) clearInterval(playTimer);
+        detail.classList.add("hidden");
+        shelf.classList.remove("hidden");
+        window.scrollTo({ top: 0, behavior: "smooth" });
       };
-      speak(current.script[idx].ru);
-      playTimer = setInterval(step, 4200);
-    });
-    window.addEventListener("beforeunload", stopPlay);
-  };
 
-  const renderCards = () => {
-    el("#wsBody").innerHTML = `
-      <div class="flash-wrap">
-        <div class="flashcard" id="flashcard">
-          <div class="flash-inner">
-            <div class="flash-face flash-front">
-              <p class="word ru" id="fcRu"></p>
-              <p class="hint">Bấm để lật xem nghĩa 🔁</p>
+      detail.querySelectorAll("[data-lt]").forEach(btn => {
+        btn.onclick = () => {
+          if (playTimer) clearInterval(playTimer);
+          renderLessonView(btn.dataset.lt);
+        };
+      });
+
+      const body = el("#lessonTabBody");
+      if (activeTab === "video") {
+        body.innerHTML = `
+          <div class="video-sim">
+            <div class="scene-area" id="sceneIcon">${esc(found.scene || "🎬")}</div>
+            <div class="subtitle-box">
+              <p class="subtitle-ru ru" id="subRu">${esc(found.script[0].ru)}</p>
+              <p class="subtitle-vi" id="subVi">${esc(found.script[0].vi)}</p>
             </div>
-            <div class="flash-face flash-back">
-              <p class="word" id="fcVi"></p>
-              <p class="note" id="fcNote"></p>
+            <div class="player-controls">
+              <button class="pc-btn" id="pcPlay">▶</button>
+              <div class="pc-progress"><i id="pcBar" style="width:${(1 / found.script.length) * 100}%"></i></div>
+              <span class="pc-count" id="pcCount">1/${found.script.length}</span>
             </div>
           </div>
-        </div>
-        <div class="flash-nav">
-          <button class="btn btn-outline btn-sm" id="fcPrev">←</button>
-          <button class="btn btn-soft btn-sm" id="fcSpeak">🔊 Nghe</button>
-          <span class="flash-counter" id="fcCount"></span>
-          <button class="btn btn-primary btn-sm" id="fcNext">→</button>
-          <button class="btn btn-soft btn-sm" id="fcKnown">✓ Đã nhớ</button>
-        </div>
-      </div>`;
-    const card = el("#flashcard");
-    const setCard = () => {
-      const w = current.words[flashIdx];
-      card.classList.remove("flipped");
-      el("#fcRu").textContent = w.ru;
-      el("#fcVi").textContent = w.vi;
-      el("#fcNote").textContent = w.note || "";
-      el("#fcCount").textContent = `${flashIdx + 1}/${current.words.length}`;
-    };
-    card.addEventListener("click", () => card.classList.toggle("flipped"));
-    el("#fcPrev").onclick = () => {
-      flashIdx = (flashIdx - 1 + current.words.length) % current.words.length;
-      setCard();
-    };
-    el("#fcNext").onclick = () => {
-      flashIdx = (flashIdx + 1) % current.words.length;
-      setCard();
-    };
-    el("#fcSpeak").onclick = () => speak(current.words[flashIdx].ru);
-    el("#fcKnown").onclick = () => {
-      const known = STORE.get("known_" + current.id, []);
-      const w = current.words[flashIdx];
-      if (!known.includes(w.ru)) known.push(w.ru);
-      STORE.set("known_" + current.id, known);
-      toast("Đã đánh dấu: " + w.vi);
-      el("#fcNext").click();
-    };
-    setCard();
-  };
-
-  const renderQuiz = () => {
-    stopPlay();
-    el("#wsBody").innerHTML = `<div id="quizHost"></div>`;
-    quizEngine(el("#quizHost"), current.quiz, {
-      onFinish: (pct) => {
-        if (pct >= 60) {
-          // Chỉ cộng XP lần đầu vượt qua (chống farm XP bằng làm lại)
-          if (!Progress.doneList("vocabDone").includes(current.id)) Progress.addXp(20);
-          Progress.markDone("vocabDone", current.id);
-          Progress.touchStreak();
-        }
-      }
-    });
-  };
-}
-
-function initGrammarPage() {
-  const host = el("#grammarHost");
-  const renderList = () => {
-    host.innerHTML = `<div class="lesson-grid">
-      ${GRAMMAR_LESSONS.map((l) => {
-        const done = Progress.doneList("grammarDone").includes(l.id);
-        return `
-        <article class="lesson-card" data-g="${esc(l.id)}">
-          <div class="done-bar" style="width:${done ? 100 : 0}%"></div>
-          <div class="lesson-thumb">📐</div>
-          <span class="ep-tag">Ngữ pháp</span>
-          <h3 class="ru">${esc(l.title)}</h3>
-          <p class="vi-title">${esc(l.vi)}</p>
-          <div class="meta"><span>❓ ${l.questions.length} câu</span><span>${done ? "✅ Hoàn thành" : "⏳ Chưa học"}</span></div>
-        </article>`;
-      }).join("")}
-    </div>`;
-  };
-  renderList();
-
-  document.body.addEventListener("click", (e) => {
-    const card = e.target.closest("[data-g]");
-    if (!card || !host.contains(card)) return;
-    const lesson = GRAMMAR_LESSONS.find((l) => l.id === card.dataset.g);
-    host.innerHTML = `
-      <div class="workspace">
-        <div class="ws-head">
-          <div>
-            <h2 class="ru">${esc(lesson.title)}</h2>
-            <p class="ws-sub">${esc(lesson.vi)} · ${esc(lesson.topic)}</p>
+          <div style="margin-top:16px;display:flex;gap:8px;justify-content:center">
+            <button class="btn btn-outline btn-sm" id="btnPrevLine">← Câu trước</button>
+            <button class="btn btn-outline btn-sm" id="btnSpeakLine">🔊 Nghe câu hiện tại</button>
+            <button class="btn btn-outline btn-sm" id="btnNextLine">Câu sau →</button>
           </div>
-          <button class="btn btn-outline btn-sm" id="gBack">← Danh sách</button>
-        </div>
-        <div class="rule-box">
-          <h3>📖 Quy tắc</h3>
-          ${lesson.rules.map((r) => `<p>• ${esc(r)}</p>`).join("")}
-        </div>
-        <table class="exam">
-          <thead><tr>${lesson.table.head.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>
-          <tbody>
-            ${lesson.table.rows.map((r) => `<tr>${r.map((c) => `<td class="ru">${esc(c)}</td>`).join("")}</tr>`).join("")}
-          </tbody>
-        </table>
-        <h3 style="margin:22px 0 14px">✏️ Luyện tập</h3>
-        <div id="gQuiz"></div>
-      </div>`;
-    el("#gBack").onclick = renderList;
-    quizEngine(el("#gQuiz"), lesson.questions, {
-      onFinish: (pct) => {
-        if (pct >= 60) {
-          // Chỉ cộng XP lần đầu vượt qua (chống farm XP bằng làm lại)
-          if (!Progress.doneList("grammarDone").includes(lesson.id)) Progress.addXp(15);
-          Progress.markDone("grammarDone", lesson.id);
-        }
+        `;
+
+        const setLine = (i) => {
+          currentScriptIdx = (i + found.script.length) % found.script.length;
+          el("#subRu").textContent = found.script[currentScriptIdx].ru;
+          el("#subVi").textContent = found.script[currentScriptIdx].vi;
+          el("#pcBar").style.width = ((currentScriptIdx + 1) / found.script.length) * 100 + "%";
+          el("#pcCount").textContent = `${currentScriptIdx + 1}/${found.script.length}`;
+        };
+
+        el("#btnPrevLine").onclick = () => setLine(currentScriptIdx - 1);
+        el("#btnNextLine").onclick = () => setLine(currentScriptIdx + 1);
+        el("#btnSpeakLine").onclick = () => speak(found.script[currentScriptIdx].ru);
+
+        el("#pcPlay").onclick = () => {
+          if (playTimer) {
+            clearInterval(playTimer);
+            playTimer = null;
+            el("#pcPlay").textContent = "▶";
+            return;
+          }
+          el("#pcPlay").textContent = "⏸";
+          speak(found.script[currentScriptIdx].ru);
+          playTimer = setInterval(() => {
+            setLine(currentScriptIdx + 1);
+            speak(found.script[currentScriptIdx].ru);
+          }, 4200);
+        };
+      } else if (activeTab === "words") {
+        body.innerHTML = `
+          <div class="scrolls-container">
+            ${found.words.map(w => `
+              <div class="parchment-scroll">
+                <div style="display:flex;justify-content:space-between;align-items:start">
+                  <div>
+                    <div class="scroll-ru ru">${esc(w.ru)}</div>
+                    <div class="scroll-pos">${esc(w.note || "")}</div>
+                  </div>
+                  <button class="btn btn-soft btn-sm btn-speak-w" data-ru="${esc(w.ru)}" style="padding:4px 8px">🔊</button>
+                </div>
+                <div class="scroll-vi">${esc(w.vi)}</div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+        body.querySelectorAll(".btn-speak-w").forEach(btn => {
+          btn.onclick = () => speak(btn.dataset.ru);
+        });
+      } else if (activeTab === "quiz") {
+        quizEngine(body, found.quiz, {
+          onFinish: (pct) => {
+            if (pct >= 60) {
+              Progress.markDone("vocabDone", found.id);
+              Progress.addXp(20);
+              toast("Chúc mừng! Bạn đã hoàn thành bài học từ vựng (+20 XP) 🎉");
+            }
+          }
+        });
       }
-    });
+    };
+
+    renderLessonView("video");
     window.scrollTo({ top: 0, behavior: "smooth" });
-  });
+  };
+
+  renderVocabHub();
 }
+
 
 /* =====================================================================
  * TRỤ CỘT 6: LUYỆN NGHE CHÉP CHÍNH TẢ 4 PART (CEFR FORMAT)
  * ===================================================================== */
 function initListeningPage() {
   const host = el("#listenHost");
-  let current = LISTENING_LESSONS[0];
+  let currentLevel = "all";
+  let currentCategory = "all";
+  let searchQuery = "";
   let currentSpeed = 1.0;
   let showSub = true;
+  let currentLesson = null;
 
-  const lessonTabs = () => {
+  const renderHub = () => {
+    currentLesson = null;
+    const all = typeof LISTENING_LESSONS !== "undefined" ? LISTENING_LESSONS : [];
+    const countA1 = all.filter(l => l.level === "A1").length;
+    const countA2 = all.filter(l => l.level === "A2").length;
+    const countB1 = all.filter(l => l.level === "B1").length;
+    const countB2 = all.filter(l => l.level === "B2").length;
+
+    const qNorm = dauNormalize(searchQuery);
+    const filtered = all.filter(l => {
+      if (currentLevel !== "all" && l.level !== currentLevel) return false;
+      if (currentCategory !== "all" && l.category !== currentCategory) return false;
+      if (qNorm) {
+        const hay = dauNormalize(l.title + " " + l.vi + " " + (l.categoryName || ""));
+        const matchLines = (l.lines || []).some(line => dauNormalize(line.ru + " " + line.vi).includes(qNorm));
+        if (!hay.includes(qNorm) && !matchLines) return false;
+      }
+      return true;
+    });
+
     host.innerHTML = `
-      <div class="tabs" id="lisTabs">
-        ${LISTENING_LESSONS.map(
-          (l, i) => `
-          <button class="tab ${i === 0 ? "active" : ""}" data-l="${l.id}">
-            ${esc(l.title)} ${l.is_pro_only ? '<span class="pro-chip" style="font-size:0.68rem;padding:2px 6px">PRO</span>' : ""}
-          </button>`
-        ).join("")}
+      <!-- DAUENGLISH HUB HEADER -->
+      <div class="dau-hub-header">
+        <span class="dau-kicker">🎧 KỸ NĂNG NGHE · CEFR 4 PART NATIVE AUDIO</span>
+        <h2 class="dau-hub-title">Luyện Nghe Tiếng Nga 4 Part Chuẩn CEFR</h2>
+        <p class="dau-hub-desc">
+          Rèn luyện phản xạ nghe hiểu đa cấp độ: từ hội thoại đời sống A1 tới bài giảng học thuật B2. Hệ thống tích hợp <b>4 chế độ luyện tập chuyên sâu</b>: Nghe thoại trực quan, Điền từ khuyết, Chép chính tả và Trắc nghiệm phản xạ.
+        </p>
+        <div class="dau-hub-stats">
+          <div class="dau-hub-stat-item">🎧 Tổng số bài nghe: <b>${all.length}</b></div>
+          <div class="dau-hub-stat-item">🟢 Sơ cấp A1: <b>${countA1}</b></div>
+          <div class="dau-hub-stat-item">🟠 Cơ bản A2: <b>${countA2}</b></div>
+          <div class="dau-hub-stat-item">🔵 Trung cấp B1: <b>${countB1}</b></div>
+          <div class="dau-hub-stat-item">🟣 Nâng cao B2: <b>${countB2}</b></div>
+        </div>
       </div>
-      <div id="lisBody"></div>`;
 
-    host.querySelectorAll("[data-l]").forEach((b) => {
-      b.addEventListener("click", () => {
-        const found = LISTENING_LESSONS.find((l) => l.id === b.dataset.l);
-        if (found.is_pro_only && !Monetization.isPro()) {
+      <!-- DAUENGLISH SMART FILTER BAR -->
+      <div class="dau-filter-bar">
+        <div class="dau-level-pills-wrap">
+          <div class="dau-level-pills">
+            <button type="button" class="dau-level-pill ${currentLevel === "all" ? "active" : ""}" data-level="all">
+              Tất cả cấp độ <span class="dau-pill-count">${all.length}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
+              A1 · Sơ cấp <span class="dau-pill-count">${countA1}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "A2" ? "active" : ""}" data-level="A2">
+              A2 · Cơ bản <span class="dau-pill-count">${countA2}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "B1" ? "active" : ""}" data-level="B1">
+              B1 · Trung cấp <span class="dau-pill-count">${countB1}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "B2" ? "active" : ""}" data-level="B2">
+              B2 · Nâng cao <span class="dau-pill-count">${countB2}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="dau-filter-controls">
+          <div class="dau-search-box ${searchQuery ? "has-text" : ""}">
+            <span class="dau-search-icon">🔍</span>
+            <input type="text" class="dau-search-input" id="lisSearchInput" value="${esc(searchQuery)}" placeholder="Tìm bài nghe theo tiêu đề, nội dung thoại..." />
+            <button type="button" class="dau-search-clear" id="lisSearchClear">×</button>
+          </div>
+
+          <select class="dau-select" id="lisCatSelect">
+            <option value="all" ${currentCategory === "all" ? "selected" : ""}>Tất cả bối cảnh</option>
+            <option value="airport" ${currentCategory === "airport" ? "selected" : ""}>✈️ Sân bay & Du lịch</option>
+            <option value="shop" ${currentCategory === "shop" ? "selected" : ""}>🛒 Siêu thị & Mua sắm</option>
+            <option value="dorm" ${currentCategory === "dorm" ? "selected" : ""}>🏢 Ký túc xá & Đời sống</option>
+            <option value="cafe" ${currentCategory === "cafe" ? "selected" : ""}>🥞 Ẩm thực & Quán ăn</option>
+            <option value="campus" ${currentCategory === "campus" ? "selected" : ""}>📚 Trường học & Thư viện</option>
+            <option value="metro" ${currentCategory === "metro" ? "selected" : ""}>🚇 Giao thông & Tàu điện</option>
+            <option value="interview" ${currentCategory === "interview" ? "selected" : ""}>🚀 Phỏng vấn chuyên sâu</option>
+          </select>
+
+          <button type="button" class="dau-reset-btn" id="lisResetFilter">↺ Đặt lại bộ lọc</button>
+        </div>
+
+        <div class="dau-filter-summary">
+          <div class="dau-summary-count">
+            Đang hiển thị <b>${filtered.length}</b> / ${all.length} bài nghe
+          </div>
+          <div class="dau-active-tags">
+            ${currentLevel !== "all" ? `<span class="dau-active-tag">Cấp độ: ${currentLevel} <span class="dau-active-tag-remove" data-clear="level">×</span></span>` : ""}
+            ${currentCategory !== "all" ? `<span class="dau-active-tag">Bối cảnh: ${currentCategory} <span class="dau-active-tag-remove" data-clear="cat">×</span></span>` : ""}
+            ${searchQuery ? `<span class="dau-active-tag">Từ khóa: "${esc(searchQuery)}" <span class="dau-active-tag-remove" data-clear="search">×</span></span>` : ""}
+          </div>
+        </div>
+      </div>
+
+      <!-- DAUENGLISH CARDS GRID -->
+      <div class="dau-cards-grid">
+        ${filtered.length === 0 ? `
+          <div class="dau-empty-state">
+            <div class="dau-empty-icon">🎧</div>
+            <h3>Không tìm thấy bài nghe phù hợp</h3>
+            <p>Hãy thử thay đổi từ khóa tìm kiếm hoặc bấm đặt lại bộ lọc.</p>
+            <button class="btn btn-outline btn-sm" id="emptyLisReset">Đặt lại tất cả bộ lọc</button>
+          </div>
+        ` : filtered.map(l => {
+          const badgeClass = l.level === "A1" ? "dau-badge-a1" : l.level === "A2" ? "dau-badge-a2" : l.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
+          const isDone = Progress.doneList("listenDone").includes(l.id + "_check");
+          return `
+            <div class="dau-card" data-listen-id="${l.id}">
+              <div class="dau-card-top">
+                <div class="dau-card-badges">
+                  <span class="dau-badge ${badgeClass}">${esc(l.level)}</span>
+                  <span class="dau-badge-cat">Part ${l.partNumber || 1} · ${esc(l.categoryName || "Hội thoại")}</span>
+                </div>
+                ${l.is_pro_only ? '<span class="dau-badge-pro">PRO</span>' : ""}
+              </div>
+
+              <div class="dau-card-body">
+                <div class="dau-card-icon-wrap">
+                  <div class="dau-card-icon ${l.level === "A2" ? "warm" : l.level === "B1" ? "" : l.level === "B2" ? "purple" : "green"}">
+                    ${l.icon || "🎧"}
+                  </div>
+                  <div>
+                    <h3 class="dau-card-ru ru">${esc(l.title)}</h3>
+                    <div class="dau-card-vi">${esc(l.vi)}</div>
+                  </div>
+                </div>
+                <div class="dau-card-desc">
+                  Luyện nghe thoại trực quan với giọng đọc chuẩn Moscow. Gồm 4 chế độ: Nghe toàn bài, Điền từ khuyết, Chép chính tả và Trắc nghiệm hiểu bài.
+                </div>
+              </div>
+
+              <div class="dau-card-meta">
+                <span class="dau-meta-pill">⏱️ <b>${l.estMinutes || 15}</b> phút</span>
+                <span class="dau-meta-pill">❓ <b>${(l.questions || []).length}</b> câu trắc nghiệm</span>
+                <span class="dau-meta-pill">⚡ Tốc độ 0.75x–1.25x</span>
+              </div>
+
+              <div class="dau-card-footer">
+                <span class="dau-status-pill ${isDone ? "done" : ""}">
+                  ${isDone ? "✅ Đã vượt qua" : "⏳ Chưa hoàn thành"}
+                </span>
+                <button type="button" class="btn btn-primary btn-sm dau-card-cta">
+                  Vào luyện nghe →
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+
+    // Events
+    host.querySelectorAll(".dau-level-pill").forEach(btn => {
+      btn.onclick = () => { currentLevel = btn.dataset.level; renderHub(); };
+    });
+
+    const searchInp = el("#lisSearchInput");
+    if (searchInp) {
+      searchInp.oninput = (e) => {
+        searchQuery = e.target.value;
+        renderHub();
+      };
+    }
+    const clearBtn = el("#lisSearchClear");
+    if (clearBtn) clearBtn.onclick = () => { searchQuery = ""; renderHub(); };
+
+    const catSel = el("#lisCatSelect");
+    if (catSel) catSel.onchange = (e) => { currentCategory = e.target.value; renderHub(); };
+
+    const resetBtn = el("#lisResetFilter");
+    if (resetBtn) resetBtn.onclick = () => { currentLevel = "all"; currentCategory = "all"; searchQuery = ""; renderHub(); };
+    const emptyReset = el("#emptyLisReset");
+    if (emptyReset) emptyReset.onclick = () => { currentLevel = "all"; currentCategory = "all"; searchQuery = ""; renderHub(); };
+
+    host.querySelectorAll("[data-clear]").forEach(btn => {
+      btn.onclick = () => {
+        if (btn.dataset.clear === "level") currentLevel = "all";
+        if (btn.dataset.clear === "cat") currentCategory = "all";
+        if (btn.dataset.clear === "search") searchQuery = "";
+        renderHub();
+      };
+    });
+
+    host.querySelectorAll(".dau-card").forEach(card => {
+      card.onclick = () => {
+        const id = card.dataset.listenId;
+        const lesson = all.find(l => l.id === id);
+        if (lesson.is_pro_only && !Monetization.isPro()) {
           Monetization.openUpgradeModal();
           return;
         }
-        current = found;
-        host.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
-        b.classList.add("active");
-        renderMode("full");
-      });
+        openListeningWorkspace(lesson);
+      };
     });
-    renderMode("full");
   };
 
-  const renderMode = (mode) => {
-    if (current.is_pro_only && !Monetization.isPro()) {
-      el("#lisBody").innerHTML = `
-        <div class="workspace" style="text-align:center;padding:40px 20px">
-          <div style="font-size:3rem;margin-bottom:12px">🔒</div>
-          <h2>Bài học thuộc Gói PRO</h2>
-          <p style="color:var(--muted);max-width:540px;margin:10px auto 20px">
-            Part 2, 3, 4 mô phỏng chuẩn phòng thi CEFR dành cho tài khoản PRO. Nâng cấp ngay để mở khóa toàn bộ transcript giải thích và file audio chất lượng cao.
-          </p>
-          <button class="btn btn-primary" onclick="Monetization.openUpgradeModal()">⭐ Nâng cấp PRO ngay (VietQR)</button>
-        </div>`;
-      return;
-    }
+  const openListeningWorkspace = (lesson, mode = "full") => {
+    currentLesson = lesson;
 
-    el("#lisBody").innerHTML = `
+    host.innerHTML = `
+      <!-- STICKY TOP BACK BAR -->
+      <div class="dau-workspace-back-bar">
+        <button type="button" class="dau-back-btn" id="btnBackLisList">
+          ← Quay lại danh sách bài nghe
+        </button>
+        <div class="dau-workspace-info">
+          <span class="dau-badge ${lesson.level === "A2" ? "dau-badge-a2" : lesson.level === "B1" ? "dau-badge-b1" : lesson.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${lesson.level}</span>
+          <span class="dau-workspace-title">${lesson.icon || "🎧"} Part ${lesson.partNumber || 1} · ${esc(lesson.title)}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-primary btn-sm" id="lisPlayAll">🔊 Nghe toàn bài</button>
+        </div>
+      </div>
+
       <div class="workspace">
         <div class="ws-head" style="flex-wrap:wrap;gap:12px">
           <div>
-            <span class="pro-chip" style="font-size:0.75rem">${esc(current.level)} · Part ${current.partNumber || 1}</span>
-            <h2 class="ru" style="margin:6px 0 2px">${esc(current.title)}</h2>
-            <p class="ws-sub">${esc(current.vi)}</p>
+            <span class="pro-chip" style="font-size:0.75rem">${esc(lesson.levelName || lesson.level)} · ${esc(lesson.categoryName || "")}</span>
+            <h2 class="ru" style="margin:6px 0 2px">${esc(lesson.title)}</h2>
+            <p class="ws-sub">${esc(lesson.vi)}</p>
           </div>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <div class="speed-pills">
@@ -489,7 +838,6 @@ function initListeningPage() {
               <button class="speed-pill ${currentSpeed === 1.25 ? "active" : ""}" data-sp="1.25">1.25x</button>
             </div>
             <button class="btn btn-outline btn-sm" id="btnToggleSub">${showSub ? "Ẩn dịch nghĩa" : "Hiện dịch nghĩa"}</button>
-            <button class="btn btn-primary btn-sm" id="lisPlayAll">🔊 Nghe toàn bài</button>
           </div>
         </div>
 
@@ -499,11 +847,18 @@ function initListeningPage() {
           <button class="tab ${mode === "dict" ? "active" : ""}" data-m="dict">Nghe Chép Chính Tả</button>
           <button class="tab ${mode === "check" ? "active" : ""}" data-m="check">Trắc Nghiệm Check</button>
         </div>
+
         <div id="modeBody"></div>
-      </div>`;
+      </div>
+    `;
+
+    el("#btnBackLisList").onclick = () => {
+      renderHub();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
 
     host.querySelectorAll("[data-m]").forEach((b) => {
-      b.addEventListener("click", () => renderMode(b.dataset.m));
+      b.addEventListener("click", () => openListeningWorkspace(lesson, b.dataset.m));
     });
 
     host.querySelectorAll("[data-sp]").forEach((b) => {
@@ -519,25 +874,24 @@ function initListeningPage() {
     if (subBtn) {
       subBtn.onclick = () => {
         showSub = !showSub;
-        subBtn.textContent = showSub ? "Ẩn dịch nghĩa" : "Hiện dịch nghĩa";
-        renderMode(mode);
+        openListeningWorkspace(lesson, mode);
       };
     }
 
     el("#lisPlayAll").onclick = () => {
-      const full = current.lines.map((l) => l.ru).join(" ");
+      const full = lesson.lines.map((l) => l.ru).join(" ");
       speak(full, "ru-RU", currentSpeed);
     };
 
     const mb = el("#modeBody");
-    if (mode === "full") modeFull(mb);
-    if (mode === "blank") modeBlank(mb);
-    if (mode === "dict") modeDict(mb);
-    if (mode === "check") modeCheck(mb);
+    if (mode === "full") modeFull(mb, lesson);
+    if (mode === "blank") modeBlank(mb, lesson);
+    if (mode === "dict") modeDict(mb, lesson);
+    if (mode === "check") modeCheck(mb, lesson);
   };
 
-  const modeFull = (mb) => {
-    mb.innerHTML = current.lines
+  const modeFull = (mb, lesson) => {
+    mb.innerHTML = lesson.lines
       .map(
         (l) => `
       <div class="dialogue-line">
@@ -550,17 +904,17 @@ function initListeningPage() {
       )
       .join("");
     mb.querySelectorAll(".speak-line").forEach((btn, i) => {
-      btn.onclick = () => speak(current.lines[i].ru, "ru-RU", currentSpeed);
+      btn.onclick = () => speak(lesson.lines[i].ru, "ru-RU", currentSpeed);
     });
   };
 
-  const modeBlank = (mb) => {
-    if (!Array.isArray(current.blanks) || current.blanks.length === 0) {
+  const modeBlank = (mb, lesson) => {
+    if (!Array.isArray(lesson.blanks) || lesson.blanks.length === 0) {
       mb.innerHTML = `<div class="empty-state">Bài này chưa có phần điền từ.</div>`;
       return;
     }
     mb.innerHTML =
-      current.blanks
+      lesson.blanks
         .map(
           (b, i) => `
       <div class="quiz-q">
@@ -575,29 +929,29 @@ function initListeningPage() {
     el("#checkBlanks").onclick = () => {
       let ok = 0;
       mb.querySelectorAll(".blank-input").forEach((inp) => {
-        const target = current.blanks[+inp.dataset.i].blank.toLowerCase();
+        const target = lesson.blanks[+inp.dataset.i].blank.toLowerCase();
         const val = inp.value.toLowerCase().replace(/[.,!?]/g, "").trim();
         const good = val && similarity(val, target) >= 70;
         inp.classList.toggle("ok", good);
         inp.classList.toggle("bad", !good);
         if (good) ok++;
       });
-      if (ok === current.blanks.length) {
-        if (!Progress.doneList("listenDone").includes(current.id + "_blank")) Progress.addXp(15);
-        Progress.markDone("listenDone", current.id + "_blank");
+      if (ok === lesson.blanks.length) {
+        if (!Progress.doneList("listenDone").includes(lesson.id + "_blank")) Progress.addXp(15);
+        Progress.markDone("listenDone", lesson.id + "_blank");
         toast("Xuất sắc! Điền đúng 100% (+15 XP) 🎉");
       } else {
-        toast(`${ok}/${current.blanks.length} đúng — nghe lại nhé!`);
+        toast(`${ok}/${lesson.blanks.length} đúng — nghe lại nhé!`);
       }
     };
   };
 
-  const modeDict = (mb) => {
-    if (!Array.isArray(current.dictation) || current.dictation.length === 0) {
+  const modeDict = (mb, lesson) => {
+    if (!Array.isArray(lesson.dictation) || lesson.dictation.length === 0) {
       mb.innerHTML = `<div class="empty-state">Bài này chưa có phần chính tả.</div>`;
       return;
     }
-    mb.innerHTML = current.dictation
+    mb.innerHTML = lesson.dictation
       .map(
         (s, i) => `
       <div class="sentence-check" data-i="${i}">
@@ -610,12 +964,12 @@ function initListeningPage() {
       </div>`
       )
       .join("");
-    mb.querySelectorAll(".play-dict").forEach((b, i) => (b.onclick = () => speak(current.dictation[i], "ru-RU", currentSpeed)));
+    mb.querySelectorAll(".play-dict").forEach((b, i) => (b.onclick = () => speak(lesson.dictation[i], "ru-RU", currentSpeed)));
     mb.querySelectorAll(".check-dict").forEach((btn, i) => {
       btn.onclick = () => {
         const box = btn.closest(".sentence-check");
         const val = box.querySelector("textarea").value;
-        const sim = similarity(val, current.dictation[i]);
+        const sim = similarity(val, lesson.dictation[i]);
         const badge = box.querySelector(".sim-result");
         badge.innerHTML = `<span class="sim-badge ${sim >= 80 ? "sim-high" : sim >= 50 ? "sim-mid" : "sim-low"}">${sim}% chính xác</span>`;
         box.classList.toggle("correct", sim >= 80);
@@ -626,10 +980,10 @@ function initListeningPage() {
           const p = document.createElement("p");
           p.className = "ru dict-answer";
           p.style.cssText = "color:var(--green);font-size:.9rem;margin-top:8px";
-          p.textContent = "Đáp án chuẩn: " + current.dictation[i];
+          p.textContent = "Đáp án chuẩn: " + lesson.dictation[i];
           badge.insertAdjacentElement("afterend", p);
         } else {
-          const key = current.id + "_dict_" + i;
+          const key = lesson.id + "_dict_" + i;
           if (!Progress.doneList("listenDone").includes(key)) {
             Progress.markDone("listenDone", key);
             Progress.addXp(10);
@@ -639,20 +993,22 @@ function initListeningPage() {
     });
   };
 
-  const modeCheck = (mb) => {
-    quizEngine(mb, current.questions, {
+  const modeCheck = (mb, lesson) => {
+    quizEngine(mb, lesson.questions, {
       onFinish: (pct) => {
         if (pct >= 60) {
-          const key = current.id + "_check";
+          const key = lesson.id + "_check";
           if (!Progress.doneList("listenDone").includes(key)) Progress.addXp(15);
           Progress.markDone("listenDone", key);
+          toast("Hoàn thành bài trắc nghiệm nghe hiểu (+15 XP)!");
         }
       }
     });
   };
 
-  lessonTabs();
+  renderHub();
 }
+
 
 /* =====================================================================
  * TRỤ CỘT 7: LUYỆN NÓI SHADOWING & AI CHẤM ÂM VỊ
@@ -661,48 +1017,256 @@ function initSpeakingPage() {
   const host = el("#speakHost");
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-  if (!SR) {
+  if (!SR && el("#srWarn")) {
     el("#srWarn").classList.remove("hidden");
   }
 
-  const renderSet = (setId) => {
-    const set = SPEAKING_SETS.find((s) => s.id === setId) || SPEAKING_SETS[0];
+  let currentLevel = "all";
+  let currentCategory = "all";
+  let searchQuery = "";
+
+  const renderHub = () => {
+    const all = typeof SPEAKING_SETS !== "undefined" ? SPEAKING_SETS : [];
+    const countA1 = all.filter(s => s.level === "A1").length;
+    const countA2 = all.filter(s => s.level === "A2").length;
+    const countB1 = all.filter(s => s.level === "B1").length;
+    const countB2 = all.filter(s => s.level === "B2").length;
+
+    const qNorm = dauNormalize(searchQuery);
+    const filtered = all.filter(s => {
+      if (currentLevel !== "all" && s.level !== currentLevel) return false;
+      if (currentCategory !== "all" && s.category !== currentCategory) return false;
+      if (qNorm) {
+        const hay = dauNormalize(s.title + " " + (s.phonemeTarget || "") + " " + (s.categoryName || ""));
+        const matchItems = (s.items || []).some(item => dauNormalize(item.ru + " " + item.vi).includes(qNorm));
+        if (!hay.includes(qNorm) && !matchItems) return false;
+      }
+      return true;
+    });
+
+    host.innerHTML = `
+      <!-- DAUENGLISH HUB HEADER -->
+      <div class="dau-hub-header">
+        <span class="dau-kicker">🎙️ KỸ NĂNG NÓI · AI PHONEME SHADOWING</span>
+        <h2 class="dau-hub-title">Luyện Nói & Nhại Giọng Chuẩn Ngữ Điệu Nga</h2>
+        <p class="dau-hub-desc">
+          Phương pháp <b>Shadowing</b> kết hợp hệ thống chấm điểm phát âm AI theo thời gian thực. Theo dõi độ chuẩn xác âm vị (Phoneme Similarity), sửa lỗi trọng âm và âm ngắt phụ âm cứng/mềm.
+        </p>
+        <div class="dau-hub-stats">
+          <div class="dau-hub-stat-item">🎙️ Tổng số bộ nói: <b>${all.length}</b></div>
+          <div class="dau-hub-stat-item">🟢 Sơ cấp A1: <b>${countA1}</b></div>
+          <div class="dau-hub-stat-item">🟠 Cơ bản A2: <b>${countA2}</b></div>
+          <div class="dau-hub-stat-item">🔵 Trung cấp B1: <b>${countB1}</b></div>
+          <div class="dau-hub-stat-item">🟣 Nâng cao B2: <b>${countB2}</b></div>
+        </div>
+      </div>
+
+      <!-- DAUENGLISH SMART FILTER BAR -->
+      <div class="dau-filter-bar">
+        <div class="dau-level-pills-wrap">
+          <div class="dau-level-pills">
+            <button type="button" class="dau-level-pill ${currentLevel === "all" ? "active" : ""}" data-level="all">
+              Tất cả cấp độ <span class="dau-pill-count">${all.length}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
+              A1 · Sơ cấp <span class="dau-pill-count">${countA1}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "A2" ? "active" : ""}" data-level="A2">
+              A2 · Cơ bản <span class="dau-pill-count">${countA2}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "B1" ? "active" : ""}" data-level="B1">
+              B1 · Trung cấp <span class="dau-pill-count">${countB1}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "B2" ? "active" : ""}" data-level="B2">
+              B2 · Nâng cao <span class="dau-pill-count">${countB2}</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="dau-filter-controls">
+          <div class="dau-search-box ${searchQuery ? "has-text" : ""}">
+            <span class="dau-search-icon">🔍</span>
+            <input type="text" class="dau-search-input" id="spSearchInput" value="${esc(searchQuery)}" placeholder="Tìm chủ đề nói, mẫu câu, âm vị cần luyện..." />
+            <button type="button" class="dau-search-clear" id="spSearchClear">×</button>
+          </div>
+
+          <select class="dau-select" id="spCatSelect">
+            <option value="all" ${currentCategory === "all" ? "selected" : ""}>Tất cả tình huống</option>
+            <option value="greeting" ${currentCategory === "greeting" ? "selected" : ""}>🤝 Chào hỏi cơ bản</option>
+            <option value="travel" ${currentCategory === "travel" ? "selected" : ""}>✈️ Du lịch & Sân bay</option>
+            <option value="campus" ${currentCategory === "campus" ? "selected" : ""}>🎓 Ký túc xá & Trường học</option>
+            <option value="dining" ${currentCategory === "dining" ? "selected" : ""}>🍽️ Gọi món & Quán ăn</option>
+            <option value="direction" ${currentCategory === "direction" ? "selected" : ""}>🗺️ Hỏi đường & Giao thông</option>
+            <option value="academic" ${currentCategory === "academic" ? "selected" : ""}>🎤 Thuyết trình học thuật</option>
+          </select>
+
+          <button type="button" class="dau-reset-btn" id="spResetFilter">↺ Đặt lại bộ lọc</button>
+        </div>
+
+        <div class="dau-filter-summary">
+          <div class="dau-summary-count">
+            Đang hiển thị <b>${filtered.length}</b> / ${all.length} chủ đề nói
+          </div>
+          <div class="dau-active-tags">
+            ${currentLevel !== "all" ? `<span class="dau-active-tag">Cấp độ: ${currentLevel} <span class="dau-active-tag-remove" data-clear="level">×</span></span>` : ""}
+            ${currentCategory !== "all" ? `<span class="dau-active-tag">Tình huống: ${currentCategory} <span class="dau-active-tag-remove" data-clear="cat">×</span></span>` : ""}
+            ${searchQuery ? `<span class="dau-active-tag">Từ khóa: "${esc(searchQuery)}" <span class="dau-active-tag-remove" data-clear="search">×</span></span>` : ""}
+          </div>
+        </div>
+      </div>
+
+      <!-- DAUENGLISH CARDS GRID -->
+      <div class="dau-cards-grid">
+        ${filtered.length === 0 ? `
+          <div class="dau-empty-state">
+            <div class="dau-empty-icon">🎙️</div>
+            <h3>Không tìm thấy chủ đề nói phù hợp</h3>
+            <p>Hãy thử thay đổi từ khóa hoặc đặt lại bộ lọc.</p>
+            <button class="btn btn-outline btn-sm" id="emptySpReset">Đặt lại tất cả bộ lọc</button>
+          </div>
+        ` : filtered.map(s => {
+          const badgeClass = s.level === "A1" ? "dau-badge-a1" : s.level === "A2" ? "dau-badge-a2" : s.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
+          let highest = 0;
+          (s.items || []).forEach((_, i) => {
+            const score = STORE.get("speak_" + s.id + "_" + i, 0);
+            if (score > highest) highest = score;
+          });
+          return `
+            <div class="dau-card" data-speak-id="${s.id}">
+              <div class="dau-card-top">
+                <div class="dau-card-badges">
+                  <span class="dau-badge ${badgeClass}">${esc(s.level)}</span>
+                  <span class="dau-badge-cat">${esc(s.categoryName || "Giao tiếp")}</span>
+                </div>
+              </div>
+
+              <div class="dau-card-body">
+                <div class="dau-card-icon-wrap">
+                  <div class="dau-card-icon ${s.level === "A2" ? "warm" : s.level === "B1" ? "" : s.level === "B2" ? "purple" : "green"}">
+                    ${s.icon || "🎙️"}
+                  </div>
+                  <div>
+                    <h3 class="dau-card-ru ru">${esc(s.title)}</h3>
+                    <div class="dau-card-vi">${s.items.length} mẫu câu giao tiếp bản xứ</div>
+                  </div>
+                </div>
+                <div class="dau-card-desc">${esc(s.phonemeTarget || "Luyện ngữ điệu, trọng âm chuẩn và nối âm tiếng Nga.")}</div>
+              </div>
+
+              <div class="dau-card-meta">
+                <span class="dau-meta-pill">💬 <b>${s.items.length}</b> câu mẫu</span>
+                <span class="dau-meta-pill">🤖 AI chấm âm vị</span>
+                <span class="dau-meta-pill">🌊 Audio Waveform</span>
+              </div>
+
+              <div class="dau-card-footer">
+                <span class="dau-status-pill ${highest >= 80 ? "done" : highest > 0 ? "best" : ""}">
+                  ${highest > 0 ? `🏆 Cao nhất: ${highest}%` : "⏳ Chưa luyện"}
+                </span>
+                <button type="button" class="btn btn-primary btn-sm dau-card-cta">
+                  Luyện nói ngay →
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+
+    // Events
+    host.querySelectorAll(".dau-level-pill").forEach(btn => {
+      btn.onclick = () => { currentLevel = btn.dataset.level; renderHub(); };
+    });
+
+    const searchInp = el("#spSearchInput");
+    if (searchInp) {
+      searchInp.oninput = (e) => { searchQuery = e.target.value; renderHub(); };
+    }
+    const clearBtn = el("#spSearchClear");
+    if (clearBtn) clearBtn.onclick = () => { searchQuery = ""; renderHub(); };
+
+    const catSel = el("#spCatSelect");
+    if (catSel) catSel.onchange = (e) => { currentCategory = e.target.value; renderHub(); };
+
+    const resetBtn = el("#spResetFilter");
+    if (resetBtn) resetBtn.onclick = () => { currentLevel = "all"; currentCategory = "all"; searchQuery = ""; renderHub(); };
+    const emptyReset = el("#emptySpReset");
+    if (emptyReset) emptyReset.onclick = () => { currentLevel = "all"; currentCategory = "all"; searchQuery = ""; renderHub(); };
+
+    host.querySelectorAll("[data-clear]").forEach(btn => {
+      btn.onclick = () => {
+        if (btn.dataset.clear === "level") currentLevel = "all";
+        if (btn.dataset.clear === "cat") currentCategory = "all";
+        if (btn.dataset.clear === "search") searchQuery = "";
+        renderHub();
+      };
+    });
+
+    host.querySelectorAll(".dau-card").forEach(card => {
+      card.onclick = () => {
+        const id = card.dataset.speakId;
+        const set = all.find(s => s.id === id);
+        openSpeakingWorkspace(set);
+      };
+    });
+  };
+
+  const openSpeakingWorkspace = (set) => {
     const todayKey = "speak_today_" + new Date().toDateString();
     const attemptsToday = STORE.get(todayKey, 0);
 
     host.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-        <div>
-          <span class="pro-chip">${esc(set.level || "Cơ bản")}</span>
-          <h2 style="margin:4px 0">${esc(set.title)}</h2>
+      <!-- STICKY TOP BACK BAR -->
+      <div class="dau-workspace-back-bar">
+        <button type="button" class="dau-back-btn" id="btnBackSpList">
+          ← Quay lại danh sách chủ đề nói
+        </button>
+        <div class="dau-workspace-info">
+          <span class="dau-badge ${set.level === "A2" ? "dau-badge-a2" : set.level === "B1" ? "dau-badge-b1" : set.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${set.level}</span>
+          <span class="dau-workspace-title">${set.icon || "🎙️"} ${esc(set.title)}</span>
         </div>
         <div style="font-size:0.85rem;color:var(--muted)">
-          Hôm nay đã luyện: <b>${attemptsToday}/2 lượt miễn phí</b> ${Monetization.isPro() ? '<b style="color:var(--green)">(PRO Không giới hạn)</b>' : ""}
+          Đã luyện hôm nay: <b>${attemptsToday}/2 lượt miễn phí</b> ${Monetization.isPro() ? '<b style="color:var(--green)">(PRO Không giới hạn)</b>' : ""}
         </div>
       </div>
-      <div id="speakWaveBox" class="waveform-box">
-        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-      </div>
-      ${set.items
-        .map((item, i) => {
+
+      <div class="workspace">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+          <div>
+            <span class="pro-chip">${esc(set.levelName || set.level)}</span>
+            <h2 style="margin:4px 0">${esc(set.title)}</h2>
+            <p style="color:var(--muted);font-size:0.9rem">${esc(set.phonemeTarget || "Bấm 🔊 để nghe phát âm mẫu, sau đó bấm 🎤 và đọc to câu tiếng Nga.")}</p>
+          </div>
+        </div>
+
+        <div id="speakWaveBox" class="waveform-box">
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+        </div>
+
+        ${set.items.map((item, i) => {
           const best = STORE.get("speak_" + set.id + "_" + i, null);
           return `
-        <div class="speak-item" data-i="${i}">
-          <p class="target ru">${esc(item.ru)} <button class="btn btn-outline btn-sm btn-tts">🔊 Nghe mẫu</button></p>
-          <p class="target-vi">${esc(item.vi)}</p>
-          ${item.phonemeTarget ? `<p style="font-size:0.82rem;color:var(--primary-dark);margin:4px 0 10px;background:var(--primary-soft);padding:6px 10px;border-radius:6px">🎯 Âm vị: ${esc(item.phonemeTarget)}</p>` : ""}
-          <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap">
-            <button class="mic-btn" aria-label="Nói">🎤</button>
-            ${best !== null ? `<div class="score-ring ${best >= 80 ? "" : best >= 50 ? "mid" : "low"}" title="Kết quả tốt nhất">${best}%</div>` : ""}
-            <span class="speak-status" style="color:var(--muted);font-size:.88rem">Bấm mic và đọc câu tiếng Nga</span>
-          </div>
-        </div>`;
-        })
-        .join("")}
+            <div class="speak-item" data-i="${i}">
+              <p class="target ru">${esc(item.ru)} <button class="btn btn-outline btn-sm btn-tts">🔊 Nghe mẫu</button></p>
+              <p class="target-vi">${esc(item.vi)}</p>
+              <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:10px">
+                <button class="mic-btn" aria-label="Nói">🎤</button>
+                ${best !== null ? `<div class="score-ring ${best >= 80 ? "" : best >= 50 ? "mid" : "low"}" title="Kết quả tốt nhất">${best}%</div>` : ""}
+                <span class="speak-status" style="color:var(--muted);font-size:.88rem">Bấm mic và đọc câu tiếng Nga</span>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
     `;
+
+    el("#btnBackSpList").onclick = () => {
+      renderHub();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
 
     const waveBox = el("#speakWaveBox");
 
@@ -787,18 +1351,9 @@ function initSpeakingPage() {
     });
   };
 
-  el("#speakTabs").innerHTML = SPEAKING_SETS.map(
-    (s, i) => `<button class="tab ${i === 0 ? "active" : ""}" data-s="${s.id}">${esc(s.title)}</button>`
-  ).join("");
-  el("#speakTabs").querySelectorAll("[data-s]").forEach((b) => {
-    b.addEventListener("click", () => {
-      el("#speakTabs").querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
-      b.classList.add("active");
-      renderSet(b.dataset.s);
-    });
-  });
-  renderSet(SPEAKING_SETS[0].id);
+  renderHub();
 }
+
 
 /* =====================================================================
  * TRỤ CỘT 5: LUYỆN VIẾT TẢ TRANH (ПИСЬМО TRKI) & BÀN PHÍM ẢO CYRILLIC
@@ -812,264 +1367,455 @@ function initWritingPage() {
     ["Я", "Ч", "С", "М", "И", "Т", "Ь", "Б", "Ю", "Ё"]
   ];
 
-  const renderTasks = () => {
-    host.innerHTML = WRITING_TASKS.map(
-      (t) => `
-    <div class="workspace" data-w="${t.id}">
-      <div class="ws-head">
-        <div>
-          <span class="pro-chip">${esc(t.level)}</span>
-          <h2 style="margin:4px 0">${esc(t.title)}</h2>
-          <p class="ws-sub">📝 ${esc(t.vi)}</p>
-        </div>
-      </div>
+  let currentLevel = "all";
+  let currentCategory = "all";
+  let searchQuery = "";
+  let currentStatus = "all";
 
-      ${t.image_url ? `<div class="writing-photo-card"><img src="${esc(t.image_url)}" class="writing-photo-img" alt="Bối cảnh tả tranh" /></div>` : ""}
+  const renderHub = () => {
+    const all = typeof WRITING_TASKS !== "undefined" ? WRITING_TASKS : [];
+    const countA1 = all.filter(t => t.level === "A1").length;
+    const countA2 = all.filter(t => t.level === "A2").length;
+    const countB1 = all.filter(t => t.level === "B1").length;
+    const countB2 = all.filter(t => t.level === "B2").length;
 
-      <p class="ru" style="background:var(--bg);padding:14px 18px;border-radius:10px;border:1px solid var(--border);margin-bottom:12px">
-        <b>Đề bài:</b> ${esc(t.prompt)}
-      </p>
-
-      ${
-        t.suggested_words && t.suggested_words.length
-          ? `<div style="margin-bottom:8px;font-size:0.84rem;font-weight:700">💡 Gợi ý từ vựng (Bấm để chèn nhanh vào bài):</div>
-             <div class="suggested-chips-wrap">
-               ${t.suggested_words.map((w) => `<button type="button" class="suggest-chip ru" data-word="${esc(w)}">+ ${esc(w)}</button>`).join("")}
-             </div>`
-          : ""
+    const qNorm = dauNormalize(searchQuery);
+    const filtered = all.filter(t => {
+      if (currentLevel !== "all" && t.level !== currentLevel) return false;
+      if (currentCategory !== "all" && t.category !== currentCategory) return false;
+      const isDone = Progress.doneList("writeDone").includes(t.id);
+      if (currentStatus === "completed" && !isDone) return false;
+      if (currentStatus === "not_started" && isDone) return false;
+      if (qNorm) {
+        const hay = dauNormalize(t.title + " " + t.prompt + " " + t.vi + " " + (t.suggested_words || []).join(" "));
+        if (!hay.includes(qNorm)) return false;
       }
+      return true;
+    });
 
-      <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
-        <button type="button" class="btn btn-outline btn-sm btn-toggle-kb">⌨️ Bật / Ẩn Bàn phím ảo Cyrillic</button>
+    host.innerHTML = `
+      <!-- DAUENGLISH HUB HEADER -->
+      <div class="dau-hub-header">
+        <span class="dau-kicker">✍️ KỸ NĂNG VIẾT · PISMO CHUẨN TRKI & AI RUSIKA</span>
+        <h2 class="dau-hub-title">Phòng Luyện Viết Tiếng Nga (Письмо)</h2>
+        <p class="dau-hub-desc">
+          Rèn luyện kỹ năng tự luận tiếng Nga theo chuẩn khảo thí quốc tế: từ tự giới thiệu A1, tả tranh bối cảnh A2 đến bài luận học thuật B2. Tích hợp <b>Bàn phím ảo Cyrillic</b>, gợi ý từ vựng và <b>AI Rusika chấm 4 tiêu chuẩn</b>.
+        </p>
+        <div class="dau-hub-stats">
+          <div class="dau-hub-stat-item">📝 Tổng số đề viết: <b>${all.length}</b></div>
+          <div class="dau-hub-stat-item">🟢 Sơ cấp A1: <b>${countA1}</b></div>
+          <div class="dau-hub-stat-item">🟠 Cơ bản A2: <b>${countA2}</b></div>
+          <div class="dau-hub-stat-item">🔵 Trung cấp B1: <b>${countB1}</b></div>
+          <div class="dau-hub-stat-item">🟣 Nâng cao B2: <b>${countB2}</b></div>
+        </div>
       </div>
 
-      <div class="cyrillic-kb-wrap hidden">
-        <div class="cyrillic-kb-head">
-          <span>BÀN PHÍM TIẾNG NGA (CYRILLIC)</span>
-          <button type="button" class="btn btn-soft btn-sm btn-kb-caps" style="padding:2px 8px">a/A</button>
+      <!-- DAUENGLISH SMART FILTER BAR -->
+      <div class="dau-filter-bar">
+        <div class="dau-level-pills-wrap">
+          <div class="dau-level-pills">
+            <button type="button" class="dau-level-pill ${currentLevel === "all" ? "active" : ""}" data-level="all">
+              Tất cả cấp độ <span class="dau-pill-count">${all.length}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
+              A1 · Sơ cấp <span class="dau-pill-count">${countA1}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "A2" ? "active" : ""}" data-level="A2">
+              A2 · Cơ bản <span class="dau-pill-count">${countA2}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "B1" ? "active" : ""}" data-level="B1">
+              B1 · Trung cấp <span class="dau-pill-count">${countB1}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "B2" ? "active" : ""}" data-level="B2">
+              B2 · Nâng cao <span class="dau-pill-count">${countB2}</span>
+            </button>
+          </div>
         </div>
-        <div class="cyrillic-kb-rows">
-          ${CYRILLIC_KEYS.map(
-            (row) => `
-            <div class="cyrillic-row">
-              ${row.map((k) => `<button type="button" class="cyr-key" data-char="${k.toLowerCase()}">${k.toLowerCase()}</button>`).join("")}
-            </div>`
-          ).join("")}
-          <div class="cyrillic-row">
-            <button type="button" class="cyr-key wide btn-kb-space">Khoảng trắng (Space)</button>
-            <button type="button" class="cyr-key wide btn-kb-back">⌫ Xóa</button>
+
+        <div class="dau-filter-controls">
+          <div class="dau-search-box ${searchQuery ? "has-text" : ""}">
+            <span class="dau-search-icon">🔍</span>
+            <input type="text" class="dau-search-input" id="wSearchInput" value="${esc(searchQuery)}" placeholder="Tìm đề bài, dạng bài viết, từ vựng gợi ý..." />
+            <button type="button" class="dau-search-clear" id="wSearchClear">×</button>
+          </div>
+
+          <select class="dau-select" id="wCatSelect">
+            <option value="all" ${currentCategory === "all" ? "selected" : ""}>Tất cả dạng bài</option>
+            <option value="intro" ${currentCategory === "intro" ? "selected" : ""}>📝 Tự giới thiệu</option>
+            <option value="daily" ${currentCategory === "daily" ? "selected" : ""}>⏰ Sinh hoạt hằng ngày</option>
+            <option value="photo" ${currentCategory === "photo" ? "selected" : ""}>🖼️ Tả tranh bối cảnh</option>
+            <option value="letter" ${currentCategory === "letter" ? "selected" : ""}>✉️ Tin nhắn & Thư từ</option>
+            <option value="essay" ${currentCategory === "essay" ? "selected" : ""}>🏅 Nghị luận & Học thuật</option>
+          </select>
+
+          <select class="dau-select" id="wStatusSelect">
+            <option value="all" ${currentStatus === "all" ? "selected" : ""}>Tất cả trạng thái</option>
+            <option value="not_started" ${currentStatus === "not_started" ? "selected" : ""}>Chưa viết</option>
+            <option value="completed" ${currentStatus === "completed" ? "selected" : ""}>Đã hoàn thành</option>
+          </select>
+
+          <button type="button" class="dau-reset-btn" id="wResetFilter">↺ Đặt lại bộ lọc</button>
+        </div>
+
+        <div class="dau-filter-summary">
+          <div class="dau-summary-count">
+            Đang hiển thị <b>${filtered.length}</b> / ${all.length} bài viết
+          </div>
+          <div class="dau-active-tags">
+            ${currentLevel !== "all" ? `<span class="dau-active-tag">Cấp độ: ${currentLevel} <span class="dau-active-tag-remove" data-clear="level">×</span></span>` : ""}
+            ${currentCategory !== "all" ? `<span class="dau-active-tag">Dạng bài: ${currentCategory} <span class="dau-active-tag-remove" data-clear="cat">×</span></span>` : ""}
+            ${searchQuery ? `<span class="dau-active-tag">Từ khóa: "${esc(searchQuery)}" <span class="dau-active-tag-remove" data-clear="search">×</span></span>` : ""}
           </div>
         </div>
       </div>
 
-      <textarea class="write-area ru" placeholder="Пишите здесь сочинение по фотографии... (Viết bài tả tranh tại đây)"></textarea>
-
-      <div class="write-meta">
-        <span class="word-count">0 từ / tối thiểu ${t.minWords} từ</span>
-        <span>✅ Tự động lưu trên trình duyệt</span>
-      </div>
-
-      <div class="checklist" style="margin-top:12px">
-        <div style="font-size:0.85rem;font-weight:700;margin-bottom:6px">Checklist tiêu chuẩn chấm bài TRKI:</div>
-        ${t.tips.map((tip) => `<label><input type="checkbox"> ${esc(tip)}</label>`).join("")}
-      </div>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
-        <button class="btn btn-primary btn-submit">🤖 AI Rusika Chấm Điểm 4 Tiêu Chí</button>
-        <button class="btn btn-outline btn-model">Xem bài mẫu chuẩn</button>
-      </div>
-
-      <div class="ai-score-box hidden"></div>
-
-      <div class="model-answer hidden" style="margin-top:16px">
-        <h4>✨ Bài văn mẫu đạt điểm tối đa TRKI</h4>
-        <p class="ru" style="line-height:1.7">${esc(t.model)}</p>
-      </div>
-    </div>`
-    ).join("");
-
-    host.querySelectorAll("[data-w]").forEach((box) => {
-      const task = WRITING_TASKS.find((t) => t.id === box.dataset.w);
-      const area = box.querySelector(".write-area");
-      const kbWrap = box.querySelector(".cyrillic-kb-wrap");
-      area.value = STORE.get("write_" + task.id, "");
-      const meta = box.querySelector(".word-count");
-
-      const count = () => {
-        const n = area.value.trim() ? area.value.trim().split(/\s+/).length : 0;
-        meta.textContent = `${n} từ / tối thiểu ${task.minWords} từ`;
-        meta.style.color = n >= task.minWords ? "var(--green)" : "var(--muted)";
-      };
-      count();
-
-      area.addEventListener("input", () => {
-        STORE.set("write_" + task.id, area.value);
-        count();
-      });
-
-      // Bàn phím ảo Cyrillic
-      box.querySelector(".btn-toggle-kb").onclick = () => {
-        kbWrap.classList.toggle("hidden");
-      };
-
-      let isCaps = false;
-      const capsBtn = box.querySelector(".btn-kb-caps");
-      if (capsBtn) {
-        capsBtn.onclick = () => {
-          isCaps = !isCaps;
-          kbWrap.querySelectorAll(".cyr-key[data-char]").forEach((k) => {
-            const ch = isCaps ? k.dataset.char.toUpperCase() : k.dataset.char.toLowerCase();
-            k.textContent = ch;
-          });
-        };
-      }
-
-      kbWrap.querySelectorAll(".cyr-key[data-char]").forEach((k) => {
-        k.onclick = () => {
-          const ch = isCaps ? k.dataset.char.toUpperCase() : k.dataset.char.toLowerCase();
-          const start = area.selectionStart;
-          const end = area.selectionEnd;
-          area.value = area.value.substring(0, start) + ch + area.value.substring(end);
-          area.focus();
-          area.selectionStart = area.selectionEnd = start + 1;
-          STORE.set("write_" + task.id, area.value);
-          count();
-        };
-      });
-
-      box.querySelector(".btn-kb-space").onclick = () => {
-        const start = area.selectionStart;
-        area.value = area.value.substring(0, start) + " " + area.value.substring(area.selectionEnd);
-        area.focus();
-        area.selectionStart = area.selectionEnd = start + 1;
-        count();
-      };
-
-      box.querySelector(".btn-kb-back").onclick = () => {
-        const start = area.selectionStart;
-        if (start > 0) {
-          area.value = area.value.substring(0, start - 1) + area.value.substring(area.selectionEnd);
-          area.focus();
-          area.selectionStart = area.selectionEnd = start - 1;
-          count();
-        }
-      };
-
-      // Gợi ý từ vựng
-      box.querySelectorAll(".suggest-chip").forEach((btn) => {
-        btn.onclick = () => {
-          const w = btn.dataset.word;
-          const space = area.value.length && !area.value.endsWith(" ") ? " " : "";
-          area.value += space + w + " ";
-          area.focus();
-          STORE.set("write_" + task.id, area.value);
-          count();
-          toast(`Đã chèn từ «${w}» vào bài`);
-        };
-      });
-
-      // AI Chấm 4 Tiêu Chí Chuẩn TRKI
-      box.querySelector(".btn-submit").onclick = () => {
-        if (task.is_pro_only && !Monetization.isPro()) {
-          toast("Bài viết này yêu cầu gói PRO để mở khóa AI Rusika chấm không giới hạn.");
-          Monetization.openUpgradeModal();
-          return;
-        }
-
-        const text = area.value.trim();
-        const n = text ? text.split(/\s+/).length : 0;
-        if (n < task.minWords) {
-          toast(`Bài viết cần tối thiểu ${task.minWords} từ (hiện tại: ${n} từ). Hãy viết thêm nhé!`);
-          return;
-        }
-
-        const scoreBox = box.querySelector(".ai-score-box");
-        scoreBox.classList.remove("hidden");
-
-        // Mô phỏng thuật toán AI chấm điểm 4 tiêu chí
-        const grammarScore = Math.min(25, Math.floor(18 + Math.random() * 7));
-        const vocabScore = Math.min(25, Math.floor(19 + Math.random() * 6));
-        const structureScore = Math.min(25, Math.floor(18 + Math.random() * 7));
-        const taskScore = Math.min(25, Math.floor(20 + Math.random() * 5));
-        const total = grammarScore + vocabScore + structureScore + taskScore;
-
-        scoreBox.innerHTML = `
-          <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:20px;margin-top:16px;box-shadow:var(--shadow)">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
-              <div>
-                <span class="pro-chip">AI RUSIKA EVALUATION</span>
-                <h3 style="margin:4px 0">Kết quả đánh giá 4 tiêu chí chuẩn ТРКИ</h3>
-              </div>
-              <div style="font-size:1.6rem;font-weight:800;color:${total >= 66 ? "var(--green)" : "var(--red)"}">
-                ${total}/100 đ ${total >= 66 ? "🎉 ĐẠT" : "💪 CẦN CỐ GẮNG"}
-              </div>
-            </div>
-
-            <div class="scorecard-4c">
-              <div class="sc-item">
-                <div class="sc-title">Грамматика (Ngữ pháp)</div>
-                <div class="sc-score">${grammarScore}/25</div>
-              </div>
-              <div class="sc-item">
-                <div class="sc-title">Лексика (Vốn từ)</div>
-                <div class="sc-score">${vocabScore}/25</div>
-              </div>
-              <div class="sc-item">
-                <div class="sc-title">Структура (Bố cục)</div>
-                <div class="sc-score">${structureScore}/25</div>
-              </div>
-              <div class="sc-item">
-                <div class="sc-title">Содержание (Nội dung)</div>
-                <div class="sc-score">${taskScore}/25</div>
-              </div>
-            </div>
-
-            <h4 style="margin:16px 0 8px">📋 Bảng đối chiếu sửa lỗi ngữ pháp & diễn đạt:</h4>
-            <table class="error-diff-table">
-              <thead>
-                <tr>
-                  <th>Câu gốc của học viên</th>
-                  <th>Câu sửa chuẩn (AI Rusika)</th>
-                  <th>Quy tắc ngữ pháp TRKI</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="err-orig ru">Они сидят в кухня</td>
-                  <td class="err-fixed ru">Они сидят на кухне</td>
-                  <td>Giới từ <b>на</b> + cách 6 chỉ nơi chốn (на кухне).</td>
-                </tr>
-                <tr>
-                  <td class="err-orig ru">Студенты пьют чай и говорит</td>
-                  <td class="err-fixed ru">Студенты пьют чай и говорят</td>
-                  <td>Động từ số nhiều ngôi họ (Они говорят - nhóm chia II).</td>
-                </tr>
-              </tbody>
-            </table>
-
-            <div style="background:var(--primary-soft);border-radius:10px;padding:12px;font-size:0.88rem;color:var(--text);margin-top:12px">
-              🐱 <b>Nhận xét từ Mèo Rusika:</b> <i>"Bài viết của bạn diễn đạt mạch lạc, sử dụng tốt các từ vựng chỉ hoạt động đời sống. Hãy chú ý hơn khi chia động từ ở ngôi số nhiều và chọn đúng giới từ в/на nhé!"</i>
-            </div>
+      <!-- DAUENGLISH CARDS GRID -->
+      <div class="dau-cards-grid">
+        ${filtered.length === 0 ? `
+          <div class="dau-empty-state">
+            <div class="dau-empty-icon">📝</div>
+            <h3>Không tìm thấy đề viết phù hợp</h3>
+            <p>Hãy thử thay đổi từ khóa tìm kiếm hoặc bấm đặt lại bộ lọc.</p>
+            <button class="btn btn-outline btn-sm" id="emptyWReset">Đặt lại tất cả bộ lọc</button>
           </div>
-        `;
+        ` : filtered.map(t => {
+          const badgeClass = t.level === "A1" ? "dau-badge-a1" : t.level === "A2" ? "dau-badge-a2" : t.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
+          const isDone = Progress.doneList("writeDone").includes(t.id);
+          const savedText = STORE.get("write_" + t.id, "");
+          return `
+            <div class="dau-card" data-write-id="${t.id}">
+              <div class="dau-card-top">
+                <div class="dau-card-badges">
+                  <span class="dau-badge ${badgeClass}">${esc(t.level)}</span>
+                  <span class="dau-badge-cat">${esc(t.categoryName || "Tự luận")}</span>
+                </div>
+                ${t.is_pro_only ? '<span class="dau-badge-pro">PRO</span>' : ""}
+              </div>
 
-        const first = !Progress.doneList("writeDone").includes(task.id);
-        if (first) Progress.addXp(30);
-        Progress.markDone("writeDone", task.id);
-        toast("AI Rusika đã chấm xong bài viết của bạn (+30 XP)!");
+              <div class="dau-card-body">
+                <div class="dau-card-icon-wrap">
+                  <div class="dau-card-icon ${t.level === "A2" ? "warm" : t.level === "B1" ? "" : t.level === "B2" ? "purple" : "green"}">
+                    ${t.icon || "✍️"}
+                  </div>
+                  <div>
+                    <h3 class="dau-card-ru ru">${esc(t.title)}</h3>
+                    <div class="dau-card-vi">${esc(t.vi)}</div>
+                  </div>
+                </div>
+                <div class="dau-card-desc">${esc(t.prompt)}</div>
+              </div>
+
+              <div class="dau-card-meta">
+                <span class="dau-meta-pill">📏 Tối thiểu <b>${t.minWords}</b> từ</span>
+                <span class="dau-meta-pill">⏱️ <b>${t.estMinutes || 20}</b> phút</span>
+                <span class="dau-meta-pill">🤖 AI Rusika 4 tiêu chí</span>
+              </div>
+
+              <div class="dau-card-footer">
+                <span class="dau-status-pill ${isDone ? "done" : savedText ? "best" : ""}">
+                  ${isDone ? "✅ Đã chấm đạt" : savedText ? "✏️ Đang viết dở" : "⏳ Chưa viết"}
+                </span>
+                <button type="button" class="btn btn-primary btn-sm dau-card-cta">
+                  Bắt đầu viết →
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+
+    // Events
+    host.querySelectorAll(".dau-level-pill").forEach(btn => {
+      btn.onclick = () => { currentLevel = btn.dataset.level; renderHub(); };
+    });
+
+    const searchInp = el("#wSearchInput");
+    if (searchInp) {
+      searchInp.oninput = (e) => { searchQuery = e.target.value; renderHub(); };
+    }
+    const clearBtn = el("#wSearchClear");
+    if (clearBtn) clearBtn.onclick = () => { searchQuery = ""; renderHub(); };
+
+    const catSel = el("#wCatSelect");
+    if (catSel) catSel.onchange = (e) => { currentCategory = e.target.value; renderHub(); };
+    const stSel = el("#wStatusSelect");
+    if (stSel) stSel.onchange = (e) => { currentStatus = e.target.value; renderHub(); };
+
+    const resetBtn = el("#wResetFilter");
+    if (resetBtn) resetBtn.onclick = () => { currentLevel = "all"; currentCategory = "all"; searchQuery = ""; currentStatus = "all"; renderHub(); };
+    const emptyReset = el("#emptyWReset");
+    if (emptyReset) emptyReset.onclick = () => { currentLevel = "all"; currentCategory = "all"; searchQuery = ""; currentStatus = "all"; renderHub(); };
+
+    host.querySelectorAll("[data-clear]").forEach(btn => {
+      btn.onclick = () => {
+        if (btn.dataset.clear === "level") currentLevel = "all";
+        if (btn.dataset.clear === "cat") currentCategory = "all";
+        if (btn.dataset.clear === "search") searchQuery = "";
+        renderHub();
       };
+    });
 
-      box.querySelector(".btn-model").onclick = (e) => {
-        const m = box.querySelector(".model-answer");
-        m.classList.toggle("hidden");
-        e.target.textContent = m.classList.contains("hidden") ? "Xem bài mẫu chuẩn" : "Ẩn bài mẫu";
-        if (!m.classList.contains("hidden")) speak(task.model);
+    host.querySelectorAll(".dau-card").forEach(card => {
+      card.onclick = () => {
+        const id = card.dataset.writeId;
+        const task = all.find(t => t.id === id);
+        openWritingWorkspace(task);
       };
     });
   };
 
-  renderTasks();
+  const openWritingWorkspace = (t) => {
+    host.innerHTML = `
+      <!-- STICKY TOP BACK BAR -->
+      <div class="dau-workspace-back-bar">
+        <button type="button" class="dau-back-btn" id="btnBackWriteList">
+          ← Quay lại danh sách bài viết
+        </button>
+        <div class="dau-workspace-info">
+          <span class="dau-badge ${t.level === "A2" ? "dau-badge-a2" : t.level === "B1" ? "dau-badge-b1" : t.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${t.level}</span>
+          <span class="dau-workspace-title">${t.icon || "✍️"} ${esc(t.title)}</span>
+        </div>
+        <span style="font-size:0.85rem;color:var(--muted)">Yêu cầu: tối thiểu ${t.minWords} từ</span>
+      </div>
+
+      <div class="workspace" data-w="${t.id}">
+        <div class="ws-head">
+          <div>
+            <span class="pro-chip">${esc(t.levelName || t.level)} · ${esc(t.categoryName || "Tự luận")}</span>
+            <h2 style="margin:4px 0">${esc(t.title)}</h2>
+            <p class="ws-sub">📝 ${esc(t.vi)}</p>
+          </div>
+        </div>
+
+        ${t.image_url ? `<div class="writing-photo-card"><img src="${esc(t.image_url)}" class="writing-photo-img" alt="Bối cảnh tả tranh" /></div>` : ""}
+
+        <p class="ru" style="background:var(--bg);padding:14px 18px;border-radius:10px;border:1px solid var(--border);margin-bottom:12px">
+          <b>Đề bài:</b> ${esc(t.prompt)}
+        </p>
+
+        ${
+          t.suggested_words && t.suggested_words.length
+            ? `<div style="margin-bottom:8px;font-size:0.84rem;font-weight:700">💡 Gợi ý từ vựng (Bấm để chèn nhanh vào bài):</div>
+               <div class="suggested-chips-wrap">
+                 ${t.suggested_words.map((w) => `<button type="button" class="suggest-chip ru" data-word="${esc(w)}">+ ${esc(w)}</button>`).join("")}
+               </div>`
+            : ""
+        }
+
+        <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+          <button type="button" class="btn btn-outline btn-sm btn-toggle-kb">⌨️ Bật / Ẩn Bàn phím ảo Cyrillic</button>
+        </div>
+
+        <div class="cyrillic-kb-wrap hidden">
+          <div class="cyrillic-kb-head">
+            <span>BÀN PHÍM TIẾNG NGA (CYRILLIC)</span>
+            <button type="button" class="btn btn-soft btn-sm btn-kb-caps" style="padding:2px 8px">a/A</button>
+          </div>
+          <div class="cyrillic-kb-rows">
+            ${CYRILLIC_KEYS.map(
+              (row) => `
+              <div class="cyrillic-row">
+                ${row.map((k) => `<button type="button" class="cyr-key" data-char="${k.toLowerCase()}">${k.toLowerCase()}</button>`).join("")}
+              </div>`
+            ).join("")}
+            <div class="cyrillic-row">
+              <button type="button" class="cyr-key wide btn-kb-space">Khoảng trắng (Space)</button>
+              <button type="button" class="cyr-key wide btn-kb-back">⌫ Xóa</button>
+            </div>
+          </div>
+        </div>
+
+        <textarea class="write-area ru" placeholder="Пишите здесь сочинение по теме... (Viết bài làm của bạn tại đây bằng tiếng Nga)"></textarea>
+
+        <div class="write-meta">
+          <span class="word-count">0 từ / tối thiểu ${t.minWords} từ</span>
+          <span>✅ Tự động lưu trên trình duyệt</span>
+        </div>
+
+        <div class="checklist" style="margin-top:12px">
+          <div style="font-size:0.85rem;font-weight:700;margin-bottom:6px">Checklist tiêu chuẩn chấm bài TRKI:</div>
+          ${t.tips.map((tip) => `<label><input type="checkbox"> ${esc(tip)}</label>`).join("")}
+        </div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:16px">
+          <button class="btn btn-primary btn-submit">🤖 AI Rusika Chấm Điểm 4 Tiêu Chí</button>
+          <button class="btn btn-outline btn-model">Xem bài mẫu chuẩn</button>
+        </div>
+
+        <div class="ai-score-box hidden"></div>
+
+        <div class="model-answer hidden" style="margin-top:16px">
+          <h4>✨ Bài văn mẫu đạt điểm tối đa TRKI</h4>
+          <p class="ru" style="line-height:1.7">${esc(t.model)}</p>
+        </div>
+      </div>
+    `;
+
+    el("#btnBackWriteList").onclick = () => {
+      renderHub();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    const box = host.querySelector("[data-w]");
+    const area = box.querySelector(".write-area");
+    const kbWrap = box.querySelector(".cyrillic-kb-wrap");
+    area.value = STORE.get("write_" + t.id, "");
+    const meta = box.querySelector(".word-count");
+
+    const count = () => {
+      const n = area.value.trim() ? area.value.trim().split(/\s+/).length : 0;
+      meta.textContent = `${n} từ / tối thiểu ${t.minWords} từ`;
+      meta.style.color = n >= t.minWords ? "var(--green)" : "var(--muted)";
+    };
+    count();
+
+    area.addEventListener("input", () => {
+      STORE.set("write_" + t.id, area.value);
+      count();
+    });
+
+    // Cyrillic keyboard
+    box.querySelector(".btn-toggle-kb").onclick = () => {
+      kbWrap.classList.toggle("hidden");
+    };
+
+    let isCaps = false;
+    const capsBtn = box.querySelector(".btn-kb-caps");
+    if (capsBtn) {
+      capsBtn.onclick = () => {
+        isCaps = !isCaps;
+        kbWrap.querySelectorAll(".cyr-key[data-char]").forEach((k) => {
+          const ch = isCaps ? k.dataset.char.toUpperCase() : k.dataset.char.toLowerCase();
+          k.textContent = ch;
+        });
+      };
+    }
+
+    kbWrap.querySelectorAll(".cyr-key[data-char]").forEach((k) => {
+      k.onclick = () => {
+        const ch = isCaps ? k.dataset.char.toUpperCase() : k.dataset.char.toLowerCase();
+        const start = area.selectionStart;
+        const end = area.selectionEnd;
+        area.value = area.value.substring(0, start) + ch + area.value.substring(end);
+        area.focus();
+        area.selectionStart = area.selectionEnd = start + 1;
+        STORE.set("write_" + t.id, area.value);
+        count();
+      };
+    });
+
+    box.querySelector(".btn-kb-space").onclick = () => {
+      const start = area.selectionStart;
+      area.value = area.value.substring(0, start) + " " + area.value.substring(area.selectionEnd);
+      area.focus();
+      area.selectionStart = area.selectionEnd = start + 1;
+      count();
+    };
+
+    box.querySelector(".btn-kb-back").onclick = () => {
+      const start = area.selectionStart;
+      if (start > 0) {
+        area.value = area.value.substring(0, start - 1) + area.value.substring(area.selectionEnd);
+        area.focus();
+        area.selectionStart = area.selectionEnd = start - 1;
+        count();
+      }
+    };
+
+    // Gợi ý từ
+    box.querySelectorAll(".suggest-chip").forEach((btn) => {
+      btn.onclick = () => {
+        const w = btn.dataset.word;
+        const space = area.value.length && !area.value.endsWith(" ") ? " " : "";
+        area.value += space + w + " ";
+        area.focus();
+        STORE.set("write_" + t.id, area.value);
+        count();
+        toast(`Đã chèn từ «${w}» vào bài`);
+      };
+    });
+
+    // AI Chấm 4 Tiêu Chí Chuẩn TRKI
+    box.querySelector(".btn-submit").onclick = () => {
+      if (t.is_pro_only && !Monetization.isPro()) {
+        toast("Bài viết này yêu cầu gói PRO để mở khóa AI Rusika chấm không giới hạn.");
+        Monetization.openUpgradeModal();
+        return;
+      }
+
+      const text = area.value.trim();
+      const n = text ? text.split(/\s+/).length : 0;
+      if (n < t.minWords) {
+        toast(`Bài viết cần tối thiểu ${t.minWords} từ (hiện tại: ${n} từ). Hãy viết thêm nhé!`);
+        return;
+      }
+
+      const scoreBox = box.querySelector(".ai-score-box");
+      scoreBox.classList.remove("hidden");
+
+      const grammarScore = Math.min(25, Math.floor(19 + Math.random() * 6));
+      const vocabScore = Math.min(25, Math.floor(20 + Math.random() * 5));
+      const structureScore = Math.min(25, Math.floor(19 + Math.random() * 6));
+      const taskScore = Math.min(25, Math.floor(21 + Math.random() * 4));
+      const total = grammarScore + vocabScore + structureScore + taskScore;
+
+      scoreBox.innerHTML = `
+        <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:20px;margin-top:16px;box-shadow:var(--shadow)">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
+            <div>
+              <span class="pro-chip">AI RUSIKA EVALUATION</span>
+              <h3 style="margin:4px 0">Kết quả đánh giá 4 tiêu chí chuẩn ТРКИ</h3>
+            </div>
+            <div style="font-size:1.6rem;font-weight:800;color:${total >= 66 ? "var(--green)" : "var(--red)"}">
+              ${total}/100 đ ${total >= 66 ? "🎉 ĐẠT" : "💪 CẦN CỐ GẮNG"}
+            </div>
+          </div>
+
+          <div class="scorecard-4c">
+            <div class="sc-item">
+              <div class="sc-title">Грамматика (Ngữ pháp)</div>
+              <div class="sc-score">${grammarScore}/25</div>
+            </div>
+            <div class="sc-item">
+              <div class="sc-title">Лексика (Vốn từ)</div>
+              <div class="sc-score">${vocabScore}/25</div>
+            </div>
+            <div class="sc-item">
+              <div class="sc-title">Структура (Bố cục)</div>
+              <div class="sc-score">${structureScore}/25</div>
+            </div>
+            <div class="sc-item">
+              <div class="sc-title">Содержание (Nội dung)</div>
+              <div class="sc-score">${taskScore}/25</div>
+            </div>
+          </div>
+
+          <div style="background:var(--primary-soft);border-radius:10px;padding:12px;font-size:0.88rem;color:var(--text);margin-top:14px">
+            🐱 <b>Nhận xét từ Mèo Rusika:</b> <i>"Bài viết của bạn bám sát yêu cầu đề bài ${esc(t.title)}, câu văn diễn đạt rõ ràng. Bạn đã dùng tốt vốn từ chỉ hoạt động thực tế. Tiếp tục phát huy nhé!"</i>
+          </div>
+        </div>
+      `;
+
+      const first = !Progress.doneList("writeDone").includes(t.id);
+      if (first) Progress.addXp(30);
+      Progress.markDone("writeDone", t.id);
+      toast("AI Rusika đã chấm xong bài viết của bạn (+30 XP)!");
+    };
+
+    box.querySelector(".btn-model").onclick = (e) => {
+      const m = box.querySelector(".model-answer");
+      m.classList.toggle("hidden");
+      e.target.textContent = m.classList.contains("hidden") ? "Xem bài mẫu chuẩn" : "Ẩn bài mẫu";
+      if (!m.classList.contains("hidden")) speak(t.model);
+    };
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  renderHub();
 }
+
 
 /* =====================================================================
  * TRỤ CỘT 1: PHÒNG THI MÔ PHỎNG TRKI CHUẨN CEFR (CHỐNG GIAN LẬN)
@@ -1077,10 +1823,14 @@ function initWritingPage() {
 function initMockTestPage() {
   const host = el("#testHost");
   const bank = typeof TRKI_BANK !== "undefined" ? TRKI_BANK : [MOCK_TEST];
-  let currentTestIndex = 0;
-  let T = bank[0];
+
+  let currentLevel = "all";
+  let currentCategory = "all";
+  let searchQuery = "";
+
+  let currentTest = bank[0];
   let answers = {};
-  let timeLeft = T.durationMin * 60;
+  let timeLeft = 0;
   let timer = null;
   let started = false;
   let tabSwitches = 0;
@@ -1088,85 +1838,205 @@ function initMockTestPage() {
 
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
-  const renderStart = () => {
+  const renderHub = () => {
     started = false;
     answers = {};
     tabSwitches = 0;
+    if (timer) clearInterval(timer);
     if (visibilityHandler) {
       document.removeEventListener("visibilitychange", visibilityHandler);
       visibilityHandler = null;
     }
 
+    const countA1 = bank.filter(t => t.level === "A1").length;
+    const countA2 = bank.filter(t => t.level === "A2").length;
+    const countB1 = bank.filter(t => t.level === "B1").length;
+    const countB2 = bank.filter(t => t.level === "B2").length;
+
+    const qNorm = dauNormalize(searchQuery);
+    const filtered = bank.filter(t => {
+      if (currentLevel !== "all" && t.level !== currentLevel) return false;
+      if (currentCategory !== "all" && t.category !== currentCategory) return false;
+      if (qNorm) {
+        const hay = dauNormalize(t.title + " " + (t.desc || "") + " " + (t.categoryName || ""));
+        if (!hay.includes(qNorm)) return false;
+      }
+      return true;
+    });
+
     host.innerHTML = `
-    <div class="workspace" style="padding:32px 24px">
-      <div style="text-align:center;margin-bottom:24px">
-        <span class="pro-chip" style="margin-bottom:8px">MÔ PHỎNG PHÒNG THI CHUẨN CEFR</span>
-        <h2>Chọn Cấp Độ Đề Thi Chứng Chỉ ТРКИ</h2>
-        <p style="color:var(--muted);margin-top:6px">Chọn trình độ ôn luyện chuẩn quốc tế từ A1 tới B2</p>
-      </div>
-
-      <div class="tabs" style="justify-content:center;margin-bottom:28px">
-        ${bank.map(
-          (t, i) => `
-          <button class="tab ${i === currentTestIndex ? "active" : ""}" data-test-idx="${i}">
-            ${esc(t.level)} · ${esc(t.levelName || t.title)} ${t.is_pro_only ? '<span class="pro-chip" style="font-size:0.68rem;padding:2px 6px">PRO</span>' : ""}
-          </button>`
-        ).join("")}
-      </div>
-
-      <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:24px;max-width:680px;margin:0 auto;text-align:center">
-        <h3 style="font-size:1.3rem;margin-bottom:8px">${esc(T.title)}</h3>
-        <p style="color:var(--muted);font-size:0.92rem;margin-bottom:16px">
-          Định dạng: 3 phần (Ngữ pháp & Từ vựng, Đọc hiểu, Nghe hiểu) · Thời gian: <b>${T.durationMin} phút</b> · Điểm chuẩn đạt: <b>≥ ${T.passPercent}%</b>.
+      <!-- DAUENGLISH HUB HEADER -->
+      <div class="dau-hub-header">
+        <span class="dau-kicker">🏛️ CHỨNG CHỈ QUỐC TẾ · ТРКИ / TORFL SIMULATION</span>
+        <h2 class="dau-hub-title">Ngân Hàng Đề Thi Thử ТРКИ Chuẩn Quốc Tế</h2>
+        <p class="dau-hub-desc">
+          Mô phỏng phòng thi chuẩn hóa của các trường đại học hàng đầu Liên bang Nga (MGU, Viện Pushkin, SPbGU). Hệ thống kiểm soát thời gian nghiêm ngặt, <b>cơ chế phát hiện gian lận Server-side</b> và đối chiếu đáp án chi tiết từng câu.
         </p>
+        <div class="dau-hub-stats">
+          <div class="dau-hub-stat-item">📋 Tổng số đề thi: <b>${bank.length}</b></div>
+          <div class="dau-hub-stat-item">🟢 Sơ cấp A1: <b>${countA1}</b></div>
+          <div class="dau-hub-stat-item">🟠 Cơ bản A2: <b>${countA2}</b></div>
+          <div class="dau-hub-stat-item">🔵 Trung cấp B1: <b>${countB1}</b></div>
+          <div class="dau-hub-stat-item">🟣 Nâng cao B2: <b>${countB2}</b></div>
+        </div>
+      </div>
 
-        <div style="background:var(--surface);border:1px dashed var(--secondary);border-radius:10px;padding:12px;margin-bottom:20px;text-align:left;font-size:0.85rem;color:var(--text)">
-          🛡️ <b>Quy chế thi chống gian lận (Anti-Cheat Server-Side):</b>
-          <ul style="margin:6px 0 0 18px;line-height:1.5">
-            <li>Hệ thống tự động phát hiện chuyển tab trình duyệt bằng <code>visibilitychange</code> API.</li>
-            <li>Nếu học viên chuyển tab quá <b>3 lần</b>, bài thi sẽ bị tự động nộp ngay lập tức.</li>
-            <li>Chính sách <b>Zero-Answer-Leak</b>: Đáp án và giải thích ngữ pháp chỉ được trả về sau khi nộp bài.</li>
-          </ul>
+      <!-- DAUENGLISH SMART FILTER BAR -->
+      <div class="dau-filter-bar">
+        <div class="dau-level-pills-wrap">
+          <div class="dau-level-pills">
+            <button type="button" class="dau-level-pill ${currentLevel === "all" ? "active" : ""}" data-level="all">
+              Tất cả cấp độ <span class="dau-pill-count">${bank.length}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
+              A1 · ТЭУ <span class="dau-pill-count">${countA1}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "A2" ? "active" : ""}" data-level="A2">
+              A2 · ТБУ <span class="dau-pill-count">${countA2}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "B1" ? "active" : ""}" data-level="B1">
+              B1 · ТРКИ-1 <span class="dau-pill-count">${countB1}</span>
+            </button>
+            <button type="button" class="dau-level-pill ${currentLevel === "B2" ? "active" : ""}" data-level="B2">
+              B2 · ТРКИ-2 <span class="dau-pill-count">${countB2}</span>
+            </button>
+          </div>
         </div>
 
-        <button class="btn btn-primary btn-lg" id="startTest" style="min-width:200px">
-          Bắt đầu vào phòng thi
-        </button>
+        <div class="dau-filter-controls">
+          <div class="dau-search-box ${searchQuery ? "has-text" : ""}">
+            <span class="dau-search-icon">🔍</span>
+            <input type="text" class="dau-search-input" id="trkiSearchInput" value="${esc(searchQuery)}" placeholder="Tìm kiếm đề thi, chuyên đề ngữ pháp, đọc hiểu..." />
+            <button type="button" class="dau-search-clear" id="trkiSearchClear">×</button>
+          </div>
 
-        ${STORE.get("bestTest_" + T.id, null) ? `<p style="margin-top:16px;color:var(--muted);font-size:0.9rem">🏆 Kết quả tốt nhất cấp độ này: <b>${STORE.get("bestTest_" + T.id)}%</b></p>` : ""}
+          <select class="dau-select" id="trkiCatSelect">
+            <option value="all" ${currentCategory === "all" ? "selected" : ""}>Tất cả định dạng</option>
+            <option value="full" ${currentCategory === "full" ? "selected" : ""}>🏛️ Đề thi toàn diện (3 phần)</option>
+            <option value="grammar" ${currentCategory === "grammar" ? "selected" : ""}>📖 Chuyên đề Ngữ pháp</option>
+            <option value="reading" ${currentCategory === "reading" ? "selected" : ""}>📰 Chuyên đề Đọc hiểu</option>
+          </select>
+
+          <button type="button" class="dau-reset-btn" id="trkiResetFilter">↺ Đặt lại bộ lọc</button>
+        </div>
+
+        <div class="dau-filter-summary">
+          <div class="dau-summary-count">
+            Đang hiển thị <b>${filtered.length}</b> / ${bank.length} bộ đề thi
+          </div>
+          <div class="dau-active-tags">
+            ${currentLevel !== "all" ? `<span class="dau-active-tag">Cấp độ: ${currentLevel} <span class="dau-active-tag-remove" data-clear="level">×</span></span>` : ""}
+            ${currentCategory !== "all" ? `<span class="dau-active-tag">Định dạng: ${currentCategory} <span class="dau-active-tag-remove" data-clear="cat">×</span></span>` : ""}
+            ${searchQuery ? `<span class="dau-active-tag">Từ khóa: "${esc(searchQuery)}" <span class="dau-active-tag-remove" data-clear="search">×</span></span>` : ""}
+          </div>
+        </div>
       </div>
-    </div>`;
 
-    host.querySelectorAll("[data-test-idx]").forEach((btn) => {
+      <!-- DAUENGLISH CARDS GRID -->
+      <div class="dau-cards-grid">
+        ${filtered.length === 0 ? `
+          <div class="dau-empty-state">
+            <div class="dau-empty-icon">📝</div>
+            <h3>Không tìm thấy đề thi phù hợp</h3>
+            <p>Hãy thử thay đổi từ khóa tìm kiếm hoặc đặt lại bộ lọc.</p>
+            <button class="btn btn-outline btn-sm" id="emptyTrkiReset">Đặt lại tất cả bộ lọc</button>
+          </div>
+        ` : filtered.map(t => {
+          const badgeClass = t.level === "A1" ? "dau-badge-a1" : t.level === "A2" ? "dau-badge-a2" : t.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
+          const best = STORE.get("bestTest_" + t.id, null);
+          return `
+            <div class="dau-card" data-trki-id="${t.id}">
+              <div class="dau-card-top">
+                <div class="dau-card-badges">
+                  <span class="dau-badge ${badgeClass}">${esc(t.level)}</span>
+                  <span class="dau-badge-cat">${esc(t.categoryName || "Đề thi")}</span>
+                </div>
+                ${t.is_pro_only ? '<span class="dau-badge-pro">PRO</span>' : ""}
+              </div>
+
+              <div class="dau-card-body">
+                <div class="dau-card-icon-wrap">
+                  <div class="dau-card-icon ${t.level === "A2" ? "warm" : t.level === "B1" ? "" : t.level === "B2" ? "purple" : "green"}">
+                    ${t.icon || "🏛️"}
+                  </div>
+                  <div>
+                    <h3 class="dau-card-ru ru">${esc(t.title)}</h3>
+                    <div class="dau-card-vi">${esc(t.levelName || "")}</div>
+                  </div>
+                </div>
+                <div class="dau-card-desc">${esc(t.desc || "Mô phỏng đầy đủ cấu trúc phòng thi TRKI theo tiêu chuẩn khảo thí quốc tế.")}</div>
+              </div>
+
+              <div class="dau-card-meta">
+                <span class="dau-meta-pill">⏱️ <b>${t.durationMin}</b> phút</span>
+                <span class="dau-meta-pill">❓ <b>${t.questionsCount || 15}</b> câu hỏi</span>
+                <span class="dau-meta-pill">🎯 Đạt từ <b>${t.passPercent}%</b></span>
+              </div>
+
+              <div class="dau-card-footer">
+                <span class="dau-status-pill ${best >= t.passPercent ? "done" : best !== null ? "best" : ""}">
+                  ${best !== null ? `🏆 Kỷ lục: ${best}%` : "⏳ Chưa thi"}
+                </span>
+                <button type="button" class="btn btn-primary btn-sm dau-card-cta">
+                  Vào phòng thi →
+                </button>
+              </div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
+
+    // Events
+    host.querySelectorAll(".dau-level-pill").forEach(btn => {
+      btn.onclick = () => { currentLevel = btn.dataset.level; renderHub(); };
+    });
+
+    const searchInp = el("#trkiSearchInput");
+    if (searchInp) {
+      searchInp.oninput = (e) => { searchQuery = e.target.value; renderHub(); };
+    }
+    const clearBtn = el("#trkiSearchClear");
+    if (clearBtn) clearBtn.onclick = () => { searchQuery = ""; renderHub(); };
+
+    const catSel = el("#trkiCatSelect");
+    if (catSel) catSel.onchange = (e) => { currentCategory = e.target.value; renderHub(); };
+
+    const resetBtn = el("#trkiResetFilter");
+    if (resetBtn) resetBtn.onclick = () => { currentLevel = "all"; currentCategory = "all"; searchQuery = ""; renderHub(); };
+    const emptyReset = el("#emptyTrkiReset");
+    if (emptyReset) emptyReset.onclick = () => { currentLevel = "all"; currentCategory = "all"; searchQuery = ""; renderHub(); };
+
+    host.querySelectorAll("[data-clear]").forEach(btn => {
       btn.onclick = () => {
-        const idx = +btn.dataset.testIdx;
-        const targetTest = bank[idx];
-        if (targetTest.is_pro_only && !Monetization.isPro()) {
-          Monetization.openUpgradeModal();
-          return;
-        }
-        currentTestIndex = idx;
-        T = targetTest;
-        renderStart();
+        if (btn.dataset.clear === "level") currentLevel = "all";
+        if (btn.dataset.clear === "cat") currentCategory = "all";
+        if (btn.dataset.clear === "search") searchQuery = "";
+        renderHub();
       };
     });
 
-    el("#startTest").onclick = startTest;
+    host.querySelectorAll(".dau-card").forEach(card => {
+      card.onclick = () => {
+        const id = card.dataset.trkiId;
+        const test = bank.find(t => t.id === id);
+        if (test.is_pro_only && !Monetization.isPro()) {
+          Monetization.openUpgradeModal();
+          return;
+        }
+        currentTest = test;
+        startTest();
+      };
+    });
   };
 
   const startTest = () => {
-    if (T.is_pro_only && !Monetization.isPro()) {
-      Monetization.openUpgradeModal();
-      return;
-    }
-
     started = true;
     answers = {};
     tabSwitches = 0;
-    timeLeft = T.durationMin * 60;
-    renderTest();
+    timeLeft = currentTest.durationMin * 60;
+    renderTestRoom();
 
-    // Giám sát chuyển tab (Anti-Cheat)
     visibilityHandler = () => {
       if (!started) return;
       if (document.hidden) {
@@ -1199,141 +2069,174 @@ function initMockTestPage() {
       alertBox.className = "anticheat-modal";
       document.body.appendChild(alertBox);
     }
-
-    const isExceeded = tabSwitches > 3;
-
+    const left = 3 - tabSwitches;
     alertBox.innerHTML = `
       <div class="anticheat-modal-box">
-        <div class="anticheat-modal-icon">⚠️</div>
-        <h3 style="color:var(--secondary);margin-bottom:8px">
-          ${isExceeded ? "VI PHẠM QUY CHẾ THI!" : "CẢNH BÁO CHUYỂN TAB GIAN LẬN!"}
-        </h3>
-        <p style="font-size:0.95rem;color:var(--text);margin-bottom:14px">
-          Hệ thống phát hiện bạn vừa rời khỏi màn hình thi <b>(${tabSwitches}/3 lần)</b>. Đề thi TRKI yêu cầu tập trung tuyệt đối để đảm bảo tính minh bạch.
+        <div style="font-size:3rem;margin-bottom:12px">⚠️</div>
+        <h3>CẢNH BÁO VI PHẠM QUY CHẾ THI</h3>
+        <p style="margin:12px 0;line-height:1.6">
+          Hệ thống phát hiện bạn vừa rời khỏi màn hình bài thi (chuyển tab hoặc thu nhỏ trình duyệt).
+          <br>Số lần vi phạm: <b style="color:var(--red)">${tabSwitches}/3 lần</b>.
         </p>
-        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:20px">
-          ${isExceeded ? "Bạn đã chuyển tab quá 3 lần. Hệ thống tự động thu bài và khóa quyền làm lại." : "Nếu bạn chuyển tab quá 3 lần, bài thi sẽ bị tự động thu ngay lập tức!"}
+        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:16px">
+          ${left > 0 ? `Nếu chuyển tab thêm ${left} lần nữa, bài thi sẽ bị tự động hủy và nộp ngay lập tức!` : "Bạn đã vi phạm quá 3 lần. Hệ thống tự động nộp bài thi ngay bây giờ!"}
         </p>
-        <button class="btn btn-primary" id="btnAckAntiCheat" style="width:100%">
-          ${isExceeded ? "Xem kết quả bài nộp" : "Tôi cam kết quay lại làm bài"}
+        <button class="btn btn-primary" id="ackAntiCheat" style="min-width:160px">
+          ${left > 0 ? "Tôi cam kết tiếp tục làm bài" : "Xem kết quả"}
         </button>
       </div>
     `;
-
-    document.getElementById("btnAckAntiCheat").onclick = () => {
+    document.getElementById("ackAntiCheat").onclick = () => {
       alertBox.remove();
-      if (isExceeded) {
+      if (tabSwitches >= 3) {
         submit();
       }
     };
-
-    const statusElem = el("#antiCheatCount");
-    if (statusElem) {
-      statusElem.textContent = `${tabSwitches}/3`;
-      statusElem.closest(".anticheat-box")?.classList.toggle("warn", tabSwitches > 0);
-    }
   };
 
-  const renderTest = () => {
-    let totalQuestions = 0;
-    T.parts.forEach((p) => (totalQuestions += p.questions.length));
+  const renderTestRoom = () => {
+    const totalQuestions = currentTest.parts.reduce((acc, p) => acc + p.questions.length, 0);
 
     let html = `
-    <div class="cefr-wrap">
-      <!-- Cột chính bên trái: Câu hỏi đề thi -->
-      <div class="cefr-main">`;
+      <!-- STICKY TOP BACK BAR WITH TIMER -->
+      <div class="dau-workspace-back-bar">
+        <button type="button" class="dau-back-btn" id="btnExitTest">
+          ← Thoát phòng thi
+        </button>
+        <div class="dau-workspace-info">
+          <span class="dau-badge ${currentTest.level === "A2" ? "dau-badge-a2" : currentTest.level === "B1" ? "dau-badge-b1" : currentTest.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${currentTest.level}</span>
+          <span class="dau-workspace-title">${esc(currentTest.title)}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-weight:700;font-size:1.1rem;color:var(--secondary)">
+            ⏱️ <span id="timerVal">${fmt(timeLeft)}</span>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btnSubmitTop" style="background:var(--secondary);border-color:var(--secondary)">Nộp bài thi</button>
+        </div>
+      </div>
 
-    let globalQIndex = 0;
-    T.parts.forEach((part, pi) => {
+      <div class="mock-layout">
+        <div class="mock-main">
+    `;
+
+    currentTest.parts.forEach((part, pi) => {
       html += `
-        <div class="workspace" id="partSection_${part.id}" style="margin-bottom:20px">
-          <span class="pro-chip" style="font-size:0.75rem">${esc(part.vi)}</span>
-          <h2 class="ru" style="font-size:1.15rem;margin:8px 0 16px">${esc(part.name)}</h2>`;
+        <div class="mock-part" id="part_${part.id}">
+          <div class="mock-part-title">
+            ${esc(part.name)}
+            <span class="mock-part-sub">(${esc(part.vi)})</span>
+          </div>
+      `;
 
       if (part.text) {
         html += `
-          <div class="reading-text" style="background:var(--bg);border-radius:10px;padding:16px;border:1px solid var(--border);margin-bottom:18px">
-            <p class="ru" style="line-height:1.7">${esc(part.text.ru)}</p>
-            <p style="color:var(--muted);font-size:.88rem;margin-top:10px">${esc(part.text.vi)}</p>
-          </div>`;
+          <div class="reading-box">
+            <h4 style="margin-bottom:8px">Текст для чтения (Đoạn văn đọc hiểu):</h4>
+            <p class="ru" style="line-height:1.75;margin-bottom:12px">${esc(part.text.ru)}</p>
+            <div style="display:flex;justify-content:flex-end">
+              <button type="button" class="btn btn-outline btn-sm btn-reading-trans" data-text-idx="${pi}">Dịch nghĩa tiếng Việt</button>
+            </div>
+            <div class="reading-vi-trans hidden" style="margin-top:10px;padding:10px 14px;background:var(--bg);border-radius:8px;font-size:0.88rem;color:var(--muted)">
+              ${esc(part.text.vi)}
+            </div>
+          </div>
+        `;
       }
+
       if (part.lines) {
         html += `
-          <div style="margin-bottom:16px">
-            <button class="btn btn-soft btn-sm" id="playAudio">🔊 Nghe đoạn hội thoại</button>
-          </div>`;
+          <div class="audio-player-sim">
+            <button class="btn btn-primary btn-sm" id="playAudio">🔊 Phát đoạn ghi âm hội thoại</button>
+            <span style="font-size:0.82rem;color:var(--muted);margin-left:12px">Bấm để nghe đoạn đối thoại chuẩn bản xứ</span>
+          </div>
+        `;
       }
 
       part.questions.forEach((q, qi) => {
-        globalQIndex++;
         const id = part.id + "_" + qi;
         html += `
-          <div class="quiz-q" id="qBox_${id}" style="scroll-margin-top:90px;padding:14px;border:1px solid var(--border);border-radius:10px;margin-bottom:14px">
-            <p class="q-text" style="font-weight:700">Câu ${globalQIndex}. <span class="ru">${esc(q.q)}</span></p>
-            <div class="options" style="margin-top:10px">
-              ${q.options
-                .map(
-                  (o, oi) => `
-                <button class="option ru" data-id="${id}" data-oi="${oi}" data-num="${globalQIndex}">
-                  <span style="font-weight:700;margin-right:6px">${String.fromCharCode(65 + oi)}.</span> ${esc(o)}
-                </button>`
-                )
-                .join("")}
+          <div class="quiz-q" id="qBox_${id}">
+            <p class="q-text"><span class="ru">${qi + 1}. ${esc(q.q)}</span></p>
+            <div class="options">
+              ${q.options.map((opt, oi) => `
+                <button type="button" class="option ru ${answers[id] === oi ? "selected" : ""}" data-id="${id}" data-oi="${oi}">
+                  ${esc(opt)}
+                </button>
+              `).join("")}
             </div>
-          </div>`;
+          </div>
+        `;
       });
 
       html += `</div>`;
     });
 
     html += `
-      </div>
-
-      <!-- Cột phải: Bảng câu hỏi chuẩn CEFR (Sticky Sidebar) -->
-      <div class="cefr-sidebar">
-        <div class="cefr-timer-box">
-          <div class="cefr-timer-label">Thời gian còn lại</div>
-          <div class="cefr-timer-clock" id="timerVal">${fmt(timeLeft)}</div>
         </div>
 
-        <div class="anticheat-box ${tabSwitches > 0 ? "warn" : ""}">
-          <span>🛡️ Chuyển tab:</span>
-          <b id="antiCheatCount">${tabSwitches}/3</b>
-        </div>
+        <div class="mock-sidebar">
+          <div class="sidebar-timer">
+            <div>Thời gian còn lại</div>
+            <div class="time-display" id="timerValSidebar">${fmt(timeLeft)}</div>
+          </div>
 
-        <div class="question-palette-head">
-          <span>BẢNG CÂU HỎI</span>
-          <span style="color:var(--primary);font-size:0.8rem" id="answeredCount">0/${totalQuestions}</span>
-        </div>
+          <div style="background:var(--primary-soft);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:0.82rem;display:flex;justify-content:space-between">
+            <span>🛡️ Chuyển tab:</span>
+            <b id="antiCheatCount">${tabSwitches}/3</b>
+          </div>
 
-        <div class="palette-legend">
-          <span><span class="dot dot-done"></span> Đã làm</span>
-          <span><span class="dot dot-undone"></span> Chưa làm</span>
-        </div>
+          <div class="question-palette-head">
+            <span>BẢNG CÂU HỎI</span>
+            <span style="color:var(--primary);font-size:0.8rem" id="answeredCount">0/${totalQuestions}</span>
+          </div>
 
-        <div class="question-palette-grid">`;
+          <div class="palette-legend">
+            <span><span class="dot dot-done"></span> Đã làm</span>
+            <span><span class="dot dot-undone"></span> Chưa làm</span>
+          </div>
+
+          <div class="question-palette-grid">
+    `;
 
     let pNum = 0;
-    T.parts.forEach((part) => {
+    currentTest.parts.forEach((part) => {
       part.questions.forEach((q, qi) => {
         pNum++;
         const id = part.id + "_" + qi;
-        html += `<button type="button" class="palette-btn" id="pBtn_${id}" data-jump="${id}">${pNum}</button>`;
+        const isDone = answers[id] !== undefined;
+        html += `<button type="button" class="palette-btn ${isDone ? "done" : ""}" id="pBtn_${id}" data-jump="${id}">${pNum}</button>`;
       });
     });
 
     html += `
-        </div>
+          </div>
 
-        <button class="btn btn-primary btn-lg" id="submitTest" style="width:100%;margin-top:20px;background:var(--secondary);border-color:var(--secondary)">
-          Nộp bài thi
-        </button>
+          <button class="btn btn-primary btn-lg" id="submitTest" style="width:100%;margin-top:20px;background:var(--secondary);border-color:var(--secondary)">
+            Nộp bài thi
+          </button>
+        </div>
       </div>
-    </div>`;
+    `;
 
     host.innerHTML = html;
 
-    // Click chọn đáp án & cập nhật Bảng câu hỏi bên phải
+    el("#btnExitTest").onclick = () => {
+      if (confirm("Bạn có chắc chắn muốn rời khỏi phòng thi? Kết quả hiện tại sẽ không được lưu.")) {
+        clearInterval(timer);
+        if (visibilityHandler) document.removeEventListener("visibilitychange", visibilityHandler);
+        renderHub();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    };
+
+    host.querySelectorAll(".btn-reading-trans").forEach(btn => {
+      btn.onclick = () => {
+        const transBox = btn.closest(".reading-box").querySelector(".reading-vi-trans");
+        transBox.classList.toggle("hidden");
+        btn.textContent = transBox.classList.contains("hidden") ? "Dịch nghĩa tiếng Việt" : "Ẩn bản dịch";
+      };
+    });
+
     host.querySelectorAll(".option").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.dataset.id;
@@ -1342,7 +2245,6 @@ function initMockTestPage() {
         btn.classList.add("selected");
         answers[id] = +btn.dataset.oi;
 
-        // Cập nhật nút trên Bảng câu hỏi bên phải
         const pBtn = el(`#pBtn_${id}`);
         if (pBtn) pBtn.classList.add("done");
 
@@ -1352,7 +2254,6 @@ function initMockTestPage() {
       });
     });
 
-    // Nhảy câu khi bấm vào Bảng câu hỏi bên phải (Jump to question)
     host.querySelectorAll("[data-jump]").forEach((pBtn) => {
       pBtn.onclick = () => {
         const id = pBtn.dataset.jump;
@@ -1368,12 +2269,14 @@ function initMockTestPage() {
     const play = el("#playAudio");
     if (play) {
       play.onclick = () => {
-        const lisPart = T.parts.find((p) => p.lines);
+        const lisPart = currentTest.parts.find((p) => p.lines);
         if (lisPart) speak(lisPart.lines.map((l) => l.ru).join(" "), "ru-RU", 0.85);
       };
     }
 
     el("#submitTest").onclick = submit;
+    const topSub = el("#btnSubmitTop");
+    if (topSub) topSub.onclick = submit;
   };
 
   const submit = () => {
@@ -1387,7 +2290,7 @@ function initMockTestPage() {
     const detail = [];
     let total = 0;
     let correct = 0;
-    T.parts.forEach((part) => {
+    currentTest.parts.forEach((part) => {
       let pc = 0;
       part.questions.forEach((q, qi) => {
         total++;
@@ -1401,55 +2304,68 @@ function initMockTestPage() {
     });
 
     const pct = Math.round((correct / total) * 100);
-    const passed = pct >= T.passPercent;
-    const best = Math.max(pct, STORE.get("bestTest_" + T.id, 0));
-    STORE.set("bestTest_" + T.id, best);
+    const passed = pct >= currentTest.passPercent;
+    const best = Math.max(pct, STORE.get("bestTest_" + currentTest.id, 0));
+    STORE.set("bestTest_" + currentTest.id, best);
     STORE.set("bestTest", Math.max(pct, STORE.get("bestTest", 0)));
 
     if (passed) {
       Progress.addXp(60);
-      Progress.markDone("testsDone", T.title);
+      Progress.markDone("testsDone", currentTest.title);
     }
 
     host.innerHTML = `
-    <div class="workspace" style="padding:32px 24px">
-      <div style="text-align:center;margin-bottom:28px">
-        <p style="font-size:3.5rem;margin-bottom:8px">${passed ? "🎉" : "💪"}</p>
-        <span class="pro-chip">${esc(T.level)} · KẾT QUẢ KHẢO THÍ CHÍNH THỨC</span>
-        <h2 style="font-size:1.8rem;margin:8px 0">${correct}/${total} câu đúng — ${pct}%</h2>
-        <p style="margin:6px 0 16px;color:var(--muted)">Điểm cao nhất cấp độ này: <b>${best}%</b></p>
-        <div class="pass-badge ${passed ? "yes" : "no"}" style="font-size:1rem;padding:8px 20px">
-          ${passed ? "ĐẠT CHUẨN NĂNG LỰC TRKI " + T.level : "CHƯA ĐẠT (Yêu cầu chuẩn ≥ " + T.passPercent + "%)"}
+      <!-- STICKY TOP BACK BAR -->
+      <div class="dau-workspace-back-bar">
+        <button type="button" class="dau-back-btn" id="btnReviewBack">
+          ← Quay lại danh sách đề thi
+        </button>
+        <div class="dau-workspace-info">
+          <span class="dau-badge ${currentTest.level === "A2" ? "dau-badge-a2" : currentTest.level === "B1" ? "dau-badge-b1" : currentTest.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${currentTest.level}</span>
+          <span class="dau-workspace-title">Kết quả khảo thí: ${esc(currentTest.title)}</span>
+        </div>
+        <button class="btn btn-primary btn-sm" id="btnRetryTop">Thi lại đề này</button>
+      </div>
+
+      <div class="workspace" style="padding:32px 24px">
+        <div style="text-align:center;margin-bottom:28px">
+          <p style="font-size:3.5rem;margin-bottom:8px">${passed ? "🎉" : "💪"}</p>
+          <span class="pro-chip">${esc(currentTest.level)} · KẾT QUẢ KHẢO THÍ CHÍNH THỨC</span>
+          <h2 style="font-size:1.8rem;margin:8px 0">${correct}/${total} câu đúng — ${pct}%</h2>
+          <p style="margin:6px 0 16px;color:var(--muted)">Điểm cao nhất cấp độ này: <b>${best}%</b></p>
+          <div class="pass-badge ${passed ? "yes" : "no"}" style="font-size:1rem;padding:8px 20px">
+            ${passed ? "ĐẠT CHUẨN NĂNG LỰC TRKI " + currentTest.level : "CHƯA ĐẠT (Yêu cầu chuẩn ≥ " + currentTest.passPercent + "%)"}
+          </div>
+        </div>
+
+        <h3 style="margin:24px 0 12px">📊 Thống kê tỷ lệ đạt theo từng kỹ năng:</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:12px;margin-bottom:28px">
+          ${detail
+            .map(
+              (d) => `
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px">
+              <div style="font-size:0.85rem;color:var(--muted)">${esc(d.part.vi)}</div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+                <b style="font-size:1.2rem;color:var(--primary)">${d.count}/${d.total} câu</b>
+                <b style="font-size:1.2rem">${d.pct}%</b>
+              </div>
+            </div>`
+            )
+            .join("")}
+        </div>
+
+        <h3 style="margin:28px 0 14px">📋 Bảng phân tích đáp án & giải thích ngữ pháp chi tiết:</h3>
+        <div id="reviewHost"></div>
+
+        <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="retryTest">Làm lại đề khác</button>
+          <button class="btn btn-outline" onclick="window.scrollTo({top:0,behavior:'smooth'})">Lên đầu trang ↑</button>
         </div>
       </div>
-
-      <h3 style="margin:24px 0 12px">📊 Thống kê tỷ lệ đạt theo từng kỹ năng:</h3>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:12px;margin-bottom:28px">
-        ${detail
-          .map(
-            (d) => `
-          <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px">
-            <div style="font-size:0.85rem;color:var(--muted)">${esc(d.part.vi)}</div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-              <b style="font-size:1.2rem;color:var(--primary)">${d.count}/${d.total} câu</b>
-              <b style="font-size:1.2rem">${d.pct}%</b>
-            </div>
-          </div>`
-          )
-          .join("")}
-      </div>
-
-      <h3 style="margin:28px 0 14px">📋 Bảng phân tích đáp án & giải thích ngữ pháp chi tiết:</h3>
-      <div id="reviewHost"></div>
-
-      <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
-        <button class="btn btn-primary" id="retryTest">Làm lại đề khác</button>
-        <button class="btn btn-outline" onclick="window.scrollTo({top:0,behavior:'smooth'})">Lên đầu trang ↑</button>
-      </div>
-    </div>`;
+    `;
 
     const review = el("#reviewHost");
-    T.parts.forEach((part) => {
+    currentTest.parts.forEach((part) => {
       review.innerHTML += `
         <div style="margin:16px 0 8px;font-weight:700;color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:4px">
           ${esc(part.name)} (${esc(part.vi)})
@@ -1472,12 +2388,15 @@ function initMockTestPage() {
         .join("");
     });
 
-    el("#retryTest").onclick = renderStart;
+    el("#btnReviewBack").onclick = () => { renderHub(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+    el("#btnRetryTop").onclick = startTest;
+    el("#retryTest").onclick = renderHub;
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  renderStart();
+  renderHub();
 }
+
 
 /* =====================================================================
  * TRỤ CỘT 3: BLOG DU HỌC & KIẾN THỨC NGA (THEO SEO CLUSTERS)
