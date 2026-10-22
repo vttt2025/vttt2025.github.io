@@ -499,50 +499,52 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     return;
   }
 
+  const initialMode = (options && options.initialMode) ? options.initialMode : "list";
+
   container.innerHTML = `
     <div class="quizlet-suite">
       <div class="quizlet-mode-bar">
-        <button type="button" class="quizlet-mode-btn active" data-mode="flashcard">
-          <span>🃏</span> Thẻ ghi nhớ
+        <button type="button" class="quizlet-mode-btn ${initialMode === "list" ? "active" : ""}" data-mode="list">
+          <span>📋</span> Danh sách từ (${words.length})
         </button>
-        <button type="button" class="quizlet-mode-btn" data-mode="learn">
-          <span>🎯</span> Học thông minh
+        <button type="button" class="quizlet-mode-btn ${initialMode === "flashcard" ? "active" : ""}" data-mode="flashcard">
+          <span>🃏</span> Thẻ ghi nhớ (Flashcard)
         </button>
-        <button type="button" class="quizlet-mode-btn" data-mode="write">
-          <span>✍️</span> Gõ từ & Chính tả
+        <button type="button" class="quizlet-mode-btn ${initialMode === "learn" ? "active" : ""}" data-mode="learn">
+          <span>🧠</span> Trắc nghiệm
         </button>
-        <button type="button" class="quizlet-mode-btn" data-mode="match">
+        <button type="button" class="quizlet-mode-btn ${initialMode === "match" ? "active" : ""}" data-mode="match">
           <span>⚡</span> Ghép thẻ
         </button>
-        <button type="button" class="quizlet-mode-btn" data-mode="test">
+        <button type="button" class="quizlet-mode-btn ${initialMode === "test" ? "active" : ""}" data-mode="test">
           <span>📝</span> Kiểm tra
         </button>
-        <button type="button" class="quizlet-mode-btn" data-mode="list">
-          <span>📜</span> Danh sách (${words.length})
+        <button type="button" class="quizlet-mode-btn ${initialMode === "write" ? "active" : ""}" data-mode="write">
+          <span>✍️</span> Gõ chính tả
         </button>
       </div>
 
-      <div class="qmode-pane active" id="paneFlashcard"></div>
-      <div class="qmode-pane" id="paneLearn"></div>
-      <div class="qmode-pane" id="paneWrite"></div>
-      <div class="qmode-pane" id="paneMatch"></div>
-      <div class="qmode-pane" id="paneTest"></div>
-      <div class="qmode-pane" id="paneList"></div>
+      <div class="qmode-pane ${initialMode === "list" ? "active" : ""}" id="paneList"></div>
+      <div class="qmode-pane ${initialMode === "flashcard" ? "active" : ""}" id="paneFlashcard"></div>
+      <div class="qmode-pane ${initialMode === "learn" ? "active" : ""}" id="paneLearn"></div>
+      <div class="qmode-pane ${initialMode === "write" ? "active" : ""}" id="paneWrite"></div>
+      <div class="qmode-pane ${initialMode === "match" ? "active" : ""}" id="paneMatch"></div>
+      <div class="qmode-pane ${initialMode === "test" ? "active" : ""}" id="paneTest"></div>
     </div>
   `;
 
   // Mode switching
-  let currentMode = "flashcard";
+  let currentMode = initialMode;
   let matchTimerInterval = null;
 
   const modeBtns = container.querySelectorAll(".quizlet-mode-btn");
   const panes = {
+    list: container.querySelector("#paneList"),
     flashcard: container.querySelector("#paneFlashcard"),
     learn: container.querySelector("#paneLearn"),
     write: container.querySelector("#paneWrite"),
     match: container.querySelector("#paneMatch"),
-    test: container.querySelector("#paneTest"),
-    list: container.querySelector("#paneList")
+    test: container.querySelector("#paneTest")
   };
 
   const switchMode = (mode) => {
@@ -674,6 +676,26 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           </button>
         </div>
       </div>
+
+      <!-- SRS SPACED REPETITION RATING BAR -->
+      <div class="qcard-srs-rating-bar" style="margin-top:14px">
+        <button type="button" class="btn-srs-rate btn-srs-again" data-rate="again" title="Chưa nhớ - Ôn lại ngay sau 5 thẻ">
+          <span>❌ Quên</span>
+          <small>&lt; 10 phút</small>
+        </button>
+        <button type="button" class="btn-srs-rate btn-srs-hard" data-rate="hard" title="Khó nhớ - Ôn lại sau 6 giờ">
+          <span>⚡ Khó</span>
+          <small>6 giờ</small>
+        </button>
+        <button type="button" class="btn-srs-rate btn-srs-good" data-rate="good" title="Nhớ tốt - Ôn lại sau 1 ngày">
+          <span>👍 Tốt</span>
+          <small>1 ngày</small>
+        </button>
+        <button type="button" class="btn-srs-rate btn-srs-easy" data-rate="easy" title="Rất dễ - Ôn lại sau 3 ngày">
+          <span>🌟 Dễ</span>
+          <small>3 ngày</small>
+        </button>
+      </div>
     `;
 
     // Bind card flip
@@ -701,6 +723,26 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
     pane.querySelector("#qNavNext").onclick = nextCard;
     pane.querySelector("#qNavPrev").onclick = prevCard;
+
+    // SRS Spaced Repetition Rating
+    pane.querySelectorAll(".btn-srs-rate").forEach(b => {
+      b.onclick = (e) => {
+        e.stopPropagation();
+        const rating = b.dataset.rate;
+        if (typeof SRS !== "undefined" && typeof SRS.ensureCard === "function") {
+          const cardId = SRS.ensureCard(currentWord);
+          if (typeof SRS.review === "function") {
+            SRS.review(cardId, rating);
+          }
+          if (typeof Progress !== "undefined") {
+            Progress.addXp(rating === "again" ? 2 : 5);
+            Progress.markDone("vocabDone", jarId);
+          }
+        }
+        playQuizletSound(rating === "again" ? "wrong" : "correct");
+        nextCard();
+      };
+    });
 
     // Audio
     pane.querySelector("#qAudioFront").onclick = (e) => {
@@ -1366,20 +1408,21 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     let searchTxt = "";
 
     pane.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
-        <div style="flex:1;max-width:360px" class="dau-search-box" id="listSearchBox">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;background:var(--surface);padding:14px 16px;border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 8px rgba(16,42,76,0.03)">
+        <div style="flex:1;min-width:240px;max-width:380px" class="dau-search-box" id="listSearchBox">
           <span class="dau-search-icon">🔍</span>
-          <input type="text" class="dau-search-input" id="listSearchInput" placeholder="Tìm trong lọ này..." />
+          <input type="text" class="dau-search-input" id="listSearchInput" placeholder="Tìm từ tiếng Nga hoặc nghĩa..." />
           <button type="button" class="dau-search-clear" id="listSearchClear" style="display:none">×</button>
         </div>
 
-        <div style="display:flex;gap:8px;align-items:center">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
           <span style="font-size:0.85rem;color:var(--muted)" id="listWordCount">Đang hiện <b>${words.length}</b> / ${words.length} từ</span>
-          ${isCustomJar ? `<button class="btn btn-primary btn-sm" id="btnListAddWord">+ Thêm từ mới</button>` : ""}
+          ${isCustomJar ? `<button class="btn btn-outline btn-sm" id="btnListAddWord">+ Thêm từ mới</button>` : ""}
+          <button type="button" class="btn btn-primary btn-sm" id="btnListToStudy" style="font-weight:700">⚡ Bắt đầu học lọ này →</button>
         </div>
       </div>
 
-      <div class="scrolls-container" id="listScrollsGrid"></div>
+      <div class="vocab-word-grid" id="listScrollsGrid"></div>
     `;
 
     const sinp = pane.querySelector("#listSearchInput");
@@ -1387,6 +1430,10 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     const sbox = pane.querySelector("#listSearchBox");
     const countEl = pane.querySelector("#listWordCount");
     const gridEl = pane.querySelector("#listScrollsGrid");
+    const btnToStudy = pane.querySelector("#btnListToStudy");
+    if (btnToStudy) {
+      btnToStudy.onclick = () => switchMode("flashcard");
+    }
 
     const renderWords = () => {
       const qNorm = dauNormalize(searchTxt);
@@ -1401,34 +1448,53 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       }
 
       if (filtered.length === 0) {
-        gridEl.innerHTML = `<div style="text-align:center;padding:32px;color:var(--muted)">Không tìm thấy từ vựng phù hợp</div>`;
+        gridEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;background:var(--surface);border:1px dashed var(--border);border-radius:14px;color:var(--muted)">Không tìm thấy từ vựng phù hợp</div>`;
         return;
       }
 
       gridEl.innerHTML = filtered.map(w => {
         const isStarred = getQuizletStarred().map(s => s.toLowerCase()).includes(w.ru.toLowerCase());
         return `
-          <div class="parchment-scroll" data-ru="${esc(w.ru)}">
-            <div style="display:flex;justify-content:space-between;align-items:start">
-              <div>
-                <div class="scroll-ru ru">${esc(w.stress || w.ru)}</div>
-                ${w.note ? `<div class="scroll-pos">${esc(w.note)}</div>` : ""}
+          <div class="vocab-word-card" data-ru="${esc(w.ru)}">
+            <div class="vw-top-row">
+              <div class="vw-word-area">
+                <span class="vw-main-word ru">${esc(w.stress || w.ru)}</span>
+                <button type="button" class="btn btn-soft btn-xs btn-speak-item" data-ru="${esc(w.ru)}" title="Nghe phát âm">🔊</button>
+                <button type="button" class="btn btn-soft btn-xs btn-star-item ${isStarred ? "starred" : ""}" data-ru="${esc(w.ru)}" title="Gắn sao">⭐</button>
               </div>
-              <div style="display:flex;gap:6px;align-items:center">
-                <button type="button" class="btn btn-soft btn-sm btn-speak-item" data-ru="${esc(w.ru)}" title="Phát âm">🔊</button>
-                <button type="button" class="btn btn-soft btn-sm btn-star-item ${isStarred ? "starred" : ""}" data-ru="${esc(w.ru)}" title="Gắn sao">⭐</button>
-                <button type="button" class="btn btn-soft btn-sm btn-addjar-item" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" data-ex="${esc(w.ex || "")}" title="Lưu vào Lọ cá nhân">🏺 + Lưu</button>
-                ${isCustomJar ? `<button type="button" class="btn btn-soft btn-sm btn-delword-item" data-ru="${esc(w.ru)}" style="color:var(--red)" title="Xóa từ khỏi lọ này">🗑️</button>` : ""}
-              </div>
+              <span class="vw-pos-badge">${esc(w.note || w.pos || "từ vựng")}</span>
             </div>
-            <div class="scroll-vi">${esc(w.vi)}</div>
-            ${w.ex ? `<div class="scroll-ex ru">«${esc(w.ex)}»</div>` : ""}
+
+            <div class="vw-meaning-text">${esc(w.vi)}</div>
+
+            ${w.ex ? `
+              <div class="vw-example-box">
+                <div class="vw-ex-ru ru">«${esc(w.ex)}»</div>
+                <button type="button" class="btn btn-soft btn-xs btn-speak-ex" data-text="${esc(w.ex)}" title="Nghe câu ví dụ">🔊</button>
+              </div>
+            ` : ""}
+
+            ${w.syn ? `<div class="vw-syn">🟢 Đồng nghĩa: <b>${esc(w.syn)}</b></div>` : ""}
+
+            <div class="vw-bottom-bar">
+              <button type="button" class="btn btn-soft btn-xs btn-addjar-item" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" data-ex="${esc(w.ex || "")}" title="Lưu vào Lọ cá nhân để học riêng">
+                🏺 + Lọ của tôi
+              </button>
+              <button type="button" class="btn btn-outline btn-xs btn-dict-detail" data-ru="${esc(w.ru)}" title="Tra cứu biến cách 6 cách & chia thì TFlat">
+                📖 Tra từ 6 cách
+              </button>
+              ${isCustomJar ? `<button type="button" class="btn btn-soft btn-xs btn-delword-item" data-ru="${esc(w.ru)}" style="color:var(--red)" title="Xóa từ khỏi lọ này">🗑️</button>` : ""}
+            </div>
           </div>
         `;
       }).join("");
 
       gridEl.querySelectorAll(".btn-speak-item").forEach(b => {
         b.onclick = () => speak(b.dataset.ru);
+      });
+
+      gridEl.querySelectorAll(".btn-speak-ex").forEach(b => {
+        b.onclick = () => speak(b.dataset.text);
       });
 
       gridEl.querySelectorAll(".btn-star-item").forEach(b => {
@@ -1445,6 +1511,16 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           note: b.dataset.note,
           ex: b.dataset.ex
         });
+      });
+
+      gridEl.querySelectorAll(".btn-dict-detail").forEach(b => {
+        b.onclick = () => {
+          if (window.WordDetail && typeof window.WordDetail.open === "function") {
+            window.WordDetail.open(b.dataset.ru);
+          } else {
+            speak(b.dataset.ru);
+          }
+        };
       });
 
       if (isCustomJar) {
@@ -1573,6 +1649,7 @@ function initVocabPage() {
       desc: j.desc || "",
       icon: j.icon || "🏺",
       wordsCount: (j.words || []).length,
+      is_pro_only: Boolean(j.is_pro_only || j.is_vip || (j.level === "B2" && j.id !== "jar_travel") || j.id === "jar_bank" || j.id === "jar_hospital" || j.id === "jar_dekanat"),
       raw: j
     }));
     return jars;
@@ -1622,13 +1699,15 @@ function initVocabPage() {
       gridHost.innerHTML = pageItems.map(item => {
         const isDone = Progress.doneList("vocabDone").includes(item.id);
         const badgeClass = item.level === "A1" ? "dau-badge-a1" : item.level === "A2" ? "dau-badge-a2" : item.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
+        const isPro = Boolean(item.is_pro_only);
         return `
-          <div class="dau-card" data-vocab-id="${item.id}" data-kind="jar">
+          <div class="dau-card dau-card-compact" data-vocab-id="${item.id}" data-kind="jar" data-pro="${isPro}">
             <div class="dau-card-top">
               <div class="dau-card-badges">
                 <span class="dau-badge ${badgeClass}">${esc(item.level)}</span>
+                <span class="dau-badge-cat">📝 ${item.wordsCount} từ</span>
               </div>
-              ${item.raw.is_pro_only ? '<span class="dau-badge-pro">PRO</span>' : ""}
+              ${isPro ? '<span class="dau-badge-pro">👑 PRO</span>' : ""}
             </div>
 
             <div class="dau-card-body">
@@ -1636,35 +1715,63 @@ function initVocabPage() {
                 <div class="dau-card-icon ${item.level === "A2" ? "warm" : item.level === "B1" ? "" : item.level === "B2" ? "purple" : "green"}">
                   ${item.icon}
                 </div>
-                <div>
-                  <h3 class="dau-card-ru ru" style="font-size:1.05rem;margin:0 0 4px">${esc(item.title)}</h3>
-                  <div class="dau-card-vi" style="font-size:0.86rem;color:var(--muted)">${esc(item.desc || "Lọ từ vựng tình huống")}</div>
+                <div style="flex:1;min-width:0">
+                  <h3 class="dau-card-ru ru" style="font-size:1.02rem;margin:0 0 2px">${esc(item.title)}</h3>
+                  <div class="dau-card-vi" style="font-size:0.83rem;color:var(--muted)">${esc(item.desc || "Lọ từ vựng tình huống")}</div>
                 </div>
               </div>
             </div>
 
-            <div class="dau-card-meta">
-              <span class="dau-meta-pill">📝 <b>${item.wordsCount}</b> từ vựng</span>
-              <span class="dau-meta-pill">⏱️ <b>15</b> phút</span>
-              <span class="dau-meta-pill">🔊 Audio bản xứ</span>
-            </div>
-
             <div class="dau-card-footer">
-              <span class="dau-status-pill ${isDone ? "done" : ""}">
-                ${isDone ? "✅ Đã học thuộc" : "⏳ Chưa học"}
-              </span>
-              <button type="button" class="btn btn-primary btn-sm dau-card-cta">
-                Mở lọ từ →
-              </button>
+              <div class="dau-card-actions-2btn">
+                <button type="button" class="btn btn-outline btn-sm btn-jar-list" data-jar-id="${item.id}" title="Xem danh sách chi tiết các từ">
+                  📋 Xem từ (${item.wordsCount})
+                </button>
+                <button type="button" class="btn btn-primary btn-sm btn-jar-study" data-jar-id="${item.id}" title="Bắt đầu học ngay">
+                  ⚡ Học
+                </button>
+              </div>
             </div>
           </div>
         `;
       }).join("");
 
+      gridHost.querySelectorAll(".btn-jar-list").forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.jarId;
+          const jar = allItems.find(j => j.id === id);
+          if (jar && jar.is_pro_only && !Monetization.isPro()) {
+            Monetization.openUpgradeModal();
+            return;
+          }
+          showJarDetail(id, "list");
+        };
+      });
+
+      gridHost.querySelectorAll(".btn-jar-study").forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.jarId;
+          const jar = allItems.find(j => j.id === id);
+          if (jar && jar.is_pro_only && !Monetization.isPro()) {
+            Monetization.openUpgradeModal();
+            return;
+          }
+          showJarDetail(id, "flashcard");
+        };
+      });
+
       gridHost.querySelectorAll(".dau-card").forEach(card => {
-        card.onclick = () => {
+        card.onclick = (e) => {
+          if (e.target.closest("button")) return;
           const id = card.dataset.vocabId;
-          showJarDetail(id);
+          const jar = allItems.find(j => j.id === id);
+          if (jar && jar.is_pro_only && !Monetization.isPro()) {
+            Monetization.openUpgradeModal();
+            return;
+          }
+          showJarDetail(id, "list");
         };
       });
     }
@@ -1928,11 +2035,19 @@ function initVocabPage() {
     };
   };
 
-  const showJarDetail = (jarId) => {
+  const showJarDetail = (jarId, initialMode = "list") => {
     const customJars = STORE.get("custom_jars", []);
     const baseJars = (cloudJars && cloudJars.length) ? cloudJars : (typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []);
     const jar = [...baseJars, ...customJars].find((j) => j.id === jarId);
     if (!jar) return;
+
+    // Kiểm tra quyền truy cập PRO
+    const isProJar = Boolean(jar.is_pro_only || jar.is_vip || (jar.level === "B2" && jar.id !== "jar_travel") || jar.id === "jar_bank" || jar.id === "jar_hospital" || jar.id === "jar_dekanat");
+    if (isProJar && !Monetization.isPro()) {
+      Monetization.openUpgradeModal();
+      return;
+    }
+
     const mainLayout = el("#vocMainLayout");
     if (mainLayout) mainLayout.classList.add("hidden");
     const srsPane = el("#vocPaneAlgorithm");
@@ -1952,14 +2067,14 @@ function initVocabPage() {
           </button>
           <div class="dau-workspace-info">
             <span class="dau-badge ${jar.level === "A2" ? "dau-badge-a2" : jar.level === "B1" ? "dau-badge-b1" : jar.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${jar.level || "A1"}</span>
-            <span class="dau-workspace-title">${jar.icon || "🏺"} ${esc(jar.name)}</span>
+            <span class="dau-workspace-title">${jar.icon || "🏺"} ${esc(jar.name)} (${(jar.words || []).length} từ)</span>
           </div>
           <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
             ${isCustom ? `
               <button type="button" class="btn btn-outline btn-sm" id="btnAddWordCustom">+ Thêm từ mới</button>
               <button type="button" class="btn btn-soft btn-sm" id="btnDeleteCustomJar" style="color:var(--red)" title="Xóa lọ này">🗑️</button>
             ` : ""}
-            <button type="button" class="btn btn-primary btn-sm" id="btnStudyJar">⚡ Ôn luyện Quizlet</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btnStudyJar">⚡ Học Flashcard</button>
           </div>
         </div>
 
@@ -1985,7 +2100,7 @@ function initVocabPage() {
       if (isCustom) {
         const btnAdd = el("#btnAddWordCustom");
         if (btnAdd) {
-          btnAdd.onclick = () => openAddWordToJarModal(jar.id, () => showJarDetail(jar.id));
+          btnAdd.onclick = () => openAddWordToJarModal(jar.id, () => showJarDetail(jar.id, "list"));
         }
         const btnDel = el("#btnDeleteCustomJar");
         if (btnDel) {
@@ -2004,8 +2119,8 @@ function initVocabPage() {
       }
 
       el("#btnStudyJar").onclick = () => {
-        const firstModeBtn = detail.querySelector(".quizlet-mode-btn[data-mode='flashcard']");
-        if (firstModeBtn) firstModeBtn.click();
+        const flashBtn = detail.querySelector(".quizlet-mode-btn[data-mode='flashcard']");
+        if (flashBtn) flashBtn.click();
         const cardElem = detail.querySelector(".quizlet-card-container");
         if (cardElem) cardElem.scrollIntoView({ behavior: "smooth", block: "center" });
       };
@@ -2015,8 +2130,9 @@ function initVocabPage() {
         jarId: jar.id,
         jarTitle: jar.name,
         isCustomJar: isCustom,
+        initialMode: initialMode || "list",
         onWordListChange: () => {
-          showJarDetail(jar.id);
+          showJarDetail(jar.id, "list");
         }
       });
 
@@ -2258,15 +2374,16 @@ function initListeningPage() {
     } else {
       gridHost.innerHTML = pageItems.map(l => {
         const badgeClass = l.level === "A1" ? "dau-badge-a1" : l.level === "A2" ? "dau-badge-a2" : l.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
-        const isDone = Progress.doneList("listenDone").includes(l.id + "_check");
+        const isDone = Progress.doneList("listenDone").includes(l.id + "_check") || Progress.doneList("listenDone").includes(l.id + "_video");
+        const isPro = l.is_pro_only || l.level === "B1" || l.level === "B2";
         return `
-          <div class="dau-card" data-listen-id="${l.id}">
+          <div class="dau-card dau-card-compact" data-listen-id="${l.id}">
             <div class="dau-card-top">
               <div class="dau-card-badges">
                 <span class="dau-badge ${badgeClass}">${esc(l.level)}</span>
                 <span class="dau-badge-cat">Part ${l.partNumber || 1} · ${esc(l.categoryName || "Hội thoại")}</span>
               </div>
-              ${l.is_pro_only ? '<span class="dau-badge-pro">PRO</span>' : ""}
+              ${isPro ? '<span class="dau-badge-pro">👑 PRO</span>' : ""}
             </div>
 
             <div class="dau-card-body">
@@ -2280,14 +2397,14 @@ function initListeningPage() {
                 </div>
               </div>
               <div class="dau-card-desc">
-                Luyện nghe thoại trực quan với giọng đọc chuẩn Moscow. Gồm 4 chế độ: Nghe toàn bài, Điền từ khuyết, Chép chính tả và Trắc nghiệm hiểu bài.
+                Luyện nghe thoại trực quan với giọng đọc chuẩn Moscow. Gồm 5 chế độ: Video 1-5 phút, Nghe Full, Điền từ, Chính tả & Trắc nghiệm.
               </div>
             </div>
 
             <div class="dau-card-meta">
               <span class="dau-meta-pill">⏱️ <b>${l.estMinutes || 15}</b> phút</span>
-              <span class="dau-meta-pill">❓ <b>${(l.questions || []).length}</b> câu trắc nghiệm</span>
-              <span class="dau-meta-pill">⚡ Tốc độ 0.75x–1.25x</span>
+              <span class="dau-meta-pill">🎬 Video 1-5p</span>
+              <span class="dau-meta-pill">❓ <b>${(l.questions || []).length}</b> câu hỏi</span>
             </div>
 
             <div class="dau-card-footer">
@@ -2306,7 +2423,8 @@ function initListeningPage() {
         card.onclick = () => {
           const id = card.dataset.listenId;
           const lesson = all.find(l => l.id === id);
-          if (lesson.is_pro_only && !Monetization.isPro()) {
+          const isPro = lesson.is_pro_only || lesson.level === "B1" || lesson.level === "B2";
+          if (isPro && !Monetization.isPro()) {
             Monetization.openUpgradeModal();
             return;
           }
@@ -2372,7 +2490,9 @@ function initListeningPage() {
     renderListeningCards();
   };
 
-  const openListeningWorkspace = (lesson, mode = "full") => {
+  const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
+  const openListeningWorkspace = (lesson, mode = "video") => {
     currentLesson = lesson;
 
     host.innerHTML = `
@@ -2407,7 +2527,8 @@ function initListeningPage() {
           </div>
         </div>
 
-        <div class="tabs" style="justify-content:flex-start;margin:16px 0">
+        <div class="tabs" style="justify-content:flex-start;margin:16px 0;flex-wrap:wrap">
+          <button class="tab ${mode === "video" ? "active" : ""}" data-m="video">🎬 Xem Video (1-5 phút)</button>
           <button class="tab ${mode === "full" ? "active" : ""}" data-m="full">Nghe Full</button>
           <button class="tab ${mode === "blank" ? "active" : ""}" data-m="blank">Điền Từ</button>
           <button class="tab ${mode === "dict" ? "active" : ""}" data-m="dict">Nghe Chép Chính Tả</button>
@@ -2450,10 +2571,219 @@ function initListeningPage() {
     };
 
     const mb = el("#modeBody");
+    if (mode === "video") modeVideo(mb, lesson);
     if (mode === "full") modeFull(mb, lesson);
     if (mode === "blank") modeBlank(mb, lesson);
     if (mode === "dict") modeDict(mb, lesson);
     if (mode === "check") modeCheck(mb, lesson);
+  };
+
+  const modeVideo = (mb, lesson) => {
+    // Default video segments (1-5 min) per level
+    const defaultVideos = {
+      A1: { youtubeId: "e6lFvAQp0LE", startSec: 15, endSec: 195, durationLabel: "3 phút (180 giây)" },
+      A2: { youtubeId: "e6lFvAQp0LE", startSec: 200, endSec: 380, durationLabel: "3 phút (180 giây)" },
+      B1: { youtubeId: "e6lFvAQp0LE", startSec: 390, endSec: 570, durationLabel: "3 phút (180 giây)" },
+      B2: { youtubeId: "e6lFvAQp0LE", startSec: 15, endSec: 255, durationLabel: "4 phút (240 giây)" }
+    };
+
+    const vConfig = lesson.video || defaultVideos[lesson.level] || defaultVideos.A1;
+    const ytId = vConfig.youtubeId || "e6lFvAQp0LE";
+    const start = vConfig.startSec || 15;
+    const end = vConfig.endSec || 195;
+    const durationLabel = vConfig.durationLabel || `${Math.round((end - start) / 60)} phút`;
+
+    const videoQuestions = (lesson.video && lesson.video.questions) || [
+      {
+        q: `1. Trong đoạn video giao tiếp "${lesson.title}", nhân vật chính đang ở tình huống nào?`,
+        options: [
+          lesson.vi || "Tình huống giao tiếp tiếng Nga đời thường",
+          "Thảo luận về thời sự quốc tế và khoa học vũ trụ",
+          "Hướng dẫn công thức nấu món súp truyền thống Nga",
+          "Tham quan triển lãm nghệ thuật cổ điển Ermitage"
+        ],
+        a: 0,
+        explain: `Bối cảnh chính của bài nghe là: ${lesson.vi}`
+      },
+      {
+        q: `2. Trong đoạn hội thoại có xuất hiện câu thoại nào dưới đây?`,
+        options: [
+          lesson.lines[0]?.ru || "Здравствуйте! Скажите, пожалуйста...",
+          "Я совершенно не понимаю ни слова по-русски.",
+          "Вчера в Москве была очень снежная погода.",
+          "Поезд дальнего следования отправляется через час."
+        ],
+        a: 0,
+        explain: `Nhân vật bắt đầu cuộc trao đổi với câu: "${lesson.lines[0]?.ru || "Здравствуйте!"}"`
+      },
+      {
+        q: `3. Từ vựng hoặc cụm từ trọng tâm nào được nhấn mạnh trong đoạn băng?`,
+        options: [
+          lesson.blanks?.[0]?.blank ? `Cụm từ liên quan đến: "${lesson.blanks[0].blank}"` : (lesson.lines[1]?.ru || "Hỏi thông tin và cảm ơn lịch sự"),
+          "Du hành thám hiểm sao Hỏa bằng tên lửa",
+          "Đổi tiền ngoại tệ tại chi nhánh ngân hàng",
+          "Thủ tục cấp visa du lịch dài hạn"
+        ],
+        a: 0,
+        explain: `Từ khóa then chốt được dùng nhiều lần trong bối cảnh giao tiếp này.`
+      }
+    ];
+
+    mb.innerHTML = `
+      <div class="lis-video-wrap">
+        <!-- VIDEO EMBED (1-5 MINUTES) -->
+        <div class="lis-video-container">
+          <iframe
+            id="lisYtIframe"
+            src="https://www.youtube-nocookie.com/embed/${ytId}?start=${start}&end=${end}&enablejsapi=1&rel=0&modestbranding=1"
+            title="Russian Listening Video"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen>
+          </iframe>
+        </div>
+
+        <!-- VIDEO CONTROLS BAR -->
+        <div class="lis-video-controls-bar">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span class="dau-meta-pill" style="font-weight:700">⏱️ Thời lượng: ${durationLabel} (từ ${fmtTime(start)} đến ${fmtTime(end)})</span>
+            <span class="dau-meta-pill" style="color:var(--primary);font-weight:700">🎯 Giọng Moscow chuẩn</span>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:0.8rem;color:var(--muted);font-weight:600">Tốc độ video:</span>
+              <div class="speed-pills">
+                <button type="button" class="speed-pill btn-yt-speed" data-speed="0.75">0.75x</button>
+                <button type="button" class="speed-pill btn-yt-speed active" data-speed="1.0">1.0x</button>
+                <button type="button" class="speed-pill btn-yt-speed" data-speed="1.25">1.25x</button>
+              </div>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" id="btnToggleVideoScript">👁️ Hiện kịch bản song ngữ</button>
+          </div>
+        </div>
+
+        <!-- OPTIONAL SCRIPT BOX -->
+        <div id="videoScriptBox" class="hidden" style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px">
+          <h4 style="margin:0 0 10px;font-size:0.95rem;color:var(--primary)">📜 Kịch bản lời thoại trích đoạn:</h4>
+          ${lesson.lines.map(l => `
+            <div style="margin-bottom:8px;font-size:0.9rem">
+              <b style="color:var(--text)">${esc(l.who)}:</b> <span class="ru" style="font-weight:600;color:var(--primary)">${esc(l.ru)}</span>
+              <div style="color:var(--muted);font-size:0.82rem;margin-left:14px">${esc(l.vi)}</div>
+            </div>
+          `).join("")}
+        </div>
+
+        <!-- VIDEO QUIZ COMPREHENSION -->
+        <div class="lis-video-quiz-box">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+            <div>
+              <h3 style="margin:0 0 4px;font-size:1.15rem">🧠 Bài trắc nghiệm kiểm tra sau khi xem video</h3>
+              <p style="margin:0;font-size:0.85rem;color:var(--muted)">Xem kỹ đoạn trích video trên và chọn đáp án đúng nhất cho các câu hỏi sau:</p>
+            </div>
+            <div id="videoQuizScore" class="dau-meta-pill" style="font-weight:700;color:var(--primary)">
+              Tiến độ: 0/${videoQuestions.length} câu
+            </div>
+          </div>
+
+          <div class="lis-video-questions-list">
+            ${videoQuestions.map((q, qIdx) => `
+              <div class="lis-video-q-card" data-q-idx="${qIdx}">
+                <div class="lis-video-q-title">${esc(q.q)}</div>
+                <div class="lis-video-opt-list">
+                  ${q.options.map((opt, optIdx) => `
+                    <button type="button" class="lis-video-opt-btn" data-opt-idx="${optIdx}">
+                      <span style="font-weight:700;color:var(--muted)">${String.fromCharCode(65 + optIdx)}.</span>
+                      <span>${esc(opt)}</span>
+                    </button>
+                  `).join("")}
+                </div>
+                <div class="lis-video-feedback hidden"></div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Speed buttons interaction via YouTube postMessage API
+    mb.querySelectorAll(".btn-yt-speed").forEach(btn => {
+      btn.onclick = () => {
+        const speed = parseFloat(btn.dataset.speed);
+        mb.querySelectorAll(".btn-yt-speed").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const iframe = mb.querySelector("#lisYtIframe");
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage(JSON.stringify({
+            event: "command",
+            func: "setPlaybackRate",
+            args: [speed]
+          }), "*");
+        }
+        toast(`Đã chỉnh tốc độ phát: ${speed}x`);
+      };
+    });
+
+    // Toggle script button
+    const btnScript = mb.querySelector("#btnToggleVideoScript");
+    const scriptBox = mb.querySelector("#videoScriptBox");
+    if (btnScript && scriptBox) {
+      btnScript.onclick = () => {
+        const isHidden = scriptBox.classList.toggle("hidden");
+        btnScript.textContent = isHidden ? "👁️ Hiện kịch bản song ngữ" : "🙈 Ẩn kịch bản song ngữ";
+      };
+    }
+
+    // Quiz evaluation
+    let answeredCount = 0;
+    let correctCount = 0;
+    const scorePill = mb.querySelector("#videoQuizScore");
+
+    mb.querySelectorAll(".lis-video-q-card").forEach((card, qIdx) => {
+      const qData = videoQuestions[qIdx];
+      const optBtns = card.querySelectorAll(".lis-video-opt-btn");
+      const fbBox = card.querySelector(".lis-video-feedback");
+
+      optBtns.forEach(btn => {
+        btn.onclick = () => {
+          if (card.dataset.answered === "true") return;
+          card.dataset.answered = "true";
+          answeredCount++;
+
+          const selectedIdx = parseInt(btn.dataset.optIdx, 10);
+          const isCorrect = selectedIdx === qData.a;
+
+          if (isCorrect) {
+            btn.classList.add("correct");
+            correctCount++;
+            fbBox.className = "lis-video-feedback";
+            fbBox.style.cssText = "background:#ecfdf5;border:1px solid #10b981;color:#065f46";
+            fbBox.innerHTML = `✅ <b>Chính xác!</b> ${esc(qData.explain || "")}`;
+          } else {
+            btn.classList.add("wrong");
+            optBtns[qData.a]?.classList.add("correct");
+            fbBox.className = "lis-video-feedback";
+            fbBox.style.cssText = "background:#fef2f2;border:1px solid #ef4444;color:#991b1b";
+            fbBox.innerHTML = `❌ <b>Chưa đúng!</b> Đáp án chuẩn là: <b>${String.fromCharCode(65 + qData.a)}. ${esc(qData.options[qData.a])}</b><br><small>${esc(qData.explain || "")}</small>`;
+          }
+
+          scorePill.textContent = `Tiến độ: ${answeredCount}/${videoQuestions.length} câu (Đúng: ${correctCount})`;
+
+          if (answeredCount === videoQuestions.length) {
+            const pct = Math.round((correctCount / videoQuestions.length) * 100);
+            if (pct >= 60) {
+              const key = lesson.id + "_video";
+              if (!Progress.doneList("listenDone").includes(key)) {
+                Progress.addXp(20);
+                Progress.markDone("listenDone", key);
+              }
+              toast(`🎉 Xuất sắc! Bạn trả lời đúng ${correctCount}/${videoQuestions.length} câu (+20 XP)!`);
+            } else {
+              toast(`Bạn đạt ${correctCount}/${videoQuestions.length} câu. Hãy xem lại video để hiểu rõ hơn nhé!`);
+            }
+          }
+        };
+      });
+    });
   };
 
   const modeFull = (mb, lesson) => {
@@ -2653,18 +2983,20 @@ function initSpeakingPage() {
     } else {
       gridHost.innerHTML = pageItems.map(s => {
         const badgeClass = s.level === "A1" ? "dau-badge-a1" : s.level === "A2" ? "dau-badge-a2" : s.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
+        const isPro = s.is_pro_only || s.level === "B1" || s.level === "B2";
         let highest = 0;
         (s.items || []).forEach((_, i) => {
           const score = STORE.get("speak_" + s.id + "_" + i, 0);
           if (score > highest) highest = score;
         });
         return `
-          <div class="dau-card" data-speak-id="${s.id}">
+          <div class="dau-card dau-card-compact" data-speak-id="${s.id}">
             <div class="dau-card-top">
               <div class="dau-card-badges">
                 <span class="dau-badge ${badgeClass}">${esc(s.level)}</span>
                 <span class="dau-badge-cat">${esc(s.categoryName || "Giao tiếp")}</span>
               </div>
+              ${isPro ? '<span class="dau-badge-pro">👑 PRO</span>' : ""}
             </div>
 
             <div class="dau-card-body">
@@ -2682,8 +3014,8 @@ function initSpeakingPage() {
 
             <div class="dau-card-meta">
               <span class="dau-meta-pill">💬 <b>${s.items.length}</b> câu mẫu</span>
-              <span class="dau-meta-pill">🤖 AI chấm âm vị</span>
-              <span class="dau-meta-pill">🌊 Audio Waveform</span>
+              <span class="dau-meta-pill">🤖 AI âm vị</span>
+              <span class="dau-meta-pill">🌊 Waveform</span>
             </div>
 
             <div class="dau-card-footer">
@@ -2702,6 +3034,11 @@ function initSpeakingPage() {
         card.onclick = () => {
           const id = card.dataset.speakId;
           const set = all.find(s => s.id === id);
+          const isPro = set.is_pro_only || set.level === "B1" || set.level === "B2";
+          if (isPro && !Monetization.isPro()) {
+            Monetization.openUpgradeModal();
+            return;
+          }
           openSpeakingWorkspace(set);
         };
       });
@@ -2987,14 +3324,15 @@ function initWritingPage() {
         const badgeClass = t.level === "A1" ? "dau-badge-a1" : t.level === "A2" ? "dau-badge-a2" : t.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
         const isDone = Progress.doneList("writeDone").includes(t.id);
         const savedText = STORE.get("write_" + t.id, "");
+        const isPro = t.is_pro_only || t.level === "B1" || t.level === "B2";
         return `
-          <div class="dau-card" data-write-id="${t.id}">
+          <div class="dau-card dau-card-compact" data-write-id="${t.id}">
             <div class="dau-card-top">
               <div class="dau-card-badges">
                 <span class="dau-badge ${badgeClass}">${esc(t.level)}</span>
                 <span class="dau-badge-cat">${esc(t.categoryName || "Tự luận")}</span>
               </div>
-              ${t.is_pro_only ? '<span class="dau-badge-pro">PRO</span>' : ""}
+              ${isPro ? '<span class="dau-badge-pro">👑 PRO</span>' : ""}
             </div>
 
             <div class="dau-card-body">
@@ -3013,7 +3351,7 @@ function initWritingPage() {
             <div class="dau-card-meta">
               <span class="dau-meta-pill">📏 Tối thiểu <b>${t.minWords}</b> từ</span>
               <span class="dau-meta-pill">⏱️ <b>${t.estMinutes || 20}</b> phút</span>
-              <span class="dau-meta-pill">🤖 AI Rusika 4 tiêu chí</span>
+              <span class="dau-meta-pill">🤖 AI 4 tiêu chí</span>
             </div>
 
             <div class="dau-card-footer">
@@ -3032,6 +3370,11 @@ function initWritingPage() {
         card.onclick = () => {
           const id = card.dataset.writeId;
           const task = all.find(t => t.id === id);
+          const isPro = task.is_pro_only || task.level === "B1" || task.level === "B2";
+          if (isPro && !Monetization.isPro()) {
+            Monetization.openUpgradeModal();
+            return;
+          }
           openWritingWorkspace(task);
         };
       });
@@ -3424,14 +3767,15 @@ function initMockTestPage() {
       gridHost.innerHTML = pageItems.map(t => {
         const badgeClass = t.level === "A1" ? "dau-badge-a1" : t.level === "A2" ? "dau-badge-a2" : t.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
         const best = STORE.get("bestTest_" + t.id, null);
+        const isPro = t.is_pro_only || t.level === "B1" || t.level === "B2";
         return `
-          <div class="dau-card" data-trki-id="${t.id}">
+          <div class="dau-card dau-card-compact" data-trki-id="${t.id}">
             <div class="dau-card-top">
               <div class="dau-card-badges">
                 <span class="dau-badge ${badgeClass}">${esc(t.level)}</span>
                 <span class="dau-badge-cat">${esc(t.categoryName || "Đề thi")}</span>
               </div>
-              ${t.is_pro_only ? '<span class="dau-badge-pro">PRO</span>' : ""}
+              ${isPro ? '<span class="dau-badge-pro">👑 PRO</span>' : ""}
             </div>
 
             <div class="dau-card-body">
@@ -3469,7 +3813,8 @@ function initMockTestPage() {
         card.onclick = () => {
           const id = card.dataset.trkiId;
           const test = bank.find(t => t.id === id);
-          if (test.is_pro_only && !Monetization.isPro()) {
+          const isPro = test.is_pro_only || test.level === "B1" || test.level === "B2";
+          if (isPro && !Monetization.isPro()) {
             Monetization.openUpgradeModal();
             return;
           }

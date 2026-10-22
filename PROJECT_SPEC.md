@@ -28,23 +28,30 @@
 * **Mô hình "Lọ từ vựng" (Thematic Action Clusters)**:
   * Không học từ A-Z mà gom từ theo chuỗi hành động ngữ cảnh sống còn (*Lọ mua sắm Auchan*, *Lọ vali du học*, *Lọ sân bay Sheremetyevo*, *Lọ ký túc xá*...).
   * 18 lọ hệ thống chuẩn A1 - B2 chứa từ vựng cốt lõi kèm trọng âm, chú thích giống (он/она/оно) và ví dụ câu thực tế.
+  * **Thiết kế thẻ lọ nhỏ gọn tối giản (`.dau-card-compact`)**: Hiển thị số lượng từ, cấp độ (A1-B2), gắn huy hiệu `👑 PRO` cho các lọ B1, B2 và lọ chuyên sâu.
+  * **Cấu trúc 2 nút thao tác riêng biệt trên mỗi lọ**:
+    1. Nút `[📋 Xem từ (N)]`: Mở ngay giao diện danh sách chi tiết các từ có trong lọ.
+    2. Nút `[⚡ Học]`: Khởi động ngay chế độ học Flashcard 3D theo thuật toán SRS.
+  * **Hiển thị danh sách từ dạng thẻ ô (`vocab-word-card`)**: Mỗi từ 1 ô độc lập gồm từ tiếng Nga có trọng âm chuẩn, từ loại, nút phát âm 🔊, định nghĩa tiếng Việt, câu ví dụ song ngữ kèm audio 🔊, từ đồng nghĩa, nút `[🏺 + Lọ của tôi]` (lưu vào lọ từ cá nhân) và nút `[📖 Tra 6 cách]` (tra cứu bảng biến cách TFlat).
   * Hỗ trợ học viên tự tạo lọ từ vựng cá nhân (`custom_jars`).
 * **Thuật toán lặp lại ngắt quãng SM-2 / Hộp Leitner (`srs.js`)**:
   * Vòng đời thẻ: `Unseen` $\to$ `New` $\to$ `Learning` $\to$ `Reviewing` $\to$ `Mastered`.
   * Chu kỳ giãn cách: Từ mới (Again = 5 thẻ, Hard = 6h, Good = 1 ngày, Easy = 3 ngày); Từ đã ôn (Hard $\times 2$, Good $\times 3$, Easy $\times 4$).
+  * Đánh giá 4 mức SRS trực tiếp trên Flashcard: `Again (Ôn lại)`, `Hard (Khó)`, `Good (Nhớ tốt)`, `Easy (Dễ)` đồng bộ trực tiếp vào tiến độ học (`Progress`) và thuật toán SRS.
   * Tự động lọc danh sách "Đến hạn hôm nay" (`dueCards`).
-* **Hệ sinh thái 6 chế độ học chuẩn Quizlet (`pages.js`)**:
-  1. *Thẻ ghi nhớ 3D (Flashcard)*: Lật thẻ xoay chiều, audio phát âm bản xứ, phím tắt `Space` và mũi tên.
-  2. *Học thông minh (Learn)*: Trắc nghiệm 4 đáp án với từ gây nhiễu tự sinh, phím tắt 1-4, lưu danh sách từ sai để ôn lại.
-  3. *Gõ từ & Chính tả (Write & Spell)*: **Tích hợp bàn phím ảo Cyrillic** hỗ trợ các ký tự khó (`ё, й, ъ, ы, ь, э, щ, ж, ц, ч, ш, ю, я`).
-  4. *Ghép thẻ phản xạ (Match Game)*: Trò chơi nối từ Nga - Việt với đồng hồ mili-giây và lưu Kỷ lục cá nhân (Best Record).
-  5. *Kiểm tra tổng hợp (Test)*: Trắc nghiệm kết hợp Đúng/Sai, tính điểm % và thưởng XP.
-  6. *Danh sách cuộn cổ điển*: Tìm kiếm tức thì, đánh dấu sao ⭐ và lưu nhanh vào lọ cá nhân.
+* **Hệ sinh thái chế độ học chuẩn Quizlet (`pages.js`)**:
+  1. *Danh sách từ (Word List Grid)*: Bố cục lưới ô thẻ chi tiết, tra cứu 6 cách, lưu lọ cá nhân.
+  2. *Thẻ ghi nhớ 3D (Flashcard)*: Lật thẻ xoay chiều, audio phát âm bản xứ, thanh đánh giá SRS 4 mức, phím tắt `Space` và mũi tên.
+  3. *Học thông minh (Learn)*: Trắc nghiệm 4 đáp án với từ gây nhiễu tự sinh, phím tắt 1-4, lưu danh sách từ sai để ôn lại.
+  4. *Gõ từ & Chính tả (Write & Spell)*: **Tích hợp bàn phím ảo Cyrillic** hỗ trợ các ký tự khó (`ё, й, ъ, ы, ь, э, щ, ж, ц, ч, ш, ю, я`).
+  5. *Ghép thẻ phản xạ (Match Game)*: Trò chơi nối từ Nga - Việt với đồng hồ mili-giây và lưu Kỷ lục cá nhân (Best Record).
+  6. *Kiểm tra tổng hợp (Test)*: Trắc nghiệm kết hợp Đúng/Sai, tính điểm % và thưởng XP.
 * **Tra cứu Ngữ pháp Chuyên sâu TFlat (`dict-detail.js` & `dict-data.js`)**:
   * Modal tra từ đa tầng: Bảng 6 Cách danh từ/tính từ, chia thì động từ & cặp thể CB/NCB, kết cấu quản cách (Управление: ví dụ *перекусить чем?*), từ đồng/trái nghĩa, họ từ gốc.
   * Tích hợp kho từ điển offline 81.000 từ Nga-Việt và 91.700 từ Việt-Nga.
 
 ### [Module 2] Luyện Viết Tả Tranh (Письмо TRKI)
+* **Giao diện thẻ tối giản (`.dau-card-compact`)**: Nhỏ gọn, hiển thị số từ tối thiểu, thời gian ước tính, huy hiệu `👑 PRO` cho bài B1/B2, kiểm tra quyền PRO khi mở bài.
 * **Format chuẩn quốc tế**: Đưa ra 1 hình ảnh hoặc bối cảnh thực tế tại Nga.
 * **Hỗ trợ người học**: Bàn phím ảo Cyrillic, danh sách từ vựng gợi ý cần xuất hiện trong bài.
 * **AI Chấm điểm theo 4 tiêu chí CEFR**:
@@ -54,20 +61,28 @@
   4. Hoàn thành nhiệm vụ đề bài (Содержание)
 * Bảng đối chiếu chi tiết: `[Câu gốc lỗi] ➔ [Câu sửa chuẩn] ➔ [Giải thích ngữ pháp]`.
 
-### [Module 3] Luyện Nghe (Nghe Hiểu 4 Part Chuẩn TRKI)
+### [Module 3] Luyện Nghe (Nghe Hiểu 4 Part & Video YouTube 1-5 Phút Chuẩn TRKI)
+* **Giao diện thẻ tối giản (`.dau-card-compact`)**: Gắn huy hiệu `👑 PRO` cho các bài học B1/B2, kiểm tra quyền PRO trước khi vào luyện nghe.
+* **Tích hợp Xem Video YouTube Thực Tế (1-5 phút)**:
+  * Trích xuất các đoạn hội thoại thực tế ngắn 1-5 phút (thông số `startSec` & `endSec`) chuẩn giọng Moscow từ YouTube.
+  * Bộ chỉnh tốc độ video linh hoạt (0.75x, 1.0x, 1.25x) tương tác trực tiếp qua postMessage API.
+  * Tùy chọn Ẩn/Hiện kịch bản lời thoại song ngữ Nga - Việt.
+  * **Bài trắc nghiệm kiểm tra sau khi xem video**: Bộ câu hỏi đo lường mức độ nghe hiểu tình huống, phản hồi đúng/sai tức thì kèm giải thích chi tiết, tự động chấm điểm và thưởng +20 XP khi đạt $\ge 60\%$.
 * **Phân cấp 4 Part bài bản theo định dạng đề thi chứng chỉ ТРКИ**:
   * **Level 01 (Nghe mô tả tranh)**: Học viên quan sát một bức tranh, nghe các câu mô tả bằng tiếng Nga và lựa chọn câu phù hợp nhất với nội dung hình ảnh.
   * **Level 02 (Nghe hội thoại ngắn)**: Học viên nghe một câu hỏi hoặc lời nói bằng tiếng Nga, sau đó lựa chọn câu trả lời phù hợp nhất trong các phương án được đưa ra.
   * **Level 03 (Nghe hội thoại dài)**: Học viên nghe một đoạn hội thoại giữa hai hoặc nhiều người, sau đó trả lời các câu hỏi về nội dung, thông tin chi tiết, mục đích giao tiếp hoặc ý định của người nói.
   * **Level 04 (Nghe bài nói ngắn)**: Học viên nghe một bài nói của một người (thông báo ga tàu/sân bay, tin tức, lời giới thiệu, hướng dẫn hoặc bài trình bày ngắn), rồi trả lời các câu hỏi liên quan.
 * **Trình phát chuyên dụng**: Tách audio từng câu, ẩn/hiện phụ đề song ngữ, tua chậm 0.75x - 1.25x, lặp lại câu.
-* **Giao diện tinh gọn**: Nút CTA điều hướng rõ ràng ("Bắt đầu luyện nghe →"), loại bỏ biểu tượng rườm rà.
+* **Giao diện tinh gọn**: Nút CTA điều hướng rõ ràng ("Vào luyện nghe →"), loại bỏ biểu tượng rườm rà.
 
 ### [Module 4] Luyện Nói (Shadowing & AI Phân Tích Âm Vị)
+* **Giao diện thẻ tối giản (`.dau-card-compact`)**: Gắn huy hiệu `👑 PRO` cho các chủ đề nâng cao B1/B2, kiểm tra quyền PRO khi truy cập.
 * **Phương pháp Shadowing**: Nghe mẫu từ người bản xứ, thu âm nhại theo tốc độ, trọng âm và ngữ điệu kèm hiển thị sóng âm trực quan (Audio Waveform).
 * **Phân tích âm vị (Phoneme Matching)**: Phân tích lỗi sai trọng âm và nhầm lẫn phụ âm cứng/mềm (ví dụ: `б - п`, `д - т`, `в - ф`).
 
 ### [Module 5] Luyện Thi TRKI (ТРКИ Exam Simulation)
+* **Giao diện thẻ tối giản (`.dau-card-compact`)**: Gắn huy hiệu `👑 PRO` cho các đề thi nâng cao, kiểm tra quyền PRO trước khi vào phòng thi.
 * **Cấp độ chuẩn**: A1 (ТЭУ), A2 (ТБУ), B1 (ТРКИ-1), B2 (ТРКИ-2).
 * **Phòng thi mô phỏng**: Đồng hồ đếm ngược server-side, tự động thu bài khi hết giờ, giám sát chuyển tab gian lận (`visibilitychange`).
 * **Báo cáo kết quả**: Điểm số TRKI dự đoán, phân tích ngữ pháp chi tiết từng câu sau khi nộp bài.
