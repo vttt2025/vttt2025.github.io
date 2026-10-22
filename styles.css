@@ -732,36 +732,92 @@ button {
   height: 14px;
 }
 
-/* ============ Page hero (feature pages) ============ */
+/* ============ Page hero (feature pages - Figma Modern Russian Style) ============ */
 .page-hero {
   position: relative;
-  padding: 48px 0 32px;
+  padding: 54px 0 38px;
   text-align: center;
-  background: radial-gradient(circle at 85% 30%, rgba(197, 34, 51, 0.08), transparent 30%),
-              radial-gradient(circle at 15% 70%, rgba(23, 87, 166, 0.08), transparent 30%),
+  background: radial-gradient(circle at 82% 25%, rgba(197, 34, 51, 0.12), transparent 35%),
+              radial-gradient(circle at 18% 75%, rgba(23, 87, 166, 0.12), transparent 35%),
+              radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.95), transparent 55%),
               linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
   border-bottom: 1px solid var(--border);
-  margin-bottom: 28px;
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.page-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(rgba(16, 42, 76, 0.08) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(16, 42, 76, 0.08) 1px, transparent 1px);
+  background-size: 76px 76px;
+  opacity: 0.22;
+  -webkit-mask-image: linear-gradient(180deg, #000 20%, transparent 95%);
+  mask-image: linear-gradient(180deg, #000 20%, transparent 95%);
+  pointer-events: none;
 }
 
 .page-hero > .container {
   position: relative;
+  z-index: 2;
+}
+
+.page-hero .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--russia-red);
+  background: rgba(197, 34, 51, 0.08);
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(197, 34, 51, 0.22);
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(197, 34, 51, 0.08);
+}
+
+.page-hero .eyebrow-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--russia-blue);
+  box-shadow: 0 0 10px rgba(23, 87, 166, 0.7);
+  display: inline-block;
+  flex-shrink: 0;
 }
 
 .page-hero h1 {
-  font-size: clamp(1.8rem, 3.8vw, 2.6rem);
-  letter-spacing: -0.03em;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: clamp(2rem, 4.2vw, 2.9rem);
+  letter-spacing: -0.025em;
   font-weight: 800;
+  line-height: 1.25;
   color: var(--russia-navy);
+  margin-bottom: 12px;
+  text-wrap: balance;
+}
+
+.page-hero h1 span,
+.page-hero h1 .hl {
+  color: var(--russia-red);
+  display: block;
+  font-size: 0.88em;
+  font-weight: 700;
+  margin-top: 4px;
 }
 
 .page-hero p {
-  color: var(--muted);
+  color: #5b6878;
   margin-top: 10px;
-  max-width: 680px;
+  max-width: 740px;
   margin-inline: auto;
-  font-size: 1.05rem;
-  line-height: 1.6;
+  font-size: 1.02rem;
+  line-height: 1.7;
 }
 
 /* ============ Tabs ============ */
@@ -1876,9 +1932,18 @@ body[data-season="autumn"] .footer { background: linear-gradient(180deg, var(--s
 body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--surface) 0%, #d9e7f7 100%); }
 
 /* ============ SRS — Spaced Repetition (algorithm.html) ============ */
+.srs-hero,
+.srs-hero-card {
+  background: rgba(255, 255, 255, 0.94) !important;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(216, 224, 232, 0.9) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 4px 20px rgba(16, 42, 76, 0.05) !important;
+}
+
 .srs-hero {
   padding: 56px 0 36px;
-  background: radial-gradient(700px 320px at 50% 0%, rgba(168, 85, 247, 0.15), transparent 70%);
 }
 .srs-tag {
   display: inline-block;
@@ -1912,11 +1977,16 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
   margin-top: 24px;
 }
 .srs-hero-stats > div {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: #f8fafc;
+  border: 1px solid rgba(216, 224, 232, 0.85);
+  border-radius: 14px;
   padding: 16px 18px;
   text-align: center;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+.srs-hero-stats > div:hover {
+  transform: translateY(-2px);
+  border-color: #93c5fd;
 }
 .srs-hero-stats b {
   display: block;
@@ -2676,24 +2746,26 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
 }
 
 .voc-sidebar-card {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  box-shadow: 0 4px 16px rgba(16, 42, 76, 0.04);
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(216, 224, 232, 0.95);
+  border-radius: 20px;
+  padding: 22px;
+  box-shadow: 0 8px 28px rgba(16, 42, 76, 0.06);
 }
 
 .voc-sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .voc-sidebar-title {
-  font-size: 1.02rem;
+  font-size: 1.05rem;
   font-weight: 800;
-  color: var(--text);
+  color: var(--russia-navy);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -2708,17 +2780,24 @@ body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--s
 }
 
 .voc-stat-box {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid rgba(216, 224, 232, 0.85);
+  border-radius: 14px;
   padding: 12px 10px;
   text-align: center;
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.voc-stat-box:hover {
+  transform: translateY(-2px);
+  border-color: #93c5fd;
 }
 
 .voc-stat-val {
-  font-size: 1.35rem;
+  font-size: 1.45rem;
   font-weight: 800;
   line-height: 1.2;
+  color: var(--russia-navy);
 }
 
 .voc-stat-label {
@@ -10842,12 +10921,14 @@ img, video, iframe {
 
 /* Smart Filter Bar */
 .dau-filter-bar {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 16px 20px;
-  margin-bottom: 24px;
-  box-shadow: var(--shadow);
+  background: rgba(255, 255, 255, 0.94);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(216, 224, 232, 0.95);
+  border-radius: 20px;
+  padding: 18px 22px;
+  margin-bottom: 26px;
+  box-shadow: 0 8px 30px rgba(16, 42, 76, 0.06);
 }
 
 .dau-level-pills-wrap {
@@ -10858,7 +10939,7 @@ img, video, iframe {
 .dau-level-pills {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: 4px;
@@ -10871,69 +10952,71 @@ img, video, iframe {
 
 .dau-level-pill {
   appearance: none;
-  border: 1.5px solid var(--border);
-  background: var(--bg);
+  border: 1.5px solid rgba(216, 224, 232, 0.9);
+  background: #ffffff;
   color: var(--muted);
-  padding: 8px 16px;
+  padding: 9px 18px;
   border-radius: 999px;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
+  gap: 8px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
+  box-shadow: 0 2px 6px rgba(16, 42, 76, 0.03);
 }
 
 .dau-level-pill:hover {
-  background: var(--surface-hover);
-  border-color: #cbd5e1;
-  color: var(--text);
+  background: var(--primary-soft);
+  border-color: #93c5fd;
+  color: var(--primary);
+  transform: translateY(-1px);
 }
 
 .dau-level-pill.active {
   background: var(--primary);
   border-color: var(--primary);
   color: #ffffff;
-  box-shadow: 0 4px 12px rgba(23, 87, 166, 0.25);
+  box-shadow: 0 6px 16px rgba(23, 87, 166, 0.3);
 }
 
 .dau-level-pill[data-level="A1"].active {
-  background: #16a34a;
-  border-color: #16a34a;
-  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  border-color: #15803d;
+  box-shadow: 0 6px 16px rgba(22, 163, 74, 0.32);
 }
 
 .dau-level-pill[data-level="A2"].active {
-  background: #ea580c;
-  border-color: #ea580c;
-  box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);
+  background: linear-gradient(135deg, #ea580c, #c2410c);
+  border-color: #c2410c;
+  box-shadow: 0 6px 16px rgba(234, 88, 12, 0.32);
 }
 
 .dau-level-pill[data-level="B1"].active {
-  background: #1757a6;
-  border-color: #1757a6;
-  box-shadow: 0 4px 12px rgba(23, 87, 166, 0.25);
+  background: linear-gradient(135deg, #1757a6, #102a4c);
+  border-color: #102a4c;
+  box-shadow: 0 6px 16px rgba(23, 87, 166, 0.32);
 }
 
 .dau-level-pill[data-level="B2"].active {
-  background: #7c3aed;
-  border-color: #7c3aed;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+  background: linear-gradient(135deg, #c52233, #991b2b);
+  border-color: #991b2b;
+  box-shadow: 0 6px 16px rgba(197, 34, 51, 0.32);
 }
 
 .dau-pill-count {
   background: rgba(0, 0, 0, 0.08);
   font-size: 0.74rem;
-  font-weight: 700;
+  font-weight: 800;
   padding: 2px 7px;
   border-radius: 999px;
 }
 
 .dau-level-pill.active .dau-pill-count {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.28);
   color: #ffffff;
 }
 
@@ -11153,26 +11236,28 @@ img, video, iframe {
   user-select: none;
 }
 
-/* DauEnglish Card */
+/* DauEnglish Card (Modern Russian Hub Card Visual) */
 .dau-card {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 22px;
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(216, 224, 232, 0.9);
+  border-radius: 22px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 2px 10px rgba(16, 42, 76, 0.04);
+  box-shadow: 0 4px 20px rgba(16, 42, 76, 0.05);
 }
 
 .dau-card:hover {
-  transform: translateY(-4px);
-  border-color: #93c5fd;
-  box-shadow: 0 12px 28px rgba(23, 87, 166, 0.12);
+  transform: translateY(-5px);
+  border-color: rgba(23, 87, 166, 0.45);
+  box-shadow: 0 20px 42px rgba(16, 42, 76, 0.12);
 }
 
 .dau-card-top {
@@ -11191,12 +11276,12 @@ img, video, iframe {
 }
 
 .dau-badge {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 800;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
 }
 
 .dau-badge-a1 {
@@ -11218,30 +11303,30 @@ img, video, iframe {
 }
 
 .dau-badge-b2 {
-  background: #f3e8ff;
-  color: #7e22ce;
-  border: 1px solid #e9d5ff;
+  background: #fdeced;
+  color: #c52233;
+  border: 1px solid #fecdd3;
 }
 
 .dau-badge-cat {
-  background: var(--bg);
+  background: #f1f5f9;
   color: var(--muted);
   border: 1px solid var(--border);
   font-size: 0.74rem;
   font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
 }
 
 .dau-badge-pro {
   background: linear-gradient(135deg, #f59e0b, #d97706);
   color: #ffffff;
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 900;
-  padding: 2px 7px;
-  border-radius: 6px;
-  letter-spacing: 0.05em;
-  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.3);
+  padding: 3px 9px;
+  border-radius: 8px;
+  letter-spacing: 0.06em;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
 }
 
 .dau-card-body {
@@ -11253,21 +11338,27 @@ img, video, iframe {
 .dau-card-icon-wrap {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
+  gap: 14px;
+  margin-bottom: 12px;
 }
 
 .dau-card-icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
-  background: var(--primary-soft);
-  color: var(--primary);
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #e5eef8;
+  color: var(--russia-blue);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.45rem;
+  font-size: 1.6rem;
   flex-shrink: 0;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 8px rgba(16, 42, 76, 0.06);
+}
+
+.dau-card:hover .dau-card-icon {
+  transform: scale(1.08);
 }
 
 .dau-card-icon.warm {
@@ -11286,25 +11377,28 @@ img, video, iframe {
 }
 
 .dau-card-ru {
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--text);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: var(--russia-navy);
   line-height: 1.35;
   margin-bottom: 4px;
+  letter-spacing: -0.01em;
 }
 
 .dau-card-vi {
-  font-size: 0.9rem;
-  color: var(--muted);
+  font-size: 0.92rem;
+  color: #0284c7;
+  font-weight: 600;
   line-height: 1.45;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .dau-card-desc {
-  font-size: 0.83rem;
-  color: #64748b;
-  line-height: 1.5;
-  margin-bottom: 14px;
+  font-size: 0.88rem;
+  color: #556477;
+  line-height: 1.55;
+  margin-bottom: 12px;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -11316,17 +11410,17 @@ img, video, iframe {
   align-items: center;
   flex-wrap: wrap;
   gap: 10px;
-  font-size: 0.78rem;
-  color: var(--muted);
+  font-size: 0.8rem;
+  color: #5b6878;
   padding: 8px 0;
-  border-top: 1px dashed var(--border);
+  border-top: 1px dashed rgba(216, 224, 232, 0.9);
   margin-top: auto;
 }
 
 .dau-meta-pill {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
 }
 
 .dau-card-footer {
@@ -11336,35 +11430,45 @@ img, video, iframe {
   gap: 12px;
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid rgba(216, 224, 232, 0.85);
 }
 
 .dau-status-pill {
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--muted);
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 }
 
 .dau-status-pill.done {
   color: var(--green);
+  font-weight: 700;
 }
 
 .dau-status-pill.best {
   color: #f59e0b;
+  font-weight: 700;
 }
 
 .dau-card-cta {
-  padding: 7px 14px;
-  font-size: 0.84rem;
+  padding: 8px 16px;
+  font-size: 0.86rem;
   font-weight: 700;
-  border-radius: 8px;
+  border-radius: 10px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   white-space: nowrap;
+  background: var(--primary);
+  box-shadow: 0 4px 12px rgba(23, 87, 166, 0.22);
+  transition: all 0.18s ease;
+}
+
+.dau-card:hover .dau-card-cta {
+  background: var(--primary-dark);
+  box-shadow: 0 6px 16px rgba(23, 87, 166, 0.35);
 }
 
 /* Sticky Workspace Top Back Bar */
@@ -12848,45 +12952,72 @@ img, video, iframe {
 
 
 /* =====================================================================
- * COMPACT MINIMALIST CARDS & WORD BOXES & VIDEO LISTENING
+ * COMPACT MINIMALIST CARDS & WORD BOXES & VIDEO LISTENING (MODERN RUSSIAN STYLE)
  * ===================================================================== */
 
-/* --- 1. Compact Minimalist Card Styles --- */
+/* --- 1. Compact Modern Russian Card Styles (đồng bộ visual Hub-Card của Trang Chủ) --- */
 .dau-card.dau-card-compact {
-  padding: 16px 18px;
-  border-radius: 14px;
+  padding: 22px 24px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.92);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(216, 224, 232, 0.9);
+  box-shadow: 0 4px 20px rgba(16, 42, 76, 0.05);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+}
+
+.dau-card.dau-card-compact:hover {
+  transform: translateY(-5px);
+  border-color: rgba(23, 87, 166, 0.45);
+  box-shadow: 0 20px 42px rgba(16, 42, 76, 0.12);
 }
 
 .dau-card.dau-card-compact .dau-card-top {
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .dau-card.dau-card-compact .dau-card-icon-wrap {
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 14px;
+  margin-bottom: 12px;
 }
 
 .dau-card.dau-card-compact .dau-card-icon {
-  width: 40px;
-  height: 40px;
-  font-size: 1.25rem;
-  border-radius: 10px;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(16, 42, 76, 0.06);
+  transition: transform 0.2s ease;
+}
+
+.dau-card.dau-card-compact:hover .dau-card-icon {
+  transform: scale(1.08);
 }
 
 .dau-card.dau-card-compact .dau-card-ru {
-  font-size: 1.05rem;
-  margin-bottom: 2px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 1.18rem !important;
+  font-weight: 800;
+  color: var(--russia-navy);
+  margin-bottom: 4px;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
 }
 
 .dau-card.dau-card-compact .dau-card-vi {
-  font-size: 0.84rem;
-  margin-bottom: 4px;
+  font-size: 0.92rem !important;
+  color: #0284c7;
+  font-weight: 600;
+  margin-bottom: 6px;
+  line-height: 1.45;
 }
 
 .dau-card.dau-card-compact .dau-card-desc {
-  font-size: 0.8rem;
-  line-height: 1.45;
-  margin-bottom: 8px;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #556477;
+  margin-bottom: 12px;
   -webkit-line-clamp: 2;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -12894,27 +13025,28 @@ img, video, iframe {
 }
 
 .dau-card.dau-card-compact .dau-card-meta {
-  padding: 6px 0;
-  gap: 8px;
-  font-size: 0.76rem;
-  border-top: 1px dashed var(--border);
+  padding: 8px 0;
+  gap: 10px;
+  font-size: 0.8rem;
+  border-top: 1px dashed rgba(216, 224, 232, 0.9);
   margin-top: auto;
+  color: #5b6878;
 }
 
 .dau-card.dau-card-compact .dau-card-footer {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(216, 224, 232, 0.85);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
 }
 
 .dau-card-actions-2btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
 }
 
@@ -12922,10 +13054,35 @@ img, video, iframe {
   flex: 1;
   text-align: center;
   justify-content: center;
-  padding: 7px 10px;
-  font-size: 0.82rem;
+  min-height: 40px;
+  padding: 9px 12px;
+  font-size: 0.86rem;
   font-weight: 700;
-  border-radius: 8px;
+  border-radius: 10px;
+  transition: all 0.18s ease;
+}
+
+.dau-card-actions-2btn .btn-outline {
+  background: #ffffff;
+  border: 1.5px solid var(--border);
+  color: var(--russia-navy);
+}
+
+.dau-card-actions-2btn .btn-outline:hover {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.dau-card-actions-2btn .btn-primary {
+  background: var(--primary);
+  box-shadow: 0 4px 12px rgba(23, 87, 166, 0.22);
+}
+
+.dau-card-actions-2btn .btn-primary:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 6px 16px rgba(23, 87, 166, 0.32);
+  transform: translateY(-1px);
 }
 
 /* --- 2. Word Boxes Grid (1 từ 1 ô chi tiết, phong cách hiện đại) --- */
@@ -12936,11 +13093,13 @@ img, video, iframe {
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 20px;
-  background: var(--surface);
-  padding: 14px 18px;
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: 0 2px 10px rgba(16, 42, 76, 0.04);
+  background: rgba(255, 255, 255, 0.94);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  padding: 16px 22px;
+  border: 1px solid rgba(216, 224, 232, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(16, 42, 76, 0.05);
 }
 
 .vocab-list-header-actions {
@@ -12979,22 +13138,24 @@ img, video, iframe {
 }
 
 .vocab-word-card {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 16px;
-  padding: 18px 20px;
+  background: rgba(255, 255, 255, 0.94);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(216, 224, 232, 0.9);
+  border-radius: 20px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 14px rgba(16, 42, 76, 0.04);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(16, 42, 76, 0.05);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
   position: relative;
   overflow: hidden;
 }
 
 .vocab-word-card:hover {
-  transform: translateY(-3px);
-  border-color: #60a5fa;
-  box-shadow: 0 12px 28px rgba(23, 87, 166, 0.1);
+  transform: translateY(-4px);
+  border-color: rgba(23, 87, 166, 0.45);
+  box-shadow: 0 18px 36px rgba(16, 42, 76, 0.1);
 }
 
 .vw-card-header {

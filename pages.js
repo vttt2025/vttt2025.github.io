@@ -38,7 +38,7 @@ function renderDauPagination(containerEl, currentPage, totalPages, onPageChange)
 
   let html = `
     <button type="button" class="dau-page-btn dau-page-prev" ${currentPage <= 1 ? "disabled" : ""} aria-label="Trang trước">
-      ‹ Trang trước
+      ‹
     </button>
   `;
 
@@ -56,7 +56,7 @@ function renderDauPagination(containerEl, currentPage, totalPages, onPageChange)
 
   html += `
     <button type="button" class="dau-page-btn dau-page-next" ${currentPage >= totalPages ? "disabled" : ""} aria-label="Trang sau">
-      Trang sau ›
+      ›
     </button>
   `;
 
@@ -1774,8 +1774,8 @@ function initVocabPage() {
                   ${item.icon}
                 </div>
                 <div style="flex:1;min-width:0">
-                  <h3 class="dau-card-ru ru" style="font-size:1.02rem;margin:0 0 2px">${esc(item.title)}</h3>
-                  <div class="dau-card-vi" style="font-size:0.83rem;color:var(--muted)">${esc(item.desc || "Lọ từ vựng tình huống")}</div>
+                  <h3 class="dau-card-ru ru">${esc(item.title)}</h3>
+                  <div class="dau-card-vi">${esc(item.desc || "Lọ từ vựng tình huống")}</div>
                 </div>
               </div>
             </div>
