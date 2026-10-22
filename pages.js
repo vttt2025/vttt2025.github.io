@@ -1408,17 +1408,21 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     let searchTxt = "";
 
     pane.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;background:var(--surface);padding:14px 16px;border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 8px rgba(16,42,76,0.03)">
-        <div style="flex:1;min-width:240px;max-width:380px" class="dau-search-box" id="listSearchBox">
+      <div class="vocab-list-header-bar">
+        <div style="flex:1;min-width:240px;max-width:420px" class="dau-search-box" id="listSearchBox">
           <span class="dau-search-icon">🔍</span>
-          <input type="text" class="dau-search-input" id="listSearchInput" placeholder="Tìm từ tiếng Nga hoặc nghĩa..." />
+          <input type="text" class="dau-search-input" id="listSearchInput" placeholder="Tìm kiếm từ tiếng Nga hoặc nghĩa..." autocomplete="off" />
           <button type="button" class="dau-search-clear" id="listSearchClear" style="display:none">×</button>
         </div>
 
-        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <span style="font-size:0.85rem;color:var(--muted)" id="listWordCount">Đang hiện <b>${words.length}</b> / ${words.length} từ</span>
-          ${isCustomJar ? `<button class="btn btn-outline btn-sm" id="btnListAddWord">+ Thêm từ mới</button>` : ""}
-          <button type="button" class="btn btn-primary btn-sm" id="btnListToStudy" style="font-weight:700">⚡ Bắt đầu học lọ này →</button>
+        <div class="vocab-list-header-actions">
+          <span class="vocab-list-counter" id="listWordCount">
+            📋 Đang hiện <b>${words.length}</b> / ${words.length} từ
+          </span>
+          ${isCustomJar ? `<button type="button" class="btn btn-outline btn-sm" id="btnListAddWord">+ Thêm từ mới</button>` : ""}
+          <button type="button" class="btn btn-primary btn-sm" id="btnListToStudy" style="font-weight:700">
+            ⚡ Học Flashcard ngay →
+          </button>
         </div>
       </div>
 
@@ -1435,66 +1439,115 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       btnToStudy.onclick = () => switchMode("flashcard");
     }
 
+    const btnAddW = pane.querySelector("#btnListAddWord");
+    if (btnAddW && isCustomJar && typeof openAddWordToJarModal === "function") {
+      btnAddW.onclick = () => openAddWordToJarModal(jarId, () => {
+        if (onWordListChange) onWordListChange();
+      });
+    }
+
     const renderWords = () => {
       const qNorm = dauNormalize(searchTxt);
       const filtered = words.filter(w => {
         if (!qNorm) return true;
-        const hay = dauNormalize(w.ru + " " + w.vi + " " + (w.note || "") + " " + (w.ex || ""));
+        const hay = dauNormalize(w.ru + " " + (w.stress || "") + " " + w.vi + " " + (w.note || "") + " " + (w.ex || "") + " " + (w.syn || ""));
         return hay.includes(qNorm);
       });
 
       if (countEl) {
-        countEl.innerHTML = `Đang hiện <b>${filtered.length}</b> / ${words.length} từ`;
+        countEl.innerHTML = `📋 Đang hiện <b>${filtered.length}</b> / ${words.length} từ`;
       }
 
       if (filtered.length === 0) {
-        gridEl.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px 20px;background:var(--surface);border:1px dashed var(--border);border-radius:14px;color:var(--muted)">Không tìm thấy từ vựng phù hợp</div>`;
+        gridEl.innerHTML = `
+          <div style="grid-column:1/-1;text-align:center;padding:48px 20px;background:var(--surface);border:1.5px dashed var(--border);border-radius:16px;color:var(--muted)">
+            <div style="font-size:2rem;margin-bottom:8px">🔍</div>
+            <h4 style="margin:0 0 4px;font-size:1.1rem;color:var(--text)">Không tìm thấy từ vựng</h4>
+            <p style="margin:0;font-size:0.88rem">Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc.</p>
+          </div>
+        `;
         return;
       }
 
-      gridEl.innerHTML = filtered.map(w => {
+      gridEl.innerHTML = filtered.map((w, idx) => {
         const isStarred = getQuizletStarred().map(s => s.toLowerCase()).includes(w.ru.toLowerCase());
+        const displayWord = w.stress || w.ru;
         return `
           <div class="vocab-word-card" data-ru="${esc(w.ru)}">
-            <div class="vw-top-row">
-              <div class="vw-word-area">
-                <span class="vw-main-word ru">${esc(w.stress || w.ru)}</span>
-                <button type="button" class="btn btn-soft btn-xs btn-speak-item" data-ru="${esc(w.ru)}" title="Nghe phát âm">🔊</button>
-                <button type="button" class="btn btn-soft btn-xs btn-star-item ${isStarred ? "starred" : ""}" data-ru="${esc(w.ru)}" title="Gắn sao">⭐</button>
+            <div class="vw-card-header">
+              <span class="vw-word-index">#${idx + 1}</span>
+              <div class="vw-header-tools">
+                <button type="button" class="vw-circle-btn btn-speak-item" data-ru="${esc(w.ru)}" title="Phát âm từ này">🔊</button>
+                <button type="button" class="vw-circle-btn btn-star-item ${isStarred ? "starred" : ""}" data-ru="${esc(w.ru)}" title="Đánh dấu sao từ khó">⭐</button>
               </div>
-              <span class="vw-pos-badge">${esc(w.note || w.pos || "từ vựng")}</span>
             </div>
 
-            <div class="vw-meaning-text">${esc(w.vi)}</div>
+            <div class="vw-main-section">
+              <div class="vw-word-ru ru">${esc(displayWord)}</div>
+              <div class="vw-word-vi">${esc(w.vi)}</div>
+            </div>
 
-            ${w.ex ? `
-              <div class="vw-example-box">
-                <div class="vw-ex-ru ru">«${esc(w.ex)}»</div>
-                <button type="button" class="btn btn-soft btn-xs btn-speak-ex" data-text="${esc(w.ex)}" title="Nghe câu ví dụ">🔊</button>
+            ${(w.img || w.image) ? `
+              <div class="vw-image-wrap">
+                <img src="${esc(w.img || w.image)}" alt="${esc(w.ru)}" class="vw-word-image" loading="lazy" />
               </div>
             ` : ""}
 
-            ${w.syn ? `<div class="vw-syn">🟢 Đồng nghĩa: <b>${esc(w.syn)}</b></div>` : ""}
+            ${w.note ? `
+              <div class="vw-note-box">
+                <span class="vw-note-icon">💡</span>
+                <span class="vw-note-text">${esc(w.note)}</span>
+              </div>
+            ` : ""}
 
-            <div class="vw-bottom-bar">
-              <button type="button" class="btn btn-soft btn-xs btn-addjar-item" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" data-ex="${esc(w.ex || "")}" title="Lưu vào Lọ cá nhân để học riêng">
-                🏺 + Lọ của tôi
+            ${w.ex ? `
+              <div class="vw-example-box">
+                <div class="vw-ex-text-wrap">
+                  <span class="vw-ex-badge">Ví dụ câu</span>
+                  <div class="vw-ex-ru ru">«${esc(w.ex)}»</div>
+                </div>
+                <button type="button" class="vw-circle-btn-sm btn-speak-ex" data-text="${esc(w.ex)}" title="Nghe câu ví dụ">🔊</button>
+              </div>
+            ` : ""}
+
+            ${w.syn ? `
+              <div class="vw-syn-box">
+                <span class="vw-syn-tag">Đồng nghĩa:</span>
+                <span class="vw-syn-text"><b>${esc(w.syn)}</b></span>
+              </div>
+            ` : ""}
+
+            <div class="vw-actions-grid ${isCustomJar ? "has-del" : ""}">
+              <button type="button" class="vw-btn-action vw-btn-savejar btn-addjar-item" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" data-ex="${esc(w.ex || "")}" title="Lưu vào Lọ cá nhân để học riêng">
+                <span>🏺</span> + Lọ của tôi
               </button>
-              <button type="button" class="btn btn-outline btn-xs btn-dict-detail" data-ru="${esc(w.ru)}" title="Tra cứu biến cách 6 cách & chia thì TFlat">
-                📖 Tra từ 6 cách
+              <button type="button" class="vw-btn-action vw-btn-tflat btn-dict-detail" data-ru="${esc(w.ru)}" title="Tra cứu biến cách 6 cách & chia thì TFlat">
+                <span>📖</span> Tra từ 6 cách
               </button>
-              ${isCustomJar ? `<button type="button" class="btn btn-soft btn-xs btn-delword-item" data-ru="${esc(w.ru)}" style="color:var(--red)" title="Xóa từ khỏi lọ này">🗑️</button>` : ""}
+              ${isCustomJar ? `
+                <button type="button" class="vw-btn-action vw-btn-del btn-delword-item" data-ru="${esc(w.ru)}" title="Xóa từ khỏi lọ này">
+                  <span>🗑️</span>
+                </button>
+              ` : ""}
             </div>
           </div>
         `;
       }).join("");
 
       gridEl.querySelectorAll(".btn-speak-item").forEach(b => {
-        b.onclick = () => speak(b.dataset.ru);
+        b.onclick = () => {
+          b.classList.add("playing");
+          speak(b.dataset.ru);
+          setTimeout(() => b.classList.remove("playing"), 1000);
+        };
       });
 
       gridEl.querySelectorAll(".btn-speak-ex").forEach(b => {
-        b.onclick = () => speak(b.dataset.text);
+        b.onclick = () => {
+          b.classList.add("playing");
+          speak(b.dataset.text);
+          setTimeout(() => b.classList.remove("playing"), 1500);
+        };
       });
 
       gridEl.querySelectorAll(".btn-star-item").forEach(b => {
@@ -1588,10 +1641,15 @@ function initVocabPage() {
     const mainLayout = el("#vocMainLayout");
     if (mainLayout) mainLayout.classList.remove("hidden");
     const detail = el("#jarDetailHost");
-    if (detail) detail.classList.add("hidden");
+    if (detail) {
+      detail.classList.add("hidden");
+      detail.innerHTML = "";
+    }
     const srsPane = el("#vocPaneAlgorithm");
     if (srsPane) srsPane.classList.add("hidden");
-    renderVocabCards();
+    const shelfHost = el("#jarsShelfHost");
+    if (shelfHost) shelfHost.classList.remove("hidden");
+    renderVocabHub();
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   window.exitSrsToVocab = showMainLayout;
@@ -2052,9 +2110,7 @@ function initVocabPage() {
     if (mainLayout) mainLayout.classList.add("hidden");
     const srsPane = el("#vocPaneAlgorithm");
     if (srsPane) srsPane.classList.add("hidden");
-    const shelf = el("#jarsShelfHost");
     const detail = el("#jarDetailHost");
-    if (shelf) shelf.classList.add("hidden");
     if (detail) {
       detail.classList.remove("hidden");
       const isCustom = !jar.is_system && String(jar.id).startsWith("custom-");
@@ -2147,9 +2203,7 @@ function initVocabPage() {
     if (mainLayout) mainLayout.classList.add("hidden");
     const srsPane = el("#vocPaneAlgorithm");
     if (srsPane) srsPane.classList.add("hidden");
-    const shelf = el("#jarsShelfHost");
     const detail = el("#jarDetailHost");
-    if (shelf) shelf.classList.add("hidden");
     if (!detail) return;
     detail.classList.remove("hidden");
 
