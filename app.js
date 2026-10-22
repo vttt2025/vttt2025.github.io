@@ -898,27 +898,6 @@ const Monetization = {
 
         <div class="pro-gate-body">
           <p class="pro-gate-desc">${esc(descText)}</p>
-
-          <div class="pro-gate-feature-list">
-            <div class="pro-gate-feat-row">
-              <span class="pro-gate-feat-icon">💎</span>
-              <div>
-                <b>Kho tài liệu B1 – B2 chuyên sâu:</b> Lọ từ vựng đời sống & du học, đề thi TRKI đầy đủ các phân môn.
-              </div>
-            </div>
-            <div class="pro-gate-feat-row">
-              <span class="pro-gate-feat-icon">🤖</span>
-              <div>
-                <b>Trợ lý AI Rusika đồng hành:</b> Chấm bài viết tự luận 4 tiêu chí chuẩn khảo thí và sửa lỗi phát âm âm vị.
-              </div>
-            </div>
-            <div class="pro-gate-feat-row">
-              <span class="pro-gate-feat-icon">⚡</span>
-              <div>
-                <b>Học không giới hạn:</b> Thuật toán lặp lại ngắt quãng Spaced Repetition (SRS) lưu tiến độ đa thiết bị.
-              </div>
-            </div>
-          </div>
         </div>
 
         <div class="pro-gate-actions">
@@ -926,7 +905,7 @@ const Monetization = {
             Để sau
           </button>
           <a href="upgrade.html" class="btn btn-primary pro-gate-btn-upgrade" id="btnProGateUpgrade">
-            👑 Tìm hiểu gói PRO →
+            Tìm hiểu gói PRO →
           </a>
         </div>
       </div>
