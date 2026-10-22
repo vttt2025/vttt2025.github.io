@@ -4,9 +4,9 @@
  * Hỗ trợ quản lý 9 bộ dữ liệu cốt lõi:
  *   1. TRKI_BANK        : Ngân hàng đề thi TRKI A1, A2, B1, B2 chuẩn 
  *   2. VOCAB_JARS       : Các lọ từ vựng chủ đề & mẩu giấy từ
- *   3. SHOP_PRODUCTS    : Sản phẩm shop nội địa Nga & dịch vụ du học 6730
+ *   3. SHOP_PRODUCTS    : Sản phẩm shop nội địa Nga & dịch vụ Du học Nga
  *   4. PACKAGES         : Bảng gói cước nâng cấp tài khoản PRO
- *   5. BLOG_POSTS       : Cẩm nang du học, KTX, học bổng 6730 & kinh nghiệm
+ *   5. BLOG_POSTS       : Cẩm nang du học, KTX, học bổng Du học Nga & kinh nghiệm
  *   6. LISTENING_LESSONS: 4 Part luyện nghe chuẩn CEFR
  *   7. SPEAKING_SETS    : Bộ câu luyện nói phản xạ & Shadowing
  *   8. WRITING_TASKS    : Đề bài luyện viết Письмо theo chuẩn TRKI
@@ -147,7 +147,7 @@
             { v: "banh_keo", l: "🍬 Bánh kẹo Nga" },
             { v: "my_pham", l: "🌿 Mỹ phẩm Siberia" },
             { v: "luu_niem", l: "🪆 Quà lưu niệm Nga" },
-            { v: "dich_vu_du_hoc", l: "🎓 Dịch vụ du học 6730" }
+            { v: "dich_vu_du_hoc", l: "🎓 Dịch vụ Du học Nga" }
           ]
         },
         { key: "categoryName", label: "Tên ngành hàng hiển thị", type: "text" },
@@ -189,7 +189,7 @@
       source: () => (window.BLOG_POSTS || []),
       fields: [
         { key: "title", label: "Tiêu đề bài viết", type: "text", required: true },
-        { key: "tag", label: "Chuyên mục (Lộ trình / KTX / Học bổng 6730 / Đời sống)", type: "text" },
+        { key: "tag", label: "Chuyên mục (Lộ trình / KTX / Học bổng Du học Nga / Đời sống)", type: "text" },
         { key: "date", label: "Thời gian đăng (ví dụ: Tháng 10, 2026)", type: "text" },
         { key: "icon", label: "Emoji đại diện bài viết", type: "text" },
         { key: "excerpt", label: "Tóm tắt ngắn hiển thị ngoài danh sách", type: "textarea" },

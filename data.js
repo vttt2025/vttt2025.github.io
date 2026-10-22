@@ -2465,10 +2465,10 @@ const SHOP_PRODUCTS = [
     image: "https://images.unsplash.com/photo-1559454403-b8fb88521f11?auto=format&fit=crop&w=600&q=80"
   },
   {
-    id: "tuvan-6730",
+    id: "tuvan-duhoc",
     category: "dich_vu_du_hoc",
-    categoryName: "Dịch vụ du học 6730",
-    title: "Gói tư vấn & hỗ trợ hồ sơ Hiệp định 6730",
+    categoryName: "Dịch vụ Du học Nga",
+    title: "Gói tư vấn & hỗ trợ hồ sơ Du học Nga",
     desc: "Định hướng chọn trường top (MGU, HSE, SPbGU), tối ưu bài luận và nộp hồ sơ chuẩn chỉ tiêu 1000 suất.",
     price: 1500000,
     image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=600&q=80",
@@ -2477,7 +2477,7 @@ const SHOP_PRODUCTS = [
   {
     id: "dich-thuat-nga",
     category: "dich_vu_du_hoc",
-    categoryName: "Dịch vụ du học 6730",
+    categoryName: "Dịch vụ Du học Nga",
     title: "Dịch thuật công chứng hồ sơ sang tiếng Nga",
     desc: "Dịch chuẩn xác học bạ, bằng tốt nghiệp, lý lịch tư pháp bởi dịch giả chuyên ngữ có dấu công chứng tư pháp.",
     price: 350000,
@@ -2518,7 +2518,7 @@ const PACKAGES = [
       "Phân tích chuyên sâu đề thi & dự đoán điểm đỗ",
       "Chấm bài tự luận Viết (Письмо) có nhận xét của giảng viên",
       "Kho 100+ Lọ từ vựng chuyên ngành (Y khoa, Kỹ thuật, Kinh tế)",
-      "Ưu tiên hỗ trợ hồ sơ học bổng du học Nga 6730",
+      "Ưu tiên hỗ trợ hồ sơ học bổng Du học Nga",
       "Hỗ trợ 1-1 qua nhóm Zalo VIP"
     ]
   },

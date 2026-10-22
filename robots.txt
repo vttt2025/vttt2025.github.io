@@ -1,0 +1,10 @@
+# Robots.txt for RUSI TRKI (https://rusitrki.com)
+User-agent: *
+Allow: /
+Disallow: /admin.html
+Disallow: /admin
+Disallow: /admin/
+Disallow: /scripts/
+Disallow: /*.sql
+
+Sitemap: https://rusitrki.com/sitemap.xml

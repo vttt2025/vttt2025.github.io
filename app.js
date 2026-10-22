@@ -319,7 +319,7 @@ const MascotRusika = {
                 <button type="button" class="btn-prompt-chip" data-prompt="Quy tắc đánh trọng âm và phát âm tiếng Nga chuẩn">Luyện phát âm</button>
                 <button type="button" class="btn-prompt-chip" data-prompt="Giải thích 6 Cách trong tiếng Nga ngắn gọn dễ hiểu">6 Cách tiếng Nga</button>
                 <button type="button" class="btn-prompt-chip" data-prompt="Cách chia động từ tiếng Nga theo ngôi và thể">Chia động từ</button>
-                <button type="button" class="btn-prompt-chip" data-prompt="Điều kiện và kinh nghiệm xin học bổng du học Nga 6730">Học bổng Nga 6730</button>
+                <button type="button" class="btn-prompt-chip" data-prompt="Điều kiện và kinh nghiệm xin học bổng Du học Nga">Học bổng Du học Nga</button>
               </div>
             </div>
 
@@ -439,7 +439,7 @@ const MascotRusika = {
               <button type="button" class="chat-chip-btn" data-query="Quy tắc đánh trọng âm và phát âm tiếng Nga">Luyện phát âm</button>
               <button type="button" class="chat-chip-btn" data-query="Giải thích 6 Cách trong tiếng Nga ngắn gọn">6 Cách tiếng Nga</button>
               <button type="button" class="chat-chip-btn" data-query="Cách chia động từ tiếng Nga theo ngôi">Chia động từ</button>
-              <button type="button" class="chat-chip-btn" data-query="Điều kiện và kinh nghiệm xin học bổng du học Nga 6730">Học bổng Nga</button>
+              <button type="button" class="chat-chip-btn" data-query="Điều kiện và kinh nghiệm xin học bổng Du học Nga">Học bổng Du học Nga</button>
               <button type="button" class="chat-chip-btn" data-query="Làm thế nào để mèo Rusika tăng cấp XP?">Tăng cấp Mèo</button>
             </div>
           </div>
@@ -616,9 +616,9 @@ const MascotRusika = {
         title: "Hệ thống 6 Cách trong tiếng Nga (6 Падежей) 🇷🇺",
         text: "6 Cách là xương sống của ngữ pháp tiếng Nga:\n• <b>Cách 1 (Именительный)</b>: Chủ ngữ trong câu (Кто? Что?)\n• <b>Cách 2 (Родительный)</b>: Sở hữu, phủ định 'нет', số lượng (Кого? Чего? Откуда?)\n• <b>Cách 3 (Дательный)</b>: Người nhận, tuổi tác, gián tiếp (Кому? Чему?)\n• <b>Cách 4 (Винительный)</b>: Bổ ngữ trực tiếp, hướng chuyển động (Кого? Что? Куда?)\n• <b>Cách 5 (Творительный)</b>: Phương tiện, công cụ, nghề nghiệp, đi cùng ai (Кем? Чем? С кем?)\n• <b>Cách 6 (Предложный)</b>: Địa điểm ở đâu, chủ đề suy nghĩ/nói (Где? О ком? О чём?)"
       };
-    } else if (/học bổng|du học|6730|nga/i.test(query)) {
+    } else if (/học bổng|du học|nga/i.test(query)) {
       return {
-        title: "Học bổng Hiệp định du học Nga 6730 🎓",
+        title: "Học bổng Du học Nga 🎓",
         text: "Học bổng Hiệp định giữa Bộ GD&ĐT Việt Nam và Liên bang Nga:\n• <b>Quyền lợi</b>: Miễn 100% học phí suốt 4–6 năm, đài thọ ký túc xá, bảo hiểm y tế và cấp sinh hoạt phí hàng tháng song phương (từ cả phía Nga và phía Việt Nam).\n• <b>Tiêu chuẩn</b>: Điểm trung bình GPA THPT hoặc Đại học từ 7.0+ (khuyên dùng 8.0+ để cạnh tranh hồ sơ).\n• <b>Trình độ tiếng</b>: Chưa biết tiếng Nga vẫn nộp được vì bạn sẽ được đài thọ 1 năm học tiếng Nga dự bị tại các trường danh tiếng như MGU, SPbU, Bauman, HSE..."
       };
     } else if (/tăng cấp|tiến hóa|xp|cấp độ|mèo/i.test(query)) {
@@ -847,7 +847,7 @@ const Monetization = {
           "Phân tích chuyên sâu đề thi & dự đoán điểm đỗ",
           "Chấm bài tự luận Viết (Письмо) có nhận xét của giảng viên",
           "Kho 100+ Lọ từ vựng chuyên ngành (Y khoa, Kỹ thuật, Kinh tế)",
-          "Ưu tiên hỗ trợ hồ sơ học bổng du học Nga 6730",
+          "Ưu tiên hỗ trợ hồ sơ học bổng Du học Nga",
           "Hỗ trợ 1-1 qua nhóm Zalo VIP"
         ]
       },
@@ -1190,7 +1190,7 @@ const Monetization = {
             <li><span class="chk">✓</span> Chấm bài viết Письмо theo 4 tiêu chí TRKI chuẩn quốc tế</li>
             <li><span class="chk">✓</span> Luyện nghe 4 Part CEFR kèm transcript chi tiết</li>
             <li><span class="chk">✓</span> Mở khóa toàn bộ 100+ Lọ từ vựng chuyên ngành</li>
-            <li><span class="chk">✓</span> Ưu tiên hỗ trợ hồ sơ học bổng Hiệp định du học Nga 6730</li>
+            <li><span class="chk">✓</span> Ưu tiên hỗ trợ hồ sơ học bổng Du học Nga</li>
           </ul>
         </div>
 
@@ -1850,6 +1850,8 @@ function renderFooter() {
       <a href="mock-test.html">TRKI</a>
       <a href="blog.html">Blog</a>
       <a href="shop.html">Shop</a>
+      <a href="how-to-study.html">Cách học</a>
+      <a href="upgrade.html">Gói PRO</a>
     </div>
     <small>© 2026 RUSI TRKI. Made for curious minds. Đồng hành cùng Mascot Rusika mắt xanh.</small>
   </footer>`;

@@ -106,7 +106,7 @@ Dưới đây là bản cập nhật toàn diện cho tệp **`PROJECT_SPEC.md`*
 ### [Chuyên Mục 7] Shop (Bán Hàng Từ Nga & Dịch Vụ Du Học)
 
 * **Kinh doanh nội địa Nga**: Bánh kẹo Alenka, mỹ phẩm Siberia, quà lưu niệm Matryoshka...
-* **Dịch vụ liên kết du học**: Cổng tư vấn hồ sơ du học Nga (hợp tác chỉ tiêu hiệp định 6730).
+* **Dịch vụ liên kết du học**: Cổng tư vấn hồ sơ Du học Nga uy tín.
 * **Tính năng**: Giỏ hàng rút gọn, form đặt mua nhanh, tích hợp thanh toán chuyển khoản nội địa.
 
 
@@ -117,7 +117,7 @@ Dưới đây là bản cập nhật toàn diện cho tệp **`PROJECT_SPEC.md`*
 
 ### 2.1. Bảng gói cước chuẩn:
 1. **Gói 6 Tháng (PRO-6M)**: Mở khóa full ngân hàng đề thi TRKI A1–A2, luyện nghe 4 Part CEFR, không giới hạn lọ từ vựng.
-2. **Gói 1 Năm (PRO-1Y - Phổ biến nhất 🔥)**: Mở khóa TOÀN BỘ ngân hàng đề thi TRKI A1, A2, B1, B2 + AI Rusika chấm tự luận Viết (Письmo) + AI luyện nói & sửa lỗi phát âm + Hỗ trợ học bổng 6730.
+2. **Gói 1 Năm (PRO-1Y - Phổ biến nhất 🔥)**: Mở khóa TOÀN BỘ ngân hàng đề thi TRKI A1, A2, B1, B2 + AI Rusika chấm tự luận Viết (Письmo) + AI luyện nói & sửa lỗi phát âm + Hỗ trợ học bổng Du học Nga.
 3. **Gói Trọn Đời (PRO-VIP 💎)**: Quyền truy cập VIP vĩnh viễn không giới hạn thời gian + Tặng Hộp quà Nga đặc biệt (Socola Alenka + Trà Ivan-chay) + Voucher 500k dịch vụ du học & visa Nga.
 
 ### 2.2. Cơ chế phân quyền hiển thị theo phiên đăng nhập (Auth-Aware Upgrade Flow):
@@ -181,8 +181,8 @@ Hệ thống CMS tại `admin.html` & `admin.js` quản lý trực tiếp 9 tậ
    * Mỗi lọ đại diện cho một ngữ cảnh sống còn tại Nga (Lọ mua sắm Auchan, Lọ vali hành lý, Lọ KTX Общежитие, Lọ căng tin & Trà bánh...).
    * Mẩu giấy từ vựng: Từ vựng tiếng Nga (hỗ trợ đánh dấu trọng âm), nghĩa tiếng Việt, và ghi chú ngữ cảnh/ngữ pháp.
 
-3. **`SHOP_PRODUCTS` (Shop nội địa Nga & Dịch vụ du học 6730)**:
-   * 4 danh mục chính: `banh_keo` (Bánh kẹo Nga), `my_pham` (Mỹ phẩm Siberia), `luu_niem` (Quà lưu niệm Matryoshka/Cheburashka), `dich_vu_du_hoc` (Gói tư vấn hồ sơ 6730, Dịch thuật công chứng).
+3. **`SHOP_PRODUCTS` (Shop nội địa Nga & Dịch vụ Du học Nga)**:
+   * 4 danh mục chính: `banh_keo` (Bánh kẹo Nga), `my_pham` (Mỹ phẩm Siberia), `luu_niem` (Quà lưu niệm Matryoshka/Cheburashka), `dich_vu_du_hoc` (Gói tư vấn hồ sơ Du học Nga, Dịch thuật công chứng).
    * Thuộc tính: Mã định danh, Tên sản phẩm, Ngành hàng, Giá bán VNĐ, Ảnh minh họa, Huy hiệu (Bán chạy, Hot, Mới).
 
 4. **`PACKAGES` (Bảng gói cước tài khoản PRO)**:
@@ -190,7 +190,7 @@ Hệ thống CMS tại `admin.html` & `admin.js` quản lý trực tiếp 9 tậ
    * Thuộc tính: Tên gói, Huy hiệu thời hạn, Mô tả đối tượng học viên, Giá ưu đãi, Giá niêm yết, Đánh dấu "Phổ biến nhất", Danh sách quyền lợi.
 
 5. **`BLOG_POSTS` (Cẩm nang du học & SEO Cluster)**:
-   * Chuyên mục: Lộ trình học, KTX & Đời sống du học sinh, Học bổng Hiệp định 6730, Mẹo phát âm.
+   * Chuyên mục: Lộ trình học, KTX & Đời sống du học sinh, Học bổng Du học Nga, Mẹo phát âm.
    * Thuộc tính: Tiêu đề, Chuyên mục tag, Ngày đăng, Icon đại diện, Tóm tắt ngắn, Nội dung bài viết chi tiết.
 
 6. **`LISTENING_LESSONS` (Luyện nghe 4 Part CEFR)**: Hội thoại, câu hỏi trắc nghiệm, bài tập điền từ và chính tả.
@@ -541,7 +541,7 @@ CREATE TABLE blog_posts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     slug TEXT UNIQUE NOT NULL,
     title TEXT NOT NULL,
-    category TEXT NOT NULL,              -- 'du_hoc_trai_nghiem', 'luat_cu_tru', 'ngu_phap', 'hoc_bong_6730'
+    category TEXT NOT NULL,              -- 'du_hoc_trai_nghiem', 'luat_cu_tru', 'ngu_phap', 'hoc_bong_du_hoc'
     cover_image TEXT,
     content_markdown TEXT NOT NULL,
     published BOOLEAN DEFAULT TRUE,
@@ -782,4 +782,142 @@ CREATE POLICY "Super Admins view audit logs" ON admin_audit_logs FOR SELECT USIN
 * **Xử lý Lỗi & Tương thích Toàn diện**:
   - Bắt các lỗi Firebase chi tiết: `auth/operation-not-allowed` (hướng dẫn bật Email/Password trên Firebase Console), `auth/network-request-failed` và regex kiểm tra email client-side.
   - SPA Fallback & 404 Routing trong `404.html`: Hỗ trợ Clean URLs cho tất cả chuyên mục chính (`/login`, `/signup`, `/vocabulary`, `/writing`, `/listening`, `/speaking`, `/mock-test`, `/blog`, `/shop`, `/admin`). Khi người dùng nhập sai đường dẫn hoặc tìm kiếm trang không tồn tại, tự động chuyển hướng và giữ chân tại giao diện chuyên biệt `404.html` với đầy đủ Brand Russian Header/Footer, Mascot Rusika và phím tắt điều hướng nhanh về 7 phân hệ.
+
+---
+
+## 7. QUY CHUẨN SEO TOÀN DIỆN & TỐI ƯU HÓA CÔNG CỤ TÌM KIẾM (TECHNICAL SEO & SEARCH ENGINE SPECIFICATION)
+
+Nhằm đảm bảo nền tảng **RUSI TRKI** đạt vị thế dẫn đầu trong kết quả tìm kiếm tự nhiên (Organic Search Rankings) cho các từ khóa học tiếng Nga, luyện thi chứng chỉ ТРКИ và học bổng Du học Nga, toàn bộ hệ thống tuân thủ các quy chuẩn Technical SEO khắt khe sau:
+
+### 7.1. Chiến Lược Từ Khóa Cốt Lõi (Keyword Matrix)
+* **Từ khóa thương hiệu (Brand Keywords)**: `RUSI TRKI`, `Rusi TRKI`, `Mascot Rusika`, `Mèo Rusika`, `Lọ từ vựng Rusi`.
+* **Từ khóa thi chứng chỉ (Certification Keywords)**: `luyện thi TRKI`, `đề thi thử TRKI`, `chứng chỉ TORFL`, `TRKI A1`, `TRKI A2`, `TRKI B1`, `TRKI B2`, `bài tập ngữ pháp tiếng Nga TRKI`.
+* **Từ khóa 4 kỹ năng (Skills Keywords)**: `từ vựng tiếng Nga Spaced Repetition`, `lọ từ vựng`, `luyện nghe chép chính tả tiếng Nga`, `luyện nói Shadowing tiếng Nga`, `AI chấm phát âm tiếng Nga`, `luyện viết tả tranh tiếng Nga`, `học tiếng Nga từ con số 0`.
+* **Từ khóa Du học & Đời sống (Study Abroad & Lifestyle)**: `học bổng du học Nga`, `du học Nga`, `KTX MGU`, `thẻ ngân hàng Mir Sberbank`, `thủ tục cư trú Nga`, `hàng Nga nội địa`.
+
+---
+
+### 7.2. Chuẩn Hóa Thẻ Meta & Mạng Xã Hội (Per-Page Metadata & Social Sharing)
+Mọi trang HTML trên hệ thống bắt buộc phải sở hữu cấu trúc thẻ Meta định danh đầy đủ, tuân thủ nghiêm ngặt chuẩn W3C, Open Graph (Facebook/Zalo) và Twitter Cards:
+
+```html
+<!-- Bộ thẻ chuẩn trên mỗi trang HTML -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>[Tên Trang Cụ Thể] — [Từ Khóa Bổ Trợ] | RUSI TRKI</title>
+<meta name="description" content="[Mô tả hấp dẫn, súc tích 130-160 ký tự chứa từ khóa chính và lời kêu gọi hành động]" />
+<meta name="keywords" content="[Danh sách 6-10 từ khóa trọng tâm phân cách bằng dấu phẩy]" />
+<meta name="author" content="RUSI TRKI Team" />
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+<link rel="canonical" href="https://rusitrki.com/[tên-trang].html" />
+
+<!-- Open Graph / Zalo / Facebook -->
+<meta property="og:site_name" content="RUSI TRKI" />
+<meta property="og:type" content="website" />
+<meta property="og:title" content="[Tiêu đề trang đồng bộ]" />
+<meta property="og:description" content="[Mô tả trang đồng bộ]" />
+<meta property="og:url" content="https://rusitrki.com/[tên-trang].html" />
+<meta property="og:image" content="https://rusitrki.com/assets/og-image.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="RUSI TRKI - Nền Tảng Học Tiếng Nga & Luyện Thi ТРКИ Chuẩn Quốc Tế" />
+<meta property="og:locale" content="vi_VN" />
+
+<!-- Twitter Cards -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="[Tiêu đề trang]" />
+<meta name="twitter:description" content="[Mô tả ngắn]" />
+<meta name="twitter:image" content="https://rusitrki.com/assets/og-image.jpg" />
+
+<!-- Thiết bị di động & PWA Theme Color -->
+<meta name="theme-color" content="#c52233" />
+<meta name="application-name" content="RUSI TRKI" />
+<meta name="apple-mobile-web-app-title" content="RUSI TRKI" />
+```
+
+* **Quy định đối với ảnh Social Banner (`assets/og-image.jpg`)**:
+  - Kích thước vàng: **1200 x 630 pixel** (tỷ lệ 1.91:1) chuẩn mực cho Facebook, Zalo, LinkedIn, Twitter/X và iMessage.
+  - Phối màu Russian Crimson Red `#c52233`, Cobalt Blue `#1757a6`, biểu tượng chữ cái Nga `Я`, slogan *"Chinh Phục Tiếng Nga Từ Con Số 0 Đến B2"* và các gạch đầu dòng tính năng chủ đạo.
+
+---
+
+### 7.3. Dữ Liệu Có Cấu Trúc Schema.org (JSON-LD Structured Data)
+Nhằm kích hoạt các tính năng hiển thị nâng cao (Rich Snippets, Breadcrumbs, FAQ Accordions, Course Badges) trên Google Search:
+
+1. **`WebSite` & `EducationalOrganization` (`index.html`)**: Khai báo danh tính tổ chức giáo dục RUSI TRKI, logo vector `rusi-logo.svg`, kênh email hỗ trợ `support@rusitrki.com` và các tên gọi thay thế.
+2. **`FAQPage` (`index.html`)**: Đóng gói các câu hỏi thường gặp (bắt đầu từ số 0, thời gian học mỗi ngày, độ sát thực của đề thi TRKI) thành schema `FAQPage` để mở rộng tối đa diện tích hiển thị trên SERP.
+3. **`Course` & `BreadcrumbList`**:
+   - `vocabulary.html`: Khóa học "Kho Lọ Từ Vựng Tiếng Nga Spaced Repetition".
+   - `mock-test.html`: Chương trình "Luyện Thi Thử Chứng Chỉ Tiếng Nga Quốc Tế ТРКИ".
+   - `listening.html`: Khóa học "Luyện Nghe Tiếng Nga 4 Part Toàn Diện".
+   - `speaking.html`: Khóa học "Luyện Nói Tiếng Nga Shadowing Cùng AI".
+   - `writing.html`: Khóa học "Luyện Viết Tiếng Nga Chuẩn TRKI".
+4. **`HowTo` & `BreadcrumbList` (`how-to-study.html`)**: Hướng dẫn 4 bước quy trình học tiếng Nga có hệ thống.
+5. **`Blog` (`blog.html`)**: Bộ sưu tập các bài viết cẩm nang du học và đời sống Nga.
+6. **`Store` (`shop.html`)**: Danh mục sản phẩm đặc sản Nga và cổng tư vấn Du học Nga.
+7. **`Product` & `AggregateOffer` (`upgrade.html`)**: Chi tiết gói học viên RUSI PRO với khoảng giá rõ ràng từ 199.000đ đến 999.000đ.
+
+---
+
+### 7.4. Chỉ Thị Thu Thập Dữ Liệu & Bản Đồ Trang Web (Robots & Sitemap)
+
+1. **Tệp `robots.txt`**:
+   ```txt
+   # Robots.txt for RUSI TRKI (https://rusitrki.com)
+   User-agent: *
+   Allow: /
+   Disallow: /admin.html
+   Disallow: /admin
+   Disallow: /admin/
+   Disallow: /scripts/
+   Disallow: /*.sql
+
+   Sitemap: https://rusitrki.com/sitemap.xml
+   ```
+   * *Mục tiêu*: Ngăn chặn bot tìm kiếm lập chỉ mục phân hệ Admin, tệp SQL nhạy cảm và các mã script bảo mật, tập trung 100% crawl budget vào các trang bài học công khai.
+
+2. **Tệp `sitemap.xml`**:
+   * Định dạng chuẩn XML Sitemap 0.9, khai báo 12 trang nội dung chính yếu với mức độ ưu tiên (`priority`) và tần suất cập nhật (`changefreq`):
+     - `https://rusitrki.com/`: `priority 1.0` — `daily`
+     - `https://rusitrki.com/vocabulary.html`: `priority 0.9` — `daily`
+     - `https://rusitrki.com/mock-test.html`: `priority 0.9` — `weekly`
+     - `https://rusitrki.com/listening.html`: `priority 0.8` — `weekly`
+     - `https://rusitrki.com/speaking.html`: `priority 0.8` — `weekly`
+     - `https://rusitrki.com/writing.html`: `priority 0.8` — `weekly`
+     - `https://rusitrki.com/how-to-study.html`: `priority 0.8` — `weekly`
+     - `https://rusitrki.com/blog.html`: `priority 0.8` — `daily`
+     - `https://rusitrki.com/shop.html`: `priority 0.7` — `weekly`
+     - `https://rusitrki.com/upgrade.html`: `priority 0.7` — `monthly`
+     - `https://rusitrki.com/login.html`: `priority 0.5` — `monthly`
+     - `https://rusitrki.com/signup.html`: `priority 0.5` — `monthly`
+
+3. **Chính Sách Lập Chỉ Mục Riêng Từng Trang (Robots Meta Tag)**:
+   - Các trang nội dung công khai: `index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1`.
+   - Phân hệ quản trị `admin.html`: `noindex, nofollow` (bảo mật tuyệt đối, không xuất hiện trên Google).
+   - Trang lỗi `404.html` và trang chuyển hướng `login/index.html`, `signup/index.html`: `noindex, follow` (không lập chỉ mục trang báo lỗi hoặc trang rỗng nhưng cho phép bot lần theo các liên kết nội bộ).
+
+---
+
+### 7.5. Chiến Lược Canonical & Chống Trùng Lặp Nội Dung (Canonicalization)
+* **Thẻ Canonical cố định 100%**: Mọi trang web đều khai báo thẻ `<link rel="canonical" href="https://rusitrki.com/...">`.
+* **Triệt tiêu lỗi Duplicate Content**:
+  - Hợp nhất truy cập giữa tên miền có `www` và không `www`, giữa giao thức `http` và `https`.
+  - Hợp nhất giữa tên miền chính `rusitrki.com` và tên miền mặc định của GitHub Pages `[username].github.io/rusitrki/`.
+  - Hợp nhất các Clean URLs (`/vocabulary`, `/trki`, `/login`) về đúng tệp chuẩn SEO gốc.
+
+---
+
+### 7.6. Chuẩn Hóa Cấu Trúc Ngữ Nghĩa & Hình Ảnh (Semantic & Image SEO)
+1. **Duy nhất một thẻ `<h1>` trên mỗi trang**: Tiêu đề `<h1>` đại diện cho chủ đề duy nhất của trang, sử dụng Sentence Case dễ đọc, không viết hoa toàn bộ và không bẻ chữ đột ngột.
+2. **Cấu trúc phân cấp tiêu đề logic**: `<h1>` (Chủ đề chính) ➔ `<h2>` (Các phân khúc nội dung) ➔ `<h3>` (Các đầu mục bài học / tính năng chi tiết). Tuyệt đối không nhảy cấp từ `<h1>` xuống `<h3>`.
+3. **Quy chuẩn thẻ hình ảnh (`<img>`)**:
+   - Bắt buộc thuộc tính `alt` mô tả giàu thông tin (Ví dụ: `alt="Quảng trường Đỏ Moscow Nga — Nền tảng học tiếng Nga RUSI TRKI"` thay vì `alt="ảnh"`).
+   - Bắt buộc khai báo tường minh `width` và `height` trên thẻ `<img>` nhằm giúp trình duyệt cấp phát không gian bố cục trước khi ảnh tải xong, ngăn chặn triệt để hiện tượng xô lệch giao diện (Cumulative Layout Shift - CLS < 0.1).
+   - Áp dụng `loading="eager"` cho ảnh Hero đầu trang (LCP element) và `loading="lazy"` cho các ảnh nội dung bên dưới màn hình cuộn.
+
+---
+
+### 7.7. Tối Ưu Hóa Mạng Lưới Liên Kết Nội Bộ (Internal Link Equity)
+* **Xóa bỏ hoàn toàn "Trang mồ côi" (Orphan Pages)**: Toàn bộ 7 chuyên mục chính cùng trang phương pháp học tập (`how-to-study.html`) và gói hội viên (`upgrade.html`) đều được kết nối trực tiếp trong menu Điều hướng Header (`NAV_LINKS`) và Chân trang Footer (`footer-links`).
+* Bot tìm kiếm có thể di chuyển qua lại giữa tất cả các trang chỉ trong tối đa 1 cú click từ bất kỳ vị trí nào trên website.
 ```

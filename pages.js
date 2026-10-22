@@ -3848,7 +3848,7 @@ function initBlogPage() {
         <button class="tab ${selectedCategory === "du_hoc_trai_nghiem" ? "active" : ""}" data-c="du_hoc_trai_nghiem">Trải nghiệm du học & KTX</button>
         <button class="tab ${selectedCategory === "luat_cu_tru" ? "active" : ""}" data-c="luat_cu_tru">Luật cư trú & Thẻ ngân hàng Mir</button>
         <button class="tab ${selectedCategory === "ngu_phap" ? "active" : ""}" data-c="ngu_phap">Thành ngữ & Ngữ pháp Nga</button>
-        <button class="tab ${selectedCategory === "hoc_bong_6730" ? "active" : ""}" data-c="hoc_bong_6730">Học bổng Hiệp định 6730</button>
+        <button class="tab ${selectedCategory === "hoc_bong_du_hoc" ? "active" : ""}" data-c="hoc_bong_du_hoc">Học bổng Du học Nga</button>
       </div>
 
       <div class="shop-grid">
@@ -4464,7 +4464,7 @@ function initUpgradePage() {
                 <td class="col-pro"><b>Trọn bộ các tập độc quyền</b> kèm kịch bản hội thoại và bài tập trắc nghiệm</td>
               </tr>
               <tr>
-                <td class="col-feature"><b>Tư vấn du học Nga diện Hiệp định 6730</b></td>
+                <td class="col-feature"><b>Tư vấn Du học Nga</b></td>
                 <td class="col-free"><span style="color:#94a3b8">✕ Không hỗ trợ</span></td>
                 <td class="col-pro"><b style="color:#059669">✓ Ưu tiên hỗ trợ 1-1</b> qua nhóm Zalo VIP cùng cựu du học sinh</td>
               </tr>
