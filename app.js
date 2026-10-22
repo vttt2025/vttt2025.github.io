@@ -276,7 +276,7 @@ const MascotRusika = {
       <div class="rusika-card-inner">
         <!-- CỘT CON MÈO RUSIKA TIẾN HÓA THEO XP -->
         <div class="rusika-character-col">
-          <div class="rusika-avatar-stage" id="rusikaAvatarStage" title="Bấm để trò chuyện với Mèo Rusika">
+          <div class="rusika-avatar-stage" id="rusikaAvatarStage" title="Bấm để trò chuyện với Rusi AI">
             <div class="rusika-avatar-glow"></div>
             <div class="rusika-avatar-svg-wrap">
               ${this.getSvg(lvl, season, 96)}
@@ -308,7 +308,7 @@ const MascotRusika = {
               <span class="bubble-streak">🔥 Chuỗi học: <b>${streak} ngày</b></span>
             </div>
             <div class="rusika-bubble-message">
-              «Привет! Mình là mèo Rusika 🐱. Hôm nay bạn muốn luyện từ vựng, nghe 4 Part CEFR hay sửa phát âm cùng mình? Nhấn vào đây để trò chuyện nhé! 🐾»
+              «Привет! Mình là Rusi AI. Hôm nay bạn muốn luyện từ vựng, nghe 4 Part CEFR hay sửa phát âm cùng mình? Nhấn vào đây để trò chuyện nhé! 🐾»
             </div>
 
             <!-- GỢI Ý CÂU HỎI TRỰC QUAN -->
@@ -325,7 +325,7 @@ const MascotRusika = {
 
             <div class="rusika-bubble-cta-row">
               <button class="btn btn-primary btn-chat-trigger" id="btnInteractRusika" type="button">
-                <span>💬 Mở cửa sổ trò chuyện với Rusika</span>
+                <span>Mở cửa sổ trò chuyện với Rusika</span>
                 <span class="cta-arrow">→</span>
               </button>
               <span class="cta-hint">Hoàn toàn miễn phí · Phản hồi tức thì</span>
@@ -363,10 +363,10 @@ const MascotRusika = {
 
     widget.innerHTML = `
       <div class="rusika-float-tooltip" id="rusikaFloatTooltip">
-        <span>Мяу! Trò chuyện cùng Rusika nhé 💬</span>
+        <span>Мяу! Trò chuyện cùng Rusika nhé</span>
         <button class="rusika-tooltip-close" id="rusikaTooltipClose" type="button" aria-label="Đóng">&times;</button>
       </div>
-      <button class="rusika-float-btn" id="rusikaFloatBtn" type="button" title="Mở hộp trò chuyện với Mèo Rusika (Lv.${lvl})">
+      <button class="rusika-float-btn" id="rusikaFloatBtn" type="button" title="Mở hộp trò chuyện với Rusi AI (Lv.${lvl})">
         <div class="rusika-float-avatar">
           ${this.getSvg(lvl, season, 52)}
         </div>
@@ -412,7 +412,7 @@ const MascotRusika = {
               </div>
               <div>
                 <div class="chat-header-title">
-                  <b>Mèo Rusika AI</b>
+                  <b>Rusi AI</b>
                   <span class="chat-online-dot" title="Đang trực tuyến"></span>
                 </div>
                 <div class="chat-header-sub" id="chatHeaderSub">
@@ -429,7 +429,7 @@ const MascotRusika = {
             <div class="chat-msg msg-ai">
               <div class="msg-avatar" id="msgAvatarInitial">${this.getSvg(lvl, season, 32)}</div>
               <div class="msg-bubble">
-                <p><b>Привет!</b> Mình là <b>Mèo Rusika AI</b> — bạn đồng hành luyện thi tiếng Nga của bạn 🐱.</p>
+                <p><b>Привет!</b> Mình là <b>Rusi AI</b> — bạn đồng hành luyện thi tiếng Nga của bạn.</p>
                 <p>Hôm nay bạn muốn luyện nghe, giải thích ngữ pháp hay tìm đề thi TRKI nào? Hãy nhấn gợi ý bên dưới hoặc gõ tin nhắn cho mình nhé!</p>
               </div>
             </div>
@@ -440,7 +440,7 @@ const MascotRusika = {
               <button type="button" class="chat-chip-btn" data-query="Giải thích 6 Cách trong tiếng Nga ngắn gọn">6 Cách tiếng Nga</button>
               <button type="button" class="chat-chip-btn" data-query="Cách chia động từ tiếng Nga theo ngôi">Chia động từ</button>
               <button type="button" class="chat-chip-btn" data-query="Điều kiện và kinh nghiệm xin học bổng Du học Nga">Học bổng Du học Nga</button>
-              <button type="button" class="chat-chip-btn" data-query="Làm thế nào để mèo Rusika tăng cấp XP?">Tăng cấp Mèo</button>
+              <button type="button" class="chat-chip-btn" data-query="Làm thế nào để Rusi AI tăng cấp XP?">Tăng cấp Rusi AI</button>
             </div>
           </div>
 
