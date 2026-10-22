@@ -108,13 +108,17 @@ CREATE INDEX IF NOT EXISTS idx_jar_items_review ON jar_items (user_id, next_revi
 -- 4. BỘ ĐỀ THI THỬ TRKI & CÂU HỎI (TRKI SIMULATION)
 CREATE TABLE IF NOT EXISTS trki_tests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code TEXT,                           -- vd: 'trki_a1', 'trki_a2'
     level TEXT NOT NULL,                 -- 'A1', 'A2', 'B1', 'B2'
+    level_name TEXT,
     title TEXT NOT NULL,
-    sub_test_type TEXT NOT NULL,         -- 'grammar_vocab', 'reading', 'listening', 'writing', 'speaking'
+    category TEXT DEFAULT 'full',
+    sub_test_type TEXT NOT NULL,         -- 'grammar_vocab', 'reading', 'listening', 'writing', 'speaking', 'full'
     duration_minutes INT NOT NULL,
     passing_score INT DEFAULT 66,
-    is_published BOOLEAN DEFAULT FALSE,  -- Quản trị CMS: Bản nháp hoặc đã phát hành
-    is_pro_only BOOLEAN DEFAULT TRUE,    -- Khóa nội dung (Content Paywall)
+    is_published BOOLEAN DEFAULT TRUE,   -- Quản trị CMS: Bản nháp hoặc đã phát hành
+    is_pro_only BOOLEAN DEFAULT FALSE,   -- Khóa nội dung (Content Paywall)
+    icon TEXT DEFAULT '🏛️',
     raw_data JSONB,                      -- Cấu trúc 3 Part của đề thi
     created_by UUID REFERENCES profiles(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -151,23 +155,38 @@ CREATE TABLE IF NOT EXISTS trki_test_results (
 -- 5. LUYỆN NGHE & LUYỆN NÓI (AUDIO/VIDEO DICTATION & SHADOWING)
 CREATE TABLE IF NOT EXISTS listening_lessons (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code TEXT,                           -- vd: 'lis-airport'
+    level TEXT DEFAULT 'A1',             -- 'A1', 'A2', 'B1', 'B2'
+    level_name TEXT,
+    category TEXT,
+    category_name TEXT,
+    part_number INT DEFAULT 1,
     part_type TEXT NOT NULL,             -- 'part_1_single', 'part_2_dialogue', 'part_3_passage', 'part_4_specialized'
     title TEXT NOT NULL,
+    vi TEXT,
     video_youtube_id TEXT,
-    audio_url TEXT NOT NULL,
+    audio_url TEXT,
+    est_minutes INT DEFAULT 10,
     duration_seconds INT,
-    transcript_ru TEXT NOT NULL,
+    transcript_ru TEXT,
     translation_vi TEXT,
-    raw_data JSONB,                      -- Lưu lines hội thoại và questions trắc nghiệm
+    icon TEXT DEFAULT '🎧',
+    raw_data JSONB,                      -- Lưu lines hội thoại, blanks, dictation và questions trắc nghiệm
     is_pro_only BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS speaking_lessons (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code TEXT,                           -- vd: 'sp-basic'
+    level TEXT DEFAULT 'A1',
+    level_name TEXT,
+    category TEXT,
+    category_name TEXT,
     title TEXT NOT NULL,
+    icon TEXT DEFAULT '🗣️',
     video_sample_url TEXT,
-    sentence_ru TEXT NOT NULL,
+    sentence_ru TEXT,
     phoneme_target TEXT,
     raw_data JSONB,                      -- Danh sách các mẫu câu items
     is_pro_only BOOLEAN DEFAULT TRUE,
@@ -188,13 +207,22 @@ CREATE TABLE IF NOT EXISTS speaking_submissions (
 -- 6. LUYỆN VIẾT TẢ TRANH (WRITING & HUMAN/AI EVALUATION)
 CREATE TABLE IF NOT EXISTS writing_topics (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    level TEXT NOT NULL,                 -- 'A2', 'B1', 'B2'
+    code TEXT,                           -- vd: 'w1'
+    level TEXT NOT NULL,                 -- 'A1', 'A2', 'B1', 'B2'
+    level_name TEXT,
+    category TEXT,
+    category_name TEXT,
     title TEXT NOT NULL,
-    image_url TEXT,
     prompt TEXT,
+    vi TEXT,
+    min_words INT DEFAULT 20,
+    est_minutes INT DEFAULT 15,
+    icon TEXT DEFAULT '📝',
+    image_url TEXT,
     suggested_words TEXT[],
-    model_answer TEXT,
     tips TEXT[],
+    model_answer TEXT,
+    raw_data JSONB,
     is_pro_only BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -222,8 +250,14 @@ CREATE TABLE IF NOT EXISTS blog_posts (
     slug TEXT UNIQUE NOT NULL,
     title TEXT NOT NULL,
     category TEXT NOT NULL,
+    category_name TEXT,
     cover_image TEXT,
-    content_markdown TEXT NOT NULL,
+    excerpt TEXT,
+    content_markdown TEXT,
+    date TEXT,
+    icon TEXT DEFAULT '📰',
+    author TEXT DEFAULT 'RUSI Editorial',
+    read_time TEXT DEFAULT '5 phút đọc',
     published BOOLEAN DEFAULT TRUE,
     author_id UUID REFERENCES profiles(id),
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -232,10 +266,15 @@ CREATE TABLE IF NOT EXISTS blog_posts (
 
 CREATE TABLE IF NOT EXISTS shop_products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code TEXT,
     title TEXT NOT NULL,
+    description TEXT,
     price NUMERIC NOT NULL,
     original_price NUMERIC,
     category TEXT NOT NULL,
+    category_name TEXT,
+    badge TEXT,
+    image TEXT,
     image_urls TEXT[],
     stock INT DEFAULT 100,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -246,9 +285,26 @@ CREATE TABLE IF NOT EXISTS shop_products (
 CREATE TABLE IF NOT EXISTS packages (
     id VARCHAR(50) PRIMARY KEY,          -- 'PRO_6M', 'PRO_1Y', 'PRO_VIP'
     title TEXT NOT NULL,
+    badge TEXT,
+    description TEXT,
     price NUMERIC NOT NULL,
+    price_old NUMERIC,
+    popular BOOLEAN DEFAULT FALSE,
     duration_days INT,
+    feature_list JSONB DEFAULT '[]'::jsonb,
     features JSONB NOT NULL
+);
+
+-- 8b. BÀI HỌC NGỮ PHÁP (GRAMMAR LESSONS)
+CREATE TABLE IF NOT EXISTS grammar_lessons (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    vi TEXT,
+    topic TEXT,
+    rules JSONB DEFAULT '[]'::jsonb,
+    table_data JSONB,
+    questions JSONB DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS orders (

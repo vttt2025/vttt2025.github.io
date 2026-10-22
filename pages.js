@@ -2195,12 +2195,33 @@ function initListeningPage() {
   let currentSpeed = 1.0;
   let showSub = true;
   let currentLesson = null;
+  let cloudListening = null;
+
+  const getListeningLessons = () => {
+    return (cloudListening && cloudListening.length) ? cloudListening : (typeof LISTENING_LESSONS !== "undefined" ? LISTENING_LESSONS : []);
+  };
+
+  const loadCloudListening = async () => {
+    if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
+      try {
+        const remote = await window.RusiSupabase.listening.getAll();
+        if (remote && remote.length) {
+          cloudListening = remote;
+          console.log(`⚡ [Supabase] Đã tải ${remote.length} bài nghe từ Database!`);
+          renderListeningCards();
+        }
+      } catch (err) {
+        console.warn("[Supabase] Lỗi tải bài nghe từ cloud:", err);
+      }
+    }
+  };
+  loadCloudListening();
 
   const renderListeningCards = () => {
     const gridHost = el("#lisCardsGrid");
     if (!gridHost) return;
 
-    const all = typeof LISTENING_LESSONS !== "undefined" ? LISTENING_LESSONS : [];
+    const all = getListeningLessons();
     const countA1 = all.filter(l => l.level === "A1").length;
     const countA2 = all.filter(l => l.level === "A2").length;
     const countB1 = all.filter(l => l.level === "B1").length;
@@ -2304,7 +2325,7 @@ function initListeningPage() {
 
   const renderHub = () => {
     currentLesson = null;
-    const all = typeof LISTENING_LESSONS !== "undefined" ? LISTENING_LESSONS : [];
+    const all = getListeningLessons();
     const countA1 = all.filter(l => l.level === "A1").length;
     const countA2 = all.filter(l => l.level === "A2").length;
     const countB1 = all.filter(l => l.level === "B1").length;
@@ -2569,12 +2590,33 @@ function initSpeakingPage() {
   let currentLevel = "A1";
   let currentPage = 1;
   const PAGE_SIZE = 6;
+  let cloudSpeaking = null;
+
+  const getSpeakingSets = () => {
+    return (cloudSpeaking && cloudSpeaking.length) ? cloudSpeaking : (typeof SPEAKING_SETS !== "undefined" ? SPEAKING_SETS : []);
+  };
+
+  const loadCloudSpeaking = async () => {
+    if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
+      try {
+        const remote = await window.RusiSupabase.speaking.getAll();
+        if (remote && remote.length) {
+          cloudSpeaking = remote;
+          console.log(`⚡ [Supabase] Đã tải ${remote.length} bài nói từ Database!`);
+          renderSpeakingCards();
+        }
+      } catch (err) {
+        console.warn("[Supabase] Lỗi tải bài nói từ cloud:", err);
+      }
+    }
+  };
+  loadCloudSpeaking();
 
   const renderSpeakingCards = () => {
     const gridHost = el("#spCardsGrid");
     if (!gridHost) return;
 
-    const all = typeof SPEAKING_SETS !== "undefined" ? SPEAKING_SETS : [];
+    const all = getSpeakingSets();
     const countA1 = all.filter(s => s.level === "A1").length;
     const countA2 = all.filter(s => s.level === "A2").length;
     const countB1 = all.filter(s => s.level === "B1").length;
@@ -2674,7 +2716,7 @@ function initSpeakingPage() {
   };
 
   const renderHub = () => {
-    const all = typeof SPEAKING_SETS !== "undefined" ? SPEAKING_SETS : [];
+    const all = getSpeakingSets();
     const countA1 = all.filter(s => s.level === "A1").length;
     const countA2 = all.filter(s => s.level === "A2").length;
     const countB1 = all.filter(s => s.level === "B1").length;
@@ -2880,12 +2922,33 @@ function initWritingPage() {
   let currentLevel = "A1";
   let currentPage = 1;
   const PAGE_SIZE = 6;
+  let cloudWriting = null;
+
+  const getWritingTasks = () => {
+    return (cloudWriting && cloudWriting.length) ? cloudWriting : (typeof WRITING_TASKS !== "undefined" ? WRITING_TASKS : []);
+  };
+
+  const loadCloudWriting = async () => {
+    if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
+      try {
+        const remote = await window.RusiSupabase.writing.getAll();
+        if (remote && remote.length) {
+          cloudWriting = remote;
+          console.log(`⚡ [Supabase] Đã tải ${remote.length} đề viết từ Database!`);
+          renderWritingCards();
+        }
+      } catch (err) {
+        console.warn("[Supabase] Lỗi tải đề viết từ cloud:", err);
+      }
+    }
+  };
+  loadCloudWriting();
 
   const renderWritingCards = () => {
     const gridHost = el("#wCardsGrid");
     if (!gridHost) return;
 
-    const all = typeof WRITING_TASKS !== "undefined" ? WRITING_TASKS : [];
+    const all = getWritingTasks();
     const countA1 = all.filter(t => t.level === "A1").length;
     const countA2 = all.filter(t => t.level === "A2").length;
     const countB1 = all.filter(t => t.level === "B1").length;
@@ -2983,7 +3046,7 @@ function initWritingPage() {
   };
 
   const renderHub = () => {
-    const all = typeof WRITING_TASKS !== "undefined" ? WRITING_TASKS : [];
+    const all = getWritingTasks();
     const countA1 = all.filter(t => t.level === "A1").length;
     const countA2 = all.filter(t => t.level === "A2").length;
     const countB1 = all.filter(t => t.level === "B1").length;
@@ -3287,7 +3350,7 @@ function initWritingPage() {
  * ===================================================================== */
 function initMockTestPage() {
   const host = el("#testHost");
-  const bank = typeof TRKI_BANK !== "undefined" ? TRKI_BANK : [MOCK_TEST];
+  let bank = typeof TRKI_BANK !== "undefined" ? TRKI_BANK : [MOCK_TEST];
 
   let currentLevel = "A1";
   let currentPage = 1;
@@ -3300,6 +3363,23 @@ function initMockTestPage() {
   let started = false;
   let tabSwitches = 0;
   let visibilityHandler = null;
+
+  const loadCloudTests = async () => {
+    if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
+      try {
+        const remote = await window.RusiSupabase.tests.getPublished();
+        if (remote && remote.length) {
+          bank = remote;
+          currentTest = bank[0];
+          console.log(`⚡ [Supabase] Đã tải ${remote.length} đề thi TRKI từ Database!`);
+          renderTrkiCards();
+        }
+      } catch (err) {
+        console.warn("[Supabase] Lỗi tải đề thi TRKI từ cloud:", err);
+      }
+    }
+  };
+  loadCloudTests();
 
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
@@ -3837,9 +3917,26 @@ function initMockTestPage() {
 function initBlogPage() {
   const host = el("#blogHost");
   let selectedCategory = "all";
+  let cloudPosts = null;
+
+  const loadCloudPosts = async () => {
+    if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
+      try {
+        const remote = await window.RusiSupabase.blog.getAll();
+        if (remote && remote.length) {
+          cloudPosts = remote;
+          console.log(`⚡ [Supabase] Đã tải ${remote.length} bài blog từ Database!`);
+          renderBlog();
+        }
+      } catch (err) {
+        console.warn("[Supabase] Lỗi tải bài blog từ cloud:", err);
+      }
+    }
+  };
+  loadCloudPosts();
 
   const renderBlog = () => {
-    const posts = typeof BLOG_POSTS !== "undefined" ? BLOG_POSTS : [];
+    const posts = (cloudPosts && cloudPosts.length) ? cloudPosts : (typeof BLOG_POSTS !== "undefined" ? BLOG_POSTS : []);
     const filtered = selectedCategory === "all" ? posts : posts.filter((p) => p.category === selectedCategory);
 
     host.innerHTML = `
@@ -3936,6 +4033,23 @@ function initShopPage() {
   if (!host) return;
   let currentCat = "all";
   let cart = STORE.get("shop_cart", []);
+  let cloudProducts = null;
+
+  const loadCloudProducts = async () => {
+    if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
+      try {
+        const remote = await window.RusiSupabase.shop.getAll();
+        if (remote && remote.length) {
+          cloudProducts = remote;
+          console.log(`⚡ [Supabase] Đã tải ${remote.length} sản phẩm shop từ Database!`);
+          renderShop();
+        }
+      } catch (err) {
+        console.warn("[Supabase] Lỗi tải sản phẩm shop từ cloud:", err);
+      }
+    }
+  };
+  loadCloudProducts();
 
   const saveCart = () => {
     STORE.set("shop_cart", cart);
@@ -3957,7 +4071,7 @@ function initShopPage() {
   };
 
   const renderShop = () => {
-    const products = typeof SHOP_PRODUCTS !== "undefined" ? SHOP_PRODUCTS : [];
+    const products = (cloudProducts && cloudProducts.length) ? cloudProducts : (typeof SHOP_PRODUCTS !== "undefined" ? SHOP_PRODUCTS : []);
     const filtered = currentCat === "all" ? products : products.filter((p) => p.category === currentCat);
 
     host.innerHTML = `
@@ -4181,11 +4295,7 @@ function initIndexPage() {
   const best = STORE.get("bestTest", null);
   if (el("#pwBest")) el("#pwBest").textContent = best === null ? "—" : best + "%";
 
-  // Render Mascot Rusika Companion Widget trên trang chủ (Bong bóng Chat & Con mèo theo XP)
-  const rusikaBox = el("#rusikaHeroCard");
-  if (rusikaBox && typeof MascotRusika !== "undefined") {
-    MascotRusika.renderHeroCard(rusikaBox);
-  }
+  // Nút bong bóng chat nổi Mascot Rusika ở góc dưới bên phải màn hình
   if (typeof MascotRusika !== "undefined") {
     MascotRusika.renderFloatingWidget();
   }
@@ -4291,6 +4401,153 @@ function initIndexPage() {
       }
     };
   });
+
+  // Khởi tạo chạy tự động 5 feedback học viên (Testimonial Auto-carousel)
+  const initTestimonialCarousel = () => {
+    const track = el("#testimonialTrack");
+    const dotsHost = el("#testimonialDots");
+    const prevBtn = el("#btnTestimonialPrev");
+    const nextBtn = el("#btnTestimonialNext");
+    const slider = el("#testimonialSlider");
+    if (!track) return;
+
+    const feedbacks = [
+      {
+        quote: "Sau 3 tháng học tại Rusi TRKI, mình đã tự tin đỗ chứng chỉ ТРКИ-1 và hoàn thành hồ sơ học bổng Hiệp định sang MGU. Điều mình thích nhất là giao diện thi thử mô phỏng y như phòng thi thật và các lọ từ vựng cực kỳ thực tế.",
+        author: "Lan Hương",
+        role: "Học viên xuất sắc đỗ học bổng MGU Moscow 2026",
+        badge: "Học bổng Hiệp định MGU",
+        initials: "LH",
+        color: "#ff9f64"
+      },
+      {
+        quote: "Luyện nghe 4 Part CEFR và phần phát âm Shadowing trên Rusi giúp mình cải thiện rõ rệt từ một người rất ngại nói. Nhờ đó mình vượt qua bài phỏng vấn du học của ĐH Tổng hợp Saint Petersburg (SPbU) với điểm số tuyệt đối.",
+        author: "Minh Tuấn",
+        role: "Du học sinh SPbU Saint Petersburg",
+        badge: "Du học sinh SPbU",
+        initials: "MT",
+        color: "#2563eb"
+      },
+      {
+        quote: "Tính năng Lọ từ vựng Spaced Repetition cứu cánh cho mình khi học 6 cách và động từ chuyển động. Trước đây học trước quên sau, giờ từ vựng tự động nhắc đúng thời điểm cần ôn tập, học cực kỳ nhàn mà nhớ sâu.",
+        author: "Phương Anh",
+        role: "Đỗ chứng chỉ ТРКИ A2 (89/100 điểm)",
+        badge: "ТРКИ A2 89/100",
+        initials: "PA",
+        color: "#7c3aed"
+      },
+      {
+        quote: "Bộ đề thi thử TRKI ở đây cực kỳ chuẩn cấu trúc, có đồng hồ bấm giờ và cảnh báo chống gian lận giúp rèn tâm lý phòng thi nghiêm túc. Phần giải thích ngữ pháp chi tiết từng câu sau khi nộp bài rất đáng giá.",
+        author: "Đức Hải",
+        role: "Sinh viên năm nhất HSE Moscow",
+        badge: "Du học sinh HSE",
+        initials: "ĐH",
+        color: "#059669"
+      },
+      {
+        quote: "Từ một người mất gốc tiếng Nga, nhờ phương pháp học qua bối cảnh đời sống thực tế và sự đồng hành của AI Rusika, mình đã đạt mục tiêu sang Nga học dự bị chỉ sau 4 tháng đồng hành cùng Rusi.",
+        author: "Thanh Thảo",
+        role: "Học viên nhận học bổng RUDN University",
+        badge: "Học bổng RUDN",
+        initials: "TT",
+        color: "#e11d48"
+      }
+    ];
+
+    let currentIndex = 0;
+    let timer = null;
+    const INTERVAL = 4500; // 4.5 giây tự động đổi
+
+    track.innerHTML = feedbacks
+      .map(
+        (f, idx) => `
+        <div class="testimonial-slide ${idx === 0 ? "active" : ""}" data-idx="${idx}">
+          <div class="testimonial-badge">${esc(f.badge)}</div>
+          <div class="testimonial-stars">★★★★★</div>
+          <blockquote>${esc(f.quote)}</blockquote>
+          <div class="student">
+            <span class="student-avatar" style="background:${f.color}">${esc(f.initials)}</span>
+            <p>
+              <strong>${esc(f.author)}</strong>
+              <small>${esc(f.role)}</small>
+            </p>
+          </div>
+        </div>
+      `
+      )
+      .join("");
+
+    if (dotsHost) {
+      dotsHost.innerHTML = feedbacks
+        .map(
+          (_, idx) => `
+          <button type="button" class="testimonial-dot ${idx === 0 ? "active" : ""}" data-idx="${idx}" aria-label="Feedback ${idx + 1}"></button>
+        `
+        )
+        .join("");
+    }
+
+    const showSlide = (idx) => {
+      currentIndex = (idx + feedbacks.length) % feedbacks.length;
+      track.querySelectorAll(".testimonial-slide").forEach((s, i) => {
+        s.classList.toggle("active", i === currentIndex);
+      });
+      if (dotsHost) {
+        dotsHost.querySelectorAll(".testimonial-dot").forEach((d, i) => {
+          d.classList.toggle("active", i === currentIndex);
+        });
+      }
+    };
+
+    const nextSlide = () => showSlide(currentIndex + 1);
+    const prevSlide = () => showSlide(currentIndex - 1);
+
+    const startTimer = () => {
+      stopTimer();
+      timer = setInterval(nextSlide, INTERVAL);
+    };
+
+    const stopTimer = () => {
+      if (timer) {
+        clearInterval(timer);
+        timer = null;
+      }
+    };
+
+    if (prevBtn) {
+      prevBtn.onclick = () => {
+        prevSlide();
+        startTimer();
+      };
+    }
+    if (nextBtn) {
+      nextBtn.onclick = () => {
+        nextSlide();
+        startTimer();
+      };
+    }
+
+    if (dotsHost) {
+      dotsHost.querySelectorAll(".testimonial-dot").forEach((d) => {
+        d.onclick = () => {
+          const idx = parseInt(d.dataset.idx, 10);
+          showSlide(idx);
+          startTimer();
+        };
+      });
+    }
+
+    if (slider) {
+      slider.onmouseenter = stopTimer;
+      slider.onmouseleave = startTimer;
+      slider.ontouchstart = stopTimer;
+      slider.ontouchend = startTimer;
+    }
+
+    startTimer();
+  };
+
+  initTestimonialCarousel();
 }
 
 /* =====================================================================
@@ -4299,6 +4556,22 @@ function initIndexPage() {
 function initUpgradePage() {
   const host = el("#upgradeHost");
   if (!host) return;
+
+  const loadCloudPackages = async () => {
+    if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
+      try {
+        const remote = await window.RusiSupabase.packages.getAll();
+        if (remote && remote.length) {
+          window.PACKAGES = remote;
+          console.log(`⚡ [Supabase] Đã tải ${remote.length} gói cước từ Database!`);
+          render();
+        }
+      } catch (err) {
+        console.warn("[Supabase] Lỗi tải gói cước từ cloud:", err);
+      }
+    }
+  };
+  loadCloudPackages();
 
   const render = () => {
     const user = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
@@ -4310,8 +4583,8 @@ function initUpgradePage() {
     if (!user) {
       host.innerHTML = `
         <div class="upgrade-hero">
-          <span class="upgrade-kicker">👑 NÂNG CẤP TÀI KHOẢN PRO</span>
-          <h1>Mở Khóa Toàn Bộ Đề Thi TRKI & Đồng Hành Cùng AI Rusika</h1>
+          <span class="upgrade-kicker">NÂNG CẤP TÀI KHOẢN PRO</span>
+          <h1>Mở Khóa Toàn Bộ Đề Thi TRKI</h1>
           <p>Trang nâng cấp tài khoản dành cho học viên RusiTRKI. Vui lòng đăng nhập để xem thông tin gói cước và ưu đãi dành riêng cho bạn.</p>
         </div>
 
@@ -4321,10 +4594,10 @@ function initUpgradePage() {
           <p>Để lưu trữ trọn đời kết quả luyện thi, đồng bộ tiến độ trên mọi thiết bị và gắn quyền PRO vào tài khoản chính chủ, vui lòng đăng nhập trước.</p>
           <div class="upgrade-auth-actions">
             <a class="btn btn-primary btn-lg" href="login.html?redirect=upgrade.html" style="text-decoration:none">
-              👉 Đăng nhập với Google / Email
+              Đăng nhập với Google / Email
             </a>
             <a class="btn btn-outline btn-lg" href="signup.html?redirect=upgrade.html" style="text-decoration:none">
-              ✨ Đăng ký tài khoản mới
+              Đăng ký tài khoản mới
             </a>
           </div>
         </div>
@@ -4346,7 +4619,7 @@ function initUpgradePage() {
     host.innerHTML = `
       <!-- HERO SECTION -->
       <div class="upgrade-hero">
-        <span class="upgrade-kicker">👑 BẢNG GIÁ DỊCH VỤ & GÓI HỌC VIÊN PRO</span>
+        <span class="upgrade-kicker">BẢNG GIÁ DỊCH VỤ & GÓI HỌC VIÊN PRO</span>
         <h1>Mở Khóa Toàn Diện — Bứt Phá Chứng Chỉ TRKI</h1>
         <p>Đầu tư thông minh một lần, đồng hành trọn vẹn suốt quá trình luyện thi chứng chỉ ТРКИ và chinh phục học bổng du học Liên bang Nga.</p>
       </div>

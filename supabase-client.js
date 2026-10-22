@@ -255,14 +255,30 @@
     tests: {
       getPublished: async function (level) {
         var sb = getClient();
-        if (!sb) return [];
+        if (!sb) return null;
         try {
           var q = sb.from("trki_tests").select("*").eq("is_published", true);
           if (level && level !== "all") q = q.eq("level", level);
           var res = await q;
-          return res.data || [];
-        } catch (_) {
-          return [];
+          if (res.error || !res.data) return null;
+          return res.data.map(function (row) {
+            var raw = row.raw_data || {};
+            return {
+              id: row.code || row.id,
+              level: row.level,
+              levelName: row.level_name || ("TRKI " + row.level),
+              category: row.category || row.sub_test_type || "full",
+              title: row.title,
+              durationMin: row.duration_minutes || 45,
+              passPercent: row.passing_score || 60,
+              is_pro_only: Boolean(row.is_pro_only),
+              icon: row.icon || "🏛️",
+              parts: raw.parts || []
+            };
+          });
+        } catch (e) {
+          console.warn("[RusiSupabase] Lỗi lấy đề thi TRKI:", e);
+          return null;
         }
       },
 
@@ -289,18 +305,236 @@
     },
 
     /* =========================================================================
-     * 4. GÓI DỊCH VỤ & KHÓA HỌC PRO (PACKAGES)
+     * 4. BÀI LUYỆN NGHE (LISTENING LESSONS)
+     * ========================================================================= */
+    listening: {
+      getAll: async function (level) {
+        var sb = getClient();
+        if (!sb) return null;
+        try {
+          var q = sb.from("listening_lessons").select("*").order("part_number", { ascending: true });
+          if (level && level !== "all") q = q.eq("level", level);
+          var res = await q;
+          if (res.error || !res.data) return null;
+          return res.data.map(function (row) {
+            var raw = row.raw_data || {};
+            return {
+              id: row.code || row.id,
+              title: row.title,
+              vi: row.vi || row.translation_vi || "",
+              level: row.level || "A1",
+              levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
+              category: row.category || "airport",
+              categoryName: row.category_name || "Bài nghe",
+              estMinutes: row.est_minutes || 10,
+              icon: row.icon || "🎧",
+              partNumber: row.part_number || 1,
+              is_pro_only: Boolean(row.is_pro_only),
+              lines: raw.lines || [],
+              blanks: raw.blanks || [],
+              dictation: raw.dictation || [],
+              questions: raw.questions || []
+            };
+          });
+        } catch (e) {
+          console.warn("[RusiSupabase] Lỗi lấy bài nghe:", e);
+          return null;
+        }
+      }
+    },
+
+    /* =========================================================================
+     * 5. BÀI LUYỆN NÓI & PHÁT ÂM (SPEAKING LESSONS)
+     * ========================================================================= */
+    speaking: {
+      getAll: async function (level) {
+        var sb = getClient();
+        if (!sb) return null;
+        try {
+          var q = sb.from("speaking_lessons").select("*");
+          if (level && level !== "all") q = q.eq("level", level);
+          var res = await q;
+          if (res.error || !res.data) return null;
+          return res.data.map(function (row) {
+            var raw = row.raw_data || {};
+            return {
+              id: row.code || row.id,
+              title: row.title,
+              level: row.level || "A1",
+              levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
+              category: row.category || "greeting",
+              categoryName: row.category_name || "Chào hỏi",
+              phonemeTarget: row.phoneme_target || "",
+              icon: row.icon || "🗣️",
+              is_pro_only: Boolean(row.is_pro_only),
+              items: raw.items || (row.sentence_ru ? [{ ru: row.sentence_ru, vi: "" }] : [])
+            };
+          });
+        } catch (e) {
+          console.warn("[RusiSupabase] Lỗi lấy bài nói:", e);
+          return null;
+        }
+      }
+    },
+
+    /* =========================================================================
+     * 6. ĐỀ LUYỆN VIẾT & TẢ TRANH (WRITING TOPICS)
+     * ========================================================================= */
+    writing: {
+      getAll: async function (level) {
+        var sb = getClient();
+        if (!sb) return null;
+        try {
+          var q = sb.from("writing_topics").select("*");
+          if (level && level !== "all") q = q.eq("level", level);
+          var res = await q;
+          if (res.error || !res.data) return null;
+          return res.data.map(function (row) {
+            var raw = row.raw_data || {};
+            return {
+              id: row.code || row.id,
+              level: row.level || "A1",
+              levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
+              category: row.category || "intro",
+              categoryName: row.category_name || "Tự giới thiệu",
+              icon: row.icon || "📝",
+              estMinutes: row.est_minutes || 15,
+              title: row.title,
+              prompt: row.prompt || "",
+              vi: row.vi || "",
+              minWords: row.min_words || 20,
+              suggested_words: raw.suggested_words || row.suggested_words || [],
+              tips: raw.tips || row.tips || [],
+              model: raw.model || row.model_answer || "",
+              is_pro_only: Boolean(row.is_pro_only)
+            };
+          });
+        } catch (e) {
+          console.warn("[RusiSupabase] Lỗi lấy đề viết:", e);
+          return null;
+        }
+      }
+    },
+
+    /* =========================================================================
+     * 7. BÀI VIẾT BLOG & CẨM NANG (BLOG POSTS)
+     * ========================================================================= */
+    blog: {
+      getAll: async function (category) {
+        var sb = getClient();
+        if (!sb) return null;
+        try {
+          var q = sb.from("blog_posts").select("*").eq("published", true).order("created_at", { ascending: false });
+          if (category && category !== "all") q = q.eq("category", category);
+          var res = await q;
+          if (res.error || !res.data) return null;
+          return res.data.map(function (row) {
+            return {
+              slug: row.slug,
+              title: row.title,
+              category: row.category,
+              categoryName: row.category_name || row.category,
+              cover: row.cover_image || "assets/red-square.jpg",
+              excerpt: row.excerpt || "",
+              content: row.content_markdown || row.excerpt || "",
+              date: row.date || new Date(row.created_at).toLocaleDateString("vi-VN"),
+              icon: row.icon || "📰",
+              author: row.author || "RUSI Editorial",
+              readTime: row.read_time || "5 phút đọc"
+            };
+          });
+        } catch (e) {
+          console.warn("[RusiSupabase] Lỗi lấy bài blog:", e);
+          return null;
+        }
+      }
+    },
+
+    /* =========================================================================
+     * 8. SẢN PHẨM CỬA HÀNG (SHOP PRODUCTS)
+     * ========================================================================= */
+    shop: {
+      getAll: async function (category) {
+        var sb = getClient();
+        if (!sb) return null;
+        try {
+          var q = sb.from("shop_products").select("*").order("price", { ascending: true });
+          if (category && category !== "all") q = q.eq("category", category);
+          var res = await q;
+          if (res.error || !res.data) return null;
+          return res.data.map(function (row) {
+            return {
+              id: row.code || row.id,
+              category: row.category,
+              categoryName: row.category_name || "",
+              title: row.title,
+              desc: row.description || "",
+              price: Number(row.price),
+              priceOld: row.original_price ? Number(row.original_price) : undefined,
+              image: row.image || (row.image_urls && row.image_urls[0]) || "",
+              badge: row.badge || ""
+            };
+          });
+        } catch (e) {
+          console.warn("[RusiSupabase] Lỗi lấy sản phẩm shop:", e);
+          return null;
+        }
+      }
+    },
+
+    /* =========================================================================
+     * 9. BÀI HỌC NGỮ PHÁP (GRAMMAR LESSONS)
+     * ========================================================================= */
+    grammar: {
+      getAll: async function () {
+        var sb = getClient();
+        if (!sb) return null;
+        try {
+          var res = await sb.from("grammar_lessons").select("*").order("id", { ascending: true });
+          if (res.error || !res.data) return null;
+          return res.data.map(function (row) {
+            return {
+              id: row.id,
+              title: row.title,
+              vi: row.vi || "",
+              topic: row.topic || "",
+              rules: Array.isArray(row.rules) ? row.rules : [],
+              table: row.table_data || {},
+              questions: Array.isArray(row.questions) ? row.questions : []
+            };
+          });
+        } catch (e) {
+          console.warn("[RusiSupabase] Lỗi lấy bài ngữ pháp:", e);
+          return null;
+        }
+      }
+    },
+
+    /* =========================================================================
+     * 10. GÓI DỊCH VỤ & KHÓA HỌC PRO (PACKAGES)
      * ========================================================================= */
     packages: {
       getAll: async function () {
         var sb = getClient();
-        if (!sb) return [];
+        if (!sb) return null;
         try {
           var res = await sb.from("packages").select("*").order("price", { ascending: true });
-          if (res.error || !res.data) return [];
-          return res.data;
-        } catch (_) {
-          return [];
+          if (res.error || !res.data) return null;
+          return res.data.map(function (row) {
+            return {
+              id: (row.id || "").toLowerCase(),
+              badge: row.badge || "",
+              title: row.title,
+              desc: row.description || "",
+              price: Number(row.price),
+              priceOld: row.price_old ? Number(row.price_old) : undefined,
+              popular: Boolean(row.popular),
+              features: Array.isArray(row.feature_list) ? row.feature_list : (row.features && row.features.list) || []
+            };
+          });
+        } catch (e) {
+          console.warn("[RusiSupabase] Lỗi lấy gói cước:", e);
+          return null;
         }
       }
     },
