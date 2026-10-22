@@ -892,10 +892,10 @@ const Monetization = {
           <p>${esc(reason)}</p>
           <div class="auth-req-buttons">
             <a class="btn btn-primary btn-lg" href="login.html?redirect=${currentRedirect}" style="text-decoration:none">
-              👉 Đăng nhập tài khoản
+              Đăng nhập tài khoản
             </a>
             <a class="btn btn-outline" href="signup.html?redirect=${currentRedirect}" style="text-decoration:none">
-              ✨ Đăng ký tài khoản mới
+              Đăng ký tài khoản mới
             </a>
           </div>
         </div>
