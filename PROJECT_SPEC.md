@@ -453,27 +453,34 @@ CREATE TABLE orders (
 
 ## 8. QUY TẮC CỐT LÕI CHO AI CODING AGENT
 
-1. **Tuân thủ quy chuẩn Responsive & "More..."**: Trước khi báo cáo hoàn thành bất kỳ tác vụ giao diện nào, luôn kiểm tra hiển thị trên Mobile ($\le 768px$) và Tablet ($768px - 1024px$), áp dụng quy tắc "More..." cho các thành phần dài/tràn.
-2. **Quy tắc bảo vệ ngôn từ UI — Cấm hiển thị từ "Trụ Cột"**:
+> [!CAUTION]
+> ### 🛑 QUY TẮC BẤT KHẢ XÂM PHẠM: TUYỆT ĐỐI KHÔNG TỰ Ý SỬA NỘI DUNG ĐÃ CÓ TRÊN WEB
+> **Không được sửa, xóa hoặc thay đổi bất kỳ nội dung nào mà người dùng đã đặt trên web, trừ khi chính người dùng có yêu cầu đích danh mới được sửa.**
+> - Toàn bộ câu từ, tiêu đề chính/phụ, đoạn mô tả hero, giới thiệu, nhãn dán, nội dung bài viết, đề thi, dữ liệu bài học... trên tất cả các trang web (`.html`, `app.js`, `pages.js`, `data.js`...) phải được **giữ nguyên vẹn 100%**.
+> - Khi thực hiện các tác vụ căn chỉnh giao diện, CSS styling, responsive, sửa lỗi kỹ thuật hay tối ưu code: AI **chỉ xử lý phần kỹ thuật/style**, tuyệt đối không được tự ý lược bỏ hay viết lại nội dung của người dùng.
+
+1. **Bảo tồn nguyên vẹn nội dung người dùng (Content Integrity)**: Tuyệt đối không xóa, sửa, rút gọn tiêu đề, mô tả, văn bản người dùng đã đặt trên web trừ khi có yêu cầu rõ ràng từ người dùng.
+2. **Tuân thủ quy chuẩn Responsive & "More..."**: Trước khi báo cáo hoàn thành bất kỳ tác vụ giao diện nào, luôn kiểm tra hiển thị trên Mobile ($\le 768px$) và Tablet ($768px - 1024px$), áp dụng quy tắc "More..." cho các thành phần dài/tràn.
+3. **Quy tắc bảo vệ ngôn từ UI — Cấm hiển thị từ "Trụ Cột"**:
    * Khái niệm "7 Trụ cột" chỉ là thuật ngữ cấu trúc tài liệu nội bộ; **tuyệt đối không hiển thị từ "Trụ cột" ra màn hình học viên**. Chỉ gọi tên trực tiếp: *Kho Lọ Từ Vựng, Luyện Viết Tả Tranh, Luyện Nghe 4 Part, Luyện Nói Shadowing, Luyện Thi TRKI, Shop Hàng Nga, Cẩm Nang Du Học*.
-3. **Quy chuẩn Header Navigation**:
+4. **Quy chuẩn Header Navigation**:
    * Cấu trúc cân đối 3 vùng: Logo bên trái sát mép, 7 chuyên mục nằm ở giữa, cụm Auth/PRO nằm bên phải.
    * Khi chưa đăng nhập: Không hiện mặc định XP hay Streak ra ngoài. Khi đã đăng nhập: Hiện trang trọng bên trong dropdown tài khoản.
-4. **Theme Russian Winter Cool Blue**:
+5. **Theme Russian Winter Cool Blue**:
    * Cố định giao diện Sáng (`data-theme="light"` và `data-season="winter"`), nền xanh mát mẻ thanh lịch của mùa đông nước Nga (`--bg: #eef4fb;`, surface `#ffffff;`, text `#0f1f38;`, border `#d2e0f0;`).
-5. **Quy chuẩn Deploy GitHub Pages & Cache-Busting**:
+6. **Quy chuẩn Deploy GitHub Pages & Cache-Busting**:
    * Luôn duy trì file `.nojekyll` ở thư mục gốc.
    * Nhúng file tĩnh kèm query parameter `?v=3.2` để buộc CDN Cloudflare và GitHub Pages cập nhật ngay phiên bản mới nhất.
-6. **Bảo mật Git & Secret Hygiene**:
+7. **Bảo mật Git & Secret Hygiene**:
    * Không bao giờ commit API secret key, Service role key hay thông tin nhạy cảm vào Git.
-7. **Quy chuẩn Chân trang (Footer Navigation)**:
+8. **Quy chuẩn Chân trang (Footer Navigation)**:
    * Cố định đúng 7 liên kết chuyên mục cốt lõi trong `.footer-links`: `Từ vựng | Viết | Nghe | Nói | TRKI | Blog | Shop`. Tuyệt đối không chèn thêm các liên kết phụ trợ (`how-to-study.html`, `upgrade.html`) vào danh sách này để duy trì sự thanh thoát, cân xứng với Header.
-8. **Quy chuẩn Bộ Lọc & Phân Trang (Default Level A1 & Pagination)**:
+9. **Quy chuẩn Bộ Lọc & Phân Trang (Default Level A1 & Pagination)**:
    * Các trang danh sách bài học/đề thi mặc định lọc theo cấp độ `A1` (Sơ cấp) thay vì "Tất cả", giúp người học mới bắt đầu không bị ngợp và tối ưu hóa tốc độ nạp dữ liệu.
    * Thanh công cụ lọc phải tinh gọn, hỗ trợ phân trang (Pagination) rõ ràng khi số lượng mục lớn.
-9. **Phong cách Thiết kế Tối giản & Biên tập Tinh Tế (Clean Editorial Style)**:
+10. **Phong cách Thiết kế Tối giản & Biên tập Tinh Tế (Clean Editorial Style)**:
    * Tránh lạm dụng emoji trang trí ở tiêu đề mục và nút bấm CTA (ví dụ: dùng *"Bắt đầu luyện nghe →"*, *"Bắt đầu luyện nói →"*, *"Bắt đầu học ngay hôm nay"* thay vì các biểu tượng gây xao nhãng như 🎧, 🎙️, 🚀).
    * Các nút bấm xác thực (Đăng nhập, Đăng ký) tại Header sử dụng icon SVG tối giản, thanh mảnh.
-10. **Tối ưu Trang chủ (`index.html`)**:
+11. **Tối ưu Trang chủ (`index.html`)**:
    * **Trợ lý AI**: Ẩn khối giới thiệu tĩnh trên trang chủ, chuyển thành dạng bong bóng chat nổi tròn thông minh (`.companion-bubble`) cố định ở góc dưới bên phải màn hình.
    * **Minh chứng xã hội (Social Proof)**: Tích hợp slider/carousel tự động chạy 5 phản hồi thực tế của học viên kèm avatar, số sao 5★ và lời nhận xét chân thực.

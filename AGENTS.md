@@ -1,5 +1,12 @@
 # RUSI TRKI — Workspace Agent Guidelines & Directives
 
+## 🛑 QUY TẮC BẤT KHẢ XÂM PHẠM: KHÔNG TỰ Ý SỬA NỘI DUNG ĐÃ ĐẶT TRÊN WEB
+
+- **Tuyệt đối KHÔNG ĐƯỢC tự ý sửa, xóa, rút gọn hoặc thay đổi bất kỳ nội dung nào người dùng đã đặt trên web (tiêu đề, câu chữ, đoạn mô tả hero/eyebrow, bài viết, dữ liệu từ vựng/đề thi...) trừ khi người dùng có yêu cầu đích danh mới được sửa.**
+- Khi nhận yêu cầu tinh chỉnh giao diện, CSS, responsive, sửa lỗi JavaScript hay refactor: **chỉ tác động đến phần code kỹ thuật/styling**, bắt buộc giữ nguyên vẹn 100% nội dung chữ và dữ liệu gốc của trang web.
+
+---
+
 ## 📱 QUY TẮC BẮT BUỘC: RESPONSIVE CHO MOBILE, TABLET & XỬ LÝ TRÀN VIỀN ("MORE...")
 
 Mỗi khi thực hiện bất kỳ thay đổi nào liên quan đến giao diện người dùng (HTML, CSS, JavaScript trong `pages.js`, `app.js`, `styles.css`, hoặc các file `.html`), trợ lý AI **BẮT BUỘC** phải tuân thủ và kích hoạt các quy tắc sau:
