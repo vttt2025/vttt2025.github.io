@@ -12469,3 +12469,237 @@ img, video, iframe {
 
 
 
+
+
+/* =====================================================================
+ * RESPONSIVE & "MORE..." OVERFLOW SYSTEM UTILITIES
+ * ===================================================================== */
+
+/* --- 1. Tab Overflow Dropdown --- */
+.rusi-tabs-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  position: relative;
+  overflow: visible;
+}
+
+.rusi-tab-more-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.rusi-tab-more-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.rusi-tab-more-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.rusi-tab-more-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  padding: 6px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rusi-tab-more-menu.hidden {
+  display: none !important;
+}
+
+.rusi-tab-more-item {
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+
+.rusi-tab-more-item:hover,
+.rusi-tab-more-item:focus {
+  background: var(--red-soft, rgba(197, 34, 53, 0.08));
+  color: var(--primary);
+}
+
+/* --- 2. Kebab Menu (···) Toolbar --- */
+.rusi-action-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rusi-kebab-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.rusi-kebab-btn {
+  min-width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.rusi-kebab-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 190px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  padding: 6px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rusi-kebab-menu.hidden {
+  display: none !important;
+}
+
+.kebab-item {
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kebab-item:hover {
+  background: var(--red-soft, rgba(197, 34, 53, 0.08));
+  color: var(--primary);
+}
+
+.kebab-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}
+
+/* --- 3. Text Truncation with "Xem thêm" --- */
+.rusi-truncate-box {
+  position: relative;
+}
+
+.rusi-truncate-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.rusi-truncate-text.expanded {
+  -webkit-line-clamp: unset !important;
+  display: block;
+}
+
+.rusi-btn-toggle-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-top: 4px;
+}
+
+.rusi-btn-toggle-more:hover {
+  text-decoration: underline;
+}
+
+/* --- 4. Tags / Chips Overflow --- */
+.rusi-chips-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.rusi-chip-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rusi-chip-more:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* --- 5. Horizontal Scroll with Gradient Fade Indicator --- */
+.rusi-scroll-track-faded {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 6px;
+  mask-image: linear-gradient(to right, black 85%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+}
+
+@media (max-width: 768px) {
+  .rusi-scroll-track-faded {
+    mask-image: linear-gradient(to right, black 78%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 78%, transparent 100%);
+  }
+}
