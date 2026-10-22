@@ -32,7 +32,11 @@
   * **Cấu trúc 2 nút thao tác riêng biệt trên mỗi lọ**:
     1. Nút `[📋 Xem từ (N)]`: Mở ngay giao diện danh sách chi tiết các từ có trong lọ.
     2. Nút `[⚡ Học]`: Khởi động ngay chế độ học Flashcard 3D theo thuật toán SRS.
-  * **Hiển thị danh sách từ dạng thẻ ô (`vocab-word-card`)**: Mỗi từ 1 ô độc lập gồm từ tiếng Nga có trọng âm chuẩn, từ loại, nút phát âm 🔊, định nghĩa tiếng Việt, câu ví dụ song ngữ kèm audio 🔊, từ đồng nghĩa, nút `[🏺 + Lọ của tôi]` (lưu vào lọ từ cá nhân) và nút `[📖 Tra 6 cách]` (tra cứu bảng biến cách TFlat).
+  * **Bố cục Danh sách từ chuẩn DauEnglish (`https://dauenglish.com/vocabulary/test/...`)**:
+    - **Thẻ Flashcard xem nhanh trên cùng (`.dau-vocab-preview-box`)**: Cho phép lật thẻ xem nhanh (Space hoặc chạm thẻ), nghe phát âm 🔊, gắn sao ⭐, trộn thẻ 🔀 và chuyển từ (`‹ 1/20 ›`) ngay trong giao diện danh sách.
+    - **Thanh công cụ lọc chuẩn DauEnglish (`.dau-vocab-toolbar`)**: Hiển thị tiêu đề *Thuật ngữ trong học phần này (N)*, ô tìm kiếm từ/nghĩa, nút bật/tắt *Chi tiết* (ví dụ câu, từ loại, đồng nghĩa), bộ lọc *⭐ Gắn sao*, *✓ Đã thuộc*, bộ sắp xếp *Thứ tự gốc / A → Z* và nút CTA *⚡ Học Flashcard ngay →*.
+    - **Hiển thị danh sách thẻ hàng ngang chuẩn (`.dau-vocab-row-card`)**: Bố cục 3 phần trực quan (Từ tiếng Nga kèm trọng âm & từ loại bên trái; Nghĩa tiếng Việt & câu ví dụ song ngữ ở giữa; Bộ nút hành động 🔊 phát âm, ⭐ gắn sao, ✓ đánh dấu đã thuộc, 📖 tra 6 cách TFlat, 🏺 lưu lọ cá nhân bên phải).
+    - **Kích hoạt tức thì**: Khi bấm `[📋 Xem từ (N)]` trên lọ từ vựng, hệ thống tự động kích hoạt ngay tab danh sách (`initialMode = "list"`) và hiển thị dữ liệu ngay lập tức, không để xảy ra tình trạng trống trắng.
   * Hỗ trợ học viên tự tạo lọ từ vựng cá nhân (`custom_jars`).
 * **Thuật toán lặp lại ngắt quãng SM-2 / Hộp Leitner (`srs.js`)**:
   * Vòng đời thẻ: `Unseen` $\to$ `New` $\to$ `Learning` $\to$ `Reviewing` $\to$ `Mastered`.
@@ -63,11 +67,19 @@
 
 ### [Module 3] Luyện Nghe (Nghe Hiểu 4 Part & Video YouTube 1-5 Phút Chuẩn TRKI)
 * **Giao diện thẻ tối giản (`.dau-card-compact`)**: Gắn huy hiệu `👑 PRO` cho các bài học B1/B2, kiểm tra quyền PRO trước khi vào luyện nghe.
-* **Tích hợp Xem Video YouTube Thực Tế (1-5 phút)**:
-  * Trích xuất các đoạn hội thoại thực tế ngắn 1-5 phút (thông số `startSec` & `endSec`) chuẩn giọng Moscow từ YouTube.
-  * Bộ chỉnh tốc độ video linh hoạt (0.75x, 1.0x, 1.25x) tương tác trực tiếp qua postMessage API.
-  * Tùy chọn Ẩn/Hiện kịch bản lời thoại song ngữ Nga - Việt.
-  * **Bài trắc nghiệm kiểm tra sau khi xem video**: Bộ câu hỏi đo lường mức độ nghe hiểu tình huống, phản hồi đúng/sai tức thì kèm giải thích chi tiết, tự động chấm điểm và thưởng +20 XP khi đạt $\ge 60\%$.
+* **Bố cục Shadowing Studio chuẩn DauEnglish (2 Cột Hiện Đại)**:
+  * **Cột trái (Video & Luyện câu trọng tâm)**:
+    - Khung video YouTube 16:9 bo góc mượt mà kèm lớp phủ phụ đề nổi (`.dau-shadow-sub-overlay`) hiển thị song ngữ câu đang chọn.
+    - Thanh điều khiển tốc độ video (0.75x, 1.0x, 1.25x) tương tác trực tiếp qua postMessage API và nút ẩn/hiện dịch nghĩa.
+    - **Thẻ luyện câu trung tâm (`.dau-sentence-card`)**: Câu tiếng Nga in to rõ ràng, nút chọn số lần tự lặp (1×, 2×, 3×), nút phát âm câu `[🔊 Nghe câu]`, nút Micro to tròn `[🎤 Shadowing]`, sóng âm chuyển động (`.waveform-box`), nhận diện giọng nói tiếng Nga và vòng tròn chấm điểm `% chính xác` (`.score-ring`). Thưởng +10 XP khi đạt $\ge 70\%$.
+    - **Bài trắc nghiệm kiểm tra sau khi xem video**: Bộ câu hỏi đo lường mức độ nghe hiểu tình huống, phản hồi đúng/sai tức thì kèm giải thích chi tiết, tự động chấm điểm và thưởng +20 XP khi đạt $\ge 60\%$.
+  * **Cột phải (Danh sách câu cuộn dọc)**:
+    - Bảng danh sách toàn bộ các câu trong bài, hiển thị số thứ tự, nhân vật thoại, câu tiếng Nga và tiếng Việt.
+    - Đánh dấu câu đang chọn (`active`) nổi bật và tự động cuộn đến khi đổi câu.
+    - Bấm vào bất kỳ câu nào để kích hoạt ngay câu đó bên cột trái và phát âm mẫu.
+    - Thanh tiến độ mini (`.dau-side-progress-bar`) hiển thị tỷ lệ hoàn thành các câu đã đạt.
+  * **Thanh điều khiển chân trang cố định (Sticky Bottom Bar)**:
+    - Phím điều hướng `← Câu trước`, `🔊 Nghe lại (Space)`, `🎙️ Luyện nói (R)`, `Câu tiếp theo →` và bảng hướng dẫn phím tắt trực quan.
 * **Phân cấp 4 Part bài bản theo định dạng đề thi chứng chỉ ТРКИ**:
   * **Level 01 (Nghe mô tả tranh)**: Học viên quan sát một bức tranh, nghe các câu mô tả bằng tiếng Nga và lựa chọn câu phù hợp nhất với nội dung hình ảnh.
   * **Level 02 (Nghe hội thoại ngắn)**: Học viên nghe một câu hỏi hoặc lời nói bằng tiếng Nga, sau đó lựa chọn câu trả lời phù hợp nhất trong các phương án được đưa ra.
