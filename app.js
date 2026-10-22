@@ -1850,8 +1850,6 @@ function renderFooter() {
       <a href="mock-test.html">TRKI</a>
       <a href="blog.html">Blog</a>
       <a href="shop.html">Shop</a>
-      <a href="how-to-study.html">Cách học</a>
-      <a href="upgrade.html">Gói PRO</a>
     </div>
     <small>© 2026 RUSI TRKI. Made for curious minds. Đồng hành cùng Mascot Rusika mắt xanh.</small>
   </footer>`;
