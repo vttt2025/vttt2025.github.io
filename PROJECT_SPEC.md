@@ -111,6 +111,10 @@
 * **Khách chưa đăng nhập**: Header chỉ hiển thị `[Đăng nhập]` và `[Đăng ký]`. Bảng giá trên trang chủ ẩn đi để giao diện tinh gọn. Khi truy cập nội dung VIP, hiển thị Auth Modal với tùy chọn đăng nhập Google hoặc dùng nhanh phiên Khách.
 * **Học viên Free**: Header hiển thị nút nổi bật `[⚡ Nâng cấp PRO]` dẫn thẳng đến `upgrade.html`. Menu tài khoản có thẻ CTA nâng cấp.
 * **Học viên PRO**: Header hiển thị huy hiệu hoàng gia `[👑 PRO MEMBER]`. Menu tài khoản hiển thị thời hạn bản quyền.
+* **Cửa sổ popup bảo vệ nội dung PRO (PRO Gate Modal)**: Khi người học chưa mua gói PRO kích vào xem bất kỳ nội dung PRO nào (Lọ từ vựng nâng cao, Bài nghe thực tế, Chủ đề luyện nói, Đề viết tự luận, Phòng thi TRKI), hệ thống tự động hiển thị popup chuẩn hoá:
+  - Tiêu đề: *Nội dung dành cho PRO* kèm huy hiệu vương miện hoàng gia 👑.
+  - Nội dung: Nêu rõ quyền lợi đặc quyền ("Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng B1–B2, đề thi thử ТРКИ chuẩn quốc tế, bài luyện nghe video thực tế, AI chấm bài tự luận và nhận diện phát âm không giới hạn.").
+  - Đúng 2 nút lựa chọn: **`[ 👑 Tìm hiểu gói PRO → ]`** (chuyển thẳng tới trang `upgrade.html`) và **`[ Để sau ]`** (đóng popup quay lại trang hiện tại).
 
 ### 2.3. Cổng VietQR 2.0 kích hoạt tức thì:
 * **Mã đơn định danh**: Sinh mã tự động kèm ID người học (`RUSI_[ordNum]_[userTag]`).

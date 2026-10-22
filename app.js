@@ -870,6 +870,85 @@ const Monetization = {
     ];
   },
 
+  /**
+   * Popup cửa sổ "Nội dung dành cho PRO" khi người dùng chưa mua kích vào xem.
+   * Có 2 lựa chọn: "Tìm hiểu gói PRO" (chuyển sang upgrade.html) và "Để sau" (đóng cửa sổ).
+   */
+  showProGateModal(customTitle = "Nội dung dành cho PRO", customDesc = "") {
+    let modal = document.getElementById("proGateModal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "proGateModal";
+      modal.className = "vietqr-overlay";
+      document.body.appendChild(modal);
+    }
+
+    const defaultDesc = "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng nâng cao, đề thi thử ТРКИ chuẩn quốc tế, bài luyện nghe video thực tế, AI chấm bài tự luận và nhận diện phát âm không giới hạn.";
+    const descText = customDesc || defaultDesc;
+
+    modal.innerHTML = `
+      <div class="vietqr-card pro-gate-card">
+        <button class="vietqr-close" id="closeProGate" title="Đóng">&times;</button>
+        
+        <div class="pro-gate-header">
+          <div class="pro-gate-crown-badge">👑</div>
+          <span class="pro-gate-kicker">RUSI TRKI • ĐẶC QUYỀN HỘI VIÊN</span>
+          <h3 class="pro-gate-title">${esc(customTitle)}</h3>
+        </div>
+
+        <div class="pro-gate-body">
+          <p class="pro-gate-desc">${esc(descText)}</p>
+
+          <div class="pro-gate-feature-list">
+            <div class="pro-gate-feat-row">
+              <span class="pro-gate-feat-icon">💎</span>
+              <div>
+                <b>Kho tài liệu B1 – B2 chuyên sâu:</b> Lọ từ vựng đời sống & du học, đề thi TRKI đầy đủ các phân môn.
+              </div>
+            </div>
+            <div class="pro-gate-feat-row">
+              <span class="pro-gate-feat-icon">🤖</span>
+              <div>
+                <b>Trợ lý AI Rusika đồng hành:</b> Chấm bài viết tự luận 4 tiêu chí chuẩn khảo thí và sửa lỗi phát âm âm vị.
+              </div>
+            </div>
+            <div class="pro-gate-feat-row">
+              <span class="pro-gate-feat-icon">⚡</span>
+              <div>
+                <b>Học không giới hạn:</b> Thuật toán lặp lại ngắt quãng Spaced Repetition (SRS) lưu tiến độ đa thiết bị.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="pro-gate-actions">
+          <button type="button" class="btn btn-outline pro-gate-btn-dismiss" id="btnProGateDismiss">
+            Để sau
+          </button>
+          <a href="upgrade.html" class="btn btn-primary pro-gate-btn-upgrade" id="btnProGateUpgrade">
+            👑 Tìm hiểu gói PRO →
+          </a>
+        </div>
+      </div>
+    `;
+
+    const closeModal = () => {
+      modal.remove();
+      document.removeEventListener("keydown", handleEsc);
+    };
+
+    const handleEsc = (e) => {
+      if (e.key === "Escape") closeModal();
+    };
+
+    document.getElementById("closeProGate").onclick = closeModal;
+    document.getElementById("btnProGateDismiss").onclick = closeModal;
+    modal.onclick = (e) => {
+      if (e.target === modal) closeModal();
+    };
+    document.addEventListener("keydown", handleEsc);
+  },
+
   /** Modal nhắc nhở người dùng chưa đăng nhập khi bấm vào tính năng nâng cấp / paywall */
   showAuthRequiredModal(title = "Nâng cấp tài khoản PRO", reason = "Vui lòng đăng nhập để gắn quyền PRO vào tài khoản và bảo lưu quyền lợi trọn đời.") {
     let modal = document.getElementById("authReqModal");

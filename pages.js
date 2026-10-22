@@ -1800,7 +1800,7 @@ function initVocabPage() {
           const id = btn.dataset.jarId;
           const jar = allItems.find(j => j.id === id);
           if (jar && jar.is_pro_only && !Monetization.isPro()) {
-            Monetization.openUpgradeModal();
+            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng nâng cao và ôn tập không giới hạn.");
             return;
           }
           showJarDetail(id, "list");
@@ -1813,7 +1813,7 @@ function initVocabPage() {
           const id = btn.dataset.jarId;
           const jar = allItems.find(j => j.id === id);
           if (jar && jar.is_pro_only && !Monetization.isPro()) {
-            Monetization.openUpgradeModal();
+            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng nâng cao và học Flashcard SRS không giới hạn.");
             return;
           }
           showJarDetail(id, "flashcard");
@@ -1826,7 +1826,7 @@ function initVocabPage() {
           const id = card.dataset.vocabId;
           const jar = allItems.find(j => j.id === id);
           if (jar && jar.is_pro_only && !Monetization.isPro()) {
-            Monetization.openUpgradeModal();
+            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng nâng cao và ôn tập không giới hạn.");
             return;
           }
           showJarDetail(id, "list");
@@ -2102,7 +2102,7 @@ function initVocabPage() {
     // Kiểm tra quyền truy cập PRO
     const isProJar = Boolean(jar.is_pro_only || jar.is_vip || (jar.level === "B2" && jar.id !== "jar_travel") || jar.id === "jar_bank" || jar.id === "jar_hospital" || jar.id === "jar_dekanat");
     if (isProJar && !Monetization.isPro()) {
-      Monetization.openUpgradeModal();
+      Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng nâng cao và ôn tập không giới hạn.");
       return;
     }
 
@@ -2479,7 +2479,7 @@ function initListeningPage() {
           const lesson = all.find(l => l.id === id);
           const isPro = lesson.is_pro_only || lesson.level === "B1" || lesson.level === "B2";
           if (isPro && !Monetization.isPro()) {
-            Monetization.openUpgradeModal();
+            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe thực tế chuẩn Moscow và video hội thoại.");
             return;
           }
           openListeningWorkspace(lesson);
@@ -3090,7 +3090,7 @@ function initSpeakingPage() {
           const set = all.find(s => s.id === id);
           const isPro = set.is_pro_only || set.level === "B1" || set.level === "B2";
           if (isPro && !Monetization.isPro()) {
-            Monetization.openUpgradeModal();
+            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ chủ đề giao tiếp và AI chấm âm vị không giới hạn.");
             return;
           }
           openSpeakingWorkspace(set);
@@ -3228,8 +3228,7 @@ function initSpeakingPage() {
         if (!Monetization.isPro()) {
           const used = STORE.get(todayKey, 0);
           if (used >= 2) {
-            toast("Bạn đã dùng hết 2 lượt luyện nói miễn phí hôm nay.");
-            Monetization.openUpgradeModal();
+            Monetization.showProGateModal("Lượt luyện nói hôm nay đã hết", "Bạn đã dùng hết 2 lượt luyện nói miễn phí hôm nay. Nâng cấp lên gói PRO để mở khóa AI chấm âm vị không giới hạn số lượt.");
             return;
           }
         }
@@ -3426,7 +3425,7 @@ function initWritingPage() {
           const task = all.find(t => t.id === id);
           const isPro = task.is_pro_only || task.level === "B1" || task.level === "B2";
           if (isPro && !Monetization.isPro()) {
-            Monetization.openUpgradeModal();
+            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ đề viết tự luận và AI Rusika chấm điểm 4 tiêu chí.");
             return;
           }
           openWritingWorkspace(task);
@@ -3664,8 +3663,7 @@ function initWritingPage() {
     // AI Chấm 4 Tiêu Chí Chuẩn TRKI
     box.querySelector(".btn-submit").onclick = () => {
       if (t.is_pro_only && !Monetization.isPro()) {
-        toast("Bài viết này yêu cầu gói PRO để mở khóa AI Rusika chấm không giới hạn.");
-        Monetization.openUpgradeModal();
+        Monetization.showProGateModal("Nội dung dành cho PRO", "Bài viết này yêu cầu gói PRO để mở khóa AI Rusika chấm chi tiết theo chuẩn ТРКИ.");
         return;
       }
 
@@ -3869,7 +3867,7 @@ function initMockTestPage() {
           const test = bank.find(t => t.id === id);
           const isPro = test.is_pro_only || test.level === "B1" || test.level === "B2";
           if (isPro && !Monetization.isPro()) {
-            Monetization.openUpgradeModal();
+            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
             return;
           }
           currentTest = test;
