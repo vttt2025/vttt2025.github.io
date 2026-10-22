@@ -1840,6 +1840,7 @@ function initVocabPage() {
   let algorithmInited = false;
 
   const showMainLayout = () => {
+    document.body.classList.remove("in-workspace");
     const mainLayout = el("#vocMainLayout");
     if (mainLayout) mainLayout.classList.remove("hidden");
     const detail = el("#jarDetailHost");
@@ -1857,6 +1858,7 @@ function initVocabPage() {
   window.exitSrsToVocab = showMainLayout;
 
   const showSrsWorkspace = () => {
+    document.body.classList.add("in-workspace");
     const mainLayout = el("#vocMainLayout");
     if (mainLayout) mainLayout.classList.add("hidden");
     const detail = el("#jarDetailHost");
@@ -2308,6 +2310,7 @@ function initVocabPage() {
       return;
     }
 
+    document.body.classList.add("in-workspace");
     const mainLayout = el("#vocMainLayout");
     if (mainLayout) mainLayout.classList.add("hidden");
     const srsPane = el("#vocPaneAlgorithm");
@@ -2336,16 +2339,7 @@ function initVocabPage() {
           </div>
         </div>
 
-        <div class="workspace" style="padding-top:16px">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px">
-            <div>
-              <h2 style="margin:4px 0;display:flex;align-items:center;gap:10px">
-                <span>${jar.icon || "🏺"}</span> ${esc(jar.name)}
-              </h2>
-              <p style="color:var(--muted);font-size:0.92rem;margin:0">${esc(jar.desc || "Bộ từ vựng theo tình huống thực tế")}</p>
-            </div>
-          </div>
-
+        <div class="workspace" style="padding:14px 4px;border:none;background:transparent;box-shadow:none">
           <!-- QUIZLET STUDY ENGINE HOST -->
           <div id="jarQuizletSuiteHost"></div>
         </div>
@@ -2401,6 +2395,7 @@ function initVocabPage() {
   const showLesson = (id) => {
     const found = VOCAB_LESSONS.find(l => l.id === id);
     if (!found) return;
+    document.body.classList.add("in-workspace");
     const mainLayout = el("#vocMainLayout");
     if (mainLayout) mainLayout.classList.add("hidden");
     const srsPane = el("#vocPaneAlgorithm");
@@ -2698,6 +2693,7 @@ function initListeningPage() {
   };
 
   const renderHub = () => {
+    document.body.classList.remove("in-workspace");
     currentLesson = null;
     const all = getListeningLessons();
     const countA1 = all.filter(l => l.level === "A1").length;
@@ -2748,8 +2744,14 @@ function initListeningPage() {
 
   const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
-  const openListeningWorkspace = (lesson, mode = "video") => {
+  const openListeningWorkspace = (lesson, initialMode = "video") => {
     currentLesson = lesson;
+    let activeMode = initialMode;
+    const initializedModes = {};
+    let currentSpeakTimer = null;
+
+    document.body.classList.add("in-workspace");
+    window.scrollTo({ top: 0, behavior: "smooth" });
 
     host.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
@@ -2761,84 +2763,220 @@ function initListeningPage() {
           <span class="dau-badge ${lesson.level === "A2" ? "dau-badge-a2" : lesson.level === "B1" ? "dau-badge-b1" : lesson.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${lesson.level}</span>
           <span class="dau-workspace-title">${lesson.icon || "🎧"} Part ${lesson.partNumber || 1} · ${esc(lesson.title)}</span>
         </div>
-        <div style="display:flex;align-items:center;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap">
+          <div class="speed-pills">
+            <button class="speed-pill ${currentSpeed === 0.75 ? "active" : ""}" data-sp="0.75">0.75x</button>
+            <button class="speed-pill ${currentSpeed === 1.0 ? "active" : ""}" data-sp="1.0">1.0x</button>
+            <button class="speed-pill ${currentSpeed === 1.25 ? "active" : ""}" data-sp="1.25">1.25x</button>
+          </div>
+          <button class="btn btn-outline btn-sm" id="btnToggleSub">${showSub ? "Ẩn dịch nghĩa" : "Hiện dịch nghĩa"}</button>
           <button class="btn btn-primary btn-sm" id="lisPlayAll">🔊 Nghe toàn bài</button>
         </div>
       </div>
 
-      <div class="workspace">
-        <div class="ws-head" style="flex-wrap:wrap;gap:12px">
-          <div>
-            <span class="pro-chip" style="font-size:0.75rem">${esc(lesson.levelName || lesson.level)} · ${esc(lesson.categoryName || "")}</span>
-            <h2 class="ru" style="margin:6px 0 2px">${esc(lesson.title)}</h2>
-            <p class="ws-sub">${esc(lesson.vi)}</p>
-          </div>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <div class="speed-pills">
-              <button class="speed-pill ${currentSpeed === 0.75 ? "active" : ""}" data-sp="0.75">0.75x</button>
-              <button class="speed-pill ${currentSpeed === 1.0 ? "active" : ""}" data-sp="1.0">1.0x</button>
-              <button class="speed-pill ${currentSpeed === 1.25 ? "active" : ""}" data-sp="1.25">1.25x</button>
-            </div>
-            <button class="btn btn-outline btn-sm" id="btnToggleSub">${showSub ? "Ẩn dịch nghĩa" : "Hiện dịch nghĩa"}</button>
-          </div>
+      <div class="workspace" style="max-width:1080px;margin:0 auto">
+        <div class="tabs" id="lisTabs" style="justify-content:center;margin:0 0 20px;flex-wrap:wrap">
+          <button class="tab ${activeMode === "video" ? "active" : ""}" data-m="video">🎬 Shadowing Video (1-5 phút)</button>
+          <button class="tab ${activeMode === "full" ? "active" : ""}" data-m="full">Nghe Full</button>
+          <button class="tab ${activeMode === "blank" ? "active" : ""}" data-m="blank">Điền Từ</button>
+          <button class="tab ${activeMode === "dict" ? "active" : ""}" data-m="dict">Nghe Chép Chính Tả</button>
+          <button class="tab ${activeMode === "check" ? "active" : ""}" data-m="check">Trắc Nghiệm Check</button>
         </div>
 
-        <div class="tabs" style="justify-content:flex-start;margin:16px 0;flex-wrap:wrap">
-          <button class="tab ${mode === "video" ? "active" : ""}" data-m="video">🎬 Shadowing Video (1-5 phút)</button>
-          <button class="tab ${mode === "full" ? "active" : ""}" data-m="full">Nghe Full</button>
-          <button class="tab ${mode === "blank" ? "active" : ""}" data-m="blank">Điền Từ</button>
-          <button class="tab ${mode === "dict" ? "active" : ""}" data-m="dict">Nghe Chép Chính Tả</button>
-          <button class="tab ${mode === "check" ? "active" : ""}" data-m="check">Trắc Nghiệm Check</button>
+        <div id="modeBody">
+          <div id="lisPane_video" class="lis-mode-panel lis-mode-panel-video"></div>
+          <div id="lisPane_full" class="lis-mode-panel hidden-pane"></div>
+          <div id="lisPane_blank" class="lis-mode-panel hidden-pane"></div>
+          <div id="lisPane_dict" class="lis-mode-panel hidden-pane"></div>
+          <div id="lisPane_check" class="lis-mode-panel hidden-pane"></div>
         </div>
-
-        <div id="modeBody"></div>
       </div>
     `;
 
+    // Unified translation toggling function - updates DOM in-place without touching video iframe
+    const setTranslationVisible = (visible) => {
+      showSub = visible;
+      const topSubBtn = host.querySelector("#btnToggleSub");
+      if (topSubBtn) topSubBtn.textContent = showSub ? "Ẩn dịch nghĩa" : "Hiện dịch nghĩa";
+
+      const videoSubBtn = host.querySelector("#btnToggleSubTrans");
+      if (videoSubBtn) videoSubBtn.innerHTML = showSub ? "👁️ Ẩn dịch" : "👁️ Hiện dịch";
+
+      const subVi = host.querySelector("#dauSubVi");
+      if (subVi) {
+        subVi.classList.toggle("hidden", !showSub);
+        subVi.style.display = showSub ? "" : "none";
+      }
+
+      const curVi = host.querySelector("#dauCurVi");
+      if (curVi) {
+        curVi.classList.toggle("hidden", !showSub);
+        curVi.style.display = showSub ? "" : "none";
+      }
+
+      host.querySelectorAll(".dau-item-vi").forEach((el) => {
+        el.classList.toggle("hidden", !showSub);
+        el.style.display = showSub ? "" : "none";
+      });
+
+      host.querySelectorAll(".line-vi").forEach((el) => {
+        el.classList.toggle("hidden", !showSub);
+        el.style.display = showSub ? "" : "none";
+      });
+    };
+
+    // Mode switching function - switches active tab and panel without destroying video iframe
+    const switchMode = (newMode) => {
+      activeMode = newMode;
+      host.querySelectorAll("#lisTabs [data-m]").forEach((b) => {
+        b.classList.toggle("active", b.dataset.m === newMode);
+      });
+
+      const paneVideo = host.querySelector("#lisPane_video");
+      const paneFull = host.querySelector("#lisPane_full");
+      const paneBlank = host.querySelector("#lisPane_blank");
+      const paneDict = host.querySelector("#lisPane_dict");
+      const paneCheck = host.querySelector("#lisPane_check");
+
+      // Video panel is kept mounted off-screen so YouTube player state is NOT lost and does not reset to start
+      if (paneVideo) {
+        if (newMode === "video") {
+          paneVideo.classList.remove("panel-hidden-video");
+          paneVideo.style.display = "";
+          paneVideo.style.position = "";
+          paneVideo.style.left = "";
+          paneVideo.style.top = "";
+          paneVideo.style.width = "";
+          paneVideo.style.height = "";
+          paneVideo.style.overflow = "";
+          paneVideo.style.opacity = "";
+          paneVideo.style.pointerEvents = "";
+          paneVideo.style.visibility = "";
+        } else {
+          paneVideo.classList.add("panel-hidden-video");
+          paneVideo.style.position = "absolute";
+          paneVideo.style.left = "-9999px";
+          paneVideo.style.top = "-9999px";
+          paneVideo.style.width = "1px";
+          paneVideo.style.height = "1px";
+          paneVideo.style.overflow = "hidden";
+          paneVideo.style.opacity = "0";
+          paneVideo.style.pointerEvents = "none";
+          paneVideo.style.visibility = "hidden";
+        }
+      }
+
+      if (paneFull) {
+        paneFull.classList.toggle("hidden-pane", newMode !== "full");
+        paneFull.style.display = newMode === "full" ? "block" : "none";
+        if (newMode === "full" && !initializedModes.full) {
+          modeFull(paneFull, lesson);
+          initializedModes.full = true;
+        }
+      }
+
+      if (paneBlank) {
+        paneBlank.classList.toggle("hidden-pane", newMode !== "blank");
+        paneBlank.style.display = newMode === "blank" ? "block" : "none";
+        if (newMode === "blank" && !initializedModes.blank) {
+          modeBlank(paneBlank, lesson);
+          initializedModes.blank = true;
+        }
+      }
+
+      if (paneDict) {
+        paneDict.classList.toggle("hidden-pane", newMode !== "dict");
+        paneDict.style.display = newMode === "dict" ? "block" : "none";
+        if (newMode === "dict" && !initializedModes.dict) {
+          modeDict(paneDict, lesson);
+          initializedModes.dict = true;
+        }
+      }
+
+      if (paneCheck) {
+        paneCheck.classList.toggle("hidden-pane", newMode !== "check");
+        paneCheck.style.display = newMode === "check" ? "block" : "none";
+        if (newMode === "check" && !initializedModes.check) {
+          modeCheck(paneCheck, lesson);
+          initializedModes.check = true;
+        }
+      }
+    };
+
+    // Back button
     el("#btnBackLisList").onclick = () => {
-      if (window._dauShadowKeyHandler) { window.removeEventListener("keydown", window._dauShadowKeyHandler); window._dauShadowKeyHandler = null; }
+      if (window._dauShadowKeyHandler) {
+        window.removeEventListener("keydown", window._dauShadowKeyHandler);
+        window._dauShadowKeyHandler = null;
+      }
+      if (currentSpeakTimer) {
+        clearTimeout(currentSpeakTimer);
+        currentSpeakTimer = null;
+      }
+      if ("speechSynthesis" in window) {
+        speechSynthesis.cancel();
+      }
       renderHub();
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    host.querySelectorAll("[data-m]").forEach((b) => {
+    // Tab buttons
+    host.querySelectorAll("#lisTabs [data-m]").forEach((b) => {
       b.addEventListener("click", () => {
-        if (window._dauShadowKeyHandler) { window.removeEventListener("keydown", window._dauShadowKeyHandler); window._dauShadowKeyHandler = null; }
-        openListeningWorkspace(lesson, b.dataset.m);
+        switchMode(b.dataset.m);
       });
     });
 
-    host.querySelectorAll("[data-sp]").forEach((b) => {
+    // Speed pills in header
+    host.querySelectorAll(".ws-head [data-sp]").forEach((b) => {
       b.addEventListener("click", () => {
         currentSpeed = parseFloat(b.dataset.sp);
-        host.querySelectorAll("[data-sp]").forEach((s) => s.classList.remove("active"));
+        host.querySelectorAll(".ws-head [data-sp]").forEach((s) => s.classList.remove("active"));
         b.classList.add("active");
+
+        // Sync with video speed pills if present
+        host.querySelectorAll(".btn-yt-sp").forEach((s) => {
+          s.classList.toggle("active", parseFloat(s.dataset.sp) === currentSpeed);
+        });
+
+        const iframe = host.querySelector("#lisYtIframe");
+        if (iframe && iframe.contentWindow) {
+          iframe.contentWindow.postMessage(JSON.stringify({
+            event: "command",
+            func: "setPlaybackRate",
+            args: [currentSpeed]
+          }), "*");
+        }
+
         toast(`Tốc độ đọc: ${currentSpeed}x`);
       });
     });
 
+    // Subtitle toggle button in ws-head
     const subBtn = el("#btnToggleSub");
     if (subBtn) {
       subBtn.onclick = () => {
-        showSub = !showSub;
-        openListeningWorkspace(lesson, mode);
+        setTranslationVisible(!showSub);
       };
     }
 
+    // Play all button
     el("#lisPlayAll").onclick = () => {
       const full = lesson.lines.map((l) => l.ru).join(" ");
       speak(full, "ru-RU", currentSpeed);
     };
 
-    const mb = el("#modeBody");
-    if (mode === "video") modeVideo(mb, lesson);
-    if (mode === "full") modeFull(mb, lesson);
-    if (mode === "blank") modeBlank(mb, lesson);
-    if (mode === "dict") modeDict(mb, lesson);
-    if (mode === "check") modeCheck(mb, lesson);
+    // Initialize initial mode
+    const paneVideo = host.querySelector("#lisPane_video");
+    modeVideo(paneVideo, lesson, setTranslationVisible, () => activeMode);
+    initializedModes.video = true;
+
+    if (activeMode !== "video") {
+      switchMode(activeMode);
+    }
   };
 
-  const modeVideo = (mb, lesson) => {
+  const modeVideo = (mb, lesson, setTranslationVisible, getActiveMode) => {
     // Default video segments (1-5 min) per level
     const defaultVideos = {
       A1: { youtubeId: "e6lFvAQp0LE", startSec: 15, endSec: 195, durationLabel: "3 phút (180 giây)" },
@@ -2893,10 +3031,10 @@ function initListeningPage() {
     let activeSentenceIdx = 0;
     const totalSentences = lesson.lines.length;
     const scores = {};
-    let showTranslation = showSub !== undefined ? showSub : true;
     let localSpeed = currentSpeed || 1.0;
     let repeatCount = 1;
     let isRecRunning = false;
+    let currentSpeakTimer = null;
 
     // Load saved scores
     for (let i = 0; i < totalSentences; i++) {
@@ -2906,222 +3044,220 @@ function initListeningPage() {
 
     const getPassedCount = () => Object.values(scores).filter((s) => s >= 70).length;
 
-    // Render DauEnglish-style 2-column layout
-    const renderShadowingUI = () => {
-      const curLine = lesson.lines[activeSentenceIdx] || lesson.lines[0];
-      const curScore = scores[activeSentenceIdx];
-      const passedCount = getPassedCount();
-      const progressPct = Math.round((passedCount / totalSentences) * 100);
+    const curLine = lesson.lines[0] || { ru: "", vi: "", who: "" };
+    const curScore = scores[0];
+    const passedCount = getPassedCount();
+    const progressPct = Math.round((passedCount / totalSentences) * 100);
 
-      mb.innerHTML = `
-        <div class="dau-shadow-studio">
-          <!-- 2-COLUMN STUDIO WORKSPACE -->
-          <div class="dau-shadow-grid">
-            <!-- LEFT COLUMN: VIDEO + ACTIVE SENTENCE CARD + QUIZ -->
-            <div class="dau-shadow-left-col">
-              <!-- YOUTUBE VIDEO 16:9 CONTAINER WITH SUBTITLE OVERLAY -->
-              <div class="dau-shadow-video-wrap">
-                <iframe
-                  id="lisYtIframe"
-                  src="https://www.youtube-nocookie.com/embed/${ytId}?start=${start}&end=${end}&enablejsapi=1&rel=0&modestbranding=1"
-                  title="Russian Shadowing Video"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowfullscreen>
-                </iframe>
+    // Render DauEnglish-style 2-column layout ONCE - video iframe is NEVER re-created on interactions
+    mb.innerHTML = `
+      <div class="dau-shadow-studio">
+        <!-- 2-COLUMN STUDIO WORKSPACE -->
+        <div class="dau-shadow-grid">
+          <!-- LEFT COLUMN: VIDEO + ACTIVE SENTENCE CARD + QUIZ -->
+          <div class="dau-shadow-left-col">
+            <!-- YOUTUBE VIDEO 16:9 CONTAINER WITH SUBTITLE OVERLAY -->
+            <div class="dau-shadow-video-wrap">
+              <iframe
+                id="lisYtIframe"
+                src="https://www.youtube-nocookie.com/embed/${ytId}?start=${start}&end=${end}&enablejsapi=1&rel=0&modestbranding=1"
+                title="Russian Shadowing Video"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+              </iframe>
 
-                <!-- SUBTITLE OVERLAY (DauEnglish style) -->
-                <div class="dau-shadow-sub-overlay" id="dauSubOverlay">
-                  <p class="sub-ru ru">${esc(curLine.ru)}</p>
-                  ${showTranslation && curLine.vi ? `<p class="sub-vi">${esc(curLine.vi)}</p>` : ""}
-                </div>
+              <!-- SUBTITLE OVERLAY (DauEnglish style) -->
+              <div class="dau-shadow-sub-overlay" id="dauSubOverlay">
+                <p class="sub-ru ru" id="dauSubRu">${esc(curLine.ru)}</p>
+                <p class="sub-vi ${showSub && curLine.vi ? "" : "hidden"}" id="dauSubVi">${esc(curLine.vi || "")}</p>
               </div>
+            </div>
 
-              <!-- VIDEO CONTROLS STRIP -->
-              <div class="dau-video-meta-bar">
-                <div class="dau-meta-left">
-                  <span class="dau-meta-pill">⏱️ Thời lượng: <b>${durationLabel}</b></span>
-                  <span class="dau-meta-pill text-primary">🎯 Giọng Moscow chuẩn</span>
-                </div>
-                <div class="dau-meta-right">
-                  <span class="dau-speed-label">Tốc độ:</span>
-                  <div class="speed-pills">
-                    <button type="button" class="speed-pill btn-yt-sp ${localSpeed === 0.75 ? "active" : ""}" data-sp="0.75">0.75x</button>
-                    <button type="button" class="speed-pill btn-yt-sp ${localSpeed === 1.0 ? "active" : ""}" data-sp="1.0">1.0x</button>
-                    <button type="button" class="speed-pill btn-yt-sp ${localSpeed === 1.25 ? "active" : ""}" data-sp="1.25">1.25x</button>
-                  </div>
-                  <button type="button" class="btn btn-outline btn-sm" id="btnToggleSubTrans">
-                    ${showTranslation ? "👁️ Ẩn dịch" : "👁️ Hiện dịch"}
-                  </button>
-                </div>
+            <!-- VIDEO CONTROLS STRIP -->
+            <div class="dau-video-meta-bar">
+              <div class="dau-meta-left">
+                <span class="dau-meta-pill">⏱️ Thời lượng: <b>${durationLabel}</b></span>
+                <span class="dau-meta-pill text-primary">🎯 Giọng Moscow chuẩn</span>
               </div>
+              <div class="dau-meta-right">
+                <span class="dau-speed-label">Tốc độ:</span>
+                <div class="speed-pills">
+                  <button type="button" class="speed-pill btn-yt-sp ${localSpeed === 0.75 ? "active" : ""}" data-sp="0.75">0.75x</button>
+                  <button type="button" class="speed-pill btn-yt-sp ${localSpeed === 1.0 ? "active" : ""}" data-sp="1.0">1.0x</button>
+                  <button type="button" class="speed-pill btn-yt-sp ${localSpeed === 1.25 ? "active" : ""}" data-sp="1.25">1.25x</button>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" id="btnToggleSubTrans">
+                  ${showSub ? "👁️ Ẩn dịch" : "👁️ Hiện dịch"}
+                </button>
+              </div>
+            </div>
 
-              <!-- ACTIVE SENTENCE PRACTICE CARD (SHADOWING HERO) -->
-              <div class="dau-sentence-card" id="dauActiveCard">
-                <div class="dau-sentence-card-head">
-                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                    <span class="dau-badge-sentence">Câu ${activeSentenceIdx + 1} / ${totalSentences}</span>
-                    <span class="dau-speaker-pill">🗣️ ${esc(curLine.who)}</span>
+            <!-- ACTIVE SENTENCE PRACTICE CARD (SHADOWING HERO) -->
+            <div class="dau-sentence-card" id="dauActiveCard">
+              <div class="dau-sentence-card-head">
+                <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                  <span class="dau-badge-sentence" id="dauCurSentenceIdx">Câu 1 / ${totalSentences}</span>
+                  <span class="dau-speaker-pill" id="dauCurSpeaker">🗣️ ${esc(curLine.who)}</span>
+                  <span id="dauCurScoreBadgeWrap">
                     ${curScore !== undefined ? `
                       <span class="dau-score-badge ${curScore >= 70 ? "pass" : "retry"}">
                         ${curScore >= 70 ? `✓ Đạt ${curScore}%` : `${curScore}% (luyện lại)`}
                       </span>
                     ` : ""}
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <div class="dau-repeat-group" title="Số lần tự lặp khi nghe câu">
-                      <span style="font-size:0.75rem;color:var(--muted);font-weight:600">Lặp:</span>
-                      <button type="button" class="dau-repeat-btn ${repeatCount === 1 ? "active" : ""}" data-rep="1">1×</button>
-                      <button type="button" class="dau-repeat-btn ${repeatCount === 2 ? "active" : ""}" data-rep="2">2×</button>
-                      <button type="button" class="dau-repeat-btn ${repeatCount === 3 ? "active" : ""}" data-rep="3">3×</button>
-                    </div>
-                  </div>
+                  </span>
                 </div>
-
-                <!-- SENTENCE RUSSIAN & VIETNAMESE TEXT -->
-                <div class="dau-sentence-text-box">
-                  <h3 class="dau-active-ru ru">${esc(curLine.ru)}</h3>
-                  <p class="dau-active-vi ${showTranslation ? "" : "hidden"}">${esc(curLine.vi)}</p>
-                </div>
-
-                <!-- WAVEFORM AUDIO BOX -->
-                <div id="shadowWaveBox" class="waveform-box">
-                  <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-                  <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-                  <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-                  <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-                </div>
-
-                <!-- SHADOWING ACTIONS: PLAY AUDIO & MIC BUTTON -->
-                <div class="dau-sentence-actions">
-                  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-                    <button type="button" class="btn btn-primary" id="btnPlayActiveLine">
-                      <span>🔊 Nghe câu</span>
-                    </button>
-                    <button type="button" class="mic-btn" id="btnMicActiveLine" title="Bấm để nói và nhận diện chấm điểm (R)">
-                      🎤
-                    </button>
-                    <div class="dau-mic-status" id="dauMicStatus">
-                      ${curScore !== undefined ? `Điểm gần nhất: <b>${curScore}%</b>` : `Bấm <b>🎤</b> và đọc nhại lại câu tiếng Nga`}
-                    </div>
-                  </div>
-
-                  <div id="dauScoreRingWrap">
-                    ${curScore !== undefined ? `
-                      <div class="score-ring ${curScore >= 80 ? "" : curScore >= 50 ? "mid" : "low"}" title="Độ chính xác">${curScore}%</div>
-                    ` : ""}
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div class="dau-repeat-group" title="Số lần tự lặp khi nghe câu">
+                    <span style="font-size:0.75rem;color:var(--muted);font-weight:600">Lặp:</span>
+                    <button type="button" class="dau-repeat-btn ${repeatCount === 1 ? "active" : ""}" data-rep="1">1×</button>
+                    <button type="button" class="dau-repeat-btn ${repeatCount === 2 ? "active" : ""}" data-rep="2">2×</button>
+                    <button type="button" class="dau-repeat-btn ${repeatCount === 3 ? "active" : ""}" data-rep="3">3×</button>
                   </div>
                 </div>
-
-                <!-- RECOGNITION HEARD BOX (FEEDBACK) -->
-                <div id="dauHeardFeedback" class="dau-heard-box hidden"></div>
               </div>
 
-              <!-- VIDEO QUIZ COMPREHENSION (Giữ nguyên vẹn 100% nội dung câu hỏi) -->
-              <div class="lis-video-quiz-box" style="margin-top:20px">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-                  <div>
-                    <h3 style="margin:0 0 4px;font-size:1.15rem">🧠 Bài trắc nghiệm kiểm tra sau khi xem video</h3>
-                    <p style="margin:0;font-size:0.85rem;color:var(--muted)">Xem kỹ đoạn trích video trên và chọn đáp án đúng nhất cho các câu hỏi sau:</p>
-                  </div>
-                  <div id="videoQuizScore" class="dau-meta-pill" style="font-weight:700;color:var(--primary)">
-                    Tiến độ: 0/${videoQuestions.length} câu
+              <!-- SENTENCE RUSSIAN & VIETNAMESE TEXT -->
+              <div class="dau-sentence-text-box">
+                <h3 class="dau-active-ru ru" id="dauCurRu">${esc(curLine.ru)}</h3>
+                <p class="dau-active-vi ${showSub && curLine.vi ? "" : "hidden"}" id="dauCurVi">${esc(curLine.vi || "")}</p>
+              </div>
+
+              <!-- WAVEFORM AUDIO BOX -->
+              <div id="shadowWaveBox" class="waveform-box">
+                <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+                <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+                <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+                <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+              </div>
+
+              <!-- SHADOWING ACTIONS: PLAY AUDIO & MIC BUTTON -->
+              <div class="dau-sentence-actions">
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                  <button type="button" class="btn btn-primary" id="btnPlayActiveLine">
+                    <span>🔊 Nghe câu</span>
+                  </button>
+                  <button type="button" class="mic-btn" id="btnMicActiveLine" title="Bấm để nói và nhận diện chấm điểm (R)">
+                    🎤
+                  </button>
+                  <div class="dau-mic-status" id="dauMicStatus">
+                    ${curScore !== undefined ? `Điểm gần nhất: <b>${curScore}%</b>` : `Bấm <b>🎤</b> và đọc nhại lại câu tiếng Nga`}
                   </div>
                 </div>
 
-                <div class="lis-video-questions-list">
-                  ${videoQuestions.map((q, qIdx) => `
-                    <div class="lis-video-q-card" data-q-idx="${qIdx}">
-                      <div class="lis-video-q-title">${esc(q.q)}</div>
-                      <div class="lis-video-opt-list">
-                        ${q.options.map((opt, optIdx) => `
-                          <button type="button" class="lis-video-opt-btn" data-opt-idx="${optIdx}">
-                            <span style="font-weight:700;color:var(--muted)">${String.fromCharCode(65 + optIdx)}.</span>
-                            <span>${esc(opt)}</span>
-                          </button>
-                        `).join("")}
-                      </div>
-                      <div class="lis-video-feedback hidden"></div>
-                    </div>
-                  `).join("")}
+                <div id="dauScoreRingWrap">
+                  ${curScore !== undefined ? `
+                    <div class="score-ring ${curScore >= 80 ? "" : curScore >= 50 ? "mid" : "low"}" title="Độ chính xác">${curScore}%</div>
+                  ` : ""}
                 </div>
               </div>
+
+              <!-- RECOGNITION HEARD BOX (FEEDBACK) -->
+              <div id="dauHeardFeedback" class="dau-heard-box hidden"></div>
             </div>
 
-            <!-- RIGHT COLUMN: SENTENCES LIST (DAUENGLISH SIDE PANEL) -->
-            <div class="dau-shadow-right-col">
-              <div class="dau-side-header">
+            <!-- VIDEO QUIZ COMPREHENSION (Giữ nguyên vẹn 100% nội dung câu hỏi) -->
+            <div class="lis-video-quiz-box" style="margin-top:20px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
                 <div>
-                  <h4 style="margin:0;font-size:0.95rem;font-weight:700">📋 Danh sách câu</h4>
-                  <span style="font-size:0.75rem;color:var(--muted)">Bấm câu để luyện ngay</span>
+                  <h3 style="margin:0 0 4px;font-size:1.15rem">🧠 Bài trắc nghiệm kiểm tra sau khi xem video</h3>
+                  <p style="margin:0;font-size:0.85rem;color:var(--muted)">Xem kỹ đoạn trích video trên và chọn đáp án đúng nhất cho các câu hỏi sau:</p>
                 </div>
-                <div class="dau-side-counter">
-                  Đã đạt: <b id="dauSidePassed" class="text-primary">${passedCount}</b>/${totalSentences}
+                <div id="videoQuizScore" class="dau-meta-pill" style="font-weight:700;color:var(--primary)">
+                  Tiến độ: 0/${videoQuestions.length} câu
                 </div>
               </div>
 
-              <!-- MINI PROGRESS BAR -->
-              <div class="dau-side-progress-bar">
-                <div class="dau-side-progress-fill" id="dauProgressFill" style="width: ${progressPct}%"></div>
-              </div>
-
-              <!-- SCROLLABLE SENTENCE LIST -->
-              <div class="dau-sentence-scroll-list" id="dauSentenceList">
-                ${lesson.lines.map((l, idx) => {
-                  const sScore = scores[idx];
-                  const isActive = idx === activeSentenceIdx;
-                  return `
-                    <button type="button" class="dau-sentence-item ${isActive ? "active" : ""}" data-sentence-idx="${idx}">
-                      <div class="dau-item-idx ${isActive ? "active" : ""}">#${idx + 1}</div>
-                      <div class="dau-item-body">
-                        <div class="dau-item-speaker">${esc(l.who)}</div>
-                        <div class="dau-item-ru ru">${esc(l.ru)}</div>
-                        ${showTranslation && l.vi ? `<div class="dau-item-vi">${esc(l.vi)}</div>` : ""}
-                      </div>
-                      <div class="dau-item-status">
-                        ${sScore !== undefined ? `
-                          <span class="dau-mini-score ${sScore >= 70 ? "pass" : "retry"}">${sScore}%</span>
-                        ` : `
-                          <span class="dau-mini-play">🔊</span>
-                        `}
-                      </div>
-                    </button>
-                  `;
-                }).join("")}
+              <div class="lis-video-questions-list">
+                ${videoQuestions.map((q, qIdx) => `
+                  <div class="lis-video-q-card" data-q-idx="${qIdx}">
+                    <div class="lis-video-q-title">${esc(q.q)}</div>
+                    <div class="lis-video-opt-list">
+                      ${q.options.map((opt, optIdx) => `
+                        <button type="button" class="lis-video-opt-btn" data-opt-idx="${optIdx}">
+                          <span style="font-weight:700;color:var(--muted)">${String.fromCharCode(65 + optIdx)}.</span>
+                          <span>${esc(opt)}</span>
+                        </button>
+                      `).join("")}
+                    </div>
+                    <div class="lis-video-feedback hidden"></div>
+                  </div>
+                `).join("")}
               </div>
             </div>
           </div>
 
-          <!-- STICKY BOTTOM TOOLBAR (DauEnglish style) -->
-          <div class="dau-shadow-bottom-bar">
-            <div class="dau-bot-left">
-              <button type="button" class="btn btn-outline btn-sm" id="btnPrevSentence" ${activeSentenceIdx === 0 ? "disabled" : ""}>
-                ← Câu trước
-              </button>
-            </div>
-
-            <div class="dau-bot-center">
-              <button type="button" class="btn btn-primary btn-sm" id="btnBottomPlay">
-                🔊 Nghe lại (Space)
-              </button>
-              <button type="button" class="btn btn-soft btn-sm" id="btnBottomMic">
-                🎙️ Luyện nói (R)
-              </button>
-              <button type="button" class="btn btn-primary btn-sm" id="btnNextSentence" ${activeSentenceIdx === totalSentences - 1 ? "disabled" : ""}>
-                Câu tiếp theo →
-              </button>
-            </div>
-
-            <div class="dau-bot-right">
-              <div class="dau-shortcuts-hint">
-                <kbd>Space</kbd> Nghe · <kbd>R</kbd> Mic · <kbd>←</kbd> <kbd>→</kbd> Chuyển câu
+          <!-- RIGHT COLUMN: SENTENCES LIST (DAUENGLISH SIDE PANEL) -->
+          <div class="dau-shadow-right-col">
+            <div class="dau-side-header">
+              <div>
+                <h4 style="margin:0;font-size:0.95rem;font-weight:700">📋 Danh sách câu</h4>
+                <span style="font-size:0.75rem;color:var(--muted)">Bấm câu để luyện ngay</span>
               </div>
+              <div class="dau-side-counter">
+                Đã đạt: <b id="dauSidePassed" class="text-primary">${passedCount}</b>/${totalSentences}
+              </div>
+            </div>
+
+            <!-- MINI PROGRESS BAR -->
+            <div class="dau-side-progress-bar">
+              <div class="dau-side-progress-fill" id="dauProgressFill" style="width: ${progressPct}%"></div>
+            </div>
+
+            <!-- SCROLLABLE SENTENCE LIST -->
+            <div class="dau-sentence-scroll-list" id="dauSentenceList">
+              ${lesson.lines.map((l, idx) => {
+                const sScore = scores[idx];
+                const isActive = idx === 0;
+                return `
+                  <button type="button" class="dau-sentence-item ${isActive ? "active" : ""}" data-sentence-idx="${idx}">
+                    <div class="dau-item-idx ${isActive ? "active" : ""}">#${idx + 1}</div>
+                    <div class="dau-item-body">
+                      <div class="dau-item-speaker">${esc(l.who)}</div>
+                      <div class="dau-item-ru ru">${esc(l.ru)}</div>
+                      <div class="dau-item-vi ${showSub && l.vi ? "" : "hidden"}">${esc(l.vi || "")}</div>
+                    </div>
+                    <div class="dau-item-status">
+                      ${sScore !== undefined ? `
+                        <span class="dau-mini-score ${sScore >= 70 ? "pass" : "retry"}">${sScore}%</span>
+                      ` : `
+                        <span class="dau-mini-play">🔊</span>
+                      `}
+                    </div>
+                  </button>
+                `;
+              }).join("")}
             </div>
           </div>
         </div>
-      `;
 
-      bindShadowingEvents();
-    };
+        <!-- STICKY BOTTOM TOOLBAR (DauEnglish style) -->
+        <div class="dau-shadow-bottom-bar">
+          <div class="dau-bot-left">
+            <button type="button" class="btn btn-outline btn-sm" id="btnPrevSentence" disabled>
+              ← Câu trước
+            </button>
+          </div>
+
+          <div class="dau-bot-center">
+            <button type="button" class="btn btn-primary btn-sm" id="btnBottomPlay">
+              🔊 Nghe lại (Space)
+            </button>
+            <button type="button" class="btn btn-soft btn-sm" id="btnBottomMic">
+              🎙️ Luyện nói (R)
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="btnNextSentence" ${totalSentences <= 1 ? "disabled" : ""}>
+              Câu tiếp theo →
+            </button>
+          </div>
+
+          <div class="dau-bot-right">
+            <div class="dau-shortcuts-hint">
+              <kbd>Space</kbd> Nghe · <kbd>R</kbd> Mic · <kbd>←</kbd> <kbd>→</kbd> Chuyển câu
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
 
     // Play active sentence with repeat and waveform animation
     const playCurrentSentence = () => {
@@ -3130,35 +3266,119 @@ function initListeningPage() {
       const waveBox = mb.querySelector("#shadowWaveBox");
       if (waveBox) waveBox.classList.add("active");
 
+      if (currentSpeakTimer) {
+        clearTimeout(currentSpeakTimer);
+        currentSpeakTimer = null;
+      }
+      if ("speechSynthesis" in window) {
+        speechSynthesis.cancel();
+      }
+
       let remainingRepeats = repeatCount;
       const doSpeak = () => {
         speak(curLine.ru, "ru-RU", localSpeed);
         remainingRepeats--;
         if (remainingRepeats > 0) {
-          setTimeout(doSpeak, 1800);
+          currentSpeakTimer = setTimeout(doSpeak, 1800);
         } else {
-          setTimeout(() => {
+          currentSpeakTimer = setTimeout(() => {
             if (waveBox) waveBox.classList.remove("active");
+            currentSpeakTimer = null;
           }, 1500);
         }
       };
       doSpeak();
     };
 
-    // Select sentence and update UI
+    // Select sentence and update UI in place (zero lag, zero iframe reload)
     const selectSentence = (idx, autoPlay = true) => {
       if (idx < 0 || idx >= totalSentences) return;
       activeSentenceIdx = idx;
-      renderShadowingUI();
+      const curLine = lesson.lines[activeSentenceIdx] || lesson.lines[0];
+      const curScore = scores[activeSentenceIdx];
 
-      // Auto scroll active sentence into view in right panel
-      setTimeout(() => {
-        const list = mb.querySelector("#dauSentenceList");
-        const activeItem = list?.querySelector(`[data-sentence-idx="${idx}"]`);
-        if (activeItem && list) {
-          activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
-        }
-      }, 50);
+      // Update active card elements in place without touching iframe
+      const idxEl = mb.querySelector("#dauCurSentenceIdx");
+      if (idxEl) idxEl.textContent = `Câu ${activeSentenceIdx + 1} / ${totalSentences}`;
+
+      const speakerEl = mb.querySelector("#dauCurSpeaker");
+      if (speakerEl) speakerEl.textContent = `🗣️ ${curLine.who}`;
+
+      const badgeWrap = mb.querySelector("#dauCurScoreBadgeWrap");
+      if (badgeWrap) {
+        badgeWrap.innerHTML = curScore !== undefined ? `
+          <span class="dau-score-badge ${curScore >= 70 ? "pass" : "retry"}">
+            ${curScore >= 70 ? `✓ Đạt ${curScore}%` : `${curScore}% (luyện lại)`}
+          </span>
+        ` : "";
+      }
+
+      const ruEl = mb.querySelector("#dauCurRu");
+      if (ruEl) ruEl.textContent = curLine.ru;
+
+      const viEl = mb.querySelector("#dauCurVi");
+      if (viEl) {
+        viEl.textContent = curLine.vi || "";
+        viEl.classList.toggle("hidden", !showSub || !curLine.vi);
+      }
+
+      const subRu = mb.querySelector("#dauSubRu");
+      if (subRu) subRu.textContent = curLine.ru;
+
+      const subVi = mb.querySelector("#dauSubVi");
+      if (subVi) {
+        subVi.textContent = curLine.vi || "";
+        subVi.classList.toggle("hidden", !showSub || !curLine.vi);
+      }
+
+      const micStatus = mb.querySelector("#dauMicStatus");
+      if (micStatus) {
+        micStatus.innerHTML = curScore !== undefined ? `Điểm gần nhất: <b>${curScore}%</b>` : `Bấm <b>🎤</b> và đọc nhại lại câu tiếng Nga`;
+      }
+
+      const scoreRingWrap = mb.querySelector("#dauScoreRingWrap");
+      if (scoreRingWrap) {
+        scoreRingWrap.innerHTML = curScore !== undefined ? `
+          <div class="score-ring ${curScore >= 80 ? "" : curScore >= 50 ? "mid" : "low"}" title="Độ chính xác">${curScore}%</div>
+        ` : "";
+      }
+
+      const heardBox = mb.querySelector("#dauHeardFeedback");
+      if (heardBox) {
+        heardBox.classList.add("hidden");
+        heardBox.innerHTML = "";
+      }
+
+      const waveBox = mb.querySelector("#shadowWaveBox");
+      if (waveBox) waveBox.classList.remove("active");
+
+      // Bottom bar buttons
+      const btnPrev = mb.querySelector("#btnPrevSentence");
+      if (btnPrev) btnPrev.disabled = activeSentenceIdx === 0;
+
+      const btnNext = mb.querySelector("#btnNextSentence");
+      if (btnNext) btnNext.disabled = activeSentenceIdx === totalSentences - 1;
+
+      // Sentence list highlight
+      mb.querySelectorAll(".dau-sentence-item").forEach((item) => {
+        const itemIdx = parseInt(item.dataset.sentenceIdx, 10);
+        const isAct = itemIdx === activeSentenceIdx;
+        item.classList.toggle("active", isAct);
+        const numBox = item.querySelector(".dau-item-idx");
+        if (numBox) numBox.classList.toggle("active", isAct);
+      });
+
+      const list = mb.querySelector("#dauSentenceList");
+      const activeItem = mb.querySelector(`.dau-sentence-item[data-sentence-idx="${activeSentenceIdx}"]`);
+      if (list && activeItem) {
+        const itemTop = activeItem.offsetTop - list.offsetTop;
+        list.scrollTo({ top: Math.max(0, itemTop - 20), behavior: "smooth" });
+      }
+
+      if (currentSpeakTimer) {
+        clearTimeout(currentSpeakTimer);
+        currentSpeakTimer = null;
+      }
 
       if (autoPlay) {
         playCurrentSentence();
@@ -3230,6 +3450,16 @@ function initListeningPage() {
             Progress.addXp(10);
             toast("Tuyệt vời! Phát âm chuẩn (+10 XP) 🎉");
           }
+        }
+
+        // Update active sentence score badge in card head
+        const badgeWrap = mb.querySelector("#dauCurScoreBadgeWrap");
+        if (badgeWrap) {
+          badgeWrap.innerHTML = `
+            <span class="dau-score-badge ${sim >= 70 ? "pass" : "retry"}">
+              ${sim >= 70 ? `✓ Đạt ${sim}%` : `${sim}% (luyện lại)`}
+            </span>
+          `;
         }
 
         // Update side panel counters
@@ -3308,6 +3538,12 @@ function initListeningPage() {
           currentSpeed = localSpeed;
           mb.querySelectorAll(".btn-yt-sp").forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
+
+          // Sync with header speed pills
+          host.querySelectorAll(".ws-head [data-sp]").forEach((s) => {
+            s.classList.toggle("active", parseFloat(s.dataset.sp) === localSpeed);
+          });
+
           const iframe = mb.querySelector("#lisYtIframe");
           if (iframe && iframe.contentWindow) {
             iframe.contentWindow.postMessage(JSON.stringify({
@@ -3320,13 +3556,11 @@ function initListeningPage() {
         };
       });
 
-      // Toggle translation button
+      // Toggle translation button in video bar
       const btnSub = mb.querySelector("#btnToggleSubTrans");
       if (btnSub) {
         btnSub.onclick = () => {
-          showTranslation = !showTranslation;
-          showSub = showTranslation;
-          renderShadowingUI();
+          setTranslationVisible(!showSub);
         };
       }
 
@@ -3400,6 +3634,7 @@ function initListeningPage() {
 
     // Keyboard navigation handler (DauEnglish shortcuts)
     const handleKeyNav = (e) => {
+      if (typeof getActiveMode === "function" && getActiveMode() !== "video") return;
       if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName) || e.target.isContentEditable) return;
       if (e.code === "Space") {
         e.preventDefault();
@@ -3416,10 +3651,15 @@ function initListeningPage() {
       }
     };
 
+    if (window._dauShadowKeyHandler) {
+      window.removeEventListener("keydown", window._dauShadowKeyHandler);
+      window._dauShadowKeyHandler = null;
+    }
+    window._dauShadowKeyHandler = handleKeyNav;
     window.addEventListener("keydown", handleKeyNav);
 
-    // Initial render
-    renderShadowingUI();
+    // Initial event binding
+    bindShadowingEvents();
   };
 
   const modeFull = (mb, lesson) => {
@@ -3431,7 +3671,7 @@ function initListeningPage() {
         <span class="line-ru ru">${esc(l.ru)}
           <button class="btn btn-outline btn-sm speak-line" style="margin-left:8px;padding:2px 10px">🔊</button>
         </span>
-        ${showSub && l.vi ? `<span class="line-vi">${esc(l.vi)}</span>` : ""}
+        <span class="line-vi ${showSub && l.vi ? "" : "hidden"}">${esc(l.vi || "")}</span>
       </div>`
       )
       .join("");
@@ -3733,10 +3973,12 @@ function initSpeakingPage() {
       });
     }
 
+    document.body.classList.remove("in-workspace");
     renderSpeakingCards();
   };
 
   const openSpeakingWorkspace = (set) => {
+    document.body.classList.add("in-workspace");
     const todayKey = "speak_today_" + new Date().toDateString();
     const attemptsToday = STORE.get(todayKey, 0);
 
@@ -3750,18 +3992,14 @@ function initSpeakingPage() {
           <span class="dau-badge ${set.level === "A2" ? "dau-badge-a2" : set.level === "B1" ? "dau-badge-b1" : set.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${set.level}</span>
           <span class="dau-workspace-title">${set.icon || "🎙️"} ${esc(set.title)}</span>
         </div>
-        <div style="font-size:0.85rem;color:var(--muted)">
+        <div style="font-size:0.85rem;color:var(--muted);margin-left:auto">
           Đã luyện hôm nay: <b>${attemptsToday}/2 lượt miễn phí</b> ${Monetization.isPro() ? '<b style="color:var(--green)">(PRO Không giới hạn)</b>' : ""}
         </div>
       </div>
 
-      <div class="workspace">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-          <div>
-            <span class="pro-chip">${esc(set.levelName || set.level)}</span>
-            <h2 style="margin:4px 0">${esc(set.title)}</h2>
-            <p style="color:var(--muted);font-size:0.9rem">${esc(set.phonemeTarget || "Bấm 🔊 để nghe phát âm mẫu, sau đó bấm 🎤 và đọc to câu tiếng Nga.")}</p>
-          </div>
+      <div class="workspace" style="max-width:920px;margin:0 auto">
+        <div style="text-align:center;margin-bottom:18px">
+          <p style="color:var(--muted);font-size:0.92rem;margin:0">💡 ${esc(set.phonemeTarget || "Bấm 🔊 để nghe phát âm mẫu, sau đó bấm 🎤 và đọc to câu tiếng Nga.")}</p>
         </div>
 
         <div id="speakWaveBox" class="waveform-box">
@@ -3774,10 +4012,12 @@ function initSpeakingPage() {
         ${set.items.map((item, i) => {
           const best = STORE.get("speak_" + set.id + "_" + i, null);
           return `
-            <div class="speak-item" data-i="${i}">
-              <p class="target ru">${esc(item.ru)} <button class="btn btn-outline btn-sm btn-tts">🔊 Nghe mẫu</button></p>
-              <p class="target-vi">${esc(item.vi)}</p>
-              <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:10px">
+            <div class="speak-item" data-i="${i}" style="text-align:center">
+              <p class="target ru" style="font-size:1.35rem;font-weight:700;line-height:1.55;margin-bottom:8px">
+                ${esc(item.ru)} <button type="button" class="btn btn-outline btn-sm btn-tts" style="margin-left:8px;vertical-align:middle">🔊 Nghe mẫu</button>
+              </p>
+              <p class="target-vi" style="font-size:0.95rem;margin-bottom:14px;color:var(--muted)">${esc(item.vi)}</p>
+              <div style="display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:10px">
                 <button class="mic-btn" aria-label="Nói">🎤</button>
                 ${best !== null ? `<div class="score-ring ${best >= 80 ? "" : best >= 50 ? "mid" : "low"}" title="Kết quả tốt nhất">${best}%</div>` : ""}
                 <span class="speak-status" style="color:var(--muted);font-size:.88rem">Bấm mic và đọc câu tiếng Nga</span>
@@ -3789,6 +4029,7 @@ function initSpeakingPage() {
     `;
 
     el("#btnBackSpList").onclick = () => {
+      document.body.classList.remove("in-workspace");
       renderHub();
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
@@ -4068,10 +4309,12 @@ function initWritingPage() {
       });
     }
 
+    document.body.classList.remove("in-workspace");
     renderWritingCards();
   };
 
   const openWritingWorkspace = (t) => {
+    document.body.classList.add("in-workspace");
     host.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
@@ -4082,23 +4325,16 @@ function initWritingPage() {
           <span class="dau-badge ${t.level === "A2" ? "dau-badge-a2" : t.level === "B1" ? "dau-badge-b1" : t.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${t.level}</span>
           <span class="dau-workspace-title">${t.icon || "✍️"} ${esc(t.title)}</span>
         </div>
-        <span style="font-size:0.85rem;color:var(--muted)">Yêu cầu: tối thiểu ${t.minWords} từ</span>
+        <span style="font-size:0.85rem;color:var(--muted);margin-left:auto">Mục tiêu: tối thiểu <b>${t.minWords} từ</b></span>
       </div>
 
-      <div class="workspace" data-w="${t.id}">
-        <div class="ws-head">
-          <div>
-            <span class="pro-chip">${esc(t.levelName || t.level)} · ${esc(t.categoryName || "Tự luận")}</span>
-            <h2 style="margin:4px 0">${esc(t.title)}</h2>
-            <p class="ws-sub">📝 ${esc(t.vi)}</p>
-          </div>
+      <div class="workspace" data-w="${t.id}" style="max-width:980px;margin:0 auto">
+        ${t.image_url ? `<div class="writing-photo-card" style="text-align:center;margin-bottom:16px"><img src="${esc(t.image_url)}" class="writing-photo-img" style="max-height:280px;border-radius:12px;box-shadow:var(--shadow)" alt="Bối cảnh tả tranh" /></div>` : ""}
+
+        <div class="ru" style="background:var(--bg);padding:16px 20px;border-radius:12px;border:1px solid var(--border);margin-bottom:14px">
+          <div style="font-size:1.05rem;font-weight:700;line-height:1.6;margin-bottom:6px">📌 <b>Đề bài:</b> ${esc(t.prompt)}</div>
+          ${t.vi ? `<div style="font-size:0.9rem;color:var(--muted);line-height:1.5">${esc(t.vi)}</div>` : ""}
         </div>
-
-        ${t.image_url ? `<div class="writing-photo-card"><img src="${esc(t.image_url)}" class="writing-photo-img" alt="Bối cảnh tả tranh" /></div>` : ""}
-
-        <p class="ru" style="background:var(--bg);padding:14px 18px;border-radius:10px;border:1px solid var(--border);margin-bottom:12px">
-          <b>Đề bài:</b> ${esc(t.prompt)}
-        </p>
 
         ${
           t.suggested_words && t.suggested_words.length
@@ -4159,6 +4395,7 @@ function initWritingPage() {
     `;
 
     el("#btnBackWriteList").onclick = () => {
+      document.body.classList.remove("in-workspace");
       renderHub();
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
@@ -4519,10 +4756,12 @@ function initMockTestPage() {
       });
     }
 
+    document.body.classList.remove("in-workspace");
     renderTrkiCards();
   };
 
   const startTest = () => {
+    document.body.classList.add("in-workspace");
     started = true;
     answers = {};
     tabSwitches = 0;
@@ -4716,6 +4955,7 @@ function initMockTestPage() {
       if (confirm("Bạn có chắc chắn muốn rời khỏi phòng thi? Kết quả hiện tại sẽ không được lưu.")) {
         clearInterval(timer);
         if (visibilityHandler) document.removeEventListener("visibilitychange", visibilityHandler);
+        document.body.classList.remove("in-workspace");
         renderHub();
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -4880,9 +5120,9 @@ function initMockTestPage() {
         .join("");
     });
 
-    el("#btnReviewBack").onclick = () => { renderHub(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+    el("#btnReviewBack").onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); window.scrollTo({ top: 0, behavior: "smooth" }); };
     el("#btnRetryTop").onclick = startTest;
-    el("#retryTest").onclick = renderHub;
+    el("#retryTest").onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); };
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 

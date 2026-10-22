@@ -57,6 +57,12 @@
     /** Lấy đối tượng Supabase JS gốc */
     getClient: getClient,
 
+    /** Đặt lại client khi thay đổi key hoặc cấu hình */
+    resetClient: function () {
+      client = null;
+      return getClient();
+    },
+
     /**
      * Kiểm tra trạng thái kết nối tới Database Supabase
      * Trả về: { ok: boolean, latency: number, message: string, details?: any }

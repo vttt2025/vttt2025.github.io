@@ -2027,7 +2027,7 @@ function mergeAdminData() {
 
     // Nạp item gốc trừ các item đã bị đánh dấu xoá
     target.forEach((it) => {
-      const key = it.id || it.title;
+      const key = it.id || it.slug || it.title;
       if (key && !deletedSet.has(key)) {
         map.set(key, it);
       }
@@ -2039,7 +2039,8 @@ function mergeAdminData() {
         const clean = { ...it };
         delete clean.__admin;
         delete clean.__source;
-        const key = clean.id || clean.title;
+        delete clean.__fromSupabase;
+        const key = clean.id || clean.slug || clean.title;
         if (!key || deletedSet.has(key)) return;
         map.set(key, clean);
       });

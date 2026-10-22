@@ -22,8 +22,8 @@
 
   window.SUPABASE_CONFIG = {
     url: "https://nrhtdwjihnlaxrbitmcf.supabase.co",
-    // Khoá Publishable / Anon Key công khai của dự án
-    anonKey: storedAnon || "sb_publishable_uH04ZRxHiAX8bCSXORUzyA_epTAsHsh"
+    // Khoá Anon Key công khai của dự án Supabase
+    anonKey: storedAnon || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaHRkd2ppaG5sYXhyYml0bWNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1ODk5MjgsImV4cCI6MjEwODE2NTkyOH0.qMGTYhVyoyht7jrBCSN2VczeqShmsBedC-Qdg_C5-FI"
   };
 
   /** Kiểm tra xem đã cấu hình khoá Anon Key hợp lệ chưa */

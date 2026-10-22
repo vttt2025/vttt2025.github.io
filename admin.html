@@ -1,81 +1,31 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quản trị Hệ Thống — RUSI TRKI</title>
+  <title>Payload CMS — RUSI TRKI Content Studio</title>
   <meta name="robots" content="noindex, nofollow" />
   <link rel="canonical" href="https://rusitrki.com/admin.html" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=3.1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css?v=3.2" />
   <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
-  <style>
-    /* CSS riêng cho admin — đặt inline để admin hoạt động kể cả khi styles.css lỗi */
-    .admin-tabs { display:flex; gap:6px; flex-wrap:wrap; border-bottom:1px solid var(--border); margin-bottom:18px; }
-    .admin-tab { padding:10px 16px; border:none; background:none; cursor:pointer; font-weight:600; color:var(--muted); border-bottom:2px solid transparent; font-size:.92rem; font-family:inherit; }
-    .admin-tab:hover { color:var(--text); }
-    .admin-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
-    .admin-list { display:grid; gap:10px; }
-    .admin-item { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:14px 16px; display:flex; align-items:center; gap:12px; }
-    .admin-item-meta { flex:1; min-width:0; }
-    .admin-item-title { font-weight:700; font-size:.95rem; margin-bottom:4px; word-break:break-word; }
-    .admin-item-sub { font-size:.82rem; color:var(--muted); word-break:break-word; }
-    .admin-item-badge { display:inline-block; font-size:.7rem; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--violet-soft); color:var(--violet); margin-left:6px; }
-    .admin-item-badge.original { background:var(--primary-soft); color:var(--primary); }
-    .admin-empty { text-align:center; padding:40px 20px; color:var(--muted); background:var(--surface); border:1px dashed var(--border); border-radius:10px; }
-    .admin-toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
-    .admin-modal-back { position:fixed; inset:0; background:rgba(16,24,40,.55); z-index:300; display:none; align-items:flex-start; justify-content:center; overflow:auto; padding:30px 16px; }
-    .admin-modal-back.open { display:flex; }
-    .admin-modal { background:var(--surface); border-radius:14px; width:100%; max-width:780px; box-shadow:0 20px 60px rgba(16,24,40,.25); }
-    .admin-modal-head { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
-    .admin-modal-head h3 { margin:0; font-size:1.05rem; }
-    .admin-modal-close { background:none; border:none; font-size:1.4rem; cursor:pointer; color:var(--muted); padding:0 4px; line-height:1; }
-    .admin-modal-body { padding:20px; max-height:75vh; overflow:auto; }
-    .admin-modal-foot { display:flex; justify-content:flex-end; gap:8px; padding:14px 20px; border-top:1px solid var(--border); background:#fafbfd; border-radius:0 0 14px 14px; }
-    .form-row { display:flex; gap:10px; margin-bottom:12px; }
-    .form-row > * { flex:1; min-width:0; }
-    .form-label { display:block; font-size:.82rem; font-weight:600; color:var(--text); margin-bottom:5px; }
-    .form-input, .form-textarea, .form-select { width:100%; padding:8px 10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:.9rem; background:var(--surface); color:var(--text); }
-    .form-textarea { resize:vertical; min-height:60px; }
-    .form-input:focus, .form-textarea:focus, .form-select:focus { outline:none; border-color:var(--primary); box-shadow:0 0 0 3px var(--primary-soft); }
-    .form-section { margin-bottom:18px; padding:12px 14px; background:#fafbfd; border:1px solid var(--border); border-radius:10px; }
-    .form-section h4 { margin:0 0 10px; font-size:.88rem; font-weight:700; color:var(--text); display:flex; justify-content:space-between; align-items:center; }
-    .form-section h4 button { font-size:.78rem; padding:4px 10px; }
-    .form-list-item { display:flex; gap:6px; margin-bottom:6px; align-items:flex-start; }
-    .form-list-item > * { min-width:0; }
-    .form-list-item .form-input { flex:1; }
-    .form-list-item .form-remove { background:none; border:none; color:var(--red); cursor:pointer; padding:4px 8px; font-size:1rem; line-height:1; }
-    .form-help { font-size:.78rem; color:var(--muted); margin-top:4px; }
-    .admin-stats { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; font-size:.82rem; color:var(--muted); }
-    .admin-stats span { padding:3px 10px; background:var(--surface); border:1px solid var(--border); border-radius:999px; }
-    .admin-stats b { color:var(--text); }
-    .login-gate { text-align:center; padding:60px 20px; }
-    .login-gate h2 { margin-bottom:12px; }
-    .login-gate p { color:var(--muted); margin-bottom:24px; }
-    @media (max-width:640px){ .form-row { flex-direction:column; gap:8px; } }
-  </style>
 </head>
-<body data-page="admin">
-  <div id="app-header"></div>
+<body class="payload-body" data-page="admin">
 
-  <section class="page-hero">
-    <div class="container">
-      <h1>🛠️ Quản trị nội dung (CMS)</h1>
-      <p>Quản lý toàn diện hệ thống: Đề thi TRKI, Lọ từ vựng, Shop hàng Nga, Gói PRO, Blog & Kỹ năng. Dữ liệu được đồng bộ trực tiếp về trang web.</p>
-    </div>
-  </section>
-
-  <main class="container" style="padding-bottom:60px">
-
-    <!-- Gate đăng nhập — ẩn khi đã đăng nhập -->
-    <div id="loginGate" class="login-gate" style="display:none">
-      <h2>🔒 Vui lòng đăng nhập</h2>
-      <p>Trang quản trị yêu cầu tài khoản Quản trị viên (Google Auth).</p>
-      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-google" id="adminLoginBtn" type="button">
-          <svg class="g-icon" viewBox="0 0 48 48" aria-hidden="true">
+  <!-- ========================================================================
+       GATE 1: LOGIN GATE (Khi chưa đăng nhập)
+       ======================================================================== -->
+  <div id="loginGate" class="payload-gate-screen" style="display:none">
+    <div class="payload-gate-card">
+      <div class="payload-gate-logo">P</div>
+      <h2 style="margin:0 0 8px 0;font-size:20px;font-weight:700">RUSI TRKI — Payload Studio</h2>
+      <p style="color:var(--p-text-muted);margin:0 0 24px 0;font-size:13.5px">Hệ thống quản trị nội dung mã nguồn mở. Vui lòng xác thực tài khoản quản trị.</p>
+      
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <button class="p-btn p-btn-primary" id="adminLoginBtn" type="button" style="width:100%;padding:10px 16px;font-size:14px">
+          <svg style="width:18px;height:18px;margin-right:6px" viewBox="0 0 48 48" aria-hidden="true">
             <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8a12 12 0 1 1 7.9-21l5.7-5.7A20 20 0 1 0 44 24c0-1.2-.1-2.4-.4-3.5z"/>
             <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7A20 20 0 0 0 6.3 14.7z"/>
             <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2A12 12 0 0 1 12.7 28l-6.6 5.1A20 20 0 0 0 24 44z"/>
@@ -83,128 +33,260 @@
           </svg>
           Đăng nhập bằng Google
         </button>
-        <button class="btn btn-soft" id="btnDevBypass" type="button" title="Dành cho kiểm thử cục bộ offline">
-          ⚡ Vào nhanh chế độ Dev Mode
+        <button class="p-btn p-btn-secondary" id="btnDevBypass" type="button" style="width:100%">
+          ⚡ Mở Chế độ Dev Mode (Cục bộ offline)
         </button>
       </div>
     </div>
+  </div>
 
-    <!-- Gate từ chối quyền — hiển thị khi đã đăng nhập nhưng email không thuộc ADMIN_EMAILS -->
-    <div id="deniedGate" class="login-gate" style="display:none">
-      <h2>🚫 Từ chối truy cập</h2>
-      <p id="deniedInfo" style="color:var(--text);font-weight:600;margin-bottom:8px"></p>
-      <p style="color:var(--muted);margin-bottom:20px">Tài khoản này chưa được cấu hình quyền Admin trong <code>firebase-config.js</code>.</p>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-        <button class="btn btn-primary btn-sm" id="btnSwitchAccount" type="button">🔄 Đổi tài khoản Gmail khác</button>
-        <button class="btn btn-soft btn-sm" id="btnDevBypass2" type="button">⚡ Mở bằng Dev Mode (Cục bộ)</button>
+  <!-- ========================================================================
+       GATE 2: DENIED GATE (Email không thuộc danh sách Admin)
+       ======================================================================== -->
+  <div id="deniedGate" class="payload-gate-screen" style="display:none">
+    <div class="payload-gate-card">
+      <div class="payload-gate-logo" style="background:#ef4444">✕</div>
+      <h2 style="margin:0 0 8px 0;font-size:20px;font-weight:700">Từ chối truy cập</h2>
+      <p id="deniedInfo" style="color:var(--p-text);font-weight:600;margin-bottom:6px"></p>
+      <p style="color:var(--p-text-muted);margin:0 0 24px 0;font-size:13px">Email này chưa được cấp quyền Quản trị viên trong <code>firebase-config.js</code>.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="p-btn p-btn-primary" id="btnSwitchAccount" type="button">🔄 Đổi tài khoản Gmail khác</button>
+        <button class="p-btn p-btn-secondary" id="btnDevBypass2" type="button">⚡ Mở bằng Dev Mode (Cục bộ)</button>
       </div>
     </div>
+  </div>
 
-    <!-- Khu vực admin — ẩn khi chưa đăng nhập hoặc không đủ quyền -->
-    <div id="adminArea" style="display:none">
+  <!-- ========================================================================
+       MAIN PAYLOAD CMS APP SHELL
+       ======================================================================== -->
+  <div id="payloadApp" class="payload-app" style="display:none">
 
-      <div class="admin-stats" id="adminStats"></div>
+    <!-- SIDEBAR -->
+    <aside class="payload-sidebar" id="payloadSidebar">
+      <div class="payload-sidebar-header">
+        <a href="#dashboard" class="payload-brand" id="brandLink">
+          <div class="payload-brand-logo">P</div>
+          <div class="payload-brand-text">
+            <span class="payload-brand-title">RUSI TRKI</span>
+            <span class="payload-brand-sub">Payload CMS v3</span>
+          </div>
+        </a>
+        <button class="p-btn-icon" id="sidebarCloseBtn" type="button" title="Đóng menu" style="display:none">✕</button>
+      </div>
 
-      <div class="admin-toolbar" style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <button class="btn btn-primary btn-sm" id="btnAdd" type="button">➕ Thêm mới</button>
-          <a class="btn btn-outline btn-sm" id="btnLiveView" href="#" target="_blank" title="Mở trang tương ứng của học viên trên tab mới">👁️ Xem trên web</a>
-          <button class="btn btn-primary btn-sm" id="btnSyncNow" type="button" style="background:var(--success);border-color:var(--success)" title="Cập nhật và kích hoạt tức thì dữ liệu trên toàn website">⚡ Đẩy dữ liệu về web</button>
-          <button class="btn btn-outline btn-sm" id="btnSupabase" type="button" style="border-color:#10b981;color:#10b981;display:inline-flex;align-items:center;gap:6px" title="Cấu hình và kiểm tra kết nối Supabase">
-            <span style="font-size:1rem">⚡</span> Kết nối Supabase
+      <div class="payload-sidebar-nav">
+        <!-- Dashboard Link -->
+        <div class="payload-nav-item" style="margin-bottom:14px">
+          <a class="payload-nav-link active" data-nav="dashboard" href="#dashboard">
+            <span class="payload-nav-icon">📊</span>
+            <span class="payload-nav-label">Bảng điều khiển (Overview)</span>
+          </a>
+        </div>
+
+        <!-- Group: Nội dung học tập -->
+        <div class="payload-nav-group">
+          <div class="payload-nav-heading">
+            <span>Học Tập & Khảo Thí</span>
+            <span class="payload-nav-badge" id="badgeCountStudy">6</span>
+          </div>
+          <ul class="payload-nav-list" id="navListStudy">
+            <!-- Render dynamically -->
+          </ul>
+        </div>
+
+        <!-- Group: Kinh doanh & Dịch vụ -->
+        <div class="payload-nav-group">
+          <div class="payload-nav-heading">
+            <span>Kinh Doanh & Dịch Vụ</span>
+            <span class="payload-nav-badge" id="badgeCountCommerce">3</span>
+          </div>
+          <ul class="payload-nav-list" id="navListCommerce">
+            <!-- Render dynamically -->
+          </ul>
+        </div>
+
+        <!-- Group: Hệ thống & Cấu hình -->
+        <div class="payload-nav-group">
+          <div class="payload-nav-heading">
+            <span>Hệ Thống & Khảo Thí</span>
+          </div>
+          <ul class="payload-nav-list">
+            <li class="payload-nav-item">
+              <a class="payload-nav-link" data-nav="collection:USERS" href="#collection/USERS">
+                <span class="payload-nav-icon">👥</span>
+                <span class="payload-nav-label">Học viên & Quản trị</span>
+                <span class="payload-nav-badge" id="navBadgeUsers">0</span>
+              </a>
+            </li>
+            <li class="payload-nav-item">
+              <a class="payload-nav-link" data-nav="globals:site-settings" href="#globals/site-settings">
+                <span class="payload-nav-icon">⚙️</span>
+                <span class="payload-nav-label">Cấu hình hệ thống</span>
+              </a>
+            </li>
+            <li class="payload-nav-item">
+              <a class="payload-nav-link" data-nav="supabase-sync" href="#supabase-sync">
+                <span class="payload-nav-icon">⚡</span>
+                <span class="payload-nav-label">Supabase Cloud Sync</span>
+                <span class="p-pill p-pill-success" style="font-size:9px;padding:1px 5px">Cloud</span>
+              </a>
+            </li>
+            <li class="payload-nav-item">
+              <a class="payload-nav-link" data-nav="api-explorer" href="#api-explorer">
+                <span class="payload-nav-icon">📡</span>
+                <span class="payload-nav-label">REST API & Schema</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- User footer -->
+      <div class="payload-sidebar-footer">
+        <div class="payload-user-box">
+          <div class="payload-user-avatar" id="sidebarAvatar">A</div>
+          <div class="payload-user-meta">
+            <div class="payload-user-name" id="sidebarUserName">Quản trị viên</div>
+            <div class="payload-user-role" id="sidebarUserRole">Super Admin</div>
+          </div>
+        </div>
+        <div class="payload-footer-actions">
+          <button class="p-btn-icon" id="btnToggleTheme" type="button" title="Chuyển đổi Sáng / Tối">🌙</button>
+          <a class="p-btn-icon" id="btnOpenLiveSite" href="index.html" target="_blank" title="Mở trang web học viên">👁️</a>
+          <button class="p-btn-icon" id="btnSignOut" type="button" title="Đăng xuất">🚪</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN STAGE -->
+    <main class="payload-stage">
+      <!-- TOPBAR -->
+      <header class="payload-topbar">
+        <div class="payload-topbar-left">
+          <button class="payload-menu-toggle" id="btnMenuToggle" type="button" aria-label="Mở menu điều hướng">
+            ☰
           </button>
-          <button class="btn btn-soft btn-sm" id="btnExport" type="button">📤 Export JSON / data.js</button>
-          <button class="btn btn-soft btn-sm" id="btnImport" type="button">📥 Import JSON</button>
-          <input type="file" id="importFile" accept="application/json,.json,.js" style="display:none" />
-          <button class="btn btn-soft btn-sm" id="btnReset" type="button" title="Khôi phục dữ liệu nguyên bản từ data.js">🗑️ Khôi phục gốc</button>
+          <nav class="payload-breadcrumbs" id="breadcrumbsNav" aria-label="Breadcrumb">
+            <a class="payload-crumb-item" href="#dashboard">Dashboard</a>
+          </nav>
         </div>
-        <div>
-          <input type="text" id="adminSearch" class="form-input" placeholder="🔍 Tìm kiếm bài / đề thi..." style="width:240px;padding:6px 12px;font-size:0.85rem" />
+
+        <div class="payload-topbar-right" id="topbarActions">
+          <!-- Dynamic Action Buttons & Kebab Menu -->
+        </div>
+      </header>
+
+      <!-- VIEW CONTAINER -->
+      <div class="payload-view-container" id="payloadViewContainer">
+        <!-- Views injected dynamically via admin.js:
+             1. #viewDashboard
+             2. #viewList
+             3. #viewEditor
+             4. #viewGlobals
+             5. #viewApiExplorer
+        -->
+      </div>
+    </main>
+
+    <!-- BACKDROP FOR MOBILE DRAWER & LIVE PREVIEW -->
+    <div class="payload-backdrop" id="payloadBackdrop"></div>
+
+    <!-- LIVE PREVIEW DRAWER (PAYLOAD 3.0 SIGNATURE) -->
+    <div class="payload-preview-drawer" id="previewDrawer">
+      <div class="payload-preview-head">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-weight:700;font-size:14px">👁️ Live Preview Studio</span>
+          <select class="payload-filter-select" id="previewPageSelector" style="font-size:12px;padding:4px 8px">
+            <option value="mock-test.html">Đề thi TRKI (mock-test.html)</option>
+            <option value="vocabulary.html">Lọ từ vựng (vocabulary.html)</option>
+            <option value="listening.html">Luyện nghe (listening.html)</option>
+            <option value="speaking.html">Luyện nói (speaking.html)</option>
+            <option value="writing.html">Luyện viết (writing.html)</option>
+            <option value="shop.html">Shop hàng Nga (shop.html)</option>
+            <option value="blog.html">Cẩm nang Blog (blog.html)</option>
+            <option value="index.html">Trang chủ (index.html)</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <button class="p-btn p-btn-secondary p-btn-sm" id="btnRefreshPreview" type="button" title="Làm mới khung xem thử">🔄 Tải lại</button>
+          <button class="p-btn-icon" id="btnClosePreview" type="button" title="Đóng xem trước">✕</button>
         </div>
       </div>
-
-      <div class="admin-tabs" id="adminTabs"></div>
-      <div id="adminList" class="admin-list"></div>
-
+      <iframe class="payload-preview-frame" id="previewIframe" src="about:blank"></iframe>
     </div>
 
-  </main>
+  </div>
 
-  <!-- Modal form thêm/sửa -->
-  <div class="admin-modal-back" id="modalBack">
-    <div class="admin-modal">
-      <div class="admin-modal-head">
-        <h3 id="modalTitle">Thêm bài học</h3>
-        <button class="admin-modal-close" id="modalClose" type="button" aria-label="Đóng">×</button>
+  <!-- ========================================================================
+       MODAL: SUPABASE CLOUD CONNECTION
+       ======================================================================== -->
+  <div class="payload-backdrop" id="modalSupabaseBackdrop"></div>
+  <div class="payload-preview-drawer" id="modalSupabaseDrawer" style="max-width:540px;width:90vw">
+    <div class="payload-preview-head">
+      <span style="font-weight:700">⚡ Kết nối Supabase PostgreSQL</span>
+      <button class="p-btn-icon" id="modalSbClose" type="button">✕</button>
+    </div>
+    <div style="padding:24px;overflow-y:auto;flex:1">
+      <div style="background:var(--p-surface-elevated);border:1px solid var(--p-border);border-radius:var(--p-radius-lg);padding:16px;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-weight:600;font-size:13px">Trạng thái đám mây:</span>
+          <span id="sbConnStatusBadge" class="p-pill p-pill-warning">Đang kiểm tra...</span>
+        </div>
+        <div id="sbConnMessage" style="font-size:12.5px;color:var(--p-text-muted)">Đang kiểm tra kết nối tới máy chủ Supabase...</div>
       </div>
-      <div class="admin-modal-body" id="modalBody"></div>
-      <div class="admin-modal-foot">
-        <button class="btn btn-soft btn-sm" id="modalCancel" type="button">Huỷ</button>
-        <button class="btn btn-primary btn-sm" id="modalSave" type="button">💾 Lưu</button>
+
+      <div class="p-form-group">
+        <label class="p-label">Supabase URL:</label>
+        <input type="text" class="p-input" id="sbUrlInput" value="https://nrhtdwjihnlaxrbitmcf.supabase.co" readonly style="font-family:var(--p-font-mono);font-size:12.5px" />
+      </div>
+
+      <div class="p-form-group">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <label class="p-label" style="margin:0">Supabase Anon Key (Public Key):</label>
+          <a href="https://supabase.com/dashboard/project/nrhtdwjihnlaxrbitmcf/settings/api" target="_blank" style="font-size:12px;color:var(--p-primary);text-decoration:none">Lấy key trên Dashboard ↗</a>
+        </div>
+        <textarea class="p-textarea" id="sbAnonKeyInput" rows="3" placeholder="Dán khoá anon key vào đây (eyJhbGciOi...)" style="font-family:var(--p-font-mono);font-size:12px"></textarea>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-bottom:20px">
+        <button class="p-btn p-btn-primary p-btn-sm" id="btnSaveSbKey" type="button">💾 Lưu khoá & Kết nối</button>
+        <button class="p-btn p-btn-secondary p-btn-sm" id="btnTestSbConn" type="button">🔄 Kiểm tra kết nối</button>
+      </div>
+
+      <div style="border-top:1px dashed var(--p-border);padding-top:16px;margin-bottom:20px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:8px">Đồng bộ cơ sở dữ liệu hai chiều:</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="p-btn p-btn-primary p-btn-sm" id="btnPushAllToSb" type="button">☁️ Đẩy toàn bộ dữ liệu lên Supabase</button>
+          <button class="p-btn p-btn-secondary p-btn-sm" id="btnPullAllFromSb" type="button">📥 Kéo dữ liệu từ Supabase về Web</button>
+        </div>
+      </div>
+
+      <div style="border-top:1px dashed var(--p-border);padding-top:16px">
+        <div style="font-weight:600;font-size:13px;margin-bottom:6px">Cơ sở dữ liệu PostgreSQL & Bảng:</div>
+        <p style="font-size:12.5px;color:var(--p-text-muted);margin:0 0 12px 0">Để tạo đầy đủ các bảng dữ liệu cho Payload CMS và Supabase, hãy chạy tệp <code>supabase-schema.sql</code>.</p>
+        <div style="display:flex;gap:8px">
+          <a href="https://supabase.com/dashboard/project/nrhtdwjihnlaxrbitmcf/sql/new" target="_blank" class="p-btn p-btn-secondary p-btn-sm">Mở Supabase SQL Editor ↗</a>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal Supabase Connection -->
-  <div class="admin-modal-back" id="modalSupabase">
-    <div class="admin-modal" style="max-width:580px">
-      <div class="admin-modal-head">
-        <h3>⚡ Kết nối Cơ sở dữ liệu Supabase</h3>
-        <button class="admin-modal-close" id="modalSbClose" type="button" aria-label="Đóng">×</button>
-      </div>
-      <div class="admin-modal-body" style="padding:20px;font-size:0.92rem;line-height:1.6">
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <span style="font-weight:600;color:var(--text)">Trạng thái kết nối:</span>
-            <span id="sbConnStatusBadge" style="padding:3px 10px;border-radius:20px;font-size:0.8rem;background:#fef3c7;color:#92400e;font-weight:600">Đang kiểm tra...</span>
-          </div>
-          <div id="sbConnMessage" style="font-size:0.85rem;color:var(--muted)">Đang kiểm tra thông tin cấu hình...</div>
-        </div>
+  <!-- FILE INPUT FOR IMPORT -->
+  <input type="file" id="importFileInput" accept="application/json,.json,.js" style="display:none" />
 
-        <div class="form-group" style="margin-bottom:14px">
-          <label style="display:block;font-weight:600;margin-bottom:4px">Supabase URL (Đã kết nối):</label>
-          <input type="text" class="form-input" id="sbUrlInput" value="https://nrhtdwjihnlaxrbitmcf.supabase.co" readonly style="background:var(--bg);font-family:monospace" />
-        </div>
+  <!-- TOAST NOTIFICATIONS CONTAINER -->
+  <div class="payload-toast-container" id="toastContainer"></div>
 
-        <div class="form-group" style="margin-bottom:14px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-            <label style="font-weight:600;margin:0">Supabase Anon Key (Public API Key):</label>
-            <a href="https://supabase.com/dashboard/project/nrhtdwjihnlaxrbitmcf/settings/api" target="_blank" style="font-size:0.8rem;color:var(--primary);text-decoration:underline">Lấy khoá trên Supabase ↗</a>
-          </div>
-          <textarea class="form-input" id="sbAnonKeyInput" rows="3" placeholder="Dán khoá anon key vào đây (bắt đầu bằng eyJhbGciOi... hoặc sb_publishable_...)" style="font-family:monospace;font-size:0.82rem;resize:vertical"></textarea>
-          <small style="color:var(--muted);display:block;margin-top:4px">Khoá này an toàn để dùng ở trình duyệt client với Row Level Security (RLS).</small>
-        </div>
-
-        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
-          <button class="btn btn-primary btn-sm" id="btnSaveSbKey" type="button">💾 Lưu khoá & Kiểm tra kết nối</button>
-          <button class="btn btn-soft btn-sm" id="btnTestSbConn" type="button">🔄 Thử kết nối lại</button>
-        </div>
-
-        <div style="border-top:1px dashed var(--border);padding-top:14px;margin-top:14px">
-          <div style="font-weight:600;margin-bottom:6px">Khởi tạo bảng cơ sở dữ liệu:</div>
-          <p style="font-size:0.85rem;color:var(--muted);margin:0 0 10px">Nếu dự án Supabase mới tạo chưa có các bảng (<code>profiles</code>, <code>trki_tests</code>, <code>vocab_jars</code>...), hãy mở SQL Editor và chạy tệp <code>supabase-schema.sql</code>.</p>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <a href="https://supabase.com/dashboard/project/nrhtdwjihnlaxrbitmcf/sql/new" target="_blank" class="btn btn-outline btn-sm">Mở Supabase SQL Editor ↗</a>
-            <a href="supabase-schema.sql" target="_blank" class="btn btn-soft btn-sm">Xem file supabase-schema.sql</a>
-          </div>
-        </div>
-      </div>
-      <div class="admin-modal-foot">
-        <button class="btn btn-soft btn-sm" id="modalSbCancel" type="button">Đóng</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="app-footer"></div>
+  <!-- SCRIPTS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="supabase-client.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script src="data.js?v=3.0"></script>
-  <script src="auth.js?v=3.0"></script>
-  <script src="app.js?v=3.0"></script>
-  <script src="admin.js?v=3.0"></script>
+  <script src="data.js?v=3.2"></script>
+  <script src="auth.js?v=3.2"></script>
+  <script src="app.js?v=3.2"></script>
+  <script src="admin.js?v=3.2"></script>
 </body>
 </html>
