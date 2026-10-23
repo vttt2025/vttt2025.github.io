@@ -15552,11 +15552,13 @@ body[data-page="blog"] .page-hero h1 span {
   background: #ffffff !important;
   border: 1.5px solid #d2e0f0 !important;
   border-radius: 18px !important;
-  flex-direction: column;
-  min-height: 235px;
-  padding: 22px;
+  flex-direction: column !important;
+  display: flex !important;
+  min-height: 240px !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
+  padding: 22px !important;
   transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease !important;
-  display: flex;
   cursor: pointer;
   position: relative;
   text-align: left;
@@ -15582,10 +15584,12 @@ body[data-page="blog"] .page-hero h1 span {
 }
 
 .topic-card-top {
-  justify-content: space-between;
-  align-items: center;
-  min-height: 24px;
-  display: flex;
+  justify-content: space-between !important;
+  align-items: center !important;
+  min-height: 24px !important;
+  display: flex !important;
+  margin-bottom: 12px !important;
+  flex-shrink: 0 !important;
 }
 
 .topic-number {
@@ -15672,67 +15676,80 @@ body[data-page="blog"] .page-hero h1 span {
   display: block;
 }
 .topic-card-main {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  margin-top: 14px;
-  margin-bottom: 8px;
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 14px !important;
+  margin-top: 0 !important;
+  margin-bottom: 14px !important;
+  flex: 1 0 auto !important;
 }
 
 .topic-card-main .topic-icon {
   margin-top: 2px !important;
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  flex-shrink: 0;
+  margin-bottom: 0 !important;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border-radius: 12px !important;
+  display: grid !important;
+  place-items: center !important;
+  flex-shrink: 0 !important;
+  background: #e3effc !important;
+  color: #1757a6 !important;
 }
 
 .topic-card-text {
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
 }
 
-.topic-card-text .topic-title {
-  margin: 0 0 4px 0 !important;
-  font-size: 17.5px !important;
-  font-weight: 700;
+.topic-card-text .topic-title,
+.topic-card .topic-title,
+.topic-card h3 {
+  margin: 0 0 6px 0 !important;
+  font-family: Inter, sans-serif !important;
+  font-size: 16.5px !important;
+  font-weight: 700 !important;
   color: #0f1f38 !important;
-  line-height: 1.3 !important;
+  line-height: 1.35 !important;
+  letter-spacing: -0.3px !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
 }
 
-.topic-card-text .topic-desc {
+.topic-card-text .topic-desc,
+.topic-card .topic-desc,
+.topic-card > p {
   margin: 0 !important;
   font-size: 12.5px !important;
+  font-weight: 500 !important;
   color: #53657a !important;
   line-height: 1.45 !important;
-}
-
-.topic-card h3,
-.topic-card .topic-title {
-  letter-spacing: -0.4px;
-  margin: 6px 0 8px;
-  font-family: Inter, sans-serif;
-  font-size: 19px;
-  font-weight: 700;
-  color: #0f1f38 !important;
-  line-height: 1.25;
-}
-
-.topic-card > p,
-.topic-card .topic-desc {
-  color: #53657a !important;
-  margin: 0;
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.45;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
 }
 
 .topic-progress {
-  margin-top: 16px;
+  margin-top: auto !important;
+  margin-bottom: 14px !important;
   background: #e2e8f0 !important;
-  border-radius: 10px;
-  height: 4px;
-  overflow: hidden;
+  border-radius: 10px !important;
+  height: 4px !important;
+  min-height: 4px !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+  width: 100% !important;
 }
 
 .topic-progress span {
@@ -15748,41 +15765,55 @@ body[data-page="blog"] .page-hero h1 span {
 }
 
 .topic-footer {
-  justify-content: space-between;
-  align-items: center;
-  margin-top: auto;
-  padding-top: 16px;
-  display: flex;
-  gap: 12px;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  border-top: none !important;
+  min-height: 34px !important;
+  display: flex !important;
+  gap: 10px !important;
+  flex-shrink: 0 !important;
+  width: 100% !important;
 }
 
 .topic-footer > span {
   color: #64748b !important;
-  text-transform: uppercase;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  text-transform: uppercase !important;
+  font-size: 10.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  min-width: 0 !important;
+  flex: 1 1 auto !important;
+  line-height: 1.2 !important;
 }
 
 .topic-footer-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-left: auto !important;
+  flex-shrink: 0 !important;
 }
 
 .topic-circle-btn {
   background: #f1f5f9 !important;
   border: 1px solid #cbd5e1 !important;
   color: #0f1f38 !important;
-  border-radius: 50%;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  display: grid;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
+  border-radius: 50% !important;
+  place-items: center !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  display: grid !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  flex-shrink: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
 }
 
 .topic-circle-btn:hover {
@@ -15815,15 +15846,20 @@ body[data-page="blog"] .page-hero h1 span {
   background: #e3effc !important;
   border: 1px solid rgba(23, 87, 166, 0.25) !important;
   color: #1757a6 !important;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 5px 12px;
-  border-radius: 999px;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s ease;
+  font-size: 11.5px !important;
+  font-weight: 600 !important;
+  padding: 5px 11px !important;
+  border-radius: 999px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  transition: all 0.2s ease !important;
+  height: 32px !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+  line-height: 1 !important;
 }
 
 .topic-text-btn:hover {
@@ -16904,19 +16940,40 @@ body[data-page="upgrade"] main.container {
     gap: 14px;
     margin-top: 20px;
   }
-  .topic-card {
-    min-height: 200px;
-    padding: 16px;
+  .topic-card,
+  .dau-card {
+    min-height: auto !important;
+    padding: 16px !important;
   }
   .topic-card-main .topic-icon {
-    width: 40px;
-    height: 40px;
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
   }
-  .topic-card-text .topic-title {
-    font-size: 16px !important;
+  .topic-card-text .topic-title,
+  .topic-card .topic-title,
+  .topic-card h3 {
+    font-size: 15.5px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
   }
-  .topic-card-text .topic-desc {
+  .topic-card-text .topic-desc,
+  .topic-card .topic-desc,
+  .topic-card > p {
     font-size: 12px !important;
+    min-height: 34px !important;
+    max-height: 34px !important;
+  }
+  .topic-text-btn {
+    height: 30px !important;
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+  }
+  .topic-circle-btn {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
   }
   .topic-article-container {
     padding: 20px 16px;

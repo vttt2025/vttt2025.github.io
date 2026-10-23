@@ -2112,7 +2112,6 @@ function initVocabPage() {
                 <span class="level-code">B2</span>
                 <small>Trung cấp cao</small>
                 <span class="level-tab-count" id="countB2">0</span>
-                <i class="level-tab-pro">PRO</i>
               </button>
             </div>
 
@@ -2964,7 +2963,7 @@ function initListeningPage() {
                 <button type="button" class="btn-listen-action topic-text-btn" data-listen-id="${l.id}" title="Luyện nghe">
                   ${window.RusiIcons ? RusiIcons.get("headphones", { size: 13 }) : ""} Luyện nghe
                 </button>
-                <button type="button" class="topic-circle-btn dau-card-cta" title="Luyện nghe">
+                <button type="button" class="btn-listen-action topic-circle-btn dau-card-cta" data-listen-id="${l.id}" title="Luyện nghe">
                   ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
                 </button>
               </div>
@@ -3050,13 +3049,11 @@ function initListeningPage() {
                 <span class="level-code">B1</span>
                 <small>Trung cấp</small>
                 <span class="level-tab-count" id="lisCountB1">${countB1}</span>
-                <i class="level-tab-pro">PRO</i>
               </button>
               <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
                 <span class="level-code">B2</span>
                 <small>Trung cấp cao</small>
                 <span class="level-tab-count" id="lisCountB2">${countB2}</span>
-                <i class="level-tab-pro">PRO</i>
               </button>
             </div>
 
@@ -4240,7 +4237,7 @@ function initSpeakingPage() {
                 <button type="button" class="btn-speak-action topic-text-btn" data-speak-id="${s.id}" title="Luyện nói">
                   ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 13 }) : ""} Luyện nói
                 </button>
-                <button type="button" class="topic-circle-btn dau-card-cta" title="Luyện nói">
+                <button type="button" class="btn-speak-action topic-circle-btn dau-card-cta" data-speak-id="${s.id}" title="Luyện nói">
                   ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
                 </button>
               </div>
@@ -4324,13 +4321,11 @@ function initSpeakingPage() {
                 <span class="level-code">B1</span>
                 <small>Trung cấp</small>
                 <span class="level-tab-count" id="spCountB1">${countB1}</span>
-                <i class="level-tab-pro">PRO</i>
               </button>
               <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
                 <span class="level-code">B2</span>
                 <small>Trung cấp cao</small>
                 <span class="level-tab-count" id="spCountB2">${countB2}</span>
-                <i class="level-tab-pro">PRO</i>
               </button>
             </div>
 
@@ -4621,7 +4616,7 @@ function initWritingPage() {
                 <button type="button" class="btn-write-action topic-text-btn" data-write-id="${t.id}" title="Luyện viết">
                   ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 13 }) : ""} Luyện viết
                 </button>
-                <button type="button" class="topic-circle-btn dau-card-cta" title="Làm bài viết">
+                <button type="button" class="btn-write-action topic-circle-btn dau-card-cta" data-write-id="${t.id}" title="Làm bài viết">
                   ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
                 </button>
               </div>
@@ -4646,7 +4641,7 @@ function initWritingPage() {
       });
 
       gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
-        card.onclick = () => {
+        card.onclick = (e) => {
           if (e.target.closest("button")) return;
           const id = card.dataset.writeId;
           const task = all.find(x => x.id === id);
@@ -4705,13 +4700,11 @@ function initWritingPage() {
                 <span class="level-code">B1</span>
                 <small>Trung cấp</small>
                 <span class="level-tab-count" id="wCountB1">${countB1}</span>
-                <i class="level-tab-pro">PRO</i>
               </button>
               <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
                 <span class="level-code">B2</span>
                 <small>Trung cấp cao</small>
                 <span class="level-tab-count" id="wCountB2">${countB2}</span>
-                <i class="level-tab-pro">PRO</i>
               </button>
             </div>
 
@@ -5107,7 +5100,7 @@ function initMockTestPage() {
                 <button type="button" class="btn-trki-action topic-text-btn" data-trki-id="${t.id}" title="Thi thử">
                   ${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 13 }) : ""} Thi thử
                 </button>
-                <button type="button" class="topic-circle-btn dau-card-cta" title="Vào thi thử">
+                <button type="button" class="btn-trki-action topic-circle-btn dau-card-cta" data-trki-id="${t.id}" title="Vào thi thử">
                   ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
                 </button>
               </div>
@@ -5201,13 +5194,11 @@ function initMockTestPage() {
                 <span class="level-code">B1</span>
                 <small>TRKI-1</small>
                 <span class="level-tab-count" id="trkiCountB1">${countB1}</span>
-                <i class="level-tab-pro">PRO</i>
               </button>
               <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
                 <span class="level-code">B2</span>
                 <small>TRKI-2</small>
                 <span class="level-tab-count" id="trkiCountB2">${countB2}</span>
-                <i class="level-tab-pro">PRO</i>
               </button>
             </div>
 
