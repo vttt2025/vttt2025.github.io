@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chi Tiết Sản Phẩm — Cửa Hàng RUSI TRKI</title>
+  <meta name="description" content="Sản phẩm quà tặng, bánh kẹo truyền thống Nga, mỹ phẩm Siberia thiên nhiên và dịch vụ hỗ trợ hồ sơ du học Nga chính hãng." />
+  <link rel="canonical" href="https://rusitrki.com/shop.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="RUSI TRKI" />
+  <meta property="og:type" content="product" />
+  <meta property="og:title" content="Chi Tiết Sản Phẩm — Cửa Hàng RUSI TRKI" />
+  <meta property="og:description" content="Sản phẩm quà tặng & dịch vụ du học Nga chuẩn chính hãng." />
+  <meta property="og:image" content="https://rusitrki.com/assets/og-image.jpg" />
+
+  <!-- Mobile & PWA -->
+  <meta name="theme-color" content="#c52233" />
+  <meta name="application-name" content="RUSI TRKI" />
+  <meta name="apple-mobile-web-app-title" content="RUSI TRKI" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=4.6" />
+  <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
+</head>
+<body data-page="shop">
+  <div id="app-header"></div>
+
+  <main class="pdetail-container">
+    <div id="productDetailHost">
+      <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+        <div style="font-size:2rem;margin-bottom:12px">⏳</div>
+        Đang tải thông tin sản phẩm...
+      </div>
+    </div>
+  </main>
+
+  <div id="app-footer"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js?v=3.2"></script>
+  <script src="rusi-icons.js?v=3.2"></script>
+  <script src="data.js?v=4.0"></script>
+  <script src="auth.js?v=3.0"></script>
+  <script src="app.js?v=3.0"></script>
+  <script src="pages.js?v=4.3"></script>
+  <script src="pomodoro.js?v=1.0"></script>
+  <script>
+    async function initProductDetailPage() {
+      const host = document.getElementById("productDetailHost");
+      if (!host) return;
+
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get("id") || params.get("product") || "alenka-100g";
+
+      let products = (typeof window.SHOP_PRODUCTS !== "undefined") ? window.SHOP_PRODUCTS : [];
+
+      // Try fetching from Supabase if available
+      if (window.RusiSupabase && typeof window.RusiSupabase.shop?.getAll === "function") {
+        try {
+          const remote = await window.RusiSupabase.shop.getAll();
+          if (remote && remote.length) products = remote;
+        } catch (_) {}
+      }
+
+      const p = products.find(x => x.id === id) || products[0];
+
+      if (!p) {
+        host.innerHTML = `
+          <div style="text-align:center;padding:60px 20px">
+            <h2>Không tìm thấy sản phẩm</h2>
+            <p style="color:var(--muted);margin-bottom:20px">Sản phẩm bạn đang tìm kiếm không tồn tại hoặc đã hết hàng.</p>
+            <a href="shop.html" class="btn btn-primary">← Về Cửa hàng</a>
+          </div>
+        `;
+        return;
+      }
+
+      document.title = p.title + " — Cửa Hàng RUSI TRKI";
+
+      const discountPercent = p.origPrice ? Math.round((1 - p.price / p.origPrice) * 100) : 0;
+      const rubPrice = Math.round(p.price / 250);
+      const related = products.filter(x => x !== p && x.category === p.category).slice(0, 3);
+      if (related.length < 3) {
+        products.filter(x => x !== p && !related.includes(x)).slice(0, 3 - related.length).forEach(it => related.push(it));
+      }
+
+      host.innerHTML = `
+        <div class="pdetail-nav-bar">
+          <a href="shop.html" class="dau-back-btn" style="text-decoration:none">
+            ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 16 }) : ""} Quay lại Cửa hàng
+          </a>
+          <span style="font-size:0.85rem;color:var(--muted)">
+            Trang chủ / Cửa hàng / <b>${esc(p.categoryName || "Sản phẩm")}</b>
+          </span>
+        </div>
+
+        <div class="pdetail-grid">
+          <!-- LEFT: IMAGE BOX -->
+          <div class="pdetail-img-box">
+            <img src="${esc(p.image)}" alt="${esc(p.title)}" id="mainProductImg" />
+            ${p.badge ? `<span class="pdetail-badge-chip">${esc(p.badge)}</span>` : ""}
+          </div>
+
+          <!-- RIGHT: DETAILS & ACTIONS -->
+          <div class="pdetail-meta">
+            <span class="pdetail-category">${esc(p.categoryName || "Sản phẩm chính hãng")}</span>
+            <h1 class="pdetail-title">${esc(p.title)}</h1>
+
+            <div class="pdetail-rating-row">
+              <span class="pdetail-stars">
+                ${window.RusiIcons ? RusiIcons.get("star", { size: 16, color: "#f59e0b" }) : "★"} 5.0
+              </span>
+              <span>(148 đánh giá của học viên)</span>
+              <span>•</span>
+              <span style="color:#16a34a;font-weight:700">Đã bán ${p.sold || 520}+</span>
+            </div>
+
+            <div class="pdetail-price-box">
+              <span class="pdetail-current-price">${p.price.toLocaleString("vi-VN")} đ</span>
+              ${p.origPrice ? `<span class="pdetail-old-price">${p.origPrice.toLocaleString("vi-VN")} đ</span>` : ""}
+              ${discountPercent > 0 ? `<span class="pdetail-discount-badge">-${discountPercent}%</span>` : ""}
+              <span class="pdetail-rub">(≈ ${rubPrice} ₽)</span>
+            </div>
+
+            <p style="margin:0;font-size:0.95rem;color:#475569;line-height:1.6">
+              ${esc(p.desc)}
+            </p>
+
+            <div class="pdetail-info-table">
+              <span class="pdetail-info-label">Xuất xứ:</span>
+              <span class="pdetail-info-val">Liên bang Nga (Nhập khẩu chính ngạch)</span>
+
+              <span class="pdetail-info-label">Tình trạng:</span>
+              <span class="pdetail-info-val" style="color:#059669">✓ Còn hàng (Sẵn sàng đóng gói)</span>
+
+              <span class="pdetail-info-label">Bảo hành / Đổi trả:</span>
+              <span class="pdetail-info-val">Đổi trả trong 7 ngày nếu có lỗi từ nhà sản xuất</span>
+            </div>
+
+            <div class="pdetail-qty-row">
+              <span style="font-weight:700;font-size:0.92rem;color:#334155">Số lượng:</span>
+              <div class="pdetail-qty-control">
+                <button type="button" class="pdetail-qty-btn" id="btnQtyMinus">-</button>
+                <input type="text" class="pdetail-qty-val" id="qtyInput" value="1" readonly />
+                <button type="button" class="pdetail-qty-btn" id="btnQtyPlus">+</button>
+              </div>
+            </div>
+
+            <div class="pdetail-actions">
+              <button type="button" class="pdetail-btn-cart" id="btnAddToCart">
+                ${window.RusiIcons ? RusiIcons.get("shopping-bag-shop", { size: 18 }) : ""} Thêm vào giỏ hàng
+              </button>
+              <button type="button" class="pdetail-btn-buy" id="btnBuyNow">
+                ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 18 }) : ""} Mua ngay (Quét VietQR)
+              </button>
+            </div>
+
+            <div class="pdetail-trust-box">
+              <div style="display:flex;align-items:center;gap:8px">
+                ${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 16, color: "#16a34a" }) : "✓"} <b>Cam kết 100% hàng chuẩn Nga</b>, đền tiền gấp đôi nếu phát hiện hàng nhái.
+              </div>
+              <div style="display:flex;align-items:center;gap:8px">
+                ${window.RusiIcons ? RusiIcons.get("truck-shipping", { size: 16, color: "#2563eb" }) : "🚚"} Giao hàng hỏa tốc trong 2h tại Hà Nội &amp; TP.HCM; toàn quốc 1-3 ngày.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABS SECTION -->
+        <div class="pdetail-tabs-section">
+          <div class="pdetail-tab-btns">
+            <button type="button" class="pdetail-tab-btn active" data-tab="desc">Mô tả chi tiết</button>
+            <button type="button" class="pdetail-tab-btn" data-tab="reviews">Đánh giá của khách hàng (148)</button>
+            <button type="button" class="pdetail-tab-btn" data-tab="shipping">Chính sách giao nhận & thanh toán</button>
+          </div>
+
+          <div id="tabContentDesc" class="pdetail-tab-content">
+            <h3 style="margin-top:0">Thông tin sản phẩm &amp; Hướng dẫn bảo quản</h3>
+            <p>${esc(p.desc)}</p>
+            <p>
+              Tất cả các sản phẩm bánh kẹo, đồ lưu niệm và giáo trình học tiếng Nga tại RUSI TRKI đều được lựa chọn kỹ lưỡng trực tiếp từ các nhà máy lâu đời nổi tiếng nhất nước Nga (Krasny Oktyabr, Rot Front, Babayevsky, Natura Siberica).
+            </p>
+            <ul>
+              <li><b>Quy cách đóng gói:</b> Nguyên seal từ nhà sản xuất tại Nga.</li>
+              <li><b>Hạn sử dụng:</b> In rõ nét trên bao bì, luôn đảm bảo date mới nhất.</li>
+              <li><b>Bảo quản:</b> Nơi khô ráo thoáng mát, tránh ánh nắng trực tiếp và nhiệt độ cao trên 25°C.</li>
+            </ul>
+          </div>
+
+          <div id="tabContentReviews" class="pdetail-tab-content" style="display:none">
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <div style="padding:16px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                  <b>Nguyễn Hoàng Nam (Du học sinh MGU)</b>
+                  <span style="color:#f59e0b">★★★★★</span>
+                </div>
+                <div style="font-size:0.85rem;color:var(--muted);margin-bottom:8px">Đã mua tại RUSI Store · 3 ngày trước</div>
+                <p style="margin:0;font-size:0.92rem">Đúng vị socola Nga chuẩn mà mình hay mua ở siêu thị Auchan bên Moskva. Giao hàng rất nhanh, đóng gói xốp chống sốc cẩn thận!</p>
+              </div>
+
+              <div style="padding:16px;background:#f8fafc;border-radius:12px;border:1px solid #e2e8f0">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                  <b>Lê Phương Thảo (Học viên TRKI B1)</b>
+                  <span style="color:#f59e0b">★★★★★</span>
+                </div>
+                <div style="font-size:0.85rem;color:var(--muted);margin-bottom:8px">Đã mua tại RUSI Store · 1 tuần trước</div>
+                <p style="margin:0;font-size:0.92rem">Sản phẩm rất đẹp và thơm ngon. Mua làm quà tặng thầy cô giáo dạy tiếng Nga thì chuẩn không cần chỉnh!</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="tabContentShipping" class="pdetail-tab-content" style="display:none">
+            <p>
+              RUSI TRKI hợp tác cùng các đơn vị vận chuyển uy tín (Viettel Post, GHTK, Ahamove) để đưa sản phẩm đến tay bạn nhanh chóng và an toàn nhất:
+            </p>
+            <ul>
+              <li><b>Thanh toán chuyển khoản VietQR:</b> Quét mã tự động khớp đơn hàng 24/7, xác nhận tức thì.</li>
+              <li><b>Thanh toán khi nhận hàng (COD):</b> Kiểm tra hàng trước khi thanh toán cho shipper.</li>
+              <li><b>Thời gian giao hàng:</b> 1-2 ngày đối với khu vực miền Bắc, 2-3 ngày đối với các tỉnh miền Trung và miền Nam.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- RELATED PRODUCTS -->
+        ${related.length ? `
+          <div style="margin-top:48px">
+            <h3 style="font-size:1.35rem;font-weight:800;color:#0f172a;margin-bottom:20px">
+              ${window.RusiIcons ? RusiIcons.get("shopping-bag-shop", { size: 20 }) : ""} Sản phẩm liên quan cùng danh mục
+            </h3>
+            <div class="shop-grid">
+              ${related.map(r => `
+                <div class="product-card shop-product-card" onclick="window.location.href='product-detail.html?id=' + encodeURIComponent('${r.id}')" style="cursor:pointer">
+                  <div class="product-img-wrap">
+                    <img src="${r.image}" class="product-img" alt="${r.title}" />
+                    ${r.badge ? `<span class="product-badge">${r.badge}</span>` : ""}
+                  </div>
+                  <div class="product-body">
+                    <div class="product-cat">${r.categoryName || ""}</div>
+                    <h3 class="product-title">
+                      <a href="product-detail.html?id=${encodeURIComponent(r.id)}" style="color:inherit;text-decoration:none">${r.title}</a>
+                    </h3>
+                    <p class="product-desc">${r.desc}</p>
+                    <div class="product-pricing">
+                      <span class="product-price">${r.price.toLocaleString("vi-VN")} đ</span>
+                    </div>
+                    <button class="btn btn-primary btn-sm" style="margin-top:auto" onclick="event.stopPropagation();window.location.href='product-detail.html?id=' + encodeURIComponent('${r.id}')">
+                      Xem chi tiết →
+                    </button>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          </div>
+        ` : ""}
+      `;
+
+      // Quantity buttons
+      let qty = 1;
+      const qInput = document.getElementById("qtyInput");
+      const btnMinus = document.getElementById("btnQtyMinus");
+      const btnPlus = document.getElementById("btnQtyPlus");
+
+      if (btnMinus && qInput) {
+        btnMinus.onclick = () => {
+          if (qty > 1) { qty--; qInput.value = qty; }
+        };
+      }
+      if (btnPlus && qInput) {
+        btnPlus.onclick = () => {
+          if (qty < 99) { qty++; qInput.value = qty; }
+        };
+      }
+
+      // Add to cart button
+      const btnCart = document.getElementById("btnAddToCart");
+      if (btnCart) {
+        btnCart.onclick = () => {
+          let cart = (typeof STORE !== "undefined") ? STORE.get("shop_cart", []) : [];
+          const existing = cart.find(x => x.id === p.id);
+          if (existing) {
+            existing.qty = (existing.qty || 1) + qty;
+          } else {
+            cart.push({ id: p.id, title: p.title, price: p.price, image: p.image, qty: qty });
+          }
+          if (typeof STORE !== "undefined") STORE.set("shop_cart", cart);
+
+          btnCart.innerHTML = `${window.RusiIcons ? RusiIcons.get("check", { size: 18 }) : "✓"} Đã thêm vào giỏ!`;
+          setTimeout(() => {
+            btnCart.innerHTML = `${window.RusiIcons ? RusiIcons.get("shopping-bag-shop", { size: 18 }) : ""} Thêm vào giỏ hàng`;
+          }, 2000);
+        };
+      }
+
+      // Buy Now button
+      const btnBuy = document.getElementById("btnBuyNow");
+      if (btnBuy) {
+        btnBuy.onclick = () => {
+          let cart = (typeof STORE !== "undefined") ? STORE.get("shop_cart", []) : [];
+          const existing = cart.find(x => x.id === p.id);
+          if (existing) {
+            existing.qty = (existing.qty || 1) + qty;
+          } else {
+            cart.push({ id: p.id, title: p.title, price: p.price, image: p.image, qty: qty });
+          }
+          if (typeof STORE !== "undefined") STORE.set("shop_cart", cart);
+          window.location.href = "shop.html?checkout=1";
+        };
+      }
+
+      // Tabs switching
+      const tabBtns = host.querySelectorAll(".pdetail-tab-btn");
+      tabBtns.forEach(btn => {
+        btn.onclick = () => {
+          tabBtns.forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          const t = btn.dataset.tab;
+          document.getElementById("tabContentDesc").style.display = t === "desc" ? "block" : "none";
+          document.getElementById("tabContentReviews").style.display = t === "reviews" ? "block" : "none";
+          document.getElementById("tabContentShipping").style.display = t === "shipping" ? "block" : "none";
+        };
+      });
+    }
+
+    function initPage() {
+      initProductDetailPage();
+    }
+  </script>
+</body>
+</html>

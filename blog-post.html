@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chi Tiết Bài Viết — RUSI TRKI</title>
+  <meta name="description" content="Kênh chia sẻ kinh nghiệm du học Nga, phương pháp học tiếng Nga và cuộc sống sinh viên xứ sở Bạch Dương." />
+  <link rel="canonical" href="https://rusitrki.com/blog.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:site_name" content="RUSI TRKI" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Chi Tiết Bài Viết — RUSI TRKI" />
+  <meta property="og:description" content="Kinh nghiệm du học Nga, học bổng và cuộc sống sinh viên." />
+  <meta property="og:image" content="https://rusitrki.com/assets/og-image.jpg" />
+
+  <!-- Mobile & PWA -->
+  <meta name="theme-color" content="#c52233" />
+  <meta name="application-name" content="RUSI TRKI" />
+  <meta name="apple-mobile-web-app-title" content="RUSI TRKI" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=4.6" />
+  <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
+</head>
+<body data-page="blog">
+  <div id="app-header"></div>
+
+  <main class="bpost-container">
+    <div id="postDetailHost">
+      <div style="text-align:center;padding:60px 20px;color:var(--muted)">
+        <div style="font-size:2rem;margin-bottom:12px">⏳</div>
+        Đang tải nội dung bài viết...
+      </div>
+    </div>
+  </main>
+
+  <div id="app-footer"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="supabase-client.js?v=3.2"></script>
+  <script src="rusi-icons.js?v=3.2"></script>
+  <script src="data.js?v=4.0"></script>
+  <script src="auth.js?v=3.0"></script>
+  <script src="app.js?v=3.0"></script>
+  <script src="pages.js?v=4.3"></script>
+  <script src="pomodoro.js?v=1.0"></script>
+  <script>
+    function renderMarkdownContent(text) {
+      if (!text) return "";
+      const lines = text.split("\n");
+      let html = "";
+      let inList = false;
+
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+        if (!line) {
+          if (inList) { html += "</ul>\n"; inList = false; }
+          continue;
+        }
+
+        // Headers
+        if (line.startsWith("### ")) {
+          if (inList) { html += "</ul>\n"; inList = false; }
+          html += `<h3>${formatInline(line.slice(4))}</h3>\n`;
+          continue;
+        }
+        if (line.startsWith("## ")) {
+          if (inList) { html += "</ul>\n"; inList = false; }
+          html += `<h2>${formatInline(line.slice(3))}</h2>\n`;
+          continue;
+        }
+        if (line.startsWith("# ")) {
+          if (inList) { html += "</ul>\n"; inList = false; }
+          html += `<h2>${formatInline(line.slice(2))}</h2>\n`;
+          continue;
+        }
+
+        // Blockquotes
+        if (line.startsWith("> ")) {
+          if (inList) { html += "</ul>\n"; inList = false; }
+          html += `<blockquote>${formatInline(line.slice(2))}</blockquote>\n`;
+          continue;
+        }
+
+        // Unordered lists
+        if (line.startsWith("- ") || line.startsWith("* ") || line.startsWith("• ")) {
+          if (!inList) { html += "<ul>\n"; inList = true; }
+          html += `<li>${formatInline(line.slice(2))}</li>\n`;
+          continue;
+        }
+
+        if (inList) { html += "</ul>\n"; inList = false; }
+        html += `<p>${formatInline(line)}</p>\n`;
+      }
+      if (inList) html += "</ul>\n";
+      return html;
+    }
+
+    function formatInline(str) {
+      return str
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/«(.*?)»/g, '<span style="color:var(--primary);font-weight:600">«$1»</span>');
+    }
+
+    async function initBlogPostPage() {
+      const host = document.getElementById("postDetailHost");
+      if (!host) return;
+
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get("slug") || params.get("id");
+
+      let posts = (typeof window.BLOG_POSTS !== "undefined") ? window.BLOG_POSTS : [];
+
+      // Try fetching from Supabase if available
+      if (window.RusiSupabase && typeof window.RusiSupabase.blog?.getAll === "function") {
+        try {
+          const remote = await window.RusiSupabase.blog.getAll();
+          if (remote && remote.length) posts = remote;
+        } catch (_) {}
+      }
+
+      const post = posts.find(p => p.slug === slug || p.id === slug || String(posts.indexOf(p)) === slug) || posts[0];
+
+      if (!post) {
+        host.innerHTML = `
+          <div style="text-align:center;padding:60px 20px">
+            <h2>Không tìm thấy bài viết</h2>
+            <p style="color:var(--muted);margin-bottom:20px">Bài viết bạn đang tìm kiếm không tồn tại hoặc đã được chuyển sang đường dẫn khác.</p>
+            <a href="blog.html" class="btn btn-primary">← Về trang Blog</a>
+          </div>
+        `;
+        return;
+      }
+
+      document.title = post.title + " — RUSI TRKI";
+
+      const relatedPosts = posts.filter(p => p !== post).slice(0, 2);
+
+      host.innerHTML = `
+        <div class="bpost-nav-bar">
+          <a href="blog.html" class="dau-back-btn" style="text-decoration:none">
+            ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 16 }) : ""} Quay lại danh sách bài viết
+          </a>
+          <button type="button" class="btn btn-soft btn-sm" id="btnSharePost" style="display:flex;align-items:center;gap:6px">
+            ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : ""} Chia sẻ bài viết
+          </button>
+        </div>
+
+        <article class="bpost-article">
+          <div class="bpost-header">
+            <span class="dau-badge dau-badge-b1" style="font-weight:700">
+              ${post.categoryName || "CẨM NANG DU HỌC NGA"}
+            </span>
+            <h1 class="bpost-title">${post.title}</h1>
+            <div class="bpost-meta-row">
+              <span><b>Tác giả:</b> ${post.author || "RUSI Editorial Team"}</span>
+              <span>•</span>
+              <span><b>Ngày đăng:</b> ${post.date || "Tháng 8, 2026"}</span>
+              <span>•</span>
+              <span><b>Thời gian đọc:</b> ${post.readTime || "5 phút đọc"}</span>
+            </div>
+          </div>
+
+          ${post.cover ? `<img src="${post.cover}" class="bpost-cover" alt="${post.title}" />` : ""}
+
+          <div class="bpost-body">
+            ${renderMarkdownContent(post.content || post.excerpt)}
+          </div>
+
+          <!-- AUTHOR BOX -->
+          <div style="margin-top:40px;padding:24px;background:#f8fafc;border-radius:14px;border:1px solid #e2e8f0;display:flex;gap:18px;align-items:center">
+            <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#c52233,#1757a6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;flex-shrink:0">
+              Я
+            </div>
+            <div>
+              <div style="font-weight:800;font-size:1.05rem;color:#0f172a;margin-bottom:4px">Ban Biên Tập Học Thuật RUSI TRKI</div>
+              <p style="margin:0;font-size:0.88rem;color:#64748b;line-height:1.5">
+                Chuyên trang chia sẻ kiến thức chuẩn mực về kỳ thi chứng chỉ quốc tế ТРКИ, kinh nghiệm chuẩn bị hồ sơ du học và đời sống sinh viên tại Liên bang Nga.
+              </p>
+            </div>
+          </div>
+        </article>
+
+        <!-- RELATED POSTS -->
+        ${relatedPosts.length ? `
+          <section style="margin-top:48px">
+            <h3 style="font-size:1.35rem;font-weight:800;color:#0f172a;margin-bottom:20px">
+              ${window.RusiIcons ? RusiIcons.get("book-open-blog", { size: 20 }) : ""} Bài viết cùng chuyên mục
+            </h3>
+            <div class="shop-grid">
+              ${relatedPosts.map(p => `
+                <article class="product-card blog-card" onclick="window.location.href='blog-post.html?slug=' + encodeURIComponent('${p.slug || p.id}')" style="cursor:pointer">
+                  <div class="product-img-wrap">
+                    <img src="${p.cover || "assets/red-square.jpg"}" class="product-img" alt="${p.title}" />
+                    <span class="product-badge">${p.categoryName || "Du học"}</span>
+                  </div>
+                  <div class="product-body">
+                    <div class="product-cat">${p.date || ""} · ${p.readTime || "5 phút đọc"}</div>
+                    <h3 class="product-title" style="font-size:1.05rem">
+                      <a href="blog-post.html?slug=${encodeURIComponent(p.slug || p.id)}" style="color:inherit;text-decoration:none">${p.title}</a>
+                    </h3>
+                    <p class="product-desc">${p.excerpt}</p>
+                    <a href="blog-post.html?slug=${encodeURIComponent(p.slug || p.id)}" class="btn btn-primary btn-sm btn-read-post" style="margin-top:auto;text-decoration:none">
+                      Đọc bài viết →
+                    </a>
+                  </div>
+                </article>
+              `).join("")}
+            </div>
+          </section>
+        ` : ""}
+      `;
+
+      // Share button copy link
+      const btnShare = document.getElementById("btnSharePost");
+      if (btnShare) {
+        btnShare.onclick = () => {
+          navigator.clipboard.writeText(window.location.href).then(() => {
+            btnShare.innerHTML = `${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""} Đã chép liên kết!`;
+            setTimeout(() => {
+              btnShare.innerHTML = `${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : ""} Chia sẻ bài viết`;
+            }, 2500);
+          }).catch(() => {
+            alert("Đã sao chép liên kết bài viết: " + window.location.href);
+          });
+        };
+      }
+    }
+
+    function initPage() {
+      initBlogPostPage();
+    }
+  </script>
+</body>
+</html>

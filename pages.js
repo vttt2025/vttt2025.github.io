@@ -1936,12 +1936,16 @@ function initVocabPage() {
     const countA2 = allItems.filter(i => i.level === "A2").length;
     const countB1 = allItems.filter(i => i.level === "B1").length;
     const countB2 = allItems.filter(i => i.level === "B2").length;
+    const countC1 = allItems.filter(i => i.level === "C1").length;
+    const countC2 = allItems.filter(i => i.level === "C2").length;
 
     // Cập nhật số lượng trên các nút cấp độ
     const cA1 = el("#countA1"); if (cA1) cA1.textContent = countA1;
     const cA2 = el("#countA2"); if (cA2) cA2.textContent = countA2;
     const cB1 = el("#countB1"); if (cB1) cB1.textContent = countB1;
     const cB2 = el("#countB2"); if (cB2) cB2.textContent = countB2;
+    const cC1 = el("#countC1"); if (cC1) cC1.textContent = countC1;
+    const cC2 = el("#countC2"); if (cC2) cC2.textContent = countC2;
 
     const shelfHost = el("#jarsShelfHost");
     if (shelfHost) {
@@ -2123,10 +2127,26 @@ function initVocabPage() {
                 <small>Trung cấp cao</small>
                 <span class="level-tab-count" id="countB2">0</span>
               </button>
+              <button class="level-tab ${currentLevel === "C1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C1">
+                <span class="level-code">C1</span>
+                <small>Cao cấp</small>
+                <span class="level-tab-count" id="countC1">0</span>
+              </button>
+              <button class="level-tab ${currentLevel === "C2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C2">
+                <span class="level-code">C2</span>
+                <small>Thành thạo</small>
+                <span class="level-tab-count" id="countC2">0</span>
+              </button>
             </div>
 
             <div class="topic-grid" id="vocabCardsGrid"></div>
             <div class="dau-pagination" id="vocabPagination"></div>
+
+            <!-- THẺ TIẾN ĐỘ HỌC TỪ VỰNG (THANH NGANG DÀI DƯỚI PAGINATION) -->
+            <div id="vocabProgressHorizontalHost"></div>
+
+            <!-- LỌ TỪ VỰNG CỦA BẠN (SAU THANH TIẾN ĐỘ) -->
+            <div id="vocabUserJarsHost"></div>
           </div>
         </section>
       `;
@@ -2142,6 +2162,7 @@ function initVocabPage() {
     }
 
     renderVocabCards();
+    renderVocabSidebar();
   };
 
   const renderVocabSidebar = () => {
@@ -2175,87 +2196,96 @@ function initVocabPage() {
       if (typeof STORE !== "undefined") STORE.set("custom_jars", customJars);
     }
 
-    sidebarHost.innerHTML = `
-      <!-- KHỐI 1: TIẾN ĐỘ HỌC -->
-      <div class="voc-sidebar-card">
-        <div class="voc-sidebar-header">
-          <h3 class="voc-sidebar-title">
-            <span></span> Tiến độ học từ vựng
-          </h3>
-        </div>
-
-        <div class="voc-stat-grid">
-          <div class="voc-stat-box">
-            <div class="voc-stat-val" style="color:var(--green, #16a34a)">${stats.mastered || 0}</div>
-            <div class="voc-stat-label">Đã thuộc</div>
+    if (progressHost) {
+      progressHost.innerHTML = `
+        <div class="voc-progress-horizontal-card">
+          <div class="voc-progress-horiz-left">
+            <div class="voc-progress-horiz-icon">
+              ${window.RusiIcons ? RusiIcons.get("trending-up", { size: 22 }) : ""}
+            </div>
+            <div class="voc-progress-horiz-title">
+              <h3>Tiến Độ Học &amp; Ôn Tập Từ Vựng</h3>
+              <p>Thuật toán Spaced Repetition (SM-2) theo dõi trí nhớ dài hạn và gợi ý từ vựng cần ôn đúng thời điểm.</p>
+            </div>
           </div>
-          <div class="voc-stat-box">
-            <div class="voc-stat-val" style="color:var(--orange, #ea580c)">${dueCount}</div>
-            <div class="voc-stat-label">Cần ôn tập</div>
+
+          <div class="voc-progress-horiz-stats">
+            <div class="voc-stat-box">
+              <div class="voc-stat-val" style="color:var(--green, #16a34a)">${stats.mastered || 0}</div>
+              <div class="voc-stat-label">Đã thuộc</div>
+            </div>
+            <div class="voc-stat-box">
+              <div class="voc-stat-val" style="color:var(--orange, #ea580c)">${dueCount}</div>
+              <div class="voc-stat-label">Cần ôn tập</div>
+            </div>
+            <div class="voc-stat-box">
+              <div class="voc-stat-val" style="color:var(--blue, #2563eb)">${stats.newCount || 0}</div>
+              <div class="voc-stat-label">Từ mới</div>
+            </div>
+            <div class="voc-stat-box">
+              <div class="voc-stat-val" style="color:var(--russia-red, #c52233)">${streak}</div>
+              <div class="voc-stat-label">Chuỗi ngày 🔥</div>
+            </div>
           </div>
-          <div class="voc-stat-box">
-            <div class="voc-stat-val" style="color:var(--blue, #2563eb)">${stats.newCount || 0}</div>
-            <div class="voc-stat-label">Từ mới</div>
-          </div>
-          <div class="voc-stat-box">
-            <div class="voc-stat-val" style="color:var(--russia-red, #c52233)">${streak}</div>
-            <div class="voc-stat-label">Chuỗi ngày</div>
+
+          <div class="voc-progress-horiz-right">
+            <button type="button" class="btn btn-primary btn-sm" id="btnSidebarQuickSrs" style="font-weight:700;padding:12px 20px;border-radius:10px;display:flex;align-items:center;gap:8px">
+              ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Ôn tập flashcard ngay
+            </button>
           </div>
         </div>
+      `;
+    }
 
-        <div>
-          <button type="button" class="btn btn-primary btn-sm" id="btnSidebarQuickSrs" style="width:100%;font-weight:700">
-            Ôn tập flashcard ngay
-          </button>
-        </div>
-      </div>
+    if (userJarsHost) {
+      userJarsHost.innerHTML = `
+        <section class="voc-user-jars-section">
+          <div class="voc-user-jars-header">
+            <div class="voc-user-jars-header-text">
+              <h3>${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 22 }) : ""} Lọ Từ Vựng Của Bạn</h3>
+              <p>Tập hợp các lọ từ cá nhân bạn đã tạo để gom nhóm từ và ôn luyện riêng theo sở thích.</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" id="btnSidebarCreateJar" style="font-weight:700;padding:8px 16px;border-radius:8px">
+              + Tạo lọ mới
+            </button>
+          </div>
 
-      <!-- KHỐI 2: LỌ TỪ CỦA BẠN (CÁC LỌ DO NGƯỜI DÙNG TẠO) -->
-      <div class="voc-sidebar-card">
-        <div class="voc-sidebar-header">
-          <h3 class="voc-sidebar-title">
-            <span></span> Lọ từ của bạn
-          </h3>
-          <button type="button" class="btn btn-outline btn-sm" id="btnSidebarCreateJar" style="font-size:0.78rem;padding:3px 8px">
-            + Tạo lọ mới
-          </button>
-        </div>
-
-        <p style="font-size:0.83rem;color:var(--muted);margin:0 0 12px;line-height:1.45">
-          Tập hợp các lọ từ cá nhân bạn đã tạo để gom nhóm từ và ôn luyện riêng.
-        </p>
-
-        <div class="voc-user-jars-list">
-          ${customJars.map(j => {
-            const wCount = (j.words || []).length;
-            const isDefault = j.id === "custom-jar-default";
-            return `
-              <div class="voc-user-jar-item" data-jar-id="${esc(j.id)}">
-                <div class="voc-user-jar-info">
-                  <span class="voc-user-jar-icon">${window.RusiIcons ? RusiIcons.get(j.icon || "archive-jar", { size: 20 }) : ""}</span>
-                  <div class="voc-user-jar-meta">
-                    <div class="voc-user-jar-name" title="${esc(j.name)}">${esc(j.name)}</div>
-                    <div class="voc-user-jar-count">${wCount} từ vựng</div>
+          <div class="voc-user-jars-grid">
+            ${customJars.map(j => {
+              const wCount = (j.words || []).length;
+              const isDefault = j.id === "custom-jar-default";
+              return `
+                <div class="voc-user-jar-card" data-jar-id="${esc(j.id)}">
+                  <div class="voc-user-jar-card-top">
+                    <div class="voc-user-jar-card-icon">
+                      ${window.RusiIcons ? RusiIcons.get(j.icon || "archive-jar", { size: 20 }) : ""}
+                    </div>
+                    <div style="flex:1;min-width:0">
+                      <div class="voc-user-jar-card-name" title="${esc(j.name)}">${esc(j.name)}</div>
+                      <div class="voc-user-jar-card-count">${wCount} từ vựng</div>
+                    </div>
+                  </div>
+                  <div class="voc-user-jar-card-actions">
+                    <button type="button" class="btn btn-soft btn-sm voc-btn-study-jar" data-jar-id="${esc(j.id)}" style="flex:1;font-weight:700" title="Học lọ này">
+                      Học flashcard
+                    </button>
+                    ${!isDefault ? `
+                      <button type="button" class="btn btn-soft btn-sm voc-btn-del-jar" data-jar-id="${esc(j.id)}" data-jar-name="${esc(j.name)}" style="color:var(--red);padding:6px 10px" title="Xóa lọ này">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""}</button>
+                    ` : ""}
                   </div>
                 </div>
-                <div class="voc-user-jar-actions">
-                  <button type="button" class="btn btn-soft btn-sm voc-btn-study-jar" data-jar-id="${esc(j.id)}" title="Học lọ này">
-                    Học
-                  </button>
-                  ${!isDefault ? `
-                    <button type="button" class="btn btn-soft btn-sm voc-btn-del-jar" data-jar-id="${esc(j.id)}" data-jar-name="${esc(j.name)}" style="color:var(--red);padding:4px 6px" title="Xóa lọ này">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
-                  ` : ""}
-                </div>
-              </div>
-            `;
-          }).join("")}
-        </div>
+              `;
+            }).join("")}
 
-        <button type="button" class="btn btn-soft btn-sm" id="btnSidebarCreateJarBottom" style="width:100%;margin-top:12px;border:1px dashed var(--border)">
-          ${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : ""} Thêm lọ từ vựng mới
-        </button>
-      </div>
-    `;
+            <div class="voc-user-jar-card" id="btnSidebarCreateJarBottom" style="border:1.5px dashed var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:110px;text-align:center">
+              <span style="color:var(--primary);font-weight:700;font-size:0.95rem;display:flex;align-items:center;gap:6px">
+                ${window.RusiIcons ? RusiIcons.get("plus", { size: 16 }) : ""} Thêm lọ từ vựng mới
+              </span>
+            </div>
+          </div>
+        </section>
+      `;
+    }
 
     const btnQuick = el("#btnSidebarQuickSrs");
     if (btnQuick) {
@@ -2904,12 +2934,16 @@ function initListeningPage() {
     const countA2 = all.filter(l => l.level === "A2").length;
     const countB1 = all.filter(l => l.level === "B1").length;
     const countB2 = all.filter(l => l.level === "B2").length;
+    const countC1 = all.filter(l => l.level === "C1").length;
+    const countC2 = all.filter(l => l.level === "C2").length;
 
     // Cập nhật số lượng trên các nút cấp độ
     const cA1 = el("#lisCountA1"); if (cA1) cA1.textContent = countA1;
     const cA2 = el("#lisCountA2"); if (cA2) cA2.textContent = countA2;
     const cB1 = el("#lisCountB1"); if (cB1) cB1.textContent = countB1;
     const cB2 = el("#lisCountB2"); if (cB2) cB2.textContent = countB2;
+    const cC1 = el("#lisCountC1"); if (cC1) cC1.textContent = countC1;
+    const cC2 = el("#lisCountC2"); if (cC2) cC2.textContent = countC2;
 
     // Update active class on level tabs
     host.querySelectorAll(".level-tab").forEach(b => {
@@ -3074,6 +3108,16 @@ function initListeningPage() {
                 <span class="level-code">B2</span>
                 <small>Trung cấp cao</small>
                 <span class="level-tab-count" id="lisCountB2">${countB2}</span>
+              </button>
+              <button class="level-tab ${currentLevel === "C1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C1">
+                <span class="level-code">C1</span>
+                <small>Cao cấp</small>
+                <span class="level-tab-count" id="lisCountC1">0</span>
+              </button>
+              <button class="level-tab ${currentLevel === "C2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C2">
+                <span class="level-code">C2</span>
+                <small>Thành thạo</small>
+                <span class="level-tab-count" id="lisCountC2">0</span>
               </button>
             </div>
 
@@ -4179,12 +4223,16 @@ function initSpeakingPage() {
     const countA2 = all.filter(s => s.level === "A2").length;
     const countB1 = all.filter(s => s.level === "B1").length;
     const countB2 = all.filter(s => s.level === "B2").length;
+    const countC1 = all.filter(s => s.level === "C1").length;
+    const countC2 = all.filter(s => s.level === "C2").length;
 
     // Cập nhật số lượng trên các nút cấp độ
     const cA1 = el("#spCountA1"); if (cA1) cA1.textContent = countA1;
     const cA2 = el("#spCountA2"); if (cA2) cA2.textContent = countA2;
     const cB1 = el("#spCountB1"); if (cB1) cB1.textContent = countB1;
     const cB2 = el("#spCountB2"); if (cB2) cB2.textContent = countB2;
+    const cC1 = el("#spCountC1"); if (cC1) cC1.textContent = countC1;
+    const cC2 = el("#spCountC2"); if (cC2) cC2.textContent = countC2;
 
     // Update active class on level tabs
     host.querySelectorAll(".level-tab").forEach(b => {
@@ -4346,6 +4394,16 @@ function initSpeakingPage() {
                 <span class="level-code">B2</span>
                 <small>Trung cấp cao</small>
                 <span class="level-tab-count" id="spCountB2">${countB2}</span>
+              </button>
+              <button class="level-tab ${currentLevel === "C1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C1">
+                <span class="level-code">C1</span>
+                <small>Cao cấp</small>
+                <span class="level-tab-count" id="spCountC1">0</span>
+              </button>
+              <button class="level-tab ${currentLevel === "C2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C2">
+                <span class="level-code">C2</span>
+                <small>Thành thạo</small>
+                <span class="level-tab-count" id="spCountC2">0</span>
               </button>
             </div>
 
@@ -4558,12 +4616,16 @@ function initWritingPage() {
     const countA2 = all.filter(t => t.level === "A2").length;
     const countB1 = all.filter(t => t.level === "B1").length;
     const countB2 = all.filter(t => t.level === "B2").length;
+    const countC1 = all.filter(t => t.level === "C1").length;
+    const countC2 = all.filter(t => t.level === "C2").length;
 
     // Cập nhật số lượng trên các nút cấp độ
     const cA1 = el("#wCountA1"); if (cA1) cA1.textContent = countA1;
     const cA2 = el("#wCountA2"); if (cA2) cA2.textContent = countA2;
     const cB1 = el("#wCountB1"); if (cB1) cB1.textContent = countB1;
     const cB2 = el("#wCountB2"); if (cB2) cB2.textContent = countB2;
+    const cC1 = el("#wCountC1"); if (cC1) cC1.textContent = countC1;
+    const cC2 = el("#wCountC2"); if (cC2) cC2.textContent = countC2;
 
     // Update active class on level tabs
     host.querySelectorAll(".level-tab").forEach(b => {
@@ -4725,6 +4787,16 @@ function initWritingPage() {
                 <span class="level-code">B2</span>
                 <small>Trung cấp cao</small>
                 <span class="level-tab-count" id="wCountB2">${countB2}</span>
+              </button>
+              <button class="level-tab ${currentLevel === "C1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C1">
+                <span class="level-code">C1</span>
+                <small>Cao cấp</small>
+                <span class="level-tab-count" id="wCountC1">0</span>
+              </button>
+              <button class="level-tab ${currentLevel === "C2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C2">
+                <span class="level-code">C2</span>
+                <small>Thành thạo</small>
+                <span class="level-tab-count" id="wCountC2">0</span>
               </button>
             </div>
 
@@ -5040,12 +5112,16 @@ function initMockTestPage() {
     const countA2 = bank.filter(t => t.level === "A2").length;
     const countB1 = bank.filter(t => t.level === "B1").length;
     const countB2 = bank.filter(t => t.level === "B2").length;
+    const countC1 = bank.filter(t => t.level === "C1").length;
+    const countC2 = bank.filter(t => t.level === "C2").length;
 
     // Cập nhật số lượng trên các nút cấp độ
     const cA1 = el("#trkiCountA1"); if (cA1) cA1.textContent = countA1;
     const cA2 = el("#trkiCountA2"); if (cA2) cA2.textContent = countA2;
     const cB1 = el("#trkiCountB1"); if (cB1) cB1.textContent = countB1;
     const cB2 = el("#trkiCountB2"); if (cB2) cB2.textContent = countB2;
+    const cC1 = el("#trkiCountC1"); if (cC1) cC1.textContent = countC1;
+    const cC2 = el("#trkiCountC2"); if (cC2) cC2.textContent = countC2;
 
     // Update active class on level tabs
     host.querySelectorAll(".level-tab").forEach(b => {
@@ -5219,6 +5295,16 @@ function initMockTestPage() {
                 <span class="level-code">B2</span>
                 <small>TRKI-2</small>
                 <span class="level-tab-count" id="trkiCountB2">${countB2}</span>
+              </button>
+              <button class="level-tab ${currentLevel === "C1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C1">
+                <span class="level-code">C1</span>
+                <small>Cao cấp</small>
+                <span class="level-tab-count" id="trkiCountC1">0</span>
+              </button>
+              <button class="level-tab ${currentLevel === "C2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C2">
+                <span class="level-code">C2</span>
+                <small>Thành thạo</small>
+                <span class="level-tab-count" id="trkiCountC2">0</span>
               </button>
             </div>
 
@@ -5653,18 +5739,20 @@ function initBlogPage() {
         ${filtered
           .map(
             (p, i) => `
-          <article class="product-card" data-slug="${p.slug || i}">
+          <article class="product-card blog-card" data-slug="${p.slug || i}" onclick="window.location.href='blog-post.html?slug=' + encodeURIComponent('${p.slug || i}')" style="cursor:pointer">
             <div class="product-img-wrap">
               <img src="${esc(p.cover || "assets/red-square.jpg")}" class="product-img" alt="${esc(p.title)}" />
               <span class="product-badge">${esc(p.categoryName || "Du học")}</span>
             </div>
             <div class="product-body">
               <div class="product-cat">${esc(p.date || "")} · ${esc(p.readTime || "5 phút đọc")}</div>
-              <h3 class="product-title" style="font-size:1.05rem">${esc(p.title)}</h3>
+              <h3 class="product-title" style="font-size:1.05rem">
+                <a href="blog-post.html?slug=${encodeURIComponent(p.slug || i)}" style="color:inherit;text-decoration:none">${esc(p.title)}</a>
+              </h3>
               <p class="product-desc">${esc(p.excerpt)}</p>
-              <button class="btn btn-primary btn-sm btn-read-post" data-slug="${p.slug || i}" style="margin-top:auto">
+              <a href="blog-post.html?slug=${encodeURIComponent(p.slug || i)}" class="btn btn-primary btn-sm btn-read-post" style="margin-top:auto;text-decoration:none">
                 Đọc bài viết →
-              </button>
+              </a>
             </div>
           </article>`
           )
@@ -5788,21 +5876,23 @@ function initShopPage() {
         ${filtered
           .map(
             (p) => `
-          <div class="product-card">
+          <div class="product-card shop-product-card" data-id="${esc(p.id)}" onclick="window.location.href='product-detail.html?id=' + encodeURIComponent('${p.id}')" style="cursor:pointer">
             <div class="product-img-wrap">
               <img src="${esc(p.image)}" class="product-img" alt="${esc(p.title)}" />
               ${p.badge ? `<span class="product-badge">${esc(p.badge)}</span>` : ""}
             </div>
             <div class="product-body">
               <div class="product-cat">${esc(p.categoryName)}</div>
-              <h3 class="product-title">${esc(p.title)}</h3>
+              <h3 class="product-title">
+                <a href="product-detail.html?id=${encodeURIComponent(p.id)}" style="color:inherit;text-decoration:none">${esc(p.title)}</a>
+              </h3>
               <p class="product-desc">${esc(p.desc)}</p>
               <div class="product-pricing">
                 <span class="product-price">${p.price.toLocaleString("vi-VN")} đ</span>
                 ${p.priceRub ? `<span class="product-rub">(≈ ${p.priceRub} ₽)</span>` : ""}
                 ${p.originalPrice ? `<span class="product-old-price">${p.originalPrice.toLocaleString("vi-VN")} đ</span>` : ""}
               </div>
-              <button class="btn btn-primary btn-sm btn-add-cart" data-id="${p.id}" style="margin-top:auto">
+              <button class="btn btn-primary btn-sm btn-add-cart" data-id="${p.id}" style="margin-top:auto" onclick="event.stopPropagation()">
                 ${window.RusiIcons ? RusiIcons.get("shopping-bag-shop", { size: 16 }) : ""} ${p.category === "dich_vu_du_hoc" ? "Đăng ký tư vấn" : "Thêm vào giỏ"}
               </button>
             </div>
@@ -5820,7 +5910,8 @@ function initShopPage() {
     });
 
     host.querySelectorAll(".btn-add-cart").forEach((btn) => {
-      btn.onclick = () => {
+      btn.onclick = (e) => {
+        if (e) e.stopPropagation();
         const id = btn.dataset.id;
         const item = products.find((p) => p.id === id);
         if (!item) return;

@@ -36,7 +36,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=4.4" />
+  <link rel="stylesheet" href="styles.css?v=4.6" />
   <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
 
   <!-- JSON-LD Structured Data: Course, BreadcrumbList -->
@@ -84,14 +84,12 @@
     <!-- ========================================================
          MAIN DASHBOARD: 1 BÊN CHỦ ĐỀ, 1 BÊN LỌ TỪ CỦA BẠN
          ======================================================== -->
-    <div class="voc-layout-grid" id="vocMainLayout">
-      <!-- CỘT 1: CHỦ ĐỀ TỪ VỰNG -->
-      <div class="voc-col-main" id="vocColMain">
+    <div class="voc-layout-grid voc-layout-full" id="vocMainLayout" style="display:block">
+      <!-- CHỦ ĐỀ TỪ VỰNG, TIẾN ĐỘ HÀNG NGANG & LỌ TỪ CỦA BẠN -->
+      <div class="voc-col-main" id="vocColMain" style="width:100%">
         <div id="jarsShelfHost"></div>
       </div>
-
-      <!-- CỘT 2: LỌ TỪ CỦA BẠN (TIẾN ĐỘ HỌC & CÁC LỌ TỪ TỰ TẠO) -->
-      <aside class="voc-col-sidebar" id="vocSidebarHost"></aside>
+      <aside class="voc-col-sidebar" id="vocSidebarHost" style="display:none"></aside>
     </div>
 
     <!-- KHÔNG GIAN HỌC CHI TIẾT (QUIZLET FLASHCARDS / SERIES) -->
@@ -370,9 +368,10 @@
   <script src="auth.js?v=3.0"></script>
   <script src="srs.js?v=3.2"></script>
   <script src="app.js?v=3.2"></script>
-  <script src="pages.js?v=4.2"></script>
+  <script src="pages.js?v=4.3"></script>
   <script>
     function initPage() { initVocabPage(); }
   </script>
+  <script src="pomodoro.js?v=1.0"></script>
 </body>
 </html>
