@@ -62,9 +62,17 @@ CREATE TABLE IF NOT EXISTS vocabularies (
     word_normalized TEXT NOT NULL,       -- vd: собака (chuyển ё về e, bỏ trọng âm để tìm kiếm)
     transcription TEXT,                  -- Phiên âm
     pos TEXT NOT NULL,                   -- Noun, Verb, Adj, Adverb, Preposition...
-    gender CHAR(1),                      -- 'm' (đực), 'f' (cái), 'n' (trung)
+    gender TEXT,                         -- 'm' (đực), 'f' (cái), 'n' (trung), 'pl' (số nhiều), 'm/f'
     aspect TEXT,                         -- 'perfective' (CB) / 'imperfective' (NCB)
     meaning_vi TEXT NOT NULL,
+    topic_id UUID REFERENCES vocab_jars(id) ON DELETE CASCADE, -- Ánh xạ trực tiếp đến chủ đề (vocab_jars)
+    topic_code TEXT,                     -- Mã chủ đề (vd: do_an_uong, nghe_nghiep...)
+    sub_topic TEXT,                      -- Nhóm nhỏ trong chủ đề (vd: Món chính và món phụ, Rau củ quả...)
+    examples JSONB DEFAULT '[]'::jsonb,  -- Danh sách câu ví dụ [{ru, vi}]
+    example_ru TEXT,                     -- Câu ví dụ tiếng Nga mẫu
+    example_vi TEXT,                     -- Câu ví dụ dịch tiếng Việt
+    collocations JSONB DEFAULT '{}'::jsonb, -- Động từ thao tác, công dụng, ngữ cảnh collocations
+    level TEXT DEFAULT 'A1',             -- Cấp độ CEFR (A1, A2, B1, B2)
     cases_table JSONB,                   -- Bảng chia 6 cách
     conjugation_data JSONB,              -- Chia động từ các thì
     structures JSONB,                    -- vd: ["перекусить чем? (ăn nhẹ cái gì)"]
@@ -78,17 +86,27 @@ CREATE TABLE IF NOT EXISTS vocabularies (
 );
 
 CREATE INDEX IF NOT EXISTS idx_vocab_normalized ON vocabularies USING gin (word_normalized gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_vocab_topic_id ON vocabularies(topic_id);
+CREATE INDEX IF NOT EXISTS idx_vocab_topic_code ON vocabularies(topic_code);
 
--- 3. LỌ TỪ VỰNG CÁ NHÂN & SPACED REPETITION (VOCAB JARS)
+-- 3. LỌ TỪ VỰNG CÁ NHÂN & CHỦ ĐỀ HỆ THỐNG (VOCAB JARS)
 CREATE TABLE IF NOT EXISTS vocab_jars (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    jar_name TEXT NOT NULL,              -- Tên lọ: vd "Mua sắm ở Auchan", "Từ vựng KTX"
+    jar_name TEXT NOT NULL,              -- Tên lọ / chủ đề: vd "Đồ ăn - Đồ uống", "Mua sắm ở Auchan"
+    code TEXT,                           -- Mã chủ đề định danh: vd "do_an_uong", "nghe_nghiep"
+    level TEXT DEFAULT 'A1',             -- Khung CEFR A1 - B2
+    icon TEXT DEFAULT '🏺',              -- Icon đại diện (emoji)
+    description TEXT,                    -- Mô tả nội dung chủ đề
     color_code TEXT DEFAULT '#0039A6',
-    is_system BOOLEAN DEFAULT FALSE,     -- Lọ hệ thống hay do học viên tự tạo
-    words JSONB DEFAULT '[]'::jsonb,     -- Danh sách từ trong lọ [{ru, vi, note, ex, stress}]
+    is_system BOOLEAN DEFAULT FALSE,     -- Lọ hệ thống chuẩn hóa hay do học viên tự tạo
+    sub_topics JSONB DEFAULT '[]'::jsonb, -- Danh sách các nhóm chủ đề nhỏ
+    word_count INT DEFAULT 0,            -- Tổng số lượng từ vựng trong chủ đề
+    words JSONB DEFAULT '[]'::jsonb,     -- Danh sách tóm tắt từ trong lọ [{vocab_id, ru, vi, note, ex, stress}]
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_vocab_jars_code ON vocab_jars(code) WHERE code IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS jar_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -367,6 +385,7 @@ CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.
 
 -- RLS Policies: Public Read cho tài liệu học tập
 CREATE POLICY "Public read vocabularies" ON vocabularies FOR SELECT USING (true);
+CREATE POLICY "Public read vocab_jars" ON vocab_jars FOR SELECT USING (true);
 CREATE POLICY "Public read TRKI tests" ON trki_tests FOR SELECT USING (true);
 CREATE POLICY "Public read TRKI questions" ON trki_questions FOR SELECT USING (true);
 CREATE POLICY "Public read listening lessons" ON listening_lessons FOR SELECT USING (true);

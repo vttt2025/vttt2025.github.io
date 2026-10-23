@@ -256,6 +256,45 @@
     },
 
     /* =========================================================================
+     * 2.1 KHO TỪ VỰNG THEO CHỦ ĐỀ & TỪ ĐIỂN (VOCABULARIES)
+     * ========================================================================= */
+    vocabularies: {
+      getByTopic: async function (topicId) {
+        var sb = getClient();
+        if (!sb || !topicId) return [];
+        try {
+          var res = await sb.from("vocabularies").select("*").eq("topic_id", topicId).order("created_at", { ascending: true });
+          return res.data || [];
+        } catch (_) {
+          return [];
+        }
+      },
+
+      getByTopicCode: async function (topicCode) {
+        var sb = getClient();
+        if (!sb || !topicCode) return [];
+        try {
+          var res = await sb.from("vocabularies").select("*").eq("topic_code", topicCode).order("created_at", { ascending: true });
+          return res.data || [];
+        } catch (_) {
+          return [];
+        }
+      },
+
+      search: async function (keyword) {
+        var sb = getClient();
+        if (!sb || !keyword) return [];
+        try {
+          var k = keyword.trim().toLowerCase();
+          var res = await sb.from("vocabularies").select("*").or("word_normalized.ilike.%" + k + "%,meaning_vi.ilike.%" + k + "%").limit(50);
+          return res.data || [];
+        } catch (_) {
+          return [];
+        }
+      }
+    },
+
+    /* =========================================================================
      * 3. ĐỀ THI TRKI & LỊCH SỬ THI
      * ========================================================================= */
     tests: {
