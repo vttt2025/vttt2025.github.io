@@ -34,7 +34,7 @@
           Đăng nhập bằng Google
         </button>
         <button class="p-btn p-btn-secondary" id="btnDevBypass" type="button" style="width:100%">
-          ⚡ Mở Chế độ Dev Mode (Cục bộ offline)
+          <i data-rusi-icon="zap-xp" data-size="16"></i> Mở Chế độ Dev Mode (Cục bộ offline)
         </button>
       </div>
     </div>
@@ -45,13 +45,13 @@
        ======================================================================== -->
   <div id="deniedGate" class="payload-gate-screen" style="display:none">
     <div class="payload-gate-card">
-      <div class="payload-gate-logo" style="background:#ef4444">✕</div>
+      <div class="payload-gate-logo" style="background:#ef4444"><i data-rusi-icon="x" data-size="28" style="color:#fff"></i></div>
       <h2 style="margin:0 0 8px 0;font-size:20px;font-weight:700">Từ chối truy cập</h2>
       <p id="deniedInfo" style="color:var(--p-text);font-weight:600;margin-bottom:6px"></p>
       <p style="color:var(--p-text-muted);margin:0 0 24px 0;font-size:13px">Email này chưa được cấp quyền Quản trị viên trong <code>firebase-config.js</code>.</p>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <button class="p-btn p-btn-primary" id="btnSwitchAccount" type="button">🔄 Đổi tài khoản Gmail khác</button>
-        <button class="p-btn p-btn-secondary" id="btnDevBypass2" type="button">⚡ Mở bằng Dev Mode (Cục bộ)</button>
+        <button class="p-btn p-btn-primary" id="btnSwitchAccount" type="button"><i data-rusi-icon="refresh-cw" data-size="16"></i> Đổi tài khoản Gmail khác</button>
+        <button class="p-btn p-btn-secondary" id="btnDevBypass2" type="button"><i data-rusi-icon="zap-xp" data-size="16"></i> Mở bằng Dev Mode (Cục bộ)</button>
       </div>
     </div>
   </div>
@@ -71,14 +71,14 @@
             <span class="payload-brand-sub">Payload CMS v3</span>
           </div>
         </a>
-        <button class="p-btn-icon" id="sidebarCloseBtn" type="button" title="Đóng menu" style="display:none">✕</button>
+        <button class="p-btn-icon" id="sidebarCloseBtn" type="button" title="Đóng menu" style="display:none"><i data-rusi-icon="x" data-size="18"></i></button>
       </div>
 
       <div class="payload-sidebar-nav">
         <!-- Dashboard Link -->
         <div class="payload-nav-item" style="margin-bottom:14px">
           <a class="payload-nav-link active" data-nav="dashboard" href="#dashboard">
-            <span class="payload-nav-icon">📊</span>
+            <span class="payload-nav-icon"><i data-rusi-icon="layout-dashboard" data-size="18"></i></span>
             <span class="payload-nav-label">Bảng điều khiển (Overview)</span>
           </a>
         </div>
@@ -113,27 +113,27 @@
           <ul class="payload-nav-list">
             <li class="payload-nav-item">
               <a class="payload-nav-link" data-nav="collection:USERS" href="#collection/USERS">
-                <span class="payload-nav-icon">👥</span>
+                <span class="payload-nav-icon"><i data-rusi-icon="users-students" data-size="18"></i></span>
                 <span class="payload-nav-label">Học viên & Quản trị</span>
                 <span class="payload-nav-badge" id="navBadgeUsers">0</span>
               </a>
             </li>
             <li class="payload-nav-item">
               <a class="payload-nav-link" data-nav="globals:site-settings" href="#globals/site-settings">
-                <span class="payload-nav-icon">⚙️</span>
+                <span class="payload-nav-icon"><i data-rusi-icon="settings-gear" data-size="18"></i></span>
                 <span class="payload-nav-label">Cấu hình hệ thống</span>
               </a>
             </li>
             <li class="payload-nav-item">
               <a class="payload-nav-link" data-nav="supabase-sync" href="#supabase-sync">
-                <span class="payload-nav-icon">⚡</span>
+                <span class="payload-nav-icon"><i data-rusi-icon="refresh-cw" data-size="18"></i></span>
                 <span class="payload-nav-label">Supabase Cloud Sync</span>
                 <span class="p-pill p-pill-success" style="font-size:9px;padding:1px 5px">Cloud</span>
               </a>
             </li>
             <li class="payload-nav-item">
               <a class="payload-nav-link" data-nav="api-explorer" href="#api-explorer">
-                <span class="payload-nav-icon">📡</span>
+                <span class="payload-nav-icon"><i data-rusi-icon="waveform-audio" data-size="18"></i></span>
                 <span class="payload-nav-label">REST API & Schema</span>
               </a>
             </li>
@@ -151,9 +151,9 @@
           </div>
         </div>
         <div class="payload-footer-actions">
-          <button class="p-btn-icon" id="btnToggleTheme" type="button" title="Chuyển đổi Sáng / Tối">🌙</button>
-          <a class="p-btn-icon" id="btnOpenLiveSite" href="index.html" target="_blank" title="Mở trang web học viên">👁️</a>
-          <button class="p-btn-icon" id="btnSignOut" type="button" title="Đăng xuất">🚪</button>
+          <button class="p-btn-icon" id="btnToggleTheme" type="button" title="Chuyển đổi Sáng / Tối"><i data-rusi-icon="moon" data-size="16"></i></button>
+          <a class="p-btn-icon" id="btnOpenLiveSite" href="index.html" target="_blank" title="Mở trang web học viên"><i data-rusi-icon="external-link" data-size="16"></i></a>
+          <button class="p-btn-icon" id="btnSignOut" type="button" title="Đăng xuất"><i data-rusi-icon="log-out" data-size="16"></i></button>
         </div>
       </div>
     </aside>
@@ -164,7 +164,7 @@
       <header class="payload-topbar">
         <div class="payload-topbar-left">
           <button class="payload-menu-toggle" id="btnMenuToggle" type="button" aria-label="Mở menu điều hướng">
-            ☰
+            <i data-rusi-icon="menu" data-size="18"></i>
           </button>
           <nav class="payload-breadcrumbs" id="breadcrumbsNav" aria-label="Breadcrumb">
             <a class="payload-crumb-item" href="#dashboard">Dashboard</a>
@@ -195,7 +195,7 @@
     <div class="payload-preview-drawer" id="previewDrawer">
       <div class="payload-preview-head">
         <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-weight:700;font-size:14px">👁️ Live Preview Studio</span>
+          <span style="font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:6px"><i data-rusi-icon="eye" data-size="16"></i> Live Preview Studio</span>
           <select class="payload-filter-select" id="previewPageSelector" style="font-size:12px;padding:4px 8px">
             <option value="mock-test.html">Đề thi TRKI (mock-test.html)</option>
             <option value="vocabulary.html">Lọ từ vựng (vocabulary.html)</option>
@@ -208,8 +208,8 @@
           </select>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
-          <button class="p-btn p-btn-secondary p-btn-sm" id="btnRefreshPreview" type="button" title="Làm mới khung xem thử">🔄 Tải lại</button>
-          <button class="p-btn-icon" id="btnClosePreview" type="button" title="Đóng xem trước">✕</button>
+          <button class="p-btn p-btn-secondary p-btn-sm" id="btnRefreshPreview" type="button" title="Làm mới khung xem thử"><i data-rusi-icon="refresh-cw" data-size="14"></i> Tải lại</button>
+          <button class="p-btn-icon" id="btnClosePreview" type="button" title="Đóng xem trước"><i data-rusi-icon="x" data-size="14"></i></button>
         </div>
       </div>
       <iframe class="payload-preview-frame" id="previewIframe" src="about:blank"></iframe>
@@ -223,8 +223,8 @@
   <div class="payload-backdrop" id="modalSupabaseBackdrop"></div>
   <div class="payload-preview-drawer" id="modalSupabaseDrawer" style="max-width:540px;width:90vw">
     <div class="payload-preview-head">
-      <span style="font-weight:700">⚡ Kết nối Supabase PostgreSQL</span>
-      <button class="p-btn-icon" id="modalSbClose" type="button">✕</button>
+      <span style="font-weight:700"><i data-rusi-icon="database-tests" data-size="16"></i> Kết nối Supabase PostgreSQL</span>
+      <button class="p-btn-icon" id="modalSbClose" type="button"><i data-rusi-icon="x" data-size="14"></i></button>
     </div>
     <div style="padding:24px;overflow-y:auto;flex:1">
       <div style="background:var(--p-surface-elevated);border:1px solid var(--p-border);border-radius:var(--p-radius-lg);padding:16px;margin-bottom:20px">
@@ -249,15 +249,15 @@
       </div>
 
       <div style="display:flex;gap:10px;margin-bottom:20px">
-        <button class="p-btn p-btn-primary p-btn-sm" id="btnSaveSbKey" type="button">💾 Lưu khoá & Kết nối</button>
-        <button class="p-btn p-btn-secondary p-btn-sm" id="btnTestSbConn" type="button">🔄 Kiểm tra kết nối</button>
+        <button class="p-btn p-btn-primary p-btn-sm" id="btnSaveSbKey" type="button"><i data-rusi-icon="save" data-size="16"></i> Lưu khoá & Kết nối</button>
+        <button class="p-btn p-btn-secondary p-btn-sm" id="btnTestSbConn" type="button"><i data-rusi-icon="refresh-cw" data-size="16"></i> Kiểm tra kết nối</button>
       </div>
 
       <div style="border-top:1px dashed var(--p-border);padding-top:16px;margin-bottom:20px">
         <div style="font-weight:600;font-size:13px;margin-bottom:8px">Đồng bộ cơ sở dữ liệu hai chiều:</div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button class="p-btn p-btn-primary p-btn-sm" id="btnPushAllToSb" type="button">☁️ Đẩy toàn bộ dữ liệu lên Supabase</button>
-          <button class="p-btn p-btn-secondary p-btn-sm" id="btnPullAllFromSb" type="button">📥 Kéo dữ liệu từ Supabase về Web</button>
+          <button class="p-btn p-btn-primary p-btn-sm" id="btnPushAllToSb" type="button"><i data-rusi-icon="cloud-upload" data-size="16"></i> Đẩy toàn bộ dữ liệu lên Supabase</button>
+          <button class="p-btn p-btn-secondary p-btn-sm" id="btnPullAllFromSb" type="button"><i data-rusi-icon="cloud-download" data-size="16"></i> Kéo dữ liệu từ Supabase về Web</button>
         </div>
       </div>
 
@@ -284,6 +284,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
+  <script src="rusi-icons.js?v=3.2"></script>
   <script src="data.js?v=3.2"></script>
   <script src="auth.js?v=3.2"></script>
   <script src="app.js?v=3.2"></script>

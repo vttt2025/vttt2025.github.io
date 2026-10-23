@@ -1358,3 +1358,33 @@ body.payload-body {
     align-items: flex-start;
   }
 }
+
+
+/* =====================================================================
+ * RUSI TRKI — LUCIDE VECTOR ICON SYSTEM (PAYLOAD CMS STUDIO)
+ * ===================================================================== */
+.rusi-icon,
+svg.rusi-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex-shrink: 0;
+  line-height: 1;
+  stroke: currentColor;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.payload-nav-icon .rusi-icon,
+.payload-nav-icon svg.rusi-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.payload-card-icon-wrap .rusi-icon,
+.payload-card-icon-wrap svg.rusi-icon {
+  width: 24px;
+  height: 24px;
+}

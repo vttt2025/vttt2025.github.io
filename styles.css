@@ -14834,3 +14834,41 @@ body.in-workspace .qcard-meaning {
     justify-content: flex-start;
   }
 }
+
+
+/* =====================================================================
+ * RUSI TRKI — LUCIDE VECTOR ICON SYSTEM (24px STANDARD)
+ * ===================================================================== */
+.rusi-icon,
+svg.rusi-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+  flex-shrink: 0;
+  line-height: 1;
+  stroke: currentColor;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.rusi-icon-xs { width: 14px; height: 14px; }
+.rusi-icon-sm { width: 16px; height: 16px; }
+.rusi-icon-md { width: 20px; height: 20px; }
+.rusi-icon-lg { width: 24px; height: 24px; }
+.rusi-icon-xl { width: 32px; height: 32px; }
+
+/* Hub Cards Vector Icons */
+.hub-card .hub-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hub-card .hub-icon svg {
+  width: 26px;
+  height: 26px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2px;
+}

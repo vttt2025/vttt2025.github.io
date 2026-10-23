@@ -32,7 +32,7 @@ for topic in topics:
     code = topic["code"]
     name = topic["name"]
     level = topic.get("level", "A1")
-    icon = topic.get("icon", "🏺")
+    icon = topic.get("icon", "🫙")
     desc = topic.get("desc", "")
     sub_topics = topic.get("sub_topics", [])
     

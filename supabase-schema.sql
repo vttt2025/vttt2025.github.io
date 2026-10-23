@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS vocab_jars (
     jar_name TEXT NOT NULL,              -- Tên lọ / chủ đề: vd "Đồ ăn - Đồ uống", "Mua sắm ở Auchan"
     code TEXT,                           -- Mã chủ đề định danh: vd "do_an_uong", "nghe_nghiep"
     level TEXT DEFAULT 'A1',             -- Khung CEFR A1 - B2
-    icon TEXT DEFAULT '🏺',              -- Icon đại diện (emoji)
+    icon TEXT DEFAULT '🫙',              -- Icon đại diện (emoji)
     description TEXT,                    -- Mô tả nội dung chủ đề
     color_code TEXT DEFAULT '#0039A6',
     is_system BOOLEAN DEFAULT FALSE,     -- Lọ hệ thống chuẩn hóa hay do học viên tự tạo

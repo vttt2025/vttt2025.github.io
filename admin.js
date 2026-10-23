@@ -137,7 +137,7 @@
       group: "study",
       label: "Lọ từ vựng",
       singular: "Lọ từ",
-      icon: "🏺",
+      icon: "🫙",
       webUrl: "vocabulary.html",
       source: () => (window.VOCAB_JARS || []),
       desc: "Kho lọ từ vựng theo chuỗi hành động và ngữ cảnh sống còn tại Nga, tích hợp thuật toán lặp lại ngắt quãng SM-2.",
@@ -147,7 +147,7 @@
         level: "A1",
         levelName: "Sơ cấp A1",
         desc: "Từ vựng sinh hoạt và giao tiếp sống còn.",
-        icon: "🏺",
+        icon: "🫙",
         is_pro_only: false,
         words: [
           { ru: "сло́во", vi: "từ ngữ", note: "danh từ giống trung (оно)", ex: "Русское слово." },
@@ -156,7 +156,7 @@
       }),
       fields: [
         { key: "id", label: "Mã lọ (ID)", type: "text", required: true, help: "Ví dụ: jar_auchan, jar_chemodan" },
-        { key: "icon", label: "Biểu tượng Emoji", type: "text", defaultValue: "🏺" },
+        { key: "icon", label: "Biểu tượng Emoji", type: "text", defaultValue: "🫙" },
         { key: "name", label: "Tên lọ từ vựng", type: "text", required: true },
         {
           key: "level",
@@ -738,7 +738,7 @@
       li.className = "payload-nav-item";
       li.innerHTML = `
         <a class="payload-nav-link" data-nav="collection:${col.slug}" href="#collection/${col.slug}">
-          <span class="payload-nav-icon">${col.icon}</span>
+          <span class="payload-nav-icon">${window.RusiIcons ? RusiIcons.get(col.icon, { size: 18 }) : col.icon}</span>
           <span class="payload-nav-label">${esc(col.label)}</span>
           <span class="payload-nav-badge" id="badge_${col.slug}">${items.length}</span>
         </a>
@@ -825,26 +825,26 @@
     let secondaryBtn = "";
 
     if (State.currentRoute === "list") {
-      primaryBtn = `<a class="p-btn p-btn-primary p-btn-sm" href="#collection/${State.currentSlug}/create">➕ Tạo mới</a>`;
-      secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncWeb" type="button">⚡ Đẩy về Web</button>`;
+      primaryBtn = `<a class="p-btn p-btn-primary p-btn-sm" href="#collection/${State.currentSlug}/create">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Tạo mới</a>`;
+      secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncWeb" type="button">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} Đẩy về Web</button>`;
     } else if (State.currentRoute === "editor") {
-      primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSaveDoc" type="button">💾 Lưu thay đổi</button>`;
-      secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenPreviewDrawer" type="button">👁️ Live Preview</button>`;
+      primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSaveDoc" type="button">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Lưu thay đổi</button>`;
+      secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenPreviewDrawer" type="button">${window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : ""} Live Preview</button>`;
     } else {
       primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSyncWeb" type="button">⚡ Đẩy về Web</button>`;
-      secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenSupabaseModal" type="button">⚡ Supabase</button>`;
+      secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenSupabaseModal" type="button">${window.RusiIcons ? RusiIcons.get("database-tests", { size: 14 }) : ""} Supabase</button>`;
     }
 
     const kebabHtml = `
       <div class="payload-kebab-menu" id="topbarKebab">
         <button class="p-btn-icon" id="btnKebabToggle" type="button" aria-label="Thao tác khác" title="Thêm thao tác">···</button>
         <div class="payload-kebab-dropdown" id="kebabDropdown">
-          <a class="payload-kebab-item" href="index.html" target="_blank">👁️ Mở Web học viên</a>
-          <button class="payload-kebab-item" id="kebabSbBtn" type="button">⚡ Cấu hình Supabase</button>
-          <button class="payload-kebab-item" id="kebabExportBtn" type="button">📤 Export JSON / data.js</button>
-          <button class="payload-kebab-item" id="kebabImportBtn" type="button">📥 Import Backup JSON</button>
+          <a class="payload-kebab-item" href="index.html" target="_blank">${window.RusiIcons ? RusiIcons.get("external-link", { size: 14 }) : ""} Mở Web học viên</a>
+          <button class="payload-kebab-item" id="kebabSbBtn" type="button">${window.RusiIcons ? RusiIcons.get("settings-gear", { size: 14 }) : ""} Cấu hình Supabase</button>
+          <button class="payload-kebab-item" id="kebabExportBtn" type="button">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Export JSON / data.js</button>
+          <button class="payload-kebab-item" id="kebabImportBtn" type="button">${window.RusiIcons ? RusiIcons.get("cloud-download", { size: 14 }) : ""} Import Backup JSON</button>
           <div class="payload-kebab-divider"></div>
-          <button class="payload-kebab-item danger" id="kebabResetBtn" type="button">🗑️ Khôi phục gốc (Reset)</button>
+          <button class="payload-kebab-item danger" id="kebabResetBtn" type="button">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""} Khôi phục gốc (Reset)</button>
         </div>
       </div>
     `;
@@ -913,14 +913,14 @@
       collectionsHtml += `
         <div class="payload-collection-card">
           <div class="payload-collection-card-head">
-            <div class="payload-card-icon-wrap">${col.icon}</div>
+            <div class="payload-card-icon-wrap">${window.RusiIcons ? RusiIcons.get(col.icon, { size: 24 }) : col.icon}</div>
             <span class="p-pill p-pill-neutral">${items.length} tài liệu</span>
           </div>
           <h3 class="payload-card-title">${esc(col.label)}</h3>
           <p class="payload-card-desc">${esc(col.desc || "Quản lý dữ liệu phân hệ.")}</p>
           <div class="payload-card-foot">
             <a class="p-btn p-btn-ghost p-btn-sm" href="#collection/${col.slug}">Xem danh sách →</a>
-            <a class="p-btn p-btn-primary p-btn-sm" href="#collection/${col.slug}/create">➕ Tạo mới</a>
+            <a class="p-btn p-btn-primary p-btn-sm" href="#collection/${col.slug}/create">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Tạo mới</a>
           </div>
         </div>
       `;
@@ -939,7 +939,7 @@
         <div class="payload-metric-card">
           <div class="payload-metric-head">
             <span>Tổng Tài Liệu</span>
-            <span>📚</span>
+            <span>${window.RusiIcons ? RusiIcons.get("book-open-blog", { size: 18 }) : ""}</span>
           </div>
           <div class="payload-metric-value">${totalDocs}</div>
           <div class="payload-metric-sub">Phân bố trên 10 phân hệ</div>
@@ -948,7 +948,7 @@
         <div class="payload-metric-card">
           <div class="payload-metric-head">
             <span>Cơ Sở Dữ Liệu</span>
-            <span>⚡</span>
+            <span>${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 18 }) : ""}</span>
           </div>
           <div class="payload-metric-value" style="font-size:18px;line-height:2">
             ${isSbConfigured ? '<span style="color:var(--p-success)">Supabase Cloud</span>' : '<span style="color:var(--p-warning)">Offline Cache</span>'}
@@ -959,7 +959,7 @@
         <div class="payload-metric-card">
           <div class="payload-metric-head">
             <span>Live Propagation</span>
-            <span>🔄</span>
+            <span>${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 18 }) : ""}</span>
           </div>
           <div class="payload-metric-value" style="font-size:18px;color:var(--p-primary);line-height:2">Kích hoạt</div>
           <div class="payload-metric-sub">In-place Array Mutation</div>
@@ -968,7 +968,7 @@
         <div class="payload-metric-card">
           <div class="payload-metric-head">
             <span>Quyền Hạn</span>
-            <span>🛡️</span>
+            <span>${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 18 }) : ""}</span>
           </div>
           <div class="payload-metric-value" style="font-size:18px;line-height:2">Super Admin</div>
           <div class="payload-metric-sub">Toàn quyền hệ thống</div>
@@ -1038,7 +1038,7 @@
       rowsHtml = `
         <tr>
           <td colspan="7" style="text-align:center;padding:48px 20px;color:var(--p-text-muted)">
-            <div style="font-size:24px;margin-bottom:8px">🔍</div>
+            <div style="margin-bottom:8px;color:var(--p-text-muted)">${window.RusiIcons ? RusiIcons.get("search-icon", { size: 36 }) : ""}</div>
             <div>Không tìm thấy tài liệu nào phù hợp với bộ lọc hiện tại.</div>
             <button class="p-btn p-btn-secondary p-btn-sm" style="margin-top:12px" onclick="window.clearFilters()">Xóa bộ lọc</button>
           </td>
@@ -1069,9 +1069,9 @@
             <td>${sourceBadge}</td>
             <td>
               <div class="payload-row-actions">
-                <a class="p-btn p-btn-ghost p-btn-sm" href="#collection/${slug}/edit/${encodeURIComponent(idKey)}" title="Chỉnh sửa">✏️</a>
-                <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.cloneDocument('${escAttr(slug)}', '${escAttr(idKey)}')" title="Nhân bản">📋</button>
-                <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.deleteDocument('${escAttr(slug)}', '${escAttr(idKey)}')" title="Xóa" style="color:var(--p-danger)">🗑️</button>
+                <a class="p-btn p-btn-ghost p-btn-sm" href="#collection/${slug}/edit/${encodeURIComponent(idKey)}" title="Chỉnh sửa">${window.RusiIcons ? RusiIcons.get("edit-3", { size: 14 }) : "Sửa"}</a>
+                <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.cloneDocument('${escAttr(slug)}', '${escAttr(idKey)}')" title="Nhân bản">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : "Copy"}</button>
+                <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.deleteDocument('${escAttr(slug)}', '${escAttr(idKey)}')" title="Xóa" style="color:var(--p-danger)">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : "Xóa"}</button>
               </div>
             </td>
           </tr>
@@ -1082,20 +1082,20 @@
     container.innerHTML = `
       <div class="payload-list-header">
         <div class="payload-list-title-wrap">
-          <span style="font-size:24px">${col.icon}</span>
+          <span style="font-size:24px;display:inline-flex;align-items:center">${window.RusiIcons ? RusiIcons.get(col.icon, { size: 28 }) : col.icon}</span>
           <h1 class="payload-list-title">${esc(col.label)}</h1>
           <span class="p-pill p-pill-neutral">${allItems.length}</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
-          <a class="p-btn p-btn-primary" href="#collection/${slug}/create">➕ Thêm mới</a>
-          <a class="p-btn p-btn-secondary" href="${col.webUrl}" target="_blank" title="Mở trang tương ứng của học viên">👁️ Xem trên web</a>
+          <a class="p-btn p-btn-primary" href="#collection/${slug}/create">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm mới</a>
+          <a class="p-btn p-btn-secondary" href="${col.webUrl}" target="_blank" title="Mở trang tương ứng của học viên">${window.RusiIcons ? RusiIcons.get("external-link", { size: 14 }) : ""} Xem trên web</a>
         </div>
       </div>
 
       <div class="payload-toolbar">
         <div class="payload-toolbar-left">
           <div class="payload-search-box">
-            <span class="payload-search-icon">🔍</span>
+            <span class="payload-search-icon">${window.RusiIcons ? RusiIcons.get("search-icon", { size: 16 }) : ""}</span>
             <input type="text" class="payload-search-input" id="tableSearch" placeholder="Tìm kiếm theo tiêu đề, ID, từ khóa..." value="${escAttr(State.searchQuery)}" />
           </div>
 
@@ -1124,9 +1124,9 @@
       <div class="payload-bulk-bar" id="bulkBar">
         <div style="font-weight:600;font-size:13px" id="bulkCountText">Đã chọn 0 mục</div>
         <div style="display:flex;gap:8px">
-          <button class="p-btn p-btn-danger p-btn-sm" id="btnBulkDelete" type="button">🗑️ Xoá mục đã chọn</button>
-          <button class="p-btn p-btn-secondary p-btn-sm" id="btnBulkMakePro" type="button">👑 Đặt thành PRO</button>
-          <button class="p-btn p-btn-secondary p-btn-sm" id="btnBulkMakeFree" type="button">🆓 Đặt thành Miễn phí</button>
+          <button class="p-btn p-btn-danger p-btn-sm" id="btnBulkDelete" type="button">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""} Xoá mục đã chọn</button>
+          <button class="p-btn p-btn-secondary p-btn-sm" id="btnBulkMakePro" type="button">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""} Đặt thành PRO</button>
+          <button class="p-btn p-btn-secondary p-btn-sm" id="btnBulkMakeFree" type="button">${window.RusiIcons ? RusiIcons.get("award-badge", { size: 14 }) : ""} Đặt thành Miễn phí</button>
         </div>
       </div>
 
@@ -1940,7 +1940,7 @@
           jar_name: doc.name || doc.title || "Lọ từ vựng",
           level: doc.level || "A1",
           description: doc.desc || "",
-          icon: doc.icon || "🏺",
+          icon: doc.icon || "🫙",
           color_code: doc.color || "#0039A6",
           is_system: true,
           words: Array.isArray(doc.words) ? doc.words : [],
@@ -1952,7 +1952,7 @@
           level: row.level || "A1",
           levelName: row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1",
           desc: row.description || "",
-          icon: row.icon || "🏺",
+          icon: row.icon || "🫙",
           color: row.color_code || "#0039A6",
           words: Array.isArray(row.words) ? row.words : []
         })
@@ -2701,7 +2701,7 @@
         <tr>
           <td>
             <div style="font-weight:700;display:flex;align-items:center;gap:8px">
-              <span style="font-size:18px">${col.icon || "📄"}</span>
+              <span style="display:inline-flex;align-items:center">${window.RusiIcons ? RusiIcons.get(col.icon || "file-text", { size: 18 }) : (col.icon || "📄")}</span>
               <span>${esc(m.label)}</span>
             </div>
           </td>
@@ -3199,13 +3199,13 @@
 
     const toggleBtn = document.getElementById("btnToggleTheme");
     if (toggleBtn) {
-      toggleBtn.textContent = savedTheme === "dark" ? "🌙" : "☀️";
+      toggleBtn.innerHTML = savedTheme === "dark" ? (window.RusiIcons ? RusiIcons.get("moon", { size: 16 }) : "🌙") : (window.RusiIcons ? RusiIcons.get("sun", { size: 16 }) : "☀️");
       toggleBtn.onclick = () => {
         const cur = document.documentElement.getAttribute("data-theme") || "dark";
         const next = cur === "dark" ? "light" : "dark";
         document.documentElement.setAttribute("data-theme", next);
         localStorage.setItem(THEME_KEY, next);
-        toggleBtn.textContent = next === "dark" ? "🌙" : "☀️";
+        toggleBtn.innerHTML = next === "dark" ? (window.RusiIcons ? RusiIcons.get("moon", { size: 16 }) : "🌙") : (window.RusiIcons ? RusiIcons.get("sun", { size: 16 }) : "☀️");
       };
     }
   }

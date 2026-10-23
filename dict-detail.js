@@ -343,10 +343,10 @@ const WordDetail = (() => {
         ${card && card.mastered
           ? `<button class="btn btn-soft btn-sm" id="wdUnmaster">↩ Bỏ Mastered</button>`
           : card
-          ? `<button class="btn btn-mastered btn-sm" id="wdMaster">✓ Tick · Đã thuộc</button>`
-          : `<button class="btn btn-outline btn-sm" id="wdAdd">+ Thêm vào hàng đợi học</button>`}
-        <button class="btn btn-soft btn-sm" id="wdAddJar">🏺 Bỏ vào Lọ từ vựng</button>
-        <button class="btn btn-soft btn-sm" id="wdStudy">📚 Học bằng flashcard</button>
+          ? `<button class="btn btn-mastered btn-sm" id="wdMaster">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : "✓"} Tick · Đã thuộc</button>`
+          : `<button class="btn btn-outline btn-sm" id="wdAdd">${window.RusiIcons ? RusiIcons.get("plus", { size: 16 }) : "+"} Thêm vào hàng đợi học</button>`}
+        <button class="btn btn-soft btn-sm" id="wdAddJar">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : "🫙"} Bỏ vào Lọ từ vựng</button>
+        <button class="btn btn-soft btn-sm" id="wdStudy">${window.RusiIcons ? RusiIcons.get("flashcards-layers", { size: 16 }) : "📚"} Học bằng flashcard</button>
       </div>`;
   }
 
@@ -365,7 +365,7 @@ const WordDetail = (() => {
       customJars = [{
         id: "custom-jar-default",
         name: "Lọ từ vựng của tôi 🇷🇺",
-        icon: "🏺",
+        icon: "🫙",
         desc: "Các từ vựng đã tra cứu trong từ điển",
         words: [],
         is_system: false
@@ -387,7 +387,7 @@ const WordDetail = (() => {
     if (typeof STORE !== "undefined") {
       STORE.set("custom_jars", customJars);
     }
-    toast(`🏺 Đã cuộn mẩu giấy "${entry.ru}" và bỏ vào "${targetJar.name}"!`);
+    toast(`🫙 Đã cuộn mẩu giấy "${entry.ru}" và bỏ vào "${targetJar.name}"!`);
   }
 
   function bindSrs(root, entry) {

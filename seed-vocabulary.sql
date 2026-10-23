@@ -5,7 +5,7 @@
 
 -- 1. Bổ sung các cột cần thiết cho vocab_jars nếu chưa có
 ALTER TABLE vocab_jars ADD COLUMN IF NOT EXISTS level TEXT DEFAULT 'A1';
-ALTER TABLE vocab_jars ADD COLUMN IF NOT EXISTS icon TEXT DEFAULT '🏺';
+ALTER TABLE vocab_jars ADD COLUMN IF NOT EXISTS icon TEXT DEFAULT '🫙';
 ALTER TABLE vocab_jars ADD COLUMN IF NOT EXISTS description TEXT;
 ALTER TABLE vocab_jars ADD COLUMN IF NOT EXISTS words JSONB DEFAULT '[]'::jsonb;
 

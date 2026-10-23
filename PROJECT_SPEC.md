@@ -35,7 +35,7 @@
   * **Bố cục Danh sách từ chuẩn DauEnglish (`https://dauenglish.com/vocabulary/test/...`)**:
     - **Thẻ Flashcard xem nhanh trên cùng (`.dau-vocab-preview-box`)**: Cho phép lật thẻ xem nhanh (Space hoặc chạm thẻ), nghe phát âm 🔊, gắn sao ⭐, trộn thẻ 🔀 và chuyển từ (`‹ 1/20 ›`) ngay trong giao diện danh sách.
     - **Thanh công cụ lọc chuẩn DauEnglish (`.dau-vocab-toolbar`)**: Hiển thị tiêu đề *Thuật ngữ trong học phần này (N)*, ô tìm kiếm từ/nghĩa, nút bật/tắt *Chi tiết* (ví dụ câu, từ loại, đồng nghĩa), bộ lọc *⭐ Gắn sao*, *✓ Đã thuộc*, bộ sắp xếp *Thứ tự gốc / A → Z* và nút CTA *⚡ Học Flashcard ngay →*.
-    - **Hiển thị danh sách thẻ hàng ngang chuẩn (`.dau-vocab-row-card`)**: Bố cục 3 phần trực quan (Từ tiếng Nga kèm trọng âm & từ loại bên trái; Nghĩa tiếng Việt & câu ví dụ song ngữ ở giữa; Bộ nút hành động 🔊 phát âm, ⭐ gắn sao, ✓ đánh dấu đã thuộc, 📖 tra 6 cách TFlat, 🏺 lưu lọ cá nhân bên phải).
+    - **Hiển thị danh sách thẻ hàng ngang chuẩn (`.dau-vocab-row-card`)**: Bố cục 3 phần trực quan (Từ tiếng Nga kèm trọng âm & từ loại bên trái; Nghĩa tiếng Việt & câu ví dụ song ngữ ở giữa; Bộ nút hành động 🔊 phát âm, ⭐ gắn sao, ✓ đánh dấu đã thuộc, 📖 tra 6 cách TFlat, 🫙 lưu lọ cá nhân bên phải).
     - **Kích hoạt tức thì**: Khi bấm `[📋 Xem từ (N)]` trên lọ từ vựng, hệ thống tự động kích hoạt ngay tab danh sách (`initialMode = "list"`) và hiển thị dữ liệu ngay lập tức, không để xảy ra tình trạng trống trắng.
   * Hỗ trợ học viên tự tạo lọ từ vựng cá nhân (`custom_jars`).
 * **Thuật toán lặp lại ngắt quãng SM-2 / Hộp Leitner (`srs.js`)**:
@@ -307,7 +307,7 @@ CREATE TABLE vocab_jars (
     level TEXT NOT NULL,
     level_name TEXT,
     description TEXT,
-    icon TEXT DEFAULT '🏺',
+    icon TEXT DEFAULT '🫙',
     color_code TEXT DEFAULT '#0039A6',
     is_system BOOLEAN DEFAULT TRUE,
     words JSONB DEFAULT '[]',
@@ -496,3 +496,143 @@ CREATE TABLE orders (
 11. **Tối ưu Trang chủ (`index.html`)**:
    * **Trợ lý AI**: Ẩn khối giới thiệu tĩnh trên trang chủ, chuyển thành dạng bong bóng chat nổi tròn thông minh (`.companion-bubble`) cố định ở góc dưới bên phải màn hình.
    * **Minh chứng xã hội (Social Proof)**: Tích hợp slider/carousel tự động chạy 5 phản hồi thực tế của học viên kèm avatar, số sao 5★ và lời nhận xét chân thực.
+
+
+---
+
+## 9. QUY CHUẨN VECTOR ICON LUCIDE 24px (LUCIDE DESIGN SYSTEM)
+
+Theo tiêu chuẩn thiết kế từ `rusi_trki_lucide_icon_system.html`, toàn bộ hệ thống webapp RUSI TRKI (bao gồm trang chủ, 7 chuyên mục, hệ thống làm bài thi, Payload CMS Studio và các trang con) sử dụng thống nhất bộ **Vector Icon Lucide 24px**, loại bỏ triệt để việc dùng emoji hệ điều hành không đồng nhất trong giao diện đồ họa.
+
+### 9.1. Thông số Kỹ thuật Chuẩn (Vector Specs)
+* **Kích thước khung vẽ (ViewBox)**: `0 0 24 24`
+* **Độ dày nét vẽ (Stroke Width)**: `2px` (chuẩn Lucide) hoặc `1.5px` (cho các nút phụ thanh mảnh).
+* **Màu sắc (Color)**: `stroke: currentColor` — tự động kế thừa màu chữ của phần tử cha hoặc class CSS.
+* **Đổ bóng / Nền (Fill)**: `fill: none`.
+* **Bo góc & đầu nét**: `stroke-linecap="round"` và `stroke-linejoin="round"`.
+* **Class định danh dùng chung**: `.rusi-icon`, `svg.rusi-icon`.
+* **Kích thước chuẩn**:
+  - `xs`: 14px (`.rusi-icon-xs`) — dùng trong tag, badge phụ, breadcrumb.
+  - `sm`: 16px (`.rusi-icon-sm`) — dùng trong nút phụ, bảng danh sách từ, action row.
+  - `md`: 20px (`.rusi-icon-md`) — dùng trong menu dropdown, header navigation.
+  - `lg`: 24px (`.rusi-icon-lg`) — chuẩn mặc định cho cards, tính năng chính.
+  - `xl`: 32px / 48px (`.rusi-icon-xl`) — dùng trong empty state, modal, hero banner.
+
+---
+
+### 9.2. Bảng Danh mục Icon Chuẩn (Icon Catalog Mapping)
+
+| Phân hệ / Nhóm | ID Icon Chuẩn | Tên Đại Diện | Emojis & Alias Tương Đương Được Tự Động Phân Giải |
+|---|---|---|---|
+| **7 Chuyên Mục (Pillars)** | `archive-jar` | Lọ từ vựng Spaced Repetition | `🫙`, `🏺`, `vocab`, `jar`, `tuvung` |
+| | `pen-tool` | Luyện viết tả tranh (Письмо) | `✍️`, `pismo`, `writing`, `pen` |
+| | `headphones` | Luyện nghe 4 Part CEFR | `🎧`, `audio`, `listening`, `nghe` |
+| | `mic-speaking` | Luyện nói & Shadowing AI | `🎙️`, `mic`, `speaking`, `noi`, `shadowing` |
+| | `graduation-cap` | Phòng thi thử TRKI quốc tế | `🎓`, `exam`, `trki`, `torfl`, `thi` |
+| | `book-open-blog` | Blog & Cẩm nang du học | `📖`, `📰`, `blog`, `book`, `reading` |
+| | `shopping-bag-shop` | Shop hàng Nga & Dịch vụ | `🛍️`, `shop`, `cart`, `bag`, `store` |
+| **Gamification & Mascot** | `flame-streak` | Chuỗi ngày học Streak | `🔥`, `streak`, `flame`, `fire`, `lua` |
+| | `zap-xp` | Điểm kinh nghiệm XP | `⚡`, `xp`, `zap`, `energy`, `diem` |
+| | `trophy-reward` | Cúp bảng xếp hạng học viên | `🏆`, `trophy`, `cup`, `rank`, `leaderboard` |
+| | `cat-mascot` | Trợ lý linh vật Mèo Rusika | `🐱`, `cat`, `mascot`, `rusika`, `meo` |
+| | `award-badge` | Huy hiệu chứng nhận khóa học | `🎖️`, `award`, `badge`, `medal`, `huy-hieu` |
+| | `crown-vip` | Hội viên PRO / VIP đặc quyền | `👑`, `crown`, `vip`, `pro` |
+| **Phòng Thi & Trợ Lý AI** | `timer-clock` | Đồng hồ đếm ngược server-side | `⏱️`, `clock`, `timer`, `time`, `dong-ho` |
+| | `bot-rusika` | Trợ lý trí tuệ nhân tạo Rusika | `🤖`, `bot`, `ai`, `robot` |
+| | `keyboard-cyrillic`| Bàn phím ảo gõ tiếng Nga | `⌨️`, `keyboard`, `cyrillic`, `ban-phim` |
+| | `waveform-audio` | Sóng âm thanh so sánh giọng nói | `waveform`, `soundwave` |
+| | `flashcards-layers` | Thẻ lật học từ thông minh 2 mặt | `flashcard`, `layers`, `flashcards` |
+| | `sparkles-clean` | Gợi ý & Tự động sửa lỗi AI | `✨`, `sparkles`, `magic` |
+| | `shield-anti-cheat` | Giám sát chuyển tab, chống gian lận | `🛡️`, `shield`, `anti-cheat`, `security` |
+| | `check-circle-correct` | Chỉ báo đáp án đúng / đạt điểm | `✅`, `correct`, `check-circle`, `dung` |
+| **Shop & VietQR** | `qr-code-vietqr` | Mã QR thanh toán tức thì 2.0 | `qr`, `vietqr`, `qrcode` |
+| | `credit-card` | Thẻ Mir / ATM quốc tế | `💳`, `card`, `the`, `bank` |
+| | `copy-clipboard` | Sao chép số tài khoản & nội dung | `📋`, `copy`, `clipboard`, `sao-chep` |
+| | `package-order` | Kiện hàng & đơn hàng quà tặng | `📦`, `package`, `order`, `box` |
+| | `truck-shipping` | Vận chuyển hồ sơ du học | `🚚`, `truck`, `ship`, `shipping` |
+| **Admin CMS & An Ninh** | `layout-dashboard`| Bảng điều khiển tổng quan | `📊`, `dashboard`, `overview` |
+| | `users-students` | Quản lý học viên & CRM | `👥`, `users`, `students`, `crm` |
+| | `database-tests` | Ngân hàng đề thi & từ điển | `🗄️`, `database`, `db` |
+| | `history-audit` | Nhật ký kiểm toán an ninh | `📜`, `audit`, `logs`, `history` |
+| | `settings-gear` | Cấu hình R2, Webhook, API | `⚙️`, `🛠️`, `settings`, `gear`, `config` |
+| **Điều Hướng & Tiện Ích** | `lock-pro` | Khóa Paywall nội dung VIP | `🔒`, `lock`, `khoa`, `paywall` |
+| | `play-control` | Bật phát âm thanh bài nghe | `▶️`, `play`, `phat` |
+| | `pause-control` | Tạm dừng phát âm thanh | `⏸️`, `pause`, `dung` |
+| | `volume-high` | Phát âm từ vựng / Âm lượng | `🔊`, `volume`, `sound`, `speak` |
+| | `arrow-right` | Mũi tên tiếp theo / CTA Link | `→`, `arrow`, `next`, `tiep` |
+| | `chevron-down` | Dropdown menu & mở rộng | `▾`, `chevron`, `down`, `caret` |
+| | `log-out` | Đăng xuất tài khoản an toàn | `🚪`, `logout`, `signout`, `exit` |
+| | `search-icon` | Tra cứu từ điển Cyrillic | `🔍`, `search`, `tim-kiem` |
+| | `star` | Đánh dấu sao từ khó | `⭐`, `star`, `favorite` |
+| | `trash-2` | Xóa bản ghi / Xóa từ khỏi lọ | `🗑️`, `trash`, `delete`, `del` |
+| | `refresh-cw` | Làm mới / Đồng bộ Supabase Cloud | `🔄`, `refresh`, `sync`, `reload` |
+| | `file-text` | Tài liệu văn bản / Bài viết | `📄`, `file`, `doc`, `document` |
+| | `cloud-upload` | Đẩy dữ liệu lên Cloud / Backup | `☁️`, `upload`, `cloud-up` |
+| | `cloud-download` | Tải dữ liệu về Web / Khôi phục | `📥`, `download`, `cloud-down` |
+| | `save` | Lưu cấu hình / Lưu từ vựng | `💾`, `save`, `luu` |
+| | `eye` | Xem trước Live Preview Studio | `👁️`, `eye`, `preview` |
+| | `frown` | Đánh giá từ vựng mức Khó | `😣`, `frown`, `kho` |
+| | `smile` | Đánh giá từ vựng mức Tốt | `🙂`, `smile`, `tot` |
+| | `folder` | Thư mục từ vựng & dữ liệu | `📂`, `folder`, `thu-muc` |
+| | `inbox` | Hộp thư rỗng / Chưa có từ | `📭`, `inbox`, `hop-thu` |
+| | `bar-chart-2` | Biểu đồ phân tích năng lực | `📊`, `chart`, `barchart` |
+| | `shuffle` | Xáo trộn ngẫu nhiên thẻ học | `🔀`, `shuffle`, `xao-tron` |
+| | `maximize-2` | Phóng to toàn màn hình Flashcard | `⛶`, `maximize`, `fullscreen` |
+| | `minimize-2` | Thu nhỏ màn hình (Esc) | `minimize` |
+| | `circle-dot` | Nút chọn trắc nghiệm Quizlet | `🔘`, `circle-dot`, `trac-nghiem` |
+
+---
+
+### 9.3. Kiến Trúc Thư Viện `rusi-icons.js` & Cách Triển Khai
+
+Thư viện [`rusi-icons.js`](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/rusi-icons.js) được tích hợp ở thẻ `<head>` hoặc trước `app.js` trong mọi trang web HTML:
+
+```html
+<script src="rusi-icons.js?v=3.2"></script>
+```
+
+#### 1. Sử dụng trong HTML Tĩnh (Tự Động Render):
+Hệ thống tự động quét và biến các thẻ sau thành thẻ SVG Lucide chuẩn nét:
+```html
+<!-- Dùng thuộc tính data-rusi-icon -->
+<i data-rusi-icon="headphones" data-size="24"></i>
+<span data-rusi-icon="crown-vip" data-size="16"></span>
+
+<!-- Hoặc tương thích thẻ custom element -->
+<rusi-icon name="archive-jar" size="20"></rusi-icon>
+
+<!-- Hoặc tương thích chuẩn Lucide HTML -->
+<i data-lucide="pen-tool"></i>
+```
+
+#### 2. Sử dụng trong JavaScript / Template String Render:
+```javascript
+// Sinh chuỗi HTML SVG chuẩn:
+const iconHtml = window.RusiIcons.get("headphones", {
+  size: 24,            // kích thước pixel (mặc định 24)
+  strokeWidth: 2,      // độ dày nét vẽ (mặc định 2)
+  color: "currentColor", // màu sắc kế thừa
+  className: "my-icon" // class bổ sung nếu cần
+});
+
+// Chuyển đổi an toàn từ emoji hoặc dữ liệu lưu từ database:
+const userIcon = window.RusiIcons.get(doc.icon || "archive-jar", { size: 18 });
+```
+
+#### 3. Kích hoạt quét lại phần tử động:
+Khi giao diện được vẽ lại động bằng JS:
+```javascript
+window.RusiIcons.replace(document.getElementById("myContainer"));
+```
+
+---
+
+### 9.4. Quy Định Bắt Buộc Khi Tạo Mới Trang & UI Components
+
+1. **Tuyệt đối không dùng emoji hệ điều hành làm biểu tượng tương tác**:
+   * Không đặt `🎧`, `🎙️`, `✍️`, `👑`, `⚡`, `⭐`, `🗑️` làm icon nút bấm hoặc danh sách chọn.
+   * Luôn gọi `RusiIcons.get(id, { size })` hoặc đặt thẻ `data-rusi-icon="id"`.
+2. **Kế thừa màu sắc**:
+   * Luôn để `color: "currentColor"` để icon tự đổi màu mượt mà theo trạng thái `:hover`, `:active`, theme Dark/Light và class cha.
+3. **Tuân thủ tap target $\ge 44\times 44$px**:
+   * Mặc dù icon có kích thước 16px - 24px, container nút bấm (`.dau-action-icon-btn`, `.btn-icon`) trên mobile/tablet phải có padding để đạt vùng chạm $\ge 44\times 44$px.

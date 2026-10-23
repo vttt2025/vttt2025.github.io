@@ -30,7 +30,7 @@ export const VocabJars: CollectionConfig = {
           name: 'icon',
           type: 'text',
           label: 'Icon Emoji',
-          defaultValue: '🏺',
+          defaultValue: '🫙',
           admin: { width: '20%' },
         },
         {

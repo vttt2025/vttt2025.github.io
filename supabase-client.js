@@ -189,7 +189,7 @@
               level: row.level || "A1",
               levelName: row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1",
               desc: row.description || "",
-              icon: row.icon || "🏺",
+              icon: row.icon || "🫙",
               is_system: true,
               words: Array.isArray(row.words) ? row.words : []
             };

@@ -294,7 +294,7 @@ const MascotRusika = {
               <div class="rusika-xp-fill" style="width:${info.percent}%"></div>
             </div>
             <div class="rusika-xp-text">
-              <span>⭐ ${xp} XP</span>
+              <span>${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : "⭐"} ${xp} XP</span>
               <span>${info.nextXp ? `${info.percent}% (${info.remaining} XP lên Lv.${lvl + 1})` : 'MAX 👑'}</span>
             </div>
           </div>
@@ -304,8 +304,8 @@ const MascotRusika = {
         <div class="rusika-bubble-col">
           <div class="rusika-comic-bubble">
             <div class="rusika-bubble-header">
-              <span class="bubble-tag">🐾 BẠN ĐỒNG HÀNH AI · ${this.getTitle(lvl).toUpperCase()}</span>
-              <span class="bubble-streak">🔥 Chuỗi học: <b>${streak} ngày</b></span>
+              <span class="bubble-tag">${window.RusiIcons ? RusiIcons.get("cat-mascot", { size: 14 }) : "🐾"} BẠN ĐỒNG HÀNH AI · ${this.getTitle(lvl).toUpperCase()}</span>
+              <span class="bubble-streak">${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 14 }) : "🔥"} Chuỗi học: <b>${streak} ngày</b></span>
             </div>
             <div class="rusika-bubble-message">
               «Привет! Mình là Rusi AI. Hôm nay bạn muốn luyện từ vựng, nghe 4 Part CEFR hay sửa phát âm cùng mình? Nhấn vào đây để trò chuyện nhé! 🐾»
@@ -326,7 +326,7 @@ const MascotRusika = {
             <div class="rusika-bubble-cta-row">
               <button class="btn btn-primary btn-chat-trigger" id="btnInteractRusika" type="button">
                 <span>Mở cửa sổ trò chuyện với Rusika</span>
-                <span class="cta-arrow">→</span>
+                <span class="cta-arrow">${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "→"}</span>
               </button>
               <span class="cta-hint">Hoàn toàn miễn phí · Phản hồi tức thì</span>
             </div>
@@ -891,7 +891,7 @@ const Monetization = {
         <button class="vietqr-close" id="closeProGate" title="Đóng">&times;</button>
         
         <div class="pro-gate-header">
-          <div class="pro-gate-crown-badge">👑</div>
+          <div class="pro-gate-crown-badge">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 28 }) : "👑"}</div>
           <span class="pro-gate-kicker">RUSI TRKI • ĐẶC QUYỀN HỘI VIÊN</span>
           <h3 class="pro-gate-title">${esc(customTitle)}</h3>
         </div>
@@ -1100,7 +1100,7 @@ const Monetization = {
             <!-- NÚT KÍCH HOẠT & CAM KẾT AN TOÀN -->
             <div>
               <button class="btn-confirm-vietqr" id="btnConfirmPaid" type="button">
-                ⚡ Tôi đã chuyển khoản xong (Kích hoạt ngay)
+                ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : "⚡"} Tôi đã chuyển khoản xong (Kích hoạt ngay)
               </button>
               <div class="vietqr-guarantee">
                 🔒 Tự động đối soát chữ ký số (Signature Verification) 24/7. Tài khoản được kích hoạt ngay lập tức mà không cần chờ duyệt tay.
@@ -1232,7 +1232,7 @@ const Monetization = {
 
         <div class="manage-pro-hero">
           <div>
-            <div class="manage-pro-title">👑 Trạng thái Thành viên PRO</div>
+            <div class="manage-pro-title">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 20 }) : "👑"} Trạng thái Thành viên PRO</div>
             <div class="manage-pro-meta">
               ${proInfo.isLifetime ? "✨ Bạn đang sở hữu đặc quyền VIP Vĩnh Viễn" : `⏳ Hạn sử dụng: <b>${esc(proInfo.expiresFormatted)}</b>`}
             </div>
@@ -1499,7 +1499,7 @@ const AuthModal = {
         <div class="auth-modal-body">
           <div class="auth-features-preview">
             <div class="auth-feat-item">⚡ <span>Lưu chuỗi ngày Streak & tích lũy XP</span></div>
-            <div class="auth-feat-item">🏺 <span>Đồng bộ Lọ từ vựng Spaced Repetition (SM-2)</span></div>
+            <div class="auth-feat-item">🫙 <span>Đồng bộ Lọ từ vựng Spaced Repetition (SM-2)</span></div>
             <div class="auth-feat-item">📝 <span>Lưu kết quả & báo cáo làm bài thi thử TRKI</span></div>
           </div>
 
@@ -1570,7 +1570,7 @@ function renderHeader() {
       <div class="nav-dropdown nav-more" id="navMoreDropdown">
         <button class="nav-dropdown-trigger" type="button" aria-haspopup="true" aria-expanded="false">
           <span>More</span>
-          <svg viewBox="0 0 16 16" width="12" height="12"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          ${window.RusiIcons ? RusiIcons.get("chevron-down", { size: 12 }) : '<svg viewBox="0 0 16 16" width="12" height="12"><path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2"/></svg>'}
         </button>
         <div class="nav-dropdown-menu">
           ${moreItems}
@@ -1705,12 +1705,12 @@ function renderUserArea() {
       <!-- PHẦN NÂNG CẤP PRO HIỂN THỊ KHI NGƯỜI DÙNG ĐĂNG NHẬP -->
       ${isPro ? `
         <button class="pro-chip-header" id="btnManageProHeader" type="button" title="Gói PRO đang kích hoạt — Bấm để xem và quản lý">
-          <span>👑</span>
+          <span>${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 16 }) : "👑"}</span>
           <span>PRO MEMBER</span>
         </button>
       ` : `
         <button class="btn-upgrade-pro-header" id="btnUpgradeHeader" type="button" title="Mở khóa 100% đề thi TRKI và AI">
-          <span class="btn-upgrade-icon">⚡</span>
+          <span class="btn-upgrade-icon">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "⚡"}</span>
           <span class="btn-upgrade-text">Nâng cấp PRO</span>
         </button>
       `}
@@ -1719,7 +1719,7 @@ function renderUserArea() {
         <button class="user-trigger" id="userTrigger" type="button" aria-haspopup="true" aria-expanded="false">
           ${avatar}
           <span class="user-name-short">${esc(shortName)}</span>
-          <span class="caret" aria-hidden="true">▾</span>
+          <span class="caret" aria-hidden="true">${window.RusiIcons ? RusiIcons.get("chevron-down", { size: 12 }) : "▾"}</span>
         </button>
         <div class="user-dropdown" id="userDropdown" role="menu">
           <div class="user-dropdown-head">
@@ -1737,7 +1737,7 @@ function renderUserArea() {
           ${isPro ? `
             <div class="user-pro-vip-card" id="btnUserMenuManagePro" title="Xem quyền lợi và quản lý gói PRO">
               <div class="user-pro-vip-head">
-                <span class="user-pro-vip-badge">👑 ${esc(proInfo ? proInfo.pkgTitle : "PRO VIP")}</span>
+                <span class="user-pro-vip-badge">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : "👑"} ${esc(proInfo ? proInfo.pkgTitle : "PRO VIP")}</span>
                 <span class="user-pro-vip-action">Quản lý →</span>
               </div>
               <div class="user-pro-vip-time">
@@ -1747,7 +1747,7 @@ function renderUserArea() {
           ` : `
             <div class="user-pro-cta-card" id="btnUserMenuUpgrade" title="Nâng cấp tài khoản PRO ngay">
               <div class="user-pro-cta-left">
-                <span class="user-pro-cta-icon">👑</span>
+                <span class="user-pro-cta-icon">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 20 }) : "👑"}</span>
                 <div>
                   <div class="user-pro-cta-title">Nâng cấp PRO VIP</div>
                   <div class="user-pro-cta-desc">Mở khóa 100% đề thi TRKI & AI</div>
@@ -1760,14 +1760,14 @@ function renderUserArea() {
           <!-- PHẦN ĐIỂM XP VÀ CHUỖI STREAK HIỂN THỊ TRANG TRỌNG -->
           <div class="user-stats-bar">
             <div class="user-stat-card">
-              <span class="user-stat-icon">⚡</span>
+              <span class="user-stat-icon">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "⚡"}</span>
               <div>
                 <div class="user-stat-val" id="userMenuXp">${STORE.get("xp", 0)} XP</div>
                 <div class="user-stat-lbl">Kinh nghiệm</div>
               </div>
             </div>
             <div class="user-stat-card">
-              <span class="user-stat-icon">🔥</span>
+              <span class="user-stat-icon">${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 16 }) : "🔥"}</span>
               <div>
                 <div class="user-stat-val" id="userMenuStreak">${STORE.get("streak", 0)} ngày</div>
                 <div class="user-stat-lbl">Chuỗi Streak</div>
@@ -1778,27 +1778,27 @@ function renderUserArea() {
           <div class="user-dropdown-divider"></div>
 
           <a class="user-dropdown-item" href="index.html#progress" role="menuitem">
-            <span>📊</span>
+            <span>${window.RusiIcons ? RusiIcons.get("layout-dashboard", { size: 18 }) : "📊"}</span>
             <span>Tiến độ của tôi</span>
           </a>
           <a class="user-dropdown-item" href="vocabulary.html" role="menuitem">
-            <span>🏺</span>
+            <span>${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 18 }) : "🫙"}</span>
             <span>Lọ từ vựng & Flashcard</span>
           </a>
           <a class="user-dropdown-item" href="mock-test.html" role="menuitem">
-            <span>📝</span>
+            <span>${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 18 }) : "📝"}</span>
             <span>Luyện thi TRKI</span>
           </a>
           ${isAdmin ? `
           <a class="user-dropdown-item" href="admin.html" role="menuitem">
-            <span>🛠️</span>
+            <span>${window.RusiIcons ? RusiIcons.get("settings-gear", { size: 18 }) : "🛠️"}</span>
             <span>Quản trị hệ thống</span>
           </a>` : ""}
 
           <div class="user-dropdown-divider"></div>
 
           <button class="user-dropdown-item user-dropdown-signout" id="btnSignOut" type="button" role="menuitem">
-            <span>🚪</span>
+            <span>${window.RusiIcons ? RusiIcons.get("log-out", { size: 18 }) : "🚪"}</span>
             <span>Đăng xuất</span>
           </button>
         </div>

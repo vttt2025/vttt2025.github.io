@@ -111,17 +111,17 @@
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar" style="margin-bottom:20px">
         <button type="button" class="dau-back-btn" id="btnBackFromSrs">
-          ← Quay lại kho từ vựng
+          <i data-rusi-icon="arrow-left" data-size="16"></i> Quay lại kho từ vựng
         </button>
         <div class="dau-workspace-info">
           <span class="dau-badge dau-badge-a1">ÔN TẬP THÔNG MINH</span>
-          <span class="dau-workspace-title">⚡ Phiên Ôn Tập Flashcard Ngắt Quãng</span>
+          <span class="dau-workspace-title"><i data-rusi-icon="zap-xp" data-size="18"></i> Phiên Ôn Tập Flashcard Ngắt Quãng</span>
         </div>
       </div>
 
       <!-- SRS HERO (Fixed layout, no nested container) -->
       <div class="srs-hero-card" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:20px;box-shadow:var(--shadow)">
-        <span class="srs-tag">🧠 Spaced Repetition System</span>
+        <span class="srs-tag"><i data-rusi-icon="brain" data-size="16"></i> Spaced Repetition System</span>
         <h2 style="font-size:1.7rem;margin:8px 0">Chinh phục từ vựng <span class="hl">bằng thuật toán</span></h2>
         <p class="srs-sub" style="max-width:700px;margin-bottom:16px">Học theo phương pháp <b>lặp lại ngắt quãng</b> — đẩy đúng từ vào đúng thời điểm não sắp quên. Nhớ lâu, tốn ít công sức.</p>
         <div class="srs-hero-stats">
@@ -134,10 +134,10 @@
 
       <!-- SRS INNER TABS -->
       <div class="srs-tabs">
-        <button class="srs-tab active" data-t="study">📚 Học</button>
-        <button class="srs-tab" data-t="progress">📈 Tiến độ</button>
-        <button class="srs-tab" data-t="vocab">🗂️ Từ vựng của tôi</button>
-        <button class="srs-tab" data-t="how">⚙️ Thuật toán</button>
+        <button class="srs-tab active" data-t="study"><i data-rusi-icon="flashcards-layers" data-size="16"></i> Học</button>
+        <button class="srs-tab" data-t="progress"><i data-rusi-icon="trending-up" data-size="16"></i> Tiến độ</button>
+        <button class="srs-tab" data-t="vocab"><i data-rusi-icon="archive-jar" data-size="16"></i> Từ vựng của tôi</button>
+        <button class="srs-tab" data-t="how"><i data-rusi-icon="settings-gear" data-size="16"></i> Thuật toán</button>
       </div>
 
       <!-- TAB: STUDY -->
@@ -164,16 +164,16 @@
               <label>
                 <span>Chế độ học</span>
                 <select id="setupMode">
-                  <option value="flashcard">🃏 Flashcard</option>
-                  <option value="typing">⌨️ Gõ từ</option>
-                  <option value="choice">🔘 Trắc nghiệm</option>
-                  <option value="speak">🎙️ Phát âm</option>
+                  <option value="flashcard">Flashcard</option>
+                  <option value="typing">Gõ từ</option>
+                  <option value="choice">Trắc nghiệm</option>
+                  <option value="speak">Phát âm</option>
                 </select>
               </label>
             </div>
             <div class="srs-setup-actions">
-              <button class="btn btn-primary btn-lg" id="startSession">▶ Bắt đầu học</button>
-              <button class="btn btn-soft" id="quickSession">⚡ Học nhanh (chỉ từ tới hạn)</button>
+              <button class="btn btn-primary btn-lg" id="startSession"><i data-rusi-icon="play-control" data-size="16"></i> Bắt đầu học</button>
+              <button class="btn btn-soft" id="quickSession"><i data-rusi-icon="zap-xp" data-size="16"></i> Học nhanh (chỉ từ tới hạn)</button>
             </div>
             <p class="srs-setup-hint" id="setupHint"></p>
           </div>
@@ -186,39 +186,39 @@
           </div>
           <div class="srs-mode-bar">
             <span class="srs-mode-label" id="modeLabel">Flashcard</span>
-            <button class="btn btn-soft btn-sm" id="exitSession">✕ Thoát</button>
+            <button class="btn btn-soft btn-sm" id="exitSession"><i data-rusi-icon="x" data-size="14"></i> Thoát</button>
           </div>
           <div class="srs-stage" id="srsStage"></div>
           <div class="srs-controls hidden" id="srsControls">
             <p class="srs-prompt">Bạn nhớ từ này thế nào?</p>
             <div class="srs-rate-row">
               <button class="rate-btn rate-again" data-r="again">
-                <span class="rate-label">🔁 Học lại</span>
+                <span class="rate-label"><i data-rusi-icon="refresh-cw" data-size="14"></i> Học lại</span>
                 <span class="rate-time" id="rateAgain">—</span>
               </button>
               <button class="rate-btn rate-hard" data-r="hard">
-                <span class="rate-label">😣 Khó</span>
+                <span class="rate-label"><i data-rusi-icon="frown" data-size="14"></i> Khó</span>
                 <span class="rate-time" id="rateHard">—</span>
               </button>
               <button class="rate-btn rate-good" data-r="good">
-                <span class="rate-label">🙂 Tốt</span>
+                <span class="rate-label"><i data-rusi-icon="smile" data-size="14"></i> Tốt</span>
                 <span class="rate-time" id="rateGood">—</span>
               </button>
               <button class="rate-btn rate-easy" data-r="easy">
-                <span class="rate-label">😎 Dễ</span>
+                <span class="rate-label"><i data-rusi-icon="star" data-size="14"></i> Dễ</span>
                 <span class="rate-time" id="rateEasy">—</span>
               </button>
             </div>
             <div class="srs-extra-row">
-              <button class="btn btn-soft btn-sm" id="replayAudio">🔊 Nghe lại</button>
-              <button class="btn btn-mastered btn-sm" id="markMastered">✓ Tick · Đã thuộc</button>
+              <button class="btn btn-soft btn-sm" id="replayAudio"><i data-rusi-icon="volume-high" data-size="16"></i> Nghe lại</button>
+              <button class="btn btn-mastered btn-sm" id="markMastered"><i data-rusi-icon="check-circle-correct" data-size="16"></i> Tick · Đã thuộc</button>
             </div>
           </div>
         </div>
 
         <div id="studyDone" class="srs-done hidden">
           <div class="srs-done-card">
-            <p style="font-size:3rem">🎉</p>
+            <div style="margin-bottom:12px;color:var(--primary)"><i data-rusi-icon="trophy-reward" data-size="48"></i></div>
             <h2>Hoàn thành phiên học!</h2>
             <div class="srs-done-stats" id="doneStats"></div>
             <div class="srs-done-actions">
@@ -236,18 +236,18 @@
             <h3>Hôm nay</h3>
             <div class="prog-big" id="progTodayReviewed">0</div>
             <div class="prog-meta">
-              <span>📚 Đã ôn: <b id="progTodayReviewed2">0</b></span>
-              <span>✨ Từ mới: <b id="progTodayNew">0</b></span>
-              <span>🎯 Đúng: <b id="progTodayCorrect">0</b></span>
+              <span><i data-rusi-icon="book-open-blog" data-size="14"></i> Đã ôn: <b id="progTodayReviewed2">0</b></span>
+              <span><i data-rusi-icon="sparkles-clean" data-size="14"></i> Từ mới: <b id="progTodayNew">0</b></span>
+              <span><i data-rusi-icon="target" data-size="14"></i> Đúng: <b id="progTodayCorrect">0</b></span>
             </div>
           </div>
           <div class="prog-card">
             <h3>Tổng quan</h3>
             <div class="prog-big" id="progTotalMastered">0</div>
             <div class="prog-meta">
-              <span>🟢 Đã thuộc: <b id="progMastered2">0</b></span>
-              <span>🔄 Đang ôn: <b id="progReviewing">0</b></span>
-              <span>🆕 Từ mới: <b id="progNew">0</b></span>
+              <span><i data-rusi-icon="check-circle-correct" data-size="14"></i> Đã thuộc: <b id="progMastered2">0</b></span>
+              <span><i data-rusi-icon="refresh-cw" data-size="14"></i> Đang ôn: <b id="progReviewing">0</b></span>
+              <span><i data-rusi-icon="sparkles-clean" data-size="14"></i> Từ mới: <b id="progNew">0</b></span>
             </div>
           </div>
           <div class="prog-card">
@@ -273,10 +273,10 @@
         <div class="prog-card">
           <h3>Cài đặt</h3>
           <div style="display:flex;gap:10px;flex-wrap:wrap">
-            <button class="btn btn-soft" id="exportData">📤 Xuất dữ liệu</button>
-            <button class="btn btn-soft" id="importData">📥 Nhập dữ liệu</button>
+            <button class="btn btn-soft" id="exportData"><i data-rusi-icon="cloud-upload" data-size="16"></i> Xuất dữ liệu</button>
+            <button class="btn btn-soft" id="importData"><i data-rusi-icon="cloud-download" data-size="16"></i> Nhập dữ liệu</button>
             <input type="file" id="importFile" accept=".json" style="display:none" />
-            <button class="btn btn-outline" id="resetSrs" style="color:var(--red);border-color:var(--red)">🗑️ Reset toàn bộ tiến độ</button>
+            <button class="btn btn-outline" id="resetSrs" style="color:var(--red);border-color:var(--red)"><i data-rusi-icon="trash-2" data-size="16"></i> Reset toàn bộ tiến độ</button>
           </div>
         </div>
       </div>
@@ -284,13 +284,13 @@
       <!-- TAB: VOCAB -->
       <div id="tab-vocab" class="srs-tab-pane">
         <div class="vocab-toolbar">
-          <input id="vocabSearch" type="search" placeholder="🔍 Tìm từ tiếng Nga hoặc nghĩa..." />
+          <input id="vocabSearch" type="search" placeholder="Tìm từ tiếng Nga hoặc nghĩa..." />
           <select id="vocabFilter">
             <option value="all">Tất cả trạng thái</option>
-            <option value="new">🆕 Từ mới</option>
-            <option value="learning">🔄 Đang học</option>
-            <option value="reviewing">📚 Đang ôn</option>
-            <option value="mastered">✅ Đã thuộc</option>
+            <option value="new">Từ mới</option>
+            <option value="learning">Đang học</option>
+            <option value="reviewing">Đang ôn</option>
+            <option value="mastered">Đã thuộc</option>
           </select>
           <select id="vocabLevel">
             <option value="A1" selected>A1</option>
@@ -311,17 +311,17 @@
 
           <div class="how-features">
             <div class="how-feat">
-              <div class="how-feat-icon">⏰</div>
+              <div class="how-feat-icon"><i data-rusi-icon="timer-clock" data-size="28"></i></div>
               <h4>Tự động lên lịch</h4>
               <p>Bạn chấm — hệ thống tự tính ngày ôn kế tiếp.</p>
             </div>
             <div class="how-feat">
-              <div class="how-feat-icon">🎯</div>
+              <div class="how-feat-icon"><i data-rusi-icon="target" data-size="28"></i></div>
               <h4>4 chế độ học</h4>
               <p>Flashcard · Gõ từ · Trắc nghiệm · Phát âm.</p>
             </div>
             <div class="how-feat">
-              <div class="how-feat-icon">📊</div>
+              <div class="how-feat-icon"><i data-rusi-icon="bar-chart-2" data-size="28"></i></div>
               <h4>Phân loại theo CEFR</h4>
               <p>Từ vựng chia theo A1 → C1 tương ứng ТЭУ → ТРКИ-3.</p>
             </div>
@@ -374,6 +374,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
+  <script src="rusi-icons.js?v=3.2"></script>
   <script src="data.js?v=3.2"></script>
   <script src="auth.js?v=3.0"></script>
   <script src="srs.js?v=3.2"></script>
