@@ -85,7 +85,7 @@
       group: "study",
       label: "Đề thi TRKI",
       singular: "Đề thi",
-      icon: "🎓",
+      icon: "graduation-cap",
       webUrl: "mock-test.html",
       source: () => (window.TRKI_BANK || []),
       desc: "Ngân hàng đề thi chuẩn TRKI A1, A2, B1, B2 với 3 phần thi: Từ vựng & Ngữ pháp, Đọc hiểu, Nghe hiểu.",
@@ -126,7 +126,7 @@
           type: "select",
           options: [
             { v: "false", l: "Miễn phí (Free cho mọi học viên)" },
-            { v: "true", l: "👑 Khóa VIP (Chỉ dành cho tài khoản PRO)" }
+            { v: "true", l: "Khóa VIP (Chỉ dành cho tài khoản PRO)" }
           ]
         }
       ]
@@ -137,7 +137,7 @@
       group: "study",
       label: "Lọ từ vựng",
       singular: "Lọ từ",
-      icon: "🫙",
+      icon: "archive-jar",
       webUrl: "vocabulary.html",
       source: () => (window.VOCAB_JARS || []),
       desc: "Kho lọ từ vựng theo chuỗi hành động và ngữ cảnh sống còn tại Nga, tích hợp thuật toán lặp lại ngắt quãng SM-2.",
@@ -147,7 +147,7 @@
         level: "A1",
         levelName: "Sơ cấp A1",
         desc: "Từ vựng sinh hoạt và giao tiếp sống còn.",
-        icon: "🫙",
+        icon: "archive-jar",
         is_pro_only: false,
         words: [
           { ru: "сло́во", vi: "từ ngữ", note: "danh từ giống trung (оно)", ex: "Русское слово." },
@@ -156,7 +156,7 @@
       }),
       fields: [
         { key: "id", label: "Mã lọ (ID)", type: "text", required: true, help: "Ví dụ: jar_auchan, jar_chemodan" },
-        { key: "icon", label: "Biểu tượng Emoji", type: "text", defaultValue: "🫙" },
+        { key: "icon", label: "Mã Icon Lucide", type: "text", defaultValue: "archive-jar" },
         { key: "name", label: "Tên lọ từ vựng", type: "text", required: true },
         {
           key: "level",
@@ -178,7 +178,7 @@
           type: "select",
           options: [
             { v: "false", l: "Miễn phí (Free)" },
-            { v: "true", l: "👑 Chỉ dành cho PRO" }
+            { v: "true", l: "Chỉ dành cho PRO" }
           ]
         }
       ]
@@ -189,7 +189,7 @@
       group: "study",
       label: "Luyện nghe 4 Part",
       singular: "Bài nghe",
-      icon: "🎧",
+      icon: "headphones",
       webUrl: "listening.html",
       source: () => (window.LISTENING_LESSONS || []),
       desc: "Hệ thống bài nghe 4 Part chuẩn CEFR và Shadowing Studio có phụ đề song ngữ và trắc nghiệm.",
@@ -202,7 +202,7 @@
         category: "cafe",
         categoryName: "Ăn uống & Cà phê",
         estMinutes: 10,
-        icon: "☕",
+        icon: "coffee",
         partNumber: 1,
         is_pro_only: false,
         lines: [
@@ -230,7 +230,7 @@
           defaultValue: "A1"
         },
         { key: "categoryName", label: "Chủ đề / Ngữ cảnh", type: "text", defaultValue: "Đời sống hàng ngày" },
-        { key: "icon", label: "Biểu tượng Emoji", type: "text", defaultValue: "🎧" },
+        { key: "icon", label: "Mã Icon Lucide", type: "text", defaultValue: "headphones" },
         { key: "estMinutes", label: "Thời lượng ước tính (phút)", type: "number", defaultValue: 12 },
         {
           key: "is_pro_only",
@@ -238,7 +238,7 @@
           type: "select",
           options: [
             { v: "false", l: "Miễn phí" },
-            { v: "true", l: "👑 Chỉ dành cho PRO" }
+            { v: "true", l: "Chỉ dành cho PRO" }
           ]
         }
       ]
@@ -249,7 +249,7 @@
       group: "study",
       label: "Luyện nói Shadowing",
       singular: "Bộ câu nói",
-      icon: "🎙️",
+      icon: "mic-speaking",
       webUrl: "speaking.html",
       source: () => (window.SPEAKING_SETS || []),
       desc: "Kho mẫu câu luyện nói phản xạ, ngữ điệu và phát âm tiếng Nga có AI chấm điểm âm vị.",
@@ -261,7 +261,7 @@
         category: "basic",
         categoryName: "Giao tiếp cơ bản",
         phonemeTarget: "Luyện âm cứng/mềm và trọng âm từ",
-        icon: "🤝",
+        icon: "handshake",
         is_pro_only: false,
         items: [
           { ru: "Добрый день! Как ваши дела́?", vi: "Chào bạn! Công việc của bạn thế nào?" },
@@ -285,14 +285,14 @@
         },
         { key: "categoryName", label: "Tên nhóm giao tiếp", type: "text", defaultValue: "Giao tiếp hàng ngày" },
         { key: "phonemeTarget", label: "Mục tiêu âm vị / Trọng âm cần chú ý", type: "text" },
-        { key: "icon", label: "Emoji đại diện", type: "text", defaultValue: "🎙️" },
+        { key: "icon", label: "Mã Icon Lucide", type: "text", defaultValue: "mic-speaking" },
         {
           key: "is_pro_only",
           label: "Quyền truy cập",
           type: "select",
           options: [
             { v: "false", l: "Miễn phí" },
-            { v: "true", l: "👑 Chỉ dành cho PRO" }
+            { v: "true", l: "Chỉ dành cho PRO" }
           ]
         }
       ]
@@ -303,7 +303,7 @@
       group: "study",
       label: "Luyện viết tả tranh",
       singular: "Đề bài viết",
-      icon: "✍️",
+      icon: "pen-tool",
       webUrl: "writing.html",
       source: () => (window.WRITING_TASKS || []),
       desc: "Đề bài luyện viết Письмо theo chuẩn TRKI kèm từ khóa gợi ý và bài viết mẫu.",
@@ -313,7 +313,7 @@
         levelName: "Sơ cấp A1",
         category: "general",
         categoryName: "Sinh hoạt",
-        icon: "📝",
+        icon: "pen-tool",
         estMinutes: 15,
         title: "Viết đoạn văn ngắn",
         prompt: "Напишите короткий текст о вашей семье или друзьях.",
@@ -351,7 +351,7 @@
       group: "study",
       label: "Video «Хочу в Россию»",
       singular: "Tập phim",
-      icon: "🎬",
+      icon: "film",
       webUrl: "vocabulary.html",
       source: () => (window.VOCAB_LESSONS || []),
       desc: "Series video hoạt hình tình huống đời sống sinh viên du học tại Nga.",
@@ -362,7 +362,7 @@
         ep: 1,
         ru: "Новый день в Москве",
         vi: "Ngày mới ở Moskva",
-        scene: "🏙️",
+        scene: "building-2",
         story: "Anya thức dậy tại ký túc xá và bắt đầu một ngày mới tại thủ đô.",
         words: [
           { ru: "утро", vi: "buổi sáng", note: "danh từ trung" },
@@ -379,7 +379,7 @@
           defaultValue: "series"
         },
         { key: "ep", label: "Số tập (Episode)", type: "number", defaultValue: 1 },
-        { key: "scene", label: "Emoji cảnh phim", type: "text", defaultValue: "🎬" },
+        { key: "scene", label: "Mã Icon Cảnh Phim", type: "text", defaultValue: "film" },
         { key: "ru", label: "Tiêu đề tiếng Nga", type: "text", required: true },
         { key: "vi", label: "Tiêu đề tiếng Việt", type: "text", required: true },
         { key: "story", label: "Cốt truyện / Bối cảnh", type: "textarea" }
@@ -391,7 +391,7 @@
       group: "commerce",
       label: "Sản phẩm Shop Nga",
       singular: "Sản phẩm",
-      icon: "🛍️",
+      icon: "shopping-bag-shop",
       webUrl: "shop.html",
       source: () => (window.SHOP_PRODUCTS || []),
       desc: "Sản phẩm bánh kẹo Alenka, mỹ phẩm Siberia và các gói dịch vụ Du học Nga.",
@@ -413,10 +413,10 @@
           label: "Ngành hàng",
           type: "select",
           options: [
-            { v: "banh_keo", l: "🍬 Bánh kẹo & Thực phẩm Nga" },
-            { v: "my_pham", l: "🌿 Mỹ phẩm Siberia" },
-            { v: "luu_niem", l: "🪆 Quà lưu niệm Nga" },
-            { v: "dich_vu_du_hoc", l: "🎓 Dịch vụ & Hồ sơ Du học Nga" }
+            { v: "banh_keo", l: "Bánh kẹo & Thực phẩm Nga" },
+            { v: "my_pham", l: "Mỹ phẩm Siberia" },
+            { v: "luu_niem", l: "Quà lưu niệm Nga" },
+            { v: "dich_vu_du_hoc", l: "Dịch vụ & Hồ sơ Du học Nga" }
           ]
         },
         { key: "categoryName", label: "Tên ngành hàng hiển thị", type: "text" },
@@ -434,7 +434,7 @@
       group: "commerce",
       label: "Gói cước PRO",
       singular: "Gói cước",
-      icon: "💎",
+      icon: "crown-vip",
       webUrl: "index.html#pricing",
       source: () => (window.PACKAGES || []),
       desc: "Bảng giá và quyền lợi các gói hội viên VIP PRO (6 tháng, 1 năm, trọn đời).",
@@ -466,7 +466,7 @@
           type: "select",
           options: [
             { v: "false", l: "Gói tiêu chuẩn" },
-            { v: "true", l: "⭐ Gói phổ biến nhất" }
+            { v: "true", l: "Gói phổ biến nhất" }
           ]
         }
       ]
@@ -477,7 +477,7 @@
       group: "commerce",
       label: "Cẩm nang Blog",
       singular: "Bài viết",
-      icon: "📰",
+      icon: "book-open-blog",
       webUrl: "blog.html",
       source: () => (window.BLOG_POSTS || []),
       desc: "Kinh nghiệm xin học bổng chính phủ, đời sống ký túc xá và thủ tục du học Nga.",
@@ -486,7 +486,7 @@
         title: "Bài viết cẩm nang mới",
         tag: "Lộ trình",
         date: "Tháng 10, 2026",
-        icon: "🇷🇺",
+        icon: "flag",
         excerpt: "Tóm tắt ngắn gọn nội dung bài viết về đời sống và du học Nga.",
         content: "Nội dung bài viết chi tiết được viết tại đây...",
         published: true
@@ -496,7 +496,7 @@
         { key: "title", label: "Tiêu đề bài viết", type: "text", required: true },
         { key: "tag", label: "Chuyên mục (Lộ trình / KTX / Học bổng / Đời sống)", type: "text" },
         { key: "date", label: "Thời gian đăng (ví dụ: Tháng 10, 2026)", type: "text" },
-        { key: "icon", label: "Emoji đại diện bài viết", type: "text", defaultValue: "🇷🇺" },
+        { key: "icon", label: "Mã Icon Lucide", type: "text", defaultValue: "flag" },
         { key: "excerpt", label: "Tóm tắt bài viết hiển thị ngoài danh sách", type: "textarea" },
         { key: "content", label: "Nội dung bài viết chi tiết (Hỗ trợ HTML/Markdown)", type: "textarea", required: true }
       ]
@@ -507,7 +507,7 @@
       group: "system",
       label: "Học viên & Quản trị",
       singular: "Người dùng",
-      icon: "👥",
+      icon: "users-students",
       webUrl: "index.html",
       source: () => {
         const store = loadAdminStore();
@@ -547,7 +547,7 @@
           type: "select",
           options: [
             { v: "false", l: "Tài khoản thường" },
-            { v: "true", l: "👑 Đã kích hoạt PRO" }
+            { v: "true", l: "Đã kích hoạt PRO" }
           ]
         },
         { key: "streak", label: "Chuỗi ngày học liên tục (Streak)", type: "number", defaultValue: 0 },
@@ -831,7 +831,7 @@
       primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSaveDoc" type="button">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Lưu thay đổi</button>`;
       secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenPreviewDrawer" type="button">${window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : ""} Live Preview</button>`;
     } else {
-      primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSyncWeb" type="button">⚡ Đẩy về Web</button>`;
+      primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSyncWeb" type="button">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} Đẩy về Web</button>`;
       secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenSupabaseModal" type="button">${window.RusiIcons ? RusiIcons.get("database-tests", { size: 14 }) : ""} Supabase</button>`;
     }
 
@@ -861,7 +861,7 @@
     const btnSync = document.getElementById("btnSyncWeb");
     if (btnSync) btnSync.onclick = () => {
       syncDataToWeb();
-      toast("⚡ Đã cập nhật và đột biến dữ liệu runtime thành công trên toàn bộ website!");
+      toast("Đã cập nhật và đột biến dữ liệu runtime thành công trên toàn bộ website!");
     };
 
     const btnSbModal = document.getElementById("btnOpenSupabaseModal");
@@ -1051,7 +1051,7 @@
         const titleText = it.title || it.name || it.ru || it.id;
         const subText = it.desc || it.vi || (it.parts ? `${it.parts.length} phần thi` : "");
         const levelBadge = it.level ? `<span class="p-pill p-pill-info">${esc(it.level)}</span>` : "";
-        const proBadge = String(it.is_pro_only) === "true" || it.is_pro ? `<span class="p-pill p-pill-warning">👑 PRO</span>` : `<span class="p-pill p-pill-neutral">Free</span>`;
+        const proBadge = String(it.is_pro_only) === "true" || it.is_pro ? `<span class="p-pill p-pill-warning">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO</span>` : `<span class="p-pill p-pill-neutral">Free</span>`;
         const sourceBadge = it.__source === "admin" ? `<span class="p-pill p-pill-violet">Admin sửa</span>` : `<span class="p-pill p-pill-neutral">Bản gốc</span>`;
 
         rowsHtml += `
@@ -1314,13 +1314,13 @@
           <!-- Editor Tabs -->
           <div class="payload-editor-tabs">
             <button class="payload-editor-tab ${State.activeEditorTab === "content" ? "active" : ""}" type="button" onclick="window.switchEditorTab('content')">
-              📝 Nội dung chính
+              ${window.RusiIcons ? RusiIcons.get("file-text", { size: 14 }) : ""} Nội dung chính
             </button>
             <button class="payload-editor-tab ${State.activeEditorTab === "structure" ? "active" : ""}" type="button" onclick="window.switchEditorTab('structure')">
-              🧩 Cấu trúc Array Builder
+              ${window.RusiIcons ? RusiIcons.get("flashcards-layers", { size: 14 }) : ""} Cấu trúc Array Builder
             </button>
             <button class="payload-editor-tab ${State.activeEditorTab === "json" ? "active" : ""}" type="button" onclick="window.switchEditorTab('json')">
-              💻 JSON / Mã nguồn
+              ${window.RusiIcons ? RusiIcons.get("keyboard-cyrillic", { size: 14 }) : ""} JSON / Mã nguồn
             </button>
           </div>
 
@@ -1340,7 +1340,7 @@
           <div id="tabJson" style="display:${State.activeEditorTab === "json" ? "block" : "none"}">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
               <span style="font-size:12.5px;color:var(--p-text-muted)">Chỉnh sửa JSON trực tiếp với kiểm tra cú pháp thời gian thực:</span>
-              <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.formatJsonEditor()">✨ Format JSON</button>
+              <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.formatJsonEditor()">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} Format JSON</button>
             </div>
             <textarea class="payload-code-editor" id="jsonEditorArea">${esc(jsonString)}</textarea>
           </div>
@@ -1368,7 +1368,7 @@
               </div>
               <div>
                 <span style="color:var(--p-text-dim)">Supabase Cloud:</span>
-                <span style="float:right"><span class="p-pill p-pill-success">⚡ Tự động đẩy Cloud</span></span>
+                <span style="float:right"><span class="p-pill p-pill-success">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 12 }) : ""} Tự động đẩy Cloud</span></span>
               </div>
             </div>
           </div>
@@ -1376,8 +1376,8 @@
           <div class="payload-doc-card">
             <div class="payload-doc-card-title">Hành động</div>
             <div style="display:flex;flex-direction:column;gap:8px">
-              <button class="p-btn p-btn-primary" type="button" onclick="window.saveDocument()">💾 Lưu & Đồng bộ Cloud (Supabase)</button>
-              <button class="p-btn p-btn-secondary" type="button" onclick="window.openLivePreview()">👁️ Live Preview Studio</button>
+              <button class="p-btn p-btn-primary" type="button" onclick="window.saveDocument()">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Lưu & Đồng bộ Cloud (Supabase)</button>
+              <button class="p-btn p-btn-secondary" type="button" onclick="window.openLivePreview()">${window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : ""} Live Preview Studio</button>
               <a class="p-btn p-btn-ghost" href="#collection/${slug}">Huỷ & Quay lại</a>
             </div>
           </div>
@@ -1386,7 +1386,7 @@
             <div class="payload-doc-card" style="border-color:var(--p-danger-soft)">
               <div class="payload-doc-card-title" style="color:var(--p-danger)">Vùng nguy hiểm</div>
               <p style="font-size:12px;color:var(--p-text-muted);margin:0 0 12px 0">Xóa tài liệu này khỏi bộ sưu tập (có thể khôi phục từ data.js bất kỳ lúc nào).</p>
-              <button class="p-btn p-btn-danger p-btn-sm" type="button" onclick="window.deleteDocument('${escAttr(slug)}', '${escAttr(State.currentDocId)}')">🗑️ Xoá tài liệu này</button>
+              <button class="p-btn p-btn-danger p-btn-sm" type="button" onclick="window.deleteDocument('${escAttr(slug)}', '${escAttr(State.currentDocId)}')">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""} Xoá tài liệu này</button>
             </div>
           ` : ""}
         </div>
@@ -1463,9 +1463,9 @@
       const obj = JSON.parse(el.value);
       State.currentDraft = obj;
       el.value = JSON.stringify(obj, null, 2);
-      toast("✨ Đã định dạng JSON chuẩn.");
+      toast("Đã định dạng JSON chuẩn.");
     } catch (e) {
-      toast("❌ Lỗi cú pháp JSON: " + e.message);
+      toast("Lỗi cú pháp JSON: " + e.message);
     }
   };
 
@@ -1517,7 +1517,7 @@
               </div>
               <input type="text" class="p-input" placeholder="Giải thích ngữ pháp..." value="${escAttr(q.ex || "")}" oninput="window.updateTrkiQuestion(${pIdx}, ${qIdx}, 'ex', this.value)" />
             </div>
-            <button class="p-btn-icon" type="button" onclick="window.removeTrkiQuestion(${pIdx}, ${qIdx})" title="Xóa câu hỏi">✕</button>
+            <button class="p-btn-icon" type="button" onclick="window.removeTrkiQuestion(${pIdx}, ${qIdx})" title="Xóa câu hỏi">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
           </div>
         `;
       });
@@ -1530,8 +1530,8 @@
               <span style="font-size:12px;color:var(--p-text-muted);margin-left:8px">(${p.questions ? p.questions.length : 0} câu hỏi)</span>
             </div>
             <div style="display:flex;gap:6px">
-              <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.addTrkiQuestion(${pIdx})">➕ Thêm câu hỏi</button>
-              <button class="p-btn-icon" type="button" onclick="window.removeTrkiPart(${pIdx})" title="Xoá phần thi này">✕</button>
+              <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.addTrkiQuestion(${pIdx})">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu hỏi</button>
+              <button class="p-btn-icon" type="button" onclick="window.removeTrkiPart(${pIdx})" title="Xoá phần thi này">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
             </div>
           </div>
           <div class="payload-array-items">
@@ -1545,7 +1545,7 @@
       <div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
           <span style="font-weight:700">Cấu trúc các Phần thi TRKI (${parts.length} phần):</span>
-          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addTrkiPart()">➕ Thêm phần thi mới</button>
+          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addTrkiPart()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm phần thi mới</button>
         </div>
         ${partsHtml || '<div style="padding:24px;text-align:center;color:var(--p-text-muted)">Chưa có phần thi nào.</div>'}
       </div>
@@ -1621,7 +1621,7 @@
             </div>
             <input type="text" class="p-input" placeholder="Ví dụ câu song ngữ..." value="${escAttr(w.ex || "")}" oninput="window.updateVocabWord(${idx}, 'ex', this.value)" />
           </div>
-          <button class="p-btn-icon" type="button" onclick="window.removeVocabWord(${idx})" title="Xóa từ này">✕</button>
+          <button class="p-btn-icon" type="button" onclick="window.removeVocabWord(${idx})" title="Xóa từ này">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
         </div>
       `;
     });
@@ -1630,7 +1630,7 @@
       <div class="payload-array-container">
         <div class="payload-array-header">
           <span style="font-weight:700">Danh sách mẩu từ vựng (${words.length} từ)</span>
-          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addVocabWord()">➕ Thêm từ mới</button>
+          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addVocabWord()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm từ mới</button>
         </div>
         <div class="payload-array-items">
           ${rowsHtml || '<div style="text-align:center;padding:24px;color:var(--p-text-muted)">Chưa có từ nào trong lọ. Bấm "Thêm từ mới" để tạo.</div>'}
@@ -1671,7 +1671,7 @@
             </div>
             <input type="text" class="p-input" placeholder="Dịch tiếng Việt..." value="${escAttr(l.vi || "")}" oninput="window.updateListeningLine(${idx}, 'vi', this.value)" />
           </div>
-          <button class="p-btn-icon" type="button" onclick="window.removeListeningLine(${idx})">✕</button>
+          <button class="p-btn-icon" type="button" onclick="window.removeListeningLine(${idx})">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
         </div>
       `;
     });
@@ -1697,7 +1697,7 @@
               </div>
             </div>
           </div>
-          <button class="p-btn-icon" type="button" onclick="window.removeListeningQuestion(${qIdx})">✕</button>
+          <button class="p-btn-icon" type="button" onclick="window.removeListeningQuestion(${qIdx})">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
         </div>
       `;
     });
@@ -1707,7 +1707,7 @@
         <div class="payload-array-container">
           <div class="payload-array-header">
             <span style="font-weight:700">Lời thoại Shadowing (${lines.length} câu)</span>
-            <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addListeningLine()">➕ Thêm câu thoại</button>
+            <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addListeningLine()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu thoại</button>
           </div>
           <div class="payload-array-items">
             ${linesHtml || '<div style="text-align:center;padding:20px;color:var(--p-text-muted)">Chưa có câu thoại.</div>'}
@@ -1717,7 +1717,7 @@
         <div class="payload-array-container">
           <div class="payload-array-header">
             <span style="font-weight:700">Câu hỏi trắc nghiệm nghe hiểu (${questions.length} câu)</span>
-            <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.addListeningQuestion()">➕ Thêm câu hỏi</button>
+            <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.addListeningQuestion()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu hỏi</button>
           </div>
           <div class="payload-array-items">
             ${qHtml || '<div style="text-align:center;padding:20px;color:var(--p-text-muted)">Chưa có câu hỏi trắc nghiệm.</div>'}
@@ -1779,7 +1779,7 @@
             <input type="text" class="p-input" placeholder="Câu tiếng Nga (trọng âm)..." value="${escAttr(it.ru || "")}" oninput="window.updateSpeakingItem(${idx}, 'ru', this.value)" style="margin-bottom:6px" />
             <input type="text" class="p-input" placeholder="Dịch tiếng Việt..." value="${escAttr(it.vi || "")}" oninput="window.updateSpeakingItem(${idx}, 'vi', this.value)" />
           </div>
-          <button class="p-btn-icon" type="button" onclick="window.removeSpeakingItem(${idx})">✕</button>
+          <button class="p-btn-icon" type="button" onclick="window.removeSpeakingItem(${idx})">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
         </div>
       `;
     });
@@ -1788,7 +1788,7 @@
       <div class="payload-array-container">
         <div class="payload-array-header">
           <span style="font-weight:700">Các câu luyện nói (${items.length} câu)</span>
-          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addSpeakingItem()">➕ Thêm câu mới</button>
+          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addSpeakingItem()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu mới</button>
         </div>
         <div class="payload-array-items">
           ${itemsHtml || '<div style="text-align:center;padding:20px;color:var(--p-text-muted)">Chưa có câu nào.</div>'}
@@ -1821,11 +1821,11 @@
     (features || []).forEach((feat, idx) => {
       rowsHtml += `
         <div class="payload-array-row" style="margin-bottom:6px">
-          <span class="payload-array-row-num">✓</span>
+          <span class="payload-array-row-num">${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""}</span>
           <div class="payload-array-row-fields">
             <input type="text" class="p-input" value="${escAttr(feat)}" oninput="window.updatePackageFeature(${idx}, this.value)" />
           </div>
-          <button class="p-btn-icon" type="button" onclick="window.removePackageFeature(${idx})">✕</button>
+          <button class="p-btn-icon" type="button" onclick="window.removePackageFeature(${idx})">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
         </div>
       `;
     });
@@ -1834,7 +1834,7 @@
       <div class="payload-array-container">
         <div class="payload-array-header">
           <span style="font-weight:700">Quyền lợi gói hội viên (${(features || []).length} mục)</span>
-          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addPackageFeature()">➕ Thêm quyền lợi</button>
+          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addPackageFeature()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm quyền lợi</button>
         </div>
         <div class="payload-array-items">
           ${rowsHtml || '<div style="padding:16px;text-align:center;color:var(--p-text-muted)">Chưa có quyền lợi.</div>'}
@@ -1910,7 +1910,7 @@
           passing_score: Number(doc.passPercent) || 66,
           is_published: true,
           is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
-          icon: doc.icon || "🎓",
+          icon: doc.icon || "graduation-cap",
           raw_data: { parts: Array.isArray(doc.parts) ? doc.parts : [] },
           updated_at: new Date().toISOString()
         }),
@@ -1924,7 +1924,7 @@
           durationMin: Number(row.duration_minutes) || 45,
           passPercent: Number(row.passing_score) || 66,
           is_pro_only: Boolean(row.is_pro_only),
-          icon: row.icon || "🎓",
+          icon: row.icon || "graduation-cap",
           parts: (row.raw_data && Array.isArray(row.raw_data.parts)) ? row.raw_data.parts : []
         })
       },
@@ -1940,7 +1940,7 @@
           jar_name: doc.name || doc.title || "Lọ từ vựng",
           level: doc.level || "A1",
           description: doc.desc || "",
-          icon: doc.icon || "🫙",
+          icon: doc.icon || "archive-jar",
           color_code: doc.color || "#0039A6",
           is_system: true,
           words: Array.isArray(doc.words) ? doc.words : [],
@@ -1952,7 +1952,7 @@
           level: row.level || "A1",
           levelName: row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1",
           desc: row.description || "",
-          icon: row.icon || "🫙",
+          icon: row.icon || "archive-jar",
           color: row.color_code || "#0039A6",
           words: Array.isArray(row.words) ? row.words : []
         })
@@ -1974,7 +1974,7 @@
           category: doc.category || "airport",
           category_name: doc.categoryName || "Bài nghe",
           est_minutes: Number(doc.estMinutes) || 10,
-          icon: doc.icon || "🎧",
+          icon: doc.icon || "headphones",
           part_number: Number(doc.partNumber) || 1,
           is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
           raw_data: {
@@ -1994,7 +1994,7 @@
           category: row.category || "airport",
           categoryName: row.category_name || "Bài nghe",
           estMinutes: Number(row.est_minutes) || 10,
-          icon: row.icon || "🎧",
+          icon: row.icon || "headphones",
           partNumber: Number(row.part_number) || 1,
           is_pro_only: Boolean(row.is_pro_only),
           lines: (row.raw_data && Array.isArray(row.raw_data.lines)) ? row.raw_data.lines : [],
@@ -2018,7 +2018,7 @@
           category: doc.category || "greeting",
           category_name: doc.categoryName || "Chào hỏi",
           phoneme_target: doc.phonemeTarget || "",
-          icon: doc.icon || "🗣️",
+          icon: doc.icon || "mic-speaking",
           is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
           sentence_ru: (doc.items && doc.items[0] && doc.items[0].ru) || "",
           raw_data: { items: Array.isArray(doc.items) ? doc.items : [] },
@@ -2032,7 +2032,7 @@
           category: row.category || "greeting",
           categoryName: row.category_name || "Chào hỏi",
           phonemeTarget: row.phoneme_target || "",
-          icon: row.icon || "🗣️",
+          icon: row.icon || "mic-speaking",
           is_pro_only: Boolean(row.is_pro_only),
           items: (row.raw_data && Array.isArray(row.raw_data.items)) ? row.raw_data.items : (row.sentence_ru ? [{ ru: row.sentence_ru, vi: "" }] : [])
         })
@@ -2050,7 +2050,7 @@
           level_name: doc.levelName || "Sơ cấp A1",
           category: doc.category || "intro",
           category_name: doc.categoryName || "Tự giới thiệu",
-          icon: doc.icon || "📝",
+          icon: doc.icon || "pen-tool",
           est_minutes: Number(doc.estMinutes) || 15,
           title: doc.title || "Đề luyện viết",
           prompt: doc.prompt || "",
@@ -2073,7 +2073,7 @@
           levelName: row.level_name || "Sơ cấp A1",
           category: row.category || "intro",
           categoryName: row.category_name || "Tự giới thiệu",
-          icon: row.icon || "📝",
+          icon: row.icon || "pen-tool",
           estMinutes: Number(row.est_minutes) || 15,
           title: row.title || "",
           prompt: row.prompt || "",
@@ -2166,7 +2166,7 @@
           cover_image: doc.cover || "assets/red-square.jpg",
           excerpt: doc.excerpt || "",
           content_markdown: doc.content || doc.content_markdown || "",
-          icon: doc.icon || "📰",
+          icon: doc.icon || "book-open-blog",
           author: doc.author || "RUSI Editorial",
           read_time: doc.readTime || "5 phút đọc",
           published: true,
@@ -2180,7 +2180,7 @@
           cover: row.cover_image || "assets/red-square.jpg",
           excerpt: row.excerpt || "",
           content: row.content_markdown || "",
-          icon: row.icon || "📰",
+          icon: row.icon || "book-open-blog",
           author: row.author || "RUSI Editorial",
           readTime: row.read_time || "5 phút đọc"
         })
@@ -2390,7 +2390,7 @@
       try {
         State.currentDraft = JSON.parse(jsonEl.value);
       } catch (err) {
-        toast("❌ Lỗi cú pháp JSON: " + err.message);
+        toast("Lỗi cú pháp JSON: " + err.message);
         return;
       }
     }
@@ -2398,7 +2398,7 @@
     const data = State.currentDraft;
     const idKey = data.id || data.slug || data.title;
     if (!idKey) {
-      toast("❌ Lỗi: Mã ID / Slug là bắt buộc.");
+      toast("Lỗi: Mã ID / Slug là bắt buộc.");
       return;
     }
 
@@ -2408,7 +2408,7 @@
     if (State.isCreating) {
       const exists = getMergedList(slug).some((it) => (it.id || it.slug || it.title) === idKey);
       if (exists) {
-        toast(`❌ Mã "${idKey}" đã tồn tại. Vui lòng chọn mã khác.`);
+        toast(`Mã "${idKey}" đã tồn tại. Vui lòng chọn mã khác.`);
         return;
       }
       store[slug].push({ ...data, __admin: true });
@@ -2431,19 +2431,19 @@
 
     // 2. Đồng bộ đám mây Supabase PostgreSQL nếu collection có cấu hình
     if (SupabaseSyncEngine && SupabaseSyncEngine.hasMapping(slug)) {
-      toast("⏳ Đang lưu & đẩy lên Supabase Cloud...");
+      toast("Đang lưu & đẩy lên Supabase Cloud...");
       try {
         const syncRes = await SupabaseSyncEngine.upsertDoc(slug, data);
         if (syncRes.ok) {
-          toast(`☁️ Đã lưu & đồng bộ thành công lên Supabase (bảng ${syncRes.table})!`);
+          toast(`Đã lưu & đồng bộ thành công lên Supabase (bảng ${syncRes.table})!`);
         } else {
-          toast(`⚠️ Đã lưu trên máy. Supabase phản hồi: ${syncRes.message}`);
+          toast(`Đã lưu trên máy. Supabase phản hồi: ${syncRes.message}`);
         }
       } catch (err) {
-        toast(`⚠️ Đã lưu trên máy. Lỗi Supabase: ${err.message}`);
+        toast(`Đã lưu trên máy. Lỗi Supabase: ${err.message}`);
       }
     } else {
-      toast(State.isCreating ? "✅ Đã tạo mới tài liệu và đồng bộ về website!" : "✅ Đã lưu thay đổi thành công!");
+      toast(State.isCreating ? "Đã tạo mới tài liệu và đồng bộ về website!" : "Đã lưu thay đổi thành công!");
     }
 
     navigateTo(`#collection/${slug}`);
@@ -2469,19 +2469,19 @@
 
     // Đồng bộ xoá trên Supabase Cloud
     if (SupabaseSyncEngine && SupabaseSyncEngine.hasMapping(slug)) {
-      toast(`⏳ Đang xoá "${idKey}" trên Supabase Cloud...`);
+      toast(`Đang xoá "${idKey}" trên Supabase Cloud...`);
       try {
         const delRes = await SupabaseSyncEngine.deleteDoc(slug, idKey);
         if (delRes.ok) {
-          toast(`🗑️ Đã xoá tài liệu "${idKey}" (cục bộ & bảng ${delRes.table} Cloud).`);
+          toast(`Đã xoá tài liệu "${idKey}" (cục bộ & bảng ${delRes.table} Cloud).`);
         } else {
-          toast(`🗑️ Đã xoá cục bộ. Supabase: ${delRes.message}`);
+          toast(`Đã xoá cục bộ. Supabase: ${delRes.message}`);
         }
       } catch (e) {
-        toast(`🗑️ Đã xoá cục bộ. Lỗi Supabase: ${e.message}`);
+        toast(`Đã xoá cục bộ. Lỗi Supabase: ${e.message}`);
       }
     } else {
-      toast(`🗑️ Đã xoá tài liệu "${idKey}".`);
+      toast(`Đã xoá tài liệu "${idKey}".`);
     }
 
     if (State.currentRoute === "editor") {
@@ -2510,7 +2510,7 @@
     syncDataToWeb();
     renderSidebarLists();
 
-    toast(`📋 Đã nhân bản thành công "${newId}"!`);
+    toast(`Đã nhân bản thành công "${newId}"!`);
     renderCollectionView(document.getElementById("payloadViewContainer"), slug);
   };
 
@@ -2534,7 +2534,7 @@
     renderSidebarLists();
     State.selectedRows.clear();
 
-    toast("🗑️ Đã xoá hàng loạt các mục được chọn!");
+    toast("Đã xoá hàng loạt các mục được chọn!");
     renderCollectionView(document.getElementById("payloadViewContainer"), slug);
   }
 
@@ -2559,7 +2559,7 @@
     syncDataToWeb();
     State.selectedRows.clear();
 
-    toast("⚡ Đã cập nhật trạng thái cho các mục được chọn!");
+    toast("Đã cập nhật trạng thái cho các mục được chọn!");
     renderCollectionView(document.getElementById("payloadViewContainer"), slug);
   }
 
@@ -2648,9 +2648,9 @@
               <span class="p-pill p-pill-neutral">${items.length} tài liệu</span>
             </div>
             <div style="display:flex;gap:6px">
-              <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="navigator.clipboard.writeText('curl -X GET ${origin}${restPath}');window.toast('📋 Đã copy cURL command!')">Copy cURL</button>
-              <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.downloadCollectionJson('${col.slug}')">📥 Tải JSON</button>
-              <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="document.getElementById('apiJson_${col.slug}').style.display = document.getElementById('apiJson_${col.slug}').style.display === 'none' ? 'block' : 'none'">Xem JSON ▾</button>
+              <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="navigator.clipboard.writeText('curl -X GET ${origin}${restPath}');window.toast('Đã copy cURL command!')">Copy cURL</button>
+              <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.downloadCollectionJson('${col.slug}')">${window.RusiIcons ? RusiIcons.get("cloud-download", { size: 14 }) : ""} Tải JSON</button>
+              <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="document.getElementById('apiJson_${col.slug}').style.display = document.getElementById('apiJson_${col.slug}').style.display === 'none' ? 'block' : 'none'">Xem JSON ${window.RusiIcons ? RusiIcons.get("chevron-down", { size: 12 }) : ""}</button>
             </div>
           </div>
           <p style="font-size:12.5px;color:var(--p-text-muted);margin:0 0 10px 0">${esc(col.desc || "REST endpoint simulation.")}</p>
@@ -2663,7 +2663,7 @@
 
     container.innerHTML = `
       <div style="margin-bottom:24px">
-        <h1 style="font-size:24px;font-weight:800;margin:0 0 6px 0">📡 Payload REST API & Schema Explorer</h1>
+        <h1 style="font-size:24px;font-weight:800;margin:0 0 6px 0;display:flex;align-items:center;gap:10px">${window.RusiIcons ? RusiIcons.get("waveform-audio", { size: 24 }) : ""} Payload REST API & Schema Explorer</h1>
         <p style="color:var(--p-text-muted);font-size:13.5px;margin:0">Mô phỏng các điểm cuối REST và GraphQL của Payload CMS. Hỗ trợ truy vấn dữ liệu từ xa cho ứng dụng Mobile hoặc Web bên ngoài.</p>
       </div>
 
@@ -2701,18 +2701,18 @@
         <tr>
           <td>
             <div style="font-weight:700;display:flex;align-items:center;gap:8px">
-              <span style="display:inline-flex;align-items:center">${window.RusiIcons ? RusiIcons.get(col.icon || "file-text", { size: 18 }) : (col.icon || "📄")}</span>
+              <span style="display:inline-flex;align-items:center">${window.RusiIcons ? RusiIcons.get(col.icon || "file-text", { size: 18 }) : ""}</span>
               <span>${esc(m.label)}</span>
             </div>
           </td>
           <td><code>${esc(m.table)}</code></td>
           <td style="font-weight:600">${localCount}</td>
           <td><span id="sbCloudCount_${slug}" class="p-pill p-pill-neutral">Đang nạp...</span></td>
-          <td><span class="p-pill p-pill-success">🟢 Mapped</span></td>
+          <td><span class="p-pill p-pill-success" style="display:inline-flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Mapped</span></td>
           <td>
             <div style="display:flex;gap:6px">
-              <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.syncSingleCollection('${slug}')" title="Đẩy bộ sưu tập này lên Supabase">☁️ Đẩy</button>
-              <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.pullSingleCollection('${slug}')" title="Kéo dữ liệu bảng này từ Supabase về">📥 Kéo</button>
+              <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.syncSingleCollection('${slug}')" title="Đẩy bộ sưu tập này lên Supabase">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Đẩy</button>
+              <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.pullSingleCollection('${slug}')" title="Kéo dữ liệu bảng này từ Supabase về">${window.RusiIcons ? RusiIcons.get("cloud-download", { size: 14 }) : ""} Kéo</button>
             </div>
           </td>
         </tr>
@@ -2721,7 +2721,7 @@
 
     container.innerHTML = `
       <div style="margin-bottom:24px">
-        <h1 style="font-size:24px;font-weight:800;margin:0 0 6px 0">⚡ Supabase PostgreSQL Cloud Hub</h1>
+        <h1 style="font-size:24px;font-weight:800;margin:0 0 6px 0;display:flex;align-items:center;gap:10px">${window.RusiIcons ? RusiIcons.get("database-tests", { size: 24 }) : ""} Supabase PostgreSQL Cloud Hub</h1>
         <p style="color:var(--p-text-muted);font-size:13.5px;margin:0">Cơ chế đồng bộ cơ sở dữ liệu đám mây hai chiều giữa Payload CMS và Supabase Cloud (Project: <code>nrhtdwjihnlaxrbitmcf</code>).</p>
       </div>
 
@@ -2731,19 +2731,19 @@
             <div style="font-weight:700;font-size:14px;margin-bottom:2px">Trạng thái kết nối Cloud:</div>
             <div style="font-size:12px;color:var(--p-text-muted)">Máy chủ: <code>${esc(url)}</code> &bull; Anon Key: <code>${esc(maskedKey)}</code></div>
           </div>
-          <span id="sbHubConnBadge" class="p-pill ${isReady ? "p-pill-success" : "p-pill-warning"}">${isReady ? "🟢 Supabase Sẵn Sàng" : "🟡 Chưa có Anon Key"}</span>
+          <span id="sbHubConnBadge" class="p-pill ${isReady ? "p-pill-success" : "p-pill-warning"}">${isReady ? `<span style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 12 }) : ""} Supabase Sẵn Sàng</span>` : "Chưa có Anon Key"}</span>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
-          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.openSupabaseModal()">⚙️ Cấu hình Anon Key</button>
-          <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.syncAllToSupabase()">☁️ Đẩy toàn bộ lên Supabase (Push All)</button>
-          <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.pullAllFromSupabase()">📥 Kéo toàn bộ về Web (Pull All)</button>
-          <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.refreshSupabaseStats()">🔄 Làm mới số lượng</button>
+          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.openSupabaseModal()">${window.RusiIcons ? RusiIcons.get("settings-gear", { size: 14 }) : ""} Cấu hình Anon Key</button>
+          <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.syncAllToSupabase()">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Đẩy toàn bộ lên Supabase (Push All)</button>
+          <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.pullAllFromSupabase()">${window.RusiIcons ? RusiIcons.get("cloud-download", { size: 14 }) : ""} Kéo toàn bộ về Web (Pull All)</button>
+          <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.refreshSupabaseStats()">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) : ""} Làm mới số lượng</button>
         </div>
       </div>
 
       <div id="sbSyncProgressBox" style="display:none;background:var(--p-surface-elevated);border:1px solid var(--p-border);border-radius:var(--p-radius-md);padding:16px;margin-bottom:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <span id="sbProgressTitle" style="font-weight:700;font-size:13px">⏳ Đang đồng bộ...</span>
+          <span id="sbProgressTitle" style="font-weight:700;font-size:13px">Đang đồng bộ...</span>
           <span id="sbProgressPercent" class="p-pill p-pill-info">0%</span>
         </div>
         <div style="height:6px;background:var(--p-border);border-radius:3px;overflow:hidden;margin-bottom:8px">
@@ -2792,7 +2792,7 @@
   window.syncAllToSupabase = async function () {
     const sb = SupabaseSyncEngine.getClient();
     if (!sb) {
-      toast("⚠️ Vui lòng cấu hình Supabase Anon Key trước khi đồng bộ đám mây.");
+      toast("Vui lòng cấu hình Supabase Anon Key trước khi đồng bộ đám mây.");
       openSupabaseModal();
       return;
     }
@@ -2804,9 +2804,9 @@
     const pDetail = document.getElementById("sbProgressDetail");
 
     if (box) box.style.display = "block";
-    if (pTitle) pTitle.textContent = "⏳ Đang đẩy dữ liệu lên Supabase Cloud...";
+    if (pTitle) pTitle.textContent = "Đang đẩy dữ liệu lên Supabase Cloud...";
 
-    toast("⏳ Bắt đầu đồng bộ 8 bảng lên Supabase Cloud...");
+    toast("Bắt đầu đồng bộ 8 bảng lên Supabase Cloud...");
 
     const res = await SupabaseSyncEngine.syncAllCollections((prog) => {
       const pct = Math.round((prog.index / prog.totalSlugs) * 100);
@@ -2816,12 +2816,12 @@
     });
 
     if (res.ok) {
-      toast(`✅ Đã đẩy thành công ${res.totalSuccess} tài liệu lên Supabase Cloud!`);
-      if (pTitle) pTitle.textContent = "✅ Đẩy dữ liệu hoàn tất!";
+      toast(`Đã đẩy thành công ${res.totalSuccess} tài liệu lên Supabase Cloud!`);
+      if (pTitle) pTitle.textContent = "Đẩy dữ liệu hoàn tất!";
       if (pDetail) pDetail.textContent = `Tổng cộng ${res.totalSuccess} tài liệu đã đồng bộ thành công vào 8 bảng PostgreSQL.`;
     } else {
-      toast(`⚠️ Đã đồng bộ ${res.totalSuccess} bản ghi (${res.totalErrors} lỗi).`);
-      if (pTitle) pTitle.textContent = "⚠️ Hoàn tất có cảnh báo";
+      toast(`Đã đồng bộ ${res.totalSuccess} bản ghi (${res.totalErrors} lỗi).`);
+      if (pTitle) pTitle.textContent = "Hoàn tất có cảnh báo";
       if (pDetail) pDetail.textContent = `Thành công: ${res.totalSuccess}, lỗi: ${res.totalErrors}.`;
     }
 
@@ -2832,7 +2832,7 @@
   window.pullAllFromSupabase = async function () {
     const sb = SupabaseSyncEngine.getClient();
     if (!sb) {
-      toast("⚠️ Vui lòng cấu hình Supabase Anon Key trước khi kéo dữ liệu.");
+      toast("Vui lòng cấu hình Supabase Anon Key trước khi kéo dữ liệu.");
       openSupabaseModal();
       return;
     }
@@ -2846,9 +2846,9 @@
     const pDetail = document.getElementById("sbProgressDetail");
 
     if (box) box.style.display = "block";
-    if (pTitle) pTitle.textContent = "📥 Đang kéo dữ liệu từ Supabase Cloud về...";
+    if (pTitle) pTitle.textContent = "Đang kéo dữ liệu từ Supabase Cloud về...";
 
-    toast("⏳ Đang tải dữ liệu từ Supabase PostgreSQL...");
+    toast("Đang tải dữ liệu từ Supabase PostgreSQL...");
 
     const res = await SupabaseSyncEngine.pullAllCollections((prog) => {
       const pct = Math.round((prog.index / prog.totalSlugs) * 100);
@@ -2858,8 +2858,8 @@
     });
 
     if (res.ok) {
-      toast(`📥 Đã kéo thành công ${res.totalPulled} tài liệu từ Supabase về Web!`);
-      if (pTitle) pTitle.textContent = "✅ Kéo dữ liệu hoàn tất!";
+      toast(`Đã kéo thành công ${res.totalPulled} tài liệu từ Supabase về Web!`);
+      if (pTitle) pTitle.textContent = "Kéo dữ liệu hoàn tất!";
       if (pDetail) pDetail.textContent = `Đã cập nhật ${res.totalPulled} tài liệu vào bộ nhớ máy và website.`;
     }
 
@@ -2872,18 +2872,18 @@
     if (!mapping) return;
     const sb = SupabaseSyncEngine.getClient();
     if (!sb) {
-      toast("⚠️ Vui lòng cấu hình Supabase Anon Key.");
+      toast("Vui lòng cấu hình Supabase Anon Key.");
       openSupabaseModal();
       return;
     }
-    toast(`⏳ Đang đẩy ${mapping.label} lên Supabase Cloud...`);
+    toast(`Đang đẩy ${mapping.label} lên Supabase Cloud...`);
     const items = getMergedList(slug).map(stripSource);
     let okCount = 0;
     for (const it of items) {
       const res = await SupabaseSyncEngine.upsertDoc(slug, it);
       if (res.ok) okCount++;
     }
-    toast(`✅ Đã đồng bộ ${okCount}/${items.length} bản ghi ${mapping.label} lên bảng [${mapping.table}]!`);
+    toast(`Đã đồng bộ ${okCount}/${items.length} bản ghi ${mapping.label} lên bảng [${mapping.table}]!`);
     window.refreshSupabaseStats();
   };
 
@@ -2892,11 +2892,11 @@
     if (!mapping) return;
     const sb = SupabaseSyncEngine.getClient();
     if (!sb) {
-      toast("⚠️ Vui lòng cấu hình Supabase Anon Key.");
+      toast("Vui lòng cấu hình Supabase Anon Key.");
       openSupabaseModal();
       return;
     }
-    toast(`⏳ Đang kéo dữ liệu ${mapping.label} từ Supabase...`);
+    toast(`Đang kéo dữ liệu ${mapping.label} từ Supabase...`);
     try {
       const { data, error } = await sb.from(mapping.table).select("*");
       if (error) throw error;
@@ -2914,11 +2914,11 @@
         saveAdminStore(store);
         syncDataToWeb();
         renderSidebarLists();
-        toast(`📥 Đã kéo ${data.length} bản ghi ${mapping.label} từ Cloud về máy!`);
+        toast(`Đã kéo ${data.length} bản ghi ${mapping.label} từ Cloud về máy!`);
         window.refreshSupabaseStats();
       }
     } catch (err) {
-      toast(`❌ Lỗi kéo dữ liệu: ${err.message}`);
+      toast(`Lỗi kéo dữ liệu: ${err.message}`);
     }
   };
 
@@ -2935,7 +2935,7 @@
 
     container.innerHTML = `
       <div style="margin-bottom:24px">
-        <h1 style="font-size:24px;font-weight:800;margin:0 0 6px 0">⚙️ Cấu hình Hệ thống Toàn diện (Globals)</h1>
+        <h1 style="font-size:24px;font-weight:800;margin:0 0 6px 0;display:flex;align-items:center;gap:10px">${window.RusiIcons ? RusiIcons.get("settings-gear", { size: 24 }) : ""} Cấu hình Hệ thống Toàn diện (Globals)</h1>
         <p style="color:var(--p-text-muted);font-size:13.5px;margin:0">Cấu hình thông tin thương hiệu, tài khoản VietQR và thông số vận hành website.</p>
       </div>
 
@@ -2966,7 +2966,7 @@
             <input type="text" class="p-input" id="cfgBankHolder" value="${escAttr(settings.bank_holder)}" />
           </div>
         </div>
-        <button class="p-btn p-btn-primary" type="button" onclick="window.saveSiteSettings()">💾 Lưu cấu hình</button>
+        <button class="p-btn p-btn-primary" type="button" onclick="window.saveSiteSettings()">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Lưu cấu hình</button>
       </div>
     `;
   }
@@ -2982,7 +2982,7 @@
       bank_holder: document.getElementById("cfgBankHolder")?.value || ""
     };
     saveAdminStore(store);
-    toast("✅ Đã lưu cấu hình hệ thống thành công!");
+    toast("Đã lưu cấu hình hệ thống thành công!");
   };
 
   // =========================================================================
@@ -3000,7 +3000,7 @@
     const content = `// Auto-generated by Payload CMS Studio on ${today}\n// Có thể dán trực tiếp vào data.js để lưu vĩnh viễn vào mã nguồn.\n\n${body}\n`;
 
     downloadFile(`rusitrki-data-export-${today}.js`, content, "application/javascript");
-    toast("📤 Đã tải về file export. Dán nội dung vào data.js khi muốn commit git.");
+    toast("Đã tải về file export. Dán nội dung vào data.js khi muốn commit git.");
   }
 
   function downloadFile(name, content, mime) {
@@ -3031,7 +3031,7 @@
         }
         importToStore(obj);
       } catch (err) {
-        toast("❌ File không hợp lệ: " + err.message);
+        toast("File không hợp lệ: " + err.message);
       }
       e.target.value = "";
     };
@@ -3040,7 +3040,7 @@
 
   function importToStore(obj) {
     if (!obj || typeof obj !== "object") {
-      toast("❌ File không chứa dữ liệu hợp lệ.");
+      toast("File không chứa dữ liệu hợp lệ.");
       return;
     }
     const store = loadAdminStore();
@@ -3062,7 +3062,7 @@
     syncDataToWeb();
     renderSidebarLists();
     handleRoute();
-    toast(`📥 Đã import thành công ${count} tài liệu và đồng bộ về website!`);
+    toast(`Đã import thành công ${count} tài liệu và đồng bộ về website!`);
   }
 
   function resetAdminData() {
@@ -3071,7 +3071,7 @@
     syncDataToWeb();
     renderSidebarLists();
     handleRoute();
-    toast("🗑️ Đã khôi phục dữ liệu gốc từ data.js!");
+    toast("Đã khôi phục dữ liệu gốc từ data.js!");
   }
 
   // =========================================================================
@@ -3110,7 +3110,7 @@
           window.RusiSupabase.resetClient();
         }
         testSupabaseConn();
-        toast("💾 Đã lưu khoá Supabase Anon Key!");
+        toast("Đã lưu khoá Supabase Anon Key!");
       };
     }
 
@@ -3150,16 +3150,16 @@
     try {
       const res = await window.RusiSupabase.testConnection();
       if (res.ok) {
-        badge.textContent = `🟢 Kết nối tốt (${res.latency || 45}ms)`;
+        badge.textContent = `Kết nối tốt (${res.latency || 45}ms)`;
         badge.className = "p-pill p-pill-success";
         msg.textContent = "Kết nối cơ sở dữ liệu Supabase PostgreSQL thành công.";
       } else {
-        badge.textContent = "🟡 Chưa có Anon Key";
+        badge.textContent = "Chưa có Anon Key";
         badge.className = "p-pill p-pill-warning";
         msg.textContent = res.message || "Vui lòng dán Anon Key từ Supabase Dashboard.";
       }
     } catch (e) {
-      badge.textContent = "🔴 Lỗi kết nối";
+      badge.textContent = "Lỗi kết nối";
       badge.className = "p-pill p-pill-danger";
       msg.textContent = e.message;
     }
@@ -3199,13 +3199,13 @@
 
     const toggleBtn = document.getElementById("btnToggleTheme");
     if (toggleBtn) {
-      toggleBtn.innerHTML = savedTheme === "dark" ? (window.RusiIcons ? RusiIcons.get("moon", { size: 16 }) : "🌙") : (window.RusiIcons ? RusiIcons.get("sun", { size: 16 }) : "☀️");
+      toggleBtn.innerHTML = savedTheme === "dark" ? (window.RusiIcons ? RusiIcons.get("moon", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("sun", { size: 16 }) : "");
       toggleBtn.onclick = () => {
         const cur = document.documentElement.getAttribute("data-theme") || "dark";
         const next = cur === "dark" ? "light" : "dark";
         document.documentElement.setAttribute("data-theme", next);
         localStorage.setItem(THEME_KEY, next);
-        toggleBtn.innerHTML = next === "dark" ? (window.RusiIcons ? RusiIcons.get("moon", { size: 16 }) : "🌙") : (window.RusiIcons ? RusiIcons.get("sun", { size: 16 }) : "☀️");
+        toggleBtn.innerHTML = next === "dark" ? (window.RusiIcons ? RusiIcons.get("moon", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("sun", { size: 16 }) : "");
       };
     }
   }
@@ -3260,7 +3260,7 @@
     State.devMode = true;
     localStorage.setItem(DEV_MODE_KEY, "true");
     applyAuthState(true);
-    toast("⚡ Đã kích hoạt Chế độ Dev Mode offline.");
+    toast("Đã kích hoạt Chế độ Dev Mode offline.");
   }
 
   // =========================================================================

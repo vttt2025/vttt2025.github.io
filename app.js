@@ -24,7 +24,7 @@ const Progress = {
     const xp = STORE.get("xp", 0) + n;
     STORE.set("xp", xp);
     updateHeaderChips();
-    toast(`+${n} XP! 🎉`);
+    toast(`+${n} XP!`);
     if (window.RusiSupabase && window.RusiSupabase.isReady() && window.Auth && window.Auth.user && window.Auth.user.uid) {
       window.RusiSupabase.profile.syncGamification(window.Auth.user.uid, STORE.get("streak", 0), xp).catch(() => {});
     }
@@ -61,8 +61,8 @@ function updateHeaderChips() {
   const xpChip = document.getElementById("chipXp");
   const streakChip = document.getElementById("chipStreak");
   const mascotChip = document.getElementById("chipMascot");
-  if (xpChip) xpChip.textContent = "⚡ " + xp + " XP";
-  if (streakChip) streakChip.textContent = "🔥 " + streak + " ngày";
+  if (xpChip) xpChip.innerHTML = (window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : "") + " " + xp + " XP";
+  if (streakChip) streakChip.innerHTML = (window.RusiIcons ? RusiIcons.get("flame-streak", { size: 14 }) : "") + " " + streak + " ngày";
   if (mascotChip && typeof MascotRusika !== "undefined") {
     const lvl = MascotRusika.getLevel();
     mascotChip.innerHTML = `${MascotRusika.getSvg(lvl, currentSeason())} <span>Rusika Lv.${lvl}</span>`;
@@ -140,10 +140,10 @@ const MascotRusika = {
 
   getOutfit(season) {
     const outfits = {
-      winter: "Mũ lông Ushanka & Áo len tuyết ấm áp ❄️",
-      spring: "Vòng hoa xuân tươi mát & Khăn len nhẹ 🌸",
-      summer: "Kính râm sành điệu & Mũ cói đi biển ☀️",
-      autumn: "Khăn len ấm áp & Chiếc lá phong vàng 🍂"
+      winter: "Mũ lông Ushanka & Áo len tuyết ấm áp",
+      spring: "Vòng hoa xuân tươi mát & Khăn len nhẹ",
+      summer: "Kính râm sành điệu & Mũ cói đi biển",
+      autumn: "Khăn len ấm áp & Chiếc lá phong vàng"
     };
     return outfits[season] || outfits.winter;
   },
@@ -155,7 +155,7 @@ const MascotRusika = {
       "Luyện phát âm câu nói mỗi ngày để ngữ điệu mềm mại chuẩn người Moskva nhé!",
       "Chứng chỉ ТРКИ không hề khó khi bạn luyện đề đều đặn với Rusika!",
       "«Терпение и труд всё перетрут» (Có công mài sắt, có ngày nên kim)!",
-      "Mỗi ngày một chút, tiếng Nga sẽ trở thành người bạn thân của bạn! 🐾"
+      "Mỗi ngày một chút, tiếng Nga sẽ trở thành người bạn thân của bạn!"
     ];
     return quotes[Math.floor(Math.random() * quotes.length)];
   },
@@ -294,8 +294,8 @@ const MascotRusika = {
               <div class="rusika-xp-fill" style="width:${info.percent}%"></div>
             </div>
             <div class="rusika-xp-text">
-              <span>${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : "⭐"} ${xp} XP</span>
-              <span>${info.nextXp ? `${info.percent}% (${info.remaining} XP lên Lv.${lvl + 1})` : 'MAX 👑'}</span>
+              <span>${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} ${xp} XP</span>
+              <span>${info.nextXp ? `${info.percent}% (${info.remaining} XP lên Lv.${lvl + 1})` : `MAX ${window.RusiIcons ? RusiIcons.get('crown-vip', { size: 14 }) : ''}`}</span>
             </div>
           </div>
         </div>
@@ -304,8 +304,8 @@ const MascotRusika = {
         <div class="rusika-bubble-col">
           <div class="rusika-comic-bubble">
             <div class="rusika-bubble-header">
-              <span class="bubble-tag">${window.RusiIcons ? RusiIcons.get("cat-mascot", { size: 14 }) : "🐾"} BẠN ĐỒNG HÀNH AI · ${this.getTitle(lvl).toUpperCase()}</span>
-              <span class="bubble-streak">${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 14 }) : "🔥"} Chuỗi học: <b>${streak} ngày</b></span>
+              <span class="bubble-tag">${window.RusiIcons ? RusiIcons.get("cat-mascot", { size: 14 }) : ""} BẠN ĐỒNG HÀNH AI · ${this.getTitle(lvl).toUpperCase()}</span>
+              <span class="bubble-streak">${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 14 }) : ""} Chuỗi học: <b>${streak} ngày</b></span>
             </div>
             <div class="rusika-bubble-message">
               «Привет! Mình là Rusi AI. Hôm nay bạn muốn luyện từ vựng, nghe 4 Part CEFR hay sửa phát âm cùng mình? Nhấn vào đây để trò chuyện nhé! 🐾»
@@ -416,7 +416,7 @@ const MascotRusika = {
                   <span class="chat-online-dot" title="Đang trực tuyến"></span>
                 </div>
                 <div class="chat-header-sub" id="chatHeaderSub">
-                  <span>${esc(info.shortTitle)} · Cấp ${lvl}</span> • <span>⭐ ${info.xp} XP</span>
+                  <span>${esc(info.shortTitle)} · Cấp ${lvl}</span> • <span>${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} ${info.xp} XP</span>
                 </div>
               </div>
             </div>
@@ -568,7 +568,7 @@ const MascotRusika = {
         <div class="msg-bubble">
           <div class="reply-title"><b>${esc(reply.title)}</b></div>
           <div class="reply-text">${reply.text.replace(/\n/g, "<br>")}</div>
-          <div class="reply-xp-tag">✨ +5 XP tương tác học cùng Rusika! (Tổng: ${newXp} XP)</div>
+          <div class="reply-xp-tag">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} +5 XP tương tác học cùng Rusika! (Tổng: ${newXp} XP)</div>
         </div>
       `;
       messages.appendChild(aiMsg);
@@ -581,12 +581,12 @@ const MascotRusika = {
         evoMsg.innerHTML = `
           <div class="levelup-card">
             <div class="levelup-cat">${this.getSvg(newLvl, season, 64)}</div>
-            <div class="levelup-title">🎉 CHÚC MỪNG! MÈO RUSIKA ĐÃ TIẾN HÓA! 🎉</div>
+            <div class="levelup-title">${window.RusiIcons ? RusiIcons.get("trophy-reward", { size: 24 }) : ""} CHÚC MỪNG! MÈO RUSIKA ĐÃ TIẾN HÓA! ${window.RusiIcons ? RusiIcons.get("trophy-reward", { size: 24 }) : ""}</div>
             <div class="levelup-desc">Bạn đã đạt <b>${newXp} XP</b> và mở khóa <b>${esc(evoInfo.title)}</b>! ${esc(evoInfo.badge)}</div>
           </div>
         `;
         messages.appendChild(evoMsg);
-        if (typeof toast === "function") toast(`🎉 Mèo Rusika đã tiến hóa lên Cấp ${newLvl}!`);
+        if (typeof toast === "function") toast(`Mèo Rusika đã tiến hóa lên Cấp ${newLvl}!`);
       }
 
       this.updateAllViews();
@@ -598,37 +598,37 @@ const MascotRusika = {
     const query = (q || "").toLowerCase().trim();
     if (/trki|đề thi|thi thử|chứng chỉ|torfl/i.test(query)) {
       return {
-        title: "Cẩm nang Đề thi TRKI chuẩn quốc tế 🎯",
+        title: "Cẩm nang Đề thi TRKI chuẩn quốc tế",
         text: "Hệ thống chứng chỉ TRKI (TORFL) gồm các cấp độ từ A1 đến B2:\n• <b>TRKI A1 (Элементарный)</b>: Yêu cầu ~780 từ vựng, giao tiếp sinh hoạt và xã hội căn bản.\n• <b>TRKI A2 (Базовый)</b>: ~1.300 từ vựng, chuẩn đủ điều kiện học khoa dự bị tại các trường ĐH Nga.\n• <b>TRKI B1 (Первый)</b>: ~2.300 từ vựng, điều kiện bắt buộc nhập học Đại học chính quy tại LB Nga.\n• <b>TRKI B2 (Второй)</b>: ~10.000 từ vựng, chuẩn tốt nghiệp cử nhân và thạc sĩ tại Nga.\n\n👉 Điểm đạt là <b>66%</b> trên mỗi bài thi con. Hãy vào mục <b>«Thi thử TRKI»</b> trên website để làm quen với ngân hàng đề thi chuẩn nhé!"
       };
     } else if (/phát âm|trọng âm|ударение|đọc/i.test(query)) {
       return {
-        title: "Quy tắc Phát âm & Trọng âm tiếng Nga 🗣️",
+        title: "Quy tắc Phát âm & Trọng âm tiếng Nga",
         text: "Trọng âm (Ударение) là linh hồn của phát âm tiếng Nga:\n1. <b>Biến âm chữ О</b>: Khi có trọng âm phát âm rõ [O]. Khi không mang trọng âm giảm thành âm [A] ngắn (vd: молоко đọc là [mə-la-kó]).\n2. <b>Biến âm chữ Е/Я</b>: Khi không mang trọng âm phát âm nhẹ gần như âm [I] (vd: река đọc là [ri-ká]).\n3. <b>Âm câm & biến đổi cuối từ</b>: Các phụ âm vang (звонкие: б, в, г, д, ж, з) đứng cuối từ sẽ bị vô thanh hóa (г -> к, д -> т, б -> п, vd: хлеб đọc là [khlep]).\n\n👉 Hãy vào mục <b>«Luyện nói & AI Rusika»</b> để Rusika trực tiếp sửa lỗi phát âm cho bạn nhé!"
       };
     } else if (/chia động từ|động từ|ngôi|спряжение/i.test(query)) {
       return {
-        title: "Cách chia Động từ tiếng Nga (Спряжение) ✍️",
+        title: "Cách chia Động từ tiếng Nga (Спряжение)",
         text: "Tiếng Nga có 2 nhóm chia động từ chính theo ngôi:\n• <b>Nhóm I (Спряжение I)</b>: Tận cùng -ать, -ять, -еть -> đuôi chia: <b>-ю/-у, -ешь, -ет, -ем, -ете, -ют/-ут</b> (Ví dụ: Читать -> читаю, читаешь, читает, читаем, читаете, читают).\n• <b>Nhóm II (Спряжение II)</b>: Thường tận cùng -ить -> đuôi chia: <b>-ю/-у, -ишь, -ит, -им, -ите, -ят/-ат</b> (Ví dụ: Говорить -> говорю, говоришь, говорит, говорим, говорите, говорят).\n\n💡 Lưu ý cặp thể động từ <b>НСВ</b> (chưa hoàn thành: quá trình, lặp đi lặp lại) và <b>СВ</b> (hoàn thành: kết quả duy nhất)!"
       };
     } else if (/cách|падеж|biến cách|danh từ/i.test(query)) {
       return {
-        title: "Hệ thống 6 Cách trong tiếng Nga (6 Падежей) 🇷🇺",
+        title: "Hệ thống 6 Cách trong tiếng Nga (6 Падежей)",
         text: "6 Cách là xương sống của ngữ pháp tiếng Nga:\n• <b>Cách 1 (Именительный)</b>: Chủ ngữ trong câu (Кто? Что?)\n• <b>Cách 2 (Родительный)</b>: Sở hữu, phủ định 'нет', số lượng (Кого? Чего? Откуда?)\n• <b>Cách 3 (Дательный)</b>: Người nhận, tuổi tác, gián tiếp (Кому? Чему?)\n• <b>Cách 4 (Винительный)</b>: Bổ ngữ trực tiếp, hướng chuyển động (Кого? Что? Куда?)\n• <b>Cách 5 (Творительный)</b>: Phương tiện, công cụ, nghề nghiệp, đi cùng ai (Кем? Чем? С кем?)\n• <b>Cách 6 (Предложный)</b>: Địa điểm ở đâu, chủ đề suy nghĩ/nói (Где? О ком? О чём?)"
       };
     } else if (/học bổng|du học|nga/i.test(query)) {
       return {
-        title: "Học bổng Du học Nga 🎓",
+        title: "Học bổng Du học Nga",
         text: "Học bổng Hiệp định giữa Bộ GD&ĐT Việt Nam và Liên bang Nga:\n• <b>Quyền lợi</b>: Miễn 100% học phí suốt 4–6 năm, đài thọ ký túc xá, bảo hiểm y tế và cấp sinh hoạt phí hàng tháng song phương (từ cả phía Nga và phía Việt Nam).\n• <b>Tiêu chuẩn</b>: Điểm trung bình GPA THPT hoặc Đại học từ 7.0+ (khuyên dùng 8.0+ để cạnh tranh hồ sơ).\n• <b>Trình độ tiếng</b>: Chưa biết tiếng Nga vẫn nộp được vì bạn sẽ được đài thọ 1 năm học tiếng Nga dự bị tại các trường danh tiếng như MGU, SPbU, Bauman, HSE..."
       };
     } else if (/tăng cấp|tiến hóa|xp|cấp độ|mèo/i.test(query)) {
       return {
-        title: "Hệ thống Tiến hóa của Mèo Rusika 🐾",
+        title: "Hệ thống Tiến hóa của Mèo Rusika",
         text: "Rusika sẽ lớn lên và thay đổi trang phục theo điểm XP của bạn:\n• <b>Cấp 1 (0–99 XP)</b>: Mèo con đeo chuông đỏ đáng yêu 🌱\n• <b>Cấp 2 (100–299 XP)</b>: Mèo học trò kính vàng & cà vạt Nga 📚\n• <b>Cấp 3 (300–699 XP)</b>: Mèo thông thái mũ cử nhân & nơ xanh 🎓\n• <b>Cấp 4 (700–1499 XP)</b>: Học sĩ Mũ lông Ushanka ấm áp ❄️\n• <b>Cấp 5 (1500+ XP)</b>: Đại hiệp Mèo Vương miện Hoàng gia Sa hoàng 👑\n\n👉 Nhận XP bằng cách: Học Lọ từ vựng (+10 XP), làm bài thi thử (+50 XP), viết bài luận (+30 XP) và mỗi câu hỏi trò chuyện (+5 XP)!"
       };
     } else {
       return {
-        title: "Rusika luôn sẵn sàng hỗ trợ bạn! 🐾",
+        title: "Rusika luôn sẵn sàng hỗ trợ bạn!",
         text: "Мяу! Rất vui được đồng hành cùng bạn học tiếng Nga! Phương pháp tốt nhất là <b>học đều đặn 15 phút mỗi ngày</b>.\n\nBạn có thể hỏi Rusika về <b>Đề thi TRKI</b>, <b>Ngữ pháp 6 Cách</b>, <b>Cách chia động từ</b>, <b>Quy tắc trọng âm</b> hoặc kinh nghiệm <b>Du học Nga</b> nhé! Rusika luôn sẵn sàng giải đáp! ✨"
       };
     }
@@ -642,7 +642,7 @@ const MascotRusika = {
 
     // 1. Cập nhật chip header
     const chipXp = document.getElementById("chipXp");
-    if (chipXp) chipXp.textContent = "⭐ " + xp + " XP";
+    if (chipXp) chipXp.innerHTML = (window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : "") + " " + xp + " XP";
     const chipMascot = document.getElementById("chipMascot");
     if (chipMascot) {
       chipMascot.innerHTML = `${this.getSvg(lvl, season, 22)} <span>Rusika Lv.${lvl}</span>`;
@@ -668,7 +668,7 @@ const MascotRusika = {
     const chatAvatar = document.getElementById("chatHeaderAvatar");
     if (chatAvatar) chatAvatar.innerHTML = this.getSvg(lvl, season, 42);
     const chatSub = document.getElementById("chatHeaderSub");
-    if (chatSub) chatSub.innerHTML = `<span>${esc(info.shortTitle)} · Cấp ${lvl}</span> • <span>⭐ ${info.xp} XP</span>`;
+    if (chatSub) chatSub.innerHTML = `<span>${esc(info.shortTitle)} · Cấp ${lvl}</span> • <span>${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} ${info.xp} XP</span>`;
 
     // 5. Cập nhật pwXp nếu có
     const pwXp = document.getElementById("pwXp");
@@ -891,7 +891,7 @@ const Monetization = {
         <button class="vietqr-close" id="closeProGate" title="Đóng">&times;</button>
         
         <div class="pro-gate-header">
-          <div class="pro-gate-crown-badge">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 28 }) : "👑"}</div>
+          <div class="pro-gate-crown-badge">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 28 }) : ""}</div>
           <span class="pro-gate-kicker">RUSI TRKI • ĐẶC QUYỀN HỘI VIÊN</span>
           <h3 class="pro-gate-title">${esc(customTitle)}</h3>
         </div>
@@ -945,7 +945,7 @@ const Monetization = {
       <div class="vietqr-card" style="max-width:480px">
         <button class="vietqr-close" id="closeAuthReq">&times;</button>
         <div class="auth-req-card">
-          <div class="auth-req-icon">🔐</div>
+          <div class="auth-req-icon">${window.RusiIcons ? RusiIcons.get("lock-pro", { size: 48 }) : ""}</div>
           <h3>${esc(title)}</h3>
           <p>${esc(reason)}</p>
           <div class="auth-req-buttons">
@@ -1015,10 +1015,10 @@ const Monetization = {
         <button class="vietqr-close" id="closeVietQr" title="Đóng">&times;</button>
         
         <div class="vietqr-header">
-          <span class="vietqr-chip-kicker">⚡ NÂNG CẤP TÀI KHOẢN PRO • KÍCH HOẠT TỨC THÌ</span>
+          <span class="vietqr-chip-kicker" style="display:inline-flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} NÂNG CẤP TÀI KHOẢN PRO • KÍCH HOẠT TỨC THÌ</span>
           <h3>Cổng Thanh Toán Tự Động VietQR</h3>
           <div class="vietqr-user-context">
-            <span>👤 Kích hoạt cho:</span>
+            <span style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("users-students", { size: 14 }) : ""} Kích hoạt cho:</span>
             <b>${esc(user.name || "Học viên")}</b>
             <span style="color:#64748B">(${esc(user.email || "Tài khoản Khách")})</span>
           </div>
@@ -1030,7 +1030,7 @@ const Monetization = {
             const isActive = (p.id || "").toLowerCase() === (currentPkg.id || "").toLowerCase();
             return `
             <button type="button" class="vietqr-pkg-tab ${isActive ? "active" : ""}" data-pkg-select="${p.id}">
-              ${p.popular ? `<span class="vietqr-pkg-tab-hot">HOT 🔥</span>` : ""}
+              ${p.popular ? `<span class="vietqr-pkg-tab-hot" style="display:inline-flex;align-items:center;gap:3px">HOT ${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 12 }) : ""}</span>` : ""}
               <span class="vietqr-pkg-tab-badge">${esc(p.badge || "PRO")}</span>
               <span class="vietqr-pkg-tab-title">${esc(p.title)}</span>
               <span class="vietqr-pkg-tab-price">${p.price.toLocaleString("vi-VN")} đ</span>
@@ -1043,7 +1043,7 @@ const Monetization = {
           <!-- CỘT 1: ẢNH QR & ĐỒNG HỒ PHIÊN -->
           <div class="vietqr-scan-card">
             <div class="vietqr-timer-badge">
-              <span>⏱️ Phiên hết hạn:</span>
+              <span style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Phiên hết hạn:</span>
               <b id="vietqrTimerDisplay">${formatTime(timeLeft)}</b>
             </div>
             <div class="vietqr-scan-box">
@@ -1066,7 +1066,7 @@ const Monetization = {
                 <span class="lbl">Số tài khoản:</span>
                 <span class="val">
                   <b>108873919999</b>
-                  <button class="vietqr-copy-btn" data-copy="108873919999" type="button">📋 Chép</button>
+                  <button class="vietqr-copy-btn" data-copy="108873919999" type="button">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : ""} Chép</button>
                 </span>
               </div>
               <div class="vietqr-info-row">
@@ -1077,33 +1077,33 @@ const Monetization = {
                 <span class="lbl">Số tiền:</span>
                 <span class="val" style="color:var(--secondary);font-size:1.08rem">
                   <b>${currentPkg.price.toLocaleString("vi-VN")} đ</b>
-                  <button class="vietqr-copy-btn" data-copy="${currentPkg.price}" type="button">📋 Chép</button>
+                  <button class="vietqr-copy-btn" data-copy="${currentPkg.price}" type="button">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : ""} Chép</button>
                 </span>
               </div>
               <div class="vietqr-info-row">
                 <span class="lbl">Cú pháp CK:</span>
                 <span class="val">
                   <code style="background:var(--primary-soft);color:var(--primary-dark);padding:2px 6px;border-radius:4px;font-weight:800">${orderId}</code>
-                  <button class="vietqr-copy-btn" data-copy="${orderId}" type="button">📋 Chép</button>
+                  <button class="vietqr-copy-btn" data-copy="${orderId}" type="button">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : ""} Chép</button>
                 </span>
               </div>
             </div>
 
             <!-- QUYỀN LỢI GÓI NỔI BẬT -->
             <div class="vietqr-perks-box">
-              <div class="vietqr-perks-title">🎁 Quyền lợi nổi bật (${esc(currentPkg.badge || "PRO")}):</div>
+              <div class="vietqr-perks-title" style="display:inline-flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("award-badge", { size: 16 }) : ""} Quyền lợi nổi bật (${esc(currentPkg.badge || "PRO")}):</div>
               <ul class="vietqr-perks-list">
-                ${(currentPkg.features || []).slice(0, 3).map((f) => `<li><span class="chk">✓</span> <span>${esc(f)}</span></li>`).join("")}
+                ${(currentPkg.features || []).slice(0, 3).map((f) => `<li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> <span>${esc(f)}</span></li>`).join("")}
               </ul>
             </div>
 
             <!-- NÚT KÍCH HOẠT & CAM KẾT AN TOÀN -->
             <div>
               <button class="btn-confirm-vietqr" id="btnConfirmPaid" type="button">
-                ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : "⚡"} Tôi đã chuyển khoản xong (Kích hoạt ngay)
+                ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} Tôi đã chuyển khoản xong (Kích hoạt ngay)
               </button>
               <div class="vietqr-guarantee">
-                🔒 Tự động đối soát chữ ký số (Signature Verification) 24/7. Tài khoản được kích hoạt ngay lập tức mà không cần chờ duyệt tay.
+                ${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 14 }) : ""} Tự động đối soát chữ ký số (Signature Verification) 24/7. Tài khoản được kích hoạt ngay lập tức mà không cần chờ duyệt tay.
               </div>
             </div>
           </div>
@@ -1134,7 +1134,7 @@ const Monetization = {
           const text = copyBtn.dataset.copy;
           navigator.clipboard?.writeText(text);
           const original = copyBtn.innerHTML;
-          copyBtn.innerHTML = "✓ Đã chép";
+          copyBtn.innerHTML = (window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : "") + " Đã chép";
           copyBtn.classList.add("copied");
           toast("Đã sao chép: " + text);
           setTimeout(() => {
@@ -1160,7 +1160,7 @@ const Monetization = {
             modal.innerHTML = `
               <div class="vietqr-card" style="max-width:540px">
                 <div class="vietqr-success-card">
-                  <div class="vietqr-success-icon">🎉</div>
+                  <div class="vietqr-success-icon">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 48 }) : ""}</div>
                   <h3>Nâng Cấp PRO Thành Công!</h3>
                   <p>Chúc mừng <b>${esc(user.name || user.email)}</b>! Tài khoản của bạn đã được nâng cấp lên <b>${esc(currentPkg.title)}</b>.</p>
                   
@@ -1168,17 +1168,17 @@ const Monetization = {
                     <div class="vietqr-success-row"><span>Gói kích hoạt:</span><b>${esc(currentPkg.title)}</b></div>
                     <div class="vietqr-success-row"><span>Thời hạn:</span><b>${currentPkg.id === "pro_vip" ? "Vĩnh viễn (Trọn đời)" : "Đã kích hoạt 365 ngày"}</b></div>
                     <div class="vietqr-success-row"><span>Mã giao dịch:</span><code>${orderId}</code></div>
-                    <div class="vietqr-success-row"><span>Trạng thái:</span><b style="color:#059669">✓ ĐÃ KÍCH HOẠT TỨC THÌ</b></div>
+                    <div class="vietqr-success-row"><span>Trạng thái:</span><b style="color:#059669;display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} ĐÃ KÍCH HOẠT TỨC THÌ</b></div>
                   </div>
 
                   <button class="btn btn-primary btn-lg" id="btnVietQrFinish" style="width:100%;margin-top:20px;background:var(--primary);border-color:var(--primary)">
-                    🚀 Bắt đầu trải nghiệm các tính năng PRO ngay
+                    ${window.RusiIcons ? RusiIcons.get("rocket", { size: 16 }) : ""} Bắt đầu trải nghiệm các tính năng PRO ngay
                   </button>
                 </div>
               </div>
             `;
 
-            toast(`🎉 Chúc mừng ${user.name || "bạn"}! Tài khoản đã là PRO VIP.`);
+            toast(`Chúc mừng ${user.name || "bạn"}! Tài khoản đã là PRO VIP.`);
             document.getElementById("btnVietQrFinish").onclick = () => modal.remove();
           }, 1200);
         };
@@ -1225,30 +1225,30 @@ const Monetization = {
       <div class="vietqr-card manage-pro-card" style="max-width:580px">
         <button class="vietqr-close" id="closeManagePro">&times;</button>
         <div style="text-align:center;margin-bottom:20px">
-          <span class="vietqr-chip-kicker">💎 QUẢN LÝ GÓI CƯỚC HỌC VIÊN</span>
+          <span class="vietqr-chip-kicker" style="display:inline-flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("gem", { size: 14 }) : ""} QUẢN LÝ GÓI CƯỚC HỌC VIÊN</span>
           <h3 style="margin:4px 0">${esc(proInfo.pkgTitle)}</h3>
           <p style="color:var(--muted);font-size:0.86rem">Tài khoản: <b>${esc((user && user.email) || (user && user.name) || "Học viên")}</b></p>
         </div>
 
         <div class="manage-pro-hero">
           <div>
-            <div class="manage-pro-title">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 20 }) : "👑"} Trạng thái Thành viên PRO</div>
+            <div class="manage-pro-title">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 20 }) : ""} Trạng thái Thành viên PRO</div>
             <div class="manage-pro-meta">
-              ${proInfo.isLifetime ? "✨ Bạn đang sở hữu đặc quyền VIP Vĩnh Viễn" : `⏳ Hạn sử dụng: <b>${esc(proInfo.expiresFormatted)}</b>`}
+              ${proInfo.isLifetime ? `${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} Bạn đang sở hữu đặc quyền VIP Vĩnh Viễn` : `${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Hạn sử dụng: <b>${esc(proInfo.expiresFormatted)}</b>`}
             </div>
           </div>
-          <span class="manage-pro-status">🟢 ĐANG HOẠT ĐỘNG</span>
+          <span class="manage-pro-status" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} ĐANG HOẠT ĐỘNG</span>
         </div>
 
         <div class="vietqr-perks-box" style="margin-bottom:20px">
           <div class="vietqr-perks-title">Các đặc quyền VIP đang kích hoạt:</div>
           <ul class="vietqr-perks-list">
-            <li><span class="chk">✓</span> Mở khóa 100% ngân hàng đề thi ТРКИ A1, A2, B1, B2</li>
-            <li><span class="chk">✓</span> Không giới hạn lượt luyện nói & sửa lỗi phát âm AI Rusika</li>
-            <li><span class="chk">✓</span> Chấm bài viết Письмо theo 4 tiêu chí TRKI chuẩn quốc tế</li>
-            <li><span class="chk">✓</span> Luyện nghe 4 Part CEFR kèm transcript chi tiết</li>
-            <li><span class="chk">✓</span> Mở khóa toàn bộ 100+ Lọ từ vựng chuyên ngành</li>
-            <li><span class="chk">✓</span> Ưu tiên hỗ trợ hồ sơ học bổng Du học Nga</li>
+            <li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> Mở khóa 100% ngân hàng đề thi ТРКИ A1, A2, B1, B2</li>
+            <li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> Không giới hạn lượt luyện nói & sửa lỗi phát âm AI Rusika</li>
+            <li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> Chấm bài viết Письмо theo 4 tiêu chí TRKI chuẩn quốc tế</li>
+            <li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> Luyện nghe 4 Part CEFR kèm transcript chi tiết</li>
+            <li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> Mở khóa toàn bộ 100+ Lọ từ vựng chuyên ngành</li>
+            <li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> Ưu tiên hỗ trợ hồ sơ học bổng Du học Nga</li>
           </ul>
         </div>
 
@@ -1259,7 +1259,7 @@ const Monetization = {
               <div style="font-size:0.78rem;color:#15803D">Đồng hành trọn vẹn suốt thời gian du học Nga với giá ưu đãi.</div>
             </div>
             <button class="btn btn-sm btn-primary" id="btnExtendLifetime" style="background:#059669;border-color:#059669;white-space:nowrap">
-              💎 Nâng cấp Trọn Đời
+              ${window.RusiIcons ? RusiIcons.get("gem", { size: 16 }) : ""} Nâng cấp Trọn Đời
             </button>
           </div>
         ` : ""}
@@ -1420,7 +1420,7 @@ const NAV_LINKS = [
 const SEASON_ORDER = ["winter"];
 
 const SEASON_META = {
-  winter: { icon: "❄️", label: "Mùa đông", fx: ["❄️", "•", "❄️", "•"] }
+  winter: { icon: "snowflake", label: "Mùa đông", fx: ["*", "•", "*", "•"] }
 };
 
 function autoSeason() {
@@ -1453,7 +1453,7 @@ function applySeason(season = "winter") {
 
   for (let i = 0; i < 8; i++) {
     const s = document.createElement("span");
-    s.textContent = i % 2 === 0 ? "❄️" : "•";
+    s.textContent = i % 2 === 0 ? "*" : "•";
     s.style.fontSize = i % 2 === 0 ? (9 + Math.random() * 8 + "px") : "5px";
     s.style.left = Math.random() * 100 + "vw";
     s.style.setProperty("--drift", Math.round(Math.random() * 100 - 50) + "px");
@@ -1498,9 +1498,9 @@ const AuthModal = {
 
         <div class="auth-modal-body">
           <div class="auth-features-preview">
-            <div class="auth-feat-item">⚡ <span>Lưu chuỗi ngày Streak & tích lũy XP</span></div>
-            <div class="auth-feat-item">🫙 <span>Đồng bộ Lọ từ vựng Spaced Repetition (SM-2)</span></div>
-            <div class="auth-feat-item">📝 <span>Lưu kết quả & báo cáo làm bài thi thử TRKI</span></div>
+            <div class="auth-feat-item">${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 16 }) : ""} <span>Lưu chuỗi ngày Streak & tích lũy XP</span></div>
+            <div class="auth-feat-item">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""} <span>Đồng bộ Lọ từ vựng Spaced Repetition (SM-2)</span></div>
+            <div class="auth-feat-item">${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 16 }) : ""} <span>Lưu kết quả & báo cáo làm bài thi thử TRKI</span></div>
           </div>
 
           <button class="btn-google-auth" id="btnGoogleAction" type="button">
@@ -1705,12 +1705,12 @@ function renderUserArea() {
       <!-- PHẦN NÂNG CẤP PRO HIỂN THỊ KHI NGƯỜI DÙNG ĐĂNG NHẬP -->
       ${isPro ? `
         <button class="pro-chip-header" id="btnManageProHeader" type="button" title="Gói PRO đang kích hoạt — Bấm để xem và quản lý">
-          <span>${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 16 }) : "👑"}</span>
+          <span>${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 16 }) : ""}</span>
           <span>PRO MEMBER</span>
         </button>
       ` : `
         <button class="btn-upgrade-pro-header" id="btnUpgradeHeader" type="button" title="Mở khóa 100% đề thi TRKI và AI">
-          <span class="btn-upgrade-icon">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "⚡"}</span>
+          <span class="btn-upgrade-icon">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""}</span>
           <span class="btn-upgrade-text">Nâng cấp PRO</span>
         </button>
       `}
@@ -1719,7 +1719,7 @@ function renderUserArea() {
         <button class="user-trigger" id="userTrigger" type="button" aria-haspopup="true" aria-expanded="false">
           ${avatar}
           <span class="user-name-short">${esc(shortName)}</span>
-          <span class="caret" aria-hidden="true">${window.RusiIcons ? RusiIcons.get("chevron-down", { size: 12 }) : "▾"}</span>
+          <span class="caret" aria-hidden="true">${window.RusiIcons ? RusiIcons.get("chevron-down", { size: 12 }) : ""}</span>
         </button>
         <div class="user-dropdown" id="userDropdown" role="menu">
           <div class="user-dropdown-head">
@@ -1737,17 +1737,17 @@ function renderUserArea() {
           ${isPro ? `
             <div class="user-pro-vip-card" id="btnUserMenuManagePro" title="Xem quyền lợi và quản lý gói PRO">
               <div class="user-pro-vip-head">
-                <span class="user-pro-vip-badge">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : "👑"} ${esc(proInfo ? proInfo.pkgTitle : "PRO VIP")}</span>
+                <span class="user-pro-vip-badge">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""} ${esc(proInfo ? proInfo.pkgTitle : "PRO VIP")}</span>
                 <span class="user-pro-vip-action">Quản lý →</span>
               </div>
               <div class="user-pro-vip-time">
-                ${proInfo && proInfo.isLifetime ? "✨ Đặc quyền VIP Trọn Đời" : `⏳ Hạn dùng: ${esc((proInfo && proInfo.expiresFormatted) || "Đang kích hoạt")}`}
+                ${proInfo && proInfo.isLifetime ? `${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""} Đặc quyền VIP Trọn Đời` : `${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Hạn dùng: ${esc((proInfo && proInfo.expiresFormatted) || "Đang kích hoạt")}`}
               </div>
             </div>
           ` : `
             <div class="user-pro-cta-card" id="btnUserMenuUpgrade" title="Nâng cấp tài khoản PRO ngay">
               <div class="user-pro-cta-left">
-                <span class="user-pro-cta-icon">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 20 }) : "👑"}</span>
+                <span class="user-pro-cta-icon">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 20 }) : ""}</span>
                 <div>
                   <div class="user-pro-cta-title">Nâng cấp PRO VIP</div>
                   <div class="user-pro-cta-desc">Mở khóa 100% đề thi TRKI & AI</div>
@@ -1760,14 +1760,14 @@ function renderUserArea() {
           <!-- PHẦN ĐIỂM XP VÀ CHUỖI STREAK HIỂN THỊ TRANG TRỌNG -->
           <div class="user-stats-bar">
             <div class="user-stat-card">
-              <span class="user-stat-icon">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "⚡"}</span>
+              <span class="user-stat-icon">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""}</span>
               <div>
                 <div class="user-stat-val" id="userMenuXp">${STORE.get("xp", 0)} XP</div>
                 <div class="user-stat-lbl">Kinh nghiệm</div>
               </div>
             </div>
             <div class="user-stat-card">
-              <span class="user-stat-icon">${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 16 }) : "🔥"}</span>
+              <span class="user-stat-icon">${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 16 }) : ""}</span>
               <div>
                 <div class="user-stat-val" id="userMenuStreak">${STORE.get("streak", 0)} ngày</div>
                 <div class="user-stat-lbl">Chuỗi Streak</div>
@@ -1778,27 +1778,27 @@ function renderUserArea() {
           <div class="user-dropdown-divider"></div>
 
           <a class="user-dropdown-item" href="index.html#progress" role="menuitem">
-            <span>${window.RusiIcons ? RusiIcons.get("layout-dashboard", { size: 18 }) : "📊"}</span>
+            <span>${window.RusiIcons ? RusiIcons.get("layout-dashboard", { size: 18 }) : ""}</span>
             <span>Tiến độ của tôi</span>
           </a>
           <a class="user-dropdown-item" href="vocabulary.html" role="menuitem">
-            <span>${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 18 }) : "🫙"}</span>
+            <span>${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 18 }) : ""}</span>
             <span>Lọ từ vựng & Flashcard</span>
           </a>
           <a class="user-dropdown-item" href="mock-test.html" role="menuitem">
-            <span>${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 18 }) : "📝"}</span>
+            <span>${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 18 }) : ""}</span>
             <span>Luyện thi TRKI</span>
           </a>
           ${isAdmin ? `
           <a class="user-dropdown-item" href="admin.html" role="menuitem">
-            <span>${window.RusiIcons ? RusiIcons.get("settings-gear", { size: 18 }) : "🛠️"}</span>
+            <span>${window.RusiIcons ? RusiIcons.get("settings-gear", { size: 18 }) : ""}</span>
             <span>Quản trị hệ thống</span>
           </a>` : ""}
 
           <div class="user-dropdown-divider"></div>
 
           <button class="user-dropdown-item user-dropdown-signout" id="btnSignOut" type="button" role="menuitem">
-            <span>${window.RusiIcons ? RusiIcons.get("log-out", { size: 18 }) : "🚪"}</span>
+            <span>${window.RusiIcons ? RusiIcons.get("log-out", { size: 18 }) : ""}</span>
             <span>Đăng xuất</span>
           </button>
         </div>
@@ -1935,7 +1935,7 @@ function quizEngine(container, questions, { onFinish } = {}) {
       container.innerHTML = `
         <div class="quiz-result">
           <p class="big">${correct}/${questions.length}</p>
-          <p>${pct >= 80 ? "Xuất sắc! 🎉" : pct >= 50 ? "Khá tốt — luyện thêm nhé!" : "Đừng lo, thử lại sau khi học kỹ hơn nhé!"}</p>
+          <p>${pct >= 80 ? "Xuất sắc!" : pct >= 50 ? "Khá tốt — luyện thêm nhé!" : "Đừng lo, thử lại sau khi học kỹ hơn nhé!"}</p>
           <button class="btn btn-soft" id="quizRetry">Làm lại</button>
         </div>`;
       container.querySelector("#quizRetry").onclick = () => {
@@ -1968,7 +1968,7 @@ function quizEngine(container, questions, { onFinish } = {}) {
         if (ok) correct++;
         if (item.ex) {
           container.querySelector("#explainBox").innerHTML =
-            `<div class="explain">💡 ${esc(item.ex)}</div>`;
+            `<div class="explain">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} ${esc(item.ex)}</div>`;
         }
         index++;
         setTimeout(renderQ, ok && !item.ex ? 650 : 1400);

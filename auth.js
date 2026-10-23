@@ -185,7 +185,7 @@
         store.set("auth_user", this.user);
         this._emit(this.user);
         if (typeof toast === "function") {
-          toast(`Xin chào ${this.user.name || "bạn"}! 👋`);
+          toast(`Xin chào ${this.user.name || "bạn"}!`);
         }
         return { user: this.user, error: null };
       } catch (err) {
@@ -221,7 +221,7 @@
         this.user = simulatedUser;
         store.set("auth_user", simulatedUser);
         this._emit(this.user);
-        if (typeof toast === "function") toast(`Xin chào ${guestName}! 👋`);
+        if (typeof toast === "function") toast(`Xin chào ${guestName}!`);
         return { user: this.user, error: null };
       }
       try {
@@ -230,7 +230,7 @@
         store.set("auth_user", this.user);
         this._emit(this.user);
         if (typeof toast === "function") {
-          toast(`Xin chào ${this.user.name || result.user.email}! 👋`);
+          toast(`Xin chào ${this.user.name || result.user.email}!`);
         }
         return { user: this.user, error: null };
       } catch (err) {
@@ -272,7 +272,7 @@
         this.user = simulatedUser;
         store.set("auth_user", simulatedUser);
         this._emit(this.user);
-        if (typeof toast === "function") toast(`Tạo tài khoản thành công! Xin chào ${guestName}! 👋`);
+        if (typeof toast === "function") toast(`Tạo tài khoản thành công! Xin chào ${guestName}!`);
         return { user: this.user, error: null };
       }
       try {
@@ -286,7 +286,7 @@
         store.set("auth_user", this.user);
         this._emit(this.user);
         if (typeof toast === "function") {
-          toast("Tạo tài khoản thành công! Chào mừng bạn! 🎉");
+          toast("Tạo tài khoản thành công! Chào mừng bạn!");
         }
         return { user: this.user, error: null };
       } catch (err) {
@@ -320,7 +320,7 @@
       this.user = guest;
       store.set("auth_user", guest);
       this._emit(guest);
-      if (typeof toast === "function") toast("Chào mừng bạn trải nghiệm với tư cách Khách! 👋");
+      if (typeof toast === "function") toast("Chào mừng bạn trải nghiệm với tư cách Khách!");
       return guest;
     },
 

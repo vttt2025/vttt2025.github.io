@@ -393,6 +393,131 @@
       name: "Nút Radio Tròn (Circle Dot)",
       category: "controls",
       paths: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="1"/>'
+    },
+    "plane": {
+      name: "Máy Bay / Sân Bay / Du Lịch (Plane)",
+      category: "topics",
+      paths: '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'
+    },
+    "shopping-cart": {
+      name: "Giỏ Hàng / Siêu Thị (Shopping Cart)",
+      category: "topics",
+      paths: '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>'
+    },
+    "building-2": {
+      name: "Tòa Nhà / Ký Túc Xá (Building)",
+      category: "topics",
+      paths: '<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/>'
+    },
+    "utensils": {
+      name: "Ẩm Thực & Món Ăn Nga (Utensils)",
+      category: "topics",
+      paths: '<path d="M18 2v6a3 3 0 0 1-3 3 3 3 0 0 1-3-3V2"/><path d="M15 2v18"/><path d="M5 2v8a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2V2"/><path d="M9 12v8"/>'
+    },
+    "coffee": {
+      name: "Cà Phê & Đời Sống (Coffee)",
+      category: "topics",
+      paths: '<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/>'
+    },
+    "train": {
+      name: "Tàu Điện Ngầm Metro & Giao Thông (Train)",
+      category: "topics",
+      paths: '<rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/>'
+    },
+    "rocket": {
+      name: "Khoa Học Vũ Trụ & Công Nghệ (Rocket)",
+      category: "topics",
+      paths: '<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>'
+    },
+    "handshake": {
+      name: "Giao Tiếp & Ngoại Giao (Handshake)",
+      category: "topics",
+      paths: '<path d="m11 17 2 2a1 1 0 0 0 1.4 0l4.3-4.3a1 1 0 0 0 0-1.4l-2-2a1 1 0 0 0-1.4 0L14 12.6"/><path d="m13 7 2-2a1 1 0 0 1 1.4 0l4.3 4.3a1 1 0 0 1 0 1.4l-2 2a1 1 0 0 1-1.4 0L16 11.4"/><path d="M7 11.4 3.7 8.1a1 1 0 0 1 0-1.4l2-2a1 1 0 0 1 1.4 0l4.3 4.3a1 1 0 0 1 0 1.4L10 11.8"/><path d="m9 14.6-3.3 3.3a1 1 0 0 1-1.4 0l-2-2a1 1 0 0 1 0-1.4L6.6 10.2"/>'
+    },
+    "map": {
+      name: "Bản Đồ & Địa Lý (Map)",
+      category: "topics",
+      paths: '<polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" x2="9" y1="3" y2="18"/><line x1="15" x2="15" y1="6" y2="21"/>'
+    },
+    "map-pin": {
+      name: "Địa Điểm & Ghim Vị Trí (Map Pin)",
+      category: "topics",
+      paths: '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>'
+    },
+    "image": {
+      name: "Tranh Ảnh & Tả Tranh (Image)",
+      category: "topics",
+      paths: '<rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/>'
+    },
+    "mail": {
+      name: "Thư Từ & Viết Thư (Mail)",
+      category: "topics",
+      paths: '<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>'
+    },
+    "medal": {
+      name: "Huy Chương & Cấp Độ TRKI (Medal)",
+      category: "topics",
+      paths: '<path d="M7.21 15 2.66 7.14a2 2 0 0 1 .13-2.2L4.4 2.8A2 2 0 0 1 6 2h12a2 2 0 0 1 1.6.8l1.6 2.14a2 2 0 0 1 .14 2.2L16.79 15"/><path d="M11 12 5.12 2.2"/><path d="m13 12 5.88-9.8"/><circle cx="12" cy="17" r="5"/>'
+    },
+    "briefcase": {
+      name: "Công Việc & Sự Nghiệp (Briefcase)",
+      category: "topics",
+      paths: '<rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>'
+    },
+    "film": {
+      name: "Phim Ảnh & Kịch Bản Nga (Film)",
+      category: "topics",
+      paths: '<rect width="20" height="20" x="2" y="2" rx="2.18" ry="2.18"/><line x1="7" x2="7" y1="2" y2="22"/><line x1="17" x2="17" y1="2" y2="22"/><line x1="2" x2="22" y1="12" y2="12"/><line x1="2" x2="7" y1="7" y2="7"/><line x1="2" x2="7" y1="17" y2="17"/><line x1="17" x2="22" y1="17" y2="17"/><line x1="17" x2="22" y1="7" y2="7"/>'
+    },
+    "gem": {
+      name: "Kim Cương / Cao Cấp TRKI B2 (Gem)",
+      category: "topics",
+      paths: '<path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/>'
+    },
+    "newspaper": {
+      name: "Báo Chí & Tin Tức Nga (Newspaper)",
+      category: "topics",
+      paths: '<path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/>'
+    },
+    "message-square": {
+      name: "Hội Thoại & Câu Mẫu (Message Square)",
+      category: "topics",
+      paths: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>'
+    },
+    "flag": {
+      name: "Quốc Kỳ & Ngôn Ngữ (Flag)",
+      category: "topics",
+      paths: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>'
+    },
+    "heart": {
+      name: "Gia Đình & Cảm Xúc (Heart)",
+      category: "topics",
+      paths: '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>'
+    },
+    "activity": {
+      name: "Thể Thao & Hoạt Động (Activity)",
+      category: "topics",
+      paths: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'
+    },
+    "pill": {
+      name: "Thuốc & Hiệu Thuốc (Pill)",
+      category: "topics",
+      paths: '<path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"/><path d="m8.5 8.5 7 7"/>'
+    },
+    "shirt": {
+      name: "Trang Phục & Quần Áo (Shirt)",
+      category: "topics",
+      paths: '<path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>'
+    },
+    "snowflake": {
+      name: "Mùa Đông & Thời Tiết (Snowflake)",
+      category: "topics",
+      paths: '<line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/>'
+    },
+    "alert-triangle": {
+      name: "Cảnh Báo & Lưu Ý (Alert Triangle)",
+      category: "utilities",
+      paths: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>'
     }
   };
 
@@ -483,7 +608,33 @@
     "maximize-2": "maximize-2", "maximize": "maximize-2", "full": "maximize-2", "fullscreen": "maximize-2", "⛶": "maximize-2",
     "minimize-2": "minimize-2", "minimize": "minimize-2",
     "circle-dot": "circle-dot", "trac-nghiem": "circle-dot", "🔘": "circle-dot",
-    "🎉": "trophy-reward", "🆕": "sparkles-clean", "🟢": "check-circle-correct", "👍": "check", "❌": "x", "💎": "crown-vip"
+    "🎉": "trophy-reward", "🆕": "sparkles-clean", "🟢": "check-circle-correct", "👍": "check", "❌": "x", "💎": "gem",
+    "plane": "plane", "✈️": "plane", "✈": "plane", "du-lich": "plane", "san-bay": "plane",
+    "shopping-cart": "shopping-cart", "🛒": "shopping-cart", "sieu-thi": "shopping-cart",
+    "building-2": "building-2", "building": "building-2", "🏢": "building-2", "ktx": "building-2", "nha": "building-2", "phong": "building-2",
+    "utensils": "utensils", "food": "utensils", "🥞": "utensils", "🍽️": "utensils", "🍽": "utensils", "an-uong": "utensils",
+    "coffee": "coffee", "cafe": "coffee", "☕": "coffee",
+    "train": "train", "metro": "train", "🚇": "train", "tau": "train", "giao-thong": "train",
+    "rocket": "rocket", "🚀": "rocket", "vu-tru": "rocket", "cong-nghe": "rocket",
+    "handshake": "handshake", "🤝": "handshake", "ngoai-giao": "handshake", "lam-quen": "handshake",
+    "map": "map", "🗺️": "map", "🗺": "map", "ban-do": "map", "dia-ly": "map",
+    "map-pin": "map-pin", "pin": "map-pin", "📌": "map-pin", "dia-diem": "map-pin",
+    "image": "image", "🖼️": "image", "🖼": "image", "ta-tranh": "image", "tranh": "image",
+    "mail": "mail", "letter": "mail", "✉️": "mail", "✉": "mail", "thu": "mail",
+    "medal": "medal", "🏅": "medal", "🥉": "medal", "🥈": "medal", "🥇": "medal", "huy-chuong": "medal",
+    "briefcase": "briefcase", "work": "briefcase", "💼": "briefcase", "cong-viec": "briefcase",
+    "film": "film", "movie": "film", "cinema": "film", "🎬": "film", "dien-anh": "film",
+    "gem": "gem", "diamond": "gem",
+    "newspaper": "newspaper", "📰": "newspaper", "bao-chi": "newspaper",
+    "message-square": "message-square", "💬": "message-square", "chat": "message-square",
+    "flag": "flag", "🇷🇺": "flag", "🇻🇳": "flag", "quoc-ky": "flag",
+    "heart": "heart", "❤️": "heart", "gia-dinh": "heart",
+    "activity": "activity", "sport": "activity", "the-thao": "activity", "⚽": "activity", "🎾": "activity", "🏀": "activity",
+    "pill": "pill", "medicine": "pill", "thuoc": "pill", "hieu-thuoc": "pill", "duoc": "pill", "💊": "pill",
+    "shirt": "shirt", "clothing": "shirt", "clothes": "shirt", "quan-ao": "shirt", "giat": "shirt", "👕": "shirt", "🧺": "shirt",
+    "snowflake": "snowflake", "snow": "snowflake", "winter": "snowflake", "tuyet": "snowflake", "mua-dong": "snowflake", "❄️": "snowflake", "❄": "snowflake",
+    "alert-triangle": "alert-triangle", "warning": "alert-triangle", "canh-bao": "alert-triangle", "⚠️": "alert-triangle", "⚠": "alert-triangle", "door": "inbox", "🚪": "inbox",
+    "🍬": "shopping-bag-shop", "🌿": "sparkles-clean", "🪆": "award-badge"
   };
 
   /* ==========================================================================

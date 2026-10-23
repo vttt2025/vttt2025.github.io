@@ -29,8 +29,8 @@ export const VocabJars: CollectionConfig = {
         {
           name: 'icon',
           type: 'text',
-          label: 'Icon Emoji',
-          defaultValue: '🫙',
+          label: 'Vector Icon Lucide',
+          defaultValue: 'archive-jar',
           admin: { width: '20%' },
         },
         {

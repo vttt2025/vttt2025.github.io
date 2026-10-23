@@ -113,7 +113,7 @@
         return {
           ok: true,
           latency: elapsed,
-          message: "Kết nối thành công tới " + cfg.url + " (" + elapsed + "ms) ⚡"
+          message: "Kết nối thành công tới " + cfg.url + " (" + elapsed + "ms)"
         };
       } catch (e) {
         return {
@@ -189,7 +189,7 @@
               level: row.level || "A1",
               levelName: row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1",
               desc: row.description || "",
-              icon: row.icon || "🫙",
+              icon: row.icon || "archive-jar",
               is_system: true,
               words: Array.isArray(row.words) ? row.words : []
             };
@@ -317,7 +317,7 @@
               durationMin: row.duration_minutes || 45,
               passPercent: row.passing_score || 60,
               is_pro_only: Boolean(row.is_pro_only),
-              icon: row.icon || "🏛️",
+              icon: row.icon || "graduation-cap",
               parts: raw.parts || []
             };
           });
@@ -372,7 +372,7 @@
               category: row.category || "airport",
               categoryName: row.category_name || "Bài nghe",
               estMinutes: row.est_minutes || 10,
-              icon: row.icon || "🎧",
+              icon: row.icon || "headphones",
               partNumber: row.part_number || 1,
               is_pro_only: Boolean(row.is_pro_only),
               lines: raw.lines || [],
@@ -410,7 +410,7 @@
               category: row.category || "greeting",
               categoryName: row.category_name || "Chào hỏi",
               phonemeTarget: row.phoneme_target || "",
-              icon: row.icon || "🗣️",
+              icon: row.icon || "mic-speaking",
               is_pro_only: Boolean(row.is_pro_only),
               items: raw.items || (row.sentence_ru ? [{ ru: row.sentence_ru, vi: "" }] : [])
             };
@@ -442,7 +442,7 @@
               levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
               category: row.category || "intro",
               categoryName: row.category_name || "Tự giới thiệu",
-              icon: row.icon || "📝",
+              icon: row.icon || "pen-tool",
               estMinutes: row.est_minutes || 15,
               title: row.title,
               prompt: row.prompt || "",
@@ -483,7 +483,7 @@
               excerpt: row.excerpt || "",
               content: row.content_markdown || row.excerpt || "",
               date: row.date || new Date(row.created_at).toLocaleDateString("vi-VN"),
-              icon: row.icon || "📰",
+              icon: row.icon || "book-open-blog",
               author: row.author || "RUSI Editorial",
               readTime: row.read_time || "5 phút đọc"
             };

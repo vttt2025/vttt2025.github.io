@@ -248,7 +248,7 @@ window.openAddToJarModal = function(wordData) {
     customJars = [{
       id: "custom-jar-default",
       name: "Lọ từ vựng yêu thích",
-      icon: "⭐",
+      icon: "star",
       desc: "Lọ chứa các từ vựng bạn yêu thích và đã lưu",
       words: [],
       level: "A1",
@@ -269,7 +269,7 @@ window.openAddToJarModal = function(wordData) {
         <h3 style="margin:0;font-size:1.15rem;display:flex;align-items:center;gap:8px">
           <span style="display:inline-flex;align-items:center">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""}</span> Lưu vào Lọ từ vựng cá nhân
         </h3>
-        <button type="button" class="btn btn-soft btn-sm" id="closeAddJarModal" style="padding:4px 8px;border-radius:50%;font-size:1rem;line-height:1">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
+        <button type="button" class="btn btn-soft btn-sm" id="closeAddJarModal" style="padding:4px 8px;border-radius:50%;font-size:1rem;line-height:1">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
       </div>
 
       <div class="add-jar-preview">
@@ -288,16 +288,16 @@ window.openAddToJarModal = function(wordData) {
         <span style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px">Chọn Lọ từ vựng muốn lưu vào:</span>
         <select id="selectTargetJar" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:0.92rem;background:var(--surface);color:var(--text)">
           ${customJars.map(j => `
-            <option value="${esc(j.id)}">${esc(j.icon || "🫙")} ${esc(j.name)} (${(j.words || []).length} từ)</option>
+            <option value="${esc(j.id)}">${esc(j.name)} (${(j.words || []).length} từ)</option>
           `).join("")}
-          <option value="__NEW_JAR__">➕ [Tạo Lọ mới ngay...]</option>
+          <option value="__NEW_JAR__">+ [Tạo Lọ mới ngay...]</option>
         </select>
       </label>
 
       <div id="inlineNewJarGroup" style="display:none;background:var(--bg);border:1px dashed var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px">
         <span style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:4px">Tên Lọ mới:</span>
         <div style="display:flex;gap:8px">
-          <input type="text" id="inlineNewJarIcon" value="⭐" style="width:46px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:8px;font-size:1rem" />
+          <input type="text" id="inlineNewJarIcon" value="star" style="width:46px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:8px;font-size:1rem" />
           <input type="text" id="inlineNewJarName" placeholder="Ví dụ: Từ vựng thi TRKI 1..." style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem" />
         </div>
       </div>
@@ -333,7 +333,7 @@ window.openAddToJarModal = function(wordData) {
 
     if (jarId === "__NEW_JAR__") {
       const createdName = (newName.value || "").trim();
-      const createdIcon = (newIcon.value || "").trim() || "⭐";
+      const createdIcon = (newIcon.value || "").trim() || "star";
       if (!createdName) {
         toast("Vui lòng nhập tên cho Lọ từ vựng mới!");
         newName.focus();
@@ -371,10 +371,10 @@ window.openAddToJarModal = function(wordData) {
 
     if (existingIdx >= 0) {
       jar.words[existingIdx] = Object.assign({}, jar.words[existingIdx], wordPayload);
-      toast(`✨ Đã cập nhật từ «${ru}» trong lọ «${jar.name}»!`);
+      toast(`Đã cập nhật từ «${ru}» trong lọ «${jar.name}»!`);
     } else {
       jar.words.push(wordPayload);
-      toast(`🫙 Đã lưu «${ru}» vào «${jar.name}» thành công! 🎉`);
+      toast(`Đã lưu «${ru}» vào «${jar.name}» thành công!`);
     }
 
     if (typeof STORE !== "undefined") {
@@ -399,7 +399,7 @@ function openAddWordToJarModal(jarId, onSuccess) {
     <div class="add-jar-box">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <h3 style="margin:0;font-size:1.15rem;display:inline-flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("plus", { size: 16 }) : "+"} Thêm từ mới vào Lọ</h3>
-        <button type="button" class="btn btn-soft btn-sm" id="closeAddWordModal" style="padding:4px 8px;border-radius:50%">✕</button>
+        <button type="button" class="btn btn-soft btn-sm" id="closeAddWordModal" style="padding:4px 8px;border-radius:50%">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
       </div>
 
       <label style="display:block;margin-bottom:10px">
@@ -457,7 +457,7 @@ function openAddWordToJarModal(jarId, onSuccess) {
     jar.words.push({ ru, stress, vi, note, ex });
     STORE.set("custom_jars", customJars);
     playQuizletSound("correct");
-    toast(`Đã thêm từ «${ru}» vào lọ thành công! 🎉`);
+    toast(`Đã thêm từ «${ru}» vào lọ thành công!`);
     m.remove();
     if (onSuccess) onSuccess();
   };
@@ -487,7 +487,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         <div style="margin-bottom:12px;color:var(--primary)">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 48 }) : ""}</div>
         <h3 style="margin-bottom:8px">Lọ từ vựng này đang trống</h3>
         <p style="color:var(--muted);max-width:460px;margin:0 auto 20px;font-size:0.95rem">
-          Bạn chưa có từ vựng nào trong lọ này. Hãy nhấn nút bên dưới để thêm từ mới, hoặc nhấn nút <b>🫙 + Lưu</b> từ bất kỳ bài học nào trên hệ thống!
+          Bạn chưa có từ vựng nào trong lọ này. Hãy nhấn nút bên dưới để thêm từ mới, hoặc nhấn nút <b>+ Lưu</b> từ bất kỳ bài học nào trên hệ thống!
         </p>
         ${isCustomJar ? `<button class="btn btn-primary btn-sm" id="btnEmptyAddWord">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm từ mới thủ công ngay</button>` : ""}
       </div>
@@ -505,22 +505,22 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     <div class="quizlet-suite">
       <div class="quizlet-mode-bar">
         <button type="button" class="quizlet-mode-btn ${initialMode === "list" ? "active" : ""}" data-mode="list">
-          ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 16 }) : "📋"} Danh sách từ (${words.length})
+          ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 16 }) : ""} Danh sách từ (${words.length})
         </button>
         <button type="button" class="quizlet-mode-btn ${initialMode === "flashcard" ? "active" : ""}" data-mode="flashcard">
           ${window.RusiIcons ? RusiIcons.get("flashcards-layers", { size: 16 }) : ""} Thẻ ghi nhớ (Flashcard)
         </button>
         <button type="button" class="quizlet-mode-btn ${initialMode === "learn" ? "active" : ""}" data-mode="learn">
-          ${window.RusiIcons ? RusiIcons.get("brain", { size: 16 }) : "🧠"} Trắc nghiệm
+          ${window.RusiIcons ? RusiIcons.get("brain", { size: 16 }) : ""} Trắc nghiệm
         </button>
         <button type="button" class="quizlet-mode-btn ${initialMode === "match" ? "active" : ""}" data-mode="match">
-          ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "⚡"} Ghép thẻ
+          ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Ghép thẻ
         </button>
         <button type="button" class="quizlet-mode-btn ${initialMode === "test" ? "active" : ""}" data-mode="test">
           ${window.RusiIcons ? RusiIcons.get("file-text", { size: 16 }) : ""} Kiểm tra
         </button>
         <button type="button" class="quizlet-mode-btn ${initialMode === "write" ? "active" : ""}" data-mode="write">
-          ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 16 }) : "✍️"} Gõ chính tả
+          ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 16 }) : ""} Gõ chính tả
         </button>
       </div>
 
@@ -586,7 +586,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       const starred = getQuizletStarred().map(s => s.toLowerCase());
       fActiveWords = words.filter(w => starred.includes(w.ru.toLowerCase()));
       if (fActiveWords.length === 0) {
-        toast("Chưa có từ nào được gắn sao ⭐! Hãy bấm ⭐ trên thẻ để đánh dấu từ khó.");
+        toast("Chưa có từ nào được gắn sao! Hãy bấm nút Ngôi sao trên thẻ để đánh dấu từ khó.");
         fStarredOnly = false;
         fActiveWords = [...words];
       }
@@ -607,17 +607,17 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           <!-- FRONT FACE (RU) -->
           <div class="quizlet-card-face quizlet-card-front">
             <div class="qcard-top-row">
-              <span class="qcard-badge">🇷🇺 Tiếng Nga</span>
+              <span class="qcard-badge" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Nga</span>
               <div class="qcard-actions">
-                <button type="button" class="qcard-btn-star ${isStarred ? "starred" : ""}" id="qStarFront" title="Đánh dấu từ khó (Phím S)">${window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : "⭐"}</button>
-                <button type="button" class="qcard-btn-addjar" id="qAddJarFront" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : "🫙"} + Lưu</button>
+                <button type="button" class="qcard-btn-star ${isStarred ? "starred" : ""}" id="qStarFront" title="Đánh dấu từ khó (Phím S)">${window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : ""}</button>
+                <button type="button" class="qcard-btn-addjar" id="qAddJarFront" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""} + Lưu</button>
               </div>
             </div>
 
             <div class="qcard-main">
               <div class="qcard-word ru">${esc(currentWord.stress || currentWord.ru)}</div>
               ${currentWord.note ? `<div class="scroll-pos">${esc(currentWord.note)}</div>` : ""}
-              <button type="button" class="qcard-audio-btn" id="qAudioFront" title="Phát âm tiếng Nga">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 18 }) : "🔊"}</button>
+              <button type="button" class="qcard-audio-btn" id="qAudioFront" title="Phát âm tiếng Nga">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 18 }) : ""}</button>
             </div>
 
             <div class="qcard-hint">
@@ -628,10 +628,10 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           <!-- BACK FACE (VI) -->
           <div class="quizlet-card-face quizlet-card-back">
             <div class="qcard-top-row">
-              <span class="qcard-badge vi">🇻🇳 Tiếng Việt</span>
+              <span class="qcard-badge vi" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Việt</span>
               <div class="qcard-actions">
-                <button type="button" class="qcard-btn-star ${isStarred ? "starred" : ""}" id="qStarBack" title="Đánh dấu từ khó (Phím S)">${window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : "⭐"}</button>
-                <button type="button" class="qcard-btn-addjar" id="qAddJarBack" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : "🫙"} + Lưu</button>
+                <button type="button" class="qcard-btn-star ${isStarred ? "starred" : ""}" id="qStarBack" title="Đánh dấu từ khó (Phím S)">${window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : ""}</button>
+                <button type="button" class="qcard-btn-addjar" id="qAddJarBack" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""} + Lưu</button>
               </div>
             </div>
 
@@ -643,7 +643,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                   ${currentWord.ex_vi ? `<div class="qcard-ex-vi">${esc(currentWord.ex_vi)}</div>` : ""}
                 </div>
               ` : ""}
-              ${currentWord.ex ? `<button type="button" class="qcard-audio-btn" id="qAudioBackEx" title="Phát âm câu ví dụ" style="margin-top:6px">🔊</button>` : ""}
+              ${currentWord.ex ? `<button type="button" class="qcard-audio-btn" id="qAudioBackEx" title="Phát âm câu ví dụ" style="margin-top:6px">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""}</button>` : ""}
             </div>
 
             <div class="qcard-hint">
@@ -663,16 +663,16 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
         <div class="quizlet-tools">
           <button type="button" class="quizlet-tool-btn ${fShuffled ? "active" : ""}" id="qToolShuffle">
-            ${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) : "🔀"} Xáo trộn
+            ${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) : ""} Xáo trộn
           </button>
           <button type="button" class="quizlet-tool-btn ${fStarredOnly ? "active" : ""}" id="qToolStar">
-            ${window.RusiIcons ? RusiIcons.get("star", { size: 14 }) : "⭐"} Chỉ từ khó
+            ${window.RusiIcons ? RusiIcons.get("star", { size: 14 }) : ""} Chỉ từ khó
           </button>
           <button type="button" class="quizlet-tool-btn ${fAutoAudio ? "active" : ""}" id="qToolAudio">
             <span style="display:inline-flex;align-items:center">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""}</span> Tự đọc: ${fAutoAudio ? "Bật" : "Tắt"}
           </button>
           <button type="button" class="quizlet-tool-btn" id="qToolFullscreen">
-            ${window.RusiIcons ? RusiIcons.get("external-link", { size: 14 }) : "⛶"} Toàn màn hình
+            ${window.RusiIcons ? RusiIcons.get("external-link", { size: 14 }) : ""} Toàn màn hình
           </button>
         </div>
       </div>
@@ -762,7 +762,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       if (e) e.stopPropagation();
       const starred = toggleQuizletStarred(currentWord.ru);
       pane.querySelectorAll(".qcard-btn-star").forEach(b => b.classList.toggle("starred", starred));
-      toast(starred ? `⭐ Đã gắn sao từ «${currentWord.ru}»` : `Đã bỏ gắn sao từ «${currentWord.ru}»`);
+      toast(starred ? `Đã gắn sao từ «${currentWord.ru}»` : `Đã bỏ gắn sao từ «${currentWord.ru}»`);
     };
     pane.querySelector("#qStarFront").onclick = toggleStarCurrent;
     pane.querySelector("#qStarBack").onclick = toggleStarCurrent;
@@ -780,7 +780,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       fShuffled = !fShuffled;
       if (fShuffled) {
         fActiveWords = qShuffleArray(fActiveWords);
-        toast("🔀 Đã xáo trộn danh sách thẻ!");
+        toast("Đã xáo trộn danh sách thẻ!");
       } else {
         fActiveWords = fStarredOnly
           ? words.filter(w => getQuizletStarred().map(s => s.toLowerCase()).includes(w.ru.toLowerCase()))
@@ -804,7 +804,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     pane.querySelector("#qToolAudio").onclick = () => {
       fAutoAudio = !fAutoAudio;
       if (typeof STORE !== "undefined") STORE.set("quizlet_auto_audio", fAutoAudio);
-      toast(fAutoAudio ? "🔊 Đã bật tự động đọc từ khi chuyển thẻ" : "Đã tắt tự động đọc");
+      toast(fAutoAudio ? "Đã bật tự động đọc từ khi chuyển thẻ" : "Đã tắt tự động đọc");
       renderFlashcardMode();
     };
 
@@ -822,7 +822,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           exitBtn.style.top = "20px";
           exitBtn.style.right = "24px";
           exitBtn.style.zIndex = "10001";
-          exitBtn.innerHTML = (window.RusiIcons ? RusiIcons.get("minimize-2", { size: 14 }) : "✕") + " Thu nhỏ (Esc)";
+          exitBtn.innerHTML = (window.RusiIcons ? RusiIcons.get("minimize-2", { size: 14 }) : "") + " Thu nhỏ (Esc)";
           exitBtn.onclick = () => {
             container.classList.remove("fullscreen");
             exitBtn.remove();
@@ -906,18 +906,18 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       }
       pane.innerHTML = `
         <div class="quizlet-summary-box">
-          <div class="quizlet-summary-trophy">${pct >= 80 ? "🏆" : pct >= 50 ? "🎉" : "📚"}</div>
+          <div class="quizlet-summary-trophy">${window.RusiIcons ? RusiIcons.get(pct >= 80 ? "trophy-reward" : pct >= 50 ? "award-badge" : "book-open-blog", { size: 48 }) : ""}</div>
           <h2 style="margin:0 0 8px">Hoàn thành bài Học thông minh!</h2>
           <p style="color:var(--muted);font-size:1.1rem;margin:0 0 20px">
             Bạn đạt <b>${lScore}</b> / ${lQueue.length} câu chính xác (${pct}%)
-            ${pct >= 70 ? ` · <span style="color:#16a34a;font-weight:700">+15 XP 🌟</span>` : ""}
+            ${pct >= 70 ? ` · <span style="color:#16a34a;font-weight:700">+15 XP ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""}</span>` : ""}
           </p>
 
           <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
             ${lWrongWords.length > 0 ? `
-              <button class="btn btn-primary" id="btnLearnRetryWrong">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 16 }) : "🔁"} Ôn lại ${lWrongWords.length} từ chưa nhớ</button>
+              <button class="btn btn-primary" id="btnLearnRetryWrong">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 16 }) : ""} Ôn lại ${lWrongWords.length} từ chưa nhớ</button>
             ` : ""}
-            <button class="btn btn-outline" id="btnLearnRestart">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 16 }) : "🔄"} Học lại tất cả</button>
+            <button class="btn btn-outline" id="btnLearnRestart">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 16 }) : ""} Học lại tất cả</button>
             <button class="btn btn-soft" id="btnLearnToFlash">${window.RusiIcons ? RusiIcons.get("flashcards-layers", { size: 16 }) : ""} Về thẻ ghi nhớ</button>
           </div>
         </div>
@@ -948,7 +948,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
         <div class="learn-q-card">
           <div class="learn-q-word ru">${esc(currentWord.stress || currentWord.ru)}</div>
-          <button type="button" class="btn btn-soft btn-sm" id="btnLearnAudio" style="margin-top:6px">🔊 Nghe phát âm</button>
+          <button type="button" class="btn btn-soft btn-sm" id="btnLearnAudio" style="margin-top:6px;display:inline-flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""} Nghe phát âm</button>
         </div>
 
         <p style="font-size:0.9rem;font-weight:700;color:var(--muted);margin-bottom:12px">Chọn nghĩa tiếng Việt chính xác (Phím 1-4):</p>
@@ -1042,7 +1042,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       if (pct >= 70 && typeof Progress !== "undefined") Progress.addXp(20);
       pane.innerHTML = `
         <div class="quizlet-summary-box">
-          <div class="quizlet-summary-trophy">${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 48 }) : "✍️"}</div>
+          <div class="quizlet-summary-trophy">${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 48 }) : ""}</div>
           <h2 style="margin:0 0 8px">Hoàn thành phần Gõ từ & Chính tả!</h2>
           <p style="color:var(--muted);font-size:1.1rem;margin:0 0 20px">
             Bạn đã gõ đúng <b>${wCorrect}</b> / ${wQueue.length} từ vựng (${pct}%)
@@ -1132,7 +1132,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         resBox.style.display = "block";
         resBox.style.background = "#dcfce7";
         resBox.style.color = "#15803d";
-        resBox.innerHTML = `<b>🎉 Tuyệt vời! Hoàn toàn chính xác!</b>`;
+        resBox.innerHTML = `<b>${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} Tuyệt vời! Hoàn toàn chính xác!</b>`;
         setTimeout(() => {
           wIdx++;
           renderWriteStep();
@@ -1189,7 +1189,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             <div style="font-size:0.85rem;font-weight:700;color:var(--muted)">GHÉP THẺ QUIZLET</div>
             <div style="font-size:0.9rem;font-weight:600">Ghép từ tiếng Nga với nghĩa tiếng Việt tương ứng</div>
           </div>
-          <div class="match-timer" id="matchTimer">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 16 }) : "⏱️"} 0.0s</div>
+          <div class="match-timer" id="matchTimer">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 16 }) : ""} 0.0s</div>
         </div>
 
         <div class="match-grid" id="matchGrid">
@@ -1246,12 +1246,12 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               vic.style.display = "block";
               vic.innerHTML = `
                 <div class="quizlet-summary-box">
-                  <div class="quizlet-summary-trophy">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 48 }) : "⚡"}</div>
-                  <h2 style="margin:0 0 8px">${isNewRecord ? "🎉 KỶ LỤC MỚI CỦA BẠN!" : "Tuyệt vời! Hoàn thành xuất sắc!"}</h2>
+                  <div class="quizlet-summary-trophy">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 48 }) : ""}</div>
+                  <h2 style="margin:0 0 8px">${isNewRecord ? "KỶ LỤC MỚI CỦA BẠN!" : "Tuyệt vời! Hoàn thành xuất sắc!"}</h2>
                   <p style="font-size:1.4rem;font-weight:800;color:var(--secondary);margin:10px 0">
                     ${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 16 }) : ""} Thời gian: ${finalTime} giây
                   </p>
-                  <p style="color:var(--muted);margin-bottom:20px">+25 XP thưởng tốc độ 🌟</p>
+                  <p style="color:var(--muted);margin-bottom:20px">+25 XP thưởng tốc độ ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""}</p>
                   <div style="display:flex;gap:12px;justify-content:center">
                     <button class="btn btn-primary" id="btnMatchAgain">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 16 }) : ""} Chơi lại ván mới</button>
                     <button class="btn btn-soft" id="btnMatchToFlash">${window.RusiIcons ? RusiIcons.get("flashcards-layers", { size: 16 }) : ""} Về thẻ ghi nhớ</button>
@@ -1312,7 +1312,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       <div class="quizlet-learn-box" style="max-width:720px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px">
           <div>
-            <h3 style="margin:0">📝 Bài kiểm tra từ vựng: ${esc(jarTitle)}</h3>
+            <h3 style="margin:0;display:flex;align-items:center;gap:8px">${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 20 }) : ""} Bài kiểm tra từ vựng: ${esc(jarTitle)}</h3>
             <span style="font-size:0.85rem;color:var(--muted)">Gồm ${questions.length} câu hỏi trắc nghiệm & đúng/sai</span>
           </div>
           <span class="dau-badge dau-badge-a1">${questions.length} câu</span>
@@ -1341,11 +1341,11 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 <div style="display:flex;gap:12px">
                   <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer">
                     <input type="radio" name="q_${q.id}" value="true" required />
-                    <span>${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : "✓"} Đúng</span>
+                    <span>${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Đúng</span>
                   </label>
                   <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer">
                     <input type="radio" name="q_${q.id}" value="false" required />
-                    <span>${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"} Sai</span>
+                    <span>${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""} Sai</span>
                   </label>
                 </div>
               `}
@@ -1384,7 +1384,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       resBox.style.display = "block";
       resBox.innerHTML = `
         <div class="quizlet-summary-box">
-          <div class="quizlet-summary-trophy">${pct >= 80 ? "🏆" : pct >= 50 ? "🎉" : "📚"}</div>
+          <div class="quizlet-summary-trophy">${window.RusiIcons ? RusiIcons.get(pct >= 80 ? "trophy-reward" : pct >= 50 ? "award-badge" : "book-open-blog", { size: 48 }) : ""}</div>
           <h2 style="margin:0 0 8px">Kết quả: ${pct}% (${correct}/${questions.length} câu đúng)</h2>
           <p style="color:var(--muted);margin-bottom:20px">
             ${pct >= 80 ? "Xuất sắc! Bạn đã làm chủ rất tốt các từ vựng này." : pct >= 50 ? "Khá tốt! Hãy ôn lại các từ chưa vững nhé." : "Cần rèn luyện thêm, hãy dùng thẻ ghi nhớ để ôn lại."}
@@ -1467,16 +1467,16 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               <!-- FRONT FACE -->
               <div class="dau-preview-face dau-preview-front">
                 <div class="dau-preview-top">
-                  <span class="dau-preview-tag">🇷🇺 Tiếng Nga</span>
+                  <span class="dau-preview-tag" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Nga</span>
                   <div class="dau-preview-actions">
-                    <button type="button" class="dau-preview-btn-star ${isCurStarred ? "starred" : ""}" id="btnPreviewStar" title="Đánh dấu sao từ khó">⭐</button>
-                    <button type="button" class="dau-preview-btn-addjar" id="btnPreviewAddJar" title="Lưu vào Lọ cá nhân">🫙 + Lọ</button>
+                    <button type="button" class="dau-preview-btn-star ${isCurStarred ? "starred" : ""}" id="btnPreviewStar" title="Đánh dấu sao từ khó">${window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : ""}</button>
+                    <button type="button" class="dau-preview-btn-addjar" id="btnPreviewAddJar" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} + Lọ</button>
                   </div>
                 </div>
                 <div class="dau-preview-body">
                   <div class="dau-preview-word ru">${esc(curPreviewWord.stress || curPreviewWord.ru)}</div>
                   ${curPreviewWord.note ? `<div class="dau-preview-note">${esc(curPreviewWord.note)}</div>` : ""}
-                  <button type="button" class="dau-preview-audio-btn" id="btnPreviewAudio" title="Phát âm tiếng Nga">🔊</button>
+                  <button type="button" class="dau-preview-audio-btn" id="btnPreviewAudio" title="Phát âm tiếng Nga">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""}</button>
                 </div>
                 <div class="dau-preview-footer">
                   <span>↷ Bấm vào thẻ để lật xem nghĩa tiếng Việt</span>
@@ -1486,10 +1486,10 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               <!-- BACK FACE -->
               <div class="dau-preview-face dau-preview-back">
                 <div class="dau-preview-top">
-                  <span class="dau-preview-tag vi">🇻🇳 Tiếng Việt</span>
+                  <span class="dau-preview-tag vi" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Việt</span>
                   <div class="dau-preview-actions">
-                    <button type="button" class="dau-preview-btn-star ${isCurStarred ? "starred" : ""}" id="btnPreviewStarBack" title="Đánh dấu sao từ khó">⭐</button>
-                    <button type="button" class="dau-preview-btn-addjar" id="btnPreviewAddJarBack" title="Lưu vào Lọ cá nhân">🫙 + Lọ</button>
+                    <button type="button" class="dau-preview-btn-star ${isCurStarred ? "starred" : ""}" id="btnPreviewStarBack" title="Đánh dấu sao từ khó">${window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : ""}</button>
+                    <button type="button" class="dau-preview-btn-addjar" id="btnPreviewAddJarBack" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} + Lọ</button>
                   </div>
                 </div>
                 <div class="dau-preview-body">
@@ -1512,7 +1512,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               <button type="button" class="dau-preview-nav-btn" id="btnPreviewPrev" title="Từ trước">‹</button>
               <div class="dau-preview-counter">${previewIdx + 1} / ${previewWords.length}</div>
               <button type="button" class="dau-preview-nav-btn" id="btnPreviewNext" title="Từ tiếp theo">›</button>
-              <button type="button" class="dau-preview-ctrl-btn ${previewShuffled ? "active" : ""}" id="btnPreviewShuffle" title="Xáo trộn thứ tự từ">🔀 Trộn</button>
+              <button type="button" class="dau-preview-ctrl-btn ${previewShuffled ? "active" : ""}" id="btnPreviewShuffle" title="Xáo trộn thứ tự từ">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) : ""} Trộn</button>
             </div>
           </div>
 
@@ -1535,19 +1535,19 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               <!-- FILTER PILLS -->
               <div class="dau-vocab-pills-wrap">
                 <button type="button" class="dau-vocab-pill ${showDetails ? "active" : ""}" id="btnToggleDetails" title="Hiện hoặc ẩn chi tiết câu ví dụ, từ loại, đồng nghĩa">
-                  <span>📝</span> Chi tiết
+                  <span>${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 14 }) : ""}</span> Chi tiết
                 </button>
                 <button type="button" class="dau-vocab-pill ${filterMode === "starred" ? "active" : ""}" id="btnFilterStarred" ${starredCount === 0 && filterMode !== "starred" ? "disabled" : ""}>
-                  <span>${window.RusiIcons ? RusiIcons.get("star", { size: 14 }) : "⭐"}</span> Gắn sao (${starredCount})
+                  <span>${window.RusiIcons ? RusiIcons.get("star", { size: 14 }) : ""}</span> Gắn sao (${starredCount})
                 </button>
                 <button type="button" class="dau-vocab-pill ${filterMode === "mastered" ? "active" : ""}" id="btnFilterMastered" ${masteredCount === 0 && filterMode !== "mastered" ? "disabled" : ""}>
-                  <span>✓</span> Đã thuộc (${masteredCount})
+                  <span>${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""}</span> Đã thuộc (${masteredCount})
                 </button>
                 <button type="button" class="dau-vocab-pill" id="btnToggleSort" title="Đổi thứ tự sắp xếp">
-                  <span>${sortMode === "alphabetical" ? "🔤 A → Z" : "🔢 Thứ tự gốc"}</span> ▾
+                  <span>${sortMode === "alphabetical" ? "A → Z" : "Thứ tự gốc"}</span> ${window.RusiIcons ? RusiIcons.get("chevron-down", { size: 12 }) : ""}
                 </button>
                 <button type="button" class="btn btn-primary btn-sm btn-flash-cta" id="btnListToStudy" style="font-weight:700">
-                  ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "⚡"} Học Flashcard ngay →
+                  ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Học Flashcard ngay →
                 </button>
               </div>
             </div>
@@ -1595,13 +1595,13 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
                   <!-- COL 3: ACTION BUTTONS -->
                   <div class="dau-row-col-actions">
-                    <button type="button" class="dau-action-icon-btn btn-speak-item" data-ru="${esc(w.ru)}" title="Phát âm từ này">🔊</button>
-                    <button type="button" class="dau-action-icon-btn btn-star-item ${isStarred ? "starred" : ""}" data-ru="${esc(w.ru)}" title="Đánh dấu sao từ khó">⭐</button>
-                    <button type="button" class="dau-action-icon-btn btn-master-item ${isMastered ? "mastered" : ""}" data-ru="${esc(w.ru)}" title="Đánh dấu đã thuộc / thành thạo">✓</button>
-                    <button type="button" class="dau-action-icon-btn btn-dict-detail" data-ru="${esc(w.ru)}" title="Tra cứu biến cách 6 cách & chia thì TFlat">📖</button>
-                    <button type="button" class="dau-action-icon-btn btn-addjar-item" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" data-ex="${esc(w.ex || "")}" title="Lưu vào Lọ cá nhân">🫙</button>
+                    <button type="button" class="dau-action-icon-btn btn-speak-item" data-ru="${esc(w.ru)}" title="Phát âm từ này">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""}</button>
+                    <button type="button" class="dau-action-icon-btn btn-star-item ${isStarred ? "starred" : ""}" data-ru="${esc(w.ru)}" title="Đánh dấu sao từ khó">${window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : ""}</button>
+                    <button type="button" class="dau-action-icon-btn btn-master-item ${isMastered ? "mastered" : ""}" data-ru="${esc(w.ru)}" title="Đánh dấu đã thuộc / thành thạo">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""}</button>
+                    <button type="button" class="dau-action-icon-btn btn-dict-detail" data-ru="${esc(w.ru)}" title="Tra cứu biến cách 6 cách & chia thì TFlat">${window.RusiIcons ? RusiIcons.get("book-open-blog", { size: 16 }) : ""}</button>
+                    <button type="button" class="dau-action-icon-btn btn-addjar-item" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" data-ex="${esc(w.ex || "")}" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""}</button>
                     ${isCustomJar ? `
-                      <button type="button" class="dau-action-icon-btn btn-delword-item" style="color:var(--red)" data-ru="${esc(w.ru)}" title="Xóa từ khỏi lọ này">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 16 }) : "🗑️"}</button>
+                      <button type="button" class="dau-action-icon-btn btn-delword-item" style="color:var(--red)" data-ru="${esc(w.ru)}" title="Xóa từ khỏi lọ này">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 16 }) : ""}</button>
                     ` : ""}
                   </div>
                 </div>
@@ -1889,7 +1889,7 @@ function initVocabPage() {
         const remote = await window.RusiSupabase.jars.getSystemJars();
         if (remote && remote.length) {
           cloudJars = remote;
-          console.log(`⚡ [Supabase] Đã kết nối & lấy ${remote.length} lọ từ vựng từ Database!`);
+          console.log(`[Supabase] Đã kết nối & lấy ${remote.length} lọ từ vựng từ Database!`);
           renderVocabCards();
         }
       } catch (err) {
@@ -1909,7 +1909,7 @@ function initVocabPage() {
       levelName: j.levelName || (j.level === "B2" ? "Nâng cao B2" : j.level === "B1" ? "Trung cấp B1" : j.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
       title: j.name,
       desc: j.desc || "",
-      icon: j.icon || "🫙",
+      icon: j.icon || "archive-jar",
       wordsCount: (j.words || []).length,
       is_pro_only: Boolean(j.is_pro_only || j.is_vip || (j.level === "B2" && j.id !== "jar_travel") || j.id === "jar_bank" || j.id === "jar_hospital" || j.id === "jar_dekanat"),
       raw: j
@@ -1967,15 +1967,15 @@ function initVocabPage() {
             <div class="dau-card-top">
               <div class="dau-card-badges">
                 <span class="dau-badge ${badgeClass}">${esc(item.level)}</span>
-                <span class="dau-badge-cat">${window.RusiIcons ? RusiIcons.get("file-text", { size: 13 }) : "📝"} ${item.wordsCount} từ</span>
+                <span class="dau-badge-cat">${window.RusiIcons ? RusiIcons.get("file-text", { size: 13 }) : ""} ${item.wordsCount} từ</span>
               </div>
-              ${isPro ? '<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : "👑"} PRO</span>' : ""}
+              ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} PRO</span>` : ""}
             </div>
 
             <div class="dau-card-body">
               <div class="dau-card-icon-wrap">
                 <div class="dau-card-icon ${item.level === "A2" ? "warm" : item.level === "B1" ? "" : item.level === "B2" ? "purple" : "green"}">
-                  ${item.icon}
+                  ${window.RusiIcons ? RusiIcons.get(item.icon || "archive-jar", { size: 30 }) : ""}
                 </div>
                 <div style="flex:1;min-width:0">
                   <h3 class="dau-card-ru ru">${esc(item.title)}</h3>
@@ -1987,10 +1987,10 @@ function initVocabPage() {
             <div class="dau-card-footer">
               <div class="dau-card-actions-2btn">
                 <button type="button" class="btn btn-outline btn-sm btn-jar-list" data-jar-id="${item.id}" title="Xem danh sách chi tiết các từ">
-                  ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 16 }) : "📋"} Xem từ (${item.wordsCount})
+                  ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 16 }) : ""} Xem từ (${item.wordsCount})
                 </button>
                 <button type="button" class="btn btn-primary btn-sm btn-jar-study" data-jar-id="${item.id}" title="Bắt đầu học ngay">
-                  ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "⚡"} Học
+                  ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Học
                 </button>
               </div>
             </div>
@@ -2120,7 +2120,7 @@ function initVocabPage() {
       customJars = [{
         id: "custom-jar-default",
         name: "Lọ từ vựng yêu thích",
-        icon: "⭐",
+        icon: "star",
         desc: "Lọ chứa các từ vựng bạn yêu thích và đã lưu",
         words: [],
         level: "A1",
@@ -2186,7 +2186,7 @@ function initVocabPage() {
             return `
               <div class="voc-user-jar-item" data-jar-id="${esc(j.id)}">
                 <div class="voc-user-jar-info">
-                  <span class="voc-user-jar-icon">${esc(j.icon || "🫙")}</span>
+                  <span class="voc-user-jar-icon">${window.RusiIcons ? RusiIcons.get(j.icon || "archive-jar", { size: 20 }) : ""}</span>
                   <div class="voc-user-jar-meta">
                     <div class="voc-user-jar-name" title="${esc(j.name)}">${esc(j.name)}</div>
                     <div class="voc-user-jar-count">${wCount} từ vựng</div>
@@ -2197,9 +2197,7 @@ function initVocabPage() {
                     Học
                   </button>
                   ${!isDefault ? `
-                    <button type="button" class="btn btn-soft btn-sm voc-btn-del-jar" data-jar-id="${esc(j.id)}" data-jar-name="${esc(j.name)}" style="color:var(--red);padding:4px 6px" title="Xóa lọ này">
-                      ✕
-                    </button>
+                    <button type="button" class="btn btn-soft btn-sm voc-btn-del-jar" data-jar-id="${esc(j.id)}" data-jar-name="${esc(j.name)}" style="color:var(--red);padding:4px 6px" title="Xóa lọ này">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
                   ` : ""}
                 </div>
               </div>
@@ -2208,7 +2206,7 @@ function initVocabPage() {
         </div>
 
         <button type="button" class="btn btn-soft btn-sm" id="btnSidebarCreateJarBottom" style="width:100%;margin-top:12px;border:1px dashed var(--border)">
-          ➕ Thêm lọ từ vựng mới
+          ${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : ""} Thêm lọ từ vựng mới
         </button>
       </div>
     `;
@@ -2256,14 +2254,14 @@ function initVocabPage() {
     }
     m.innerHTML = `
       <div class="anticheat-modal-box" style="text-align:left">
-        <h3 style="margin-bottom:12px">🫙 Tạo Lọ Từ Vựng Cá Nhân</h3>
+        <h3 style="margin-bottom:12px;display:flex;align-items:center;gap:8px">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 20 }) : ""} Tạo Lọ Từ Vựng Cá Nhân</h3>
         <label style="display:block;margin-bottom:10px">
           <span style="font-size:0.85rem;font-weight:700">Tên lọ từ vựng:</span>
           <input type="text" id="newJarName" placeholder="Ví dụ: Từ vựng KTX & Nấu ăn" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;margin-top:4px" />
         </label>
         <label style="display:block;margin-bottom:14px">
           <span style="font-size:0.85rem;font-weight:700">Biểu tượng (Icon):</span>
-          <input type="text" id="newJarIcon" value="⭐" style="width:60px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:4px;text-align:center" />
+          <input type="text" id="newJarIcon" value="star" style="width:60px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:4px;text-align:center" />
         </label>
         <div style="display:flex;gap:10px;justify-content:flex-end">
           <button class="btn btn-outline btn-sm" id="cancelJar">Hủy</button>
@@ -2274,7 +2272,7 @@ function initVocabPage() {
     document.getElementById("cancelJar").onclick = () => m.remove();
     document.getElementById("saveJar").onclick = () => {
       const name = document.getElementById("newJarName").value.trim();
-      const icon = document.getElementById("newJarIcon").value.trim() || "🫙";
+      const icon = document.getElementById("newJarIcon").value.trim() || "archive-jar";
       if (!name) { toast("Vui lòng nhập tên lọ từ vựng"); return; }
       const customJars = STORE.get("custom_jars", []);
       customJars.push({
@@ -2320,18 +2318,18 @@ function initVocabPage() {
         <!-- STICKY TOP BACK BAR -->
         <div class="dau-workspace-back-bar">
           <button type="button" class="dau-back-btn" id="btnBackJars">
-            ← Quay lại kho Lọ từ vựng
+            <i data-rusi-icon="arrow-left" data-size="16"></i> Quay lại kho Lọ từ vựng
           </button>
           <div class="dau-workspace-info">
             <span class="dau-badge ${jar.level === "A2" ? "dau-badge-a2" : jar.level === "B1" ? "dau-badge-b1" : jar.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${jar.level || "A1"}</span>
-            <span class="dau-workspace-title">${jar.icon || "🫙"} ${esc(jar.name)} (${(jar.words || []).length} từ)</span>
+            <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(jar.icon || "archive-jar", { size: 22 }) : ""} ${esc(jar.name)} (${(jar.words || []).length} từ)</span>
           </div>
           <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
             ${isCustom ? `
               <button type="button" class="btn btn-outline btn-sm" id="btnAddWordCustom">+ Thêm từ mới</button>
-              <button type="button" class="btn btn-soft btn-sm" id="btnDeleteCustomJar" style="color:var(--red)" title="Xóa lọ này">🗑️</button>
+              <button type="button" class="btn btn-soft btn-sm" id="btnDeleteCustomJar" style="color:var(--red)" title="Xóa lọ này">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : "Xóa"}</button>
             ` : ""}
-            <button type="button" class="btn btn-primary btn-sm" id="btnStudyJar">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "⚡"} Học Flashcard</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btnStudyJar">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Học Flashcard</button>
           </div>
         </div>
 
@@ -2408,11 +2406,11 @@ function initVocabPage() {
         <!-- STICKY TOP BACK BAR -->
         <div class="dau-workspace-back-bar">
           <button type="button" class="dau-back-btn" id="btnBackLessons">
-            ← Quay lại danh sách từ vựng
+            <i data-rusi-icon="arrow-left" data-size="16"></i> Quay lại danh sách từ vựng
           </button>
           <div class="dau-workspace-info">
             <span class="dau-badge ${found.level === "A2" ? "dau-badge-a2" : found.level === "B1" ? "dau-badge-b1" : found.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${found.level || "A1"}</span>
-            <span class="dau-workspace-title">${found.scene || "📚"} ${esc(found.ru)}</span>
+            <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(found.scene || "book-open-blog", { size: 22 }) : ""} ${esc(found.ru)}</span>
           </div>
           <span style="font-size:0.85rem;color:var(--muted)">${found.words.length} từ vựng trọng tâm</span>
         </div>
@@ -2425,9 +2423,9 @@ function initVocabPage() {
               <p style="color:var(--muted);font-size:0.92rem">${esc(found.vi)}</p>
             </div>
             <div class="tabs" style="margin:0">
-              <button class="tab ${activeTab === "video" ? "active" : ""}" data-lt="video">🎬 Hội thoại & Ngữ cảnh</button>
-              <button class="tab ${activeTab === "words" ? "active" : ""}" data-lt="words">📝 Từ vựng (${found.words.length})</button>
-              <button class="tab ${activeTab === "quiz" ? "active" : ""}" data-lt="quiz">${window.RusiIcons ? RusiIcons.get("edit-3", { size: 16 }) : "✏️"} Trắc nghiệm</button>
+              <button class="tab ${activeTab === "video" ? "active" : ""}" data-lt="video">${window.RusiIcons ? RusiIcons.get("film", { size: 14 }) : ""} Hội thoại & Ngữ cảnh</button>
+              <button class="tab ${activeTab === "words" ? "active" : ""}" data-lt="words">${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 14 }) : ""} Từ vựng (${found.words.length})</button>
+              <button class="tab ${activeTab === "quiz" ? "active" : ""}" data-lt="quiz">${window.RusiIcons ? RusiIcons.get("edit-3", { size: 16 }) : ""} Trắc nghiệm</button>
             </div>
           </div>
 
@@ -2451,20 +2449,20 @@ function initVocabPage() {
       if (activeTab === "video") {
         body.innerHTML = `
           <div class="video-sim">
-            <div class="scene-area" id="sceneIcon">${esc(found.scene || "🎬")}</div>
+            <div class="scene-area" id="sceneIcon">${window.RusiIcons ? RusiIcons.get(found.scene || "film", { size: 40 }) : ""}</div>
             <div class="subtitle-box">
               <p class="subtitle-ru ru" id="subRu">${esc(found.script[0].ru)}</p>
               <p class="subtitle-vi" id="subVi">${esc(found.script[0].vi)}</p>
             </div>
             <div class="player-controls">
-              <button class="pc-btn" id="pcPlay">▶</button>
+              <button class="pc-btn" id="pcPlay">${window.RusiIcons ? RusiIcons.get("play-control", { size: 18 }) : ""}</button>
               <div class="pc-progress"><i id="pcBar" style="width:${(1 / found.script.length) * 100}%"></i></div>
               <span class="pc-count" id="pcCount">1/${found.script.length}</span>
             </div>
           </div>
           <div style="margin-top:16px;display:flex;gap:8px;justify-content:center">
             <button class="btn btn-outline btn-sm" id="btnPrevLine">← Câu trước</button>
-            <button class="btn btn-outline btn-sm" id="btnSpeakLine">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : "🔊"} Nghe câu hiện tại</button>
+            <button class="btn btn-outline btn-sm" id="btnSpeakLine">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""} Nghe câu hiện tại</button>
             <button class="btn btn-outline btn-sm" id="btnNextLine">Câu sau →</button>
           </div>
         `;
@@ -2485,10 +2483,10 @@ function initVocabPage() {
           if (playTimer) {
             clearInterval(playTimer);
             playTimer = null;
-            el("#pcPlay").textContent = "▶";
+            el("#pcPlay").innerHTML = window.RusiIcons ? RusiIcons.get("play-control", { size: 18 }) : "";
             return;
           }
-          el("#pcPlay").textContent = "⏸";
+          el("#pcPlay").innerHTML = window.RusiIcons ? RusiIcons.get("pause-control", { size: 18 }) : "";
           speak(found.script[currentScriptIdx].ru);
           playTimer = setInterval(() => {
             setLine(currentScriptIdx + 1);
@@ -2506,8 +2504,8 @@ function initVocabPage() {
                     <div class="scroll-pos">${esc(w.note || "")}</div>
                   </div>
                   <div style="display:flex;gap:6px">
-                    <button type="button" class="btn btn-soft btn-sm btn-speak-w" data-ru="${esc(w.ru)}" style="padding:4px 8px" title="Phát âm">🔊</button>
-                    <button type="button" class="btn btn-soft btn-sm btn-add-w-jar" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" style="padding:4px 8px" title="Lưu vào Lọ cá nhân">🫙 + Lưu</button>
+                    <button type="button" class="btn btn-soft btn-sm btn-speak-w" data-ru="${esc(w.ru)}" style="padding:4px 8px" title="Phát âm">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""}</button>
+                    <button type="button" class="btn btn-soft btn-sm btn-add-w-jar" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" style="padding:4px 8px" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} + Lưu</button>
                   </div>
                 </div>
                 <div class="scroll-vi">${esc(w.vi)}</div>
@@ -2531,7 +2529,7 @@ function initVocabPage() {
             if (pct >= 60) {
               Progress.markDone("vocabDone", found.id);
               Progress.addXp(20);
-              toast("Chúc mừng! Bạn đã hoàn thành bài học từ vựng (+20 XP) 🎉");
+              toast("Chúc mừng! Bạn đã hoàn thành bài học từ vựng (+20 XP)");
             }
           }
         });
@@ -2570,7 +2568,7 @@ function initListeningPage() {
         const remote = await window.RusiSupabase.listening.getAll();
         if (remote && remote.length) {
           cloudListening = remote;
-          console.log(`⚡ [Supabase] Đã tải ${remote.length} bài nghe từ Database!`);
+          console.log(`[Supabase] Đã tải ${remote.length} bài nghe từ Database!`);
           renderListeningCards();
         }
       } catch (err) {
@@ -2613,7 +2611,7 @@ function initListeningPage() {
     if (filtered.length === 0) {
       gridHost.innerHTML = `
         <div class="dau-empty-state">
-          <div class="dau-empty-icon">${window.RusiIcons ? RusiIcons.get("headphones", { size: 48 }) : "🎧"}</div>
+          <div class="dau-empty-icon">${window.RusiIcons ? RusiIcons.get("headphones", { size: 48 }) : ""}</div>
           <h3>Chưa có bài nghe cho cấp độ này</h3>
           <p>Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
         </div>
@@ -2630,13 +2628,13 @@ function initListeningPage() {
                 <span class="dau-badge ${badgeClass}">${esc(l.level)}</span>
                 <span class="dau-badge-cat">Part ${l.partNumber || 1} · ${esc(l.categoryName || "Hội thoại")}</span>
               </div>
-              ${isPro ? '<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : "👑"} PRO</span>' : ""}
+              ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} PRO</span>` : ""}
             </div>
 
             <div class="dau-card-body">
               <div class="dau-card-icon-wrap">
                 <div class="dau-card-icon ${l.level === "A2" ? "warm" : l.level === "B1" ? "" : l.level === "B2" ? "purple" : "green"}">
-                  ${l.icon || "🎧"}
+                  ${window.RusiIcons ? RusiIcons.get(l.icon || "headphones", { size: 30 }) : ""}
                 </div>
                 <div>
                   <h3 class="dau-card-ru ru">${esc(l.title)}</h3>
@@ -2649,14 +2647,14 @@ function initListeningPage() {
             </div>
 
             <div class="dau-card-meta">
-              <span class="dau-meta-pill">⏱️ <b>${l.estMinutes || 15}</b> phút</span>
-              <span class="dau-meta-pill">🎬 Video 1-5p</span>
-              <span class="dau-meta-pill">❓ <b>${(l.questions || []).length}</b> câu hỏi</span>
+              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} <b>${l.estMinutes || 15}</b> phút</span>
+              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("film", { size: 14 }) : ""} Video 1-5p</span>
+              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("help-circle", { size: 14 }) : ""} <b>${(l.questions || []).length}</b> câu hỏi</span>
             </div>
 
             <div class="dau-card-footer">
               <span class="dau-status-pill ${isDone ? "done" : ""}">
-                ${isDone ? "✅ Đã vượt qua" : "⏳ Chưa hoàn thành"}
+                ${isDone ? `${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Đã vượt qua` : `${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Chưa hoàn thành`}
               </span>
               <button type="button" class="btn btn-primary btn-sm dau-card-cta">
                 Vào luyện nghe →
@@ -2753,11 +2751,11 @@ function initListeningPage() {
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
         <button type="button" class="dau-back-btn" id="btnBackLisList">
-          ← Quay lại danh sách bài nghe
+          <i data-rusi-icon="arrow-left" data-size="16"></i> Quay lại danh sách bài nghe
         </button>
         <div class="dau-workspace-info">
           <span class="dau-badge ${lesson.level === "A2" ? "dau-badge-a2" : lesson.level === "B1" ? "dau-badge-b1" : lesson.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${lesson.level}</span>
-          <span class="dau-workspace-title">${lesson.icon || "🎧"} Part ${lesson.partNumber || 1} · ${esc(lesson.title)}</span>
+          <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(lesson.icon || "headphones", { size: 22 }) : ""} Part ${lesson.partNumber || 1} · ${esc(lesson.title)}</span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-wrap:wrap">
           <div class="speed-pills">
@@ -2766,13 +2764,13 @@ function initListeningPage() {
             <button class="speed-pill ${currentSpeed === 1.25 ? "active" : ""}" data-sp="1.25">1.25x</button>
           </div>
           <button class="btn btn-outline btn-sm" id="btnToggleSub">${showSub ? "Ẩn dịch nghĩa" : "Hiện dịch nghĩa"}</button>
-          <button class="btn btn-primary btn-sm" id="lisPlayAll">${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : "🔊"} Nghe toàn bài</button>
+          <button class="btn btn-primary btn-sm" id="lisPlayAll">${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Nghe toàn bài</button>
         </div>
       </div>
 
       <div class="workspace" style="max-width:1080px;margin:0 auto">
         <div class="tabs" id="lisTabs" style="justify-content:center;margin:0 0 20px;flex-wrap:wrap">
-          <button class="tab ${activeMode === "video" ? "active" : ""}" data-m="video">🎬 Shadowing Video (1-5 phút)</button>
+          <button class="tab ${activeMode === "video" ? "active" : ""}" data-m="video">${window.RusiIcons ? RusiIcons.get("film", { size: 14 }) : ""} Shadowing Video (1-5 phút)</button>
           <button class="tab ${activeMode === "full" ? "active" : ""}" data-m="full">Nghe Full</button>
           <button class="tab ${activeMode === "blank" ? "active" : ""}" data-m="blank">Điền Từ</button>
           <button class="tab ${activeMode === "dict" ? "active" : ""}" data-m="dict">Nghe Chép Chính Tả</button>
@@ -2796,7 +2794,7 @@ function initListeningPage() {
       if (topSubBtn) topSubBtn.textContent = showSub ? "Ẩn dịch nghĩa" : "Hiện dịch nghĩa";
 
       const videoSubBtn = host.querySelector("#btnToggleSubTrans");
-      if (videoSubBtn) videoSubBtn.innerHTML = showSub ? "👁️ Ẩn dịch" : "👁️ Hiện dịch";
+      if (videoSubBtn) videoSubBtn.innerHTML = showSub ? ((window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : "") + " Ẩn dịch") : ((window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : "") + " Hiện dịch");
 
       const subVi = host.querySelector("#dauSubVi");
       if (subVi) {
@@ -3072,8 +3070,8 @@ function initListeningPage() {
             <!-- VIDEO CONTROLS STRIP -->
             <div class="dau-video-meta-bar">
               <div class="dau-meta-left">
-                <span class="dau-meta-pill">⏱️ Thời lượng: <b>${durationLabel}</b></span>
-                <span class="dau-meta-pill text-primary">${window.RusiIcons ? RusiIcons.get("target", { size: 14 }) : "🎯"} Giọng Moscow chuẩn</span>
+                <span class="dau-meta-pill" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Thời lượng: <b>${durationLabel}</b></span>
+                <span class="dau-meta-pill text-primary">${window.RusiIcons ? RusiIcons.get("target", { size: 14 }) : ""} Giọng Moscow chuẩn</span>
               </div>
               <div class="dau-meta-right">
                 <span class="dau-speed-label">Tốc độ:</span>
@@ -3083,7 +3081,7 @@ function initListeningPage() {
                   <button type="button" class="speed-pill btn-yt-sp ${localSpeed === 1.25 ? "active" : ""}" data-sp="1.25">1.25x</button>
                 </div>
                 <button type="button" class="btn btn-outline btn-sm" id="btnToggleSubTrans">
-                  ${showSub ? "👁️ Ẩn dịch" : "👁️ Hiện dịch"}
+                  ${showSub ? ((window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : "") + " Ẩn dịch") : ((window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : "") + " Hiện dịch")}
                 </button>
               </div>
             </div>
@@ -3093,11 +3091,11 @@ function initListeningPage() {
               <div class="dau-sentence-card-head">
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                   <span class="dau-badge-sentence" id="dauCurSentenceIdx">Câu 1 / ${totalSentences}</span>
-                  <span class="dau-speaker-pill" id="dauCurSpeaker">🗣️ ${esc(curLine.who)}</span>
+                  <span class="dau-speaker-pill" id="dauCurSpeaker" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""} ${esc(curLine.who)}</span>
                   <span id="dauCurScoreBadgeWrap">
                     ${curScore !== undefined ? `
                       <span class="dau-score-badge ${curScore >= 70 ? "pass" : "retry"}">
-                        ${curScore >= 70 ? `✓ Đạt ${curScore}%` : `${curScore}% (luyện lại)`}
+                        ${curScore >= 70 ? `Đạt ${curScore}%` : `${curScore}% (luyện lại)`}
                       </span>
                     ` : ""}
                   </span>
@@ -3130,13 +3128,11 @@ function initListeningPage() {
               <div class="dau-sentence-actions">
                 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
                   <button type="button" class="btn btn-primary" id="btnPlayActiveLine">
-                    <span>${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : "🔊"} Nghe câu</span>
+                    <span>${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""} Nghe câu</span>
                   </button>
-                  <button type="button" class="mic-btn" id="btnMicActiveLine" title="Bấm để nói và nhận diện chấm điểm (R)">
-                    🎤
-                  </button>
+                  <button type="button" class="mic-btn" id="btnMicActiveLine" title="Bấm để nói và nhận diện chấm điểm (R)">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 20 }) : ""}</button>
                   <div class="dau-mic-status" id="dauMicStatus">
-                    ${curScore !== undefined ? `Điểm gần nhất: <b>${curScore}%</b>` : `Bấm <b>🎤</b> và đọc nhại lại câu tiếng Nga`}
+                    ${curScore !== undefined ? `Điểm gần nhất: <b>${curScore}%</b>` : `Bấm nút <b>Micro</b> và đọc nhại lại câu tiếng Nga`}
                   </div>
                 </div>
 
@@ -3155,7 +3151,7 @@ function initListeningPage() {
             <div class="lis-video-quiz-box" style="margin-top:20px">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
                 <div>
-                  <h3 style="margin:0 0 4px;font-size:1.15rem">🧠 Bài trắc nghiệm kiểm tra sau khi xem video</h3>
+                  <h3 style="margin:0 0 4px;font-size:1.15rem;display:flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("brain", { size: 18 }) : ""} Bài trắc nghiệm kiểm tra sau khi xem video</h3>
                   <p style="margin:0;font-size:0.85rem;color:var(--muted)">Xem kỹ đoạn trích video trên và chọn đáp án đúng nhất cho các câu hỏi sau:</p>
                 </div>
                 <div id="videoQuizScore" class="dau-meta-pill" style="font-weight:700;color:var(--primary)">
@@ -3186,7 +3182,7 @@ function initListeningPage() {
           <div class="dau-shadow-right-col">
             <div class="dau-side-header">
               <div>
-                <h4 style="margin:0;font-size:0.95rem;font-weight:700">📋 Danh sách câu</h4>
+                <h4 style="margin:0;font-size:0.95rem;font-weight:700;display:flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 16 }) : ""} Danh sách câu</h4>
                 <span style="font-size:0.75rem;color:var(--muted)">Bấm câu để luyện ngay</span>
               </div>
               <div class="dau-side-counter">
@@ -3216,7 +3212,7 @@ function initListeningPage() {
                       ${sScore !== undefined ? `
                         <span class="dau-mini-score ${sScore >= 70 ? "pass" : "retry"}">${sScore}%</span>
                       ` : `
-                        <span class="dau-mini-play">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : "🔊"}</span>
+                        <span class="dau-mini-play">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""}</span>
                       `}
                     </div>
                   </button>
@@ -3236,10 +3232,10 @@ function initListeningPage() {
 
           <div class="dau-bot-center">
             <button type="button" class="btn btn-primary btn-sm" id="btnBottomPlay">
-              ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : "🔊"} Nghe lại (Space)
+              ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""} Nghe lại (Space)
             </button>
             <button type="button" class="btn btn-soft btn-sm" id="btnBottomMic">
-              ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 16 }) : "🎙️"} Luyện nói (R)
+              ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 16 }) : ""} Luyện nói (R)
             </button>
             <button type="button" class="btn btn-primary btn-sm" id="btnNextSentence" ${totalSentences <= 1 ? "disabled" : ""}>
               Câu tiếp theo →
@@ -3298,13 +3294,13 @@ function initListeningPage() {
       if (idxEl) idxEl.textContent = `Câu ${activeSentenceIdx + 1} / ${totalSentences}`;
 
       const speakerEl = mb.querySelector("#dauCurSpeaker");
-      if (speakerEl) speakerEl.textContent = `🗣️ ${curLine.who}`;
+      if (speakerEl) speakerEl.innerHTML = (window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : "") + " " + esc(curLine.who);
 
       const badgeWrap = mb.querySelector("#dauCurScoreBadgeWrap");
       if (badgeWrap) {
         badgeWrap.innerHTML = curScore !== undefined ? `
           <span class="dau-score-badge ${curScore >= 70 ? "pass" : "retry"}">
-            ${curScore >= 70 ? `✓ Đạt ${curScore}%` : `${curScore}% (luyện lại)`}
+            ${curScore >= 70 ? `Đạt ${curScore}%` : `${curScore}% (luyện lại)`}
           </span>
         ` : "";
       }
@@ -3329,7 +3325,7 @@ function initListeningPage() {
 
       const micStatus = mb.querySelector("#dauMicStatus");
       if (micStatus) {
-        micStatus.innerHTML = curScore !== undefined ? `Điểm gần nhất: <b>${curScore}%</b>` : `Bấm <b>🎤</b> và đọc nhại lại câu tiếng Nga`;
+        micStatus.innerHTML = curScore !== undefined ? `Điểm gần nhất: <b>${curScore}%</b>` : `Bấm nút <b>Micro</b> và đọc nhại lại câu tiếng Nga`;
       }
 
       const scoreRingWrap = mb.querySelector("#dauScoreRingWrap");
@@ -3404,7 +3400,7 @@ function initListeningPage() {
       if (micBtn) micBtn.classList.add("rec");
       if (bottomMicBtn) bottomMicBtn.classList.add("btn-danger");
       if (waveBox) waveBox.classList.add("active");
-      if (micStatus) micStatus.innerHTML = "🎙️ <i>Đang nghe... hãy đọc to câu tiếng Nga trên</i>";
+      if (micStatus) micStatus.innerHTML = (window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 14 }) : "") + " <i>Đang nghe... hãy đọc to câu tiếng Nga trên</i>";
 
       const rec = new SR();
       rec.lang = "ru-RU";
@@ -3434,8 +3430,8 @@ function initListeningPage() {
 
         if (micStatus) {
           micStatus.innerHTML = sim >= 70 ?
-            `🎉 <b style="color:var(--green)">Xuất sắc! Đạt ${sim}%</b>` :
-            `⚠️ <b>Đạt ${sim}%</b> — nghe lại và thử phát âm rõ hơn nhé`;
+            `${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} <b style="color:var(--green)">Xuất sắc! Đạt ${sim}%</b>` :
+            `${window.RusiIcons ? RusiIcons.get("alert-triangle", { size: 16 }) : ""} <b>Đạt ${sim}%</b> — nghe lại và thử phát âm rõ hơn nhé`;
         }
 
         // Award XP if first time passed
@@ -3444,7 +3440,7 @@ function initListeningPage() {
           if (!Progress.doneList("listenDone").includes(passKey)) {
             Progress.markDone("listenDone", passKey);
             Progress.addXp(10);
-            toast("Tuyệt vời! Phát âm chuẩn (+10 XP) 🎉");
+            toast("Tuyệt vời! Phát âm chuẩn (+10 XP)");
           }
         }
 
@@ -3453,7 +3449,7 @@ function initListeningPage() {
         if (badgeWrap) {
           badgeWrap.innerHTML = `
             <span class="dau-score-badge ${sim >= 70 ? "pass" : "retry"}">
-              ${sim >= 70 ? `✓ Đạt ${sim}%` : `${sim}% (luyện lại)`}
+              ${sim >= 70 ? `Đạt ${sim}%` : `${sim}% (luyện lại)`}
             </span>
           `;
         }
@@ -3474,7 +3470,7 @@ function initListeningPage() {
 
       rec.onerror = (err) => {
         console.warn("SpeechRec error:", err);
-        if (micStatus) micStatus.innerHTML = "⚠️ Chưa nhận diện được âm thanh. Hãy thử lại.";
+        if (micStatus) micStatus.innerHTML = (window.RusiIcons ? RusiIcons.get("alert-triangle", { size: 14 }) : "") + " Chưa nhận diện được âm thanh. Hãy thử lại.";
       };
 
       rec.onend = () => {
@@ -3601,7 +3597,7 @@ function initListeningPage() {
               fbBox.style.color = isCorrect ? "#065f46" : "#991b1b";
               fbBox.style.border = isCorrect ? "1px solid #10b981" : "1px solid #ef4444";
               fbBox.innerHTML = `
-                <div style="font-weight:700;margin-bottom:2px">${isCorrect ? "✓ Chính xác!" : "✗ Chưa chính xác!"}</div>
+                <div style="font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:4px">${isCorrect ? `${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""} Chính xác!` : `${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""} Chưa chính xác!`}</div>
                 <div>${esc(qData.explain)}</div>
               `;
             }
@@ -3618,7 +3614,7 @@ function initListeningPage() {
                   Progress.addXp(20);
                   Progress.markDone("listenDone", key);
                 }
-                toast(`🎉 Xuất sắc! Bạn trả lời đúng ${correctCount}/${videoQuestions.length} câu (+20 XP)!`);
+                toast(`Xuất sắc! Bạn trả lời đúng ${correctCount}/${videoQuestions.length} câu (+20 XP)!`);
               } else {
                 toast(`Bạn đạt ${correctCount}/${videoQuestions.length} câu. Hãy xem lại video để hiểu rõ hơn nhé!`);
               }
@@ -3665,7 +3661,7 @@ function initListeningPage() {
       <div class="dialogue-line">
         <span class="who">${esc(l.who)}</span>
         <span class="line-ru ru">${esc(l.ru)}
-          <button class="btn btn-outline btn-sm speak-line" style="margin-left:8px;padding:2px 10px">🔊</button>
+          <button class="btn btn-outline btn-sm speak-line" style="margin-left:8px;padding:2px 10px">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""}</button>
         </span>
         <span class="line-vi ${showSub && l.vi ? "" : "hidden"}">${esc(l.vi || "")}</span>
       </div>`
@@ -3689,7 +3685,7 @@ function initListeningPage() {
         <p class="q-text ru">${esc(b.before)}
           <input class="blank-input" data-i="${i}" autocomplete="off" placeholder="?">
         ${esc(b.after)}</p>
-        <p style="color:var(--muted);font-size:.85rem">💡 Gợi ý: ${esc(b.hint)}</p>
+        <p style="color:var(--muted);font-size:.85rem;display:flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} Gợi ý: ${esc(b.hint)}</p>
       </div>`
         )
         .join("") +
@@ -3707,7 +3703,7 @@ function initListeningPage() {
       if (ok === lesson.blanks.length) {
         if (!Progress.doneList("listenDone").includes(lesson.id + "_blank")) Progress.addXp(15);
         Progress.markDone("listenDone", lesson.id + "_blank");
-        toast("Xuất sắc! Điền đúng 100% (+15 XP) 🎉");
+        toast("Xuất sắc! Điền đúng 100% (+15 XP)");
       } else {
         toast(`${ok}/${lesson.blanks.length} đúng — nghe lại nhé!`);
       }
@@ -3804,7 +3800,7 @@ function initSpeakingPage() {
         const remote = await window.RusiSupabase.speaking.getAll();
         if (remote && remote.length) {
           cloudSpeaking = remote;
-          console.log(`⚡ [Supabase] Đã tải ${remote.length} bài nói từ Database!`);
+          console.log(`[Supabase] Đã tải ${remote.length} bài nói từ Database!`);
           renderSpeakingCards();
         }
       } catch (err) {
@@ -3847,7 +3843,7 @@ function initSpeakingPage() {
     if (filtered.length === 0) {
       gridHost.innerHTML = `
         <div class="dau-empty-state">
-          <div class="dau-empty-icon">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 48 }) : "🎙️"}</div>
+          <div class="dau-empty-icon">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 48 }) : ""}</div>
           <h3>Chưa có chủ đề nói cho cấp độ này</h3>
           <p>Vui lòng chọn cấp độ khác để tiếp tục luyện phát âm.</p>
         </div>
@@ -3868,13 +3864,13 @@ function initSpeakingPage() {
                 <span class="dau-badge ${badgeClass}">${esc(s.level)}</span>
                 <span class="dau-badge-cat">${esc(s.categoryName || "Giao tiếp")}</span>
               </div>
-              ${isPro ? '<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : "👑"} PRO</span>' : ""}
+              ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} PRO</span>` : ""}
             </div>
 
             <div class="dau-card-body">
               <div class="dau-card-icon-wrap">
                 <div class="dau-card-icon ${s.level === "A2" ? "warm" : s.level === "B1" ? "" : s.level === "B2" ? "purple" : "green"}">
-                  ${s.icon || "🎙️"}
+                  ${window.RusiIcons ? RusiIcons.get(s.icon || "mic-speaking", { size: 30 }) : ""}
                 </div>
                 <div>
                   <h3 class="dau-card-ru ru">${esc(s.title)}</h3>
@@ -3886,8 +3882,8 @@ function initSpeakingPage() {
 
             <div class="dau-card-meta">
               <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 14 }) : ""} <b>${s.items.length}</b> câu mẫu</span>
-              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("bot-rusika", { size: 14 }) : "🤖"} AI âm vị</span>
-              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("waveform-audio", { size: 14 }) : "🌊"} Waveform</span>
+              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("bot-rusika", { size: 14 }) : ""} AI âm vị</span>
+              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("waveform-audio", { size: 14 }) : ""} Waveform</span>
             </div>
 
             <div class="dau-card-footer">
@@ -3982,11 +3978,11 @@ function initSpeakingPage() {
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
         <button type="button" class="dau-back-btn" id="btnBackSpList">
-          ← Quay lại danh sách chủ đề nói
+          <i data-rusi-icon="arrow-left" data-size="16"></i> Quay lại danh sách chủ đề nói
         </button>
         <div class="dau-workspace-info">
           <span class="dau-badge ${set.level === "A2" ? "dau-badge-a2" : set.level === "B1" ? "dau-badge-b1" : set.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${set.level}</span>
-          <span class="dau-workspace-title">${set.icon || "🎙️"} ${esc(set.title)}</span>
+          <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(set.icon || "mic-speaking", { size: 22 }) : ""} ${esc(set.title)}</span>
         </div>
         <div style="font-size:0.85rem;color:var(--muted);margin-left:auto">
           Đã luyện hôm nay: <b>${attemptsToday}/2 lượt miễn phí</b> ${Monetization.isPro() ? '<b style="color:var(--green)">(PRO Không giới hạn)</b>' : ""}
@@ -3995,7 +3991,7 @@ function initSpeakingPage() {
 
       <div class="workspace" style="max-width:920px;margin:0 auto">
         <div style="text-align:center;margin-bottom:18px">
-          <p style="color:var(--muted);font-size:0.92rem;margin:0">💡 ${esc(set.phonemeTarget || "Bấm 🔊 để nghe phát âm mẫu, sau đó bấm 🎤 và đọc to câu tiếng Nga.")}</p>
+          <p style="color:var(--muted);font-size:0.92rem;margin:0;display:flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} ${esc(set.phonemeTarget || "Bấm nút nghe để nghe phát âm mẫu, sau đó bấm nút micro và đọc to câu tiếng Nga.")}</p>
         </div>
 
         <div id="speakWaveBox" class="waveform-box">
@@ -4014,7 +4010,7 @@ function initSpeakingPage() {
               </p>
               <p class="target-vi" style="font-size:0.95rem;margin-bottom:14px;color:var(--muted)">${esc(item.vi)}</p>
               <div style="display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:10px">
-                <button class="mic-btn" aria-label="Nói">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 22 }) : "🎤"}</button>
+                <button class="mic-btn" aria-label="Nói">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 22 }) : ""}</button>
                 ${best !== null ? `<div class="score-ring ${best >= 80 ? "" : best >= 50 ? "mid" : "low"}" title="Kết quả tốt nhất">${best}%</div>` : ""}
                 <span class="speak-status" style="color:var(--muted);font-size:.88rem">Bấm mic và đọc câu tiếng Nga</span>
               </div>
@@ -4079,8 +4075,8 @@ function initSpeakingPage() {
           item.insertAdjacentHTML(
             "beforeend",
             `<div class="heard">
-              🤖 AI nhận dạng: <b class="ru" style="color:var(--primary)">${esc(heard)}</b><br>
-              🎯 Độ chuẩn âm vị: <b>${sim}%</b> ${sim >= 80 ? "— Phát âm rất chuẩn!" : "— Lưu ý trọng âm và biến âm"}
+              ${window.RusiIcons ? RusiIcons.get("bot-rusika", { size: 16 }) : ""} AI nhận dạng: <b class="ru" style="color:var(--primary)">${esc(heard)}</b><br>
+              ${window.RusiIcons ? RusiIcons.get("target", { size: 16 }) : ""} Độ chuẩn âm vị: <b>${sim}%</b> ${sim >= 80 ? "— Phát âm rất chuẩn!" : "— Lưu ý trọng âm và biến âm"}
             </div>`
           );
 
@@ -4093,7 +4089,7 @@ function initSpeakingPage() {
             Progress.markDone("speakDone", key);
             Progress.addXp(10);
           }
-          status.textContent = sim >= 80 ? "Xuất sắc! Luyện tiếp câu dưới nhé 👏" : "Bấm 🔊 nghe lại mẫu rồi thử lại nhé!";
+          status.textContent = sim >= 80 ? "Xuất sắc! Luyện tiếp câu dưới nhé" : "Bấm nghe lại mẫu rồi thử lại nhé!";
         };
         rec.onerror = () => {
           status.textContent = "Không nghe rõ — hãy đọc to hơn trong không gian yên tĩnh nhé.";
@@ -4143,7 +4139,7 @@ function initWritingPage() {
         const remote = await window.RusiSupabase.writing.getAll();
         if (remote && remote.length) {
           cloudWriting = remote;
-          console.log(`⚡ [Supabase] Đã tải ${remote.length} đề viết từ Database!`);
+          console.log(`[Supabase] Đã tải ${remote.length} đề viết từ Database!`);
           renderWritingCards();
         }
       } catch (err) {
@@ -4186,7 +4182,7 @@ function initWritingPage() {
     if (filtered.length === 0) {
       gridHost.innerHTML = `
         <div class="dau-empty-state">
-          <div class="dau-empty-icon">${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 48 }) : "✍️"}</div>
+          <div class="dau-empty-icon">${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 48 }) : ""}</div>
           <h3>Chưa có bài viết cho cấp độ này</h3>
           <p>Vui lòng chọn cấp độ khác để tiếp tục luyện viết.</p>
         </div>
@@ -4204,13 +4200,13 @@ function initWritingPage() {
                 <span class="dau-badge ${badgeClass}">${esc(t.level)}</span>
                 <span class="dau-badge-cat">${esc(t.categoryName || "Tự luận")}</span>
               </div>
-              ${isPro ? '<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : "👑"} PRO</span>' : ""}
+              ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} PRO</span>` : ""}
             </div>
 
             <div class="dau-card-body">
               <div class="dau-card-icon-wrap">
                 <div class="dau-card-icon ${t.level === "A2" ? "warm" : t.level === "B1" ? "" : t.level === "B2" ? "purple" : "green"}">
-                  ${t.icon || "✍️"}
+                  ${window.RusiIcons ? RusiIcons.get(t.icon || "pen-tool", { size: 30 }) : ""}
                 </div>
                 <div>
                   <h3 class="dau-card-ru ru">${esc(t.title)}</h3>
@@ -4221,7 +4217,7 @@ function initWritingPage() {
             </div>
 
             <div class="dau-card-meta">
-              <span class="dau-meta-pill">📏 Tối thiểu <b>${t.minWords}</b> từ</span>
+              <span class="dau-meta-pill" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 14 }) : ""} Tối thiểu <b>${t.minWords}</b> từ</span>
               <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} <b>${t.estMinutes || 20}</b> phút</span>
               <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("bot-rusika", { size: 14 }) : ""} AI 4 tiêu chí</span>
             </div>
@@ -4315,11 +4311,11 @@ function initWritingPage() {
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
         <button type="button" class="dau-back-btn" id="btnBackWriteList">
-          ← Quay lại danh sách bài viết
+          <i data-rusi-icon="arrow-left" data-size="16"></i> Quay lại danh sách bài viết
         </button>
         <div class="dau-workspace-info">
           <span class="dau-badge ${t.level === "A2" ? "dau-badge-a2" : t.level === "B1" ? "dau-badge-b1" : t.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${t.level}</span>
-          <span class="dau-workspace-title">${t.icon || "✍️"} ${esc(t.title)}</span>
+          <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(t.icon || "pen-tool", { size: 22 }) : ""} ${esc(t.title)}</span>
         </div>
         <span style="font-size:0.85rem;color:var(--muted);margin-left:auto">Mục tiêu: tối thiểu <b>${t.minWords} từ</b></span>
       </div>
@@ -4328,13 +4324,13 @@ function initWritingPage() {
         ${t.image_url ? `<div class="writing-photo-card" style="text-align:center;margin-bottom:16px"><img src="${esc(t.image_url)}" class="writing-photo-img" style="max-height:280px;border-radius:12px;box-shadow:var(--shadow)" alt="Bối cảnh tả tranh" /></div>` : ""}
 
         <div class="ru" style="background:var(--bg);padding:16px 20px;border-radius:12px;border:1px solid var(--border);margin-bottom:14px">
-          <div style="font-size:1.05rem;font-weight:700;line-height:1.6;margin-bottom:6px">📌 <b>Đề bài:</b> ${esc(t.prompt)}</div>
+          <div style="font-size:1.05rem;font-weight:700;line-height:1.6;margin-bottom:6px;display:flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("map-pin", { size: 16 }) : ""} <b>Đề bài:</b> ${esc(t.prompt)}</div>
           ${t.vi ? `<div style="font-size:0.9rem;color:var(--muted);line-height:1.5">${esc(t.vi)}</div>` : ""}
         </div>
 
         ${
           t.suggested_words && t.suggested_words.length
-            ? `<div style="margin-bottom:8px;font-size:0.84rem;font-weight:700">💡 Gợi ý từ vựng (Bấm để chèn nhanh vào bài):</div>
+            ? `<div style="margin-bottom:8px;font-size:0.84rem;font-weight:700;display:flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} Gợi ý từ vựng (Bấm để chèn nhanh vào bài):</div>
                <div class="suggested-chips-wrap">
                  ${t.suggested_words.map((w) => `<button type="button" class="suggest-chip ru" data-word="${esc(w)}">+ ${esc(w)}</button>`).join("")}
                </div>`
@@ -4384,7 +4380,7 @@ function initWritingPage() {
         <div class="ai-score-box hidden"></div>
 
         <div class="model-answer hidden" style="margin-top:16px">
-          <h4>✨ Bài văn mẫu đạt điểm tối đa TRKI</h4>
+          <h4 style="display:flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 18 }) : ""} Bài văn mẫu đạt điểm tối đa TRKI</h4>
           <p class="ru" style="line-height:1.7">${esc(t.model)}</p>
         </div>
       </div>
@@ -4506,7 +4502,7 @@ function initWritingPage() {
               <h3 style="margin:4px 0">Kết quả đánh giá 4 tiêu chí chuẩn ТРКИ</h3>
             </div>
             <div style="font-size:1.6rem;font-weight:800;color:${total >= 66 ? "var(--green)" : "var(--red)"}">
-              ${total}/100 đ ${total >= 66 ? "🎉 ĐẠT" : "💪 CẦN CỐ GẮNG"}
+              ${total}/100 đ ${total >= 66 ? "ĐẠT" : "CẦN CỐ GẮNG"}
             </div>
           </div>
 
@@ -4530,7 +4526,7 @@ function initWritingPage() {
           </div>
 
           <div style="background:var(--primary-soft);border-radius:10px;padding:12px;font-size:0.88rem;color:var(--text);margin-top:14px">
-            🐱 <b>Nhận xét từ Mèo Rusika:</b> <i>"Bài viết của bạn bám sát yêu cầu đề bài ${esc(t.title)}, câu văn diễn đạt rõ ràng. Bạn đã dùng tốt vốn từ chỉ hoạt động thực tế. Tiếp tục phát huy nhé!"</i>
+            <span style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("cat-mascot", { size: 16 }) : ""} <b>Nhận xét từ Mèo Rusika:</b></span> <i>"Bài viết của bạn bám sát yêu cầu đề bài ${esc(t.title)}, câu văn diễn đạt rõ ràng. Bạn đã dùng tốt vốn từ chỉ hoạt động thực tế. Tiếp tục phát huy nhé!"</i>
           </div>
         </div>
       `;
@@ -4581,7 +4577,7 @@ function initMockTestPage() {
         if (remote && remote.length) {
           bank = remote;
           currentTest = bank[0];
-          console.log(`⚡ [Supabase] Đã tải ${remote.length} đề thi TRKI từ Database!`);
+          console.log(`[Supabase] Đã tải ${remote.length} đề thi TRKI từ Database!`);
           renderTrkiCards();
         }
       } catch (err) {
@@ -4625,7 +4621,7 @@ function initMockTestPage() {
     if (filtered.length === 0) {
       gridHost.innerHTML = `
         <div class="dau-empty-state">
-          <div class="dau-empty-icon">${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 48 }) : "🏛️"}</div>
+          <div class="dau-empty-icon">${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 48 }) : ""}</div>
           <h3>Chưa có đề thi cho cấp độ này</h3>
           <p>Vui lòng chọn cấp độ khác để tiếp tục luyện thi.</p>
         </div>
@@ -4642,13 +4638,13 @@ function initMockTestPage() {
                 <span class="dau-badge ${badgeClass}">${esc(t.level)}</span>
                 <span class="dau-badge-cat">${esc(t.categoryName || "Đề thi")}</span>
               </div>
-              ${isPro ? '<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : "👑"} PRO</span>' : ""}
+              ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} PRO</span>` : ""}
             </div>
 
             <div class="dau-card-body">
               <div class="dau-card-icon-wrap">
                 <div class="dau-card-icon ${t.level === "A2" ? "warm" : t.level === "B1" ? "" : t.level === "B2" ? "purple" : "green"}">
-                  ${t.icon || "🏛️"}
+                  ${window.RusiIcons ? RusiIcons.get(t.icon || "graduation-cap", { size: 30 }) : ""}
                 </div>
                 <div>
                   <h3 class="dau-card-ru ru">${esc(t.title)}</h3>
@@ -4799,7 +4795,7 @@ function initMockTestPage() {
     const left = 3 - tabSwitches;
     alertBox.innerHTML = `
       <div class="anticheat-modal-box">
-        <div style="font-size:3rem;margin-bottom:12px">⚠️</div>
+        <div style="margin-bottom:12px;color:var(--red)">${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 48 }) : ""}</div>
         <h3>CẢNH BÁO VI PHẠM QUY CHẾ THI</h3>
         <p style="margin:12px 0;line-height:1.6">
           Hệ thống phát hiện bạn vừa rời khỏi màn hình bài thi (chuyển tab hoặc thu nhỏ trình duyệt).
@@ -4828,7 +4824,7 @@ function initMockTestPage() {
       <!-- STICKY TOP BACK BAR WITH TIMER -->
       <div class="dau-workspace-back-bar">
         <button type="button" class="dau-back-btn" id="btnExitTest">
-          ← Thoát phòng thi
+          <i data-rusi-icon="arrow-left" data-size="16"></i> Thoát phòng thi
         </button>
         <div class="dau-workspace-info">
           <span class="dau-badge ${currentTest.level === "A2" ? "dau-badge-a2" : currentTest.level === "B1" ? "dau-badge-b1" : currentTest.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${currentTest.level}</span>
@@ -4836,7 +4832,7 @@ function initMockTestPage() {
         </div>
         <div style="display:flex;align-items:center;gap:12px">
           <div style="font-weight:700;font-size:1.1rem;color:var(--secondary)">
-            ⏱️ <span id="timerVal">${fmt(timeLeft)}</span>
+            ${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 16 }) : ""} <span id="timerVal">${fmt(timeLeft)}</span>
           </div>
           <button class="btn btn-primary btn-sm" id="btnSubmitTop" style="background:var(--secondary);border-color:var(--secondary)">Nộp bài thi</button>
         </div>
@@ -4873,7 +4869,7 @@ function initMockTestPage() {
       if (part.lines) {
         html += `
           <div class="audio-player-sim">
-            <button class="btn btn-primary btn-sm" id="playAudio">${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : "🔊"} Phát đoạn ghi âm hội thoại</button>
+            <button class="btn btn-primary btn-sm" id="playAudio">${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn ghi âm hội thoại</button>
             <span style="font-size:0.82rem;color:var(--muted);margin-left:12px">Bấm để nghe đoạn đối thoại chuẩn bản xứ</span>
           </div>
         `;
@@ -4908,7 +4904,7 @@ function initMockTestPage() {
           </div>
 
           <div style="background:var(--primary-soft);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:0.82rem;display:flex;justify-content:space-between">
-            <span>${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 16 }) : "🛡️"} Chuyển tab:</span>
+            <span>${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 16 }) : ""} Chuyển tab:</span>
             <b id="antiCheatCount">${tabSwitches}/3</b>
           </div>
 
@@ -5046,7 +5042,7 @@ function initMockTestPage() {
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
         <button type="button" class="dau-back-btn" id="btnReviewBack">
-          ← Quay lại danh sách đề thi
+          <i data-rusi-icon="arrow-left" data-size="16"></i> Quay lại danh sách đề thi
         </button>
         <div class="dau-workspace-info">
           <span class="dau-badge ${currentTest.level === "A2" ? "dau-badge-a2" : currentTest.level === "B1" ? "dau-badge-b1" : currentTest.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${currentTest.level}</span>
@@ -5057,7 +5053,7 @@ function initMockTestPage() {
 
       <div class="workspace" style="padding:32px 24px">
         <div style="text-align:center;margin-bottom:28px">
-          <p style="font-size:3.5rem;margin-bottom:8px">${passed ? "🎉" : "💪"}</p>
+          <div style="margin-bottom:12px;color:${passed ? "var(--primary)" : "var(--muted)"}">${window.RusiIcons ? RusiIcons.get(passed ? "trophy-reward" : "sparkles-clean", { size: 54 }) : ""}</div>
           <span class="pro-chip">${esc(currentTest.level)} · KẾT QUẢ KHẢO THÍ CHÍNH THỨC</span>
           <h2 style="font-size:1.8rem;margin:8px 0">${correct}/${total} câu đúng — ${pct}%</h2>
           <p style="margin:6px 0 16px;color:var(--muted)">Điểm cao nhất cấp độ này: <b>${best}%</b></p>
@@ -5066,7 +5062,7 @@ function initMockTestPage() {
           </div>
         </div>
 
-        <h3 style="margin:24px 0 12px">📊 Thống kê tỷ lệ đạt theo từng kỹ năng:</h3>
+        <h3 style="margin:24px 0 12px;display:flex;align-items:center;gap:8px">${window.RusiIcons ? RusiIcons.get("bar-chart-2", { size: 20 }) : ""} Thống kê tỷ lệ đạt theo từng kỹ năng:</h3>
         <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:12px;margin-bottom:28px">
           ${detail
             .map(
@@ -5107,10 +5103,10 @@ function initMockTestPage() {
           <p class="q-text" style="font-weight:700">${qi + 1}. <span class="ru">${esc(q.q)}</span></p>
           <div style="font-size:.9rem;margin:8px 0">
             Bạn chọn: <b class="ru" style="color:${ok ? "var(--green)" : "var(--red)"}">${given !== undefined ? esc(q.options[given]) : "— bỏ trống —"}</b>
-            ${ok ? '<span style="color:var(--green)"> (Chính xác ✓)</span>' : '<span style="color:var(--red)"> (Sai ✗)</span>'}
+            ${ok ? '<span style="color:var(--green)"> (Chính xác)</span>' : '<span style="color:var(--red)"> (Sai)</span>'}
           </div>
           ${ok ? "" : `<div style="font-size:.9rem;margin-bottom:8px">Đáp án đúng: <b class="ru" style="color:var(--green)">${esc(q.options[q.a])}</b></div>`}
-          <div class="explain">💡 <b>Giải thích quy tắc:</b> ${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}</div>
+          <div class="explain">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} <b>Giải thích quy tắc:</b> ${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}</div>
         </div>`;
         })
         .join("");
@@ -5140,7 +5136,7 @@ function initBlogPage() {
         const remote = await window.RusiSupabase.blog.getAll();
         if (remote && remote.length) {
           cloudPosts = remote;
-          console.log(`⚡ [Supabase] Đã tải ${remote.length} bài blog từ Database!`);
+          console.log(`[Supabase] Đã tải ${remote.length} bài blog từ Database!`);
           renderBlog();
         }
       } catch (err) {
@@ -5256,7 +5252,7 @@ function initShopPage() {
         const remote = await window.RusiSupabase.shop.getAll();
         if (remote && remote.length) {
           cloudProducts = remote;
-          console.log(`⚡ [Supabase] Đã tải ${remote.length} sản phẩm shop từ Database!`);
+          console.log(`[Supabase] Đã tải ${remote.length} sản phẩm shop từ Database!`);
           renderShop();
         }
       } catch (err) {
@@ -5281,7 +5277,7 @@ function initShopPage() {
       document.body.appendChild(btn);
       btn.onclick = openCartDrawer;
     }
-    btn.innerHTML = `${window.RusiIcons ? RusiIcons.get("shopping-bag-shop", { size: 16 }) : "🛒"} Giỏ hàng (<span id="cartCount">${count}</span>)`;
+    btn.innerHTML = `${window.RusiIcons ? RusiIcons.get("shopping-bag-shop", { size: 16 }) : ""} Giỏ hàng (<span id="cartCount">${count}</span>)`;
     btn.style.display = count > 0 ? "flex" : "none";
   };
 
@@ -5317,7 +5313,7 @@ function initShopPage() {
                 ${p.originalPrice ? `<span class="product-old-price">${p.originalPrice.toLocaleString("vi-VN")} đ</span>` : ""}
               </div>
               <button class="btn btn-primary btn-sm btn-add-cart" data-id="${p.id}" style="margin-top:auto">
-                🛒 ${p.category === "dich_vu_du_hoc" ? "Đăng ký tư vấn" : "Thêm vào giỏ"}
+                ${window.RusiIcons ? RusiIcons.get("shopping-bag-shop", { size: 16 }) : ""} ${p.category === "dich_vu_du_hoc" ? "Đăng ký tư vấn" : "Thêm vào giỏ"}
               </button>
             </div>
           </div>`
@@ -5373,7 +5369,7 @@ function initShopPage() {
 
     drawer.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px">
-        <h3 style="margin:0">🛒 Giỏ hàng của bạn</h3>
+        <h3 style="margin:0;display:flex;align-items:center;gap:8px">${window.RusiIcons ? RusiIcons.get("shopping-bag-shop", { size: 20 }) : ""} Giỏ hàng của bạn</h3>
         <button class="btn btn-outline btn-sm" id="closeCartBtn" style="padding:2px 8px">&times;</button>
       </div>
       <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px">
@@ -5462,7 +5458,7 @@ function initShopPage() {
 
     m.innerHTML = `
       <div class="anticheat-modal-box" style="max-width:500px;text-align:left">
-        <h3 style="margin-bottom:12px">${window.RusiIcons ? RusiIcons.get("shopping-bag-shop", { size: 20 }) : "🛍️"} Đặt Hàng & Thanh Toán VietQR</h3>
+        <h3 style="margin-bottom:12px">${window.RusiIcons ? RusiIcons.get("shopping-bag-shop", { size: 20 }) : ""} Đặt Hàng & Thanh Toán VietQR</h3>
         <div style="font-size:0.85rem;color:var(--muted);margin-bottom:14px">
           Mã đơn hàng: <b style="color:var(--primary)">${orderId}</b> · Tổng tiền: <b style="color:var(--secondary)">${total.toLocaleString("vi-VN")} đ</b>
         </div>
@@ -5490,7 +5486,7 @@ function initShopPage() {
       cart = [];
       saveCart();
       m.remove();
-      toast(`🎉 Cảm ơn ${name}! Đơn hàng ${orderId} đã được ghi nhận.`);
+      toast(`Cảm ơn ${name}! Đơn hàng ${orderId} đã được ghi nhận.`);
     };
   };
 
@@ -5540,11 +5536,11 @@ function initIndexPage() {
     const alertBannerHtml = `
       <div class="pricing-auth-banner logged-in" style="grid-column:1/-1">
         <div style="display:flex;align-items:center;gap:8px">
-          <span>👤</span>
+          <span>${window.RusiIcons ? RusiIcons.get("users-students", { size: 16 }) : ""}</span>
           <span>Đang chọn gói cho tài khoản: <b>${esc(user.name || "Học viên")}</b> <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px">${esc(user.email || "Khách")}</code></span>
         </div>
         <div style="display:flex;align-items:center;gap:10px">
-          ${isPro ? `<span class="pro-chip-header" style="font-size:0.75rem;padding:3px 10px">👑 PRO VIP (${esc(proInfo ? proInfo.pkgTitle : "Active")})</span>` : `<span class="user-tier-badge tier-free" style="font-size:0.75rem;padding:3px 9px">Học viên Free</span>`}
+          ${isPro ? `<span class="pro-chip-header" style="font-size:0.75rem;padding:3px 10px">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} PRO VIP (${esc(proInfo ? proInfo.pkgTitle : "Active")})</span>` : `<span class="user-tier-badge tier-free" style="font-size:0.75rem;padding:3px 9px">Học viên Free</span>`}
           <a href="upgrade.html" class="btn btn-sm btn-outline" style="font-size:0.78rem;padding:3px 10px;text-decoration:none">
             Xem bảng so sánh chi tiết →
           </a>
@@ -5560,7 +5556,7 @@ function initIndexPage() {
       if (isCurrentPlan) {
         actionBtnHtml = `
           <button class="btn btn-outline" disabled style="width:100%;background:rgba(16,185,129,0.1);color:#059669;border-color:#10b981;cursor:default;font-weight:800">
-            ✓ Gói bạn đang sử dụng
+            ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Gói bạn đang sử dụng
           </button>`;
       } else {
         actionBtnHtml = `
@@ -5571,7 +5567,7 @@ function initIndexPage() {
 
       return `
       <div class="pricing-card ${pkg.popular ? "popular" : ""} ${isCurrentPlan ? "is-current" : ""}">
-        ${isCurrentPlan ? `<div class="pricing-current-badge">GÓI ĐANG DÙNG ✓</div>` : (pkg.popular ? `<div class="pricing-popular-badge">PHỔ BIẾN NHẤT</div>` : "")}
+        ${isCurrentPlan ? `<div class="pricing-current-badge">GÓI ĐANG DÙNG</div>` : (pkg.popular ? `<div class="pricing-popular-badge">PHỔ BIẾN NHẤT</div>` : "")}
         <div class="pricing-card-head">
           <span class="pricing-badge">${esc(pkg.badge || "PRO")}</span>
           <h3 class="pricing-title">${esc(pkg.title)}</h3>
@@ -5582,7 +5578,7 @@ function initIndexPage() {
           ${pkg.priceOld ? `<span class="pricing-old">${pkg.priceOld.toLocaleString("vi-VN")} đ</span>` : ""}
         </div>
         <ul class="pricing-features">
-          ${(pkg.features || []).map((f) => `<li><span class="chk">✓</span> <span>${esc(f)}</span></li>`).join("")}
+          ${(pkg.features || []).map((f) => `<li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> <span>${esc(f)}</span></li>`).join("")}
         </ul>
         ${actionBtnHtml}
       </div>`;
@@ -5678,7 +5674,7 @@ function initIndexPage() {
         (f, idx) => `
         <div class="testimonial-slide ${idx === 0 ? "active" : ""}" data-idx="${idx}">
           <div class="testimonial-badge">${esc(f.badge)}</div>
-          <div class="testimonial-stars">★★★★★</div>
+          <div class="testimonial-stars" style="display:inline-flex;gap:3px;color:#f59e0b">${Array(5).fill(window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : "").join("")}</div>
           <blockquote>${esc(f.quote)}</blockquote>
           <div class="student">
             <span class="student-avatar" style="background:${f.color}">${esc(f.initials)}</span>
@@ -5778,7 +5774,7 @@ function initUpgradePage() {
         const remote = await window.RusiSupabase.packages.getAll();
         if (remote && remote.length) {
           window.PACKAGES = remote;
-          console.log(`⚡ [Supabase] Đã tải ${remote.length} gói cước từ Database!`);
+          console.log(`[Supabase] Đã tải ${remote.length} gói cước từ Database!`);
           render();
         }
       } catch (err) {
@@ -5804,7 +5800,7 @@ function initUpgradePage() {
         </div>
 
         <div class="upgrade-auth-box">
-          <div class="upgrade-auth-icon">${window.RusiIcons ? RusiIcons.get("lock-pro", { size: 36 }) : "🔐"}</div>
+          <div class="upgrade-auth-icon">${window.RusiIcons ? RusiIcons.get("lock-pro", { size: 36 }) : ""}</div>
           <h2>Đăng nhập để xem bảng giá & ưu đãi</h2>
           <p>Để lưu trữ trọn đời kết quả luyện thi, đồng bộ tiến độ trên mọi thiết bị và gắn quyền PRO vào tài khoản chính chủ, vui lòng đăng nhập trước.</p>
           <div class="upgrade-auth-actions">
@@ -5849,19 +5845,19 @@ function initUpgradePage() {
               <code class="upgrade-user-email">${esc(user.email || "Khách")}</code>
             </div>
             <div class="upgrade-user-tier">
-              Cấp độ tài khoản: ${isPro ? `<span class="user-tier-badge tier-pro">⭐ PRO MEMBER (${esc(proInfo ? proInfo.pkgTitle : "Active")})</span>` : `<span class="user-tier-badge tier-free">Học viên Free</span>`}
+              Cấp độ tài khoản: ${isPro ? `<span class="user-tier-badge tier-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""} PRO MEMBER (${esc(proInfo ? proInfo.pkgTitle : "Active")})</span>` : `<span class="user-tier-badge tier-free">Học viên Free</span>`}
             </div>
           </div>
         </div>
 
         ${isPro ? `
           <div class="upgrade-pro-active-box">
-            <span>🟢 Gói đang dùng: <b>${esc(proInfo ? proInfo.pkgTitle : "PRO VIP")}</b> (${esc((proInfo && proInfo.expiresFormatted) || "Đang kích hoạt")})</span>
+            <span>${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Gói đang dùng: <b>${esc(proInfo ? proInfo.pkgTitle : "PRO VIP")}</b> (${esc((proInfo && proInfo.expiresFormatted) || "Đang kích hoạt")})</span>
             <button class="btn btn-sm btn-outline" id="btnManageUpgradePage" style="white-space:nowrap">Quản lý gói</button>
           </div>
         ` : `
           <div class="upgrade-discount-countdown">
-            🔥 Ưu đãi 50% dành riêng cho tài khoản của bạn hôm nay
+            ${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 16 }) : ""} Ưu đãi 50% dành riêng cho tài khoản của bạn hôm nay
           </div>
         `}
       </div>
@@ -5872,7 +5868,7 @@ function initUpgradePage() {
           const isCurrent = isPro && proInfo && (pkg.id || "").toLowerCase() === (proInfo.pkgId || "").toLowerCase();
           return `
           <div class="pricing-card ${pkg.popular ? "popular" : ""} ${isCurrent ? "is-current" : ""}">
-            ${isCurrent ? `<div class="pricing-current-badge">GÓI ĐANG DÙNG ✓</div>` : (pkg.popular ? `<div class="pricing-popular-badge">PHỔ BIẾN NHẤT</div>` : "")}
+            ${isCurrent ? `<div class="pricing-current-badge">GÓI ĐANG DÙNG</div>` : (pkg.popular ? `<div class="pricing-popular-badge">PHỔ BIẾN NHẤT</div>` : "")}
             <div class="pricing-card-head">
               <span class="pricing-badge">${esc(pkg.badge || "PRO")}</span>
               <h3 class="pricing-title">${esc(pkg.title)}</h3>
@@ -5883,11 +5879,11 @@ function initUpgradePage() {
               ${pkg.priceOld ? `<span class="pricing-old">${pkg.priceOld.toLocaleString("vi-VN")} đ</span>` : ""}
             </div>
             <ul class="pricing-features">
-              ${(pkg.features || []).map((f) => `<li><span class="chk">✓</span> <span>${esc(f)}</span></li>`).join("")}
+              ${(pkg.features || []).map((f) => `<li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> <span>${esc(f)}</span></li>`).join("")}
             </ul>
             ${isCurrent ? `
               <button class="btn btn-outline" disabled style="width:100%;background:rgba(16,185,129,0.1);color:#059669;border-color:#10b981;cursor:default;font-weight:800">
-                ✓ Gói bạn đang sử dụng
+                ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Gói bạn đang sử dụng
               </button>
             ` : `
               <button class="btn ${pkg.popular ? "btn-primary" : "btn-outline"} btn-select-upgrade" data-pkg="${pkg.id}" style="width:100%;${pkg.popular ? "background:var(--secondary);border-color:var(--secondary);color:#fff" : ""}">
@@ -5912,7 +5908,7 @@ function initUpgradePage() {
               <tr>
                 <th class="col-feature">Tính năng / Nội dung học</th>
                 <th class="col-free">Tài khoản FREE</th>
-                <th class="col-pro"><span class="pro-crown">👑</span> Gói PRO VIP (Khuyên dùng)</th>
+                <th class="col-pro"><span class="pro-crown">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 16 }) : ""}</span> Gói PRO VIP (Khuyên dùng)</th>
               </tr>
             </thead>
             <tbody>
@@ -5953,8 +5949,8 @@ function initUpgradePage() {
               </tr>
               <tr>
                 <td class="col-feature"><b>Tư vấn Du học Nga</b></td>
-                <td class="col-free"><span style="color:#94a3b8">✕ Không hỗ trợ</span></td>
-                <td class="col-pro"><b style="color:#059669">✓ Ưu tiên hỗ trợ 1-1</b> qua nhóm Zalo VIP cùng cựu du học sinh</td>
+                <td class="col-free"><span style="display:inline-flex;align-items:center;gap:4px;color:#94a3b8">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""} Không hỗ trợ</span></td>
+                <td class="col-pro"><b style="color:#059669;display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""} Ưu tiên hỗ trợ 1-1</b> qua nhóm Zalo VIP cùng cựu du học sinh</td>
               </tr>
               <tr>
                 <td class="col-feature"><b>Ghi chú & Note câu hỏi trong đề</b></td>
@@ -5998,7 +5994,7 @@ function initUpgradePage() {
           </div>
           <div class="step-card">
             <span class="step-num step-card-num">02</span>
-            <div class="step-icon">${window.RusiIcons ? RusiIcons.get("qr-code-vietqr", { size: 28 }) : "📱"}</div>
+            <div class="step-icon">${window.RusiIcons ? RusiIcons.get("qr-code-vietqr", { size: 28 }) : ""}</div>
             <div class="step-title">Quét Mã VietQR</div>
             <div class="step-desc">Mở app Mobile Banking bất kỳ, quét mã VietQR tự động điền sẵn số tài khoản và cú pháp.</div>
           </div>
@@ -6019,17 +6015,17 @@ function initUpgradePage() {
           <div class="guarantee-desc">Tự động 24/7 kể cả ban đêm và ngày nghỉ.</div>
         </div>
         <div class="guarantee-card">
-          <div class="guarantee-icon">${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 28 }) : "🔒"}</div>
+          <div class="guarantee-icon">${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 28 }) : ""}</div>
           <div class="guarantee-title">An Toàn Tuyệt Đối</div>
           <div class="guarantee-desc">Cổng VietinBank chuẩn bảo mật liên ngân hàng NAPAS.</div>
         </div>
         <div class="guarantee-card">
-          <div class="guarantee-icon">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 28 }) : "🤝"}</div>
+          <div class="guarantee-icon">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 28 }) : ""}</div>
           <div class="guarantee-title">Hỗ Trợ 1-1</div>
           <div class="guarantee-desc">Giảng viên và cựu du học sinh Nga trực tiếp đồng hành.</div>
         </div>
         <div class="guarantee-card">
-          <div class="guarantee-icon">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 28 }) : "💎"}</div>
+          <div class="guarantee-icon">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 28 }) : ""}</div>
           <div class="guarantee-title">Bảo Lưu Trọn Đời</div>
           <div class="guarantee-desc">Tiến độ học tập và quyền PRO luôn được gắn với email của bạn.</div>
         </div>
@@ -6229,12 +6225,12 @@ function initSrsPage() {
 
     el("#vocabList").innerHTML = filtered
       .map((c) => {
-        const status = c.mastered ? "✅ Đã thuộc" : c.isNew ? "🆕 Mới" : c.learningStep === 1 ? "🔄 Đang học" : "📚 Ôn tập";
+        const status = c.mastered ? (window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) + " Đã thuộc" : "Đã thuộc") : c.isNew ? (window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) + " Mới" : "Mới") : c.learningStep === 1 ? (window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) + " Đang học" : "Đang học") : (window.RusiIcons ? RusiIcons.get("book-open-blog", { size: 14 }) + " Ôn tập" : "Ôn tập");
         const dueText = c.mastered
           ? "—"
           : c.dueDate <= Date.now()
-          ? "⏰ Tới hạn ngay"
-          : "⏳ " + SRS.formatInterval((c.dueDate - Date.now()) / 3600000);
+          ? (window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) + " Tới hạn ngay" : "Tới hạn ngay")
+          : (window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) + " " : "") + SRS.formatInterval((c.dueDate - Date.now()) / 3600000);
         return `
         <div class="vocab-row ${c.mastered ? "mastered" : ""}" data-id="${c.id}" data-ru="${esc(c.ru)}" style="cursor:pointer">
           <div class="vocab-word">
@@ -6279,7 +6275,7 @@ function initSrsPage() {
     el("#vocabList").querySelectorAll(".vocab-master").forEach((b) => {
       b.onclick = () => {
         SRS.markMastered(b.dataset.id);
-        toast("Đã thêm vào Đã thuộc ✓");
+        toast("Đã thêm vào Đã thuộc");
         renderVocabTab();
         renderHero();
       };
@@ -6364,7 +6360,7 @@ function initSrsPage() {
     el("#studySetup").classList.add("hidden");
     el("#studySession").classList.remove("hidden");
     el("#studyDone").classList.add("hidden");
-    el("#modeLabel").textContent = "🃏 Flashcard Ôn tập";
+    el("#modeLabel").textContent = "Flashcard Ôn tập";
 
     showNextCard();
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -6375,7 +6371,7 @@ function initSrsPage() {
     let due = SRS.getDueCards(st, 50);
     let news = onlyDue ? [] : SRS.getNewCards(st, level, newLimit);
     if (due.length === 0 && news.length === 0) {
-      toast("Không có từ để học — hãy đợi từ tới hạn hoặc thêm từ mới ✨");
+      toast("Không có từ để học — hãy đợi từ tới hạn hoặc thêm từ mới");
       return;
     }
     // Thêm từ mới vào state.cards
@@ -6404,10 +6400,10 @@ function initSrsPage() {
 
   function modeLabel(mode) {
     return ({
-      flashcard: "🃏 Flashcard",
-      typing: "⌨️ Gõ từ",
-      choice: "🔘 Trắc nghiệm",
-      speak: "🎙️ Phát âm"
+      flashcard: "Flashcard",
+      typing: "Gõ từ",
+      choice: "Trắc nghiệm",
+      speak: "Phát âm"
     })[mode] || mode;
   }
 
@@ -6524,7 +6520,7 @@ function initSrsPage() {
             <div class="flash-face flash-front">
               <p class="word ru" style="font-size:2.4rem">${esc(card.ru)}</p>
               <p class="lvl-badge lvl-${card.level}">${card.level}</p>
-              <p class="hint">Bấm để lật xem nghĩa 🔁</p>
+              <p class="hint">Bấm để lật xem nghĩa ${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) : ""}</p>
             </div>
             <div class="flash-face flash-back">
               <p class="word" style="font-size:1.8rem;color:var(--primary)">${esc(card.vi)}</p>
@@ -6534,9 +6530,9 @@ function initSrsPage() {
           </div>
         </div>
         <div class="srs-quick-actions">
-          <button class="btn btn-soft btn-sm" id="speakNow">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : "🔊"} Nghe phát âm</button>
-          <button class="btn btn-soft btn-sm" id="wordDetail">${window.RusiIcons ? RusiIcons.get("book-open-blog", { size: 16 }) : "📖"} Chi tiết từ</button>
-          <button class="btn btn-soft btn-sm" id="srsAddJar">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : "🫙"} Lưu vào Lọ</button>
+          <button class="btn btn-soft btn-sm" id="speakNow">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""} Nghe phát âm</button>
+          <button class="btn btn-soft btn-sm" id="wordDetail">${window.RusiIcons ? RusiIcons.get("book-open-blog", { size: 16 }) : ""} Chi tiết từ</button>
+          <button class="btn btn-soft btn-sm" id="srsAddJar">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""} Lưu vào Lọ</button>
         </div>
       </div>`;
     const f = el("#srsFlash");
@@ -6580,7 +6576,7 @@ function initSrsPage() {
         <div class="typing-actions">
           <button class="btn btn-primary" id="typingCheck">Kiểm tra</button>
           <button class="btn btn-soft" id="typingShow">${window.RusiIcons ? RusiIcons.get("eye", { size: 16 }) : ""} Hiện đáp án</button>
-          <button class="btn btn-outline" id="typingSpeak">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : "🔊"} Nghe</button>
+          <button class="btn btn-outline" id="typingSpeak">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""} Nghe</button>
         </div>
       </div>`;
     speak(card.ru);
@@ -6592,7 +6588,7 @@ function initSrsPage() {
       const sim = similarity(val, card.ru);
       const fb = el("#typingFeedback");
       if (sim === 100) {
-        fb.innerHTML = `<span class="fb-ok">✓ Chính xác 100%!</span>`;
+        fb.innerHTML = `<span class="fb-ok" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Chính xác 100%!</span>`;
         input.classList.add("ok");
         input.classList.remove("bad");
         showControls();
@@ -6638,7 +6634,7 @@ function initSrsPage() {
         </div>
         <div class="choice-feedback" id="choiceFeedback"></div>
         <div class="choice-actions">
-          <button class="btn btn-outline" id="choiceSpeak">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : "🔊"} Nghe</button>
+          <button class="btn btn-outline" id="choiceSpeak">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""} Nghe</button>
         </div>
       </div>`;
     speak(card.ru);
@@ -6652,7 +6648,7 @@ function initSrsPage() {
         });
         btn.classList.add(ok ? "correct" : "wrong");
         el("#choiceFeedback").innerHTML = ok
-          ? `<span class="fb-ok">✓ Đúng rồi!</span>`
+          ? `<span class="fb-ok" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Đúng rồi!</span>`
           : `<span class="fb-bad">Sai — đáp án: <b>${esc(card.vi)}</b></span>`;
         showControls();
       };
@@ -6671,8 +6667,8 @@ function initSrsPage() {
         <p class="speak-pos">${esc(card.pos || "")}</p>
         <p class="speak-meaning" style="color:var(--muted);font-size:.9rem">${esc(card.vi)}</p>
         <div class="speak-actions">
-          <button class="mic-btn big" id="speakMic" aria-label="Nói">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 28 }) : "🎤"}</button>
-          <button class="btn btn-outline" id="speakListen">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : "🔊"} Nghe mẫu</button>
+          <button class="mic-btn big" id="speakMic" aria-label="Nói">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 28 }) : ""}</button>
+          <button class="btn btn-outline" id="speakListen">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""} Nghe mẫu</button>
         </div>
         <div class="speak-feedback" id="speakFeedback"></div>
       </div>`;
@@ -6697,7 +6693,7 @@ function initSrsPage() {
         const sim = similarity(heard, card.ru);
         el("#speakFeedback").innerHTML =
           `<span class="${sim >= 80 ? "fb-ok" : sim >= 50 ? "fb-mid" : "fb-bad"}">` +
-          `🤖 Nghe được: <b class="ru">${esc(heard)}</b><br>` +
+          `${window.RusiIcons ? RusiIcons.get("bot-rusika", { size: 14 }) : ""} Nghe được: <b class="ru">${esc(heard)}</b><br>` +
           `Điểm: <b>${sim}%</b></span>`;
         showControls();
       };
@@ -6713,7 +6709,7 @@ function initSrsPage() {
     };
     // Nếu không có SR thì auto show controls
     if (!SR) {
-      el("#speakFeedback").innerHTML = `<span class="fb-empty">Bấm mic và đọc to. Nếu trình duyệt không hỗ trợ, bấm "🔊 Nghe mẫu" và "Dễ" để bỏ qua.</span>`;
+      el("#speakFeedback").innerHTML = `<span class="fb-empty">Bấm mic và đọc to. Nếu trình duyệt không hỗ trợ, bấm "Nghe mẫu" và "Dễ" để bỏ qua.</span>`;
     }
     showControls();
   }
@@ -6981,10 +6977,10 @@ function initDictPage() {
     host.innerHTML = slice
       .map((w) => {
         const st = sm.get(SRS.cardId(w)) || "unseen";
-        const statusIcon = st === "mastered" ? "✅" :
-                           st === "learning" ? "🔄" :
-                           st === "reviewing" ? "📚" :
-                           st === "new" ? "🆕" : "·";
+        const statusIcon = st === "mastered" ? (window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : "") :
+                           st === "learning" ? (window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) : "") :
+                           st === "reviewing" ? (window.RusiIcons ? RusiIcons.get("book-open-blog", { size: 14 }) : "") :
+                           st === "new" ? (window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : "") : "·";
         const levelBadge = w.level ? `<span class="dict-level lvl-${w.level}">${w.level}</span>` : `<span></span>`;
         const pronLine = w.pron ? `<p class="dict-pron ru">${esc(w.pron)}</p>` : "";
         const catBadge = w.cat ? `<span class="dict-cat">${esc(w.cat)}</span>` : "";

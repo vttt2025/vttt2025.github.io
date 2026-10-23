@@ -580,6 +580,31 @@ Theo tiêu chuẩn thiết kế từ `rusi_trki_lucide_icon_system.html`, toàn 
 | | `maximize-2` | Phóng to toàn màn hình Flashcard | `⛶`, `maximize`, `fullscreen` |
 | | `minimize-2` | Thu nhỏ màn hình (Esc) | `minimize` |
 | | `circle-dot` | Nút chọn trắc nghiệm Quizlet | `🔘`, `circle-dot`, `trac-nghiem` |
+| **Chủ Đề & Ngữ Cảnh (Topics)** | `plane` | Du lịch, sân bay, khách sạn | `✈️`, `plane`, `flight`, `du-lich` |
+| | `shopping-cart` | Siêu thị Auchan, mua sắm | `🛒`, `shopping-cart`, `sieu-thi` |
+| | `building-2` | Ký túc xá, phòng ở, tòa nhà | `🏢`, `building`, `ktx`, `nha` |
+| | `utensils` | Ẩm thực, nhà hàng, món ăn Nga | `🥞`, `🍽️`, `utensils`, `food` |
+| | `coffee` | Quán cà phê, đời sống sinh viên | `☕`, `coffee`, `cafe` |
+| | `train` | Tàu điện ngầm Metro, bến tàu | `🚇`, `train`, `metro`, `tau` |
+| | `rocket` | Công nghệ, vũ trụ, khoa học | `🚀`, `rocket`, `vu-tru` |
+| | `handshake` | Ngoại giao, giao tiếp, kết bạn | `🤝`, `handshake`, `giao-tiep` |
+| | `map` | Bản đồ nước Nga, du lịch địa lý | `🗺️`, `map`, `ban-do` |
+| | `map-pin` | Điểm đến, ghim vị trí | `📌`, `map-pin`, `dia-diem` |
+| | `image` | Tả tranh, miêu tả hình ảnh | `🖼️`, `image`, `ta-tranh` |
+| | `mail` | Viết thư, bưu điện Nga | `✉️`, `mail`, `letter`, `thu` |
+| | `medal` | Cấp độ chứng chỉ TRKI A1, A2, B1 | `🏅`, `🥉`, `🥈`, `🥇`, `medal` |
+| | `briefcase` | Công việc, sự nghiệp, công ty | `💼`, `briefcase`, `work` |
+| | `film` | Điện ảnh, kịch bản, phim Nga | `🎬`, `film`, `movie`, `cinema` |
+| | `gem` | TRKI B2 cao cấp, VIP | `💎`, `gem`, `diamond` |
+| | `newspaper` | Báo chí, cẩm nang tin tức | `📰`, `newspaper`, `bao-chi` |
+| | `message-square` | Mẫu câu đàm thoại bản xứ | `💬`, `message-square`, `chat` |
+| | `flag` | Quốc kỳ Nga, ngôn ngữ | `🇷🇺`, `flag` |
+| | `heart` | Gia đình, tình cảm | `❤️`, `heart`, `gia-dinh` |
+| | `activity` | Thể thao, rèn luyện sức khỏe | `⚽`, `activity`, `sport`, `the-thao` |
+| | `pill` | Hiệu thuốc, y tế, dược phẩm | `💊`, `pill`, `medicine`, `thuoc` |
+| | `shirt` | Trang phục, quần áo, giặt giũ | `👕`, `shirt`, `quan-ao`, `giat` |
+| | `snowflake` | Mùa đông nước Nga, thời tiết lạnh | `❄️`, `snowflake`, `winter`, `tuyet` |
+| | `alert-triangle` | Cảnh báo, lưu ý quan trọng | `⚠️`, `alert-triangle`, `warning`, `canh-bao` |
 
 ---
 
@@ -632,6 +657,7 @@ window.RusiIcons.replace(document.getElementById("myContainer"));
 1. **Tuyệt đối không dùng emoji hệ điều hành làm biểu tượng tương tác**:
    * Không đặt `🎧`, `🎙️`, `✍️`, `👑`, `⚡`, `⭐`, `🗑️` làm icon nút bấm hoặc danh sách chọn.
    * Luôn gọi `RusiIcons.get(id, { size })` hoặc đặt thẻ `data-rusi-icon="id"`.
+   * **Hiển thị chủ đề & phân hệ dữ liệu (Lọ từ vựng, Nghe, Nói, Viết, Đề thi, Blog, Shop, CMS)**: Không được render chuỗi raw emoji trực tiếp từ database/JSON. Bắt buộc hiển thị qua `RusiIcons.get(item.icon || defaultSlug, { size })` để luôn xuất ra SVG Lucide 24px chuẩn nét.
 2. **Kế thừa màu sắc**:
    * Luôn để `color: "currentColor"` để icon tự đổi màu mượt mà theo trạng thái `:hover`, `:active`, theme Dark/Light và class cha.
 3. **Tuân thủ tap target $\ge 44\times 44$px**:

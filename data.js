@@ -6,7 +6,7 @@ const VOCAB_LESSONS = [
     ep: 1,
     ru: "Собираю чемодан",
     vi: "Tập 1 — Chuẩn bị hành lý",
-    scene: "🧳",
+    scene: "briefcase",
     story: "Anya, du học sinh tương lai, đang xếp vali chuẩn bị bay tới Nga học tập.",
     script: [
       { ru: "Меня зовут Аня. Скоро я поеду учиться в Россию!", vi: "Tôi tên là Anya. Sắp tới tôi sẽ sang Nga du học!" },
@@ -43,7 +43,7 @@ const VOCAB_LESSONS = [
     ep: 2,
     ru: "В самолёте",
     vi: "Tập 2 — Trên chuyến bay",
-    scene: "✈️",
+    scene: "plane",
     story: "Anya làm thủ tục, qua kiểm tra hộ chiếu và lên máy bay — hành trình có quá cảnh ở Moskva.",
     script: [
       { ru: "Аня идёт в аэропорт. Это её первый рейс в Россию.", vi: "Anya đi tới sân bay. Đây là chuyến bay đầu tiên của cô tới Nga." },
@@ -80,7 +80,7 @@ const VOCAB_LESSONS = [
     ep: 3,
     ru: "Первый день в университете",
     vi: "Tập 3 — Ngày đầu nhập học",
-    scene: "🎓",
+    scene: "graduation-cap",
     story: "Anya tới trường, làm thủ tục vào ký túc xá, khám sức khỏe và nhận thời khóa biểu.",
     script: [
       { ru: "Сегодня Аня первый раз в университете. Она немного волнуется.", vi: "Hôm nay Anya lần đầu tới trường. Cô hơi lo lắng." },
@@ -116,7 +116,7 @@ const VOCAB_LESSONS = [
     level: "A1",
     ru: "Спорт",
     vi: "Chủ đề — Thể thao",
-    scene: "⚽",
+    scene: "activity",
     story: "Buổi chiều chơi bóng chuyền cùng bạn mới — học từ vựng qua chuỗi hành động.",
     script: [
       { ru: "После занятий мы идём на площадку играть в волейбол.", vi: "Sau giờ học chúng tôi ra sân chơi bóng chuyền." },
@@ -151,7 +151,7 @@ const VOCAB_LESSONS = [
     level: "A1",
     ru: "Готовим обед",
     vi: "Chủ đề — Ăn uống, nấu ăn",
-    scene: "🍲",
+    scene: "utensils",
     story: "Anya học nấu món súp đầu tiên trong căn bếp nhỏ của ký túc xá.",
     script: [
       { ru: "Утром я готовлю завтрак: хлеб с сыром и чай с молоком.", vi: "Buổi sáng tôi nấu bữa sáng: bánh mì với phô mai và trà sữa." },
@@ -186,7 +186,7 @@ const VOCAB_LESSONS = [
     level: "A2",
     ru: "В магазине",
     vi: "Chủ đề — Mua sắm",
-    scene: "🛒",
+    scene: "shopping-cart",
     story: "Cuối tuần Anya ra siêu thị mua đồ ăn cho cả tuần.",
     script: [
       { ru: "В субботу я иду в магазин недалеко от общежития.", vi: "Thứ bảy tôi đi siêu thị gần ký túc xá." },
@@ -222,7 +222,7 @@ const VOCAB_LESSONS = [
     ep: 4,
     ru: "В поликлинике и аптеке",
     vi: "Tập 4 — Khám bệnh & Mua thuốc",
-    scene: "🏥",
+    scene: "building-2",
     story: "Mùa đông tuyết rơi, Anya bị cảm sốt và đến phòng khám sinh viên khám, sau đó ra hiệu thuốc mua thuốc theo đơn.",
     script: [
       { ru: "На улице мороз минус двадцать градусов. Аня простудилась.", vi: "Ngoài trời rét âm 20 độ. Anya bị cảm lạnh." },
@@ -258,7 +258,7 @@ const VOCAB_LESSONS = [
     ep: 5,
     ru: "Оформление визы и регистрации",
     vi: "Tập 5 — Gia hạn Visa & Thủ tục cư trú",
-    scene: "🏛️",
+    scene: "graduation-cap",
     story: "Hết hạn visa 90 ngày, Anya lên phòng quan hệ quốc tế làm thủ tục gia hạn visa du học 1 năm và đăng ký tạm trú.",
     script: [
       { ru: "Первая учебная виза выдаётся только на девяносто дней.", vi: "Thị thực du học ban đầu chỉ có giá trị 90 ngày." },
@@ -290,7 +290,7 @@ const VOCAB_LESSONS = [
     level: "B2",
     ru: "Русский балет и Большой театр",
     vi: "Chủ đề — Nghệ thuật & Nhà hát Bolshoi",
-    scene: "🎭",
+    scene: "film",
     story: "Khám phá cái nôi của nghệ thuật kinh điển Nga: từ vở ba lê Hồ Thiên Nga đến kiến trúc tráng lệ của Nhà hát Lớn Moskva.",
     script: [
       { ru: "Большой театр — один из старейших и самых знаменитых театров оперы и балета в мире.", vi: "Nhà hát Lớn là một trong những nhà hát opera và ballet cổ kính và nổi tiếng nhất thế giới." },
@@ -322,7 +322,7 @@ const VOCAB_LESSONS = [
     level: "B2",
     ru: "Собеседование и резюме",
     vi: "Chủ đề — Phỏng vấn & Hồ sơ việc làm",
-    scene: "💼",
+    scene: "briefcase",
     story: "Kinh nghiệm phỏng vấn tuyển dụng, viết резюме chuẩn Nga và đàm phán hợp đồng lao động tại các tập đoàn quốc tế.",
     script: [
       { ru: "Перед собеседованием важно грамотно составить резюме на русском языке.", vi: "Trước buổi phỏng vấn, điều cốt yếu là soạn thảo một bản CV chuẩn mực bằng tiếng Nga." },
@@ -496,7 +496,7 @@ const LISTENING_LESSONS = [
     category: "airport",
     categoryName: "Sân bay & Du lịch",
     estMinutes: 12,
-    icon: "✈️",
+    icon: "plane",
     partNumber: 1,
     is_pro_only: false,
     lines: [
@@ -536,7 +536,7 @@ const LISTENING_LESSONS = [
     category: "shop",
     categoryName: "Mua sắm & Siêu thị",
     estMinutes: 12,
-    icon: "🛒",
+    icon: "shopping-cart",
     partNumber: 1,
     is_pro_only: false,
     lines: [
@@ -573,7 +573,7 @@ const LISTENING_LESSONS = [
     category: "dorm",
     categoryName: "Ký túc xá & Đời sống",
     estMinutes: 15,
-    icon: "🏢",
+    icon: "building-2",
     partNumber: 2,
     is_pro_only: false,
     lines: [
@@ -609,7 +609,7 @@ const LISTENING_LESSONS = [
     category: "cafe",
     categoryName: "Ẩm thực & Quán ăn",
     estMinutes: 15,
-    icon: "🥞",
+    icon: "utensils",
     partNumber: 2,
     is_pro_only: false,
     lines: [
@@ -645,7 +645,7 @@ const LISTENING_LESSONS = [
     category: "campus",
     categoryName: "Trường học & Thư viện",
     estMinutes: 18,
-    icon: "📚",
+    icon: "book-open-blog",
     partNumber: 3,
     is_pro_only: true,
     lines: [
@@ -680,7 +680,7 @@ const LISTENING_LESSONS = [
     category: "metro",
     categoryName: "Giao thông công cộng",
     estMinutes: 15,
-    icon: "🚇",
+    icon: "train",
     partNumber: 3,
     is_pro_only: true,
     lines: [
@@ -714,7 +714,7 @@ const LISTENING_LESSONS = [
     category: "interview",
     categoryName: "Phỏng vấn chuyên sâu",
     estMinutes: 20,
-    icon: "🚀",
+    icon: "rocket",
     partNumber: 4,
     is_pro_only: true,
     lines: [
@@ -751,7 +751,7 @@ const SPEAKING_SETS = [
     category: "greeting",
     categoryName: "Chào hỏi cơ bản",
     phonemeTarget: "Luyện âm ngắt và trọng âm cơ bản: [прив'эт], [зват']",
-    icon: "🤝",
+    icon: "handshake",
     items: [
       { ru: "Привет! Меня зовут Аня.", vi: "Chào bạn! Mình tên là Anya." },
       { ru: "Очень приятно познакомиться!", vi: "Rất vui được làm quen với bạn!" },
@@ -769,7 +769,7 @@ const SPEAKING_SETS = [
     category: "travel",
     categoryName: "Du lịch & Sân bay",
     phonemeTarget: "Luyện phát âm phụ âm mềm [л'], [р'], [т']: [б'ил'эт], [м'эста]",
-    icon: "✈️",
+    icon: "plane",
     items: [
       { ru: "Вот мой паспорт и посадочный талон.", vi: "Đây là hộ chiếu và thẻ lên máy bay của tôi." },
       { ru: "У меня только один чемодан и ручная кладь.", vi: "Tôi chỉ có một vali và hành lý xách tay." },
@@ -787,7 +787,7 @@ const SPEAKING_SETS = [
     category: "campus",
     categoryName: "Ký túc xá & Trường học",
     phonemeTarget: "Phân biệt phụ âm [ж] và [ш]: [апщ'ижыт'ийэ], [страхофка]",
-    icon: "🎓",
+    icon: "graduation-cap",
     items: [
       { ru: "Я живу в студенческом общежитии на четвёртом этаже.", vi: "Tôi sống ở ký túc xá sinh viên trên tầng bốn." },
       { ru: "Сегодня у нашей группы медосмотр в поликлинике.", vi: "Hôm nay nhóm chúng tôi có buổi khám sức khỏe ở phòng khám." },
@@ -805,7 +805,7 @@ const SPEAKING_SETS = [
     category: "dining",
     categoryName: "Gọi món & Quán ăn",
     phonemeTarget: "Luyện nguyên âm căng [ы]: [сыр], [рыба], [быстро]",
-    icon: "🍽️",
+    icon: "utensils",
     items: [
       { ru: "Дайте, пожалуйста, меню на русском языке.", vi: "Xin vui lòng cho tôi xem thực đơn tiếng Nga." },
       { ru: "Что вы посоветуете из традиционных русских блюд?", vi: "Bạn có gợi ý món nào trong ẩm thực truyền thống Nga không?" },
@@ -822,7 +822,7 @@ const SPEAKING_SETS = [
     category: "direction",
     categoryName: "Hỏi đường & Giao thông",
     phonemeTarget: "Phát âm chuẩn âm rung [р]: [красная], [площад'], [переход]",
-    icon: "🗺️",
+    icon: "map",
     items: [
       { ru: "Извините, как быстрее добраться до Красной площади?", vi: "Xin lỗi, làm cách nào nhanh nhất đến Quảng trường Đỏ?" },
       { ru: "Вам нужно доехать на метро до станции Охотный ряд.", vi: "Bạn cần đi tàu điện ngầm tới ga Okhotny Ryad." },
@@ -839,7 +839,7 @@ const SPEAKING_SETS = [
     category: "academic",
     categoryName: "Thuyết trình học thuật",
     phonemeTarget: "Ngữ điệu khẳng định IK-1 và nghi vấn IK-3 chuẩn ngữ âm Nga",
-    icon: "🎤",
+    icon: "mic-speaking",
     items: [
       { ru: "Тема моего сегодняшнего доклада посвящена развитию науки.", vi: "Chủ đề bài báo cáo hôm nay của tôi dành cho sự phát triển khoa học." },
       { ru: "Позвольте обратить ваше внимание на приведённые графики.", vi: "Cho phép tôi hướng sự chú ý của quý vị vào các biểu đồ dưới đây." },
@@ -857,7 +857,7 @@ const WRITING_TASKS = [
     levelName: "Sơ cấp A1",
     category: "intro",
     categoryName: "Tự giới thiệu",
-    icon: "📝",
+    icon: "file-text",
     estMinutes: 15,
     title: "Bức tự giới thiệu ngắn (Меня зовут...)",
     prompt: "Расскажите о себе: как вас зовут, откуда вы, где вы живёте и что вы изучаете. (4–6 câu)",
@@ -877,7 +877,7 @@ const WRITING_TASKS = [
     levelName: "Sơ cấp A1",
     category: "daily",
     categoryName: "Sinh hoạt hằng ngày",
-    icon: "⏰",
+    icon: "timer-clock",
     estMinutes: 15,
     title: "Mô tả một ngày của bạn (Мой день)",
     prompt: "Напишите о вашем дне: во сколько вы встаёте, что вы делаете утром, днём и вечером.",
@@ -897,7 +897,7 @@ const WRITING_TASKS = [
     levelName: "Cơ bản A2",
     category: "photo",
     categoryName: "Tả tranh bối cảnh",
-    icon: "🖼️",
+    icon: "image",
     estMinutes: 20,
     title: "Tả tranh: Buổi sáng ở ký túc xá",
     prompt: "Опишите картинку: комната общежития, за столом сидят студенты, пьют чай и готовятся к экзамену. (6–8 câu)",
@@ -918,7 +918,7 @@ const WRITING_TASKS = [
     levelName: "Cơ bản A2",
     category: "letter",
     categoryName: "Tin nhắn & Ghi chú",
-    icon: "📌",
+    icon: "map-pin",
     estMinutes: 20,
     title: "Viết mẩu giấy để lại cho bạn cùng phòng (Записка)",
     prompt: "Напишите записку соседу по комнате: вы ушли в библиотеку, вернётесь в 18:00, попросите его купить хлеб и молоко. (4–5 câu)",
@@ -938,7 +938,7 @@ const WRITING_TASKS = [
     levelName: "Trung cấp B1",
     category: "letter",
     categoryName: "Email & Thư từ",
-    icon: "✉️",
+    icon: "mail",
     estMinutes: 25,
     title: "Thư cho bạn kể về chuyến du lịch Peterburg",
     prompt: "Напишите другу письмо о вашей поездке в Санкт-Петербург: что вы видели, какая была погода, что вам больше всего понравилось. (8–10 câu)",
@@ -958,7 +958,7 @@ const WRITING_TASKS = [
     levelName: "Trung cấp B1",
     category: "essay",
     categoryName: "Nghị luận xã hội",
-    icon: "🏅",
+    icon: "medal",
     estMinutes: 25,
     title: "Nghị luận: Thể thao và lối sống lành mạnh của sinh viên",
     prompt: "Напишите небольшой текст о спорте в жизни студента: почему важно заниматься физической культурой при высокой учебной нагрузке? (70–90 từ)",
@@ -978,7 +978,7 @@ const WRITING_TASKS = [
     levelName: "Nâng cao B2",
     category: "essay",
     categoryName: "Luận học thuật",
-    icon: "🤖",
+    icon: "bot-rusika",
     estMinutes: 30,
     title: "Bài luận học thuật: Trí tuệ nhân tạo (AI) trong giáo dục",
     prompt: "Напишите эссе на тему: «Плюсы и минусы использования искусственного интеллекта в университетском образовании». Аргументируйте свою позицию. (100–120 từ)",
@@ -998,7 +998,7 @@ const WRITING_TASKS = [
     levelName: "Nâng cao B2",
     category: "letter",
     categoryName: "Thư ứng tuyển",
-    icon: "💼",
+    icon: "briefcase",
     estMinutes: 30,
     title: "Thư động lực ứng tuyển thực tập sinh IT (Мотивационное письмо)",
     prompt: "Напишите официальное мотивационное письмо в компанию для прохождения стажировки: образование, навыки, почему именно вы подходите на эту роль. (90–110 từ)",
@@ -1057,7 +1057,7 @@ const MOCK_TEST = {
     {
       id: "listening",
       name: "Часть 3. Аудирование",
-      vi: "Phần 3. Nghe hiểu (bấm 🔊 để nghe)",
+      vi: "Phần 3. Nghe hiểu (bấm để nghe)",
       lines: [
         { who: "Аня", ru: "Извините, сколько стоит этот словарь?", vi: "" },
         { who: "Продавец", ru: "Этот словарь стоит 300 рублей.", vi: "" },
@@ -1082,19 +1082,19 @@ const BLOG_POSTS = [
     tag: "Lộ trình",
     date: "Tháng 9, 2026",
     excerpt: "Tháng 1: bảng chữ cái + từ vựng sống còn qua video series. Tháng 2: 6 cách + động từ chuyển động. Tháng 3: luyện đề mỗi tuần và sửa phát âm bằng AI.",
-    icon: "🗺️"
+    icon: "map"
   },
   {
     title: "Học từ vựng qua chuỗi hành động — vì sao hiệu quả?",
     date: "Tháng 8, 2026",
     excerpt: "Thay vì học «bánh mì» đơn lẻ, hãy học cả câu: «Я режу хлеб и кладу сыр на хлеб» — một câu có danh từ, động từ và giới từ cùng lúc.",
-    icon: "🎬"
+    icon: "film"
   },
   {
     title: "5 lỗi phát âm tiếng Nga của người Việt",
     date: "Tháng 8, 2026",
     excerpt: "Ы, р, мягкий знак — ba «hung thủ» quen thuộc. Dùng chế độ luyện nói của trang để AI chấm điểm từng câu và theo dõi tiến bộ.",
-    icon: "🎙️"
+    icon: "mic-speaking"
   }
 ];
 
@@ -1115,7 +1115,7 @@ const TRKI_BANK = [
     passPercent: 60,
     questionsCount: 21,
     is_pro_only: false,
-    icon: "🥉",
+    icon: "medal",
     parts: MOCK_TEST.parts
   },
   {
@@ -1130,7 +1130,7 @@ const TRKI_BANK = [
     passPercent: 66,
     questionsCount: 13,
     is_pro_only: false,
-    icon: "🥈",
+    icon: "medal",
     parts: [
       {
         id: "gram",
@@ -1190,7 +1190,7 @@ const TRKI_BANK = [
     passPercent: 70,
     questionsCount: 8,
     is_pro_only: false,
-    icon: "📖",
+    icon: "book-open-blog",
     parts: [
       {
         id: "gram",
@@ -1221,7 +1221,7 @@ const TRKI_BANK = [
     passPercent: 66,
     questionsCount: 8,
     is_pro_only: true,
-    icon: "🥇",
+    icon: "medal",
     parts: [
       {
         id: "gram",
@@ -1274,7 +1274,7 @@ const TRKI_BANK = [
     passPercent: 66,
     questionsCount: 4,
     is_pro_only: true,
-    icon: "📰",
+    icon: "newspaper",
     parts: [
       {
         id: "reading",
@@ -1305,7 +1305,7 @@ const TRKI_BANK = [
     passPercent: 66,
     questionsCount: 6,
     is_pro_only: true,
-    icon: "💎",
+    icon: "gem",
     parts: [
       {
         id: "gram",
@@ -1354,7 +1354,7 @@ const VOCAB_JARS = [
     "level": "A1",
     "levelName": "Sơ cấp A1",
     "desc": "Từ vựng siêu thị, thực phẩm, cân đo, thanh toán sống còn khi mới sang Nga.",
-    "icon": "🛒",
+    "icon": "shopping-cart",
     "words": [
       {
         "ru": "хлеб",
@@ -1412,7 +1412,7 @@ const VOCAB_JARS = [
     "level": "A1",
     "levelName": "Sơ cấp A1",
     "desc": "Đồ dùng cá nhân, quần áo giữ nhiệt, giấy tờ bắt buộc chuẩn bị từ Việt Nam sang.",
-    "icon": "🧳",
+    "icon": "briefcase",
     "words": [
       {
         "ru": "чемода́н",
@@ -1470,7 +1470,7 @@ const VOCAB_JARS = [
     "level": "A1",
     "levelName": "Sơ cấp A1",
     "desc": "Thủ tục check-in, ký gửi hành lý, cửa ra tàu bay và hải quan nhập cảnh Nga.",
-    "icon": "✈️",
+    "icon": "plane",
     "words": [
       {
         "ru": "аэропо́рт",
@@ -1528,7 +1528,7 @@ const VOCAB_JARS = [
     "level": "A1",
     "levelName": "Sơ cấp A1",
     "desc": "Mối quan hệ thân thuộc, xưng hô gia đình và tình bạn bè quốc tế.",
-    "icon": "👨‍👩‍👧",
+    "icon": "users-students",
     "words": [
       {
         "ru": "семья́",
@@ -1586,7 +1586,7 @@ const VOCAB_JARS = [
     "level": "A1",
     "levelName": "Sơ cấp A1",
     "desc": "Các buổi trong ngày, nếp sống học tập, ăn uống và giờ giấc nghỉ ngơi.",
-    "icon": "⏰",
+    "icon": "timer-clock",
     "words": [
       {
         "ru": "у́тро",
@@ -1644,7 +1644,7 @@ const VOCAB_JARS = [
     "level": "A1",
     "levelName": "Sơ cấp A1",
     "desc": "Bốn mùa đặc trưng xứ sở Bạch Dương: tuyết trắng, lá vàng, mưa phùn và nắng hè.",
-    "icon": "❄️",
+    "icon": "snowflake",
     "words": [
       {
         "ru": "пого́да",
@@ -1702,7 +1702,7 @@ const VOCAB_JARS = [
     "level": "A1",
     "levelName": "Sơ cấp A1",
     "desc": "Đường phố, quảng trường, phương hướng trái phải và cách hỏi đường người bản xứ.",
-    "icon": "🗺️",
+    "icon": "map",
     "words": [
       {
         "ru": "го́род",
@@ -1760,7 +1760,7 @@ const VOCAB_JARS = [
     "level": "A2",
     "levelName": "Cơ bản A2",
     "desc": "Cuộc sống tự lập ở KTX Nga: chìa khóa, nội quy, giặt giũ, nấu nướng.",
-    "icon": "🏢",
+    "icon": "building-2",
     "words": [
       {
         "ru": "общежи́тие",
@@ -1818,7 +1818,7 @@ const VOCAB_JARS = [
     "level": "A2",
     "levelName": "Cơ bản A2",
     "desc": "Thực đơn món Nga truyền thống, cách gọi món và tính tiền lịch sự.",
-    "icon": "🍽️",
+    "icon": "utensils",
     "words": [
       {
         "ru": "меню́",
@@ -1876,7 +1876,7 @@ const VOCAB_JARS = [
     "level": "A2",
     "levelName": "Cơ bản A2",
     "desc": "Bản đồ ngầm, quẹt thẻ Troika, chuyển tuyến đường tròn Koltsevaya.",
-    "icon": "🚇",
+    "icon": "train",
     "words": [
       {
         "ru": "ста́нция",
@@ -1934,7 +1934,7 @@ const VOCAB_JARS = [
     "level": "A2",
     "levelName": "Cơ bản A2",
     "desc": "Mở tài khoản sinh viên, rút tiền ATM, chuyển khoản qua số điện thoại và bảo mật thẻ.",
-    "icon": "💳",
+    "icon": "credit-card",
     "words": [
       {
         "ru": "банк",
@@ -1992,7 +1992,7 @@ const VOCAB_JARS = [
     "level": "A2",
     "levelName": "Cơ bản A2",
     "desc": "Nhận bưu kiện từ Việt Nam, gửi quà lưu niệm, tra mã tracking bưu chính.",
-    "icon": "📦",
+    "icon": "package-order",
     "words": [
       {
         "ru": "по́чта",
@@ -2050,7 +2050,7 @@ const VOCAB_JARS = [
     "level": "B1",
     "levelName": "Trung cấp B1",
     "desc": "Bảo hiểm y tế, mô tả bệnh án, đơn thuốc bác sĩ và tiêm phòng.",
-    "icon": "💊",
+    "icon": "pill",
     "words": [
       {
         "ru": "поликли́ника",
@@ -2108,7 +2108,7 @@ const VOCAB_JARS = [
     "level": "B1",
     "levelName": "Trung cấp B1",
     "desc": "Thủ tục học vụ, lịch thi cử, sổ điểm zachotka và xin gia hạn visa du học.",
-    "icon": "🏛️",
+    "icon": "graduation-cap",
     "words": [
       {
         "ru": "декана́т",
@@ -2166,7 +2166,7 @@ const VOCAB_JARS = [
     "level": "B1",
     "levelName": "Trung cấp B1",
     "desc": "Tàu hỏa xuyên Siberia, đặt phòng khách sạn, khám phá kỳ quan thiên nhiên Baikal, Kazan, SPb.",
-    "icon": "🚂",
+    "icon": "train",
     "words": [
       {
         "ru": "путеше́ствие",
@@ -2224,7 +2224,7 @@ const VOCAB_JARS = [
     "level": "B2",
     "levelName": "Nâng cao B2",
     "desc": "Thuật ngữ luận văn, bảo vệ đề tài, phản biện khoa học và trích dẫn theo chuẩn GOST.",
-    "icon": "🎓",
+    "icon": "graduation-cap",
     "words": [
       {
         "ru": "дипло́мная рабо́та",
@@ -2282,7 +2282,7 @@ const VOCAB_JARS = [
     "level": "B2",
     "levelName": "Nâng cao B2",
     "desc": "Tuyển dụng, sơ yếu lý lịch CV, hợp đồng lao động và văn hóa làm việc văn phòng Nga.",
-    "icon": "💼",
+    "icon": "briefcase",
     "words": [
       {
         "ru": "собесе́дование",
@@ -2340,7 +2340,7 @@ const VOCAB_JARS = [
     "level": "B2",
     "levelName": "Nâng cao B2",
     "desc": "Tin tức thời sự, báo chí phân tích, xu hướng truyền thông và bình luận xã hội.",
-    "icon": "📰",
+    "icon": "newspaper",
     "words": [
       {
         "ru": "сре́дства ма́ссовой информа́ции",
