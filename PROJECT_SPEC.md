@@ -25,13 +25,25 @@
 ```
 
 ### [Module 1] Kho Từ Vựng & Thuật Toán Spaced Repetition (SM-2)
+* **Giao diện chuẩn Figma (#tu-vung — https://rigor-hall-40167838.figma.site/#tu-vung)**:
+  * **Khung chứa Russian Navy Gradient (`.vocabulary-section`)**: Nền gradient chuyển đổi sang trọng từ xanh hải quân Nga (#102a4c đến #08192d) kết hợp vầng sáng tỏa radial xanh dương, bo góc 24px.
+  * **Hàng tiêu đề & Thẻ Tiến độ tròn (`.vocabulary-heading` & `.vocabulary-summary`)**: Kicker nhãn đỏ `KHO TỪ VỰNG`, tiêu đề lớn `Học theo chủ đề. Nhớ theo ngữ cảnh.`, thẻ tiến độ thủy tinh mờ (glassmorphism) với vòng tròn tiến độ động (`.summary-ring`) hiển thị tỷ lệ % thành thạo và thanh tiến độ.
+  * **Bộ Tab Phân Cấp Chuẩn (`.level-tabs`)**: 4 tab A1 (Cơ bản), A2 (Sơ cấp), B1 (Trung cấp), B2 (Trên trung cấp - PRO) với vạch đỏ chỉ báo active, cỡ chữ lớn 24px kèm số lượng thẻ.
+  * **Lưới thẻ chủ đề chuẩn Figma (`.topic-grid` & `.topic-card`)**:
+    - Thẻ kính mờ bo góc 20px, hiệu ứng hover nhấc nổi -5px và viền sáng xanh.
+    - Hàng trên (`.topic-card-top`): Số thứ tự `01`, `02`... bên trái; nhãn trạng thái `Hoàn thành` (xanh ngọc) hoặc `PRO` (đỏ) bên phải.
+    - Hộp biểu tượng (`.topic-icon`): 48x48px bo góc 13px với vector icon Lucide 24px.
+    - Nhãn phân loại tiếng Nga viết hoa (`.topic-russian`): `СЛОВАРЬ · A1`, font 9px chữ đậm, dãn cách 1px.
+    - Tiêu đề thẻ (`h3.topic-title`): Font Inter in đậm 20px, chữ trắng.
+    - Mô tả phụ (`p.topic-desc`): `X từ vựng · Y bài học`.
+    - Thanh tiến độ (`.topic-progress`): Cao 4px bo tròn, dải màu xanh biển / xanh lá khi hoàn thành.
+    - Chân thẻ (`.topic-footer`): Nhãn trạng thái bên trái (`68% đã học` / `Đã hoàn thành` / `Sẵn sàng để học`), bên phải gồm nút `[📋 Xem từ]` và nút tròn mũi tên `[→]` (hoặc `[🔒]` nếu PRO).
 * **Mô hình "Lọ từ vựng" (Thematic Action Clusters)**:
   * Không học từ A-Z mà gom từ theo chuỗi hành động ngữ cảnh sống còn (*Lọ mua sắm Auchan*, *Lọ vali du học*, *Lọ sân bay Sheremetyevo*, *Lọ ký túc xá*...).
   * 18 lọ hệ thống chuẩn A1 - B2 chứa từ vựng cốt lõi kèm trọng âm, chú thích giống (он/она/оно) và ví dụ câu thực tế.
-  * **Thiết kế thẻ lọ nhỏ gọn chuẩn mới (`.dau-card-compact`)**: Icon bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số từ` (ví dụ `A1 | 25 từ`), không hiển thị mô tả, phía dưới giữ nguyên 2 nút `[📋 Xem từ (N)]` và `[⚡ Học]`, gắn huy hiệu `👑 PRO` khi cần.
   * **Cấu trúc 2 nút thao tác riêng biệt trên mỗi lọ**:
-    1. Nút `[📋 Xem từ (N)]`: Mở ngay giao diện danh sách chi tiết các từ có trong lọ.
-    2. Nút `[⚡ Học]`: Khởi động ngay chế độ học Flashcard 3D theo thuật toán SRS.
+    1. Nút `[📋 Xem từ]`: Mở ngay giao diện danh sách chi tiết các từ có trong lọ.
+    2. Nút tròn `[→]`: Khởi động ngay chế độ học Flashcard 3D theo thuật toán SRS.
   * **Bố cục Danh sách từ chuẩn DauEnglish (`https://dauenglish.com/vocabulary/test/...`)**:
     - **Thẻ Flashcard xem nhanh trên cùng (`.dau-vocab-preview-box`)**: Cho phép lật thẻ xem nhanh (Space hoặc chạm thẻ), nghe phát âm 🔊, gắn sao ⭐, trộn thẻ 🔀 và chuyển từ (`‹ 1/20 ›`) ngay trong giao diện danh sách.
     - **Thanh công cụ lọc chuẩn DauEnglish (`.dau-vocab-toolbar`)**: Hiển thị tiêu đề *Thuật ngữ trong học phần này (N)*, ô tìm kiếm từ/nghĩa, nút bật/tắt *Chi tiết* (ví dụ câu, từ loại, đồng nghĩa), bộ lọc *⭐ Gắn sao*, *✓ Đã thuộc*, bộ sắp xếp *Thứ tự gốc / A → Z* và nút CTA *⚡ Học Flashcard ngay →*.

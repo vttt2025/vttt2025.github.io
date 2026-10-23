@@ -14926,3 +14926,576 @@ svg.rusi-icon {
   fill: none;
   stroke-width: 2px;
 }
+
+/* =====================================================================
+ * FIGMA THEME: RUSSIAN NAVY KHO TỪ VỰNG & TOPIC CARDS DESIGN SYSTEM
+ * Model: https://rigor-hall-40167838.figma.site/#tu-vung
+ * Applied to: Từ vựng, Nghe, Viết, Nói, TRKI
+ * ===================================================================== */
+
+.vocabulary-section,
+.rusi-topic-section {
+  color: #ffffff;
+  background: radial-gradient(circle at 85% 10%, rgba(23, 87, 166, 0.52), rgba(0, 0, 0, 0) 32%),
+              linear-gradient(145deg, #102a4c 0%, #08192d 72%);
+  border-radius: 24px;
+  padding: 36px 32px 42px;
+  margin-bottom: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 40px rgba(8, 25, 45, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.vocabulary-inner {
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+/* Heading & Summary Bar */
+.vocabulary-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+
+.section-kicker-dark {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #ef8993;
+  margin-bottom: 4px;
+}
+
+.vocabulary-heading h2 {
+  letter-spacing: -2px;
+  margin: 10px 0 0;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: clamp(26px, 3.8vw, 42px);
+  font-weight: 800;
+  line-height: 1.1;
+  color: #ffffff;
+}
+
+/* Progress Summary Card */
+.vocabulary-summary {
+  -webkit-backdrop-filter: blur(15px);
+  backdrop-filter: blur(15px);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 18px;
+  align-items: center;
+  gap: 18px;
+  width: min(100%, 360px);
+  padding: 16px 20px;
+  display: flex;
+  flex-shrink: 0;
+}
+
+.summary-ring {
+  text-align: center;
+  border-radius: 50%;
+  flex: none;
+  place-content: center;
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: conic-gradient(#ef6572 0deg, rgba(255, 255, 255, 0.15) 0deg);
+  transition: background 0.3s ease;
+}
+
+.summary-ring-inner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #102a4c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.summary-ring-inner strong {
+  display: block;
+  font-size: 14px;
+  color: #ffffff;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.summary-ring-inner span {
+  display: block;
+  color: #8dbcef;
+  margin-top: 1px;
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vocabulary-summary > div:last-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.vocabulary-summary > div > strong {
+  display: block;
+  font-size: 13px;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.vocabulary-summary p {
+  color: #8fa4bb;
+  margin: 4px 0 8px;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.summary-bar,
+.topic-progress {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  height: 4px;
+  overflow: hidden;
+}
+
+.summary-bar span {
+  border-radius: inherit;
+  background: var(--russia-red, #c52233);
+  height: 100%;
+  display: block;
+  transition: width 0.3s ease;
+}
+
+/* Level Tabs */
+.level-tabs {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+  grid-template-columns: repeat(4, 1fr);
+  margin-top: 28px;
+  display: grid;
+  gap: 6px;
+}
+
+.level-tab {
+  color: #7990a8;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 8px;
+  transition: color 0.18s ease;
+  display: flex;
+  position: relative;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.level-tab:hover {
+  color: #c4d7ed;
+}
+
+.level-tab:after {
+  content: "";
+  background: transparent;
+  height: 3px;
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  transition: background 0.18s ease;
+}
+
+.level-tab span.level-code {
+  font-family: Inter, sans-serif;
+  font-weight: 800;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.level-tab small {
+  font-size: 11px;
+  color: inherit;
+  line-height: 1.2;
+}
+
+.level-tab .level-tab-count {
+  font-size: 10px;
+  opacity: 0.7;
+  margin-left: 2px;
+}
+
+.level-tab i.level-tab-pro {
+  color: #fff;
+  background: var(--russia-red, #c52233);
+  letter-spacing: 0.8px;
+  border-radius: 5px;
+  padding: 3px 6px;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 700;
+  margin-left: auto;
+}
+
+.level-tab-active,
+.level-tab.active {
+  color: #ffffff !important;
+}
+
+.level-tab-active:after,
+.level-tab.active:after {
+  background: var(--russia-red, #c52233);
+}
+
+/* Topic Cards Grid & Card */
+.topic-grid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+  display: grid;
+}
+
+.topic-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 20px;
+  flex-direction: column;
+  min-height: 335px;
+  padding: 24px;
+  transition: transform 0.22s ease, border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease;
+  display: flex;
+  cursor: pointer;
+  position: relative;
+  text-align: left;
+}
+
+.topic-card:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(141, 188, 239, 0.55);
+  transform: translateY(-5px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.35);
+}
+
+.topic-card.topic-completed {
+  border-color: rgba(88, 180, 140, 0.45);
+}
+
+.topic-card.topic-pro {
+  background: linear-gradient(145deg, rgba(197, 34, 51, 0.16), rgba(255, 255, 255, 0.05));
+}
+
+.topic-card-top {
+  justify-content: space-between;
+  align-items: center;
+  min-height: 24px;
+  display: flex;
+}
+
+.topic-number {
+  color: #617890;
+  font-family: Inter, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.topic-status {
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  border-radius: 6px;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  font-size: 8px;
+  font-weight: 700;
+  display: inline-flex;
+  line-height: 1;
+}
+
+.topic-status-completed {
+  color: #8ed9b5;
+  background: rgba(63, 164, 116, 0.22);
+}
+
+.topic-status-completed svg {
+  stroke: currentColor;
+  fill: none;
+  width: 12px;
+  height: 12px;
+}
+
+.topic-status-pro {
+  color: #ffffff;
+  background: var(--russia-red, #c52233);
+}
+
+.topic-status-level {
+  color: #8dbcef;
+  background: rgba(23, 87, 166, 0.25);
+}
+
+.topic-icon {
+  color: #8dbcef;
+  background: rgba(23, 87, 166, 0.25);
+  border-radius: 13px;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  margin-top: 20px;
+  display: grid;
+  flex-shrink: 0;
+}
+
+.topic-completed .topic-icon {
+  color: #8ed9b5;
+  background: rgba(63, 164, 116, 0.22);
+}
+
+.topic-pro .topic-icon {
+  color: #ef8993;
+  background: rgba(197, 34, 51, 0.22);
+}
+
+.topic-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.topic-russian {
+  color: #6f89a4;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 18px;
+  font-size: 9px;
+  font-weight: 700;
+  display: block;
+}
+
+.topic-card h3,
+.topic-card .topic-title {
+  letter-spacing: -0.6px;
+  margin: 6px 0 8px;
+  font-family: Inter, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.25;
+}
+
+.topic-card > p,
+.topic-card .topic-desc {
+  color: #8094a9;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.topic-progress {
+  margin-top: 18px;
+}
+
+.topic-progress span {
+  border-radius: inherit;
+  background: var(--russia-blue, #1757a6);
+  height: 100%;
+  display: block;
+  transition: width 0.3s ease;
+}
+
+.topic-completed .topic-progress span {
+  background: #4bac7e;
+}
+
+.topic-footer {
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.topic-footer > span {
+  color: #698098;
+  text-transform: uppercase;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.topic-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.topic-circle-btn {
+  color: #ffffff;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  display: grid;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.topic-circle-btn:hover {
+  background: #ffffff;
+  color: #102a4c;
+  border-color: #ffffff;
+  transform: scale(1.08);
+}
+
+.topic-circle-btn svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2px;
+  width: 16px;
+  height: 16px;
+}
+
+.topic-pro .topic-circle-btn {
+  color: #ef8993;
+  border-color: rgba(197, 34, 51, 0.45);
+}
+
+.topic-pro .topic-circle-btn:hover {
+  background: var(--russia-red, #c52233);
+  color: #ffffff;
+  border-color: var(--russia-red, #c52233);
+}
+
+.topic-text-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #d0e0f0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.topic-text-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Pagination inside Russian Dark Shelf */
+.vocabulary-section .dau-pagination {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+}
+
+.vocabulary-section .dau-page-btn {
+  color: #cbdcf0;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 7px 13px;
+  min-width: 36px;
+  min-height: 36px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vocabulary-section .dau-page-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.vocabulary-section .dau-page-btn.active {
+  background: var(--russia-red, #c52233);
+  color: #ffffff;
+  border-color: var(--russia-red, #c52233);
+}
+
+.vocabulary-section .dau-page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 1024px) {
+  .vocabulary-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .vocabulary-summary {
+    width: 100%;
+  }
+  .topic-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .vocabulary-section,
+  .rusi-topic-section {
+    padding: 24px 16px;
+    border-radius: 18px;
+    margin-bottom: 24px;
+  }
+  .vocabulary-heading h2 {
+    letter-spacing: -1.2px;
+    font-size: 26px;
+  }
+  .level-tabs {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-top: 18px;
+  }
+  .level-tab {
+    padding: 10px 2px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .level-tab span.level-code {
+    font-size: 17px;
+  }
+  .level-tab small {
+    font-size: 9px;
+  }
+  .level-tab i.level-tab-pro {
+    position: static;
+    margin-left: 0;
+  }
+  .topic-grid {
+    grid-template-columns: 1fr; /* Single column on mobile */
+    gap: 14px;
+    margin-top: 20px;
+  }
+  .topic-card {
+    min-height: 290px;
+    padding: 18px;
+  }
+}

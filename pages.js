@@ -1935,12 +1935,26 @@ function initVocabPage() {
 
     const shelfHost = el("#jarsShelfHost");
     if (shelfHost) {
-      shelfHost.querySelectorAll(".dau-level-pill").forEach(b => {
-        b.classList.toggle("active", b.dataset.level === currentLevel);
+      shelfHost.querySelectorAll(".level-tab").forEach(b => {
+        const isActive = b.dataset.level === currentLevel;
+        b.classList.toggle("level-tab-active", isActive);
+        b.setAttribute("aria-selected", isActive ? "true" : "false");
       });
     }
 
     const filtered = allItems.filter(item => item.level === currentLevel);
+
+    const doneCount = filtered.filter(item => Progress.doneList("vocabDone").includes(item.id)).length;
+    const totalCount = filtered.length;
+    const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
+    const ringPct = el("#vocabRingPct"); if (ringPct) ringPct.textContent = `${pct}%`;
+    const ringLevel = el("#vocabRingLevel"); if (ringLevel) ringLevel.textContent = currentLevel;
+    const summaryText = el("#vocabSummaryText");
+    if (summaryText) summaryText.textContent = `Đã thành thạo ${doneCount} / ${totalCount} chủ đề (${currentLevel})`;
+    const summaryBar = el("#vocabSummaryBar"); if (summaryBar) summaryBar.style.width = `${pct}%`;
+    const summaryRing = el("#vocabSummaryRing");
+    if (summaryRing) summaryRing.style.background = `conic-gradient(#ef6572 ${pct * 3.6}deg, rgba(255, 255, 255, 0.15) 0deg)`;
 
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
@@ -1951,47 +1965,63 @@ function initVocabPage() {
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
-        <div class="dau-empty-state" style="grid-column:1/-1;text-align:center;padding:40px 20px;background:var(--surface);border:1px dashed var(--border);border-radius:var(--radius)">
-          <div style="margin-bottom:8px;color:var(--primary)">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 44 }) : ""}</div>
-          <h3 style="margin:0 0 6px">Chưa có lọ từ vựng cho cấp độ này</h3>
-          <p style="color:var(--muted);font-size:0.9rem;margin:0">Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
+        <div class="topic-empty-state" style="grid-column:1/-1;text-align:center;padding:48px 24px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.18);border-radius:20px;color:#fff">
+          <div style="margin-bottom:12px;color:#8dbcef">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 48 }) : ""}</div>
+          <h3 style="margin:0 0 8px;color:#fff;font-size:1.2rem">Chưa có lọ từ vựng cho cấp độ này</h3>
+          <p style="color:#8094a9;font-size:0.9rem;margin:0">Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
         </div>
       `;
     } else {
-      gridHost.innerHTML = pageItems.map(item => {
+      gridHost.innerHTML = pageItems.map((item, idx) => {
         const isDone = Progress.doneList("vocabDone").includes(item.id);
-        const badgeClass = item.level === "A1" ? "dau-badge-a1" : item.level === "A2" ? "dau-badge-a2" : item.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
         const isPro = Boolean(item.is_pro_only);
+        const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
+        const indexStr = String((currentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, "0");
+        const wordsCount = item.wordsCount || (item.words ? item.words.length : 0);
+        const lessonsCount = Math.ceil(wordsCount / 10) || 1;
+        const russianCategory = item.levelName || `СЛОВАРЬ · ${item.level}`;
+
         return `
-          <div class="dau-card dau-card-compact" data-vocab-id="${item.id}" data-kind="jar" data-pro="${isPro}">
-            <div class="dau-card-header">
-              <div class="dau-card-icon ${item.level === "A2" ? "warm" : item.level === "B1" ? "" : item.level === "B2" ? "purple" : "green"}">
-                ${window.RusiIcons ? RusiIcons.get(item.icon || "archive-jar", { size: 26 }) : ""}
-              </div>
-              <div class="dau-card-header-main">
-                <div class="dau-card-title-row">
-                  <h3 class="dau-card-ru ru">${esc(item.title)}</h3>
-                  ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO</span>` : ""}
-                </div>
-                <div class="dau-card-subinfo">
-                  <span class="dau-badge ${badgeClass}">${esc(item.level)}</span>
-                  <span class="dau-card-sep">|</span>
-                  <span class="dau-card-count">${item.wordsCount} từ</span>
-                </div>
-              </div>
+          <article class="topic-card dau-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-vocab-id="${item.id}" data-kind="jar" data-pro="${isPro}">
+            <div class="topic-card-top">
+              <span class="topic-number">${indexStr}</span>
+              ${isDone ? `
+                <span class="topic-status topic-status-completed">
+                  ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
+                </span>
+              ` : isPro ? `
+                <span class="topic-status topic-status-pro">PRO</span>
+              ` : `
+                <span class="topic-status topic-status-level">${item.level}</span>
+              `}
             </div>
 
-            <div class="dau-card-footer">
-              <div class="dau-card-actions-2btn">
-                <button type="button" class="btn btn-outline btn-sm btn-jar-list" data-jar-id="${item.id}" title="Xem danh sách chi tiết các từ">
-                  ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 16 }) : ""} Xem từ (${item.wordsCount})
+            <span class="topic-icon">
+              ${window.RusiIcons ? RusiIcons.get(item.icon || "archive-jar", { size: 24 }) : ""}
+            </span>
+
+            <span class="topic-russian">${esc(russianCategory)}</span>
+
+            <h3 class="topic-title">${esc(item.title)}</h3>
+
+            <p class="topic-desc">${wordsCount} từ vựng · ${lessonsCount} bài học</p>
+
+            <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
+              <span style="width: ${isDone ? 100 : 0}%"></span>
+            </div>
+
+            <div class="topic-footer">
+              <span>${isDone ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng để học"}</span>
+              <div class="topic-footer-actions">
+                <button type="button" class="btn-jar-list topic-text-btn" data-jar-id="${item.id}" title="Xem danh sách từ">
+                  ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 13 }) : ""} Xem từ
                 </button>
-                <button type="button" class="btn btn-primary btn-sm btn-jar-study" data-jar-id="${item.id}" title="Bắt đầu học ngay">
-                  ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Học
+                <button type="button" class="btn-jar-study topic-circle-btn" data-jar-id="${item.id}" title="Học ngay">
+                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
                 </button>
               </div>
             </div>
-          </div>
+          </article>
         `;
       }).join("");
 
@@ -2021,7 +2051,7 @@ function initVocabPage() {
         };
       });
 
-      gridHost.querySelectorAll(".dau-card").forEach(card => {
+      gridHost.querySelectorAll(".dau-card, .topic-card").forEach(card => {
         card.onclick = (e) => {
           if (e.target.closest("button")) return;
           const id = card.dataset.vocabId;
@@ -2038,7 +2068,7 @@ function initVocabPage() {
     renderDauPagination(el("#vocabPagination"), currentPage, totalPages, (newPage) => {
       currentPage = newPage;
       renderVocabCards();
-      const topEl = el("#vocabFilterBar") || el("#jarsShelfHost");
+      const topEl = el("#vocabSection") || el("#jarsShelfHost");
       if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
     });
 
@@ -2056,34 +2086,63 @@ function initVocabPage() {
     if (srsPane) srsPane.classList.add("hidden");
     shelfHost.classList.remove("hidden");
 
-    let filterBar = el("#vocabFilterBar");
-    if (!filterBar) {
+    let section = el("#vocabSection");
+    if (!section) {
       shelfHost.innerHTML = `
-        <div class="dau-filter-bar" id="vocabFilterBar">
-          <div class="dau-level-pills-wrap">
-            <div class="dau-level-pills" id="vocabLevelPills">
-              <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
-                A1 · Sơ cấp <span class="dau-pill-count" id="countA1">0</span>
+        <section class="vocabulary-section" id="vocabSection">
+          <div class="vocabulary-inner">
+            <div class="vocabulary-heading">
+              <div>
+                <span class="section-kicker-dark">KHO TỪ VỰNG</span>
+                <h2>Học theo chủ đề.<br />Nhớ theo ngữ cảnh.</h2>
+              </div>
+              <div class="vocabulary-summary" id="vocabSummaryCard">
+                <div class="summary-ring" id="vocabSummaryRing">
+                  <div class="summary-ring-inner">
+                    <strong id="vocabRingPct">0%</strong>
+                    <span id="vocabRingLevel">A1</span>
+                  </div>
+                </div>
+                <div>
+                  <strong>Tiến độ của bạn</strong>
+                  <p id="vocabSummaryText">Đang tải dữ liệu tiến độ...</p>
+                  <div class="summary-bar"><span id="vocabSummaryBar" style="width:0%"></span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="level-tabs" role="tablist" aria-label="Chọn cấp độ từ vựng" id="vocabLevelTabs">
+              <button class="level-tab ${currentLevel === "A1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A1">
+                <span class="level-code">A1</span>
+                <small>Cơ bản</small>
+                <span class="level-tab-count" id="countA1">0</span>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "A2" ? "active" : ""}" data-level="A2">
-                A2 · Cơ bản <span class="dau-pill-count" id="countA2">0</span>
+              <button class="level-tab ${currentLevel === "A2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A2">
+                <span class="level-code">A2</span>
+                <small>Sơ cấp</small>
+                <span class="level-tab-count" id="countA2">0</span>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "B1" ? "active" : ""}" data-level="B1">
-                B1 · Trung cấp <span class="dau-pill-count" id="countB1">0</span>
+              <button class="level-tab ${currentLevel === "B1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B1">
+                <span class="level-code">B1</span>
+                <small>Trung cấp</small>
+                <span class="level-tab-count" id="countB1">0</span>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "B2" ? "active" : ""}" data-level="B2">
-                B2 · Nâng cao <span class="dau-pill-count" id="countB2">0</span>
+              <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
+                <span class="level-code">B2</span>
+                <small>Trên trung cấp</small>
+                <span class="level-tab-count" id="countB2">0</span>
+                <i class="level-tab-pro">PRO</i>
               </button>
             </div>
-          </div>
-        </div>
 
-        <div class="dau-cards-grid" id="vocabCardsGrid"></div>
-        <div class="dau-pagination" id="vocabPagination"></div>
+            <div class="topic-grid" id="vocabCardsGrid"></div>
+            <div class="dau-pagination" id="vocabPagination"></div>
+          </div>
+        </section>
       `;
 
-      // Event listener Level pills
-      shelfHost.querySelectorAll(".dau-level-pill").forEach(btn => {
+      // Event listener Level tabs
+      shelfHost.querySelectorAll(".level-tab").forEach(btn => {
         btn.onclick = () => {
           currentLevel = btn.dataset.level;
           currentPage = 1;
@@ -2591,12 +2650,26 @@ function initListeningPage() {
     const cB1 = el("#lisCountB1"); if (cB1) cB1.textContent = countB1;
     const cB2 = el("#lisCountB2"); if (cB2) cB2.textContent = countB2;
 
-    // Update active class on level pills
-    host.querySelectorAll(".dau-level-pill").forEach(b => {
-      b.classList.toggle("active", b.dataset.level === currentLevel);
+    // Update active class on level tabs
+    host.querySelectorAll(".level-tab").forEach(b => {
+      const isActive = b.dataset.level === currentLevel;
+      b.classList.toggle("level-tab-active", isActive);
+      b.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
     const filtered = all.filter(l => l.level === currentLevel);
+
+    const doneCount = filtered.filter(l => Progress.doneList("listenDone").includes(l.id + "_check") || Progress.doneList("listenDone").includes(l.id + "_video")).length;
+    const totalCount = filtered.length;
+    const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
+    const ringPct = el("#lisRingPct"); if (ringPct) ringPct.textContent = `${pct}%`;
+    const ringLevel = el("#lisRingLevel"); if (ringLevel) ringLevel.textContent = currentLevel;
+    const summaryText = el("#lisSummaryText");
+    if (summaryText) summaryText.textContent = `Đã hoàn thành ${doneCount} / ${totalCount} bài nghe (${currentLevel})`;
+    const summaryBar = el("#lisSummaryBar"); if (summaryBar) summaryBar.style.width = `${pct}%`;
+    const summaryRing = el("#lisSummaryRing");
+    if (summaryRing) summaryRing.style.background = `conic-gradient(#ef6572 ${pct * 3.6}deg, rgba(255, 255, 255, 0.15) 0deg)`;
 
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
@@ -2607,56 +2680,70 @@ function initListeningPage() {
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
-        <div class="dau-empty-state">
-          <div class="dau-empty-icon">${window.RusiIcons ? RusiIcons.get("headphones", { size: 48 }) : ""}</div>
-          <h3>Chưa có bài nghe cho cấp độ này</h3>
-          <p>Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
+        <div class="topic-empty-state" style="grid-column:1/-1;text-align:center;padding:48px 24px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.18);border-radius:20px;color:#fff">
+          <div style="margin-bottom:12px;color:#8dbcef">${window.RusiIcons ? RusiIcons.get("headphones", { size: 48 }) : ""}</div>
+          <h3 style="margin:0 0 8px;color:#fff;font-size:1.2rem">Chưa có bài nghe cho cấp độ này</h3>
+          <p style="color:#8094a9;font-size:0.9rem;margin:0">Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
         </div>
       `;
     } else {
-      gridHost.innerHTML = pageItems.map(l => {
-        const badgeClass = l.level === "A1" ? "dau-badge-a1" : l.level === "A2" ? "dau-badge-a2" : l.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
+      gridHost.innerHTML = pageItems.map((l, idx) => {
         const isDone = Progress.doneList("listenDone").includes(l.id + "_check") || Progress.doneList("listenDone").includes(l.id + "_video");
         const isPro = l.is_pro_only || l.level === "B1" || l.level === "B2";
+        const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
+        const indexStr = String((currentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, "0");
+        const qCount = (l.questions && l.questions.length) ? l.questions.length : (l.script && l.script.length) ? l.script.length : 5;
+        const russianCategory = `АУДИРОВАНИЕ · ${l.level}`;
+
         return `
-          <div class="dau-card dau-card-compact" data-listen-id="${l.id}">
-            <div class="dau-card-header">
-              <div class="dau-card-icon ${l.level === "A2" ? "warm" : l.level === "B1" ? "" : l.level === "B2" ? "purple" : "green"}">
-                ${window.RusiIcons ? RusiIcons.get(l.icon || "headphones", { size: 26 }) : ""}
-              </div>
-              <div class="dau-card-header-main">
-                <div class="dau-card-title-row">
-                  <h3 class="dau-card-ru ru">${esc(l.title)}</h3>
-                  ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO</span>` : ""}
-                </div>
-                ${l.vi ? `<div class="dau-card-vi">${esc(l.vi)}</div>` : ""}
-                <div class="dau-card-subinfo">
-                  <span class="dau-badge ${badgeClass}">${esc(l.level)}</span>
-                  <span class="dau-card-sep">|</span>
-                  <span class="dau-card-count">${(l.questions && l.questions.length) ? l.questions.length : (l.script && l.script.length) ? l.script.length : 5} câu</span>
-                </div>
-              </div>
+          <article class="topic-card dau-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-listen-id="${l.id}">
+            <div class="topic-card-top">
+              <span class="topic-number">${indexStr}</span>
+              ${isDone ? `
+                <span class="topic-status topic-status-completed">
+                  ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
+                </span>
+              ` : isPro ? `
+                <span class="topic-status topic-status-pro">PRO</span>
+              ` : `
+                <span class="topic-status topic-status-level">${l.level}</span>
+              `}
             </div>
 
-            <div class="dau-card-footer">
-              <span class="dau-status-pill ${isDone ? "done" : ""}">
-                ${isDone ? `${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Đã vượt qua` : `${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Chưa hoàn thành`}
-              </span>
-              <button type="button" class="btn btn-primary btn-sm dau-card-cta">
-                Vào luyện nghe →
-              </button>
+            <span class="topic-icon">
+              ${window.RusiIcons ? RusiIcons.get(l.icon || "headphones", { size: 24 }) : ""}
+            </span>
+
+            <span class="topic-russian">${esc(russianCategory)}</span>
+
+            <h3 class="topic-title">${esc(l.title)}</h3>
+
+            <p class="topic-desc">${l.vi ? esc(l.vi) + ' · ' : ''}${qCount} câu hỏi · Audio chuẩn Nga</p>
+
+            <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
+              <span style="width: ${isDone ? 100 : 0}%"></span>
             </div>
-          </div>
+
+            <div class="topic-footer">
+              <span>${isDone ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng để luyện"}</span>
+              <div class="topic-footer-actions">
+                <button type="button" class="topic-circle-btn dau-card-cta" title="Luyện nghe">
+                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
+                </button>
+              </div>
+            </div>
+          </article>
         `;
       }).join("");
 
-      gridHost.querySelectorAll(".dau-card").forEach(card => {
+      gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
         card.onclick = () => {
           const id = card.dataset.listenId;
-          const lesson = all.find(l => l.id === id);
+          const lesson = all.find(x => x.id === id);
+          if (!lesson) return;
           const isPro = lesson.is_pro_only || lesson.level === "B1" || lesson.level === "B2";
           if (isPro && !Monetization.isPro()) {
-            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe thực tế chuẩn Moscow và video hội thoại.");
+            Monetization.showProGateModal("Nội dung nghe dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao.");
             return;
           }
           openListeningWorkspace(lesson);
@@ -2667,7 +2754,7 @@ function initListeningPage() {
     renderDauPagination(el("#lisPagination"), currentPage, totalPages, (newPage) => {
       currentPage = newPage;
       renderListeningCards();
-      const topEl = el("#lisFilterBar") || host;
+      const topEl = el("#lisSection") || host;
       if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   };
@@ -2681,36 +2768,64 @@ function initListeningPage() {
     const countB1 = all.filter(l => l.level === "B1").length;
     const countB2 = all.filter(l => l.level === "B2").length;
 
-    let filterBar = host.querySelector("#lisFilterBar");
-    if (!filterBar) {
+    let section = host.querySelector("#lisSection");
+    if (!section) {
       host.innerHTML = `
-        <!-- DAUENGLISH SMART FILTER BAR -->
-        <div class="dau-filter-bar" id="lisFilterBar">
-          <div class="dau-level-pills-wrap">
-            <div class="dau-level-pills">
-              <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
-                A1 · Sơ cấp <span class="dau-pill-count" id="lisCountA1">${countA1}</span>
+        <section class="vocabulary-section rusi-topic-section" id="lisSection">
+          <div class="vocabulary-inner">
+            <div class="vocabulary-heading">
+              <div>
+                <span class="section-kicker-dark">LUYỆN NGHE HIỂU</span>
+                <h2>Giọng đọc chuẩn Nga.<br />Nghe chép chính tả.</h2>
+              </div>
+              <div class="vocabulary-summary" id="lisSummaryCard">
+                <div class="summary-ring" id="lisSummaryRing">
+                  <div class="summary-ring-inner">
+                    <strong id="lisRingPct">0%</strong>
+                    <span id="lisRingLevel">A1</span>
+                  </div>
+                </div>
+                <div>
+                  <strong>Tiến độ của bạn</strong>
+                  <p id="lisSummaryText">Đang tải dữ liệu tiến độ...</p>
+                  <div class="summary-bar"><span id="lisSummaryBar" style="width:0%"></span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="level-tabs" role="tablist" aria-label="Chọn cấp độ nghe" id="lisLevelTabs">
+              <button class="level-tab ${currentLevel === "A1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A1">
+                <span class="level-code">A1</span>
+                <small>Cơ bản</small>
+                <span class="level-tab-count" id="lisCountA1">${countA1}</span>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "A2" ? "active" : ""}" data-level="A2">
-                A2 · Cơ bản <span class="dau-pill-count" id="lisCountA2">${countA2}</span>
+              <button class="level-tab ${currentLevel === "A2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A2">
+                <span class="level-code">A2</span>
+                <small>Sơ cấp</small>
+                <span class="level-tab-count" id="lisCountA2">${countA2}</span>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "B1" ? "active" : ""}" data-level="B1">
-                B1 · Trung cấp <span class="dau-pill-count" id="lisCountB1">${countB1}</span>
+              <button class="level-tab ${currentLevel === "B1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B1">
+                <span class="level-code">B1</span>
+                <small>Trung cấp</small>
+                <span class="level-tab-count" id="lisCountB1">${countB1}</span>
+                <i class="level-tab-pro">PRO</i>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "B2" ? "active" : ""}" data-level="B2">
-                B2 · Nâng cao <span class="dau-pill-count" id="lisCountB2">${countB2}</span>
+              <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
+                <span class="level-code">B2</span>
+                <small>Trên trung cấp</small>
+                <span class="level-tab-count" id="lisCountB2">${countB2}</span>
+                <i class="level-tab-pro">PRO</i>
               </button>
             </div>
-          </div>
-        </div>
 
-        <!-- DAUENGLISH CARDS GRID -->
-        <div class="dau-cards-grid" id="lisCardsGrid"></div>
-        <div class="dau-pagination" id="lisPagination"></div>
+            <div class="topic-grid" id="lisCardsGrid"></div>
+            <div class="dau-pagination" id="lisPagination"></div>
+          </div>
+        </section>
       `;
 
-      // Level pills
-      host.querySelectorAll(".dau-level-pill").forEach(btn => {
+      // Level tabs
+      host.querySelectorAll(".level-tab").forEach(btn => {
         btn.onclick = () => {
           currentLevel = btn.dataset.level;
           currentPage = 1;
@@ -3812,12 +3927,26 @@ function initSpeakingPage() {
     const cB1 = el("#spCountB1"); if (cB1) cB1.textContent = countB1;
     const cB2 = el("#spCountB2"); if (cB2) cB2.textContent = countB2;
 
-    // Update active class on level pills
-    host.querySelectorAll(".dau-level-pill").forEach(b => {
-      b.classList.toggle("active", b.dataset.level === currentLevel);
+    // Update active class on level tabs
+    host.querySelectorAll(".level-tab").forEach(b => {
+      const isActive = b.dataset.level === currentLevel;
+      b.classList.toggle("level-tab-active", isActive);
+      b.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
     const filtered = all.filter(s => s.level === currentLevel);
+
+    const doneCount = filtered.filter(s => Progress.doneList("speakDone").includes(s.id)).length;
+    const totalCount = filtered.length;
+    const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
+    const ringPct = el("#spRingPct"); if (ringPct) ringPct.textContent = `${pct}%`;
+    const ringLevel = el("#spRingLevel"); if (ringLevel) ringLevel.textContent = currentLevel;
+    const summaryText = el("#spSummaryText");
+    if (summaryText) summaryText.textContent = `Đã luyện tập ${doneCount} / ${totalCount} bài nói (${currentLevel})`;
+    const summaryBar = el("#spSummaryBar"); if (summaryBar) summaryBar.style.width = `${pct}%`;
+    const summaryRing = el("#spSummaryRing");
+    if (summaryRing) summaryRing.style.background = `conic-gradient(#ef6572 ${pct * 3.6}deg, rgba(255, 255, 255, 0.15) 0deg)`;
 
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
@@ -3828,62 +3957,72 @@ function initSpeakingPage() {
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
-        <div class="dau-empty-state">
-          <div class="dau-empty-icon">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 48 }) : ""}</div>
-          <h3>Chưa có chủ đề nói cho cấp độ này</h3>
-          <p>Vui lòng chọn cấp độ khác để tiếp tục luyện phát âm.</p>
+        <div class="topic-empty-state" style="grid-column:1/-1;text-align:center;padding:48px 24px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.18);border-radius:20px;color:#fff">
+          <div style="margin-bottom:12px;color:#8dbcef">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 48 }) : ""}</div>
+          <h3 style="margin:0 0 8px;color:#fff;font-size:1.2rem">Chưa có bài nói cho cấp độ này</h3>
+          <p style="color:#8094a9;font-size:0.9rem;margin:0">Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
         </div>
       `;
     } else {
-      gridHost.innerHTML = pageItems.map(s => {
-        const badgeClass = s.level === "A1" ? "dau-badge-a1" : s.level === "A2" ? "dau-badge-a2" : s.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
+      gridHost.innerHTML = pageItems.map((s, idx) => {
+        const isDone = Progress.doneList("speakDone").includes(s.id);
         const isPro = s.is_pro_only || s.level === "B1" || s.level === "B2";
-        let highest = 0;
-        (s.items || []).forEach((_, i) => {
-          const score = STORE.get("speak_" + s.id + "_" + i, 0);
-          if (score > highest) highest = score;
-        });
+        const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
+        const indexStr = String((currentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, "0");
+        const russianCategory = `ГОВОРЕНИЕ · ${s.level}`;
+
         return `
-          <div class="dau-card dau-card-compact" data-speak-id="${s.id}">
-            <div class="dau-card-header">
-              <div class="dau-card-icon ${s.level === "A2" ? "warm" : s.level === "B1" ? "" : s.level === "B2" ? "purple" : "green"}">
-                ${window.RusiIcons ? RusiIcons.get(s.icon || "mic-speaking", { size: 26 }) : ""}
-              </div>
-              <div class="dau-card-header-main">
-                <div class="dau-card-title-row">
-                  <h3 class="dau-card-ru ru">${esc(s.title)}</h3>
-                  ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO</span>` : ""}
-                </div>
-                <div class="dau-card-subinfo">
-                  <span class="dau-badge ${badgeClass}">${esc(s.level)}</span>
-                  <span class="dau-card-sep">|</span>
-                  <span class="dau-card-count">${s.items.length} câu</span>
-                </div>
-              </div>
+          <article class="topic-card dau-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-speak-id="${s.id}">
+            <div class="topic-card-top">
+              <span class="topic-number">${indexStr}</span>
+              ${isDone ? `
+                <span class="topic-status topic-status-completed">
+                  ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
+                </span>
+              ` : isPro ? `
+                <span class="topic-status topic-status-pro">PRO</span>
+              ` : `
+                <span class="topic-status topic-status-level">${s.level}</span>
+              `}
             </div>
 
-            <div class="dau-card-footer">
-              <span class="dau-status-pill ${highest >= 80 ? "done" : highest > 0 ? "best" : ""}">
-                ${highest > 0 ? `${window.RusiIcons ? RusiIcons.get("trophy-reward", { size: 14 }) : ""} Cao nhất: ${highest}%` : `${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Chưa luyện`}
-              </span>
-              <button type="button" class="btn btn-primary btn-sm dau-card-cta">
-                Luyện nói ngay →
-              </button>
+            <span class="topic-icon">
+              ${window.RusiIcons ? RusiIcons.get(s.icon || "mic-speaking", { size: 24 }) : ""}
+            </span>
+
+            <span class="topic-russian">${esc(russianCategory)}</span>
+
+            <h3 class="topic-title">${esc(s.title)}</h3>
+
+            <p class="topic-desc">${s.items.length} mẫu câu · Shadowing & AI chấm điểm</p>
+
+            <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
+              <span style="width: ${isDone ? 100 : 0}%"></span>
             </div>
-          </div>
+
+            <div class="topic-footer">
+              <span>${isDone ? "Đã luyện tập" : isPro ? "Dành cho thành viên" : "Sẵn sàng để nói"}</span>
+              <div class="topic-footer-actions">
+                <button type="button" class="topic-circle-btn dau-card-cta" title="Luyện nói">
+                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
+                </button>
+              </div>
+            </div>
+          </article>
         `;
       }).join("");
 
-      gridHost.querySelectorAll(".dau-card").forEach(card => {
+      gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
         card.onclick = () => {
           const id = card.dataset.speakId;
-          const set = all.find(s => s.id === id);
-          const isPro = set.is_pro_only || set.level === "B1" || set.level === "B2";
+          const s = all.find(x => x.id === id);
+          if (!s) return;
+          const isPro = s.is_pro_only || s.level === "B1" || s.level === "B2";
           if (isPro && !Monetization.isPro()) {
-            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ chủ đề giao tiếp và AI chấm âm vị không giới hạn.");
+            Monetization.showProGateModal("Nội dung luyện nói dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn.");
             return;
           }
-          openSpeakingWorkspace(set);
+          openSpeakingWorkspace(s);
         };
       });
     }
@@ -3891,7 +4030,7 @@ function initSpeakingPage() {
     renderDauPagination(el("#spPagination"), currentPage, totalPages, (newPage) => {
       currentPage = newPage;
       renderSpeakingCards();
-      const topEl = el("#spFilterBar") || host;
+      const topEl = el("#spSection") || host;
       if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   };
@@ -3903,36 +4042,64 @@ function initSpeakingPage() {
     const countB1 = all.filter(s => s.level === "B1").length;
     const countB2 = all.filter(s => s.level === "B2").length;
 
-    let filterBar = host.querySelector("#spFilterBar");
-    if (!filterBar) {
+    let section = host.querySelector("#spSection");
+    if (!section) {
       host.innerHTML = `
-        <!-- DAUENGLISH SMART FILTER BAR -->
-        <div class="dau-filter-bar" id="spFilterBar">
-          <div class="dau-level-pills-wrap">
-            <div class="dau-level-pills">
-              <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
-                A1 · Sơ cấp <span class="dau-pill-count" id="spCountA1">${countA1}</span>
+        <section class="vocabulary-section rusi-topic-section" id="spSection">
+          <div class="vocabulary-inner">
+            <div class="vocabulary-heading">
+              <div>
+                <span class="section-kicker-dark">LUYỆN NÓI SHADOWING</span>
+                <h2>Phản xạ hội thoại.<br />AI sửa phát âm.</h2>
+              </div>
+              <div class="vocabulary-summary" id="spSummaryCard">
+                <div class="summary-ring" id="spSummaryRing">
+                  <div class="summary-ring-inner">
+                    <strong id="spRingPct">0%</strong>
+                    <span id="spRingLevel">A1</span>
+                  </div>
+                </div>
+                <div>
+                  <strong>Tiến độ của bạn</strong>
+                  <p id="spSummaryText">Đang tải dữ liệu tiến độ...</p>
+                  <div class="summary-bar"><span id="spSummaryBar" style="width:0%"></span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="level-tabs" role="tablist" aria-label="Chọn cấp độ nói" id="spLevelTabs">
+              <button class="level-tab ${currentLevel === "A1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A1">
+                <span class="level-code">A1</span>
+                <small>Cơ bản</small>
+                <span class="level-tab-count" id="spCountA1">${countA1}</span>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "A2" ? "active" : ""}" data-level="A2">
-                A2 · Cơ bản <span class="dau-pill-count" id="spCountA2">${countA2}</span>
+              <button class="level-tab ${currentLevel === "A2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A2">
+                <span class="level-code">A2</span>
+                <small>Sơ cấp</small>
+                <span class="level-tab-count" id="spCountA2">${countA2}</span>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "B1" ? "active" : ""}" data-level="B1">
-                B1 · Trung cấp <span class="dau-pill-count" id="spCountB1">${countB1}</span>
+              <button class="level-tab ${currentLevel === "B1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B1">
+                <span class="level-code">B1</span>
+                <small>Trung cấp</small>
+                <span class="level-tab-count" id="spCountB1">${countB1}</span>
+                <i class="level-tab-pro">PRO</i>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "B2" ? "active" : ""}" data-level="B2">
-                B2 · Nâng cao <span class="dau-pill-count" id="spCountB2">${countB2}</span>
+              <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
+                <span class="level-code">B2</span>
+                <small>Trên trung cấp</small>
+                <span class="level-tab-count" id="spCountB2">${countB2}</span>
+                <i class="level-tab-pro">PRO</i>
               </button>
             </div>
-          </div>
-        </div>
 
-        <!-- DAUENGLISH CARDS GRID -->
-        <div class="dau-cards-grid" id="spCardsGrid"></div>
-        <div class="dau-pagination" id="spPagination"></div>
+            <div class="topic-grid" id="spCardsGrid"></div>
+            <div class="dau-pagination" id="spPagination"></div>
+          </div>
+        </section>
       `;
 
-      // Level pills
-      host.querySelectorAll(".dau-level-pill").forEach(btn => {
+      // Level tabs
+      host.querySelectorAll(".level-tab").forEach(btn => {
         btn.onclick = () => {
           currentLevel = btn.dataset.level;
           currentPage = 1;
@@ -4141,12 +4308,26 @@ function initWritingPage() {
     const cB1 = el("#wCountB1"); if (cB1) cB1.textContent = countB1;
     const cB2 = el("#wCountB2"); if (cB2) cB2.textContent = countB2;
 
-    // Update active class on level pills
-    host.querySelectorAll(".dau-level-pill").forEach(b => {
-      b.classList.toggle("active", b.dataset.level === currentLevel);
+    // Update active class on level tabs
+    host.querySelectorAll(".level-tab").forEach(b => {
+      const isActive = b.dataset.level === currentLevel;
+      b.classList.toggle("level-tab-active", isActive);
+      b.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
     const filtered = all.filter(t => t.level === currentLevel);
+
+    const doneCount = filtered.filter(t => Progress.doneList("writeDone").includes(t.id)).length;
+    const totalCount = filtered.length;
+    const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
+    const ringPct = el("#wRingPct"); if (ringPct) ringPct.textContent = `${pct}%`;
+    const ringLevel = el("#wRingLevel"); if (ringLevel) ringLevel.textContent = currentLevel;
+    const summaryText = el("#wSummaryText");
+    if (summaryText) summaryText.textContent = `Đã làm ${doneCount} / ${totalCount} đề viết (${currentLevel})`;
+    const summaryBar = el("#wSummaryBar"); if (summaryBar) summaryBar.style.width = `${pct}%`;
+    const summaryRing = el("#wSummaryRing");
+    if (summaryRing) summaryRing.style.background = `conic-gradient(#ef6572 ${pct * 3.6}deg, rgba(255, 255, 255, 0.15) 0deg)`;
 
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
@@ -4157,57 +4338,69 @@ function initWritingPage() {
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
-        <div class="dau-empty-state">
-          <div class="dau-empty-icon">${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 48 }) : ""}</div>
-          <h3>Chưa có bài viết cho cấp độ này</h3>
-          <p>Vui lòng chọn cấp độ khác để tiếp tục luyện viết.</p>
+        <div class="topic-empty-state" style="grid-column:1/-1;text-align:center;padding:48px 24px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.18);border-radius:20px;color:#fff">
+          <div style="margin-bottom:12px;color:#8dbcef">${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 48 }) : ""}</div>
+          <h3 style="margin:0 0 8px;color:#fff;font-size:1.2rem">Chưa có đề viết cho cấp độ này</h3>
+          <p style="color:#8094a9;font-size:0.9rem;margin:0">Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
         </div>
       `;
     } else {
-      gridHost.innerHTML = pageItems.map(t => {
-        const badgeClass = t.level === "A1" ? "dau-badge-a1" : t.level === "A2" ? "dau-badge-a2" : t.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
+      gridHost.innerHTML = pageItems.map((t, idx) => {
         const isDone = Progress.doneList("writeDone").includes(t.id);
-        const savedText = STORE.get("write_" + t.id, "");
         const isPro = t.is_pro_only || t.level === "B1" || t.level === "B2";
+        const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
+        const indexStr = String((currentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, "0");
+        const russianCategory = `ПИСЬМО · ${t.level}`;
+
         return `
-          <div class="dau-card dau-card-compact" data-write-id="${t.id}">
-            <div class="dau-card-header">
-              <div class="dau-card-icon ${t.level === "A2" ? "warm" : t.level === "B1" ? "" : t.level === "B2" ? "purple" : "green"}">
-                ${window.RusiIcons ? RusiIcons.get(t.icon || "pen-tool", { size: 26 }) : ""}
-              </div>
-              <div class="dau-card-header-main">
-                <div class="dau-card-title-row">
-                  <h3 class="dau-card-ru ru">${esc(t.title)}</h3>
-                  ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO</span>` : ""}
-                </div>
-                ${t.vi ? `<div class="dau-card-vi">${esc(t.vi)}</div>` : ""}
-                <div class="dau-card-subinfo">
-                  <span class="dau-badge ${badgeClass}">${esc(t.level)}</span>
-                  <span class="dau-card-sep">|</span>
-                  <span class="dau-card-count">${t.minWords} từ</span>
-                </div>
-              </div>
+          <article class="topic-card dau-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-write-id="${t.id}">
+            <div class="topic-card-top">
+              <span class="topic-number">${indexStr}</span>
+              ${isDone ? `
+                <span class="topic-status topic-status-completed">
+                  ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
+                </span>
+              ` : isPro ? `
+                <span class="topic-status topic-status-pro">PRO</span>
+              ` : `
+                <span class="topic-status topic-status-level">${t.level}</span>
+              `}
             </div>
 
-            <div class="dau-card-footer">
-              <span class="dau-status-pill ${isDone ? "done" : savedText ? "best" : ""}">
-                ${isDone ? `${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Đã chấm đạt` : savedText ? `${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 14 }) : ""} Đang viết dở` : `${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Chưa viết`}
-              </span>
-              <button type="button" class="btn btn-primary btn-sm dau-card-cta">
-                Bắt đầu viết →
-              </button>
+            <span class="topic-icon">
+              ${window.RusiIcons ? RusiIcons.get(t.icon || "pen-tool", { size: 24 }) : ""}
+            </span>
+
+            <span class="topic-russian">${esc(russianCategory)}</span>
+
+            <h3 class="topic-title">${esc(t.title)}</h3>
+
+            <p class="topic-desc">${t.vi ? esc(t.vi) + ' · ' : ''}Tối thiểu ${t.minWords} từ · Chữa ngữ pháp</p>
+
+            <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
+              <span style="width: ${isDone ? 100 : 0}%"></span>
             </div>
-          </div>
+
+            <div class="topic-footer">
+              <span>${isDone ? "Đã nộp bài" : isPro ? "Dành cho thành viên" : "Sẵn sàng làm bài"}</span>
+              <div class="topic-footer-actions">
+                <button type="button" class="topic-circle-btn dau-card-cta" title="Làm bài viết">
+                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
+                </button>
+              </div>
+            </div>
+          </article>
         `;
       }).join("");
 
-      gridHost.querySelectorAll(".dau-card").forEach(card => {
+      gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
         card.onclick = () => {
           const id = card.dataset.writeId;
-          const task = all.find(t => t.id === id);
+          const task = all.find(x => x.id === id);
+          if (!task) return;
           const isPro = task.is_pro_only || task.level === "B1" || task.level === "B2";
           if (isPro && !Monetization.isPro()) {
-            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ đề viết tự luận và AI Rusika chấm điểm 4 tiêu chí.");
+            Monetization.showProGateModal("Đề luyện viết dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ đề thi viết TRKI chuyên sâu và trợ lý AI chữa ngữ pháp không giới hạn.");
             return;
           }
           openWritingWorkspace(task);
@@ -4218,7 +4411,7 @@ function initWritingPage() {
     renderDauPagination(el("#wPagination"), currentPage, totalPages, (newPage) => {
       currentPage = newPage;
       renderWritingCards();
-      const topEl = el("#wFilterBar") || host;
+      const topEl = el("#wSection") || host;
       if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   };
@@ -4230,36 +4423,64 @@ function initWritingPage() {
     const countB1 = all.filter(t => t.level === "B1").length;
     const countB2 = all.filter(t => t.level === "B2").length;
 
-    let filterBar = host.querySelector("#wFilterBar");
-    if (!filterBar) {
+    let section = host.querySelector("#wSection");
+    if (!section) {
       host.innerHTML = `
-        <!-- DAUENGLISH SMART FILTER BAR -->
-        <div class="dau-filter-bar" id="wFilterBar">
-          <div class="dau-level-pills-wrap">
-            <div class="dau-level-pills">
-              <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
-                A1 · Sơ cấp <span class="dau-pill-count" id="wCountA1">${countA1}</span>
+        <section class="vocabulary-section rusi-topic-section" id="wSection">
+          <div class="vocabulary-inner">
+            <div class="vocabulary-heading">
+              <div>
+                <span class="section-kicker-dark">LUYỆN VIẾT TRKI</span>
+                <h2>Chuẩn form đề thi.<br />AI sửa ngữ pháp.</h2>
+              </div>
+              <div class="vocabulary-summary" id="wSummaryCard">
+                <div class="summary-ring" id="wSummaryRing">
+                  <div class="summary-ring-inner">
+                    <strong id="wRingPct">0%</strong>
+                    <span id="wRingLevel">A1</span>
+                  </div>
+                </div>
+                <div>
+                  <strong>Tiến độ của bạn</strong>
+                  <p id="wSummaryText">Đang tải dữ liệu tiến độ...</p>
+                  <div class="summary-bar"><span id="wSummaryBar" style="width:0%"></span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="level-tabs" role="tablist" aria-label="Chọn cấp độ viết" id="wLevelTabs">
+              <button class="level-tab ${currentLevel === "A1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A1">
+                <span class="level-code">A1</span>
+                <small>Cơ bản</small>
+                <span class="level-tab-count" id="wCountA1">${countA1}</span>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "A2" ? "active" : ""}" data-level="A2">
-                A2 · Cơ bản <span class="dau-pill-count" id="wCountA2">${countA2}</span>
+              <button class="level-tab ${currentLevel === "A2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A2">
+                <span class="level-code">A2</span>
+                <small>Sơ cấp</small>
+                <span class="level-tab-count" id="wCountA2">${countA2}</span>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "B1" ? "active" : ""}" data-level="B1">
-                B1 · Trung cấp <span class="dau-pill-count" id="wCountB1">${countB1}</span>
+              <button class="level-tab ${currentLevel === "B1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B1">
+                <span class="level-code">B1</span>
+                <small>Trung cấp</small>
+                <span class="level-tab-count" id="wCountB1">${countB1}</span>
+                <i class="level-tab-pro">PRO</i>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "B2" ? "active" : ""}" data-level="B2">
-                B2 · Nâng cao <span class="dau-pill-count" id="wCountB2">${countB2}</span>
+              <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
+                <span class="level-code">B2</span>
+                <small>Trên trung cấp</small>
+                <span class="level-tab-count" id="wCountB2">${countB2}</span>
+                <i class="level-tab-pro">PRO</i>
               </button>
             </div>
-          </div>
-        </div>
 
-        <!-- DAUENGLISH CARDS GRID -->
-        <div class="dau-cards-grid" id="wCardsGrid"></div>
-        <div class="dau-pagination" id="wPagination"></div>
+            <div class="topic-grid" id="wCardsGrid"></div>
+            <div class="dau-pagination" id="wPagination"></div>
+          </div>
+        </section>
       `;
 
-      // Level pills
-      host.querySelectorAll(".dau-level-pill").forEach(btn => {
+      // Level tabs
+      host.querySelectorAll(".level-tab").forEach(btn => {
         btn.onclick = () => {
           currentLevel = btn.dataset.level;
           currentPage = 1;
@@ -4571,12 +4792,26 @@ function initMockTestPage() {
     const cB1 = el("#trkiCountB1"); if (cB1) cB1.textContent = countB1;
     const cB2 = el("#trkiCountB2"); if (cB2) cB2.textContent = countB2;
 
-    // Update active class on level pills
-    host.querySelectorAll(".dau-level-pill").forEach(b => {
-      b.classList.toggle("active", b.dataset.level === currentLevel);
+    // Update active class on level tabs
+    host.querySelectorAll(".level-tab").forEach(b => {
+      const isActive = b.dataset.level === currentLevel;
+      b.classList.toggle("level-tab-active", isActive);
+      b.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
     const filtered = bank.filter(t => t.level === currentLevel);
+
+    const doneCount = filtered.filter(t => Progress.doneList("trkiDone").includes(t.id)).length;
+    const totalCount = filtered.length;
+    const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+
+    const ringPct = el("#trkiRingPct"); if (ringPct) ringPct.textContent = `${pct}%`;
+    const ringLevel = el("#trkiRingLevel"); if (ringLevel) ringLevel.textContent = currentLevel;
+    const summaryText = el("#trkiSummaryText");
+    if (summaryText) summaryText.textContent = `Đã hoàn thành ${doneCount} / ${totalCount} đề thi (${currentLevel})`;
+    const summaryBar = el("#trkiSummaryBar"); if (summaryBar) summaryBar.style.width = `${pct}%`;
+    const summaryRing = el("#trkiSummaryRing");
+    if (summaryRing) summaryRing.style.background = `conic-gradient(#ef6572 ${pct * 3.6}deg, rgba(255, 255, 255, 0.15) 0deg)`;
 
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
@@ -4587,56 +4822,71 @@ function initMockTestPage() {
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
-        <div class="dau-empty-state">
-          <div class="dau-empty-icon">${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 48 }) : ""}</div>
-          <h3>Chưa có đề thi cho cấp độ này</h3>
-          <p>Vui lòng chọn cấp độ khác để tiếp tục luyện thi.</p>
+        <div class="topic-empty-state" style="grid-column:1/-1;text-align:center;padding:48px 24px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.18);border-radius:20px;color:#fff">
+          <div style="margin-bottom:12px;color:#8dbcef">${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 48 }) : ""}</div>
+          <h3 style="margin:0 0 8px;color:#fff;font-size:1.2rem">Chưa có đề thi cho cấp độ này</h3>
+          <p style="color:#8094a9;font-size:0.9rem;margin:0">Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
         </div>
       `;
     } else {
-      gridHost.innerHTML = pageItems.map(t => {
-        const badgeClass = t.level === "A1" ? "dau-badge-a1" : t.level === "A2" ? "dau-badge-a2" : t.level === "B1" ? "dau-badge-b1" : "dau-badge-b2";
-        const best = STORE.get("bestTest_" + t.id, null);
+      gridHost.innerHTML = pageItems.map((t, idx) => {
+        const isDone = Progress.doneList("trkiDone").includes(t.id);
         const isPro = t.is_pro_only || t.level === "B1" || t.level === "B2";
+        const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
+        const indexStr = String((currentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, "0");
+        const russianCategory = `ТРКИ · ${t.level}`;
+        const qCount = t.questionsCount || (t.questions ? t.questions.length : 15);
+        const durMin = Math.round((t.durationSeconds || 1800) / 60);
+
         return `
-          <div class="dau-card dau-card-compact" data-trki-id="${t.id}">
-            <div class="dau-card-header">
-              <div class="dau-card-icon ${t.level === "A2" ? "warm" : t.level === "B1" ? "" : t.level === "B2" ? "purple" : "green"}">
-                ${window.RusiIcons ? RusiIcons.get(t.icon || "graduation-cap", { size: 26 }) : ""}
-              </div>
-              <div class="dau-card-header-main">
-                <div class="dau-card-title-row">
-                  <h3 class="dau-card-ru ru">${esc(t.title)}</h3>
-                  ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO</span>` : ""}
-                </div>
-                ${t.levelName ? `<div class="dau-card-vi">${esc(t.levelName)}</div>` : ""}
-                <div class="dau-card-subinfo">
-                  <span class="dau-badge ${badgeClass}">${esc(t.level)}</span>
-                  <span class="dau-card-sep">|</span>
-                  <span class="dau-card-count">${t.questionsCount || 15} câu</span>
-                </div>
-              </div>
+          <article class="topic-card dau-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-trki-id="${t.id}">
+            <div class="topic-card-top">
+              <span class="topic-number">${indexStr}</span>
+              ${isDone ? `
+                <span class="topic-status topic-status-completed">
+                  ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
+                </span>
+              ` : isPro ? `
+                <span class="topic-status topic-status-pro">PRO</span>
+              ` : `
+                <span class="topic-status topic-status-level">${t.level}</span>
+              `}
             </div>
 
-            <div class="dau-card-footer">
-              <span class="dau-status-pill ${best >= t.passPercent ? "done" : best !== null ? "best" : ""}">
-                ${best !== null ? `${window.RusiIcons ? RusiIcons.get("trophy-reward", { size: 14 }) : ""} Kỷ lục: ${best}%` : `${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Chưa thi`}
-              </span>
-              <button type="button" class="btn btn-primary btn-sm dau-card-cta">
-                Vào phòng thi →
-              </button>
+            <span class="topic-icon">
+              ${window.RusiIcons ? RusiIcons.get(t.icon || "graduation-cap", { size: 24 }) : ""}
+            </span>
+
+            <span class="topic-russian">${esc(russianCategory)}</span>
+
+            <h3 class="topic-title">${esc(t.title)}</h3>
+
+            <p class="topic-desc">${t.levelName ? esc(t.levelName) + ' · ' : ''}${qCount} câu hỏi · ${durMin} phút</p>
+
+            <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
+              <span style="width: ${isDone ? 100 : 0}%"></span>
             </div>
-          </div>
+
+            <div class="topic-footer">
+              <span>${isDone ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng thi thử"}</span>
+              <div class="topic-footer-actions">
+                <button type="button" class="topic-circle-btn dau-card-cta" title="Vào thi thử">
+                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
+                </button>
+              </div>
+            </div>
+          </article>
         `;
       }).join("");
 
-      gridHost.querySelectorAll(".dau-card").forEach(card => {
+      gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
         card.onclick = () => {
           const id = card.dataset.trkiId;
-          const test = bank.find(t => t.id === id);
+          const test = bank.find(x => x.id === id);
+          if (!test) return;
           const isPro = test.is_pro_only || test.level === "B1" || test.level === "B2";
           if (isPro && !Monetization.isPro()) {
-            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
+            Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
             return;
           }
           currentTest = test;
@@ -4648,7 +4898,7 @@ function initMockTestPage() {
     renderDauPagination(el("#trkiPagination"), currentPage, totalPages, (newPage) => {
       currentPage = newPage;
       renderTrkiCards();
-      const topEl = el("#trkiFilterBar") || host;
+      const topEl = el("#trkiSection") || host;
       if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   };
@@ -4668,36 +4918,64 @@ function initMockTestPage() {
     const countB1 = bank.filter(t => t.level === "B1").length;
     const countB2 = bank.filter(t => t.level === "B2").length;
 
-    let filterBar = host.querySelector("#trkiFilterBar");
-    if (!filterBar) {
+    let section = host.querySelector("#trkiSection");
+    if (!section) {
       host.innerHTML = `
-        <!-- DAUENGLISH SMART FILTER BAR -->
-        <div class="dau-filter-bar" id="trkiFilterBar">
-          <div class="dau-level-pills-wrap">
-            <div class="dau-level-pills">
-              <button type="button" class="dau-level-pill ${currentLevel === "A1" ? "active" : ""}" data-level="A1">
-                A1 · ТЭУ <span class="dau-pill-count" id="trkiCountA1">${countA1}</span>
+        <section class="vocabulary-section rusi-topic-section" id="trkiSection">
+          <div class="vocabulary-inner">
+            <div class="vocabulary-heading">
+              <div>
+                <span class="section-kicker-dark">PHÒNG THI MÔ PHỎNG</span>
+                <h2>Format quốc tế.<br />Chấm điểm chuẩn CEFR.</h2>
+              </div>
+              <div class="vocabulary-summary" id="trkiSummaryCard">
+                <div class="summary-ring" id="trkiSummaryRing">
+                  <div class="summary-ring-inner">
+                    <strong id="trkiRingPct">0%</strong>
+                    <span id="trkiRingLevel">A1</span>
+                  </div>
+                </div>
+                <div>
+                  <strong>Tiến độ của bạn</strong>
+                  <p id="trkiSummaryText">Đang tải dữ liệu tiến độ...</p>
+                  <div class="summary-bar"><span id="trkiSummaryBar" style="width:0%"></span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="level-tabs" role="tablist" aria-label="Chọn cấp độ thi TRKI" id="trkiLevelTabs">
+              <button class="level-tab ${currentLevel === "A1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A1">
+                <span class="level-code">A1</span>
+                <small>ТЭУ</small>
+                <span class="level-tab-count" id="trkiCountA1">${countA1}</span>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "A2" ? "active" : ""}" data-level="A2">
-                A2 · ТБУ <span class="dau-pill-count" id="trkiCountA2">${countA2}</span>
+              <button class="level-tab ${currentLevel === "A2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A2">
+                <span class="level-code">A2</span>
+                <small>ТБУ</small>
+                <span class="level-tab-count" id="trkiCountA2">${countA2}</span>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "B1" ? "active" : ""}" data-level="B1">
-                B1 · TRKI-1 <span class="dau-pill-count" id="trkiCountB1">${countB1}</span>
+              <button class="level-tab ${currentLevel === "B1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B1">
+                <span class="level-code">B1</span>
+                <small>TRKI-1</small>
+                <span class="level-tab-count" id="trkiCountB1">${countB1}</span>
+                <i class="level-tab-pro">PRO</i>
               </button>
-              <button type="button" class="dau-level-pill ${currentLevel === "B2" ? "active" : ""}" data-level="B2">
-                B2 · TRKI-2 <span class="dau-pill-count" id="trkiCountB2">${countB2}</span>
+              <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
+                <span class="level-code">B2</span>
+                <small>TRKI-2</small>
+                <span class="level-tab-count" id="trkiCountB2">${countB2}</span>
+                <i class="level-tab-pro">PRO</i>
               </button>
             </div>
-          </div>
-        </div>
 
-        <!-- DAUENGLISH CARDS GRID -->
-        <div class="dau-cards-grid" id="trkiCardsGrid"></div>
-        <div class="dau-pagination" id="trkiPagination"></div>
+            <div class="topic-grid" id="trkiCardsGrid"></div>
+            <div class="dau-pagination" id="trkiPagination"></div>
+          </div>
+        </section>
       `;
 
-      // Level pills
-      host.querySelectorAll(".dau-level-pill").forEach(btn => {
+      // Level tabs
+      host.querySelectorAll(".level-tab").forEach(btn => {
         btn.onclick = () => {
           currentLevel = btn.dataset.level;
           currentPage = 1;
