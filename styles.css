@@ -15499,3 +15499,235 @@ svg.rusi-icon {
     padding: 18px;
   }
 }
+
+/* =====================================================================
+ * DARK RUSSIAN NAVY FULL PAGE THEME
+ * Applied to: vocabulary, listening, speaking, writing, mock-test
+ * ===================================================================== */
+body[data-page="vocabulary"],
+body[data-page="listening"],
+body[data-page="speaking"],
+body[data-page="writing"],
+body[data-page="mock-test"] {
+  --bg: #0c1f38;
+  --header-bg: rgba(12, 31, 56, 0.88);
+  --border: rgba(255, 255, 255, 0.12);
+  --text: #ffffff;
+  --muted: #8fa4bb;
+  --nav-link-color: #d0e0f0;
+  background: radial-gradient(circle at 85% 10%, rgba(23, 87, 166, 0.45), rgba(0, 0, 0, 0) 40%),
+              linear-gradient(145deg, #102a4c 0%, #08192d 72%) fixed !important;
+  color: #ffffff;
+  min-height: 100vh;
+}
+
+body[data-page="vocabulary"] .header,
+body[data-page="listening"] .header,
+body[data-page="speaking"] .header,
+body[data-page="writing"] .header,
+body[data-page="mock-test"] .header {
+  background: rgba(12, 31, 56, 0.88);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+body[data-page="vocabulary"] .brand,
+body[data-page="listening"] .brand,
+body[data-page="speaking"] .brand,
+body[data-page="writing"] .brand,
+body[data-page="mock-test"] .brand {
+  color: #ffffff;
+}
+
+body[data-page="vocabulary"] .nav-link,
+body[data-page="listening"] .nav-link,
+body[data-page="speaking"] .nav-link,
+body[data-page="writing"] .nav-link,
+body[data-page="mock-test"] .nav-link {
+  color: #c4d7ed;
+}
+
+body[data-page="vocabulary"] .nav-link:hover,
+body[data-page="listening"] .nav-link:hover,
+body[data-page="speaking"] .nav-link:hover,
+body[data-page="writing"] .nav-link:hover,
+body[data-page="mock-test"] .nav-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+body[data-page="vocabulary"] .nav-link.active,
+body[data-page="listening"] .nav-link.active,
+body[data-page="speaking"] .nav-link.active,
+body[data-page="writing"] .nav-link.active,
+body[data-page="mock-test"] .nav-link.active {
+  color: #ffffff;
+  background: var(--russia-red, #c52233);
+}
+
+body[data-page="vocabulary"] .nav-dropdown-trigger,
+body[data-page="listening"] .nav-dropdown-trigger,
+body[data-page="speaking"] .nav-dropdown-trigger,
+body[data-page="writing"] .nav-dropdown-trigger,
+body[data-page="mock-test"] .nav-dropdown-trigger {
+  color: #c4d7ed;
+}
+
+body[data-page="vocabulary"] .nav-dropdown-menu,
+body[data-page="listening"] .nav-dropdown-menu,
+body[data-page="speaking"] .nav-dropdown-menu,
+body[data-page="writing"] .nav-dropdown-menu,
+body[data-page="mock-test"] .nav-dropdown-menu {
+  background: #102a4c;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+body[data-page="vocabulary"] .nav-dropdown-item,
+body[data-page="listening"] .nav-dropdown-item,
+body[data-page="speaking"] .nav-dropdown-item,
+body[data-page="writing"] .nav-dropdown-item,
+body[data-page="mock-test"] .nav-dropdown-item {
+  color: #c4d7ed;
+}
+
+body[data-page="vocabulary"] .nav-dropdown-item:hover,
+body[data-page="listening"] .nav-dropdown-item:hover,
+body[data-page="speaking"] .nav-dropdown-item:hover,
+body[data-page="writing"] .nav-dropdown-item:hover,
+body[data-page="mock-test"] .nav-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+body[data-page="vocabulary"] .hamburger span,
+body[data-page="listening"] .hamburger span,
+body[data-page="speaking"] .hamburger span,
+body[data-page="writing"] .hamburger span,
+body[data-page="mock-test"] .hamburger span {
+  background: #ffffff;
+}
+
+/* Hide duplicate white page-hero on dark learning pages */
+body[data-page="vocabulary"] .page-hero,
+body[data-page="listening"] .page-hero,
+body[data-page="speaking"] .page-hero,
+body[data-page="writing"] .page-hero,
+body[data-page="mock-test"] .page-hero {
+  display: none !important;
+}
+
+body[data-page="vocabulary"] .footer,
+body[data-page="listening"] .footer,
+body[data-page="speaking"] .footer,
+body[data-page="writing"] .footer,
+body[data-page="mock-test"] .footer {
+  background: rgba(8, 25, 45, 0.98);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8fa4bb;
+}
+
+body[data-page="vocabulary"] .footer a,
+body[data-page="listening"] .footer a,
+body[data-page="speaking"] .footer a,
+body[data-page="writing"] .footer a,
+body[data-page="mock-test"] .footer a {
+  color: #c4d7ed;
+}
+
+/* Sidebar dark glass styling on vocabulary page */
+body[data-page="vocabulary"] .voc-sidebar-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+}
+
+body[data-page="vocabulary"] .voc-sidebar-title {
+  color: #ffffff;
+}
+
+body[data-page="vocabulary"] .voc-stat-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+body[data-page="vocabulary"] .voc-stat-lbl {
+  color: #8fa4bb;
+}
+
+body[data-page="vocabulary"] .voc-custom-item {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+}
+
+body[data-page="vocabulary"] .voc-custom-name {
+  color: #ffffff;
+}
+
+body[data-page="vocabulary"] .voc-custom-count {
+  color: #8fa4bb;
+}
+
+/* Full Page Shelf seamless background */
+.vocabulary-section,
+.rusi-topic-section {
+  color: #ffffff;
+  background: transparent !important;
+  border-radius: 0;
+  padding: 32px 0 24px;
+  margin-bottom: 0;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.vocabulary-heading {
+  display: block;
+  margin-bottom: 24px;
+}
+
+.page-title-box {
+  text-align: left;
+}
+
+.page-main-hero-title {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: clamp(26px, 4.2vw, 44px);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -1.2px;
+  color: #ffffff;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.page-main-hero-title span {
+  display: block;
+  font-size: clamp(15px, 2.2vw, 22px);
+  font-weight: 600;
+  color: #8dbcef;
+  letter-spacing: normal;
+  text-transform: none;
+  margin-top: 8px;
+}
+
+body[data-page="vocabulary"] main.container,
+body[data-page="listening"] main.container,
+body[data-page="speaking"] main.container,
+body[data-page="writing"] main.container,
+body[data-page="mock-test"] main.container {
+  padding-top: 36px;
+}
+
+@media (max-width: 768px) {
+  body[data-page="vocabulary"] main.container,
+  body[data-page="listening"] main.container,
+  body[data-page="speaking"] main.container,
+  body[data-page="writing"] main.container,
+  body[data-page="mock-test"] main.container {
+    padding-top: 24px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}

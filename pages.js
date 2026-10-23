@@ -1948,14 +1948,6 @@ function initVocabPage() {
     const totalCount = filtered.length;
     const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
-    const ringPct = el("#vocabRingPct"); if (ringPct) ringPct.textContent = `${pct}%`;
-    const ringLevel = el("#vocabRingLevel"); if (ringLevel) ringLevel.textContent = currentLevel;
-    const summaryText = el("#vocabSummaryText");
-    if (summaryText) summaryText.textContent = `Đã thành thạo ${doneCount} / ${totalCount} chủ đề (${currentLevel})`;
-    const summaryBar = el("#vocabSummaryBar"); if (summaryBar) summaryBar.style.width = `${pct}%`;
-    const summaryRing = el("#vocabSummaryRing");
-    if (summaryRing) summaryRing.style.background = `conic-gradient(#ef6572 ${pct * 3.6}deg, rgba(255, 255, 255, 0.15) 0deg)`;
-
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
@@ -2092,22 +2084,11 @@ function initVocabPage() {
         <section class="vocabulary-section" id="vocabSection">
           <div class="vocabulary-inner">
             <div class="vocabulary-heading">
-              <div>
-                <span class="section-kicker-dark">KHO TỪ VỰNG</span>
-                <h2>Học theo chủ đề.<br />Nhớ theo ngữ cảnh.</h2>
-              </div>
-              <div class="vocabulary-summary" id="vocabSummaryCard">
-                <div class="summary-ring" id="vocabSummaryRing">
-                  <div class="summary-ring-inner">
-                    <strong id="vocabRingPct">0%</strong>
-                    <span id="vocabRingLevel">A1</span>
-                  </div>
-                </div>
-                <div>
-                  <strong>Tiến độ của bạn</strong>
-                  <p id="vocabSummaryText">Đang tải dữ liệu tiến độ...</p>
-                  <div class="summary-bar"><span id="vocabSummaryBar" style="width:0%"></span></div>
-                </div>
+              <div class="page-title-box">
+                <h1 class="page-main-hero-title">
+                  CHINH PHỤC 5.000 TỪ TIẾNG NGA<br />
+                  <span>theo Chủ Đề &amp; Chuỗi Hành Động</span>
+                </h1>
               </div>
             </div>
 
@@ -2663,14 +2644,6 @@ function initListeningPage() {
     const totalCount = filtered.length;
     const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
-    const ringPct = el("#lisRingPct"); if (ringPct) ringPct.textContent = `${pct}%`;
-    const ringLevel = el("#lisRingLevel"); if (ringLevel) ringLevel.textContent = currentLevel;
-    const summaryText = el("#lisSummaryText");
-    if (summaryText) summaryText.textContent = `Đã hoàn thành ${doneCount} / ${totalCount} bài nghe (${currentLevel})`;
-    const summaryBar = el("#lisSummaryBar"); if (summaryBar) summaryBar.style.width = `${pct}%`;
-    const summaryRing = el("#lisSummaryRing");
-    if (summaryRing) summaryRing.style.background = `conic-gradient(#ef6572 ${pct * 3.6}deg, rgba(255, 255, 255, 0.15) 0deg)`;
-
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
@@ -2774,22 +2747,11 @@ function initListeningPage() {
         <section class="vocabulary-section rusi-topic-section" id="lisSection">
           <div class="vocabulary-inner">
             <div class="vocabulary-heading">
-              <div>
-                <span class="section-kicker-dark">LUYỆN NGHE HIỂU</span>
-                <h2>Giọng đọc chuẩn Nga.<br />Nghe chép chính tả.</h2>
-              </div>
-              <div class="vocabulary-summary" id="lisSummaryCard">
-                <div class="summary-ring" id="lisSummaryRing">
-                  <div class="summary-ring-inner">
-                    <strong id="lisRingPct">0%</strong>
-                    <span id="lisRingLevel">A1</span>
-                  </div>
-                </div>
-                <div>
-                  <strong>Tiến độ của bạn</strong>
-                  <p id="lisSummaryText">Đang tải dữ liệu tiến độ...</p>
-                  <div class="summary-bar"><span id="lisSummaryBar" style="width:0%"></span></div>
-                </div>
+              <div class="page-title-box">
+                <h1 class="page-main-hero-title">
+                  CHINH PHỤC KỸ NĂNG NGHE<br />
+                  <span>giọng đọc chuẩn Nga &amp; Video tương tác</span>
+                </h1>
               </div>
             </div>
 
@@ -3940,14 +3902,6 @@ function initSpeakingPage() {
     const totalCount = filtered.length;
     const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
-    const ringPct = el("#spRingPct"); if (ringPct) ringPct.textContent = `${pct}%`;
-    const ringLevel = el("#spRingLevel"); if (ringLevel) ringLevel.textContent = currentLevel;
-    const summaryText = el("#spSummaryText");
-    if (summaryText) summaryText.textContent = `Đã luyện tập ${doneCount} / ${totalCount} bài nói (${currentLevel})`;
-    const summaryBar = el("#spSummaryBar"); if (summaryBar) summaryBar.style.width = `${pct}%`;
-    const summaryRing = el("#spSummaryRing");
-    if (summaryRing) summaryRing.style.background = `conic-gradient(#ef6572 ${pct * 3.6}deg, rgba(255, 255, 255, 0.15) 0deg)`;
-
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
@@ -4048,22 +4002,11 @@ function initSpeakingPage() {
         <section class="vocabulary-section rusi-topic-section" id="spSection">
           <div class="vocabulary-inner">
             <div class="vocabulary-heading">
-              <div>
-                <span class="section-kicker-dark">LUYỆN NÓI SHADOWING</span>
-                <h2>Phản xạ hội thoại.<br />AI sửa phát âm.</h2>
-              </div>
-              <div class="vocabulary-summary" id="spSummaryCard">
-                <div class="summary-ring" id="spSummaryRing">
-                  <div class="summary-ring-inner">
-                    <strong id="spRingPct">0%</strong>
-                    <span id="spRingLevel">A1</span>
-                  </div>
-                </div>
-                <div>
-                  <strong>Tiến độ của bạn</strong>
-                  <p id="spSummaryText">Đang tải dữ liệu tiến độ...</p>
-                  <div class="summary-bar"><span id="spSummaryBar" style="width:0%"></span></div>
-                </div>
+              <div class="page-title-box">
+                <h1 class="page-main-hero-title">
+                  LUYỆN NÓI SHADOWING<br />
+                  <span>phản xạ giao tiếp &amp; AI sửa phát âm</span>
+                </h1>
               </div>
             </div>
 
@@ -4321,14 +4264,6 @@ function initWritingPage() {
     const totalCount = filtered.length;
     const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
-    const ringPct = el("#wRingPct"); if (ringPct) ringPct.textContent = `${pct}%`;
-    const ringLevel = el("#wRingLevel"); if (ringLevel) ringLevel.textContent = currentLevel;
-    const summaryText = el("#wSummaryText");
-    if (summaryText) summaryText.textContent = `Đã làm ${doneCount} / ${totalCount} đề viết (${currentLevel})`;
-    const summaryBar = el("#wSummaryBar"); if (summaryBar) summaryBar.style.width = `${pct}%`;
-    const summaryRing = el("#wSummaryRing");
-    if (summaryRing) summaryRing.style.background = `conic-gradient(#ef6572 ${pct * 3.6}deg, rgba(255, 255, 255, 0.15) 0deg)`;
-
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
@@ -4429,22 +4364,11 @@ function initWritingPage() {
         <section class="vocabulary-section rusi-topic-section" id="wSection">
           <div class="vocabulary-inner">
             <div class="vocabulary-heading">
-              <div>
-                <span class="section-kicker-dark">LUYỆN VIẾT TRKI</span>
-                <h2>Chuẩn form đề thi.<br />AI sửa ngữ pháp.</h2>
-              </div>
-              <div class="vocabulary-summary" id="wSummaryCard">
-                <div class="summary-ring" id="wSummaryRing">
-                  <div class="summary-ring-inner">
-                    <strong id="wRingPct">0%</strong>
-                    <span id="wRingLevel">A1</span>
-                  </div>
-                </div>
-                <div>
-                  <strong>Tiến độ của bạn</strong>
-                  <p id="wSummaryText">Đang tải dữ liệu tiến độ...</p>
-                  <div class="summary-bar"><span id="wSummaryBar" style="width:0%"></span></div>
-                </div>
+              <div class="page-title-box">
+                <h1 class="page-main-hero-title">
+                  LUYỆN VIẾT CHUẨN TRKI<br />
+                  <span>tả tranh, email &amp; AI chữa ngữ pháp</span>
+                </h1>
               </div>
             </div>
 
@@ -4805,14 +4729,6 @@ function initMockTestPage() {
     const totalCount = filtered.length;
     const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
 
-    const ringPct = el("#trkiRingPct"); if (ringPct) ringPct.textContent = `${pct}%`;
-    const ringLevel = el("#trkiRingLevel"); if (ringLevel) ringLevel.textContent = currentLevel;
-    const summaryText = el("#trkiSummaryText");
-    if (summaryText) summaryText.textContent = `Đã hoàn thành ${doneCount} / ${totalCount} đề thi (${currentLevel})`;
-    const summaryBar = el("#trkiSummaryBar"); if (summaryBar) summaryBar.style.width = `${pct}%`;
-    const summaryRing = el("#trkiSummaryRing");
-    if (summaryRing) summaryRing.style.background = `conic-gradient(#ef6572 ${pct * 3.6}deg, rgba(255, 255, 255, 0.15) 0deg)`;
-
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
@@ -4924,22 +4840,11 @@ function initMockTestPage() {
         <section class="vocabulary-section rusi-topic-section" id="trkiSection">
           <div class="vocabulary-inner">
             <div class="vocabulary-heading">
-              <div>
-                <span class="section-kicker-dark">PHÒNG THI MÔ PHỎNG</span>
-                <h2>Format quốc tế.<br />Chấm điểm chuẩn CEFR.</h2>
-              </div>
-              <div class="vocabulary-summary" id="trkiSummaryCard">
-                <div class="summary-ring" id="trkiSummaryRing">
-                  <div class="summary-ring-inner">
-                    <strong id="trkiRingPct">0%</strong>
-                    <span id="trkiRingLevel">A1</span>
-                  </div>
-                </div>
-                <div>
-                  <strong>Tiến độ của bạn</strong>
-                  <p id="trkiSummaryText">Đang tải dữ liệu tiến độ...</p>
-                  <div class="summary-bar"><span id="trkiSummaryBar" style="width:0%"></span></div>
-                </div>
+              <div class="page-title-box">
+                <h1 class="page-main-hero-title">
+                  PHÒNG THI MÔ PHỎNG CHUẨN TRKI<br />
+                  <span>chuẩn CEFR</span>
+                </h1>
               </div>
             </div>
 
