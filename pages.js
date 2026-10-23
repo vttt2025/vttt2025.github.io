@@ -2944,15 +2944,15 @@ function initListeningPage() {
               `}
             </div>
 
-            <span class="topic-icon">
-              ${window.RusiIcons ? RusiIcons.get(l.icon || "headphones", { size: 24 }) : ""}
-            </span>
-
-            <span class="topic-russian">${esc(russianCategory)}</span>
-
-            <h3 class="topic-title">${esc(l.title)}</h3>
-
-            <p class="topic-desc">${l.vi ? esc(l.vi) + ' · ' : ''}${qCount} câu hỏi · Audio chuẩn Nga</p>
+            <div class="topic-card-main">
+              <span class="topic-icon">
+                ${window.RusiIcons ? RusiIcons.get(l.icon || "headphones", { size: 24 }) : ""}
+              </span>
+              <div class="topic-card-text">
+                <h3 class="topic-title">${esc(l.title)}</h3>
+                <p class="topic-desc">${l.vi ? esc(l.vi) + ' · ' : ''}${qCount} câu hỏi · Audio chuẩn Nga</p>
+              </div>
+            </div>
 
             <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
               <span style="width: ${isDone ? 100 : 0}%"></span>
@@ -2961,6 +2961,9 @@ function initListeningPage() {
             <div class="topic-footer">
               <span>${isDone ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng để luyện"}</span>
               <div class="topic-footer-actions">
+                <button type="button" class="btn-listen-action topic-text-btn" data-listen-id="${l.id}" title="Luyện nghe">
+                  ${window.RusiIcons ? RusiIcons.get("headphones", { size: 13 }) : ""} Luyện nghe
+                </button>
                 <button type="button" class="topic-circle-btn dau-card-cta" title="Luyện nghe">
                   ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
                 </button>
@@ -2970,8 +2973,24 @@ function initListeningPage() {
         `;
       }).join("");
 
+      gridHost.querySelectorAll(".btn-listen-action").forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.listenId;
+          const lesson = all.find(x => x.id === id);
+          if (!lesson) return;
+          const isPro = lesson.is_pro_only || lesson.level === "B1" || lesson.level === "B2";
+          if (isPro && !Monetization.isPro()) {
+            Monetization.showProGateModal("Nội dung nghe dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao.");
+            return;
+          }
+          openListeningWorkspace(lesson);
+        };
+      });
+
       gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
-        card.onclick = () => {
+        card.onclick = (e) => {
+          if (e.target.closest("button")) return;
           const id = card.dataset.listenId;
           const lesson = all.find(x => x.id === id);
           if (!lesson) return;
@@ -4201,15 +4220,15 @@ function initSpeakingPage() {
               `}
             </div>
 
-            <span class="topic-icon">
-              ${window.RusiIcons ? RusiIcons.get(s.icon || "mic-speaking", { size: 24 }) : ""}
-            </span>
-
-            <span class="topic-russian">${esc(russianCategory)}</span>
-
-            <h3 class="topic-title">${esc(s.title)}</h3>
-
-            <p class="topic-desc">${s.items.length} mẫu câu · Shadowing & AI chấm điểm</p>
+            <div class="topic-card-main">
+              <span class="topic-icon">
+                ${window.RusiIcons ? RusiIcons.get(s.icon || "mic-speaking", { size: 24 }) : ""}
+              </span>
+              <div class="topic-card-text">
+                <h3 class="topic-title">${esc(s.title)}</h3>
+                <p class="topic-desc">${s.items.length} mẫu câu · Shadowing & AI chấm điểm</p>
+              </div>
+            </div>
 
             <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
               <span style="width: ${isDone ? 100 : 0}%"></span>
@@ -4218,6 +4237,9 @@ function initSpeakingPage() {
             <div class="topic-footer">
               <span>${isDone ? "Đã luyện tập" : isPro ? "Dành cho thành viên" : "Sẵn sàng để nói"}</span>
               <div class="topic-footer-actions">
+                <button type="button" class="btn-speak-action topic-text-btn" data-speak-id="${s.id}" title="Luyện nói">
+                  ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 13 }) : ""} Luyện nói
+                </button>
                 <button type="button" class="topic-circle-btn dau-card-cta" title="Luyện nói">
                   ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
                 </button>
@@ -4227,8 +4249,24 @@ function initSpeakingPage() {
         `;
       }).join("");
 
+      gridHost.querySelectorAll(".btn-speak-action").forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.speakId;
+          const s = all.find(x => x.id === id);
+          if (!s) return;
+          const isPro = s.is_pro_only || s.level === "B1" || s.level === "B2";
+          if (isPro && !Monetization.isPro()) {
+            Monetization.showProGateModal("Nội dung luyện nói dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn.");
+            return;
+          }
+          openSpeakingWorkspace(s);
+        };
+      });
+
       gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
-        card.onclick = () => {
+        card.onclick = (e) => {
+          if (e.target.closest("button")) return;
           const id = card.dataset.speakId;
           const s = all.find(x => x.id === id);
           if (!s) return;
@@ -4563,15 +4601,15 @@ function initWritingPage() {
               `}
             </div>
 
-            <span class="topic-icon">
-              ${window.RusiIcons ? RusiIcons.get(t.icon || "pen-tool", { size: 24 }) : ""}
-            </span>
-
-            <span class="topic-russian">${esc(russianCategory)}</span>
-
-            <h3 class="topic-title">${esc(t.title)}</h3>
-
-            <p class="topic-desc">${t.vi ? esc(t.vi) + ' · ' : ''}Tối thiểu ${t.minWords} từ · Chữa ngữ pháp</p>
+            <div class="topic-card-main">
+              <span class="topic-icon">
+                ${window.RusiIcons ? RusiIcons.get(t.icon || "pen-tool", { size: 24 }) : ""}
+              </span>
+              <div class="topic-card-text">
+                <h3 class="topic-title">${esc(t.title)}</h3>
+                <p class="topic-desc">${t.vi ? esc(t.vi) + ' · ' : ''}Tối thiểu ${t.minWords} từ · Chữa ngữ pháp</p>
+              </div>
+            </div>
 
             <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
               <span style="width: ${isDone ? 100 : 0}%"></span>
@@ -4580,6 +4618,9 @@ function initWritingPage() {
             <div class="topic-footer">
               <span>${isDone ? "Đã nộp bài" : isPro ? "Dành cho thành viên" : "Sẵn sàng làm bài"}</span>
               <div class="topic-footer-actions">
+                <button type="button" class="btn-write-action topic-text-btn" data-write-id="${t.id}" title="Luyện viết">
+                  ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 13 }) : ""} Luyện viết
+                </button>
                 <button type="button" class="topic-circle-btn dau-card-cta" title="Làm bài viết">
                   ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
                 </button>
@@ -4589,8 +4630,24 @@ function initWritingPage() {
         `;
       }).join("");
 
+      gridHost.querySelectorAll(".btn-write-action").forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.writeId;
+          const task = all.find(x => x.id === id);
+          if (!task) return;
+          const isPro = task.is_pro_only || task.level === "B1" || task.level === "B2";
+          if (isPro && !Monetization.isPro()) {
+            Monetization.showProGateModal("Đề luyện viết dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ đề thi viết TRKI chuyên sâu và trợ lý AI chữa ngữ pháp không giới hạn.");
+            return;
+          }
+          openWritingWorkspace(task);
+        };
+      });
+
       gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
         card.onclick = () => {
+          if (e.target.closest("button")) return;
           const id = card.dataset.writeId;
           const task = all.find(x => x.id === id);
           if (!task) return;
@@ -5030,15 +5087,15 @@ function initMockTestPage() {
               `}
             </div>
 
-            <span class="topic-icon">
-              ${window.RusiIcons ? RusiIcons.get(t.icon || "graduation-cap", { size: 24 }) : ""}
-            </span>
-
-            <span class="topic-russian">${esc(russianCategory)}</span>
-
-            <h3 class="topic-title">${esc(t.title)}</h3>
-
-            <p class="topic-desc">${t.levelName ? esc(t.levelName) + ' · ' : ''}${qCount} câu hỏi · ${durMin} phút</p>
+            <div class="topic-card-main">
+              <span class="topic-icon">
+                ${window.RusiIcons ? RusiIcons.get(t.icon || "graduation-cap", { size: 24 }) : ""}
+              </span>
+              <div class="topic-card-text">
+                <h3 class="topic-title">${esc(t.title)}</h3>
+                <p class="topic-desc">${t.levelName ? esc(t.levelName) + ' · ' : ''}${qCount} câu hỏi · ${durMin} phút</p>
+              </div>
+            </div>
 
             <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
               <span style="width: ${isDone ? 100 : 0}%"></span>
@@ -5047,6 +5104,9 @@ function initMockTestPage() {
             <div class="topic-footer">
               <span>${isDone ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng thi thử"}</span>
               <div class="topic-footer-actions">
+                <button type="button" class="btn-trki-action topic-text-btn" data-trki-id="${t.id}" title="Thi thử">
+                  ${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 13 }) : ""} Thi thử
+                </button>
                 <button type="button" class="topic-circle-btn dau-card-cta" title="Vào thi thử">
                   ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
                 </button>
@@ -5056,8 +5116,25 @@ function initMockTestPage() {
         `;
       }).join("");
 
+      gridHost.querySelectorAll(".btn-trki-action").forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.trkiId;
+          const test = bank.find(x => x.id === id);
+          if (!test) return;
+          const isPro = test.is_pro_only || test.level === "B1" || test.level === "B2";
+          if (isPro && !Monetization.isPro()) {
+            Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
+            return;
+          }
+          currentTest = test;
+          startTest();
+        };
+      });
+
       gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
-        card.onclick = () => {
+        card.onclick = (e) => {
+          if (e.target.closest("button")) return;
           const id = card.dataset.trkiId;
           const test = bank.find(x => x.id === id);
           if (!test) return;
