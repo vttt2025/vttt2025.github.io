@@ -14968,10 +14968,10 @@ body[data-page="mock-test"] .header,
 body[data-page="shop"] .header,
 body[data-page="blog"] .header,
 body[data-page="upgrade"] .header {
-  background: rgba(255, 255, 255, 0.94) !important;
+  background: var(--header-bg, rgba(238, 244, 251, 0.88)) !important;
   border-bottom: 1px solid #d2e0f0 !important;
-  backdrop-filter: blur(14px) !important;
-  -webkit-backdrop-filter: blur(14px) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
   box-shadow: 0 2px 14px rgba(16, 42, 76, 0.04) !important;
 }
 
@@ -15008,9 +15008,11 @@ body[data-page="mock-test"] .nav a,
 body[data-page="shop"] .nav a,
 body[data-page="blog"] .nav a,
 body[data-page="upgrade"] .nav a {
-  color: #334155 !important;
-  font-weight: 500;
-  transition: all 0.2s ease;
+  color: var(--nav-link-color, #2c3e55) !important;
+  font-weight: 600;
+  transition: all 0.16s ease;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 body[data-page="vocabulary"] .nav a:hover,
@@ -15021,8 +15023,8 @@ body[data-page="mock-test"] .nav a:hover,
 body[data-page="shop"] .nav a:hover,
 body[data-page="blog"] .nav a:hover,
 body[data-page="upgrade"] .nav a:hover {
-  color: #1757a6 !important;
-  background: #e5effa !important;
+  color: var(--russia-red, #c52233) !important;
+  background: rgba(197, 34, 51, 0.06) !important;
 }
 
 body[data-page="vocabulary"] .nav a.active,
@@ -15033,11 +15035,11 @@ body[data-page="mock-test"] .nav a.active,
 body[data-page="shop"] .nav a.active,
 body[data-page="blog"] .nav a.active,
 body[data-page="upgrade"] .nav a.active {
-  color: #1757a6 !important;
-  background: #e3effc !important;
-  border: 1px solid rgba(23, 87, 166, 0.25) !important;
-  box-shadow: 0 2px 8px rgba(23, 87, 166, 0.08) !important;
+  color: var(--russia-red, #c52233) !important;
+  background: rgba(197, 34, 51, 0.09) !important;
   font-weight: 700 !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
 /* Dropdown More... */
@@ -15049,7 +15051,7 @@ body[data-page="mock-test"] .nav-dropdown-trigger,
 body[data-page="shop"] .nav-dropdown-trigger,
 body[data-page="blog"] .nav-dropdown-trigger,
 body[data-page="upgrade"] .nav-dropdown-trigger {
-  color: #334155 !important;
+  color: var(--nav-link-color, #2c3e55) !important;
 }
 
 body[data-page="vocabulary"] .nav-dropdown-trigger:hover,
@@ -15060,8 +15062,8 @@ body[data-page="mock-test"] .nav-dropdown-trigger:hover,
 body[data-page="shop"] .nav-dropdown-trigger:hover,
 body[data-page="blog"] .nav-dropdown-trigger:hover,
 body[data-page="upgrade"] .nav-dropdown-trigger:hover {
-  color: #1757a6 !important;
-  background: #e5effa !important;
+  color: var(--russia-red, #c52233) !important;
+  background: rgba(197, 34, 51, 0.06) !important;
 }
 
 body[data-page="vocabulary"] .nav-dropdown-menu,
@@ -15097,8 +15099,8 @@ body[data-page="mock-test"] .nav-dropdown-item:hover,
 body[data-page="shop"] .nav-dropdown-item:hover,
 body[data-page="blog"] .nav-dropdown-item:hover,
 body[data-page="upgrade"] .nav-dropdown-item:hover {
-  background: #e5effa !important;
-  color: #1757a6 !important;
+  background: rgba(197, 34, 51, 0.06) !important;
+  color: var(--russia-red, #c52233) !important;
 }
 
 body[data-page="vocabulary"] .nav-dropdown-item.active,
@@ -15109,8 +15111,8 @@ body[data-page="mock-test"] .nav-dropdown-item.active,
 body[data-page="shop"] .nav-dropdown-item.active,
 body[data-page="blog"] .nav-dropdown-item.active,
 body[data-page="upgrade"] .nav-dropdown-item.active {
-  color: #1757a6 !important;
-  background: #e3effc !important;
+  color: var(--russia-red, #c52233) !important;
+  background: rgba(197, 34, 51, 0.09) !important;
   font-weight: 700 !important;
 }
 
@@ -15287,17 +15289,37 @@ body[data-page="upgrade"] .menu-button span {
   background: #0f1f38 !important;
 }
 
-body[data-page="vocabulary"] .header-center,
-body[data-page="listening"] .header-center,
-body[data-page="speaking"] .header-center,
-body[data-page="writing"] .header-center,
-body[data-page="mock-test"] .header-center,
-body[data-page="shop"] .header-center,
-body[data-page="blog"] .header-center,
-body[data-page="upgrade"] .header-center {
-  background: #ffffff !important;
-  border-bottom: 1px solid #d2e0f0 !important;
-  box-shadow: 0 16px 40px rgba(16, 42, 76, 0.12) !important;
+/* Desktop: Seamless header-center without detached box or shadow */
+@media (min-width: 961px) {
+  body[data-page="vocabulary"] .header-center,
+  body[data-page="listening"] .header-center,
+  body[data-page="speaking"] .header-center,
+  body[data-page="writing"] .header-center,
+  body[data-page="mock-test"] .header-center,
+  body[data-page="shop"] .header-center,
+  body[data-page="blog"] .header-center,
+  body[data-page="upgrade"] .header-center {
+    background: transparent !important;
+    border: none !important;
+    border-bottom: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Mobile Drawer: Clean white surface when menu is toggled */
+@media (max-width: 960px) {
+  body[data-page="vocabulary"] .header-center,
+  body[data-page="listening"] .header-center,
+  body[data-page="speaking"] .header-center,
+  body[data-page="writing"] .header-center,
+  body[data-page="mock-test"] .header-center,
+  body[data-page="shop"] .header-center,
+  body[data-page="blog"] .header-center,
+  body[data-page="upgrade"] .header-center {
+    background: #ffffff !important;
+    border-bottom: 1px solid #d2e0f0 !important;
+    box-shadow: 0 16px 40px rgba(16, 42, 76, 0.12) !important;
+  }
 }
 
 /* Footer styling across all bright pages */
