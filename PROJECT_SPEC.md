@@ -28,7 +28,7 @@
 * **Mô hình "Lọ từ vựng" (Thematic Action Clusters)**:
   * Không học từ A-Z mà gom từ theo chuỗi hành động ngữ cảnh sống còn (*Lọ mua sắm Auchan*, *Lọ vali du học*, *Lọ sân bay Sheremetyevo*, *Lọ ký túc xá*...).
   * 18 lọ hệ thống chuẩn A1 - B2 chứa từ vựng cốt lõi kèm trọng âm, chú thích giống (он/она/оно) và ví dụ câu thực tế.
-  * **Thiết kế thẻ lọ nhỏ gọn tối giản (`.dau-card-compact`)**: Hiển thị số lượng từ, cấp độ (A1-B2), gắn huy hiệu `👑 PRO` cho các lọ B1, B2 và lọ chuyên sâu.
+  * **Thiết kế thẻ lọ nhỏ gọn chuẩn mới (`.dau-card-compact`)**: Icon bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số từ` (ví dụ `A1 | 25 từ`), không hiển thị mô tả, phía dưới giữ nguyên 2 nút `[📋 Xem từ (N)]` và `[⚡ Học]`, gắn huy hiệu `👑 PRO` khi cần.
   * **Cấu trúc 2 nút thao tác riêng biệt trên mỗi lọ**:
     1. Nút `[📋 Xem từ (N)]`: Mở ngay giao diện danh sách chi tiết các từ có trong lọ.
     2. Nút `[⚡ Học]`: Khởi động ngay chế độ học Flashcard 3D theo thuật toán SRS.
@@ -55,7 +55,7 @@
   * Tích hợp kho từ điển offline 81.000 từ Nga-Việt và 91.700 từ Việt-Nga.
 
 ### [Module 2] Luyện Viết Tả Tranh (Письмо TRKI)
-* **Giao diện thẻ tối giản (`.dau-card-compact`)**: Nhỏ gọn, hiển thị số từ tối thiểu, thời gian ước tính, huy hiệu `👑 PRO` cho bài B1/B2, kiểm tra quyền PRO khi mở bài.
+* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số từ` (ví dụ `A1 | 40 từ`), không hiển thị mô tả, phía dưới giữ nguyên trạng thái viết và nút CTA `[Bắt đầu viết →]`.
 * **Format chuẩn quốc tế**: Đưa ra 1 hình ảnh hoặc bối cảnh thực tế tại Nga.
 * **Hỗ trợ người học**: Bàn phím ảo Cyrillic, danh sách từ vựng gợi ý cần xuất hiện trong bài.
 * **AI Chấm điểm theo 4 tiêu chí CEFR**:
@@ -66,7 +66,7 @@
 * Bảng đối chiếu chi tiết: `[Câu gốc lỗi] ➔ [Câu sửa chuẩn] ➔ [Giải thích ngữ pháp]`.
 
 ### [Module 3] Luyện Nghe (Nghe Hiểu 4 Part & Video YouTube 1-5 Phút Chuẩn TRKI)
-* **Giao diện thẻ tối giản (`.dau-card-compact`)**: Gắn huy hiệu `👑 PRO` cho các bài học B1/B2, kiểm tra quyền PRO trước khi vào luyện nghe.
+* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 8 câu`), không hiển thị mô tả, phía dưới giữ nguyên trạng thái và nút CTA `[Vào luyện nghe →]`.
 * **Bố cục Shadowing Studio chuẩn DauEnglish (2 Cột Hiện Đại)**:
   * **Cột trái (Video & Luyện câu trọng tâm)**:
     - Khung video YouTube 16:9 bo góc mượt mà kèm lớp phủ phụ đề nổi (`.dau-shadow-sub-overlay`) hiển thị song ngữ câu đang chọn.
@@ -89,12 +89,12 @@
 * **Giao diện tinh gọn**: Nút CTA điều hướng rõ ràng ("Vào luyện nghe →"), loại bỏ biểu tượng rườm rà.
 
 ### [Module 4] Luyện Nói (Shadowing & AI Phân Tích Âm Vị)
-* **Giao diện thẻ tối giản (`.dau-card-compact`)**: Gắn huy hiệu `👑 PRO` cho các chủ đề nâng cao B1/B2, kiểm tra quyền PRO khi truy cập.
+* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 8 câu`), không hiển thị mô tả, phía dưới giữ nguyên kỷ lục điểm và nút CTA `[Luyện nói ngay →]`.
 * **Phương pháp Shadowing**: Nghe mẫu từ người bản xứ, thu âm nhại theo tốc độ, trọng âm và ngữ điệu kèm hiển thị sóng âm trực quan (Audio Waveform).
 * **Phân tích âm vị (Phoneme Matching)**: Phân tích lỗi sai trọng âm và nhầm lẫn phụ âm cứng/mềm (ví dụ: `б - п`, `д - т`, `в - ф`).
 
 ### [Module 5] Luyện Thi TRKI (ТРКИ Exam Simulation)
-* **Giao diện thẻ tối giản (`.dau-card-compact`)**: Gắn huy hiệu `👑 PRO` cho các đề thi nâng cao, kiểm tra quyền PRO trước khi vào phòng thi.
+* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 15 câu`), không hiển thị mô tả, phía dưới giữ nguyên trạng thái kết quả và nút CTA `[Vào phòng thi →]`.
 * **Cấp độ chuẩn**: A1 (ТЭУ), A2 (ТБУ), B1 (ТРКИ-1), B2 (ТРКИ-2).
 * **Phòng thi mô phỏng**: Đồng hồ đếm ngược server-side, tự động thu bài khi hết giờ, giám sát chuyển tab gian lận (`visibilitychange`).
 * **Báo cáo kết quả**: Điểm số TRKI dự đoán, phân tích ngữ pháp chi tiết từng câu sau khi nộp bài.

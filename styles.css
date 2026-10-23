@@ -13002,92 +13002,146 @@ img, video, iframe {
  * COMPACT MINIMALIST CARDS & WORD BOXES & VIDEO LISTENING (MODERN RUSSIAN STYLE)
  * ===================================================================== */
 
-/* --- 1. Compact Modern Russian Card Styles (đồng bộ visual Hub-Card của Trang Chủ) --- */
+/* --- 1. Compact Modern Russian Card Styles (Thẻ Nhỏ Gọn Chuẩn Mới) --- */
 .dau-card.dau-card-compact {
-  padding: 22px 24px;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.92);
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.95);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   border: 1px solid rgba(216, 224, 232, 0.9);
-  box-shadow: 0 4px 20px rgba(16, 42, 76, 0.05);
+  box-shadow: 0 4px 18px rgba(16, 42, 76, 0.05);
   transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.22s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 130px;
 }
 
 .dau-card.dau-card-compact:hover {
-  transform: translateY(-5px);
+  transform: translateY(-4px);
   border-color: rgba(23, 87, 166, 0.45);
-  box-shadow: 0 20px 42px rgba(16, 42, 76, 0.12);
+  box-shadow: 0 16px 36px rgba(16, 42, 76, 0.11);
 }
 
-.dau-card.dau-card-compact .dau-card-top {
-  margin-bottom: 14px;
-}
-
-.dau-card.dau-card-compact .dau-card-icon-wrap {
+.dau-card.dau-card-compact .dau-card-header {
+  display: flex;
+  align-items: flex-start;
   gap: 14px;
-  margin-bottom: 12px;
 }
 
 .dau-card.dau-card-compact .dau-card-icon {
-  width: 50px;
-  height: 50px;
-  font-size: 1.5rem;
-  border-radius: 14px;
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(16, 42, 76, 0.06);
   transition: transform 0.2s ease;
 }
 
 .dau-card.dau-card-compact:hover .dau-card-icon {
-  transform: scale(1.08);
+  transform: scale(1.06);
+}
+
+.dau-card.dau-card-compact .dau-card-header-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.dau-card.dau-card-compact .dau-card-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
 }
 
 .dau-card.dau-card-compact .dau-card-ru {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: 1.18rem !important;
+  font-size: 1.05rem !important;
   font-weight: 800;
   color: var(--russia-navy);
-  margin-bottom: 4px;
+  margin: 0;
   line-height: 1.35;
   letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .dau-card.dau-card-compact .dau-card-vi {
-  font-size: 0.92rem !important;
+  font-size: 0.85rem !important;
   color: #0284c7;
   font-weight: 600;
-  margin-bottom: 6px;
-  line-height: 1.45;
-}
-
-.dau-card.dau-card-compact .dau-card-desc {
-  font-size: 0.88rem;
-  line-height: 1.55;
-  color: #556477;
-  margin-bottom: 12px;
-  -webkit-line-clamp: 2;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
+  margin-top: 3px;
+  margin-bottom: 0;
+  line-height: 1.35;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.dau-card.dau-card-compact .dau-card-meta {
-  padding: 8px 0;
-  gap: 10px;
-  font-size: 0.8rem;
-  border-top: 1px dashed rgba(216, 224, 232, 0.9);
-  margin-top: auto;
-  color: #5b6878;
+.dau-card.dau-card-compact .dau-card-subinfo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.dau-card.dau-card-compact .dau-card-sep {
+  color: #cbd5e1;
+  font-weight: 400;
+  margin: 0 1px;
+}
+
+.dau-card.dau-card-compact .dau-card-count {
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.82rem;
 }
 
 .dau-card.dau-card-compact .dau-card-footer {
   margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(216, 224, 232, 0.85);
+  padding-top: 10px;
+  border-top: 1px solid rgba(216, 224, 232, 0.7);
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+}
+
+/* Dark mode for compact cards */
+[data-theme="dark"] .dau-card.dau-card-compact {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] .dau-card.dau-card-compact .dau-card-ru {
+  color: var(--text);
+}
+
+[data-theme="dark"] .dau-card.dau-card-compact .dau-card-vi {
+  color: #38bdf8;
+}
+
+[data-theme="dark"] .dau-card.dau-card-compact .dau-card-count {
+  color: var(--muted);
+}
+
+[data-theme="dark"] .dau-card.dau-card-compact .dau-card-sep {
+  color: var(--border);
+}
+
+[data-theme="dark"] .dau-card.dau-card-compact .dau-card-footer {
+  border-top-color: var(--border);
 }
 
 .dau-card-actions-2btn {

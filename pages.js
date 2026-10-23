@@ -1964,22 +1964,19 @@ function initVocabPage() {
         const isPro = Boolean(item.is_pro_only);
         return `
           <div class="dau-card dau-card-compact" data-vocab-id="${item.id}" data-kind="jar" data-pro="${isPro}">
-            <div class="dau-card-top">
-              <div class="dau-card-badges">
-                <span class="dau-badge ${badgeClass}">${esc(item.level)}</span>
-                <span class="dau-badge-cat">${window.RusiIcons ? RusiIcons.get("file-text", { size: 13 }) : ""} ${item.wordsCount} từ</span>
+            <div class="dau-card-header">
+              <div class="dau-card-icon ${item.level === "A2" ? "warm" : item.level === "B1" ? "" : item.level === "B2" ? "purple" : "green"}">
+                ${window.RusiIcons ? RusiIcons.get(item.icon || "archive-jar", { size: 26 }) : ""}
               </div>
-              ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} PRO</span>` : ""}
-            </div>
-
-            <div class="dau-card-body">
-              <div class="dau-card-icon-wrap">
-                <div class="dau-card-icon ${item.level === "A2" ? "warm" : item.level === "B1" ? "" : item.level === "B2" ? "purple" : "green"}">
-                  ${window.RusiIcons ? RusiIcons.get(item.icon || "archive-jar", { size: 30 }) : ""}
-                </div>
-                <div style="flex:1;min-width:0">
+              <div class="dau-card-header-main">
+                <div class="dau-card-title-row">
                   <h3 class="dau-card-ru ru">${esc(item.title)}</h3>
-                  <div class="dau-card-vi">${esc(item.desc || "Lọ từ vựng tình huống")}</div>
+                  ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO</span>` : ""}
+                </div>
+                <div class="dau-card-subinfo">
+                  <span class="dau-badge ${badgeClass}">${esc(item.level)}</span>
+                  <span class="dau-card-sep">|</span>
+                  <span class="dau-card-count">${item.wordsCount} từ</span>
                 </div>
               </div>
             </div>
@@ -2623,33 +2620,22 @@ function initListeningPage() {
         const isPro = l.is_pro_only || l.level === "B1" || l.level === "B2";
         return `
           <div class="dau-card dau-card-compact" data-listen-id="${l.id}">
-            <div class="dau-card-top">
-              <div class="dau-card-badges">
-                <span class="dau-badge ${badgeClass}">${esc(l.level)}</span>
-                <span class="dau-badge-cat">Part ${l.partNumber || 1} · ${esc(l.categoryName || "Hội thoại")}</span>
+            <div class="dau-card-header">
+              <div class="dau-card-icon ${l.level === "A2" ? "warm" : l.level === "B1" ? "" : l.level === "B2" ? "purple" : "green"}">
+                ${window.RusiIcons ? RusiIcons.get(l.icon || "headphones", { size: 26 }) : ""}
               </div>
-              ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} PRO</span>` : ""}
-            </div>
-
-            <div class="dau-card-body">
-              <div class="dau-card-icon-wrap">
-                <div class="dau-card-icon ${l.level === "A2" ? "warm" : l.level === "B1" ? "" : l.level === "B2" ? "purple" : "green"}">
-                  ${window.RusiIcons ? RusiIcons.get(l.icon || "headphones", { size: 30 }) : ""}
-                </div>
-                <div>
+              <div class="dau-card-header-main">
+                <div class="dau-card-title-row">
                   <h3 class="dau-card-ru ru">${esc(l.title)}</h3>
-                  <div class="dau-card-vi">${esc(l.vi)}</div>
+                  ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO</span>` : ""}
+                </div>
+                ${l.vi ? `<div class="dau-card-vi">${esc(l.vi)}</div>` : ""}
+                <div class="dau-card-subinfo">
+                  <span class="dau-badge ${badgeClass}">${esc(l.level)}</span>
+                  <span class="dau-card-sep">|</span>
+                  <span class="dau-card-count">${(l.questions && l.questions.length) ? l.questions.length : (l.script && l.script.length) ? l.script.length : 5} câu</span>
                 </div>
               </div>
-              <div class="dau-card-desc">
-                Luyện nghe thoại trực quan với giọng đọc chuẩn Moscow. Gồm 5 chế độ: Video 1-5 phút, Nghe Full, Điền từ, Chính tả & Trắc nghiệm.
-              </div>
-            </div>
-
-            <div class="dau-card-meta">
-              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} <b>${l.estMinutes || 15}</b> phút</span>
-              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("film", { size: 14 }) : ""} Video 1-5p</span>
-              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("help-circle", { size: 14 }) : ""} <b>${(l.questions || []).length}</b> câu hỏi</span>
             </div>
 
             <div class="dau-card-footer">
@@ -3859,31 +3845,21 @@ function initSpeakingPage() {
         });
         return `
           <div class="dau-card dau-card-compact" data-speak-id="${s.id}">
-            <div class="dau-card-top">
-              <div class="dau-card-badges">
-                <span class="dau-badge ${badgeClass}">${esc(s.level)}</span>
-                <span class="dau-badge-cat">${esc(s.categoryName || "Giao tiếp")}</span>
+            <div class="dau-card-header">
+              <div class="dau-card-icon ${s.level === "A2" ? "warm" : s.level === "B1" ? "" : s.level === "B2" ? "purple" : "green"}">
+                ${window.RusiIcons ? RusiIcons.get(s.icon || "mic-speaking", { size: 26 }) : ""}
               </div>
-              ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} PRO</span>` : ""}
-            </div>
-
-            <div class="dau-card-body">
-              <div class="dau-card-icon-wrap">
-                <div class="dau-card-icon ${s.level === "A2" ? "warm" : s.level === "B1" ? "" : s.level === "B2" ? "purple" : "green"}">
-                  ${window.RusiIcons ? RusiIcons.get(s.icon || "mic-speaking", { size: 30 }) : ""}
-                </div>
-                <div>
+              <div class="dau-card-header-main">
+                <div class="dau-card-title-row">
                   <h3 class="dau-card-ru ru">${esc(s.title)}</h3>
-                  <div class="dau-card-vi">${s.items.length} mẫu câu giao tiếp bản xứ</div>
+                  ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO</span>` : ""}
+                </div>
+                <div class="dau-card-subinfo">
+                  <span class="dau-badge ${badgeClass}">${esc(s.level)}</span>
+                  <span class="dau-card-sep">|</span>
+                  <span class="dau-card-count">${s.items.length} câu</span>
                 </div>
               </div>
-              <div class="dau-card-desc">${esc(s.phonemeTarget || "Luyện ngữ điệu, trọng âm chuẩn và nối âm tiếng Nga.")}</div>
-            </div>
-
-            <div class="dau-card-meta">
-              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 14 }) : ""} <b>${s.items.length}</b> câu mẫu</span>
-              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("bot-rusika", { size: 14 }) : ""} AI âm vị</span>
-              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("waveform-audio", { size: 14 }) : ""} Waveform</span>
             </div>
 
             <div class="dau-card-footer">
@@ -4195,31 +4171,22 @@ function initWritingPage() {
         const isPro = t.is_pro_only || t.level === "B1" || t.level === "B2";
         return `
           <div class="dau-card dau-card-compact" data-write-id="${t.id}">
-            <div class="dau-card-top">
-              <div class="dau-card-badges">
-                <span class="dau-badge ${badgeClass}">${esc(t.level)}</span>
-                <span class="dau-badge-cat">${esc(t.categoryName || "Tự luận")}</span>
+            <div class="dau-card-header">
+              <div class="dau-card-icon ${t.level === "A2" ? "warm" : t.level === "B1" ? "" : t.level === "B2" ? "purple" : "green"}">
+                ${window.RusiIcons ? RusiIcons.get(t.icon || "pen-tool", { size: 26 }) : ""}
               </div>
-              ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} PRO</span>` : ""}
-            </div>
-
-            <div class="dau-card-body">
-              <div class="dau-card-icon-wrap">
-                <div class="dau-card-icon ${t.level === "A2" ? "warm" : t.level === "B1" ? "" : t.level === "B2" ? "purple" : "green"}">
-                  ${window.RusiIcons ? RusiIcons.get(t.icon || "pen-tool", { size: 30 }) : ""}
-                </div>
-                <div>
+              <div class="dau-card-header-main">
+                <div class="dau-card-title-row">
                   <h3 class="dau-card-ru ru">${esc(t.title)}</h3>
-                  <div class="dau-card-vi">${esc(t.vi)}</div>
+                  ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO</span>` : ""}
+                </div>
+                ${t.vi ? `<div class="dau-card-vi">${esc(t.vi)}</div>` : ""}
+                <div class="dau-card-subinfo">
+                  <span class="dau-badge ${badgeClass}">${esc(t.level)}</span>
+                  <span class="dau-card-sep">|</span>
+                  <span class="dau-card-count">${t.minWords} từ</span>
                 </div>
               </div>
-              <div class="dau-card-desc">${esc(t.prompt)}</div>
-            </div>
-
-            <div class="dau-card-meta">
-              <span class="dau-meta-pill" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 14 }) : ""} Tối thiểu <b>${t.minWords}</b> từ</span>
-              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} <b>${t.estMinutes || 20}</b> phút</span>
-              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("bot-rusika", { size: 14 }) : ""} AI 4 tiêu chí</span>
             </div>
 
             <div class="dau-card-footer">
@@ -4633,31 +4600,22 @@ function initMockTestPage() {
         const isPro = t.is_pro_only || t.level === "B1" || t.level === "B2";
         return `
           <div class="dau-card dau-card-compact" data-trki-id="${t.id}">
-            <div class="dau-card-top">
-              <div class="dau-card-badges">
-                <span class="dau-badge ${badgeClass}">${esc(t.level)}</span>
-                <span class="dau-badge-cat">${esc(t.categoryName || "Đề thi")}</span>
+            <div class="dau-card-header">
+              <div class="dau-card-icon ${t.level === "A2" ? "warm" : t.level === "B1" ? "" : t.level === "B2" ? "purple" : "green"}">
+                ${window.RusiIcons ? RusiIcons.get(t.icon || "graduation-cap", { size: 26 }) : ""}
               </div>
-              ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} PRO</span>` : ""}
-            </div>
-
-            <div class="dau-card-body">
-              <div class="dau-card-icon-wrap">
-                <div class="dau-card-icon ${t.level === "A2" ? "warm" : t.level === "B1" ? "" : t.level === "B2" ? "purple" : "green"}">
-                  ${window.RusiIcons ? RusiIcons.get(t.icon || "graduation-cap", { size: 30 }) : ""}
-                </div>
-                <div>
+              <div class="dau-card-header-main">
+                <div class="dau-card-title-row">
                   <h3 class="dau-card-ru ru">${esc(t.title)}</h3>
-                  <div class="dau-card-vi">${esc(t.levelName || "")}</div>
+                  ${isPro ? `<span class="dau-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO</span>` : ""}
+                </div>
+                ${t.levelName ? `<div class="dau-card-vi">${esc(t.levelName)}</div>` : ""}
+                <div class="dau-card-subinfo">
+                  <span class="dau-badge ${badgeClass}">${esc(t.level)}</span>
+                  <span class="dau-card-sep">|</span>
+                  <span class="dau-card-count">${t.questionsCount || 15} câu</span>
                 </div>
               </div>
-              <div class="dau-card-desc">${esc(t.desc || "Mô phỏng đầy đủ cấu trúc phòng thi TRKI theo tiêu chuẩn khảo thí quốc tế.")}</div>
-            </div>
-
-            <div class="dau-card-meta">
-              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} <b>${t.durationMin}</b> phút</span>
-              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("help-circle", { size: 14 }) : ""} <b>${t.questionsCount || 15}</b> câu hỏi</span>
-              <span class="dau-meta-pill">${window.RusiIcons ? RusiIcons.get("target", { size: 14 }) : ""} Đạt từ <b>${t.passPercent}%</b></span>
             </div>
 
             <div class="dau-card-footer">
