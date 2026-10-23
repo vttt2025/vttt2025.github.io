@@ -7729,14 +7729,18 @@ body.rusika-chat-open .rusika-floating-widget {
 .hub-card-trki:hover {
   box-shadow: 0 24px 50px rgba(197, 34, 51, 0.3);
 }
-.hub-card-blog,
-.hub-card-shop {
-  background: #eaf1f8;
+.hub-card-blog {
+  background: linear-gradient(180deg, #ffffff 0%, #f0f7ff 100%);
+  border-color: rgba(23, 87, 166, 0.22);
+}
+.hub-card-blog .hub-icon {
+  background: rgba(23, 87, 166, 0.1);
+  color: var(--russia-blue);
 }
 .hub-card-shop {
   color: #fff;
-  border-color: var(--russia-navy);
-  background: var(--russia-navy);
+  border-color: rgba(255, 255, 255, 0.18);
+  background: radial-gradient(circle at 90% 0%, rgba(255, 255, 255, 0.15), transparent 40%), var(--russia-navy);
 }
 .hub-index {
   color: #9aa6b3;
@@ -15502,109 +15506,381 @@ svg.rusi-icon {
 
 /* =====================================================================
  * DARK RUSSIAN NAVY FULL PAGE THEME
- * Applied to: vocabulary, listening, speaking, writing, mock-test
+ * Applied to: vocabulary, listening, speaking, writing, mock-test, shop, blog, upgrade
  * ===================================================================== */
 body[data-page="vocabulary"],
 body[data-page="listening"],
 body[data-page="speaking"],
 body[data-page="writing"],
-body[data-page="mock-test"] {
+body[data-page="mock-test"],
+body[data-page="shop"],
+body[data-page="blog"],
+body[data-page="upgrade"] {
   --bg: #0c1f38;
-  --header-bg: rgba(12, 31, 56, 0.88);
+  --surface: #0f2744;
+  --header-bg: rgba(10, 25, 48, 0.92);
   --border: rgba(255, 255, 255, 0.12);
   --text: #ffffff;
   --muted: #8fa4bb;
-  --nav-link-color: #d0e0f0;
+  --nav-link-color: #cbd5e1;
   background: radial-gradient(circle at 85% 10%, rgba(23, 87, 166, 0.45), rgba(0, 0, 0, 0) 40%),
               linear-gradient(145deg, #102a4c 0%, #08192d 72%) fixed !important;
   color: #ffffff;
   min-height: 100vh;
 }
 
+/* Header Bar across dark pages */
 body[data-page="vocabulary"] .header,
 body[data-page="listening"] .header,
 body[data-page="speaking"] .header,
 body[data-page="writing"] .header,
-body[data-page="mock-test"] .header {
-  background: rgba(12, 31, 56, 0.88);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+body[data-page="mock-test"] .header,
+body[data-page="shop"] .header,
+body[data-page="blog"] .header,
+body[data-page="upgrade"] .header {
+  background: rgba(10, 25, 48, 0.92) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
 }
 
+/* Brand Logo */
 body[data-page="vocabulary"] .brand,
 body[data-page="listening"] .brand,
 body[data-page="speaking"] .brand,
 body[data-page="writing"] .brand,
-body[data-page="mock-test"] .brand {
-  color: #ffffff;
+body[data-page="mock-test"] .brand,
+body[data-page="shop"] .brand,
+body[data-page="blog"] .brand,
+body[data-page="upgrade"] .brand {
+  color: #ffffff !important;
 }
 
-body[data-page="vocabulary"] .nav-link,
-body[data-page="listening"] .nav-link,
-body[data-page="speaking"] .nav-link,
-body[data-page="writing"] .nav-link,
-body[data-page="mock-test"] .nav-link {
-  color: #c4d7ed;
+body[data-page="vocabulary"] .brand-text span,
+body[data-page="listening"] .brand-text span,
+body[data-page="speaking"] .brand-text span,
+body[data-page="writing"] .brand-text span,
+body[data-page="mock-test"] .brand-text span,
+body[data-page="shop"] .brand-text span,
+body[data-page="blog"] .brand-text span,
+body[data-page="upgrade"] .brand-text span {
+  color: #60a5fa !important;
+  text-shadow: 0 0 12px rgba(96, 165, 250, 0.45);
 }
 
-body[data-page="vocabulary"] .nav-link:hover,
-body[data-page="listening"] .nav-link:hover,
-body[data-page="speaking"] .nav-link:hover,
-body[data-page="writing"] .nav-link:hover,
-body[data-page="mock-test"] .nav-link:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
+/* Navigation Links (header-center .nav a) */
+body[data-page="vocabulary"] .nav a,
+body[data-page="listening"] .nav a,
+body[data-page="speaking"] .nav a,
+body[data-page="writing"] .nav a,
+body[data-page="mock-test"] .nav a,
+body[data-page="shop"] .nav a,
+body[data-page="blog"] .nav a,
+body[data-page="upgrade"] .nav a {
+  color: #cbd5e1 !important;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
-body[data-page="vocabulary"] .nav-link.active,
-body[data-page="listening"] .nav-link.active,
-body[data-page="speaking"] .nav-link.active,
-body[data-page="writing"] .nav-link.active,
-body[data-page="mock-test"] .nav-link.active {
-  color: #ffffff;
-  background: var(--russia-red, #c52233);
+body[data-page="vocabulary"] .nav a:hover,
+body[data-page="listening"] .nav a:hover,
+body[data-page="speaking"] .nav a:hover,
+body[data-page="writing"] .nav a:hover,
+body[data-page="mock-test"] .nav a:hover,
+body[data-page="shop"] .nav a:hover,
+body[data-page="blog"] .nav a:hover,
+body[data-page="upgrade"] .nav a:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.12) !important;
 }
 
+body[data-page="vocabulary"] .nav a.active,
+body[data-page="listening"] .nav a.active,
+body[data-page="speaking"] .nav a.active,
+body[data-page="writing"] .nav a.active,
+body[data-page="mock-test"] .nav a.active,
+body[data-page="shop"] .nav a.active,
+body[data-page="blog"] .nav a.active,
+body[data-page="upgrade"] .nav a.active {
+  color: #ffffff !important;
+  background: rgba(37, 99, 235, 0.4) !important;
+  border: 1px solid rgba(96, 165, 250, 0.45) !important;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35) !important;
+  font-weight: 700 !important;
+}
+
+/* Dropdown More... */
 body[data-page="vocabulary"] .nav-dropdown-trigger,
 body[data-page="listening"] .nav-dropdown-trigger,
 body[data-page="speaking"] .nav-dropdown-trigger,
 body[data-page="writing"] .nav-dropdown-trigger,
-body[data-page="mock-test"] .nav-dropdown-trigger {
-  color: #c4d7ed;
+body[data-page="mock-test"] .nav-dropdown-trigger,
+body[data-page="shop"] .nav-dropdown-trigger,
+body[data-page="blog"] .nav-dropdown-trigger,
+body[data-page="upgrade"] .nav-dropdown-trigger {
+  color: #cbd5e1 !important;
+}
+
+body[data-page="vocabulary"] .nav-dropdown-trigger:hover,
+body[data-page="listening"] .nav-dropdown-trigger:hover,
+body[data-page="speaking"] .nav-dropdown-trigger:hover,
+body[data-page="writing"] .nav-dropdown-trigger:hover,
+body[data-page="mock-test"] .nav-dropdown-trigger:hover,
+body[data-page="shop"] .nav-dropdown-trigger:hover,
+body[data-page="blog"] .nav-dropdown-trigger:hover,
+body[data-page="upgrade"] .nav-dropdown-trigger:hover {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.12) !important;
 }
 
 body[data-page="vocabulary"] .nav-dropdown-menu,
 body[data-page="listening"] .nav-dropdown-menu,
 body[data-page="speaking"] .nav-dropdown-menu,
 body[data-page="writing"] .nav-dropdown-menu,
-body[data-page="mock-test"] .nav-dropdown-menu {
-  background: #102a4c;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+body[data-page="mock-test"] .nav-dropdown-menu,
+body[data-page="shop"] .nav-dropdown-menu,
+body[data-page="blog"] .nav-dropdown-menu,
+body[data-page="upgrade"] .nav-dropdown-menu {
+  background: #0f2744 !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 12px !important;
 }
 
 body[data-page="vocabulary"] .nav-dropdown-item,
 body[data-page="listening"] .nav-dropdown-item,
 body[data-page="speaking"] .nav-dropdown-item,
 body[data-page="writing"] .nav-dropdown-item,
-body[data-page="mock-test"] .nav-dropdown-item {
-  color: #c4d7ed;
+body[data-page="mock-test"] .nav-dropdown-item,
+body[data-page="shop"] .nav-dropdown-item,
+body[data-page="blog"] .nav-dropdown-item,
+body[data-page="upgrade"] .nav-dropdown-item {
+  color: #cbd5e1 !important;
 }
 
 body[data-page="vocabulary"] .nav-dropdown-item:hover,
 body[data-page="listening"] .nav-dropdown-item:hover,
 body[data-page="speaking"] .nav-dropdown-item:hover,
 body[data-page="writing"] .nav-dropdown-item:hover,
-body[data-page="mock-test"] .nav-dropdown-item:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+body[data-page="mock-test"] .nav-dropdown-item:hover,
+body[data-page="shop"] .nav-dropdown-item:hover,
+body[data-page="blog"] .nav-dropdown-item:hover,
+body[data-page="upgrade"] .nav-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
 }
 
-body[data-page="vocabulary"] .hamburger span,
-body[data-page="listening"] .hamburger span,
-body[data-page="speaking"] .hamburger span,
-body[data-page="writing"] .hamburger span,
-body[data-page="mock-test"] .hamburger span {
-  background: #ffffff;
+body[data-page="vocabulary"] .nav-dropdown-item.active,
+body[data-page="listening"] .nav-dropdown-item.active,
+body[data-page="speaking"] .nav-dropdown-item.active,
+body[data-page="writing"] .nav-dropdown-item.active,
+body[data-page="mock-test"] .nav-dropdown-item.active,
+body[data-page="shop"] .nav-dropdown-item.active,
+body[data-page="blog"] .nav-dropdown-item.active,
+body[data-page="upgrade"] .nav-dropdown-item.active {
+  color: #60a5fa !important;
+  background: rgba(37, 99, 235, 0.3) !important;
+  font-weight: 700 !important;
+}
+
+/* Header Auth Buttons (Login / Register) */
+body[data-page="vocabulary"] .btn-auth-login,
+body[data-page="listening"] .btn-auth-login,
+body[data-page="speaking"] .btn-auth-login,
+body[data-page="writing"] .btn-auth-login,
+body[data-page="mock-test"] .btn-auth-login,
+body[data-page="shop"] .btn-auth-login,
+body[data-page="blog"] .btn-auth-login,
+body[data-page="upgrade"] .btn-auth-login {
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+body[data-page="vocabulary"] .btn-auth-login:hover,
+body[data-page="listening"] .btn-auth-login:hover,
+body[data-page="speaking"] .btn-auth-login:hover,
+body[data-page="writing"] .btn-auth-login:hover,
+body[data-page="mock-test"] .btn-auth-login:hover,
+body[data-page="shop"] .btn-auth-login:hover,
+body[data-page="blog"] .btn-auth-login:hover,
+body[data-page="upgrade"] .btn-auth-login:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 12px rgba(255, 255, 255, 0.15) !important;
+}
+
+/* Header User Profile Area */
+body[data-page="vocabulary"] .user-trigger,
+body[data-page="listening"] .user-trigger,
+body[data-page="speaking"] .user-trigger,
+body[data-page="writing"] .user-trigger,
+body[data-page="mock-test"] .user-trigger,
+body[data-page="shop"] .user-trigger,
+body[data-page="blog"] .user-trigger,
+body[data-page="upgrade"] .user-trigger {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(8px);
+}
+
+body[data-page="vocabulary"] .user-trigger:hover,
+body[data-page="listening"] .user-trigger:hover,
+body[data-page="speaking"] .user-trigger:hover,
+body[data-page="writing"] .user-trigger:hover,
+body[data-page="mock-test"] .user-trigger:hover,
+body[data-page="shop"] .user-trigger:hover,
+body[data-page="blog"] .user-trigger:hover,
+body[data-page="upgrade"] .user-trigger:hover {
+  background: rgba(255, 255, 255, 0.16) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+body[data-page="vocabulary"] .user-name-short,
+body[data-page="listening"] .user-name-short,
+body[data-page="speaking"] .user-name-short,
+body[data-page="writing"] .user-name-short,
+body[data-page="mock-test"] .user-name-short,
+body[data-page="shop"] .user-name-short,
+body[data-page="blog"] .user-name-short,
+body[data-page="upgrade"] .user-name-short {
+  color: #ffffff !important;
+}
+
+body[data-page="vocabulary"] .user-dropdown,
+body[data-page="listening"] .user-dropdown,
+body[data-page="speaking"] .user-dropdown,
+body[data-page="writing"] .user-dropdown,
+body[data-page="mock-test"] .user-dropdown,
+body[data-page="shop"] .user-dropdown,
+body[data-page="blog"] .user-dropdown,
+body[data-page="upgrade"] .user-dropdown {
+  background: #0f2744 !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5) !important;
+  color: #ffffff !important;
+}
+
+body[data-page="vocabulary"] .user-dropdown-head,
+body[data-page="listening"] .user-dropdown-head,
+body[data-page="speaking"] .user-dropdown-head,
+body[data-page="writing"] .user-dropdown-head,
+body[data-page="mock-test"] .user-dropdown-head,
+body[data-page="shop"] .user-dropdown-head,
+body[data-page="blog"] .user-dropdown-head,
+body[data-page="upgrade"] .user-dropdown-head {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+body[data-page="vocabulary"] .user-fullname,
+body[data-page="listening"] .user-fullname,
+body[data-page="speaking"] .user-fullname,
+body[data-page="writing"] .user-fullname,
+body[data-page="mock-test"] .user-fullname,
+body[data-page="shop"] .user-fullname,
+body[data-page="blog"] .user-fullname,
+body[data-page="upgrade"] .user-fullname {
+  color: #ffffff !important;
+}
+
+body[data-page="vocabulary"] .user-email,
+body[data-page="listening"] .user-email,
+body[data-page="speaking"] .user-email,
+body[data-page="writing"] .user-email,
+body[data-page="mock-test"] .user-email,
+body[data-page="shop"] .user-email,
+body[data-page="blog"] .user-email,
+body[data-page="upgrade"] .user-email {
+  color: #94a3b8 !important;
+}
+
+body[data-page="vocabulary"] .user-dropdown-item,
+body[data-page="listening"] .user-dropdown-item,
+body[data-page="speaking"] .user-dropdown-item,
+body[data-page="writing"] .user-dropdown-item,
+body[data-page="mock-test"] .user-dropdown-item,
+body[data-page="shop"] .user-dropdown-item,
+body[data-page="blog"] .user-dropdown-item,
+body[data-page="upgrade"] .user-dropdown-item {
+  color: #cbd5e1 !important;
+}
+
+body[data-page="vocabulary"] .user-dropdown-item:hover,
+body[data-page="listening"] .user-dropdown-item:hover,
+body[data-page="speaking"] .user-dropdown-item:hover,
+body[data-page="writing"] .user-dropdown-item:hover,
+body[data-page="mock-test"] .user-dropdown-item:hover,
+body[data-page="shop"] .user-dropdown-item:hover,
+body[data-page="blog"] .user-dropdown-item:hover,
+body[data-page="upgrade"] .user-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+/* Mobile Menu Button & Drawer */
+body[data-page="vocabulary"] .menu-button,
+body[data-page="listening"] .menu-button,
+body[data-page="speaking"] .menu-button,
+body[data-page="writing"] .menu-button,
+body[data-page="mock-test"] .menu-button,
+body[data-page="shop"] .menu-button,
+body[data-page="blog"] .menu-button,
+body[data-page="upgrade"] .menu-button {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+body[data-page="vocabulary"] .menu-button span,
+body[data-page="listening"] .menu-button span,
+body[data-page="speaking"] .menu-button span,
+body[data-page="writing"] .menu-button span,
+body[data-page="mock-test"] .menu-button span,
+body[data-page="shop"] .menu-button span,
+body[data-page="blog"] .menu-button span,
+body[data-page="upgrade"] .menu-button span {
+  background: #ffffff !important;
+}
+
+body[data-page="vocabulary"] .header-center,
+body[data-page="listening"] .header-center,
+body[data-page="speaking"] .header-center,
+body[data-page="writing"] .header-center,
+body[data-page="mock-test"] .header-center,
+body[data-page="shop"] .header-center,
+body[data-page="blog"] .header-center,
+body[data-page="upgrade"] .header-center {
+  background: #0c1f38 !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Footer styling across all dark pages */
+body[data-page="vocabulary"] .footer,
+body[data-page="listening"] .footer,
+body[data-page="speaking"] .footer,
+body[data-page="writing"] .footer,
+body[data-page="mock-test"] .footer,
+body[data-page="shop"] .footer,
+body[data-page="blog"] .footer,
+body[data-page="upgrade"] .footer {
+  background: rgba(8, 25, 45, 0.98);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #8fa4bb;
+}
+
+body[data-page="vocabulary"] .footer a,
+body[data-page="listening"] .footer a,
+body[data-page="speaking"] .footer a,
+body[data-page="writing"] .footer a,
+body[data-page="mock-test"] .footer a,
+body[data-page="shop"] .footer a,
+body[data-page="blog"] .footer a,
+body[data-page="upgrade"] .footer a {
+  color: #c4d7ed;
 }
 
 /* Hide duplicate white page-hero on dark learning pages */
@@ -15616,22 +15892,610 @@ body[data-page="mock-test"] .page-hero {
   display: none !important;
 }
 
-body[data-page="vocabulary"] .footer,
-body[data-page="listening"] .footer,
-body[data-page="speaking"] .footer,
-body[data-page="writing"] .footer,
-body[data-page="mock-test"] .footer {
-  background: rgba(8, 25, 45, 0.98);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  color: #8fa4bb;
+/* Page Hero on Shop & Blog */
+body[data-page="shop"] .page-hero,
+body[data-page="blog"] .page-hero {
+  background: transparent !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 38px 0 24px !important;
+  margin-bottom: 28px !important;
 }
 
-body[data-page="vocabulary"] .footer a,
-body[data-page="listening"] .footer a,
-body[data-page="speaking"] .footer a,
-body[data-page="writing"] .footer a,
-body[data-page="mock-test"] .footer a {
-  color: #c4d7ed;
+body[data-page="shop"] .page-hero h1,
+body[data-page="blog"] .page-hero h1 {
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  font-size: clamp(26px, 4.2vw, 42px) !important;
+  letter-spacing: -1px !important;
+  text-transform: uppercase !important;
+  line-height: 1.18 !important;
+}
+
+body[data-page="shop"] .page-hero h1 span,
+body[data-page="blog"] .page-hero h1 span {
+  color: #8dbcef !important;
+  font-weight: 600 !important;
+  font-size: clamp(15px, 2.2vw, 22px) !important;
+  text-transform: none !important;
+  margin-top: 8px !important;
+  display: block;
+}
+
+/* =====================================================================
+ * SHOP SECTION & CARDS COLOR COORDINATION
+ * ===================================================================== */
+body[data-page="shop"] .shop-filters .tab {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+body[data-page="shop"] .shop-filters .tab:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+body[data-page="shop"] .shop-filters .tab.active {
+  background: linear-gradient(135deg, #c52233 0%, #991b1b 100%);
+  color: #ffffff;
+  border-color: #f87171;
+  box-shadow: 0 4px 16px rgba(197, 34, 51, 0.4);
+}
+
+body[data-page="shop"] .product-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transition: all 0.25s ease;
+}
+
+body[data-page="shop"] .product-card:hover {
+  transform: translateY(-5px);
+  border-color: #3b82f6;
+  box-shadow: 0 16px 40px rgba(0, 57, 166, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+body[data-page="shop"] .product-img-wrap {
+  background: #08192d;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body[data-page="shop"] .product-badge {
+  background: linear-gradient(135deg, #c52233 0%, #991b1b 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(197, 34, 51, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+body[data-page="shop"] .product-cat {
+  color: #8dbcef;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+body[data-page="shop"] .product-title {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+body[data-page="shop"] .product-desc {
+  color: #94a3b8;
+  line-height: 1.55;
+}
+
+body[data-page="shop"] .product-price {
+  color: #fbbf24;
+  font-size: 1.28rem;
+  font-weight: 800;
+  text-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
+}
+
+body[data-page="shop"] .product-rub {
+  color: #94a3b8;
+}
+
+body[data-page="shop"] .product-old-price {
+  color: #64748b;
+}
+
+body[data-page="shop"] .btn-add-cart {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+}
+
+body[data-page="shop"] .btn-add-cart:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+}
+
+/* Floating Cart Button & Drawer */
+.cart-float-btn {
+  background: linear-gradient(135deg, #c52233 0%, #991b1b 100%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 8px 25px rgba(197, 34, 51, 0.5) !important;
+  color: #ffffff !important;
+}
+
+.cart-drawer {
+  background: #0d223f !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  box-shadow: -14px 0 45px rgba(0, 0, 0, 0.6) !important;
+}
+
+.cart-drawer h3 {
+  color: #ffffff !important;
+}
+
+.cart-drawer div[style*="background:var(--bg)"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+#checkoutModal .anticheat-modal-box {
+  background: #0f2744 !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-top: 5px solid #c52233 !important;
+  color: #ffffff !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6) !important;
+}
+
+#checkoutModal input {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
+
+#checkoutModal input::placeholder {
+  color: #94a3b8;
+}
+
+#checkoutModal .vietqr-img-box {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+#checkoutModal .vietqr-img-box p {
+  color: #475569 !important;
+}
+
+/* =====================================================================
+ * BLOG SECTION & CARDS COLOR COORDINATION
+ * ===================================================================== */
+body[data-page="blog"] .shop-filters .tab {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #cbd5e1;
+  border-radius: 999px;
+  padding: 8px 18px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+body[data-page="blog"] .shop-filters .tab:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+body[data-page="blog"] .shop-filters .tab.active {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  color: #ffffff;
+  border-color: #60a5fa;
+  box-shadow: 0 4px 16px rgba(29, 78, 216, 0.4);
+}
+
+body[data-page="blog"] .product-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transition: all 0.25s ease;
+}
+
+body[data-page="blog"] .product-card:hover {
+  transform: translateY(-5px);
+  border-color: #3b82f6;
+  box-shadow: 0 16px 40px rgba(0, 57, 166, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+body[data-page="blog"] .product-badge {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(29, 78, 216, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+body[data-page="blog"] .product-cat {
+  color: #8dbcef;
+  font-weight: 700;
+}
+
+body[data-page="blog"] .product-title {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+body[data-page="blog"] .product-desc {
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+body[data-page="blog"] .btn-read-post {
+  background: rgba(37, 99, 235, 0.25);
+  color: #93c5fd;
+  border: 1px solid rgba(96, 165, 250, 0.4);
+  border-radius: 10px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+body[data-page="blog"] .btn-read-post:hover {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+}
+
+#articleModal .anticheat-modal-box {
+  background: #0d223f !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-top: 5px solid #2563eb !important;
+  color: #ffffff !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7) !important;
+}
+
+#articleModal h2 {
+  color: #ffffff !important;
+}
+
+#articleModal .pro-chip {
+  background: rgba(37, 99, 235, 0.3) !important;
+  color: #93c5fd !important;
+  border: 1px solid rgba(96, 165, 250, 0.4) !important;
+}
+
+#articleModal div[style*="pre-line"] {
+  color: #e2e8f0 !important;
+  line-height: 1.8 !important;
+}
+
+#articleModal div[style*="primary-soft"] {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+}
+
+/* =====================================================================
+ * UPGRADE / UPDATE SECTION & PRICING COLOR COORDINATION
+ * ===================================================================== */
+body[data-page="upgrade"] .upgrade-kicker {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.35)) !important;
+  color: #fbbf24 !important;
+  border: 1px solid #f59e0b !important;
+}
+
+body[data-page="upgrade"] .upgrade-hero h1 {
+  color: #ffffff !important;
+  font-weight: 900;
+  font-size: clamp(26px, 4.2vw, 42px);
+  letter-spacing: -1px;
+}
+
+body[data-page="upgrade"] .upgrade-hero p {
+  color: #94a3b8 !important;
+}
+
+body[data-page="upgrade"] .upgrade-user-strip {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(12px);
+}
+
+body[data-page="upgrade"] .upgrade-user-name {
+  color: #ffffff;
+}
+
+body[data-page="upgrade"] .upgrade-user-name b {
+  color: #60a5fa;
+}
+
+body[data-page="upgrade"] .upgrade-user-email {
+  background: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+
+body[data-page="upgrade"] .upgrade-discount-countdown {
+  background: rgba(197, 34, 51, 0.25);
+  border: 1px solid #c52233;
+  color: #fca5a5;
+  box-shadow: 0 2px 10px rgba(197, 34, 51, 0.3);
+}
+
+body[data-page="upgrade"] .upgrade-auth-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  backdrop-filter: blur(12px);
+}
+
+body[data-page="upgrade"] .upgrade-auth-box h2 {
+  color: #ffffff;
+}
+
+body[data-page="upgrade"] .upgrade-auth-box p {
+  color: #94a3b8;
+}
+
+body[data-page="upgrade"] .upgrade-auth-icon {
+  color: #fbbf24;
+}
+
+/* Pricing Cards across Upgrade page & Index page */
+body[data-page="upgrade"] .pricing-card,
+#pricing .pricing-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+body[data-page="upgrade"] .pricing-card:hover,
+#pricing .pricing-card:hover {
+  border-color: #60a5fa;
+  transform: translateY(-5px);
+  box-shadow: 0 16px 40px rgba(0, 57, 166, 0.4);
+}
+
+body[data-page="upgrade"] .pricing-card.popular,
+#pricing .pricing-card.popular {
+  border: 2px solid #f59e0b;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.12) 0%, rgba(13, 34, 63, 0.95) 100%);
+  box-shadow: 0 12px 35px rgba(245, 158, 11, 0.25);
+}
+
+body[data-page="upgrade"] .pricing-popular-badge,
+#pricing .pricing-popular-badge {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: #1e1b4b;
+  font-weight: 800;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+body[data-page="upgrade"] .pricing-card.is-current,
+#pricing .pricing-card.is-current {
+  border-color: #10b981;
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.12) 0%, rgba(13, 34, 63, 0.95) 100%);
+}
+
+body[data-page="upgrade"] .pricing-title,
+#pricing .pricing-title {
+  color: #ffffff;
+}
+
+body[data-page="upgrade"] .pricing-desc,
+#pricing .pricing-desc {
+  color: #94a3b8;
+}
+
+body[data-page="upgrade"] .pricing-amount,
+#pricing .pricing-amount {
+  color: #ffffff;
+}
+
+body[data-page="upgrade"] .pricing-card.popular .pricing-amount,
+#pricing .pricing-card.popular .pricing-amount {
+  color: #fbbf24;
+}
+
+body[data-page="upgrade"] .pricing-old,
+#pricing .pricing-old {
+  color: #64748b;
+}
+
+body[data-page="upgrade"] .pricing-features li,
+#pricing .pricing-features li {
+  color: #cbd5e1;
+}
+
+body[data-page="upgrade"] .pricing-features .chk,
+#pricing .pricing-features .chk {
+  color: #10b981;
+}
+
+/* Upgrade Comparison Table */
+body[data-page="upgrade"] .comparison-section h2 {
+  color: #ffffff;
+}
+
+body[data-page="upgrade"] .comparison-section p {
+  color: #94a3b8;
+}
+
+body[data-page="upgrade"] .comparison-table-wrap {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+body[data-page="upgrade"] .comparison-table th.col-feature {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+body[data-page="upgrade"] .comparison-table th.col-free {
+  background: rgba(255, 255, 255, 0.04);
+  color: #94a3b8;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+}
+
+body[data-page="upgrade"] .comparison-table th.col-pro {
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.25) 0%, rgba(217, 119, 6, 0.15) 100%);
+  color: #fbbf24;
+  border-left: 2px solid #f59e0b;
+  border-right: 2px solid #f59e0b;
+  border-bottom: 2px solid #f59e0b;
+}
+
+body[data-page="upgrade"] .comparison-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #cbd5e1;
+}
+
+body[data-page="upgrade"] .comparison-table td.col-feature {
+  color: #ffffff;
+}
+
+body[data-page="upgrade"] .comparison-table td.col-free {
+  color: #94a3b8;
+}
+
+body[data-page="upgrade"] .comparison-table td.col-pro {
+  color: #ffffff;
+  background: rgba(245, 158, 11, 0.06);
+  border-left: 2px solid rgba(245, 158, 11, 0.4);
+  border-right: 2px solid rgba(245, 158, 11, 0.4);
+}
+
+body[data-page="upgrade"] .comparison-table tr:hover td {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+body[data-page="upgrade"] .steps-section {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body[data-page="upgrade"] .steps-section h2 {
+  color: #ffffff;
+}
+
+body[data-page="upgrade"] .steps-section p {
+  color: #94a3b8;
+}
+
+body[data-page="upgrade"] .step-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+body[data-page="upgrade"] .step-card h3 {
+  color: #ffffff;
+}
+
+body[data-page="upgrade"] .step-card p {
+  color: #94a3b8;
+}
+
+/* VietQR Payment Modal */
+.vietqr-overlay {
+  backdrop-filter: blur(6px);
+}
+
+.vietqr-card {
+  background: #0d223f !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7) !important;
+}
+
+.vietqr-header h3 {
+  color: #ffffff !important;
+}
+
+.vietqr-chip-kicker {
+  background: rgba(245, 158, 11, 0.2) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+
+.vietqr-user-context {
+  color: #cbd5e1 !important;
+}
+
+.vietqr-pkg-tab {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #cbd5e1 !important;
+}
+
+.vietqr-pkg-tab.active {
+  background: rgba(37, 99, 235, 0.3) !important;
+  border-color: #60a5fa !important;
+  color: #ffffff !important;
+}
+
+.vietqr-pkg-tab-title {
+  color: #ffffff !important;
+}
+
+.vietqr-pkg-tab-price {
+  color: #fbbf24 !important;
+}
+
+.vietqr-scan-card {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.vietqr-scan-box {
+  background: #ffffff !important;
+  border-radius: 12px !important;
+  padding: 12px !important;
+}
+
+.vietqr-details-card {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+.vietqr-info-row {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.vietqr-info-row .lbl {
+  color: #94a3b8 !important;
+}
+
+.vietqr-info-row .val {
+  color: #ffffff !important;
+}
+
+.vietqr-copy-btn {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #60a5fa !important;
+}
+
+.vietqr-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
 }
 
 /* Sidebar dark glass styling on vocabulary page */
@@ -15716,7 +16580,10 @@ body[data-page="vocabulary"] main.container,
 body[data-page="listening"] main.container,
 body[data-page="speaking"] main.container,
 body[data-page="writing"] main.container,
-body[data-page="mock-test"] main.container {
+body[data-page="mock-test"] main.container,
+body[data-page="shop"] main.container,
+body[data-page="blog"] main.container,
+body[data-page="upgrade"] main.container {
   padding-top: 36px;
 }
 
@@ -15725,7 +16592,10 @@ body[data-page="mock-test"] main.container {
   body[data-page="listening"] main.container,
   body[data-page="speaking"] main.container,
   body[data-page="writing"] main.container,
-  body[data-page="mock-test"] main.container {
+  body[data-page="mock-test"] main.container,
+  body[data-page="shop"] main.container,
+  body[data-page="blog"] main.container,
+  body[data-page="upgrade"] main.container {
     padding-top: 24px;
     padding-left: 16px;
     padding-right: 16px;
