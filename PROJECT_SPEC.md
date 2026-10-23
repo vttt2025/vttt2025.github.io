@@ -28,16 +28,16 @@
 * **Giao diện chuẩn Figma (#tu-vung — https://rigor-hall-40167838.figma.site/#tu-vung)**:
   * **Khung chứa Russian Navy Gradient (`.vocabulary-section`)**: Nền gradient chuyển đổi sang trọng từ xanh hải quân Nga (#102a4c đến #08192d) kết hợp vầng sáng tỏa radial xanh dương, bo góc 24px.
   * **Hàng tiêu đề & Thẻ Tiến độ tròn (`.vocabulary-heading` & `.vocabulary-summary`)**: Kicker nhãn đỏ `KHO TỪ VỰNG`, tiêu đề lớn `Học theo chủ đề. Nhớ theo ngữ cảnh.`, thẻ tiến độ thủy tinh mờ (glassmorphism) với vòng tròn tiến độ động (`.summary-ring`) hiển thị tỷ lệ % thành thạo và thanh tiến độ.
-  * **Bộ Tab Phân Cấp Chuẩn (`.level-tabs`)**: 4 tab A1 (Cơ bản), A2 (Sơ cấp), B1 (Trung cấp), B2 (Trên trung cấp - PRO) với vạch đỏ chỉ báo active, cỡ chữ lớn 24px kèm số lượng thẻ.
+  * **Bộ Tab Phân Cấp Chuẩn (`.level-tabs`)**: 4 tab A1 (Sơ cấp), A2 (Cơ bản), B1 (Trung cấp), B2 (Trung cấp cao) với vạch đỏ chỉ báo active, cỡ chữ lớn 24px kèm số lượng thẻ.
   * **Lưới thẻ chủ đề chuẩn Figma (`.topic-grid` & `.topic-card`)**:
     - Thẻ kính mờ bo góc 20px, hiệu ứng hover nhấc nổi -5px và viền sáng xanh.
     - Hàng trên (`.topic-card-top`): Số thứ tự `01`, `02`... bên trái; nhãn trạng thái `Hoàn thành` (xanh ngọc) hoặc `PRO` (đỏ) bên phải.
-    - Hộp biểu tượng (`.topic-icon`): 48x48px bo góc 13px với vector icon Lucide 24px.
-    - Nhãn phân loại tiếng Nga viết hoa (`.topic-russian`): `СЛОВАРЬ · A1`, font 9px chữ đậm, dãn cách 1px.
-    - Tiêu đề thẻ (`h3.topic-title`): Font Inter in đậm 20px, chữ trắng.
-    - Mô tả phụ (`p.topic-desc`): `X từ vựng · Y bài học`.
+    - Khối nội dung chính (`.topic-card-main`): Bố cục ngang với Hộp biểu tượng (`.topic-icon`) bên trái; Tiêu đề thẻ (`h3.topic-title`) bên phải biểu tượng và Mô tả phụ (`p.topic-desc`) nằm dưới tiêu đề bên phải biểu tượng. Bỏ nhãn phân loại cũ.
     - Thanh tiến độ (`.topic-progress`): Cao 4px bo tròn, dải màu xanh biển / xanh lá khi hoàn thành.
-    - Chân thẻ (`.topic-footer`): Nhãn trạng thái bên trái (`68% đã học` / `Đã hoàn thành` / `Sẵn sàng để học`), bên phải gồm nút `[📋 Xem từ]` và nút tròn mũi tên `[→]` (hoặc `[🔒]` nếu PRO).
+    - Chân thẻ (`.topic-footer`): Nhãn trạng thái bên trái (`Đã hoàn thành` / `Dành cho thành viên` / `Sẵn sàng để học`), bên phải gồm nút `[Lọ từ vựng]` (icon archive-jar) và nút tròn mũi tên `[→]` (hoặc `[🔒]` nếu PRO).
+    - **Điều hướng & Tương tác**:
+      * Bấm vào thẻ hoặc nút mũi tên `[→]`: Chuyển sang Trang Bài Học Chủ Đề (Topic Lesson Article View) với bối cảnh, hội thoại mẫu, điểm ngữ pháp, bảng từ vựng, tính năng **Xuất sang PDF** (`window.print()`) chuẩn chỉnh và mục mở Lọ từ vựng.
+      * Bấm vào nút `[Lọ từ vựng]`: Vào thẳng danh sách các từ vựng trong lọ để xem và học 3D Flashcard Spaced Repetition.
 * **Mô hình "Lọ từ vựng" (Thematic Action Clusters)**:
   * Không học từ A-Z mà gom từ theo chuỗi hành động ngữ cảnh sống còn (*Lọ mua sắm Auchan*, *Lọ vali du học*, *Lọ sân bay Sheremetyevo*, *Lọ ký túc xá*...).
   * 18 lọ hệ thống chuẩn A1 - B2 chứa từ vựng cốt lõi kèm trọng âm, chú thích giống (он/она/оно) và ví dụ câu thực tế.

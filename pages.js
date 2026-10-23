@@ -1906,7 +1906,7 @@ function initVocabPage() {
       id: j.id,
       kind: "jar",
       level: j.level || "A1",
-      levelName: j.levelName || (j.level === "B2" ? "Nâng cao B2" : j.level === "B1" ? "Trung cấp B1" : j.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
+      levelName: j.levelName || (j.level === "B2" ? "Trung cấp cao B2" : j.level === "B1" ? "Trung cấp B1" : j.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
       title: j.name,
       desc: j.desc || "",
       icon: j.icon || "archive-jar",
@@ -1988,15 +1988,15 @@ function initVocabPage() {
               `}
             </div>
 
-            <span class="topic-icon">
-              ${window.RusiIcons ? RusiIcons.get(item.icon || "archive-jar", { size: 24 }) : ""}
-            </span>
-
-            <span class="topic-russian">${esc(russianCategory)}</span>
-
-            <h3 class="topic-title">${esc(item.title)}</h3>
-
-            <p class="topic-desc">${wordsCount} từ vựng · ${lessonsCount} bài học</p>
+            <div class="topic-card-main">
+              <span class="topic-icon">
+                ${window.RusiIcons ? RusiIcons.get(item.icon || "archive-jar", { size: 24 }) : ""}
+              </span>
+              <div class="topic-card-text">
+                <h3 class="topic-title">${esc(item.title)}</h3>
+                <p class="topic-desc">${wordsCount} từ vựng · ${lessonsCount} bài học</p>
+              </div>
+            </div>
 
             <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
               <span style="width: ${isDone ? 100 : 0}%"></span>
@@ -2005,10 +2005,10 @@ function initVocabPage() {
             <div class="topic-footer">
               <span>${isDone ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng để học"}</span>
               <div class="topic-footer-actions">
-                <button type="button" class="btn-jar-list topic-text-btn" data-jar-id="${item.id}" title="Xem danh sách từ">
-                  ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 13 }) : ""} Xem từ
+                <button type="button" class="btn-jar-list topic-text-btn" data-jar-id="${item.id}" title="Lọ từ vựng">
+                  ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} Lọ từ vựng
                 </button>
-                <button type="button" class="btn-jar-study topic-circle-btn" data-jar-id="${item.id}" title="Học ngay">
+                <button type="button" class="btn-topic-article topic-circle-btn" data-jar-id="${item.id}" title="Xem bài học chủ đề">
                   ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
                 </button>
               </div>
@@ -2030,16 +2030,16 @@ function initVocabPage() {
         };
       });
 
-      gridHost.querySelectorAll(".btn-jar-study").forEach(btn => {
+      gridHost.querySelectorAll(".btn-topic-article").forEach(btn => {
         btn.onclick = (e) => {
           e.stopPropagation();
           const id = btn.dataset.jarId;
           const jar = allItems.find(j => j.id === id);
           if (jar && jar.is_pro_only && !Monetization.isPro()) {
-            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng nâng cao và học Flashcard SRS không giới hạn.");
+            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài học chủ đề và kho từ vựng nâng cao.");
             return;
           }
-          showJarDetail(id, "flashcard");
+          showTopicArticle(id);
         };
       });
 
@@ -2049,10 +2049,10 @@ function initVocabPage() {
           const id = card.dataset.vocabId;
           const jar = allItems.find(j => j.id === id);
           if (jar && jar.is_pro_only && !Monetization.isPro()) {
-            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng nâng cao và ôn tập không giới hạn.");
+            Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài học chủ đề và kho từ vựng nâng cao.");
             return;
           }
-          showJarDetail(id, "list");
+          showTopicArticle(id);
         };
       });
     }
@@ -2095,12 +2095,12 @@ function initVocabPage() {
             <div class="level-tabs" role="tablist" aria-label="Chọn cấp độ từ vựng" id="vocabLevelTabs">
               <button class="level-tab ${currentLevel === "A1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A1">
                 <span class="level-code">A1</span>
-                <small>Cơ bản</small>
+                <small>Sơ cấp</small>
                 <span class="level-tab-count" id="countA1">0</span>
               </button>
               <button class="level-tab ${currentLevel === "A2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A2">
                 <span class="level-code">A2</span>
-                <small>Sơ cấp</small>
+                <small>Cơ bản</small>
                 <span class="level-tab-count" id="countA2">0</span>
               </button>
               <button class="level-tab ${currentLevel === "B1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B1">
@@ -2110,7 +2110,7 @@ function initVocabPage() {
               </button>
               <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
                 <span class="level-code">B2</span>
-                <small>Trên trung cấp</small>
+                <small>Trung cấp cao</small>
                 <span class="level-tab-count" id="countB2">0</span>
                 <i class="level-tab-pro">PRO</i>
               </button>
@@ -2328,6 +2328,259 @@ function initVocabPage() {
     };
   };
 
+const showTopicArticle = (jarId) => {
+    const allJars = getVocabJars();
+    const item = allJars.find(j => j.id === jarId);
+    if (!item) return;
+    const jar = item.raw || item;
+
+    // Kiểm tra quyền truy cập PRO
+    if (item.is_pro_only && !Monetization.isPro()) {
+      Monetization.showProGateModal(
+        "Nội dung dành cho PRO",
+        "Nâng cấp lên gói PRO để mở khóa toàn bộ bài học chủ đề chuyên sâu, tài liệu PDF và kho từ vựng nâng cao."
+      );
+      return;
+    }
+
+    document.body.classList.add("in-workspace");
+    const mainLayout = el("#vocMainLayout");
+    if (mainLayout) mainLayout.classList.add("hidden");
+    const srsPane = el("#vocPaneAlgorithm");
+    if (srsPane) srsPane.classList.add("hidden");
+    const detail = el("#jarDetailHost");
+    if (!detail) return;
+    detail.classList.remove("hidden");
+
+    // Lấy nội dung bài học chuyên sâu
+    const articlesMap = (typeof TOPIC_ARTICLES !== "undefined") ? TOPIC_ARTICLES : {};
+    const customArticle = jar.article || articlesMap[jar.id] || null;
+
+    const words = jar.words || [];
+    const levelBadgeClass = jar.level === "A2" ? "dau-badge-a2" : jar.level === "B1" ? "dau-badge-b1" : jar.level === "B2" ? "dau-badge-b2" : "dau-badge-a1";
+    const levelLabel = jar.level === "A1" ? "Sơ cấp" : jar.level === "A2" ? "Cơ bản" : jar.level === "B1" ? "Trung cấp" : "Trung cấp cao";
+
+    // Tạo nội dung hội thoại mẫu
+    let dialoguesHtml = "";
+    if (customArticle && customArticle.dialogues && customArticle.dialogues.length) {
+      dialoguesHtml = customArticle.dialogues.map((d, i) => `
+        <div class="topic-dialogue-line">
+          <div class="topic-speaker-avatar ${i % 2 === 0 ? 'speaker-a' : 'speaker-b'}" title="${esc(d.role || d.speaker)}">
+            ${esc((d.speaker || 'AB').slice(0, 2))}
+          </div>
+          <div class="topic-dialogue-content">
+            <div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:2px">${esc(d.speaker)} ${d.role ? `<span style="font-weight:400;font-size:0.7rem">(${esc(d.role)})</span>` : ''}</div>
+            <div class="topic-dialogue-ru">${esc(d.ru)}</div>
+            <div class="topic-dialogue-vi">${esc(d.vi)}</div>
+          </div>
+        </div>
+      `).join("");
+    } else {
+      const sampleWords = words.slice(0, 5);
+      dialoguesHtml = sampleWords.map((w, i) => `
+        <div class="topic-dialogue-line">
+          <div class="topic-speaker-avatar ${i % 2 === 0 ? 'speaker-a' : 'speaker-b'}">
+            ${i % 2 === 0 ? 'A' : 'B'}
+          </div>
+          <div class="topic-dialogue-content">
+            <div class="topic-dialogue-ru">${esc(w.ex || w.ru)}</div>
+            <div class="topic-dialogue-vi">${esc(w.vi)} ${w.note ? `— <em>${esc(w.note)}</em>` : ''}</div>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // Điểm ngữ pháp cốt lõi
+    let grammarHtml = "";
+    if (customArticle && customArticle.grammarNotes && customArticle.grammarNotes.length) {
+      grammarHtml = `
+        <div class="topic-grammar-cards">
+          ${customArticle.grammarNotes.map(g => `
+            <div class="topic-grammar-card">
+              <h4>${esc(g.title)}</h4>
+              <p style="white-space:pre-line">${esc(g.content)}</p>
+            </div>
+          `).join("")}
+        </div>
+      `;
+    } else {
+      grammarHtml = `
+        <div class="topic-grammar-cards">
+          <div class="topic-grammar-card">
+            <h4>1. Phân loại từ vựng &amp; Giống ngữ pháp</h4>
+            <p>Ghi nhớ chính xác giống của danh từ trong chủ đề (он, она, оно) để phối hợp chuẩn xác với tính từ và đại từ chỉ định.</p>
+          </div>
+          <div class="topic-grammar-card">
+            <h4>2. Mẫu câu ứng dụng theo ngữ cảnh</h4>
+            <p>Vận dụng các cụm động từ đi kèm trong các câu ví dụ thực tế giúp hình thành phản xạ ngôn ngữ tự nhiên.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Bảng từ vựng chi tiết
+    const vocabRowsHtml = words.map((w, idx) => `
+      <tr>
+        <td style="width:40px;color:#94a3b8;font-weight:700;text-align:center">${idx + 1}</td>
+        <td style="min-width:140px">
+          <div class="topic-word-ru">${esc(w.ru)}</div>
+          ${w.note ? `<span class="topic-word-note">${esc(w.note)}</span>` : ''}
+        </td>
+        <td style="min-width:130px" class="topic-word-vi">${esc(w.vi)}</td>
+        <td class="topic-word-ex">${w.ex ? esc(w.ex) : '—'}</td>
+      </tr>
+    `).join("");
+
+    detail.innerHTML = `
+      <!-- STICKY TOP BACK BAR -->
+      <div class="dau-workspace-back-bar topic-article-nav-bar">
+        <button type="button" class="dau-back-btn" id="btnBackFromArticle">
+          ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 16 }) : ""} Quay lại danh sách chủ đề
+        </button>
+        <div class="dau-workspace-info">
+          <span class="dau-badge ${levelBadgeClass}">${jar.level || "A1"} · ${levelLabel}</span>
+          <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(jar.icon || "archive-jar", { size: 20 }) : ""} ${esc(jar.name)}</span>
+        </div>
+        <div class="topic-article-top-actions">
+          <button type="button" class="btn btn-outline btn-sm" id="btnPrintTopicArticle" title="Xuất PDF hoặc In tài liệu">
+            ${window.RusiIcons ? RusiIcons.get("download", { size: 15 }) : ""} Xuất PDF / In bài học
+          </button>
+          <button type="button" class="btn btn-primary btn-sm" id="btnOpenJarFromArticleTop">
+            ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 15 }) : ""} Xem lọ từ vựng (${words.length} từ)
+          </button>
+        </div>
+      </div>
+
+      <!-- MAIN ARTICLE BODY CONTAINER -->
+      <article class="topic-article-container">
+        <!-- HEADER DÀNH RIÊNG KHI XUẤT PDF / IN ẤN -->
+        <div class="topic-article-print-header">
+          <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #0f1f38;padding-bottom:12px;margin-bottom:20px">
+            <div>
+              <div style="font-size:18pt;font-weight:800;color:#c52233;letter-spacing:-0.5px">RUSI TRKI — TÀI LIỆU BÀI HỌC CHỦ ĐỀ</div>
+              <div style="font-size:10pt;color:#64748b">Chuyên đề: ${esc(jar.name)} · Trình độ: ${jar.level} (${levelLabel}) · rusitrki.com</div>
+            </div>
+            <div style="font-size:9pt;color:#64748b;text-align:right">
+              <div>Số lượng từ: ${words.length} từ</div>
+              <div>Ngày xuất: ${new Date().toLocaleDateString("vi-VN")}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HERO HEADER -->
+        <header class="topic-article-hero">
+          <span class="topic-article-eyebrow">
+            ${window.RusiIcons ? RusiIcons.get("book-open", { size: 14 }) : ""} BÀI HỌC CHỦ ĐỀ · ${jar.level} (${levelLabel})
+          </span>
+          <h1 class="topic-article-title">${esc(jar.name)}</h1>
+          <p class="topic-article-desc">${esc(jar.desc || "Khám phá vốn từ vựng và mẫu câu giao tiếp then chốt về chủ đề " + jar.name)}</p>
+          <div class="topic-article-meta-row">
+            <span>${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} ${words.length} từ vựng cốt lõi</span>
+            <span>${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} 15–20 phút học</span>
+            <span>${window.RusiIcons ? RusiIcons.get("award", { size: 14 }) : ""} Chuẩn TRKI ${jar.level}</span>
+          </div>
+        </header>
+
+        <!-- PHẦN 1: BỐI CẢNH & TÌNH HUỐNG THỰC TẾ -->
+        <section class="topic-article-section">
+          <h2 class="topic-article-sec-title">
+            <span class="sec-badge">I</span> Bối cảnh &amp; Tình huống giao tiếp thực tế
+          </h2>
+          <div style="font-size:0.95rem;line-height:1.7;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px 22px">
+            ${customArticle && customArticle.intro ? esc(customArticle.intro) : `
+              Chủ đề <strong>«${esc(jar.name)}»</strong> đóng vai trò vô cùng thiết yếu trong đời sống và giao tiếp tiếng Nga trình độ ${jar.level}. 
+              Nắm vững hệ thống từ vựng và cấu trúc diễn đạt của chủ đề này giúp bạn tự tin xử lý mọi tình huống thực tế khi du học, công tác hoặc thi chứng chỉ TRKI.
+            `}
+          </div>
+        </section>
+
+        <!-- PHẦN 2: HỘI THOẠI MẪU & CÂU GIAO TIẾP THEN CHỐT -->
+        <section class="topic-article-section">
+          <h2 class="topic-article-sec-title">
+            <span class="sec-badge">II</span> Hội thoại mẫu &amp; Mẫu câu then chốt
+          </h2>
+          <div class="topic-dialogue-box">
+            ${dialoguesHtml}
+          </div>
+        </section>
+
+        <!-- PHẦN 3: ĐIỂM NGỮ PHÁP & LƯU Ý VĂN HÓA -->
+        <section class="topic-article-section">
+          <h2 class="topic-article-sec-title">
+            <span class="sec-badge">III</span> Điểm ngữ pháp &amp; Bí kíp sinh tồn
+          </h2>
+          ${grammarHtml}
+          ${customArticle && customArticle.culturalTip ? `
+            <div style="margin-top:16px;background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:10px;padding:14px 18px;font-size:0.88rem;color:#92400e;line-height:1.55">
+              <strong>💡 Mẹo văn hóa thực tế:</strong> ${esc(customArticle.culturalTip)}
+            </div>
+          ` : ''}
+        </section>
+
+        <!-- PHẦN 4: BẢNG TỪ VỰNG TRỌNG TÂM -->
+        <section class="topic-article-section">
+          <h2 class="topic-article-sec-title">
+            <span class="sec-badge">IV</span> Bảng từ vựng trọng tâm (${words.length} từ)
+          </h2>
+          <div class="topic-vocab-table-wrapper">
+            <table class="topic-vocab-table">
+              <thead>
+                <tr>
+                  <th style="width:40px;text-align:center">#</th>
+                  <th>Từ tiếng Nga</th>
+                  <th>Nghĩa tiếng Việt</th>
+                  <th>Ví dụ &amp; Ngữ cảnh</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${vocabRowsHtml}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- PHẦN 5: MỤC XEM LỌ TỪ VỰNG & LUYỆN FLASHCARD -->
+        <section class="topic-article-section topic-article-footer-cta">
+          <div class="topic-article-footer-cta-info">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+              <span style="color:var(--russia-blue, #1757a6)">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 24 }) : ""}</span>
+              <h3 style="margin:0;font-size:1.15rem;color:#0f1f38">Lọ từ vựng «${esc(jar.name)}»</h3>
+            </div>
+            <p>Đã sẵn sàng ghi nhớ bền vững ${words.length} từ vựng với mô hình Lọ Từ Vựng độc quyền và thuật toán Spaced Repetition (SM-2)?</p>
+          </div>
+          <button type="button" class="btn btn-primary" id="btnOpenJarFromArticleBottom" style="white-space:nowrap;font-weight:700;padding:12px 22px">
+            ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Mở Lọ &amp; Học Flashcard ngay →
+          </button>
+        </section>
+      </article>
+    `;
+
+    // Event listeners
+    const backBtn = el("#btnBackFromArticle");
+    if (backBtn) {
+      backBtn.onclick = () => showMainLayout();
+    }
+
+    const printBtn = el("#btnPrintTopicArticle");
+    if (printBtn) {
+      printBtn.onclick = () => {
+        window.print();
+      };
+    }
+
+    const openJarTop = el("#btnOpenJarFromArticleTop");
+    if (openJarTop) {
+      openJarTop.onclick = () => showJarDetail(jar.id, "list");
+    }
+
+    const openJarBottom = el("#btnOpenJarFromArticleBottom");
+    if (openJarBottom) {
+      openJarBottom.onclick = () => showJarDetail(jar.id, "list");
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   const showJarDetail = (jarId, initialMode = "list") => {
     const customJars = STORE.get("custom_jars", []);
     const baseJars = (cloudJars && cloudJars.length) ? cloudJars : (typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []);
@@ -2366,6 +2619,9 @@ function initVocabPage() {
               <button type="button" class="btn btn-outline btn-sm" id="btnAddWordCustom">+ Thêm từ mới</button>
               <button type="button" class="btn btn-soft btn-sm" id="btnDeleteCustomJar" style="color:var(--red)" title="Xóa lọ này">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : "Xóa"}</button>
             ` : ""}
+            <button type="button" class="btn btn-soft btn-sm" id="btnViewArticleFromJar" title="Xem bài học chủ đề">
+              ${window.RusiIcons ? RusiIcons.get("book-open", { size: 14 }) : ""} Xem bài học
+            </button>
             <button type="button" class="btn btn-primary btn-sm" id="btnStudyJar">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Học Flashcard</button>
           </div>
         </div>
@@ -2399,6 +2655,11 @@ function initVocabPage() {
             }
           };
         }
+      }
+
+      const btnArt = el("#btnViewArticleFromJar");
+      if (btnArt) {
+        btnArt.onclick = () => showTopicArticle(jar.id);
       }
 
       el("#btnStudyJar").onclick = () => {
@@ -2758,12 +3019,12 @@ function initListeningPage() {
             <div class="level-tabs" role="tablist" aria-label="Chọn cấp độ nghe" id="lisLevelTabs">
               <button class="level-tab ${currentLevel === "A1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A1">
                 <span class="level-code">A1</span>
-                <small>Cơ bản</small>
+                <small>Sơ cấp</small>
                 <span class="level-tab-count" id="lisCountA1">${countA1}</span>
               </button>
               <button class="level-tab ${currentLevel === "A2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A2">
                 <span class="level-code">A2</span>
-                <small>Sơ cấp</small>
+                <small>Cơ bản</small>
                 <span class="level-tab-count" id="lisCountA2">${countA2}</span>
               </button>
               <button class="level-tab ${currentLevel === "B1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B1">
@@ -2774,7 +3035,7 @@ function initListeningPage() {
               </button>
               <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
                 <span class="level-code">B2</span>
-                <small>Trên trung cấp</small>
+                <small>Trung cấp cao</small>
                 <span class="level-tab-count" id="lisCountB2">${countB2}</span>
                 <i class="level-tab-pro">PRO</i>
               </button>
@@ -4013,12 +4274,12 @@ function initSpeakingPage() {
             <div class="level-tabs" role="tablist" aria-label="Chọn cấp độ nói" id="spLevelTabs">
               <button class="level-tab ${currentLevel === "A1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A1">
                 <span class="level-code">A1</span>
-                <small>Cơ bản</small>
+                <small>Sơ cấp</small>
                 <span class="level-tab-count" id="spCountA1">${countA1}</span>
               </button>
               <button class="level-tab ${currentLevel === "A2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A2">
                 <span class="level-code">A2</span>
-                <small>Sơ cấp</small>
+                <small>Cơ bản</small>
                 <span class="level-tab-count" id="spCountA2">${countA2}</span>
               </button>
               <button class="level-tab ${currentLevel === "B1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B1">
@@ -4029,7 +4290,7 @@ function initSpeakingPage() {
               </button>
               <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
                 <span class="level-code">B2</span>
-                <small>Trên trung cấp</small>
+                <small>Trung cấp cao</small>
                 <span class="level-tab-count" id="spCountB2">${countB2}</span>
                 <i class="level-tab-pro">PRO</i>
               </button>
@@ -4375,12 +4636,12 @@ function initWritingPage() {
             <div class="level-tabs" role="tablist" aria-label="Chọn cấp độ viết" id="wLevelTabs">
               <button class="level-tab ${currentLevel === "A1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A1">
                 <span class="level-code">A1</span>
-                <small>Cơ bản</small>
+                <small>Sơ cấp</small>
                 <span class="level-tab-count" id="wCountA1">${countA1}</span>
               </button>
               <button class="level-tab ${currentLevel === "A2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A2">
                 <span class="level-code">A2</span>
-                <small>Sơ cấp</small>
+                <small>Cơ bản</small>
                 <span class="level-tab-count" id="wCountA2">${countA2}</span>
               </button>
               <button class="level-tab ${currentLevel === "B1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B1">
@@ -4391,7 +4652,7 @@ function initWritingPage() {
               </button>
               <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
                 <span class="level-code">B2</span>
-                <small>Trên trung cấp</small>
+                <small>Trung cấp cao</small>
                 <span class="level-tab-count" id="wCountB2">${countB2}</span>
                 <i class="level-tab-pro">PRO</i>
               </button>

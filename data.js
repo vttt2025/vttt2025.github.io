@@ -2540,6 +2540,846 @@ const PACKAGES = [
   }
 ];
 
+
+// =======================================================================
+// KHO BÀI HỌC CHỦ ĐỀ CHUYÊN SÂU (TOPIC LESSON ARTICLES)
+// Hỗ trợ cập nhật nội dung bài giảng, hội thoại, ngữ pháp & xuất PDF
+// =======================================================================
+const TOPIC_ARTICLES = {
+  "jar_auchan": {
+    "intro": "Đi siêu thị tại Nga (Auchan, Pyaterochka, Perekrestok, Magnit) là trải nghiệm sinh hoạt thực tế đầu tiên của mọi du học sinh và người sinh sống tại Nga. Khác với nhiều siêu thị ở Việt Nam, hệ thống siêu thị Nga yêu cầu bạn tự cân rau củ quả tại cân điện tử và dán tem giá, tự mua túi nilông ở quầy thu ngân và ưu tiên thanh toán qua thẻ ngân hàng nội địa (Sberbank / Mir).",
+    "dialogues": [
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Здравствуйте! Скажите, пожалуйста, где можно взвесить яблоки?",
+        "vi": "Xin chào! Làm ơn cho tôi hỏi, tôi có thể cân táo ở đâu ạ?"
+      },
+      {
+        "speaker": "Сотрудник",
+        "role": "Nhân viên siêu thị",
+        "ru": "Здравствуйте! Весы находятся вон там, рядом с овощами. Номер для этих яблок — 14.",
+        "vi": "Chào bạn! Cân ở đằng kia, bên cạnh quầy rau củ. Mã số của loại táo này là 14."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Спасибо большое! А сколько стоит докторская колбаса?",
+        "vi": "Cảm ơn bạn nhiều! Cho tôi hỏi xúc xích giò Doktorskaya giá bao nhiêu ạ?"
+      },
+      {
+        "speaker": "Сотрудник",
+        "role": "Nhân viên siêu thị",
+        "ru": "Она стоит двести сорок рублей за штуку.",
+        "vi": "Loại đó giá 240 rúp một cây ạ."
+      },
+      {
+        "speaker": "Кассир",
+        "role": "Thu ngân",
+        "ru": "Добрый день! Пакет нужен? Карта лояльности есть?",
+        "vi": "Chào bạn! Bạn có cần túi không? Có thẻ tích điểm không?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Да, один большой пакет, пожалуйста. Карты нет. Я оплачу покупку картой.",
+        "vi": "Vâng, cho tôi một túi lớn. Tôi không có thẻ tích điểm. Tôi thanh toán bằng thẻ ạ."
+      },
+      {
+        "speaker": "Кассир",
+        "role": "Thu ngân",
+        "ru": "Приложите карту к терминалу. Возьмите ваш чек, пожалуйста. Хорошего дня!",
+        "vi": "Mời bạn chạm thẻ vào máy. Xin hãy lấy hóa đơn của bạn. Chúc bạn một ngày tốt lành!"
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Câu mệnh lệnh lịch sự trong mua bán",
+        "content": "Luôn sử dụng động từ thể mệnh lệnh ngôi lịch sự (Вы) kết hợp với từ «пожалуйста»:\n• «Взвесьте, пожалуйста» (Làm ơn cân giúp tôi)\n• «Дайте, пожалуйста...» (Làm ơn cho tôi lấy...)\n• «Покажите, пожалуйста...» (Làm ơn cho tôi xem...)"
+      },
+      {
+        "title": "2. Danh từ giống và cách dùng số lượng",
+        "content": "Để ý đuôi giống đực (хлеб, сыр, чек), giống cái (колбаса, карта, скидка) và giống trung (молоко). Khi kết hợp số từ: 1 chiếc dùng Cách 1 (один пакет), 2-4 chiếc dùng Cách 2 số ít (два пакета), từ 5 chiếc trở lên dùng Cách 2 số nhiều (пять пакетов)."
+      },
+      {
+        "title": "3. Các câu hỏi phản xạ tại quầy thu ngân",
+        "content": "Thu ngân Nga thường dùng các câu rút gọn nhanh: «Пакет нужен?» (Cần túi không?), «Картой или наличными?» (Quẹt thẻ hay tiền mặt?). Bạn chỉ cần đáp nhanh: «Картой, пожалуйста» hoặc «Наличными»."
+      }
+    ],
+    "culturalTip": "Sau khi thanh toán xong, luôn cầm hóa đơn giấy (чек) trong tay hoặc để ngay miệng túi cho đến khi ra hẳn khỏi cửa siêu thị. Nhân viên bảo vệ (охрана) có quyền kiểm tra đối chiếu hóa đơn nếu còi báo động cửa an ninh vô tình kêu."
+  },
+  "jar_chemodan": {
+    "intro": "Chuẩn bị hành lý du học Nga là bước khởi đầu quyết định sự thuận lợi của cả kỳ học đầu tiên. Khí hậu mùa đông nước Nga có thể hạ xuống -20°C đến -30°C, vì vậy hành lý ký gửi tiêu chuẩn 23kg và xách tay 10kg cần được phân loại khoa học giữa trang phục giữ nhiệt, tài liệu học vụ gốc dịch công chứng và thuốc men dự phòng.",
+    "dialogues": [
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Мама, я собираю чемодан. Сколько килограммов можно взять?",
+        "vi": "Mẹ ơi, con đang xếp vali. Được mang tối đa bao nhiêu cân ạ?"
+      },
+      {
+        "speaker": "Мама",
+        "role": "Mẹ",
+        "ru": "В билете написано: одно место багажа до двадцати трёх килограммов.",
+        "vi": "Trong vé ghi là: một kiện hành lý ký gửi tối đa 23 kg con nhé."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Я уже положила тёплую зимнюю куртку, обувь и свитер. Куда положить паспорт и визу?",
+        "vi": "Con đã để áo khoác ấm mùa đông, giày dép và áo len vào rồi. Hộ chiếu và visa để vào đâu ạ?"
+      },
+      {
+        "speaker": "Мама",
+        "role": "Mẹ",
+        "ru": "Ни в коем случае не клади документы в багаж! Паспорт, визу и билеты возьми в ручную кладь.",
+        "vi": "Tuyệt đối không được để giấy tờ vào hành lý ký gửi! Hộ chiếu, visa và vé hãy để vào túi xách tay."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Поняла! Я положу их в маленькую сумку вместе с зарядкой для телефона.",
+        "vi": "Con hiểu rồi! Con sẽ để chúng vào túi nhỏ cùng với sạc điện thoại."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Cặp động từ đặt để: «класть / положить»",
+        "content": "«Класть» (Chưa hoàn thành thể - diễn tả quá trình đang xếp vào): «Я кладу вещи в чемодан».\n«Положить» (Hoàn thành thể - đã đặt để xong một vật cụ thể): «Я уже положила паспорт в сумку»."
+      },
+      {
+        "title": "2. Cặp động từ xếp dọn: «собирать / собрать»",
+        "content": "Cụm từ cố định: «собирать чемодан» (xếp vali), «собираться в дорогу / в поездку» (chuẩn bị lên đường, chuẩn bị cho chuyến đi)."
+      }
+    ],
+    "culturalTip": "Tất cả hồ sơ gốc (bằng tốt nghiệp, học bạ, giấy khai sinh, giấy khám sức khỏe và kết quả xét nghiệm HIV) bắt buộc phải để trong hành lý xách tay (ручная кладь) mang theo người, tuyệt đối không gửi trong vali ký gửi phòng trường hợp thất lạc hành lý."
+  },
+  "jar_airport": {
+    "intro": "Hạ cánh xuống các sân bay quốc tế lớn của Moskva (như Sheremetyevo - SVO, Domodedovo - DME hoặc Vnukovo - VKO), du học sinh cần hoàn tất quy trình: kiểm tra an ninh, xếp hàng tại quầy kiểm soát hộ chiếu (паспортный контроль), nhận thẻ di trú (миграционная карта), lấy hành lý tại băng chuyền và qua cửa khẩu hải quan.",
+    "dialogues": [
+      {
+        "speaker": "Пограничник",
+        "role": "Sĩ quan biên phòng",
+        "ru": "Здравствуйте! Ваш заграничный паспорт и посадочный талон, пожалуйста.",
+        "vi": "Xin chào! Xin vui lòng xuất trình hộ chiếu và thẻ lên máy bay của bạn."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Здравствуйте! Вот мой паспорт, виза и приглашение из университета.",
+        "vi": "Xin chào! Đây là hộ chiếu, thị thực và giấy mời nhập học của trường đại học ạ."
+      },
+      {
+        "speaker": "Пограничник",
+        "role": "Sĩ quan biên phòng",
+        "ru": "Цель вашей поездки в Российскую Федерацию?",
+        "vi": "Mục đích chuyến đi của bạn đến Liên bang Nga là gì?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Учёба. Я поступила в Московский государственный университет.",
+        "vi": "Đi học ạ. Em trúng tuyển vào Đại học Quốc gia Moskva (MGU)."
+      },
+      {
+        "speaker": "Пограничник",
+        "role": "Sĩ quan biên phòng",
+        "ru": "Распишитесь на миграционной карте. Добро пожаловать в Россию!",
+        "vi": "Mời bạn ký tên vào thẻ di trú. Chào mừng bạn đến với nước Nga!"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Большое спасибо! Подскажите, где выдача багажа рейса VN-62?",
+        "vi": "Em cảm ơn nhiều ạ! Xin hỏi khu vực trả hành lý của chuyến bay VN-62 ở đâu ạ?"
+      },
+      {
+        "speaker": "Сотрудник",
+        "role": "Nhân viên mặt đất",
+        "ru": "Пройдите прямо и поверните направо, лента номер четыре.",
+        "vi": "Bạn đi thẳng rồi rẽ phải, băng chuyền số 4 nhé."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Mẫu câu trả lời mục đích chuyến đi",
+        "content": "Khi qua cửa khẩu hải quan, trả lời ngắn gọn, chuẩn xác bằng danh từ:\n• «Учёба» (Đi học)\n• «Туризм» (Du lịch)\n• «Работа / Деловая поездка» (Công tác, làm việc)"
+      },
+      {
+        "title": "2. Hỏi phương hướng tại sân bay",
+        "content": "• «Где выдача багажа?» (Nơi nhận hành lý ở đâu?)\n• «Пройдите прямо» (Đi thẳng)\n• «Поверните направо / налево» (Rẽ phải / rẽ trái)"
+      }
+    ],
+    "culturalTip": "Tờ thẻ di trú (миграционная карта) mà hải quan kẹp vào hộ chiếu là văn bản pháp lý sống còn! Bạn phải giữ nó thật phẳng phiu, không được làm mất hay rách nát, vì phòng quản lý sinh viên quốc tế (Деканат) bắt buộc phải có giấy này để làm thủ tục đăng ký tạm trú (Регистрация)."
+  },
+  "jar_family": {
+    "intro": "Chủ đề gia đình, người thân và mối quan hệ xã hội là nội dung giao tiếp nền tảng ở cấp độ A1. Tại Nga, người bản xứ rất trân trọng tình cảm gia đình, và việc bạn biết cách giới thiệu các thành viên, xưng hô tôn trọng và kể về công việc của cha mẹ sẽ tạo thiện cảm rất lớn.",
+    "dialogues": [
+      {
+        "speaker": "Иван",
+        "role": "Bạn học người Nga",
+        "ru": "Аня, расскажи о своей семье. У тебя большая семья?",
+        "vi": "Anya, hãy kể về gia đình bạn đi. Nhà bạn có đông người không?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Моя семья небольшая: папа, мама, младший брат и я.",
+        "vi": "Gia đình mình không đông lắm: bố, mẹ, em trai và mình."
+      },
+      {
+        "speaker": "Иван",
+        "role": "Bạn học người Nga",
+        "ru": "Кем работают твои родители?",
+        "vi": "Bố mẹ bạn làm nghề gì?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Мой папа — инженер, а мама — учительница русского языка во Вьетнаме.",
+        "vi": "Bố mình là kỹ sư, còn mẹ là giáo viên tiếng Nga tại Việt Nam."
+      },
+      {
+        "speaker": "Иван",
+        "role": "Bạn học người Nga",
+        "ru": "Здорово! А сколько лет твоему брату?",
+        "vi": "Tuyệt thật! Em trai bạn bao nhiêu tuổi rồi?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Ему пятнадцать лет, он учится в школе и тоже мечтает поехать в Россию.",
+        "vi": "Em ấy 15 tuổi, đang học phổ thông và cũng ước mơ được sang Nga."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Nói về nghề nghiệp: «Кем работает...?»",
+        "content": "Câu hỏi nghề nghiệp: «Кем работает ваш папа?» (Bố bạn làm nghề gì?) dùng Công cụ cách (Cách 5). Khi trả lời ở A1, bạn có thể nói danh từ đơn giản: «Мой папа — инженер»."
+      },
+      {
+        "title": "2. Nói về tuổi tác: Đại từ Cách 3 (Dative)",
+        "content": "Cấu trúc: «Кому сколько лет»: «Мне двадцать лет» (Tôi 20 tuổi), «Ему пятнадцать лет» (Cậu ấy 15 tuổi), «Ей сорок лет» (Bà ấy 40 tuổi)."
+      }
+    ],
+    "culturalTip": "Trong tiếng Nga, họ tên đầy đủ gồm: Tên (Имя) + Tên đệm theo tên bố (Отчество) + Họ (Фамилия). Khi giao tiếp lịch sự với người lớn tuổi, giáo viên hoặc giáo sư đại học, luôn gọi bằng [Tên + Tên đệm] (ví dụ: Иван Сергеевич, Анна Петровна) thay vì chỉ gọi tên riêng."
+  },
+  "jar_daily": {
+    "intro": "Thiết lập thời gian biểu và nếp sinh hoạt điều độ là chìa khóa để thích nghi với nhịp sống học tập cường độ cao tại Nga. Chủ đề sinh hoạt hằng ngày giúp bạn nắm chắc cách diễn đạt các hoạt động thức dậy, học tập, ăn uống và giải trí theo từng buổi trong ngày.",
+    "dialogues": [
+      {
+        "speaker": "Иван",
+        "role": "Bạn cùng phòng",
+        "ru": "Во сколько ты обычно встаёшь утром?",
+        "vi": "Cậu thường thức dậy lúc mấy giờ vào buổi sáng?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Я просыпаюсь в семь часов, принимаю душ и готовлю завтрак.",
+        "vi": "Mình thức dậy lúc 7 giờ, tắm rửa và chuẩn bị bữa sáng."
+      },
+      {
+        "speaker": "Иван",
+        "role": "Bạn cùng phòng",
+        "ru": "Когда начинаются занятия в университете?",
+        "vi": "Mấy giờ thì bắt đầu tiết học ở trường đại học?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Первая пара начинается в девять часов утра. Обычно у нас три или четыре пары в день.",
+        "vi": "Tiết học đầu tiên bắt đầu lúc 9 giờ sáng. Thường chúng mình có 3 hoặc 4 ca học mỗi ngày."
+      },
+      {
+        "speaker": "Иван",
+        "role": "Bạn cùng phòng",
+        "ru": "Что ты делаешь вечером после пар?",
+        "vi": "Buổi tối sau giờ học cậu làm gì?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Я делаю домашнее задание, учу новые русские слова и гуляю в парке.",
+        "vi": "Mình làm bài tập về nhà, học từ vựng tiếng Nga mới và đi dạo trong công viên."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Nói về giờ giấc: «В каком часу? / Во сколько?»",
+        "content": "Dùng giới từ «в / во» + Giờ (Cách 4):\n• в семь часов утра (vào 7 giờ sáng)\n• в девять часов (vào 9 giờ)\n• в полдень (vào giữa trưa)"
+      },
+      {
+        "title": "2. Khái niệm «Пара» tại đại học Nga",
+        "content": "Tại Nga, một tiết học đại học gọi là «пара» (cặp tiết), kéo dài 90 phút (bằng 2 tiết 45 phút ghép lại). Sinh viên thường học 3-4 cặp tiết (пары) mỗi ngày."
+      }
+    ],
+    "culturalTip": "Mùa đông nước Nga trời tối rất sớm (khoảng 16:00 chiều đã tắt nắng), trong khi mùa hè đêm trắng (Белые ночи) đến 23:00 đêm vẫn sáng rực. Hãy điều chỉnh đồng hồ sinh học để duy trì giấc ngủ đủ 7-8 tiếng mỗi ngày."
+  },
+  "jar_weather": {
+    "intro": "Thời tiết nước Nga nổi tiếng với 4 mùa rõ rệt, từ sắc vàng mùa thu (Золотая осень) thơ mộng đến mùa đông tuyết trắng âm hàng chục độ. Học từ vựng thời tiết giúp bạn biết cách theo dõi dự báo (прогноз погоды), lựa chọn trang phục phù hợp và tham gia các cuộc trò chuyện tự nhiên với người bản xứ.",
+    "dialogues": [
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Иван, какая погода сегодня на улице?",
+        "vi": "Ivan ơi, thời tiết ngoài trời hôm nay thế nào?"
+      },
+      {
+        "speaker": "Иван",
+        "role": "Bạn người Nga",
+        "ru": "Сегодня холодно и ветрено, идёт сильный снег. На термометре минус пятнадцать градусов.",
+        "vi": "Hôm nay lạnh và nhiều gió, tuyết đang rơi dày. Trên nhiệt kế là âm 15 độ đấy."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du học sinh",
+        "ru": "Ого! Мне нужно надеть тёплый шарф, перчатки и зимнюю шапку.",
+        "vi": "Trời ơi! Mình phải đeo khăn ấm, găng tay và đội mũ len mùa đông mới được."
+      },
+      {
+        "speaker": "Иван",
+        "role": "Bạn người Nga",
+        "ru": "Обязательно! И надень зимние ботинки с нескользящей подошвой — на дорогах гололёд.",
+        "vi": "Nhất định rồi! Và nhớ đi giày chống trượt nữa — trên đường đang bị đóng băng trơn trượt đấy."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Mẫu câu vô nhân xưng mô tả thời tiết",
+        "content": "Trong tiếng Nga, trạng thái thời tiết dùng phó từ không cần chủ ngữ:\n• «Сегодня холодно / тепло / ветрено / солнечно» (Hôm nay trời lạnh / ấm / nhiều gió / có nắng).\n• Hiện tượng thời tiết: «Идёт дождь» (Trời mưa), «Идёт снег» (Tuyết rơi)."
+      },
+      {
+        "title": "2. Nói về nhiệt độ âm / dương",
+        "content": "• «минус десять градусов» (âm 10 độ)\n• «плюс двадцать градусов» (dương 20 độ)\n• «ноль градусов» (0 độ)."
+      }
+    ],
+    "culturalTip": "Hiện tượng «гололёд» (băng trơn mỏng trên vỉa hè) rất nguy hiểm vào đầu mùa đông và đầu xuân. Người Nga có dáng đi mùa đông gọi là dáng chim cánh cụt (походка пингвина) — bước ngắn, hơi đổ trọng tâm về phía trước để không bị trượt ngã."
+  },
+  "jar_city": {
+    "intro": "Khi mới sang Nga, việc hỏi đường (как пройти / как доехать) là kỹ năng sống còn giúp bạn không bị lạc giữa những đại lộ thênh thang và quảng trường rộng lớn. Nắm chắc mẫu câu hỏi đường giúp bạn tự tin khám phá thành phố.",
+    "dialogues": [
+      {
+        "speaker": "Anya",
+        "role": "Du khách",
+        "ru": "Извините, пожалуйста! Вы не подскажете, как пройти к Красной площади?",
+        "vi": "Xin lỗi bạn! Bạn có thể chỉ giúp tôi đường đi đến Quảng trường Đỏ được không ạ?"
+      },
+      {
+        "speaker": "Прохожий",
+        "role": "Người qua đường",
+        "ru": "Конечно! Идите прямо по этой улице до светофора, затем поверните налево.",
+        "vi": "Tất nhiên rồi! Bạn đi thẳng theo con phố này đến cột đèn giao thông, sau đó rẽ trái."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du khách",
+        "ru": "Это далеко отсюда? Можно дойти пешком?",
+        "vi": "Chỗ đó có xa đây không ạ? Có thể đi bộ được không?"
+      },
+      {
+        "speaker": "Прохожий",
+        "role": "Người qua đường",
+        "ru": "Нет, совсем рядом, минут десять пешком. Вы увидите Исторический музей прямо перед собой.",
+        "vi": "Không, rất gần, khoảng 10 phút đi bộ. Bạn sẽ thấy Bảo tàng Lịch sử ngay trước mắt."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Cặp câu hỏi đường lịch sự",
+        "content": "• «Как пройти к...?» (Đi bộ đến đâu như thế nào?) — dùng «к» + Cách 3.\n• «Как доехать до...?» (Đi xe/tàu đến đâu như thế nào?) — dùng «до» + Cách 2."
+      },
+      {
+        "title": "2. Chỉ dẫn phương hướng",
+        "content": "• «Идите прямо» (Hãy đi thẳng)\n• «Поверните направо / налево» (Rẽ phải / rẽ trái)\n• «Перейдите улицу по пешеходному переходу» (Qua đường tại vạch cho người đi bộ)."
+      }
+    ],
+    "culturalTip": "Khi nhờ người lạ trên đường giúp đỡ, luôn mở đầu bằng câu: «Извините, пожалуйста, вы не подскажете...» (Xin lỗi, bạn có thể chỉ giúp...). Cách nói phủ định «вы не подскажете» mang sắc thái cực kỳ mềm mỏng và lịch sự trong văn hóa Nga."
+  },
+  "jar_dorm": {
+    "intro": "Ký túc xá (Общежитие, gọi thân mật là Obshaga) là ngôi nhà thứ hai của du học sinh tại Nga. Tại đây, bạn sẽ tiếp xúc hằng ngày với bảo vệ trực tầng (Дежурная / Вахтёрша), quản trị viên ký túc xá (Комендант), tuân thủ nội quy giờ giấc, sử dụng bếp chung và phòng giặt đồ tự động.",
+    "dialogues": [
+      {
+        "speaker": "Anya",
+        "role": "Sinh viên",
+        "ru": "Здравствуйте! Я новая студентка из Вьетнама. Где сидит комендант?",
+        "vi": "Cháu chào cô ạ! Cháu là sinh viên mới đến từ Việt Nam. Phòng quản lý KTX ở đâu ạ?"
+      },
+      {
+        "speaker": "Дежурная",
+        "role": "Bảo vệ trực ban",
+        "ru": "Здравствуй! Кабинет коменданта на первом этаже, номер сто пять.",
+        "vi": "Chào cháu! Phòng quản lý ở tầng 1, phòng số 105 nhé."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Sinh viên",
+        "ru": "Здравствуйте! Вот мой ордер на заселение и направление из деканата.",
+        "vi": "Cháu chào thầy! Đây là giấy tiếp nhận vào ở KTX và giấy giới thiệu từ khoa ạ."
+      },
+      {
+        "speaker": "Комендант",
+        "role": "Quản lý KTX",
+        "ru": "Хорошо. Твоя комната — триста двенадцать на третьем этаже. Вот ключ и пропуск.",
+        "vi": "Được rồi. Phòng của em là 312 ở tầng 3. Đây là chìa khóa và thẻ ra vào KTX."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Sinh viên",
+        "ru": "Спасибо! Скажите, до скольких работает прачечная и общая кухня?",
+        "vi": "Em cảm ơn ạ! Cho em hỏi phòng giặt đồ và bếp chung mở cửa đến mấy giờ ạ?"
+      },
+      {
+        "speaker": "Комендант",
+        "role": "Quản lý KTX",
+        "ru": "Кухня открыта до двадцати трёх часов. После этого в общежитии должен быть порядок и тишина.",
+        "vi": "Bếp mở đến 23 giờ. Sau giờ đó trong ký túc xá phải giữ trật tự và yên lặng."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Cách nói tầng nhà trong tiếng Nga",
+        "content": "Dùng số thứ tự kết hợp giới từ «на» + Cách 6 (Giới cách):\n• на первом этаже (ở tầng 1)\n• на втором этаже (ở tầng 2)\n• на третьем этаже (ở tầng 3)"
+      },
+      {
+        "title": "2. Hỏi giờ giấc hoạt động «До скольких...?»",
+        "content": "• «До скольких открыта кухня?» (Bếp mở cửa đến mấy giờ?)\n• «Кухня работает до одиннадцати вечера» (Bếp mở đến 11 giờ đêm)."
+      }
+    ],
+    "culturalTip": "Luôn chào hỏi thật lễ phép với các bác trực ban (вахтёр / дежурная). Ở Nga, mối quan hệ tốt đẹp với bác trực ban tầng sẽ giúp bạn rất nhiều khi cần nhờ mở cửa lúc về muộn hoặc nhận bưu phẩm gửi đến KTX."
+  },
+  "jar_kafe": {
+    "intro": "Thưởng thức ẩm thực Nga tại các quán cà phê, nhà hàng (Столовая, Кафе, Ресторан) là nét văn hóa thú vị. Bạn sẽ bắt gặp những món ăn truyền thống nổi tiếng như súp củ dền Borsch, bánh xếp Pelmeni, bánh xèo Blini và đồ uống trà nóng ấm áp.",
+    "dialogues": [
+      {
+        "speaker": "Официант",
+        "role": "Bồi bàn",
+        "ru": "Добрый день! Вот меню. Вы уже готовы сделать заказ?",
+        "vi": "Xin chào quý khách! Đây là thực đơn. Quý khách đã sẵn sàng gọi món chưa ạ?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Thực khách",
+        "ru": "Да, пожалуйста. Принесите мне тарелку борща со сметаной и порцию сибирских пельменей.",
+        "vi": "Vâng ạ. Làm ơn mang cho tôi một bát súp Borsch kèm váng sữa smetana và một suất bánh Pelmeni Siberia."
+      },
+      {
+        "speaker": "Официант",
+        "role": "Bồi bàn",
+        "ru": "Что будете пить? Чай, кофе или клюквенный морс?",
+        "vi": "Quý khách muốn dùng đồ uống gì ạ? Trà, cà phê hay nước trái cây việt quất mors?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Thực khách",
+        "ru": "Чёрный чай с лимоном, пожалуйста. И принесите счёт сразу.",
+        "vi": "Cho tôi trà đen với chanh. Và làm ơn mang hóa đơn ra cùng luôn nhé."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Gọi món với «Принесите, пожалуйста...»",
+        "content": "Dùng «Принесите...» + Danh từ Cách 4 (Đối cách): «тарелку борща», «порцию пельменей», «чашку кофе»."
+      },
+      {
+        "title": "2. Cách gọi tính tiền lịch sự",
+        "content": "«Счёт, пожалуйста!» (Làm ơn cho tôi xin hóa đơn / tính tiền ạ!) hoặc «Можно счёт?»."
+      }
+    ],
+    "culturalTip": "Tại các nhà hàng Nga, tiền boa (чаевые) thường không bắt buộc ghi vào hóa đơn, nhưng thông lệ lịch sự là khách thường để lại 5-10% giá trị hóa đơn nếu hài lòng với phong cách phục vụ của nhân viên."
+  },
+  "jar_metro": {
+    "intro": "Hệ thống tàu điện ngầm Moskva (Московский метрополитен) là một trong những mạng lưới giao thông ngầm đẹp và đồ sộ nhất thế giới. Đi metro là phương tiện di chuyển cốt lõi của sinh viên để đến trường học, thư viện và trung tâm thành phố. Bạn cần thành thạo quẹt thẻ Troika, nghe loa thông báo ga và nhận biết các tuyến chuyển tàu.",
+    "dialogues": [
+      {
+        "speaker": "Anya",
+        "role": "Hành khách",
+        "ru": "Здравствуйте! Дайте, пожалуйста, карту «Тройка» и положите на неё пятьсот рублей.",
+        "vi": "Chào chị! Làm ơn cho tôi mua thẻ Troika và nạp vào thẻ 500 rúp ạ."
+      },
+      {
+        "speaker": "Кассир",
+        "role": "Thu ngân vé",
+        "ru": "Возьмите карту. Залог за карту — восемьдесят рублей, остальное на балансе.",
+        "vi": "Cầm lấy thẻ nhé. Tiền cọc thẻ là 80 rúp, phần còn lại trong số dư tài khoản."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Hành khách",
+        "ru": "Спасибо! Скажите, как доехать до станции «Университет»?",
+        "vi": "Cảm ơn chị! Cho em hỏi làm sao để đi đến ga Universitet ạ?"
+      },
+      {
+        "speaker": "Пассажир",
+        "role": "Người đi tàu",
+        "ru": "Вам нужно сесть на поезд в сторону центра, потом на станции «Охотный ряд» сделать переход на красную линию.",
+        "vi": "Bạn cần lên tàu hướng về trung tâm, sau đó ở ga Okhotny Ryad chuyển sang tuyến màu đỏ."
+      },
+      {
+        "speaker": "Диктор",
+        "role": "Loa phát thanh Metro",
+        "ru": "Осторожно, двери закрываются! Следующая станция — «Университет».",
+        "vi": "Chú ý, cửa đang đóng lại! Ga tiếp theo là — Universitet."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Câu thông báo kinh điển trên tàu Metro Nga",
+        "content": "«Осторожно, двери закрываются! Следующая станция — ...» (Hãy cẩn thận, cửa đang đóng! Ga tiếp theo là...)\n«Переход на станцию ...» (Chuyển sang ga...)"
+      },
+      {
+        "title": "2. Cách dùng động từ chuyển động «доехать» (đi đến nơi bằng phương tiện)",
+        "content": "«Как доехать до станции...?» (Làm thế nào để đi xe/tàu đến ga...?) — luôn dùng «до» + Danh từ Cách 2."
+      }
+    ],
+    "culturalTip": "Khi đứng trên thang cuốn (эскалатор) metro tại Nga, quy tắc bất thành văn là luôn luôn đứng nép về phía bên PHẢI, để làn bên TRÁI cho những người có việc gấp đi bộ vượt lên."
+  },
+  "jar_bank": {
+    "intro": "Mở tài khoản và làm thẻ ngân hàng (đặc biệt là Sberbank, VTB hoặc Tinkoff) là việc cấp thiết để nhận học bổng, chuyển tiền sinh hoạt và chi tiêu không dùng tiền mặt tại Nga. Thủ tục ngân hàng đòi hỏi bạn có hộ chiếu gốc, bản dịch công chứng, thẻ di trú và giấy đăng ký tạm trú hợp lệ.",
+    "dialogues": [
+      {
+        "speaker": "Сотрудник",
+        "role": "Giao dịch viên",
+        "ru": "Здравствуйте! Возьмите талон в электронной очереди. Чем могу помочь?",
+        "vi": "Xin chào! Mời bạn lấy số thứ tự ở máy lấy vé. Tôi có thể giúp gì cho bạn?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Khách hàng",
+        "ru": "Здравствуйте! Я иностранная студентка. Мне нужно открыть дебетовую карту «Мир» для получения стипендии.",
+        "vi": "Chào anh! Tôi là sinh viên nước ngoài. Tôi cần mở thẻ ghi nợ Mir để nhận học bổng sinh viên ạ."
+      },
+      {
+        "speaker": "Сотрудник",
+        "role": "Giao dịch viên",
+        "ru": "Пожалуйста, предоставьте ваш паспорт, нотариальный перевод и регистрацию.",
+        "vi": "Xin vui lòng xuất trình hộ chiếu, bản dịch công chứng và giấy đăng ký tạm trú."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Khách hàng",
+        "ru": "Вот все документы. Сколько времени изготавливается пластиковая карта?",
+        "vi": "Đây là toàn bộ giấy tờ ạ. Thẻ nhựa làm mất bao lâu thì xong ạ?"
+      },
+      {
+        "speaker": "Сотрудник",
+        "role": "Giao dịch viên",
+        "ru": "Карта будет готова через три рабочих дня. Мы пришлём СМС на ваш российский номер телефона.",
+        "vi": "Thẻ sẽ hoàn thành sau 3 ngày làm việc. Chúng tôi sẽ gửi tin nhắn SMS vào số điện thoại Nga của bạn."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Từ vựng ngân hàng thiết yếu",
+        "content": "• «Открыть счёт / карту» (Mở tài khoản / mở thẻ)\n• «Снять наличные» (Rút tiền mặt tại cây ATM)\n• «Перевести деньги по номеру телефона» (Chuyển khoản theo số điện thoại qua hệ thống SBP)"
+      },
+      {
+        "title": "2. Thời gian hoàn thành «через + Thời gian»",
+        "content": "Dùng «через» + Danh từ Cách 4 để diễn tả sau bao lâu nữa một việc sẽ xảy ra: «через три дня» (sau 3 ngày nữa), «через неделю» (sau một tuần nữa)."
+      }
+    ],
+    "culturalTip": "Hầu hết các giao dịch thanh toán cá nhân tại Nga hiện nay đều chuyển tiền qua số điện thoại (перевод по СБП). Bạn chỉ cần nhớ số điện thoại đăng ký ngân hàng của đối phương là có thể chuyển tiền tức thì 24/7."
+  },
+  "jar_post": {
+    "intro": "Nhận bưu kiện (посылка) người nhà gửi từ Việt Nam sang hoặc gửi quà lưu niệm Nga về nước là hoạt động quen thuộc của du học sinh qua hệ thống Bưu điện Nga (Почта России). Bạn cần biết cách tra mã định danh bưu chính (трек-номер), xuất trình giấy tờ và điền phiếu nhận hàng.",
+    "dialogues": [
+      {
+        "speaker": "Anya",
+        "role": "Khách hàng",
+        "ru": "Здравствуйте! Мне пришло уведомление о посылке из Вьетнама. Вот трек-номер и мой паспорт.",
+        "vi": "Chào cô ạ! Cháu nhận được thông báo bưu phẩm từ Việt Nam. Đây là mã bưu gửi và hộ chiếu của cháu ạ."
+      },
+      {
+        "speaker": "Оператор",
+        "role": "Giao dịch viên bưu điện",
+        "ru": "Сейчас проверю по базе данных. Да, посылка прибыла вчера. Распишитесь на извещении.",
+        "vi": "Để tôi kiểm tra hệ thống. Đúng rồi, kiện hàng đến hôm qua. Cháu ký vào giấy báo nhận này nhé."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Khách hàng",
+        "ru": "Мне нужно что-то доплачивать за хранение или доставку?",
+        "vi": "Cháu có cần thanh toán thêm phí lưu kho hay vận chuyển gì không ạ?"
+      },
+      {
+        "speaker": "Оператор",
+        "role": "Giao dịch viên bưu điện",
+        "ru": "Нет, всё уже оплачено отправителем. Пожалуйста, вот ваша посылка. Вес — восемь килограммов.",
+        "vi": "Không, người gửi đã thanh toán hết rồi. Đây là kiện hàng của cháu nhé. Cân nặng 8 kg."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Nhận bưu phẩm: Các động từ và cụm từ",
+        "content": "• «Получить посылку» (Nhận bưu kiện)\n• «Отправить письмо / бандероль» (Gửi thư / bưu phẩm nhỏ)\n• «Отслеживать по трек-номеру» (Theo dõi bưu phẩm qua mã vận đơn)."
+      },
+      {
+        "title": "2. Câu bị động trạng thái «оплачено»",
+        "content": "«Всё уже оплачено» (Mọi chi phí đã được thanh toán xong) — dạng phân từ ngắn của động từ оплатить."
+      }
+    ],
+    "culturalTip": "Bạn nên cài đặt ứng dụng di động Pochta Rossii và đăng ký dịch vụ nhận hàng bằng mã OTP (Простая электронная подпись). Khi đó bạn không cần mang theo giấy thông báo giấy mà chỉ cần đọc mã OTP nhận qua tin nhắn SMS là có thể lấy bưu phẩm rất nhanh."
+  },
+  "jar_hospital": {
+    "intro": "Khám chữa bệnh tại phòng khám (Поликлиника) hoặc bệnh viện Nga là tình huống đòi hỏi vốn từ chuyên sâu về triệu chứng, thân nhiệt, toa thuốc và bảo hiểm y tế (ДМС / ОМС). Việc diễn đạt chính xác cơn đau giúp bác sĩ chẩn đoán đúng bệnh.",
+    "dialogues": [
+      {
+        "speaker": "Врач",
+        "role": "Bác sĩ",
+        "ru": "Здравствуйте! На что вы жалуетесь? Что у вас болит?",
+        "vi": "Chào cháu! Cháu cảm thấy khó chịu ở đâu? Cháu bị đau chỗ nào?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Bệnh nhân",
+        "ru": "Здравствуйте, доктор. У меня сильно болит горло, насморк и температура тридцать восемь и пять.",
+        "vi": "Chào bác sĩ. Cháu bị đau họng dữ dội, sổ mũi và sốt 38.5 độ ạ."
+      },
+      {
+        "speaker": "Врач",
+        "role": "Bác sĩ",
+        "ru": "Давно это началось? Давайте послушаем ваши лёгкие. Дышите глубже.",
+        "vi": "Triệu chứng bắt đầu từ bao giờ? Nào để bác nghe phổi nhé. Hít thở sâu vào nào."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Bệnh nhân",
+        "ru": "Вчера вечером после прогулки на морозе.",
+        "vi": "Tối qua sau khi cháu đi dạo ngoài trời lạnh ạ."
+      },
+      {
+        "speaker": "Врач",
+        "role": "Bác sĩ",
+        "ru": "У вас острая простуда. Вот рецепт: пейте много тёплого чая, принимайте жаропонижающее и оставайтесь в постели три дня.",
+        "vi": "Cháu bị cảm lạnh cấp tính. Đây là đơn thuốc: uống nhiều trà ấm, uống thuốc hạ sốt và nghỉ ngơi trên giường 3 ngày nhé."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Cấu trúc nói bị đau: «У меня болит / болят...»",
+        "content": "• «У меня болит + Danh từ số ít»: «У меня болит голова» (Tôi đau đầu), «У меня болит горло» (Tôi đau họng).\n• «У меня болят + Danh từ số nhiều»: «У меня болят зубы» (Tôi đau răng), «У меня болят глаза» (Tôi đau mắt)."
+      },
+      {
+        "title": "2. Cấu trúc nói nhiệt độ cơ thể",
+        "content": "«У меня температура тридцать семь и два» (Tôi sốt 37.2 độ). Khi nói về sốt cao: «высокая температура»."
+      }
+    ],
+    "culturalTip": "Sinh viên quốc tế tại Nga bắt buộc phải mua bảo hiểm y tế tự nguyện (ДМС). Khi có dấu hiệu ốm sốt, hãy gọi ngay số điện thoại hotline trên thẻ bảo hiểm để được điều phối bác sĩ khám miễn phí hoặc đến đúng phòng khám đối tác."
+  },
+  "jar_dekanat": {
+    "intro": "Phòng Quản lý Đào tạo / Giáo vụ Khoa (Деканат) là cơ quan quản lý toàn bộ quá trình học tập của bạn tại trường đại học: lịch học, kỳ thi (сессия), sổ điểm (зачётка), học bổng và gia hạn thị thực sinh viên. Giao tiếp tại Dekanat cần thái độ chuẩn mực, đúng chức danh và thủ tục hành chính.",
+    "dialogues": [
+      {
+        "speaker": "Anya",
+        "role": "Sinh viên",
+        "ru": "Здравствуйте! Извините, можно войти?",
+        "vi": "Em chào các thầy cô! Xin lỗi cho em hỏi em có thể vào được không ạ?"
+      },
+      {
+        "speaker": "Сотрудник",
+        "role": "Cán bộ giáo vụ",
+        "ru": "Да, проходите. Из какой вы группы и какой у вас вопрос?",
+        "vi": "Vào đi em. Em ở lớp nào và có việc gì cần giải quyết?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Sinh viên",
+        "ru": "Я из группы 201. Мне нужна академическая справка для продления студенческой визы.",
+        "vi": "Em ở lớp 201 ạ. Em cần xin giấy xác nhận sinh viên để làm thủ tục gia hạn visa du học."
+      },
+      {
+        "speaker": "Сотрудник",
+        "role": "Cán bộ giáo vụ",
+        "ru": "Напишите заявление по образцу. Справка будет готова завтра после обеда.",
+        "vi": "Em viết đơn theo mẫu này nhé. Giấy xác nhận sẽ có vào chiều mai sau giờ ăn trưa."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Sinh viên",
+        "ru": "Спасибо огромное! А когда начинается зимняя экзаменационная сессия?",
+        "vi": "Em cảm ơn cô rất nhiều! Cho em hỏi kỳ thi học kỳ mùa đông khi nào bắt đầu ạ?"
+      },
+      {
+        "speaker": "Сотрудник",
+        "role": "Cán bộ giáo vụ",
+        "ru": "Сессия начнётся десятого января. Расписание зачётов уже висит на стенде.",
+        "vi": "Kỳ thi bắt đầu từ ngày 10 tháng 1. Lịch thi điều kiện (zachyot) đã dán trên bảng thông báo rồi em nhé."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Xin phép lịch sự khi vào văn phòng",
+        "content": "«Извините, можно войти?» (Xin lỗi, tôi có thể vào được không?)\n«Можно спросить?» (Tôi có thể hỏi một chút được không?)\n«Мне нужна справка...» (Tôi cần một giấy xác nhận... — dùng «нужна» vì «справка» là giống cái)."
+      },
+      {
+        "title": "2. Phân biệt thi cử tại đại học Nga: «Зачёт» và «Экзамен»",
+        "content": "• «Зачёт» (Thi điều kiện): chỉ có kết quả Đạt (зачтено) hoặc Không đạt (не зачтено).\n• «Экзамен» (Thi học phần): chấm theo thang điểm 5 (2 = Trượt, 3 = Trung bình, 4 = Khá, 5 = Giỏi/Xuất sắc)."
+      }
+    ],
+    "culturalTip": "Để gia hạn visa sinh viên, bạn phải nộp hồ sơ lên Dekanat hoặc Phòng Hợp tác Quốc tế (Международный отдел) trước khi visa cũ hết hạn ít nhất 45 ngày làm việc. Quá hạn visa tại Nga có thể bị phạt hành chính và trục xuất rất nghiêm ngặt."
+  },
+  "jar_travel": {
+    "intro": "Du lịch và khám phá lãnh thổ trải dài qua 11 múi giờ của nước Nga là ước mơ của mọi người học tiếng Nga. Từ chuyến tàu hỏa xuyên Siberia huyền thoại (Транссиб), hồ nước ngọt Baikal sâu nhất hành tinh, đến vẻ đẹp tráng lệ của cố đô Saint Petersburg hay thủ phủ Kazan ngàn năm.",
+    "dialogues": [
+      {
+        "speaker": "Anya",
+        "role": "Du khách",
+        "ru": "Здравствуйте! Я хочу купить билет на поезд «Сапсан» из Москвы в Санкт-Петербург на пятницу.",
+        "vi": "Xin chào! Tôi muốn mua vé tàu cao tốc Sapsan từ Moskva đi Saint Petersburg vào thứ Sáu ạ."
+      },
+      {
+        "speaker": "Кассир РЖД",
+        "role": "Thu ngân đường sắt",
+        "ru": "Утренний рейс в семь сорок или дневной в тринадцать тридцать? Есть места у окна в вагоне эконом-класса.",
+        "vi": "Chuyến sáng lúc 7:40 hay chuyến chiều lúc 13:30? Còn chỗ ngồi cạnh cửa sổ toa phổ thông ạ."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Du khách",
+        "ru": "Утренний рейс, пожалуйста. Сколько длится поездка?",
+        "vi": "Cho tôi chuyến sáng ạ. Chuyến đi mất bao lâu thời gian ạ?"
+      },
+      {
+        "speaker": "Кассир РЖД",
+        "role": "Thu ngân đường sắt",
+        "ru": "Поезд идёт ровно четыре часа. Прибытие на Московский вокзал Петербурга.",
+        "vi": "Tàu chạy đúng 4 tiếng. Đến ga Moskovsky tại Petersburg nhé bạn."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Mua vé tàu xe: Điểm đi và điểm đến",
+        "content": "• «из Москвы в Санкт-Петербург» (từ Moskva đi Saint Petersburg) — dùng «из» + Cách 2 và «в» + Cách 4.\n• «билет на поезд / на самолёт» (vé đi tàu / vé máy bay) — dùng «на» + Cách 4."
+      },
+      {
+        "title": "2. Nói về thời gian kéo dài của hành trình",
+        "content": "«Сколько длится поездка? — Поездка длится четыре часа» (Chuyến đi kéo dài bao lâu? — Kéo dài 4 tiếng)."
+      }
+    ],
+    "culturalTip": "Đi tàu hỏa đường dài tại Nga (РЖД), nét văn hóa đặc trưng là hành khách luôn chuẩn bị quần áo thoải mái để thay trên tàu, mang theo dép lê và cùng chia sẻ đồ ăn vặt, uống trà nóng từ chiếc cốc thủy tinh có giá đỡ kim loại truyền thống (подстаканник)."
+  },
+  "jar_academic": {
+    "intro": "Ở cấp độ B2 (TRKI-2), sinh viên chuyển từ giao tiếp sinh hoạt sang nghiên cứu học thuật chuyên sâu: đọc hiểu bài báo khoa học, viết khóa luận cử nhân/thạc sĩ (дипломная работа), bảo vệ đề tài và trích dẫn tài liệu tham khảo theo quy chuẩn quốc gia GOST.",
+    "dialogues": [
+      {
+        "speaker": "Anya",
+        "role": "Học viên",
+        "ru": "Здравствуйте, профессор! Я подготовила черновик первой главы моей дипломной работы.",
+        "vi": "Kính chào Giáo sư! Em đã hoàn thành bản thảo chương 1 của luận văn tốt nghiệp ạ."
+      },
+      {
+        "speaker": "Профессор",
+        "role": "Giáo sư hướng dẫn",
+        "ru": "Добрый день, Аня. Какова научная новизна и методология вашего исследования?",
+        "vi": "Chào Anya. Tính mới khoa học và phương pháp luận trong nghiên cứu của em là gì?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Học viên",
+        "ru": "В исследовании проведён сравнительный анализ данных и предложена новая математическая модель.",
+        "vi": "Trong nghiên cứu đã tiến hành phân tích so sánh dữ liệu và đề xuất mô hình toán học mới ạ."
+      },
+      {
+        "speaker": "Профессор",
+        "role": "Giáo sư hướng dẫn",
+        "ru": "Хорошо. Обратите внимание на оформление библиографического списка по стандарту ГОСТ.",
+        "vi": "Tốt lắm. Em chú ý quy cách trình bày danh mục tài liệu tham khảo theo tiêu chuẩn GOST nhé."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Cấu trúc học thuật văn phong viết (Научный стиль)",
+        "content": "Văn phong khoa học tiếng Nga ưa chuộng câu bị động và danh từ hóa hành động:\n• «Проведён анализ...» (Đã tiến hành phân tích...)\n• «В работе рассматривается проблема...» (Trong công trình xem xét vấn đề...)\n• «Полученные результаты подтверждают...» (Các kết quả thu được khẳng định...)."
+      },
+      {
+        "title": "2. Giới từ học thuật «согласно / в соответствии с»",
+        "content": "• «согласно исследованию» (theo nghiên cứu — Cách 3)\n• «в соответствии с требованиями» (phù hợp với các yêu cầu — Cách 5)."
+      }
+    ],
+    "culturalTip": "Khi bảo vệ luận văn (защита диплома) tại Nga, việc chuẩn bị bài phát biểu (доклад) ngắn gọn trong đúng 7-10 phút cùng slide trình chiếu chuẩn xác là yếu tố quyết định để Hội đồng chấm điểm cao nhất (Отлично)."
+  },
+  "jar_interview": {
+    "intro": "Gia nhập thị trường việc làm hoặc thực tập tại các công ty Nga đòi hỏi bạn làm chủ quy trình phỏng vấn tuyển dụng: viết sơ yếu lý lịch CV chuẩn Nga (Резюме), đàm phán hợp đồng lao động (трудовой договор) và nắm vững văn hóa công sở.",
+    "dialogues": [
+      {
+        "speaker": "HR-менеджер",
+        "role": "Trưởng phòng nhân sự",
+        "ru": "Здравствуйте, Аня! Расскажите кратко о вашем опыте работы и ключевых компетенциях.",
+        "vi": "Xin chào Anya! Bạn hãy giới thiệu ngắn gọn về kinh nghiệm làm việc và các năng lực cốt lõi của mình."
+      },
+      {
+        "speaker": "Anya",
+        "role": "Ứng viên",
+        "ru": "Здравствуйте! Я имею опыт работы в международной логистике, свободно владею русским и английским языками.",
+        "vi": "Xin chào! Tôi có kinh nghiệm trong ngành logistics quốc tế, thông thạo tiếng Nga và tiếng Anh."
+      },
+      {
+        "speaker": "HR-менеджер",
+        "role": "Trưởng phòng nhân sự",
+        "ru": "Каковы ваши ожидания по уровню заработной платы и графику работы?",
+        "vi": "Kỳ vọng của bạn về mức lương và lịch làm việc như thế nào?"
+      },
+      {
+        "speaker": "Anya",
+        "role": "Ứng viên",
+        "ru": "Я ориентируюсь на рынок и готова к полному рабочему дню с возможностью гибридного формата.",
+        "vi": "Tôi hướng theo mặt bằng thị trường và sẵn sàng làm việc toàn thời gian với chế độ làm việc kết hợp linh hoạt ạ."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Động từ diễn đạt kỹ năng và năng lực chuyên môn",
+        "content": "• «Владеть языком / технологией» (Thông thạo ngôn ngữ / công nghệ — dùng Cách 5)\n• «Иметь опыт работы в сфере...» (Có kinh nghiệm làm việc trong lĩnh vực... — dùng Cách 6)\n• «Быть ответственным за...» (Chịu trách nhiệm về... — dùng Cách 4)."
+      },
+      {
+        "title": "2. Mẫu câu trả lời phỏng vấn chuyên nghiệp",
+        "content": "«Я стремлюсь к профессиональному росту...» (Tôi hướng tới sự phát triển nghề nghiệp...)\n«Моя цель — принести максимальную пользу компании» (Mục tiêu của tôi là mang lại giá trị tối đa cho công ty)."
+      }
+    ],
+    "culturalTip": "Tại công sở Nga, tính thẳng thắn và sự minh bạch trong công việc được đánh giá rất cao. Khi phỏng vấn, hãy tự tin trả lời đúng trọng tâm câu hỏi, dẫn chứng cụ thể bằng số liệu thành tích thay vì nói chung chung."
+  },
+  "jar_media": {
+    "intro": "Đọc hiểu báo chí, các kênh truyền thông chính thống và bình luận phân tích xã hội (như TASS, RIA Novosti, Kommersant, RT) là đỉnh cao của trình độ B2/C1. Bạn sẽ tiếp cận với ngôn ngữ báo chí chính luận hiện đại, các thuật ngữ kinh tế - ngoại giao và góc nhìn đa chiều.",
+    "dialogues": [
+      {
+        "speaker": "Ведущий",
+        "role": "Bình luận viên tin tức",
+        "ru": "В эфире аналитическая программа «Главные события недели». Сегодня в фокусе — развитие международного сотрудничества.",
+        "vi": "Quý vị đang theo dõi chương trình phân tích Thời sự tuần qua. Tâm điểm hôm nay là sự phát triển hợp tác quốc tế."
+      },
+      {
+        "speaker": "Эксперт",
+        "role": "Chuyên gia phân tích",
+        "ru": "По последним данным статистики, товарооборот между странами вырос на двадцать процентов.",
+        "vi": "Theo số liệu thống kê mới nhất, kim ngạch thương mại giữa các quốc gia đã tăng 20%."
+      },
+      {
+        "speaker": "Ведущий",
+        "role": "Bình luận viên tin tức",
+        "ru": "Какие ключевые факторы повлияли на такую положительную динамику?",
+        "vi": "Những nhân tố then chốt nào đã tác động đến xu hướng tích cực này thưa ông?"
+      },
+      {
+        "speaker": "Эксперт",
+        "role": "Chuyên gia phân tích",
+        "ru": "Прежде всего — развитие новых логистических коридоров и расширение прямых расчётов в национальных валютах.",
+        "vi": "Trước hết là việc phát triển các hành lang logistics mới và mở rộng thanh toán trực tiếp bằng đồng nội tệ."
+      }
+    ],
+    "grammarNotes": [
+      {
+        "title": "1. Mẫu câu dẫn nguồn tin tức báo chí",
+        "content": "• «По данным агентства...» (Theo số liệu của hãng thông tấn... — dùng Cách 3)\n• «Как сообщает источник...» (Như nguồn tin cho biết...)\n• «В соответствии с официальным заявлением...» (Phù hợp với tuyên bố chính thức...)."
+      },
+      {
+        "title": "2. Từ ngữ biểu đạt xu hướng và biến động",
+        "content": "• «рост / падение товарооборота» (sự tăng trưởng / sụt giảm kim ngạch)\n• «положительная / отрицательная динамика» (xu hướng tích cực / tiêu cực)\n• «повлиять на что-то» (tác động đến điều gì — dùng Cách 4)."
+      }
+    ],
+    "culturalTip": "Để nâng cao khả năng đọc hiểu tin tức tiếng Nga, bạn hãy luyện đọc lướt tiêu đề (заголовки) và đoạn tóm tắt mở đầu (лид) của các bài báo trước. Báo chí tiếng Nga luôn đưa thông tin cốt lõi nhất (Ai làm gì, ở đâu, khi nào) vào ngay câu đầu tiên của bản tin."
+  }
+};
+
 // =======================================================================
 // GẮN TẤT CẢ DỮ LIỆU LÊN WINDOW ĐỂ ĐỒNG BỘ RUNTIME TOÀN DỰ ÁN
 // =======================================================================
@@ -2552,6 +3392,7 @@ if (typeof window !== "undefined") {
   window.MOCK_TEST = typeof MOCK_TEST !== "undefined" ? MOCK_TEST : {};
   window.TRKI_BANK = typeof TRKI_BANK !== "undefined" ? TRKI_BANK : [];
   window.VOCAB_JARS = typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : [];
+  window.TOPIC_ARTICLES = typeof TOPIC_ARTICLES !== "undefined" ? TOPIC_ARTICLES : {};
   window.SHOP_PRODUCTS = typeof SHOP_PRODUCTS !== "undefined" ? SHOP_PRODUCTS : [];
   window.PACKAGES = typeof PACKAGES !== "undefined" ? PACKAGES : [];
   window.BLOG_POSTS = typeof BLOG_POSTS !== "undefined" ? BLOG_POSTS : [];
