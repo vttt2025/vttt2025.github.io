@@ -184,8 +184,10 @@
           if (res.error || !res.data) return [];
           return (res.data || []).map(function (row) {
             return {
-              id: row.id,
+              id: row.code || row.id,
+              code: row.code || row.id,
               name: row.jar_name,
+              title: row.jar_name,
               level: row.level || "A1",
               levelName: row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1",
               desc: row.description || "",

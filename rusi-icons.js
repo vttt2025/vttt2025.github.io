@@ -533,6 +533,13 @@
     "graduation-cap": "graduation-cap", "exam": "graduation-cap", "trki": "graduation-cap", "torfl": "graduation-cap", "mock-test": "graduation-cap", "thi": "graduation-cap", "🎓": "graduation-cap", "🏛️": "graduation-cap", "🏛": "graduation-cap",
     "book-open-blog": "book-open-blog", "blog": "book-open-blog", "book": "book-open-blog", "doc": "book-open-blog", "reading": "book-open-blog", "cam-nang": "book-open-blog", "📖": "book-open-blog", "📰": "book-open-blog", "📚": "book-open-blog",
     "shopping-bag-shop": "shopping-bag-shop", "shop": "shopping-bag-shop", "cart": "shopping-bag-shop", "bag": "shopping-bag-shop", "store": "shopping-bag-shop", "🛍️": "shopping-bag-shop", "🛍": "shopping-bag-shop", "🛒": "shopping-bag-shop",
+    "briefcase": "briefcase", "💼": "briefcase",
+    "shirt": "shirt", "👗": "shirt",
+    "couch": "building-2", "🛋️": "building-2", "🛋": "building-2",
+    "backpack": "book-open-blog", "🎒": "book-open-blog",
+    "bus": "train", "🚌": "train",
+    "utensils": "utensils", "🍲": "utensils",
+    "football": "activity", "⚽": "activity",
 
     // Gamification
     "flame-streak": "flame-streak", "streak": "flame-streak", "flame": "flame-streak", "fire": "flame-streak", "lua": "flame-streak", "🔥": "flame-streak",

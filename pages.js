@@ -1901,14 +1901,24 @@ function initVocabPage() {
 
   const getVocabJars = () => {
     const customJars = STORE.get("custom_jars", []);
-    const baseJars = (cloudJars && cloudJars.length) ? cloudJars : (typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []);
+    const localJars = typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : [];
+    let baseJars = localJars;
+    if (cloudJars && cloudJars.length) {
+      const cloudMap = new Map();
+      cloudJars.forEach(j => cloudMap.set(j.code || j.id, j));
+      const merged = [...cloudJars];
+      localJars.forEach(j => {
+        if (!cloudMap.has(j.code || j.id)) merged.push(j);
+      });
+      baseJars = merged;
+    }
     const jars = [...baseJars, ...customJars].map(j => ({
       id: j.id,
       kind: "jar",
       level: j.level || "A1",
       levelName: j.levelName || (j.level === "B2" ? "Trung cấp cao B2" : j.level === "B1" ? "Trung cấp B1" : j.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
-      title: j.name,
-      desc: j.desc || "",
+      title: j.name || j.title,
+      desc: j.desc || j.description || "",
       icon: j.icon || "archive-jar",
       wordsCount: (j.words || []).length,
       is_pro_only: Boolean(j.is_pro_only || j.is_vip || (j.level === "B2" && j.id !== "jar_travel") || j.id === "jar_bank" || j.id === "jar_hospital" || j.id === "jar_dekanat"),
@@ -2582,8 +2592,18 @@ const showTopicArticle = (jarId) => {
 
   const showJarDetail = (jarId, initialMode = "list") => {
     const customJars = STORE.get("custom_jars", []);
-    const baseJars = (cloudJars && cloudJars.length) ? cloudJars : (typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : []);
-    const jar = [...baseJars, ...customJars].find((j) => j.id === jarId);
+    const localJars = typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : [];
+    let baseJars = localJars;
+    if (cloudJars && cloudJars.length) {
+      const cloudMap = new Map();
+      cloudJars.forEach(j => cloudMap.set(j.code || j.id, j));
+      const merged = [...cloudJars];
+      localJars.forEach(j => {
+        if (!cloudMap.has(j.code || j.id)) merged.push(j);
+      });
+      baseJars = merged;
+    }
+    const jar = [...baseJars, ...customJars].find((j) => j.id === jarId || j.code === jarId);
     if (!jar) return;
 
     // Kiểm tra quyền truy cập PRO
