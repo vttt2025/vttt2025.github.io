@@ -368,6 +368,7 @@ const WordDetail = (() => {
         icon: "🫙",
         desc: "Các từ vựng đã tra cứu trong từ điển",
         words: [],
+        level: "custom",
         is_system: false
       }];
     }

@@ -567,9 +567,14 @@
         try {
           var res = await sb.from("packages").select("*").order("price", { ascending: true });
           if (res.error || !res.data) return null;
-          return res.data.map(function (row) {
-            return {
-              id: (row.id || "").toLowerCase(),
+          var seen = {};
+          var list = [];
+          res.data.forEach(function (row) {
+            var rawId = (row.id || "").toLowerCase();
+            if (!rawId || seen[rawId]) return;
+            seen[rawId] = true;
+            list.push({
+              id: rawId,
               badge: row.badge || "",
               title: row.title,
               desc: row.description || "",
@@ -577,8 +582,9 @@
               priceOld: row.price_old ? Number(row.price_old) : undefined,
               popular: Boolean(row.popular),
               features: Array.isArray(row.feature_list) ? row.feature_list : (row.features && row.features.list) || []
-            };
+            });
           });
+          return list;
         } catch (e) {
           console.warn("[RusiSupabase] Lỗi lấy gói cước:", e);
           return null;

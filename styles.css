@@ -8156,6 +8156,50 @@ body.rusika-chat-open .rusika-floating-widget {
   font-size: 10px;
   font-weight: 600;
 }
+
+/* Tiến độ học trang chủ theo phong cách Method (Spaced Repetition & Stats) */
+.method-progress-section {
+  padding: 70px 70px;
+  margin: 36px auto 30px;
+}
+.progress-stats-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 24px;
+}
+.prog-mini-stat {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 10px 8px;
+  text-align: center;
+}
+.prog-mini-val {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.prog-mini-lbl {
+  display: block;
+  font-size: 0.72rem;
+  color: #a8a5b0;
+  margin-top: 4px;
+  font-weight: 600;
+}
+@media (max-width: 860px) {
+  .method-progress-section {
+    padding: 50px 24px;
+    margin: 24px auto 20px;
+  }
+}
+@media (max-width: 520px) {
+  .method-progress-section {
+    padding: 36px 16px;
+    margin: 18px auto 16px;
+  }
+}
 .section-kicker-dark {
   color: #8dbcef;
 }
@@ -11322,6 +11366,12 @@ img, video, iframe {
   background: #fef3c7;
   color: #b45309;
   border: 1px solid #fde68a;
+}
+
+.dau-badge-custom {
+  background: var(--primary-soft, #fef2f2);
+  color: var(--primary, #c52233);
+  border: 1px solid rgba(197, 34, 51, 0.2);
 }
 
 .dau-badge-cat {

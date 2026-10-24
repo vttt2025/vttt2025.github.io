@@ -811,13 +811,13 @@ const Monetization = {
 
   /** Lấy danh sách gói cước chuẩn */
   getPackages() {
+    let raw = [];
     if (typeof window !== "undefined" && window.PACKAGES && window.PACKAGES.length > 0) {
-      return window.PACKAGES;
-    }
-    if (typeof PACKAGES !== "undefined" && PACKAGES.length > 0) {
-      return PACKAGES;
-    }
-    return [
+      raw = window.PACKAGES;
+    } else if (typeof PACKAGES !== "undefined" && PACKAGES.length > 0) {
+      raw = PACKAGES;
+    } else {
+      raw = [
       {
         id: "pro_6m",
         badge: "6 THÁNG",
@@ -868,6 +868,16 @@ const Monetization = {
         ]
       }
     ];
+    }
+    const seen = new Set();
+    const result = [];
+    for (const p of raw) {
+      const pid = (p.id || "").toLowerCase();
+      if (!pid || seen.has(pid)) continue;
+      seen.add(pid);
+      result.push(p);
+    }
+    return result;
   },
 
   /**
@@ -1909,41 +1919,77 @@ function renderIndexProgressIfLoggedIn(user) {
   }
   const streak = (typeof STORE !== "undefined") ? STORE.get("streak", 0) : 0;
 
-  host.style.display = "block";
+  host.style.display = "grid";
   host.innerHTML = `
-    <div class="voc-progress-horizontal-card">
-      <div class="voc-progress-horiz-left">
-        <div class="voc-progress-horiz-icon">
-          ${window.RusiIcons ? RusiIcons.get("trending-up", { size: 22 }) : ""}
+    <div class="method-art">
+      <div class="lesson-window">
+        <div class="window-bar">
+          <span></span>
+          <span></span>
+          <span></span>
+          <small>Spaced Repetition (SM-2)</small>
         </div>
-        <div class="voc-progress-horiz-title">
-          <h3>Tiến Độ Học &amp; Ôn Tập Từ Vựng Của Bạn</h3>
-          <p>Thuật toán Spaced Repetition (SM-2) tự động theo dõi và gợi ý từ vựng cần ôn đúng thời điểm.</p>
+        <div class="lesson-body">
+          <span class="dialog-label">HỆ THỐNG GHI NHỚ LẶP LẠI NGẮT QUÃNG</span>
+          <p class="dialog">Повторение</p>
+          <p class="translation">Ôn tập đúng thời điểm — Mẹ của sự thành công</p>
+          <div class="progress-stats-mini-grid">
+            <div class="prog-mini-stat">
+              <span class="prog-mini-val" style="color:var(--green, #10b981)">${stats.mastered || 0}</span>
+              <span class="prog-mini-lbl">Đã thuộc</span>
+            </div>
+            <div class="prog-mini-stat">
+              <span class="prog-mini-val" style="color:var(--orange, #f59e0b)">${dueCount}</span>
+              <span class="prog-mini-lbl">Cần ôn tập</span>
+            </div>
+            <div class="prog-mini-stat">
+              <span class="prog-mini-val" style="color:var(--blue, #38bdf8)">${stats.newCount || 0}</span>
+              <span class="prog-mini-lbl">Từ mới</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mini-score">
+        <strong>🔥 ${streak}</strong>
+        <span>Ngày liên tiếp</span>
+      </div>
+    </div>
+
+    <div class="method-copy">
+      <span class="section-kicker section-kicker-dark">TIẾN ĐỘ HỌC CỦA BẠN</span>
+      <h2>Tiến Độ Học &amp; Ôn Tập Từ Vựng Của Bạn</h2>
+      <p>
+        Thuật toán Spaced Repetition (SM-2) tự động theo dõi và gợi ý từ vựng cần ôn đúng thời điểm vàng.
+      </p>
+
+      <div class="method-list">
+        <div>
+          <span style="color:var(--green, #10b981)">01</span>
+          <p>
+            <strong>Đã thuộc: ${stats.mastered || 0} từ</strong>
+            <small>Từ vựng đã ghi nhớ vững chắc qua các chu kỳ lặp lại ngắt quãng khoa học.</small>
+          </p>
+        </div>
+        <div>
+          <span style="color:var(--orange, #f59e0b)">02</span>
+          <p>
+            <strong>Cần ôn tập: ${dueCount} từ tới hạn</strong>
+            <small>${dueCount > 0 ? "Có " + dueCount + " từ đến thời điểm vàng cần củng cố ngay hôm nay để không bị trôi vào quên lãng." : "Tuyệt vời! Bạn đã hoàn thành toàn bộ từ vựng cần ôn tập hôm nay."}</small>
+          </p>
+        </div>
+        <div>
+          <span style="color:var(--blue, #38bdf8)">03</span>
+          <p>
+            <strong>Từ mới: ${stats.newCount || 0} từ</strong>
+            <small>Kho từ vựng sẵn sàng để nạp thêm vào Lọ từ vựng cá nhân và luyện tập mỗi ngày.</small>
+          </p>
         </div>
       </div>
 
-      <div class="voc-progress-horiz-stats">
-        <div class="voc-stat-box">
-          <div class="voc-stat-val" style="color:var(--green, #16a34a)">${stats.mastered || 0}</div>
-          <div class="voc-stat-label">Đã thuộc</div>
-        </div>
-        <div class="voc-stat-box">
-          <div class="voc-stat-val" style="color:var(--orange, #ea580c)">${dueCount}</div>
-          <div class="voc-stat-label">Cần ôn tập</div>
-        </div>
-        <div class="voc-stat-box">
-          <div class="voc-stat-val" style="color:var(--blue, #2563eb)">${stats.newCount || 0}</div>
-          <div class="voc-stat-label">Từ mới</div>
-        </div>
-        <div class="voc-stat-box">
-          <div class="voc-stat-val" style="color:var(--russia-red, #c52233)">${streak}</div>
-          <div class="voc-stat-label">Chuỗi ngày 🔥</div>
-        </div>
-      </div>
-
-      <div class="voc-progress-horiz-right">
-        <a href="vocabulary.html" class="btn btn-primary btn-sm" style="font-weight:700;padding:12px 20px;border-radius:10px;display:flex;align-items:center;gap:8px;text-decoration:none">
-          ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Ôn tập flashcard ngay →
+      <div style="margin-top:28px">
+        <a href="vocabulary.html" class="button button-primary" style="border-radius:14px;padding:14px 26px;font-size:0.95rem;font-weight:700;display:inline-flex;align-items:center;gap:10px;text-decoration:none">
+          ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 18 }) : ""}
+          <span>Ôn tập flashcard ngay →</span>
         </a>
       </div>
     </div>

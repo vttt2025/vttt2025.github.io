@@ -251,7 +251,7 @@ window.openAddToJarModal = function(wordData) {
       icon: "archive-jar",
       desc: "Lọ chứa các từ vựng bạn yêu thích và đã lưu",
       words: [],
-      level: "A1",
+      level: "custom",
       is_system: false
     }];
     if (typeof STORE !== "undefined") STORE.set("custom_jars", customJars);
@@ -346,7 +346,7 @@ window.openAddToJarModal = function(wordData) {
         icon: createdIcon,
         desc: "Lọ từ vựng cá nhân",
         words: [],
-        level: "A1",
+        level: "custom",
         is_system: false
       };
       currentCustomJars.push(newJar);
@@ -1797,7 +1797,9 @@ function initVocabPage() {
       });
       baseJars = merged;
     }
-    const jars = [...baseJars, ...customJars].map(j => ({
+    // Loai bo toan bo lo tu ca nhan khoi danh sach bai hoc theo cap do (A1, A2...)
+    const systemJars = baseJars.filter(j => j.is_system !== false && !String(j.id).startsWith("custom-"));
+    const jars = systemJars.map(j => ({
       id: j.id,
       kind: "jar",
       level: j.level || "A1",
@@ -2077,7 +2079,7 @@ function initVocabPage() {
         icon: "archive-jar",
         desc: "Lọ chứa các từ vựng bạn yêu thích và đã lưu",
         words: [],
-        level: "A1",
+        level: "custom",
         is_system: false
       }];
       if (typeof STORE !== "undefined") STORE.set("custom_jars", customJars);
@@ -2092,6 +2094,14 @@ function initVocabPage() {
             j.icon = "archive-jar";
             changed = true;
           }
+        }
+              if (j.level === "A1" || j.level === "A2" || !j.level) {
+          j.level = "custom";
+          changed = true;
+        }
+        if (j.is_system !== false) {
+          j.is_system = false;
+          changed = true;
         }
       });
       if (changed && typeof STORE !== "undefined") STORE.set("custom_jars", customJars);
@@ -2279,7 +2289,7 @@ function initVocabPage() {
         icon,
         desc: "Lọ từ vựng cá nhân do học viên tạo",
         words: [],
-        level: "A1",
+        level: "custom",
         is_system: false
       });
       STORE.set("custom_jars", customJars);
@@ -2573,7 +2583,7 @@ const showTopicArticle = (jarId) => {
     const detail = el("#jarDetailHost");
     if (detail) {
       detail.classList.remove("hidden");
-      const isCustom = !jar.is_system && String(jar.id).startsWith("custom-");
+      const isCustom = jar.is_system === false || String(jar.id).startsWith("custom-") || jar.level === "custom";
 
       detail.innerHTML = `
         <!-- STICKY TOP BACK BAR -->
@@ -2582,17 +2592,18 @@ const showTopicArticle = (jarId) => {
             <i data-rusi-icon="arrow-left" data-size="16"></i> Quay lại kho Lọ từ vựng
           </button>
           <div class="dau-workspace-info">
-            <span class="dau-badge ${jar.level === "A2" ? "dau-badge-a2" : jar.level === "B1" ? "dau-badge-b1" : jar.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${jar.level || "A1"}</span>
+            <span class="dau-badge ${isCustom ? "dau-badge-custom" : jar.level === "A2" ? "dau-badge-a2" : jar.level === "B1" ? "dau-badge-b1" : jar.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${isCustom ? "LỌ CỦA TÔI" : (jar.level || "A1")}</span>
             <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(jar.icon || "archive-jar", { size: 22 }) : ""} ${esc(jar.name)} (${(jar.words || []).length} từ)</span>
           </div>
           <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
             ${isCustom ? `
               <button type="button" class="btn btn-outline btn-sm" id="btnAddWordCustom">+ Thêm từ mới</button>
               <button type="button" class="btn btn-soft btn-sm" id="btnDeleteCustomJar" style="color:var(--red)" title="Xóa lọ này">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : "Xóa"}</button>
-            ` : ""}
-            <button type="button" class="btn btn-soft btn-sm" id="btnViewArticleFromJar" title="Xem bài học chủ đề">
-              ${window.RusiIcons ? RusiIcons.get("book-open", { size: 14 }) : ""} Xem bài học
-            </button>
+            ` : `
+              <button type="button" class="btn btn-soft btn-sm" id="btnViewArticleFromJar" title="Xem bài học chủ đề">
+                ${window.RusiIcons ? RusiIcons.get("book-open", { size: 14 }) : ""} Xem bài học
+              </button>
+            `}
             <button type="button" class="btn btn-primary btn-sm" id="btnStudyJar">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Học Flashcard</button>
           </div>
         </div>
@@ -2620,9 +2631,7 @@ const showTopicArticle = (jarId) => {
               jars = jars.filter(j => j.id !== jar.id);
               STORE.set("custom_jars", jars);
               toast(`Đã xóa lọ «${jar.name}» thành công!`);
-              detail.classList.add("hidden");
-              shelf.classList.remove("hidden");
-              renderVocabHub();
+              showMainLayout();
             }
           };
         }
@@ -6051,7 +6060,14 @@ function initIndexPage() {
 
     const isPro = typeof Monetization !== "undefined" ? Monetization.isPro() : false;
     const proInfo = typeof Monetization !== "undefined" ? Monetization.getProInfo() : null;
-    const pkgs = typeof Monetization !== "undefined" ? Monetization.getPackages() : (typeof PACKAGES !== "undefined" ? PACKAGES : []);
+    const rawPkgs = typeof Monetization !== "undefined" ? Monetization.getPackages() : (typeof PACKAGES !== "undefined" ? PACKAGES : []);
+    const seenPkgs = new Set();
+    const pkgs = rawPkgs.filter(p => {
+      const pid = (p.id || "").toLowerCase();
+      if (!pid || seenPkgs.has(pid)) return false;
+      seenPkgs.add(pid);
+      return true;
+    });
 
     // Banner thông tin trạng thái học viên phía trên bảng giá
     const alertBannerHtml = `

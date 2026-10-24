@@ -16,12 +16,12 @@
  */
 
 window.FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAbpH1U_z_qqx2nGx-BM0dKpWOsBhW7SgE",
-  authDomain: "rusitrki.firebaseapp.com",
-  projectId: "rusitrki",
-  storageBucket: "rusitrki.firebasestorage.app",
-  messagingSenderId: "893392774690",
-  appId: "1:893392774690:web:67653b3b3734fe01accc7b"
+  apiKey: "AIzaSyCbjQcPKcH2j41ZuHqY-X7cYyhl0b-PJIQ",
+  authDomain: "dau-trki.firebaseapp.com",
+  projectId: "dau-trki",
+  storageBucket: "dau-trki.firebasestorage.app",
+  messagingSenderId: "854191764938",
+  appId: "1:854191764938:web:3bfa382f40b45aab950b33"
 };
 
 /**
