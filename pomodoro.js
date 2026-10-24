@@ -90,16 +90,9 @@
     },
 
     createDOM: function () {
-      // 1. Floating Launcher Button
-      if (!document.getElementById("pomoFloatBtn")) {
-        const floatBtn = document.createElement("button");
-        floatBtn.id = "pomoFloatBtn";
-        floatBtn.className = "pomo-float-btn";
-        floatBtn.type = "button";
-        floatBtn.innerHTML = `🍅 <span>Pomodoro</span>`;
-        floatBtn.title = "Mở đồng hồ tập trung Pomodoro";
-        document.body.appendChild(floatBtn);
-      }
+      // 1. Floating Launcher Button (ẩn hoàn toàn, thay bằng header chip)
+      const existingFloat = document.getElementById("pomoFloatBtn");
+      if (existingFloat) existingFloat.style.display = "none";
 
       // 2. Control Modal Backdrop
       if (!document.getElementById("pomoModalBackdrop")) {
@@ -229,6 +222,15 @@
       const btnContinueNext = document.getElementById("btnPomoContinueNext");
 
       // Toggle modal
+      const bindHeaderBtn = () => {
+        const hBtn = document.getElementById("headerPomoBtn");
+        if (hBtn && modal) {
+          hBtn.onclick = () => {
+            modal.classList.add("open");
+          };
+        }
+      };
+      bindHeaderBtn();
       if (floatBtn && modal) {
         floatBtn.onclick = () => {
           modal.classList.add("open");
@@ -517,20 +519,39 @@
         settingsPanel.style.pointerEvents = (this.isRunning || this.phase !== "idle") ? "none" : "auto";
       }
 
-      // 6. Floating button status
-      const floatBtn = document.getElementById("pomoFloatBtn");
-      if (floatBtn) {
-        floatBtn.classList.toggle("is-running", this.isRunning && this.phase === "focus");
-        floatBtn.classList.toggle("is-break", this.isRunning && this.phase === "break");
+      // 6. Header compact chip & Floating button status
+      const hBtn = document.getElementById("headerPomoBtn");
+      const hTime = document.getElementById("headerPomoTime");
+      const hIcon = document.getElementById("headerPomoIcon");
+      const modal = document.getElementById("pomoModalBackdrop");
 
+      if (hBtn) {
+        hBtn.classList.toggle("is-running", this.isRunning && this.phase === "focus");
+        hBtn.classList.toggle("is-break", this.isRunning && this.phase === "break");
         if (this.isRunning) {
-          floatBtn.innerHTML = `🍅 <span>${timeStr} (${this.currentCycle}/${this.totalCycles})</span>`;
-          document.title = `(${timeStr}) Pomodoro · RUSI TRKI`;
+          hBtn.title = `Đang tập trung: ${timeStr} (Chu kỳ ${this.currentCycle}/${this.totalCycles}) · Bấm để xem`;
         } else {
-          floatBtn.innerHTML = `🍅 <span>Pomodoro</span>`;
-          document.title = document.title.replace(/^\([0-9:]+\)\s*/, "");
+          hBtn.title = `Đồng hồ tập trung Pomodoro (${this.focusMin} phút) · Bấm để mở`;
+        }
+        if (modal) {
+          hBtn.onclick = () => modal.classList.add("open");
         }
       }
+      if (hTime) {
+        hTime.textContent = timeStr;
+      }
+      if (hIcon) {
+        hIcon.textContent = (this.phase === "break") ? "☕" : "🍅";
+      }
+
+      if (this.isRunning) {
+        document.title = `(${timeStr}) Pomodoro · RUSI TRKI`;
+      } else {
+        document.title = document.title.replace(/^\([0-9:]+\)\s*/, "");
+      }
+
+      const floatBtn = document.getElementById("pomoFloatBtn");
+      if (floatBtn) floatBtn.style.display = "none";
     }
   };
 

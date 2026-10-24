@@ -2166,8 +2166,10 @@ function initVocabPage() {
   };
 
   const renderVocabSidebar = () => {
+    const progressHost = el("#vocabProgressHorizontalHost");
+    const userJarsHost = el("#vocabUserJarsHost");
     const sidebarHost = el("#vocSidebarHost");
-    if (!sidebarHost) return;
+    if (!progressHost && !userJarsHost && !sidebarHost) return;
 
     let stats = { newCount: 0, reviewing: 0, learning: 0, mastered: 0 };
     let dueCount = 0;
@@ -2298,26 +2300,29 @@ function initVocabPage() {
       if (b) b.onclick = () => openCreateJarModal();
     });
 
-    sidebarHost.querySelectorAll(".voc-btn-study-jar").forEach(btn => {
-      btn.onclick = () => {
-        const jId = btn.dataset.jarId;
-        if (jId) showJarDetail(jId);
-      };
-    });
+    const jarsContainer = userJarsHost || sidebarHost;
+    if (jarsContainer) {
+      jarsContainer.querySelectorAll(".voc-btn-study-jar").forEach(btn => {
+        btn.onclick = () => {
+          const jId = btn.dataset.jarId;
+          if (jId) showJarDetail(jId);
+        };
+      });
 
-    sidebarHost.querySelectorAll(".voc-btn-del-jar").forEach(btn => {
-      btn.onclick = () => {
-        const jId = btn.dataset.jarId;
-        const jName = btn.dataset.jarName || "lọ từ này";
-        if (confirm(`Bạn có chắc muốn xóa lọ «${jName}» không?`)) {
-          let jars = STORE.get("custom_jars", []);
-          jars = jars.filter(j => j.id !== jId);
-          STORE.set("custom_jars", jars);
-          toast(`Đã xóa lọ «${jName}»`);
-          renderVocabCards();
-        }
-      };
-    });
+      jarsContainer.querySelectorAll(".voc-btn-del-jar").forEach(btn => {
+        btn.onclick = () => {
+          const jId = btn.dataset.jarId;
+          const jName = btn.dataset.jarName || "lọ từ này";
+          if (confirm(`Bạn có chắc muốn xóa lọ «${jName}» không?`)) {
+            let jars = STORE.get("custom_jars", []);
+            jars = jars.filter(j => j.id !== jId);
+            STORE.set("custom_jars", jars);
+            toast(`Đã xóa lọ «${jName}»`);
+            renderVocabCards();
+          }
+        };
+      });
+    }
   };
 
   const openCreateJarModal = () => {

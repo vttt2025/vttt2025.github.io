@@ -1594,6 +1594,10 @@ function renderHeader() {
       </nav>
 
       <div class="header-right header-actions">
+        <button type="button" class="header-pomo-chip" id="headerPomoBtn" title="Đồng hồ Pomodoro tập trung">
+          <span class="header-pomo-icon" id="headerPomoIcon">🍅</span>
+          <span class="header-pomo-time" id="headerPomoTime">25:00</span>
+        </button>
         <div id="userArea" class="user-area"></div>
         <button class="menu-button" id="mobileMenuBtn" type="button" aria-label="Mở menu" aria-expanded="false">
           <span></span>
@@ -1614,6 +1618,9 @@ function renderHeader() {
 
   initNavDropdowns();
   renderUserArea();
+  if (window.RusiPomodoro && typeof window.RusiPomodoro.updateUI === "function") {
+    window.RusiPomodoro.updateUI();
+  }
 }
 
 /** Render một mục nav đơn (không có phần con). */
