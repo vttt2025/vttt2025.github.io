@@ -180,7 +180,7 @@
         var sb = getClient();
         if (!sb) return [];
         try {
-          var res = await sb.from("vocab_jars").select("*").eq("is_system", true).order("created_at", { ascending: true });
+          var res = await withTimeout(sb.from("vocab_jars").select("*").eq("is_system", true).order("created_at", { ascending: true }), 3500);
           if (res.error || !res.data) return [];
           return (res.data || []).map(function (row) {
             return {
@@ -306,7 +306,7 @@
         try {
           var q = sb.from("trki_tests").select("*").eq("is_published", true);
           if (level && level !== "all") q = q.eq("level", level);
-          var res = await q;
+          var res = await withTimeout(q, 3500);
           if (res.error || !res.data) return null;
           return res.data.map(function (row) {
             var raw = row.raw_data || {};
@@ -361,7 +361,7 @@
         try {
           var q = sb.from("listening_lessons").select("*").order("part_number", { ascending: true });
           if (level && level !== "all") q = q.eq("level", level);
-          var res = await q;
+          var res = await withTimeout(q, 3500);
           if (res.error || !res.data) return null;
           return res.data.map(function (row) {
             var raw = row.raw_data || {};
@@ -400,7 +400,7 @@
         try {
           var q = sb.from("speaking_lessons").select("*");
           if (level && level !== "all") q = q.eq("level", level);
-          var res = await q;
+          var res = await withTimeout(q, 3500);
           if (res.error || !res.data) return null;
           return res.data.map(function (row) {
             var raw = row.raw_data || {};
@@ -434,7 +434,7 @@
         try {
           var q = sb.from("writing_topics").select("*");
           if (level && level !== "all") q = q.eq("level", level);
-          var res = await q;
+          var res = await withTimeout(q, 3500);
           if (res.error || !res.data) return null;
           return res.data.map(function (row) {
             var raw = row.raw_data || {};
@@ -473,7 +473,7 @@
         try {
           var q = sb.from("blog_posts").select("*").eq("published", true).order("created_at", { ascending: false });
           if (category && category !== "all") q = q.eq("category", category);
-          var res = await q;
+          var res = await withTimeout(q, 3500);
           if (res.error || !res.data) return null;
           return res.data.map(function (row) {
             return {
@@ -507,7 +507,7 @@
         try {
           var q = sb.from("shop_products").select("*").order("price", { ascending: true });
           if (category && category !== "all") q = q.eq("category", category);
-          var res = await q;
+          var res = await withTimeout(q, 3500);
           if (res.error || !res.data) return null;
           return res.data.map(function (row) {
             return {

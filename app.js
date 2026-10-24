@@ -1978,15 +1978,72 @@ function quizEngine(container, questions, { onFinish } = {}) {
   renderQ();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  applyLightTheme();
-  renderHeader();
-  renderFooter();
-  applySeason("winter");
-  Progress.touchStreak();
-  bindAuthToHeader();
-  mergeAdminData();
-  if (typeof initPage === "function") initPage();
+let _appBooted = false;
+let _pageInited = false;
+
+function triggerPageInit() {
+  if (_pageInited) return;
+  if (typeof window.initPage === "function") {
+    _pageInited = true;
+    try {
+      window.initPage();
+    } catch (err) {
+      console.error("[App] Lỗi khi thực thi initPage():", err);
+    }
+  } else {
+    let retries = 0;
+    const retryTimer = setInterval(() => {
+      retries++;
+      if (typeof window.initPage === "function") {
+        clearInterval(retryTimer);
+        if (!_pageInited) {
+          _pageInited = true;
+          try {
+            window.initPage();
+          } catch (err) {
+            console.error("[App] Lỗi khi thực thi initPage() (retry):", err);
+          }
+        }
+      } else if (retries >= 30) {
+        clearInterval(retryTimer);
+      }
+    }, 40);
+  }
+}
+window.triggerPageInit = triggerPageInit;
+
+function bootApp() {
+  if (_appBooted) {
+    triggerPageInit();
+    return;
+  }
+  _appBooted = true;
+
+  try { applyLightTheme(); } catch (e) { console.error("[Boot] applyLightTheme:", e); }
+  try { renderHeader(); } catch (e) { console.error("[Boot] renderHeader:", e); }
+  try { renderFooter(); } catch (e) { console.error("[Boot] renderFooter:", e); }
+  try { applySeason("winter"); } catch (e) { console.error("[Boot] applySeason:", e); }
+  try { Progress.touchStreak(); } catch (e) { console.error("[Boot] touchStreak:", e); }
+  try { bindAuthToHeader(); } catch (e) { console.error("[Boot] bindAuthToHeader:", e); }
+  try { mergeAdminData(); } catch (e) { console.error("[Boot] mergeAdminData:", e); }
+
+  triggerPageInit();
+}
+window.bootApp = bootApp;
+
+// Đảm bảo app boot dù document đã ready hay chưa
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", bootApp);
+} else {
+  // DOMContentLoaded đã kết thúc, chạy ngay tức thì!
+  bootApp();
+}
+
+// Bắt sự kiện pageshow để hỗ trợ Back/Forward Cache (bfcache) của trình duyệt
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) {
+    bootApp();
+  }
 });
 
 /**

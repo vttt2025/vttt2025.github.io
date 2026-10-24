@@ -81,24 +81,46 @@
   <div id="app-header"></div>
 
   <main class="container" style="padding-bottom:80px">
-    <div id="listenHost"></div>
+    <div id="listenHost">
+      <div class="rusi-skeleton-hub">
+        <div class="rusi-skeleton-hero"></div>
+        <div class="rusi-skeleton-tabs">
+          <div class="rusi-skeleton-tab"></div>
+          <div class="rusi-skeleton-tab"></div>
+          <div class="rusi-skeleton-tab"></div>
+          <div class="rusi-skeleton-tab"></div>
+        </div>
+        <div class="rusi-skeleton-grid">
+          <div class="rusi-skeleton-card"></div>
+          <div class="rusi-skeleton-card"></div>
+          <div class="rusi-skeleton-card"></div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <div id="app-footer"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="supabase-client.js"></script>
+  <script src="supabase-client.js?v=4.6"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="firebase-config.js"></script>
-  <script src="rusi-icons.js?v=3.2"></script>
-  <script src="data.js?v=4.0"></script>
-  <script src="auth.js?v=3.0"></script>
-  <script src="app.js?v=3.5"></script>
-  <script src="pages.js?v=4.3"></script>
+  <script src="rusi-icons.js?v=4.6"></script>
+  <script src="data.js?v=4.6"></script>
+  <script src="auth.js?v=4.6"></script>
+  <script src="app.js?v=4.6"></script>
+  <script src="pages.js?v=4.6"></script>
   <script>
-    function initPage() { initListeningPage(); }
+    function initPage() {
+      if (typeof initListeningPage === "function") {
+        initListeningPage();
+      }
+    }
+    if (window.triggerPageInit) {
+      window.triggerPageInit();
+    }
   </script>
-  <script src="pomodoro.js?v=1.0"></script>
+  <script src="pomodoro.js?v=4.6"></script>
 </body>
 </html>

@@ -18128,3 +18128,68 @@ body[data-page="upgrade"] main.container {
   cursor: pointer;
   white-space: nowrap;
 }
+
+
+/* =====================================================================
+ * INSTANT SKELETON LOADING UI (Chống chớp giật & màn hình trắng)
+ * ===================================================================== */
+.rusi-skeleton-hub {
+  padding: 32px 0 60px;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.rusi-skeleton-hero {
+  height: 48px;
+  width: 55%;
+  max-width: 480px;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: rusiShimmer 1.5s infinite;
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.rusi-skeleton-tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.rusi-skeleton-tab {
+  width: 90px;
+  height: 46px;
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: rusiShimmer 1.5s infinite;
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.rusi-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.rusi-skeleton-card {
+  height: 240px;
+  background: linear-gradient(90deg, #f8fafc 25%, #ffffff 50%, #f8fafc 75%);
+  background-size: 200% 100%;
+  animation: rusiShimmer 1.5s infinite;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+@keyframes rusiShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (max-width: 768px) {
+  .rusi-skeleton-hero { width: 85%; height: 38px; }
+  .rusi-skeleton-grid { grid-template-columns: 1fr; gap: 16px; }
+  .rusi-skeleton-card { height: 210px; }
+}

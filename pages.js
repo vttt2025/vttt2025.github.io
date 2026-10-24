@@ -2916,7 +2916,9 @@ function initListeningPage() {
         if (remote && remote.length) {
           cloudListening = remote;
           console.log(`[Supabase] Đã tải ${remote.length} bài nghe từ Database!`);
-          renderListeningCards();
+          if (!currentLesson && !document.body.classList.contains("in-workspace")) {
+            renderListeningCards();
+          }
         }
       } catch (err) {
         console.warn("[Supabase] Lỗi tải bài nghe từ cloud:", err);
@@ -4205,7 +4207,9 @@ function initSpeakingPage() {
         if (remote && remote.length) {
           cloudSpeaking = remote;
           console.log(`[Supabase] Đã tải ${remote.length} bài nói từ Database!`);
-          renderSpeakingCards();
+          if (!document.body.classList.contains("in-workspace")) {
+            renderSpeakingCards();
+          }
         }
       } catch (err) {
         console.warn("[Supabase] Lỗi tải bài nói từ cloud:", err);
@@ -4598,7 +4602,9 @@ function initWritingPage() {
         if (remote && remote.length) {
           cloudWriting = remote;
           console.log(`[Supabase] Đã tải ${remote.length} đề viết từ Database!`);
-          renderWritingCards();
+          if (!document.body.classList.contains("in-workspace")) {
+            renderWritingCards();
+          }
         }
       } catch (err) {
         console.warn("[Supabase] Lỗi tải đề viết từ cloud:", err);
@@ -5090,10 +5096,17 @@ function initMockTestPage() {
       try {
         const remote = await window.RusiSupabase.tests.getPublished();
         if (remote && remote.length) {
-          bank = remote;
-          currentTest = bank[0];
-          console.log(`[Supabase] Đã tải ${remote.length} đề thi TRKI từ Database!`);
-          renderTrkiCards();
+          if (started) return;
+          const remoteIds = new Set(remote.map(r => r.id));
+          const localOnly = (typeof TRKI_BANK !== "undefined" ? TRKI_BANK : []).filter(t => !remoteIds.has(t.id));
+          bank = [...remote, ...localOnly];
+          if (!currentTest || !bank.some(t => t.id === currentTest.id)) {
+            currentTest = bank[0];
+          }
+          console.log(`[Supabase] Đã nạp & đồng bộ ${bank.length} đề thi TRKI!`);
+          if (!document.body.classList.contains("in-workspace")) {
+            renderTrkiCards();
+          }
         }
       } catch (err) {
         console.warn("[Supabase] Lỗi tải đề thi TRKI từ cloud:", err);
@@ -5394,7 +5407,12 @@ function initMockTestPage() {
   };
 
   const renderTestRoom = () => {
-    const totalQuestions = currentTest.parts.reduce((acc, p) => acc + p.questions.length, 0);
+    if (!currentTest || !Array.isArray(currentTest.parts)) {
+      console.warn("Đề thi thiếu dữ liệu parts hợp lệ, quay về danh sách.");
+      renderHub();
+      return;
+    }
+    const totalQuestions = currentTest.parts.reduce((acc, p) => acc + ((p && p.questions) ? p.questions.length : 0), 0);
 
     let html = `
       <!-- STICKY TOP BACK BAR WITH TIMER -->
