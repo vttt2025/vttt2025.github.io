@@ -248,7 +248,7 @@ window.openAddToJarModal = function(wordData) {
     customJars = [{
       id: "custom-jar-default",
       name: "Lọ từ vựng yêu thích",
-      icon: "star",
+      icon: "archive-jar",
       desc: "Lọ chứa các từ vựng bạn yêu thích và đã lưu",
       words: [],
       level: "A1",
@@ -516,20 +516,12 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         <button type="button" class="quizlet-mode-btn ${initialMode === "match" ? "active" : ""}" data-mode="match">
           ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Ghép thẻ
         </button>
-        <button type="button" class="quizlet-mode-btn ${initialMode === "test" ? "active" : ""}" data-mode="test">
-          ${window.RusiIcons ? RusiIcons.get("file-text", { size: 16 }) : ""} Kiểm tra
-        </button>
-        <button type="button" class="quizlet-mode-btn ${initialMode === "write" ? "active" : ""}" data-mode="write">
-          ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 16 }) : ""} Gõ chính tả
-        </button>
       </div>
 
       <div class="qmode-pane ${initialMode === "list" ? "active" : ""}" id="paneList"></div>
       <div class="qmode-pane ${initialMode === "flashcard" ? "active" : ""}" id="paneFlashcard"></div>
       <div class="qmode-pane ${initialMode === "learn" ? "active" : ""}" id="paneLearn"></div>
-      <div class="qmode-pane ${initialMode === "write" ? "active" : ""}" id="paneWrite"></div>
       <div class="qmode-pane ${initialMode === "match" ? "active" : ""}" id="paneMatch"></div>
-      <div class="qmode-pane ${initialMode === "test" ? "active" : ""}" id="paneTest"></div>
     </div>
   `;
 
@@ -542,9 +534,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     list: container.querySelector("#paneList"),
     flashcard: container.querySelector("#paneFlashcard"),
     learn: container.querySelector("#paneLearn"),
-    write: container.querySelector("#paneWrite"),
-    match: container.querySelector("#paneMatch"),
-    test: container.querySelector("#paneTest")
+    match: container.querySelector("#paneMatch")
   };
 
   const switchMode = (mode) => {
@@ -560,9 +550,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
     if (mode === "flashcard") renderFlashcardMode();
     if (mode === "learn") renderLearnMode();
-    if (mode === "write") renderWriteMode();
     if (mode === "match") renderMatchMode();
-    if (mode === "test") renderTestMode();
     if (mode === "list") renderListMode();
   };
 
@@ -609,7 +597,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             <div class="qcard-top-row">
               <span class="qcard-badge" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Nga</span>
               <div class="qcard-actions">
-                <button type="button" class="qcard-btn-star ${isStarred ? "starred" : ""}" id="qStarFront" title="Đánh dấu từ khó (Phím S)">${window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : ""}</button>
                 <button type="button" class="qcard-btn-addjar" id="qAddJarFront" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""} + Lưu</button>
               </div>
             </div>
@@ -630,7 +617,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             <div class="qcard-top-row">
               <span class="qcard-badge vi" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Việt</span>
               <div class="qcard-actions">
-                <button type="button" class="qcard-btn-star ${isStarred ? "starred" : ""}" id="qStarBack" title="Đánh dấu từ khó (Phím S)">${window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : ""}</button>
                 <button type="button" class="qcard-btn-addjar" id="qAddJarBack" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""} + Lưu</button>
               </div>
             </div>
@@ -653,27 +639,12 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         </div>
       </div>
 
-      <!-- CONTROLS -->
-      <div class="quizlet-controls">
-        <div class="quizlet-nav-wrap">
+      <!-- CONTROLS: CĂN CHUẨN TRUNG TÂM, XÓA XÁO TRỘN, CHỈ TỪ KHÓ, TỰ ĐỌC, TOÀN MÀN HÌNH -->
+      <div class="quizlet-controls" style="display:flex;justify-content:center;align-items:center;margin:18px 0;width:100%">
+        <div class="quizlet-nav-wrap" style="margin:0 auto;display:inline-flex;align-items:center;justify-content:center;gap:18px">
           <button type="button" class="quizlet-nav-btn" id="qNavPrev" title="Thẻ trước (Phím ←)">‹</button>
-          <div class="quizlet-counter">${fIdx + 1} / ${fActiveWords.length}</div>
+          <div class="quizlet-counter" style="font-weight:700;font-size:1.1rem;min-width:70px;text-align:center">${fIdx + 1} / ${fActiveWords.length}</div>
           <button type="button" class="quizlet-nav-btn" id="qNavNext" title="Thẻ sau (Phím →)">›</button>
-        </div>
-
-        <div class="quizlet-tools">
-          <button type="button" class="quizlet-tool-btn ${fShuffled ? "active" : ""}" id="qToolShuffle">
-            ${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) : ""} Xáo trộn
-          </button>
-          <button type="button" class="quizlet-tool-btn ${fStarredOnly ? "active" : ""}" id="qToolStar">
-            ${window.RusiIcons ? RusiIcons.get("star", { size: 14 }) : ""} Chỉ từ khó
-          </button>
-          <button type="button" class="quizlet-tool-btn ${fAutoAudio ? "active" : ""}" id="qToolAudio">
-            <span style="display:inline-flex;align-items:center">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""}</span> Tự đọc: ${fAutoAudio ? "Bật" : "Tắt"}
-          </button>
-          <button type="button" class="quizlet-tool-btn" id="qToolFullscreen">
-            ${window.RusiIcons ? RusiIcons.get("external-link", { size: 14 }) : ""} Toàn màn hình
-          </button>
         </div>
       </div>
 
@@ -757,83 +728,15 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       };
     }
 
-    // Star
-    const toggleStarCurrent = (e) => {
-      if (e) e.stopPropagation();
-      const starred = toggleQuizletStarred(currentWord.ru);
-      pane.querySelectorAll(".qcard-btn-star").forEach(b => b.classList.toggle("starred", starred));
-      toast(starred ? `Đã gắn sao từ «${currentWord.ru}»` : `Đã bỏ gắn sao từ «${currentWord.ru}»`);
-    };
-    pane.querySelector("#qStarFront").onclick = toggleStarCurrent;
-    pane.querySelector("#qStarBack").onclick = toggleStarCurrent;
-
     // Add to jar
     const addJarCurrent = (e) => {
       e.stopPropagation();
       window.openAddToJarModal(currentWord);
     };
-    pane.querySelector("#qAddJarFront").onclick = addJarCurrent;
-    pane.querySelector("#qAddJarBack").onclick = addJarCurrent;
-
-    // Shuffle
-    pane.querySelector("#qToolShuffle").onclick = () => {
-      fShuffled = !fShuffled;
-      if (fShuffled) {
-        fActiveWords = qShuffleArray(fActiveWords);
-        toast("Đã xáo trộn danh sách thẻ!");
-      } else {
-        fActiveWords = fStarredOnly
-          ? words.filter(w => getQuizletStarred().map(s => s.toLowerCase()).includes(w.ru.toLowerCase()))
-          : [...words];
-        toast("Đã khôi phục thứ tự ban đầu");
-      }
-      fIdx = 0;
-      fFlipped = false;
-      renderFlashcardMode();
-    };
-
-    // Star filter
-    pane.querySelector("#qToolStar").onclick = () => {
-      fStarredOnly = !fStarredOnly;
-      fIdx = 0;
-      fFlipped = false;
-      renderFlashcardMode();
-    };
-
-    // Auto audio
-    pane.querySelector("#qToolAudio").onclick = () => {
-      fAutoAudio = !fAutoAudio;
-      if (typeof STORE !== "undefined") STORE.set("quizlet_auto_audio", fAutoAudio);
-      toast(fAutoAudio ? "Đã bật tự động đọc từ khi chuyển thẻ" : "Đã tắt tự động đọc");
-      renderFlashcardMode();
-    };
-
-    // Fullscreen
-    pane.querySelector("#qToolFullscreen").onclick = () => {
-      const container = pane.querySelector("#qCardContainer");
-      const isFull = container.classList.toggle("fullscreen");
-      if (isFull) {
-        let exitBtn = container.querySelector("#qExitFullscreen");
-        if (!exitBtn) {
-          exitBtn = document.createElement("button");
-          exitBtn.id = "qExitFullscreen";
-          exitBtn.className = "btn btn-soft btn-sm";
-          exitBtn.style.position = "absolute";
-          exitBtn.style.top = "20px";
-          exitBtn.style.right = "24px";
-          exitBtn.style.zIndex = "10001";
-          exitBtn.innerHTML = (window.RusiIcons ? RusiIcons.get("minimize-2", { size: 14 }) : "") + " Thu nhỏ (Esc)";
-          exitBtn.onclick = () => {
-            container.classList.remove("fullscreen");
-            exitBtn.remove();
-          };
-          container.appendChild(exitBtn);
-        }
-      } else {
-        const exitBtn = container.querySelector("#qExitFullscreen");
-        if (exitBtn) exitBtn.remove();
-      }
-    };
+    const ajFront = pane.querySelector("#qAddJarFront");
+    if (ajFront) ajFront.onclick = addJarCurrent;
+    const ajBack = pane.querySelector("#qAddJarBack");
+    if (ajBack) ajBack.onclick = addJarCurrent;
   };
 
   // Keyboard shortcut listener for Flashcards
@@ -858,10 +761,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       e.preventDefault();
       const prevBtn = container.querySelector("#qNavPrev");
       if (prevBtn) prevBtn.click();
-    } else if (e.code === "KeyS") {
-      e.preventDefault();
-      const starBtn = container.querySelector("#qStarFront");
-      if (starBtn) starBtn.click();
+
     } else if (e.code === "KeyR") {
       e.preventDefault();
       if (fActiveWords[fIdx]) speak(fActiveWords[fIdx].ru);
@@ -1469,7 +1369,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 <div class="dau-preview-top">
                   <span class="dau-preview-tag" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Nga</span>
                   <div class="dau-preview-actions">
-                    <button type="button" class="dau-preview-btn-star ${isCurStarred ? "starred" : ""}" id="btnPreviewStar" title="Đánh dấu sao từ khó">${window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : ""}</button>
                     <button type="button" class="dau-preview-btn-addjar" id="btnPreviewAddJar" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} + Lọ</button>
                   </div>
                 </div>
@@ -1488,7 +1387,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 <div class="dau-preview-top">
                   <span class="dau-preview-tag vi" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Việt</span>
                   <div class="dau-preview-actions">
-                    <button type="button" class="dau-preview-btn-star ${isCurStarred ? "starred" : ""}" id="btnPreviewStarBack" title="Đánh dấu sao từ khó">${window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : ""}</button>
                     <button type="button" class="dau-preview-btn-addjar" id="btnPreviewAddJarBack" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} + Lọ</button>
                   </div>
                 </div>
@@ -1512,7 +1410,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               <button type="button" class="dau-preview-nav-btn" id="btnPreviewPrev" title="Từ trước">‹</button>
               <div class="dau-preview-counter">${previewIdx + 1} / ${previewWords.length}</div>
               <button type="button" class="dau-preview-nav-btn" id="btnPreviewNext" title="Từ tiếp theo">›</button>
-              <button type="button" class="dau-preview-ctrl-btn ${previewShuffled ? "active" : ""}" id="btnPreviewShuffle" title="Xáo trộn thứ tự từ">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) : ""} Trộn</button>
             </div>
           </div>
 
@@ -1525,20 +1422,10 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             </div>
 
             <div class="dau-toolbar-right">
-              <!-- SEARCH BOX -->
-              <div class="dau-vocab-search-wrap">
-                <span class="dau-vocab-search-icon">${window.RusiIcons ? RusiIcons.get("search-icon", { size: 16 }) : ""}</span>
-                <input type="text" class="dau-vocab-search-input" id="listSearchInput" value="${esc(searchTxt)}" placeholder="Tìm từ hoặc nghĩa…" autocomplete="off" />
-                ${searchTxt ? `<button type="button" class="dau-vocab-search-clear" id="listSearchClear">×</button>` : ""}
-              </div>
-
-              <!-- FILTER PILLS -->
+              <!-- FILTER PILLS: BỎ PHẦN TÌM KIẾM TỪ & BỎ GẮN SAO THEO YÊU CẦU -->
               <div class="dau-vocab-pills-wrap">
                 <button type="button" class="dau-vocab-pill ${showDetails ? "active" : ""}" id="btnToggleDetails" title="Hiện hoặc ẩn chi tiết câu ví dụ, từ loại, đồng nghĩa">
                   <span>${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 14 }) : ""}</span> Chi tiết
-                </button>
-                <button type="button" class="dau-vocab-pill ${filterMode === "starred" ? "active" : ""}" id="btnFilterStarred" ${starredCount === 0 && filterMode !== "starred" ? "disabled" : ""}>
-                  <span>${window.RusiIcons ? RusiIcons.get("star", { size: 14 }) : ""}</span> Gắn sao (${starredCount})
                 </button>
                 <button type="button" class="dau-vocab-pill ${filterMode === "mastered" ? "active" : ""}" id="btnFilterMastered" ${masteredCount === 0 && filterMode !== "mastered" ? "disabled" : ""}>
                   <span>${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""}</span> Đã thuộc (${masteredCount})
@@ -1593,12 +1480,10 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                     ` : ""}
                   </div>
 
-                  <!-- COL 3: ACTION BUTTONS -->
+                  <!-- COL 3: ACTION BUTTONS (Đã bỏ gắn sao và bỏ tra cứu biến cách theo yêu cầu) -->
                   <div class="dau-row-col-actions">
                     <button type="button" class="dau-action-icon-btn btn-speak-item" data-ru="${esc(w.ru)}" title="Phát âm từ này">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""}</button>
-                    <button type="button" class="dau-action-icon-btn btn-star-item ${isStarred ? "starred" : ""}" data-ru="${esc(w.ru)}" title="Đánh dấu sao từ khó">${window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : ""}</button>
                     <button type="button" class="dau-action-icon-btn btn-master-item ${isMastered ? "mastered" : ""}" data-ru="${esc(w.ru)}" title="Đánh dấu đã thuộc / thành thạo">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""}</button>
-                    <button type="button" class="dau-action-icon-btn btn-dict-detail" data-ru="${esc(w.ru)}" title="Tra cứu biến cách 6 cách & chia thì TFlat">${window.RusiIcons ? RusiIcons.get("book-open-blog", { size: 16 }) : ""}</button>
                     <button type="button" class="dau-action-icon-btn btn-addjar-item" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" data-ex="${esc(w.ex || "")}" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""}</button>
                     ${isCustomJar ? `
                       <button type="button" class="dau-action-icon-btn btn-delword-item" style="color:var(--red)" data-ru="${esc(w.ru)}" title="Xóa từ khỏi lọ này">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 16 }) : ""}</button>
@@ -2189,17 +2074,37 @@ function initVocabPage() {
       customJars = [{
         id: "custom-jar-default",
         name: "Lọ từ vựng yêu thích",
-        icon: "star",
+        icon: "archive-jar",
         desc: "Lọ chứa các từ vựng bạn yêu thích và đã lưu",
         words: [],
         level: "A1",
         is_system: false
       }];
       if (typeof STORE !== "undefined") STORE.set("custom_jars", customJars);
+    } else {
+      // Xóa dấu sao khỏi tên và đổi icon cho lọ yêu thích mặc định
+      let changed = false;
+      customJars.forEach(j => {
+        if (j.id === "custom-jar-default") {
+          const cleaned = (j.name || "Lọ từ vựng yêu thích").replace(/[★⭐*]/g, "").trim();
+          if (j.name !== cleaned || j.icon !== "archive-jar") {
+            j.name = cleaned;
+            j.icon = "archive-jar";
+            changed = true;
+          }
+        }
+      });
+      if (changed && typeof STORE !== "undefined") STORE.set("custom_jars", customJars);
     }
 
+    const user = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
     if (progressHost) {
-      progressHost.innerHTML = `
+      if (!user) {
+        progressHost.style.display = "none";
+        progressHost.innerHTML = "";
+      } else {
+        progressHost.style.display = "block";
+        progressHost.innerHTML = `
         <div class="voc-progress-horizontal-card">
           <div class="voc-progress-horiz-left">
             <div class="voc-progress-horiz-icon">
@@ -2237,6 +2142,7 @@ function initVocabPage() {
           </div>
         </div>
       `;
+      }
     }
 
     if (userJarsHost) {
@@ -2302,8 +2208,19 @@ function initVocabPage() {
 
     const jarsContainer = userJarsHost || sidebarHost;
     if (jarsContainer) {
+      // Cho phép bấm trực tiếp vào bất kỳ vị trí nào trên thẻ Lọ từ vựng trên điện thoại & máy tính
+      jarsContainer.querySelectorAll(".voc-user-jar-card").forEach(card => {
+        card.style.cursor = "pointer";
+        card.onclick = (e) => {
+          if (e.target.closest("button") || e.target.closest(".voc-user-jar-card-actions")) return;
+          const jId = card.dataset.jarId;
+          if (jId) showJarDetail(jId);
+        };
+      });
+
       jarsContainer.querySelectorAll(".voc-btn-study-jar").forEach(btn => {
-        btn.onclick = () => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
           const jId = btn.dataset.jarId;
           if (jId) showJarDetail(jId);
         };

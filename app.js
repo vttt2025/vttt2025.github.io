@@ -1594,7 +1594,7 @@ function renderHeader() {
       </nav>
 
       <div class="header-right header-actions">
-        <button type="button" class="header-pomo-chip" id="headerPomoBtn" title="Đồng hồ Pomodoro tập trung">
+        <button type="button" class="header-pomo-chip" id="headerPomoBtn" title="Đồng hồ Pomodoro tập trung" style="display:none">
           <span class="header-pomo-icon" id="headerPomoIcon">🍅</span>
           <span class="header-pomo-time" id="headerPomoTime">25:00</span>
         </button>
@@ -1680,8 +1680,14 @@ function renderUserArea() {
   const isPro = Monetization.isPro();
   const proInfo = Monetization.getProInfo();
 
-  // 1. KHI CHƯA ĐĂNG NHẬP: Duy nhất 2 nút Đăng nhập & Đăng ký
+  // 1. KHI CHƯA ĐĂNG NHẬP: Duy nhất 2 nút Đăng nhập & Đăng ký (ẩn Pomodoro & ẩn tiến độ index)
   if (!user) {
+    const pomoBtn = document.getElementById("headerPomoBtn");
+    if (pomoBtn) pomoBtn.style.display = "none";
+    const pomoPop = document.getElementById("pomoPopoverDropdown");
+    if (pomoPop) pomoPop.style.display = "none";
+    renderIndexProgressIfLoggedIn(null);
+
     const pageName = window.location.pathname.split("/").pop() || "index.html";
     const currentRedirect = encodeURIComponent(pageName + window.location.search + window.location.hash);
     host.innerHTML = `
@@ -1691,6 +1697,11 @@ function renderUserArea() {
       </div>`;
     return;
   }
+
+  // Khi đã đăng nhập: Hiển thị Pomodoro & tiến độ index
+  const pomoBtn = document.getElementById("headerPomoBtn");
+  if (pomoBtn) pomoBtn.style.display = "inline-flex";
+  renderIndexProgressIfLoggedIn(user);
 
   // 2. KHI ĐÃ ĐĂNG NHẬP: Avatar + Tên + Nút Nâng cấp PRO / Huy hiệu PRO
   const initials = (user.name || user.email || "?")
@@ -1870,6 +1881,73 @@ function renderUserArea() {
       if (window.Auth) window.Auth.signOut();
     });
   }
+}
+
+/**
+ * Hiển thị thẻ Tiến Độ Học Từ Vựng trên trang index.html khi người dùng đã đăng nhập thành công.
+ */
+function renderIndexProgressIfLoggedIn(user) {
+  const host = document.getElementById("indexUserProgressHost");
+  if (!host) return;
+
+  if (!user) {
+    host.style.display = "none";
+    host.innerHTML = "";
+    return;
+  }
+
+  let stats = { newCount: 0, reviewing: 0, learning: 0, mastered: 0 };
+  let dueCount = 0;
+  if (typeof SRS !== "undefined" && SRS.getState) {
+    try {
+      const st = SRS.getState();
+      stats = SRS.getStats(st);
+      dueCount = SRS.getDueCards(st, 9999).length;
+    } catch (e) {
+      console.warn("SRS stats error:", e);
+    }
+  }
+  const streak = (typeof STORE !== "undefined") ? STORE.get("streak", 0) : 0;
+
+  host.style.display = "block";
+  host.innerHTML = `
+    <div class="voc-progress-horizontal-card">
+      <div class="voc-progress-horiz-left">
+        <div class="voc-progress-horiz-icon">
+          ${window.RusiIcons ? RusiIcons.get("trending-up", { size: 22 }) : ""}
+        </div>
+        <div class="voc-progress-horiz-title">
+          <h3>Tiến Độ Học &amp; Ôn Tập Từ Vựng Của Bạn</h3>
+          <p>Thuật toán Spaced Repetition (SM-2) tự động theo dõi và gợi ý từ vựng cần ôn đúng thời điểm.</p>
+        </div>
+      </div>
+
+      <div class="voc-progress-horiz-stats">
+        <div class="voc-stat-box">
+          <div class="voc-stat-val" style="color:var(--green, #16a34a)">${stats.mastered || 0}</div>
+          <div class="voc-stat-label">Đã thuộc</div>
+        </div>
+        <div class="voc-stat-box">
+          <div class="voc-stat-val" style="color:var(--orange, #ea580c)">${dueCount}</div>
+          <div class="voc-stat-label">Cần ôn tập</div>
+        </div>
+        <div class="voc-stat-box">
+          <div class="voc-stat-val" style="color:var(--blue, #2563eb)">${stats.newCount || 0}</div>
+          <div class="voc-stat-label">Từ mới</div>
+        </div>
+        <div class="voc-stat-box">
+          <div class="voc-stat-val" style="color:var(--russia-red, #c52233)">${streak}</div>
+          <div class="voc-stat-label">Chuỗi ngày 🔥</div>
+        </div>
+      </div>
+
+      <div class="voc-progress-horiz-right">
+        <a href="vocabulary.html" class="btn btn-primary btn-sm" style="font-weight:700;padding:12px 20px;border-radius:10px;display:flex;align-items:center;gap:8px;text-decoration:none">
+          ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Ôn tập flashcard ngay →
+        </a>
+      </div>
+    </div>
+  `;
 }
 
 /**
