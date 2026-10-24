@@ -18298,3 +18298,615 @@ body[data-page="upgrade"] main.container {
     font-size: 0.72rem;
   }
 }
+
+
+/* =====================================================================
+ * RUSI TRKI — COMPREHENSIVE RESPONSIVE SUITE (TABLET & MOBILE)
+ * Tuân thủ tuyệt đối quy chuẩn SKILL.md, AGENTS.md & GEMINI.md:
+ * - Tablet (768px - 1024px): 2 cột cân đối, thanh bên/sidebar co giãn linh hoạt
+ * - Mobile (<= 768px): 1 cột duy nhất, tap target >= 44x44px, input font >= 16px (chống iOS zoom)
+ * - Small Mobile (<= 480px & <= 375px): padding 12px-14px, không phát sinh cuộn ngang
+ * - Cơ chế "More...": Gradient mask viền phải khi cuộn ngang tab/filter, không chém cụt chữ
+ * ===================================================================== */
+
+/* --- 1. TOÀN CỤC & CHỐNG TRÀN NGANG --- */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Đảm bảo container không bị tràn mép trên thiết bị nhỏ */
+@media (max-width: 768px) {
+  .container,
+  main.container,
+  .vocabulary-inner,
+  .page-container {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    max-width: 100% !important;
+  }
+
+  /* Chống iOS Safari tự động zoom trang khi người dùng chạm vào ô nhập */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="number"],
+  textarea,
+  select,
+  .write-area,
+  .writing-input-textarea {
+    font-size: 16px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .container,
+  main.container,
+  .vocabulary-inner,
+  .page-container {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+}
+
+/* --- 2. HEADER & THANH ĐIỀU HƯỚNG TRÊN MOBILE / TABLET --- */
+@media (max-width: 1024px) {
+  .header-inner {
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    height: 60px;
+  }
+  .header-inner {
+    height: 60px;
+    padding: 0 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .brand-mark {
+    width: 32px;
+    height: 32px;
+    font-size: 1.15rem;
+  }
+  .brand-text {
+    font-size: 1.05rem;
+  }
+  .header-actions {
+    gap: 6px;
+    align-items: center;
+  }
+  .header-pomo-chip {
+    height: 32px;
+    padding: 4px 8px;
+    font-size: 0.76rem;
+    min-height: 32px;
+  }
+  .user-trigger {
+    padding: 2px 4px;
+    min-height: 36px;
+  }
+  .user-dropdown {
+    min-width: 0 !important;
+    width: min(calc(100vw - 24px), 320px) !important;
+    right: 0 !important;
+    left: auto !important;
+  }
+  .menu-button {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 380px) {
+  .header-inner {
+    padding: 0 8px;
+  }
+  .brand-text {
+    font-size: 0.95rem;
+  }
+  .header-pomo-chip .header-pomo-time {
+    font-size: 0.7rem;
+  }
+  .btn-auth-register {
+    display: none !important;
+  }
+}
+
+/* --- 3. BỘ LỌC TABS & SCROLL TRACKS ("MORE..." GRADIENT MASK) --- */
+/* Báo hiệu có thể cuộn ngang, viền phải mờ dần, không chém cụt tab cuối */
+@media (max-width: 1024px) {
+  .level-tabs,
+  .tabs,
+  .shop-filters,
+  .dau-level-pills,
+  .quizlet-mode-bar,
+  .admin-tabs,
+  .rusi-skeleton-tabs,
+  #lisTabs.tabs {
+    display: flex !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 8px !important;
+    padding-bottom: 6px !important;
+    padding-right: 28px !important;
+    position: relative !important;
+    -webkit-mask-image: linear-gradient(to right, black 86%, transparent 100%) !important;
+    mask-image: linear-gradient(to right, black 86%, transparent 100%) !important;
+  }
+
+  .level-tabs::-webkit-scrollbar,
+  .tabs::-webkit-scrollbar,
+  .shop-filters::-webkit-scrollbar,
+  .dau-level-pills::-webkit-scrollbar,
+  .quizlet-mode-bar::-webkit-scrollbar,
+  .admin-tabs::-webkit-scrollbar,
+  .rusi-skeleton-tabs::-webkit-scrollbar,
+  #lisTabs.tabs::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .level-tab,
+  .tabs .tab,
+  .shop-filters .tab,
+  .dau-level-pill,
+  .quizlet-mode-btn {
+    flex: 0 0 auto !important;
+    min-height: 44px !important;
+    padding: 8px 14px !important;
+    border-radius: 10px !important;
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .level-tab {
+    padding: 8px 12px !important;
+    min-width: 78px !important;
+  }
+  .level-tab span.level-code {
+    font-size: 16px !important;
+  }
+  .level-tab small {
+    font-size: 9px !important;
+  }
+}
+
+/* Bảng dữ liệu có thanh cuộn ngang mượt mà kèm gradient mask */
+@media (max-width: 768px) {
+  .comparison-table-wrap,
+  .topic-vocab-table-wrapper,
+  .table-responsive,
+  table.exam {
+    position: relative !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%) !important;
+    mask-image: linear-gradient(to right, black calc(100% - 24px), transparent 100%) !important;
+    border-radius: 12px !important;
+  }
+}
+
+/* --- 4. BỐ CỤC LƯỚI CARD & CHUYỂN ĐỔI CỘT (TABLET 2 CỘT -> MOBILE 1 CỘT) --- */
+@media (max-width: 1024px) {
+  .topic-grid,
+  .dau-cards-grid,
+  .shop-grid,
+  .blog-grid,
+  .pillars-grid,
+  .pillars-grid-6,
+  .features-grid,
+  .pricing-grid,
+  .guarantees-grid,
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .topic-grid,
+  .dau-cards-grid,
+  .shop-grid,
+  .blog-grid,
+  .pillars-grid,
+  .pillars-grid-6,
+  .features-grid,
+  .pricing-grid,
+  .guarantees-grid,
+  .stats-grid,
+  .rusi-skeleton-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .topic-card,
+  .dau-card {
+    padding: 18px 16px !important;
+    border-radius: 16px !important;
+  }
+  .topic-footer {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+  .topic-footer-actions {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+  }
+  .topic-text-btn {
+    flex: 1 !important;
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .topic-circle-btn {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+/* --- 5. STICKY TOP BACK BAR TRONG WORKSPACE --- */
+@media (max-width: 768px) {
+  .dau-workspace-back-bar {
+    position: sticky !important;
+    top: 58px !important;
+    z-index: 35 !important;
+    padding: 10px 12px !important;
+    margin-bottom: 14px !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    border-radius: 12px !important;
+  }
+  .dau-workspace-back-bar > div:last-child {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    margin-left: 0 !important;
+  }
+  .dau-workspace-info {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    overflow: hidden !important;
+  }
+  .dau-workspace-title {
+    font-size: 0.95rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+  .dau-back-btn {
+    padding: 8px 12px !important;
+    font-size: 0.84rem !important;
+    min-height: 42px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+}
+
+/* --- 6. PHÒNG THI MÔ PHỎNG TRKI (mock-test.html) --- */
+@media (max-width: 900px) {
+  .mock-layout {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+  .mock-sidebar {
+    position: static !important;
+    width: 100% !important;
+    margin-top: 16px !important;
+    padding: 16px !important;
+    border-radius: 14px !important;
+  }
+  .question-palette-grid {
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr)) !important;
+    gap: 8px !important;
+  }
+  .palette-btn {
+    height: 42px !important;
+    min-height: 42px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .mock-part {
+    padding: 16px 14px !important;
+    border-radius: 14px !important;
+    margin-bottom: 16px !important;
+  }
+  .mock-part-title {
+    font-size: 1.05rem !important;
+  }
+  .reading-box {
+    padding: 14px !important;
+    border-radius: 10px !important;
+    font-size: 0.92rem !important;
+    line-height: 1.65 !important;
+  }
+  .quiz-q {
+    padding: 14px 12px !important;
+    border-radius: 12px !important;
+    margin-bottom: 14px !important;
+  }
+  .q-text {
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+  }
+  /* Vùng chạm đáp án trắc nghiệm >= 46px */
+  .options .option {
+    min-height: 46px !important;
+    padding: 12px 14px !important;
+    font-size: 0.95rem !important;
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    border-radius: 10px !important;
+    margin-bottom: 8px !important;
+  }
+}
+
+/* --- 7. WORKSPACE LUYỆN NGHE (listening.html) --- */
+@media (max-width: 1024px) {
+  .dau-shadow-grid {
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+  .dau-shadow-right-col {
+    width: 100% !important;
+    position: static !important;
+  }
+}
+
+@media (max-width: 768px) {
+  #lisTabs.tabs {
+    gap: 6px !important;
+    padding: 4px 16px 8px 0 !important;
+  }
+  #lisTabs .tab {
+    padding: 8px 14px !important;
+    font-size: 0.84rem !important;
+    min-height: 42px !important;
+    border-radius: 999px !important;
+  }
+  .dau-sentence-scroll-list {
+    max-height: 340px !important;
+  }
+  .dau-sentence-item {
+    padding: 12px 10px !important;
+    min-height: 44px !important;
+  }
+  .speed-pills {
+    display: flex !important;
+    gap: 6px !important;
+  }
+  .speed-pill {
+    padding: 6px 10px !important;
+    font-size: 0.82rem !important;
+    min-height: 38px !important;
+  }
+}
+
+/* --- 8. FLASHCARD QUIZLET & TỪ VỰNG (vocabulary.html) --- */
+@media (max-width: 768px) {
+  body.in-workspace .quizlet-card {
+    min-height: 260px !important;
+    height: 290px !important;
+    border-radius: 16px !important;
+    padding: 20px 14px !important;
+  }
+  .quizlet-card-ru {
+    font-size: 1.8rem !important;
+  }
+  .quizlet-card-vi {
+    font-size: 1.1rem !important;
+  }
+  .quizlet-mode-btn {
+    min-height: 42px !important;
+    padding: 8px 12px !important;
+    font-size: 0.84rem !important;
+  }
+  .srs-eval-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+  .srs-eval-btn {
+    min-height: 44px !important;
+    padding: 8px 4px !important;
+    font-size: 0.78rem !important;
+  }
+  .voc-user-jars-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .srs-eval-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .voc-progress-horiz-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .voc-stat-box {
+    padding: 10px 8px !important;
+  }
+  .voc-stat-val {
+    font-size: 1.25rem !important;
+  }
+}
+
+/* --- 9. WORKSPACE LUYỆN VIẾT & LUYỆN NÓI --- */
+@media (max-width: 768px) {
+  .writing-workspace-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .write-area,
+  textarea.write-area,
+  .writing-input-textarea,
+  textarea.writing-input {
+    font-size: 16px !important; /* Chống iOS tự động zoom */
+    min-height: 180px !important;
+    padding: 14px 12px !important;
+    border-radius: 12px !important;
+    line-height: 1.6 !important;
+    width: 100% !important;
+  }
+  .btn-submit,
+  .btn-model {
+    min-height: 46px !important;
+    font-size: 0.92rem !important;
+  }
+  .sp-mic-stage {
+    padding: 24px 12px !important;
+  }
+  .sp-mic-btn,
+  .mic-btn {
+    width: 56px !important;
+    height: 56px !important;
+    min-width: 56px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .btn-submit,
+  .btn-model {
+    width: 100% !important;
+    margin-bottom: 8px !important;
+    display: flex !important;
+    justify-content: center !important;
+  }
+}
+
+/* --- 10. MODALS (POMODORO, AUTH, VIETQR, CHECKOUT & ARTICLE) --- */
+@media (max-width: 768px) {
+  /* Modal Pomodoro */
+  .pomo-modal-card {
+    width: 95vw !important;
+    max-width: 440px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    padding: 20px 16px !important;
+    border-radius: 20px !important;
+  }
+  .pomo-presets-row {
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+  .pomo-preset-btn {
+    width: 100% !important;
+    padding: 8px 12px !important;
+    font-size: 0.82rem !important;
+    min-height: 40px !important;
+  }
+  .pomo-display-time {
+    font-size: 2.8rem !important;
+  }
+  .pomo-controls-row {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .pomo-btn-main, .pomo-btn-reset {
+    width: 100% !important;
+    min-height: 44px !important;
+  }
+  .pomo-break-box {
+    width: 95vw !important;
+    padding: 24px 16px !important;
+    border-radius: 20px !important;
+  }
+  .pomo-break-countdown {
+    font-size: 2.8rem !important;
+  }
+  .pomo-btn-skip {
+    min-height: 44px !important;
+    font-size: 0.88rem !important;
+    padding: 12px 16px !important;
+  }
+
+  /* Modal Auth & Checkout & Article */
+  .auth-modal-card {
+    width: min(calc(100vw - 20px), 440px) !important;
+    padding: 24px 16px !important;
+    border-radius: 16px !important;
+  }
+  .anticheat-modal {
+    padding: 12px !important;
+  }
+  .anticheat-modal-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 20px 16px !important;
+    border-radius: 14px !important;
+  }
+  #checkoutModal input,
+  .anticheat-modal input {
+    min-height: 44px !important;
+  }
+}
+
+/* --- 11. TRANG CHỦ & CÁC KHỐI NỘI DUNG CHÍNH (index.html) --- */
+@media (max-width: 768px) {
+  .hero {
+    padding: 36px 0 28px !important;
+  }
+  .hero h1 {
+    font-size: clamp(1.75rem, 7vw, 2.4rem) !important;
+    line-height: 1.25 !important;
+  }
+  .hero-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+  .hero-actions .button,
+  .hero-actions .video-link {
+    width: 100% !important;
+    min-height: 48px !important;
+    justify-content: center !important;
+    font-size: 0.95rem !important;
+  }
+  .faq-item button {
+    padding: 14px 12px !important;
+    min-height: 48px !important;
+    font-size: 0.95rem !important;
+  }
+}
