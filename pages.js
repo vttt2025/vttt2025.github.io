@@ -2121,8 +2121,7 @@ function initVocabPage() {
               ${window.RusiIcons ? RusiIcons.get("trending-up", { size: 22 }) : ""}
             </div>
             <div class="voc-progress-horiz-title">
-              <h3>Tiến Độ Học &amp; Ôn Tập Từ Vựng</h3>
-              <p>Thuật toán Spaced Repetition (SM-2) theo dõi trí nhớ dài hạn và gợi ý từ vựng cần ôn đúng thời điểm.</p>
+              <h3>Tiến Độ Học Từ Vựng</h3>
             </div>
           </div>
 

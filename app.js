@@ -1956,32 +1956,25 @@ function renderIndexProgressIfLoggedIn(user) {
     </div>
 
     <div class="method-copy">
-      <span class="section-kicker section-kicker-dark">TIẾN ĐỘ HỌC CỦA BẠN</span>
-      <h2>Tiến Độ Học &amp; Ôn Tập Từ Vựng Của Bạn</h2>
-      <p>
-        Thuật toán Spaced Repetition (SM-2) tự động theo dõi và gợi ý từ vựng cần ôn đúng thời điểm vàng.
-      </p>
+      <h2>TIẾN ĐỘ CỦA BẠN</h2>
 
       <div class="method-list">
         <div>
           <span style="color:var(--green, #10b981)">01</span>
           <p>
             <strong>Đã thuộc: ${stats.mastered || 0} từ</strong>
-            <small>Từ vựng đã ghi nhớ vững chắc qua các chu kỳ lặp lại ngắt quãng khoa học.</small>
           </p>
         </div>
         <div>
           <span style="color:var(--orange, #f59e0b)">02</span>
           <p>
             <strong>Cần ôn tập: ${dueCount} từ tới hạn</strong>
-            <small>${dueCount > 0 ? "Có " + dueCount + " từ đến thời điểm vàng cần củng cố ngay hôm nay để không bị trôi vào quên lãng." : "Tuyệt vời! Bạn đã hoàn thành toàn bộ từ vựng cần ôn tập hôm nay."}</small>
           </p>
         </div>
         <div>
           <span style="color:var(--blue, #38bdf8)">03</span>
           <p>
             <strong>Từ mới: ${stats.newCount || 0} từ</strong>
-            <small>Kho từ vựng sẵn sàng để nạp thêm vào Lọ từ vựng cá nhân và luyện tập mỗi ngày.</small>
           </p>
         </div>
       </div>
