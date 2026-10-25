@@ -772,12 +772,14 @@ const SRS = {
     if (!reinserted && state.sessionQueue[0] === cardId) state.sessionQueue.shift();
     if (!reinserted && !state.sessionDone.includes(cardId)) state.sessionDone.push(cardId);
 
-    // XP reward
-    const xpMap = { again: 1, hard: 3, good: 5, easy: 7 };
-    if (rating !== "again") {
-      Progress.addXp(xpMap[rating] || 1);
+    // Chỉ thưởng XP khi hoàn thành phiên học, không thưởng ở từng thẻ đơn lẻ
+    if (state.sessionQueue.length === 0 && (state.sessionDone || []).length > 0) {
+      if (!state._sessionAwarded) {
+        state._sessionAwarded = true;
+        Progress.addXp(15);
+        toast("Chúc mừng! Bạn đã hoàn thành phiên ôn tập Spaced Repetition (+15 XP)!");
+      }
     }
-    Progress.touchStreak();
 
     this.saveState(state);
     return {

@@ -49,7 +49,9 @@
     - **Thanh công cụ lọc chuẩn DauEnglish (`.dau-vocab-toolbar`)**: Hiển thị tiêu đề *Thuật ngữ trong học phần này (N)*, ô tìm kiếm từ/nghĩa, nút bật/tắt *Chi tiết* (ví dụ câu, từ loại, đồng nghĩa), bộ lọc *⭐ Gắn sao*, *✓ Đã thuộc*, bộ sắp xếp *Thứ tự gốc / A → Z* và nút CTA *⚡ Học Flashcard ngay →*.
     - **Hiển thị danh sách thẻ hàng ngang chuẩn (`.dau-vocab-row-card`)**: Bố cục 3 phần trực quan (Từ tiếng Nga kèm trọng âm & từ loại bên trái; Nghĩa tiếng Việt & câu ví dụ song ngữ ở giữa; Bộ nút hành động 🔊 phát âm, ⭐ gắn sao, ✓ đánh dấu đã thuộc, 📖 tra 6 cách TFlat, 🫙 lưu lọ cá nhân bên phải).
     - **Kích hoạt tức thì**: Khi bấm `[📋 Xem từ (N)]` trên lọ từ vựng, hệ thống tự động kích hoạt ngay tab danh sách (`initialMode = "list"`) và hiển thị dữ liệu ngay lập tức, không để xảy ra tình trạng trống trắng.
-  * Hỗ trợ học viên tự tạo lọ từ vựng cá nhân (`custom_jars`).
+  * Hỗ trợ học viên tự tạo lọ từ vựng cá nhân (`custom_jars`):
+    - Nút "Thêm lọ từ vựng mới" (`.voc-user-jar-card-add` và `#btnSidebarCreateJarTop`, `#btnSidebarCreateJarBottom`) mở modal tạo lọ cá nhân `openCreateJarModal()`.
+    - Biểu tượng mặc định luôn là `archive-jar` (SVG Lucide chuẩn thiết kế), không cho người dùng nhập hoặc chọn icon tùy tiện nhằm bảo đảm tính đồng bộ và thẩm mỹ cao cấp.
 * **Thuật toán lặp lại ngắt quãng SM-2 / Hộp Leitner (`srs.js`)**:
   * Vòng đời thẻ: `Unseen` $\to$ `New` $\to$ `Learning` $\to$ `Reviewing` $\to$ `Mastered`.
   * Chu kỳ giãn cách: Từ mới (Again = 5 thẻ, Hard = 6h, Good = 1 ngày, Easy = 3 ngày); Từ đã ôn (Hard $\times 2$, Good $\times 3$, Easy $\times 4$).
@@ -65,6 +67,13 @@
 * **Tra cứu Ngữ pháp Chuyên sâu TFlat (`dict-detail.js` & `dict-data.js`)**:
   * Modal tra từ đa tầng: Bảng 6 Cách danh từ/tính từ, chia thì động từ & cặp thể CB/NCB, kết cấu quản cách (Управление: ví dụ *перекусить чем?*), từ đồng/trái nghĩa, họ từ gốc.
   * Tích hợp kho từ điển offline 81.000 từ Nga-Việt và 91.700 từ Việt-Nga.
+* **Thanh Tiến Độ Học Hàng Ngang (`.user-progress-dark-strip` / `.voc-progress-horizontal-card`)**:
+  * **Kích hoạt tự động**: Hiển thị trên `index.html` khi học viên đã đăng nhập (`renderIndexProgressIfLoggedIn(user)`) và trên `vocabulary.html`.
+  * **Thiết kế chuẩn thanh tối màu (Navy/Đen `var(--russia-navy)` #0f1f38) đồng bộ với `proof-strip`**:
+    - Nền navy tối sang trọng, bo góc 20px, viền `1px solid rgba(255, 255, 255, 0.12)`, kích thước bề rộng ngang bằng khung trang (`width: min(100% - 48px, 1200px)`), chiều cao tối ưu nhỏ gọn (~80px - 90px).
+    - Giữ nguyên vẹn 100% câu chữ chuẩn gốc: Tiêu đề *Tiến Độ Học & Ôn Tập Từ Vựng Của Bạn*, mô tả *Thuật toán Spaced Repetition (SM-2) tự động theo dõi và gợi ý từ vựng cần ôn đúng thời điểm.*
+    - 4 ô chỉ số thống kê từ vựng cốt lõi: Đã thuộc (`mastered`), Cần ôn tập (`dueCards`), Từ mới (`newCount`), Chuỗi ngày (`streak 🔥`), kèm nút CTA `[Ôn tập flashcard ngay →]`.
+    - Tương thích mượt mà 3 phiên bản thiết bị: Dàn hàng ngang trên Desktop; 2 hàng co giãn linh hoạt trên Tablet; xếp dọc gọn gàng trên Mobile với tap target chuẩn $\ge 44px$, không phát sinh cuộn ngang.
 
 ### [Module 2] Luyện Viết Tả Tranh (Письмо TRKI)
 * **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số từ` (ví dụ `A1 | 40 từ`), không hiển thị mô tả, phía dưới giữ nguyên trạng thái viết và nút CTA `[Bắt đầu viết →]`.
@@ -180,6 +189,23 @@
    * `.rusi-truncate-box`, `.rusi-truncate-text`, `.rusi-btn-toggle-more`
    * `.rusi-chips-group`, `.rusi-chip-more`
    * `.rusi-scroll-track-faded`
+
+### 3.3. Quy chuẩn Header Navigation trên Điện Thoại & Máy Tính Bảng:
+* **Chiều cao chuẩn cố định**: `60px` trên toàn bộ thiết bị di động (<= 960px, <= 768px, <= 480px), loại bỏ hiện tượng giật layout khi đổi kích thước màn hình.
+* **Cụm thao tác góc phải (`.header-actions`)**:
+  * *Khi chưa đăng nhập*: Chỉ hiển thị 1 nút chính `[Đăng nhập]`, ẩn nút `[Đăng ký]` ở header ngoài trên mobile (<= 768px) để tránh tràn viền (nút Đăng ký được tích hợp sẵn bên trong Mobile Drawer).
+  * *Khi đã đăng nhập*:
+    - Pomodoro: Thu gọn thành icon `🍅` (hoặc `🍅 25m`) đạt kích thước chạm 34px x 34px.
+    - Nút Nâng cấp PRO: Thu gọn thành pill nhỏ gọn `⚡ PRO`.
+    - Nút Tài khoản: Chỉ hiển thị Avatar tròn 34px, ẩn tên học viên và caret để tiết kiệm không gian.
+    - Menu thả xuống tài khoản (`.user-dropdown`): Định vị cố định theo khung nhìn `position: fixed; top: 62px; right: 12px; width: min(calc(100vw - 24px), 320px); max-height: calc(100dvh - 74px);` chống triệt để lỗi tràn ra ngoài mép trái màn hình trên điện thoại nhỏ.
+* **Nút Menu Hamburger (`.menu-button`)**:
+  * Vùng chạm chuẩn 44px x 44px (`touch-action: manipulation`).
+  * 2 vạch ngang xếp tầng cân đối, tự động xoay mượt thành hình dấu `X` khi mở và trở về 2 vạch khi đóng thông qua CSS transition.
+* **Ngăn kéo điều hướng di động (`.header-center.nav-open`) & Lớp phủ Backdrop (`.header-backdrop`)**:
+  * Trượt nhẹ nhàng từ chân header (`top: 60px; max-height: calc(100dvh - 60px); overflow-y: auto;`).
+  * Lớp phủ Backdrop mờ phía sau che toàn bộ màn hình; chạm vào backdrop hoặc chạm vào bất kỳ liên kết điều hướng nào sẽ tự động đóng ngăn kéo ngay lập tức.
+  * Tự động khóa cuộn trang (`body.menu-locked { overflow: hidden; }`) để ngăn cuộn kép gây giật lag.
 
 ---
 
@@ -490,6 +516,10 @@ CREATE TABLE orders (
 4. **Quy chuẩn Header Navigation**:
    * Cấu trúc cân đối 3 vùng: Logo bên trái sát mép, 7 chuyên mục nằm ở giữa, cụm Auth/PRO nằm bên phải.
    * Khi chưa đăng nhập: Không hiện mặc định XP hay Streak ra ngoài. Khi đã đăng nhập: Hiện trang trọng bên trong dropdown tài khoản.
+   * Responsive chuẩn 3 thiết bị:
+     - Desktop (> 1024px): 3 khu vực cân xứng thoáng đãng, menu ngang đầy đủ 7 chuyên mục.
+     - Tablet (768px - 1024px): Co giãn linh hoạt, thanh tìm kiếm hoặc nút phụ thu gọn mượt mà.
+     - Mobile (<= 768px & <= 480px): Chiều cao cố định 60px; nút Hamburger 44px có animation xoay chéo thành dấu X (`menu-button.is-open`); drawer mở xuống mượt mà kèm lớp phủ nền mờ `header-backdrop` tự động đóng khi chạm ngoài, bấm phím Escape, click link điều hướng hoặc khi resize > 960px; khóa cuộn trang (`body.menu-locked`); dropdown thông tin tài khoản được neo `position: fixed` góc phải trên chống tràn mép trái màn hình; ẩn nút Đăng ký ở thanh ngoài để nhường không gian cho nút PRO compact (`⚡ PRO`) và Avatar học viên compact 34px.
 5. **Theme Russian Winter Cool Blue**:
    * Cố định giao diện Sáng (`data-theme="light"` và `data-season="winter"`), nền xanh mát mẻ thanh lịch của mùa đông nước Nga (`--bg: #eef4fb;`, surface `#ffffff;`, text `#0f1f38;`, border `#d2e0f0;`).
 6. **Quy chuẩn Deploy GitHub Pages & Cache-Busting**:
@@ -497,8 +527,13 @@ CREATE TABLE orders (
    * Nhúng file tĩnh kèm query parameter `?v=3.2` để buộc CDN Cloudflare và GitHub Pages cập nhật ngay phiên bản mới nhất.
 7. **Bảo mật Git & Secret Hygiene**:
    * Không bao giờ commit API secret key, Service role key hay thông tin nhạy cảm vào Git.
-8. **Quy chuẩn Chân trang (Footer Navigation)**:
+8. **Quy chuẩn Chân trang (Footer Navigation & Dark Baltic Styling)**:
+   * Đồng bộ 100% tất cả 13 trang web qua component `<footer class="site-footer">`.
    * Cố định đúng 7 liên kết chuyên mục cốt lõi trong `.footer-links`: `Từ vựng | Viết | Nghe | Nói | TRKI | Blog | Shop`. Tuyệt đối không chèn thêm các liên kết phụ trợ (`how-to-study.html`, `upgrade.html`) vào danh sách này để duy trì sự thanh thoát, cân xứng với Header.
+   * Phối màu chuẩn Deep Baltic Navy `#081528`: Viền trên `1px solid rgba(255, 255, 255, 0.08)`, chữ mô tả xám sáng `#94a3b8`, liên kết chuyên mục `#cbd5e1` (hover đổi màu `#38bdf8`), chữ bản quyền `#64748b`. Bỏ hẳn màu inline `#8dbcef` gây lỗi chữ logo `TRKI`. Vô hiệu hóa toàn bộ các override gradient màu mè ở các trang chuyên mục, bảo đảm 100% trang web đều có chân trang sang trọng, độ tương phản cao, chuẩn WCAG AAA.
+   * Responsive chuẩn 3 thiết bị:
+     - Desktop (> 1024px): Bố cục 3 cột cân đối (`Logo Brand` | `Đoạn mô tả ngắn gọn` | `7 Liên kết chuyên mục`) và hàng bản quyền dàn ngang full-width ở đáy.
+     - Tablet & Mobile (<= 960px & <= 480px): Tự động chuyển thành 1 cột duy nhất, căn giữa toàn bộ Brand, mô tả và hàng liên kết; tap target liên kết $\ge 44px$; padding gọn gàng 32px - 40px, tuyệt đối không phát sinh thanh cuộn ngang `overflow-x`.
 9. **Quy chuẩn Bộ Lọc & Phân Trang (Default Level A1 & Pagination)**:
    * Các trang danh sách bài học/đề thi mặc định lọc theo cấp độ `A1` (Sơ cấp) thay vì "Tất cả", giúp người học mới bắt đầu không bị ngợp và tối ưu hóa tốc độ nạp dữ liệu.
    * Thanh công cụ lọc phải tinh gọn, hỗ trợ phân trang (Pagination) rõ ràng khi số lượng mục lớn.
@@ -508,6 +543,20 @@ CREATE TABLE orders (
 11. **Tối ưu Trang chủ (`index.html`)**:
    * **Trợ lý AI**: Ẩn khối giới thiệu tĩnh trên trang chủ, chuyển thành dạng bong bóng chat nổi tròn thông minh (`.companion-bubble`) cố định ở góc dưới bên phải màn hình.
    * **Minh chứng xã hội (Social Proof)**: Tích hợp slider/carousel tự động chạy 5 phản hồi thực tế của học viên kèm avatar, số sao 5★ và lời nhận xét chân thực.
+12. **Quy chuẩn Gamification — Cơ chế tính Điểm XP & Chuỗi ngày Streak**:
+    * **Chỉ cộng XP khi hoàn thành (Completion-Only XP)**:
+      - Điểm kinh nghiệm XP là phần thưởng cho sự nỗ lực và hoàn tất trọn vẹn phiên học. Tuyệt đối không cộng XP lắt nhắt ở từng thao tác nhỏ (như vừa lật 1 thẻ flashcard hay vừa bấm 1 nút đánh giá).
+      - Học viên chỉ được cộng XP khi:
+        + Hoàn thành toàn bộ các thẻ trong Lọ từ vựng / phiên Spaced Repetition: Thưởng `+15 XP` và đánh dấu hoàn thành `vocabDone`.
+        + Hoàn thành bài Shadowing với điểm nhận diện giọng nói $\ge 70\%$: Thưởng `+10 XP`.
+        + Hoàn thành bài trắc nghiệm video nghe hiểu với điểm $\ge 60\%$: Thưởng `+20 XP`.
+        + Nộp bài kiểm tra trắc nghiệm / Test: Thưởng `+25 XP`.
+        + Nộp bài thi thử TRKI: Thưởng `+30 XP`.
+        + Hoàn thành bài viết tả tranh: Thưởng `+20 XP`.
+    * **Cơ chế tính Chuỗi ngày học Streak (XP-Gated Streak)**:
+      - Một ngày chỉ được tính vào Streak khi học viên có phát sinh điểm XP thực sự trong ngày đó (`lastXpDay === today`).
+      - Chỉ mở trang web, reload trang hay đăng nhập mà không học/không hoàn tất bài để kiếm XP thì **tuyệt đối không được tính là 1 ngày học** (bỏ hoàn toàn hàm `touchStreak` tự động tăng streak khi boot web).
+      - Khi tải trang (`Progress.checkStreakStatus()`), hệ thống chỉ kiểm tra nếu học viên bỏ bẫng ngày hôm qua không có XP (`diffDays > 1`) thì chuỗi streak tự động bị đứt về `0`. Khi học viên hoàn thành bài học đầu tiên trong ngày, streak sẽ tăng lên `+1` (nếu liên tiếp từ hôm qua) hoặc khởi tạo lại là `1` (nếu bị gián đoạn).
 
 
 ---

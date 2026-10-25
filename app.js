@@ -20,29 +20,68 @@ const STORE = {
 window.STORE = STORE;
 
 const Progress = {
+  /**
+   * Cộng XP và cập nhật chuỗi Streak ngày học.
+   * YÊU CẦU BẮT BUỘC: Học viên phải hoàn thành bài học/test mới được cộng XP.
+   * Chỗ tính ngày: PHẢI CÓ XP phát sinh trong ngày thì mới tính ngày đó vào chuỗi Streak!
+   */
   addXp(n) {
+    if (!n || n <= 0) return;
     const xp = STORE.get("xp", 0) + n;
     STORE.set("xp", xp);
+
+    // Tính ngày Streak: Phải được XP thì mới tính ngày đó!
+    const today = new Date().toDateString();
+    const lastXpDay = STORE.get("lastXpDay", "");
+    let currentStreak = STORE.get("streak", 0);
+
+    if (lastXpDay !== today) {
+      // Lần đầu tiên kiếm được XP trong ngày hôm nay
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+      if (lastXpDay === yesterday) {
+        currentStreak += 1;
+      } else {
+        currentStreak = 1; // Bắt đầu chuỗi mới
+      }
+      STORE.set("streak", currentStreak);
+      STORE.set("lastXpDay", today);
+      STORE.set("lastDay", today);
+    }
+
     updateHeaderChips();
     toast(`+${n} XP!`);
+
+    // Đồng bộ cập nhật thẻ Tiến độ trang chủ nếu đang mở
+    const user = (window.Auth && window.Auth.user) || STORE.get("auth_user", null);
+    if (user && typeof renderIndexProgressIfLoggedIn === "function") {
+      renderIndexProgressIfLoggedIn(user);
+    }
+
     if (window.RusiSupabase && window.RusiSupabase.isReady() && window.Auth && window.Auth.user && window.Auth.user.uid) {
-      window.RusiSupabase.profile.syncGamification(window.Auth.user.uid, STORE.get("streak", 0), xp).catch(() => {});
+      window.RusiSupabase.profile.syncGamification(window.Auth.user.uid, currentStreak, xp).catch(() => {});
     }
   },
-  touchStreak() {
+
+  /**
+   * Kiểm tra chuỗi Streak khi mở web (Boot).
+   * Tuyệt đối KHÔNG tự ý tăng ngày nếu hôm nay chưa có XP.
+   * Nếu hôm qua không có XP (bỏ lỡ >= 1 ngày), reset streak về 0 để tránh hiển thị ảo.
+   */
+  checkStreakStatus() {
     const today = new Date().toDateString();
-    const last = STORE.get("lastDay", "");
-    if (last === today) return;
     const yesterday = new Date(Date.now() - 86400000).toDateString();
-    const streak = STORE.get("streak", 0);
-    const newStreak = last === yesterday ? streak + 1 : 1;
-    STORE.set("streak", newStreak);
-    STORE.set("lastDay", today);
-    updateHeaderChips();
-    if (window.RusiSupabase && window.RusiSupabase.isReady() && window.Auth && window.Auth.user && window.Auth.user.uid) {
-      window.RusiSupabase.profile.syncGamification(window.Auth.user.uid, newStreak, STORE.get("xp", 0)).catch(() => {});
+    const lastXpDay = STORE.get("lastXpDay", STORE.get("lastDay", ""));
+
+    if (lastXpDay && lastXpDay !== today && lastXpDay !== yesterday) {
+      STORE.set("streak", 0);
     }
+    updateHeaderChips();
   },
+
+  touchStreak() {
+    this.checkStreakStatus();
+  },
+
   markDone(kind, id) {
     const done = STORE.get(kind, []);
     if (!done.includes(id)) {
@@ -1590,6 +1629,7 @@ function renderHeader() {
   }
 
   host.innerHTML = `
+  <div class="header-backdrop" id="headerBackdrop" aria-hidden="true"></div>
   <header class="header">
     <div class="header-inner">
       <div class="header-left">
@@ -1619,10 +1659,57 @@ function renderHeader() {
 
   const mobileBtn = document.getElementById("mobileMenuBtn");
   const nav = document.getElementById("mainNav");
+  const backdrop = document.getElementById("headerBackdrop");
+
+  const closeMobileMenu = () => {
+    if (nav) nav.classList.remove("nav-open");
+    if (mobileBtn) {
+      mobileBtn.classList.remove("is-open");
+      mobileBtn.setAttribute("aria-expanded", "false");
+    }
+    if (backdrop) backdrop.classList.remove("is-open");
+    document.body.classList.remove("menu-locked");
+  };
+
+  const openMobileMenu = () => {
+    if (nav) nav.classList.add("nav-open");
+    if (mobileBtn) {
+      mobileBtn.classList.add("is-open");
+      mobileBtn.setAttribute("aria-expanded", "true");
+    }
+    if (backdrop) backdrop.classList.add("is-open");
+    document.body.classList.add("menu-locked");
+  };
+
   if (mobileBtn && nav) {
     mobileBtn.addEventListener("click", () => {
-      const open = nav.classList.toggle("nav-open");
-      mobileBtn.setAttribute("aria-expanded", String(open));
+      const isOpen = nav.classList.contains("nav-open");
+      if (isOpen) {
+        closeMobileMenu();
+      } else {
+        openMobileMenu();
+      }
+    });
+  }
+
+  if (backdrop) {
+    backdrop.addEventListener("click", closeMobileMenu);
+  }
+
+  if (nav) {
+    nav.addEventListener("click", (e) => {
+      const a = e.target.closest("a");
+      if (a) closeMobileMenu();
+    });
+  }
+
+  if (!window._headerListenersBound) {
+    window._headerListenersBound = true;
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeMobileMenu();
+    });
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 960) closeMobileMenu();
     });
   }
 
@@ -1919,70 +2006,41 @@ function renderIndexProgressIfLoggedIn(user) {
   }
   const streak = (typeof STORE !== "undefined") ? STORE.get("streak", 0) : 0;
 
-  host.style.display = "grid";
+  host.style.display = "block";
   host.innerHTML = `
-    <div class="method-art">
-      <div class="lesson-window">
-        <div class="window-bar">
-          <span></span>
-          <span></span>
-          <span></span>
-          <small>Spaced Repetition (SM-2)</small>
+    <div class="voc-progress-horizontal-card">
+      <div class="voc-progress-horiz-left">
+        <div class="voc-progress-horiz-icon">
+          ${window.RusiIcons ? RusiIcons.get("trending-up", { size: 22 }) : ""}
         </div>
-        <div class="lesson-body">
-          <span class="dialog-label">HỆ THỐNG GHI NHỚ LẶP LẠI NGẮT QUÃNG</span>
-          <p class="dialog">Повторение</p>
-          <p class="translation">Ôn tập đúng thời điểm — Mẹ của sự thành công</p>
-          <div class="progress-stats-mini-grid">
-            <div class="prog-mini-stat">
-              <span class="prog-mini-val" style="color:var(--green, #10b981)">${stats.mastered || 0}</span>
-              <span class="prog-mini-lbl">Đã thuộc</span>
-            </div>
-            <div class="prog-mini-stat">
-              <span class="prog-mini-val" style="color:var(--orange, #f59e0b)">${dueCount}</span>
-              <span class="prog-mini-lbl">Cần ôn tập</span>
-            </div>
-            <div class="prog-mini-stat">
-              <span class="prog-mini-val" style="color:var(--blue, #38bdf8)">${stats.newCount || 0}</span>
-              <span class="prog-mini-lbl">Từ mới</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="mini-score">
-        <strong>🔥 ${streak}</strong>
-        <span>Ngày liên tiếp</span>
-      </div>
-    </div>
-
-    <div class="method-copy">
-      <h2>TIẾN ĐỘ CỦA BẠN</h2>
-
-      <div class="method-list">
-        <div>
-          <span style="color:var(--green, #10b981)">01</span>
-          <p>
-            <strong>Đã thuộc: ${stats.mastered || 0} từ</strong>
-          </p>
-        </div>
-        <div>
-          <span style="color:var(--orange, #f59e0b)">02</span>
-          <p>
-            <strong>Cần ôn tập: ${dueCount} từ tới hạn</strong>
-          </p>
-        </div>
-        <div>
-          <span style="color:var(--blue, #38bdf8)">03</span>
-          <p>
-            <strong>Từ mới: ${stats.newCount || 0} từ</strong>
-          </p>
+        <div class="voc-progress-horiz-title">
+          <h3>Tiến Độ Học &amp; Ôn Tập Từ Vựng Của Bạn</h3>
+          <p>Thuật toán Spaced Repetition (SM-2) tự động theo dõi và gợi ý từ vựng cần ôn đúng thời điểm.</p>
         </div>
       </div>
 
-      <div style="margin-top:28px">
-        <a href="vocabulary.html" class="button button-primary" style="border-radius:14px;padding:14px 26px;font-size:0.95rem;font-weight:700;display:inline-flex;align-items:center;gap:10px;text-decoration:none">
-          ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 18 }) : ""}
-          <span>Ôn tập flashcard ngay →</span>
+      <div class="voc-progress-horiz-stats">
+        <div class="voc-stat-box">
+          <div class="voc-stat-val" style="color:var(--green, #22c55e)">${stats.mastered || 0}</div>
+          <div class="voc-stat-label">Đã thuộc</div>
+        </div>
+        <div class="voc-stat-box ${dueCount > 0 ? "is-due" : ""}">
+          <div class="voc-stat-val" style="color:var(--orange, #f59e0b)">${dueCount}</div>
+          <div class="voc-stat-label">Cần ôn tập</div>
+        </div>
+        <div class="voc-stat-box">
+          <div class="voc-stat-val" style="color:var(--blue, #38bdf8)">${stats.newCount || 0}</div>
+          <div class="voc-stat-label">Từ mới</div>
+        </div>
+        <div class="voc-stat-box">
+          <div class="voc-stat-val" style="color:var(--russia-red, #ef4444)">${streak}</div>
+          <div class="voc-stat-label">Chuỗi ngày 🔥</div>
+        </div>
+      </div>
+
+      <div class="voc-progress-horiz-right">
+        <a href="vocabulary.html" class="btn btn-primary btn-sm voc-progress-horiz-cta">
+          ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Ôn tập flashcard ngay →
         </a>
       </div>
     </div>
@@ -2018,22 +2076,28 @@ function renderFooter() {
   const host = document.getElementById("app-footer");
   if (!host) return;
   host.innerHTML = `
-  <footer>
-    <a class="brand footer-brand" href="index.html">
-      <span class="brand-mark">Я</span>
-      <span>Rusi<span style="color:#8dbcef">TRKI</span></span>
-    </a>
-    <p>Học tiếng Nga hiện đại, dễ hiểu và đầy cảm hứng. Hệ sinh thái học tập toàn diện phục vụ luyện thi chứng chỉ, du học và đời sống tại Liên bang Nga.</p>
-    <div class="footer-links">
-      <a href="vocabulary.html">Từ vựng</a>
-      <a href="writing.html">Viết</a>
-      <a href="listening.html">Nghe</a>
-      <a href="speaking.html">Nói</a>
-      <a href="mock-test.html">TRKI</a>
-      <a href="blog.html">Blog</a>
-      <a href="shop.html">Shop</a>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-col-brand">
+        <a class="brand footer-brand" href="index.html" aria-label="Rusi TRKI - Trang chủ">
+          <span class="brand-mark">Я</span>
+          <span class="footer-brand-text">Rusi<span>TRKI</span></span>
+        </a>
+      </div>
+      <p class="footer-desc">Học tiếng Nga hiện đại, dễ hiểu và đầy cảm hứng. Hệ sinh thái học tập toàn diện phục vụ luyện thi chứng chỉ, du học và đời sống tại Liên bang Nga.</p>
+      <div class="footer-links" aria-label="Điều hướng chân trang">
+        <a href="vocabulary.html">Từ vựng</a>
+        <a href="writing.html">Viết</a>
+        <a href="listening.html">Nghe</a>
+        <a href="speaking.html">Nói</a>
+        <a href="mock-test.html">TRKI</a>
+        <a href="blog.html">Blog</a>
+        <a href="shop.html">Shop</a>
+      </div>
+      <div class="footer-copyright">
+        <small>© 2026 RUSI TRKI. Mọi quyền được bảo lưu.</small>
+      </div>
     </div>
-    <small>© 2026 RUSI TRKI. Made for curious minds. Đồng hành cùng Mascot Rusika mắt xanh.</small>
   </footer>`;
 }
 
@@ -2147,7 +2211,7 @@ function bootApp() {
   try { renderHeader(); } catch (e) { console.error("[Boot] renderHeader:", e); }
   try { renderFooter(); } catch (e) { console.error("[Boot] renderFooter:", e); }
   try { applySeason("winter"); } catch (e) { console.error("[Boot] applySeason:", e); }
-  try { Progress.touchStreak(); } catch (e) { console.error("[Boot] touchStreak:", e); }
+  try { Progress.checkStreakStatus(); } catch (e) { console.error("[Boot] checkStreakStatus:", e); }
   try { bindAuthToHeader(); } catch (e) { console.error("[Boot] bindAuthToHeader:", e); }
   try { mergeAdminData(); } catch (e) { console.error("[Boot] mergeAdminData:", e); }
 

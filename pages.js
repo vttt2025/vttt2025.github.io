@@ -297,8 +297,7 @@ window.openAddToJarModal = function(wordData) {
       <div id="inlineNewJarGroup" style="display:none;background:var(--bg);border:1px dashed var(--border);border-radius:10px;padding:10px 12px;margin-bottom:12px">
         <span style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:4px">Tên Lọ mới:</span>
         <div style="display:flex;gap:8px">
-          <input type="text" id="inlineNewJarIcon" value="star" style="width:46px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:8px;font-size:1rem" />
-          <input type="text" id="inlineNewJarName" placeholder="Ví dụ: Từ vựng thi TRKI 1..." style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem" />
+          <input type="text" id="inlineNewJarName" placeholder="Ví dụ: Từ vựng thi TRKI 1..." style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:0.9rem" />
         </div>
       </div>
 
@@ -333,7 +332,6 @@ window.openAddToJarModal = function(wordData) {
 
     if (jarId === "__NEW_JAR__") {
       const createdName = (newName.value || "").trim();
-      const createdIcon = (newIcon.value || "").trim() || "star";
       if (!createdName) {
         toast("Vui lòng nhập tên cho Lọ từ vựng mới!");
         newName.focus();
@@ -343,7 +341,7 @@ window.openAddToJarModal = function(wordData) {
       const newJar = {
         id: jarId,
         name: createdName,
-        icon: createdIcon,
+        icon: "archive-jar", // Mặc định không cho tạo icon
         desc: "Lọ từ vựng cá nhân",
         words: [],
         level: "custom",
@@ -705,9 +703,23 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           if (typeof SRS.review === "function") {
             SRS.review(cardId, rating);
           }
-          if (typeof Progress !== "undefined") {
-            Progress.addXp(rating === "again" ? 2 : 5);
-            Progress.markDone("vocabDone", jarId);
+          // Theo dõi tiến độ trong phiên học Flashcard: PHẢI HOÀN THÀNH HẾT THẺ MỚI CÓ ĐIỂM CỘNG
+          let reviewed = STORE.get("flash_rev_" + jarId, []);
+          if (!reviewed.includes(currentWord.ru)) {
+            reviewed.push(currentWord.ru);
+            STORE.set("flash_rev_" + jarId, reviewed);
+          }
+
+          if (reviewed.length >= fActiveWords.length) {
+            const today = new Date().toDateString();
+            const sessKey = "flash_done_" + jarId + "_" + today;
+            if (!STORE.get(sessKey, false)) {
+              STORE.set(sessKey, true);
+              STORE.set("flash_rev_" + jarId, []); // reset cho các lượt ôn tập sau
+              Progress.markDone("vocabDone", jarId);
+              Progress.addXp(15);
+              toast("Chúc mừng! Bạn đã hoàn thành toàn bộ thẻ trong lọ từ vựng (+15 XP)!");
+            }
           }
         }
         playQuizletSound(rating === "again" ? "wrong" : "correct");
@@ -2194,7 +2206,7 @@ function initVocabPage() {
               `;
             }).join("")}
 
-            <div class="voc-user-jar-card" id="btnSidebarCreateJarBottom" style="border:1.5px dashed var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:110px;text-align:center">
+            <div class="voc-user-jar-card voc-user-jar-card-add" id="btnSidebarCreateJarBottom" style="border:1.5px dashed var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:110px;text-align:center">
               <span style="color:var(--primary);font-weight:700;font-size:0.95rem;display:flex;align-items:center;gap:6px">
                 ${window.RusiIcons ? RusiIcons.get("plus", { size: 16 }) : ""} Thêm lọ từ vựng mới
               </span>
@@ -2211,14 +2223,29 @@ function initVocabPage() {
       };
     }
 
-    [el("#btnSidebarCreateJar"), el("#btnSidebarCreateJarBottom")].forEach(b => {
-      if (b) b.onclick = () => openCreateJarModal();
-    });
+    const btnCreateTop = el("#btnSidebarCreateJar");
+    if (btnCreateTop) {
+      btnCreateTop.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openCreateJarModal();
+      };
+    }
+
+    const btnCreateBottom = el("#btnSidebarCreateJarBottom");
+    if (btnCreateBottom) {
+      btnCreateBottom.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        openCreateJarModal();
+      };
+    }
 
     const jarsContainer = userJarsHost || sidebarHost;
     if (jarsContainer) {
-      // Cho phép bấm trực tiếp vào bất kỳ vị trí nào trên thẻ Lọ từ vựng trên điện thoại & máy tính
+      // Cho phép bấm trực tiếp vào bất kỳ vị trí nào trên thẻ Lọ từ vựng (bỏ qua nút tạo lọ)
       jarsContainer.querySelectorAll(".voc-user-jar-card").forEach(card => {
+        if (card.id === "btnSidebarCreateJarBottom" || card.classList.contains("voc-user-jar-card-add")) return;
         card.style.cursor = "pointer";
         card.onclick = (e) => {
           if (e.target.closest("button") || e.target.closest(".voc-user-jar-card-actions")) return;
@@ -2260,32 +2287,31 @@ function initVocabPage() {
       document.body.appendChild(m);
     }
     m.innerHTML = `
-      <div class="anticheat-modal-box" style="text-align:left">
+      <div class="anticheat-modal-box" style="text-align:left;max-width:440px">
         <h3 style="margin-bottom:12px;display:flex;align-items:center;gap:8px">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 20 }) : ""} Tạo Lọ Từ Vựng Cá Nhân</h3>
-        <label style="display:block;margin-bottom:10px">
-          <span style="font-size:0.85rem;font-weight:700">Tên lọ từ vựng:</span>
-          <input type="text" id="newJarName" placeholder="Ví dụ: Từ vựng KTX & Nấu ăn" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:8px;margin-top:4px" />
-        </label>
-        <label style="display:block;margin-bottom:14px">
-          <span style="font-size:0.85rem;font-weight:700">Biểu tượng (Icon):</span>
-          <input type="text" id="newJarIcon" value="star" style="width:60px;padding:8px;border:1px solid var(--border);border-radius:8px;margin-top:4px;text-align:center" />
+        <p style="font-size:0.85rem;color:var(--muted);margin:0 0 16px">Gom nhóm các từ vựng theo chủ đề riêng của bạn để dễ dàng ôn tập theo Spaced Repetition.</p>
+        <label style="display:block;margin-bottom:16px">
+          <span style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px">Tên lọ từ vựng:</span>
+          <input type="text" id="newJarName" placeholder="Ví dụ: Từ vựng KTX & Nấu ăn" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:0.95rem;box-sizing:border-box" autofocus />
         </label>
         <div style="display:flex;gap:10px;justify-content:flex-end">
-          <button class="btn btn-outline btn-sm" id="cancelJar">Hủy</button>
-          <button class="btn btn-primary btn-sm" id="saveJar">Tạo lọ ngay</button>
+          <button type="button" class="btn btn-outline btn-sm" id="cancelJar">Hủy</button>
+          <button type="button" class="btn btn-primary btn-sm" id="saveJar">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Tạo lọ ngay</button>
         </div>
       </div>
     `;
+    m.onclick = (e) => {
+      if (e.target === m) m.remove();
+    };
     document.getElementById("cancelJar").onclick = () => m.remove();
     document.getElementById("saveJar").onclick = () => {
       const name = document.getElementById("newJarName").value.trim();
-      const icon = document.getElementById("newJarIcon").value.trim() || "archive-jar";
-      if (!name) { toast("Vui lòng nhập tên lọ từ vựng"); return; }
+      if (!name) { toast("Vui lòng nhập tên lọ từ vựng"); document.getElementById("newJarName").focus(); return; }
       const customJars = STORE.get("custom_jars", []);
       customJars.push({
         id: "custom-jar-" + Date.now(),
         name,
-        icon,
+        icon: "archive-jar", // Mặc định không cho tạo icon
         desc: "Lọ từ vựng cá nhân do học viên tạo",
         words: [],
         level: "custom",

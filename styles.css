@@ -1926,10 +1926,15 @@ body[data-season="summer"] .page-hero { background: radial-gradient(600px 280px 
 body[data-season="autumn"] .page-hero { background: radial-gradient(600px 280px at 50% 0%, rgba(234, 88, 12, 0.13), transparent 70%); }
 body[data-season="winter"] .page-hero { background: radial-gradient(600px 280px at 50% 0%, rgba(96, 165, 250, 0.15), transparent 70%); }
 
-body[data-season="spring"] .footer { background: linear-gradient(180deg, var(--surface) 0%, #e2f3dc 100%); }
-body[data-season="summer"] .footer { background: linear-gradient(180deg, var(--surface) 0%, #fdeec7 100%); }
-body[data-season="autumn"] .footer { background: linear-gradient(180deg, var(--surface) 0%, #f8e5c8 100%); }
-body[data-season="winter"] .footer { background: linear-gradient(180deg, var(--surface) 0%, #d9e7f7 100%); }
+/* Season footer overrides neutralized — giữ chân trang Deep Baltic Navy #08192d chuẩn trên mọi mùa */
+body[data-season="spring"] .site-footer,
+body[data-season="summer"] .site-footer,
+body[data-season="autumn"] .site-footer,
+body[data-season="winter"] .site-footer,
+body[data-season="spring"] footer,
+body[data-season="summer"] footer,
+body[data-season="autumn"] footer,
+body[data-season="winter"] footer { background: #08192d !important; color: #94a3b8 !important; }
 
 /* ============ SRS — Spaced Repetition (algorithm.html) ============ */
 .srs-hero,
@@ -8158,46 +8163,207 @@ body.rusika-chat-open .rusika-floating-widget {
 }
 
 /* Tiến độ học trang chủ theo phong cách Method (Spaced Repetition & Stats) */
+/* =====================================================================
+   TIẾN ĐỘ HỌC CỦA BẠN (HORIZONTAL PROGRESS STRIP)
+   Thiết kế chuẩn thanh tối màu (Navy/Đen var(--russia-navy)) đồng bộ với proof-strip.
+   Bề rộng ngang kích thước trang, tối ưu hoàn hảo Desktop, Tablet & Mobile.
+   ===================================================================== */
+.user-progress-dark-strip,
 .method-progress-section {
-  padding: 70px 70px;
-  margin: 36px auto 30px;
+  width: min(100% - 48px, 1200px);
+  margin: 28px auto 0;
+  box-sizing: border-box;
 }
-.progress-stats-mini-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin-top: 24px;
+
+.voc-progress-horizontal-card {
+  background: var(--russia-navy, #0f1f38);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 20px 28px;
+  box-shadow: 0 16px 40px rgba(11, 10, 16, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  color: #fff;
+  box-sizing: border-box;
 }
-.prog-mini-stat {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+
+.voc-progress-horiz-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.voc-progress-horiz-icon {
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
-  padding: 10px 8px;
-  text-align: center;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
-.prog-mini-val {
-  display: block;
+
+.voc-progress-horiz-title h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.3;
+}
+
+.voc-progress-horiz-title p {
+  margin: 3px 0 0;
+  font-size: 0.82rem;
+  color: #a3b8cc;
+  line-height: 1.35;
+}
+
+.voc-progress-horiz-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  flex: 1 1 auto;
+  max-width: 440px;
+}
+
+.voc-stat-box {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px 10px;
+  text-align: center;
+  min-width: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.voc-stat-box:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+
+.voc-stat-box.is-due {
+  border-color: rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.voc-stat-val {
+  font-family: 'Inter', -apple-system, sans-serif;
   font-size: 1.35rem;
   font-weight: 800;
-  line-height: 1.2;
-}
-.prog-mini-lbl {
+  line-height: 1.15;
   display: block;
-  font-size: 0.72rem;
-  color: #a8a5b0;
-  margin-top: 4px;
-  font-weight: 600;
 }
-@media (max-width: 860px) {
+
+.voc-stat-label {
+  font-size: 0.72rem;
+  color: #a3b8cc;
+  margin-top: 3px;
+  font-weight: 600;
+  white-space: nowrap;
+  display: block;
+}
+
+.voc-progress-horiz-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.voc-progress-horiz-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 18px;
+  background: var(--primary, #1757a6);
+  color: #ffffff !important;
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+  border-radius: 10px;
+  transition: transform 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+
+.voc-progress-horiz-cta:hover {
+  transform: translateY(-1px);
+  background: #134685;
+}
+
+@media (max-width: 1024px) {
+  .user-progress-dark-strip,
   .method-progress-section {
-    padding: 50px 24px;
-    margin: 24px auto 20px;
+    width: min(100% - 32px, 1200px);
+    margin: 20px auto 0;
+  }
+  .voc-progress-horizontal-card {
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 18px 20px;
+  }
+  .voc-progress-horiz-left {
+    width: 100%;
+  }
+  .voc-progress-horiz-stats {
+    flex: 1;
+    max-width: 100%;
   }
 }
-@media (max-width: 520px) {
+
+@media (max-width: 768px) {
+  .user-progress-dark-strip,
   .method-progress-section {
-    padding: 36px 16px;
-    margin: 18px auto 16px;
+    width: calc(100% - 24px) !important;
+    margin: 16px auto 0 !important;
+  }
+  .voc-progress-horizontal-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 16px 14px !important;
+    border-radius: 16px !important;
+    gap: 14px !important;
+  }
+  .voc-progress-horiz-title h3 {
+    font-size: 1.02rem !important;
+  }
+  .voc-progress-horiz-title p {
+    font-size: 0.78rem !important;
+  }
+  .voc-progress-horiz-stats {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+    max-width: 100% !important;
+  }
+  .voc-stat-box {
+    padding: 8px 4px !important;
+  }
+  .voc-stat-val {
+    font-size: 1.15rem !important;
+  }
+  .voc-stat-label {
+    font-size: 0.65rem !important;
+  }
+  .voc-progress-horiz-right {
+    width: 100% !important;
+  }
+  .voc-progress-horiz-cta {
+    width: 100% !important;
+    justify-content: center !important;
+    min-height: 44px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .voc-progress-horiz-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
 }
 .section-kicker-dark {
@@ -8569,48 +8735,133 @@ body.rusika-chat-open .rusika-floating-widget {
   transform: rotate(7deg);
 }
 
-/* Footer */
+/* =====================================================================
+   CHÂN TRANG (FOOTER) — DEEP BALTIC NAVY
+   Đồng bộ 100% tất cả 13 trang web, độ tương phản cao, tối ưu Mobile/Tablet
+   ===================================================================== */
+.site-footer,
 footer {
-  color: #c7c4cc;
-  background: #08192d;
-  border-top: 1px solid #242329;
-  grid-template-columns: 1fr 1.4fr 1fr;
-  align-items: center;
-  gap: 35px;
-  padding: 55px max(24px, 50vw - 600px);
+  color: #94a3b8 !important;
+  background: #08192d !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  padding: 50px max(24px, 50vw - 640px) 28px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
+.site-footer .footer-inner,
+footer .footer-inner {
   display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+  max-width: 1260px;
+  margin: 0 auto;
 }
+
 .footer-brand {
-  color: #fff;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  text-decoration: none !important;
+  color: #ffffff !important;
 }
+
+.footer-brand-text {
+  color: #ffffff !important;
+  font-family: 'Inter', -apple-system, sans-serif !important;
+  font-size: 20px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.5px !important;
+}
+
+.footer-brand-text span {
+  color: #38bdf8 !important;
+}
+
+.footer-desc,
 footer > p {
-  color: #6f6c76;
-  text-align: center;
-  font-size: 12px;
-  margin: 0;
+  color: #94a3b8 !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  text-align: center !important;
+  margin: 0 !important;
 }
+
 .footer-links {
-  justify-content: flex-end;
-  gap: 20px;
-  font-size: 11.5px;
-  display: flex;
-  flex-wrap: wrap;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 18px !important;
+  flex-wrap: wrap !important;
 }
+
 .footer-links a {
-  color: #8dbcef;
-  text-decoration: none;
-  transition: color 0.18s;
+  color: #cbd5e1 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  transition: color 0.16s ease, transform 0.16s ease !important;
+  padding: 4px 2px !important;
 }
+
 .footer-links a:hover {
-  color: #fff;
+  color: #38bdf8 !important;
+  transform: translateY(-1px);
 }
+
+.footer-copyright,
 footer > small {
-  color: #56535b;
-  text-align: center;
-  border-top: 1px solid #242329;
-  grid-column: 1 / -1;
-  padding-top: 28px;
-  font-size: 9.5px;
+  color: #64748b !important;
+  font-size: 12px !important;
+  text-align: center !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  grid-column: 1 / -1 !important;
+  padding-top: 24px !important;
+  display: block !important;
+}
+
+/* Footer Responsive Tối ưu Mobile & Tablet */
+@media (max-width: 960px) {
+  .site-footer,
+  footer {
+    padding: 40px 20px 24px !important;
+  }
+  .site-footer .footer-inner,
+  footer .footer-inner {
+    grid-template-columns: 1fr !important;
+    text-align: center !important;
+    justify-items: center !important;
+    gap: 22px !important;
+  }
+  .footer-col-brand {
+    display: flex !important;
+    justify-content: center !important;
+    width: 100% !important;
+  }
+  .footer-links {
+    justify-content: center !important;
+    gap: 14px 20px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .site-footer,
+  footer {
+    padding: 32px 16px 20px !important;
+  }
+  .footer-links {
+    gap: 10px 16px !important;
+  }
+  .footer-links a {
+    font-size: 12.5px !important;
+  }
+  .footer-desc {
+    font-size: 12px !important;
+  }
 }
 
 /* Responsive Media Queries */
@@ -15384,40 +15635,48 @@ body[data-page="upgrade"] .menu-button span {
   }
 }
 
-/* Footer styling across all bright pages */
-body[data-page="vocabulary"] .footer,
-body[data-page="listening"] .footer,
-body[data-page="speaking"] .footer,
-body[data-page="writing"] .footer,
-body[data-page="mock-test"] .footer,
-body[data-page="shop"] .footer,
-body[data-page="blog"] .footer,
-body[data-page="upgrade"] .footer {
-  background: linear-gradient(180deg, #ffffff 0%, #e2ecf7 100%) !important;
-  border-top: 1px solid #d2e0f0 !important;
-  color: #53657a !important;
+/* Đồng bộ màu Deep Baltic Navy chuẩn cho footer ở mọi trang chuyên mục */
+body[data-page="vocabulary"] .site-footer,
+body[data-page="listening"] .site-footer,
+body[data-page="speaking"] .site-footer,
+body[data-page="writing"] .site-footer,
+body[data-page="mock-test"] .site-footer,
+body[data-page="shop"] .site-footer,
+body[data-page="blog"] .site-footer,
+body[data-page="upgrade"] .site-footer,
+body[data-page="vocabulary"] footer,
+body[data-page="listening"] footer,
+body[data-page="speaking"] footer,
+body[data-page="writing"] footer,
+body[data-page="mock-test"] footer,
+body[data-page="shop"] footer,
+body[data-page="blog"] footer,
+body[data-page="upgrade"] footer {
+  background: #08192d !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #94a3b8 !important;
 }
 
-body[data-page="vocabulary"] .footer a,
-body[data-page="listening"] .footer a,
-body[data-page="speaking"] .footer a,
-body[data-page="writing"] .footer a,
-body[data-page="mock-test"] .footer a,
-body[data-page="shop"] .footer a,
-body[data-page="blog"] .footer a,
-body[data-page="upgrade"] .footer a {
-  color: #2c3e55 !important;
+body[data-page="vocabulary"] footer a,
+body[data-page="listening"] footer a,
+body[data-page="speaking"] footer a,
+body[data-page="writing"] footer a,
+body[data-page="mock-test"] footer a,
+body[data-page="shop"] footer a,
+body[data-page="blog"] footer a,
+body[data-page="upgrade"] footer a {
+  color: #cbd5e1 !important;
 }
 
-body[data-page="vocabulary"] .footer a:hover,
-body[data-page="listening"] .footer a:hover,
-body[data-page="speaking"] .footer a:hover,
-body[data-page="writing"] .footer a:hover,
-body[data-page="mock-test"] .footer a:hover,
-body[data-page="shop"] .footer a:hover,
-body[data-page="blog"] .footer a:hover,
-body[data-page="upgrade"] .footer a:hover {
-  color: #1757a6 !important;
+body[data-page="vocabulary"] footer a:hover,
+body[data-page="listening"] footer a:hover,
+body[data-page="speaking"] footer a:hover,
+body[data-page="writing"] footer a:hover,
+body[data-page="mock-test"] footer a:hover,
+body[data-page="shop"] footer a:hover,
+body[data-page="blog"] footer a:hover,
+body[data-page="upgrade"] footer a:hover {
+  color: #38bdf8 !important;
 }
 
 /* Hide duplicate white page-hero on learning pages */
@@ -19216,4 +19475,40 @@ body.in-workspace .quizlet-card-container {
   .voc-stat-label {
     font-size: 0.72rem !important;
   }
+}
+
+/* Nút Thêm Lọ Từ Vựng Mới */
+.voc-user-jar-card.voc-user-jar-card-add {
+  border: 1.5px dashed var(--border) !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+.voc-user-jar-card-add:hover {
+  background: rgba(23, 87, 166, 0.06) !important;
+  border-color: var(--primary, #1757a6) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(23, 87, 166, 0.12) !important;
+}
+
+/* Header Backdrop & Mobile Overlay */
+.header-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 31, 56, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+  z-index: 998;
+}
+
+.header-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body.menu-locked {
+  overflow: hidden !important;
 }
