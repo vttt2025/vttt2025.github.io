@@ -8319,7 +8319,7 @@ body.rusika-chat-open .rusika-floating-widget {
 @media (max-width: 768px) {
   .user-progress-dark-strip,
   .method-progress-section {
-    width: calc(100% - 24px) !important;
+    width: min(calc(100% - 32px), 1200px) !important;
     margin: 16px auto 0 !important;
   }
   .voc-progress-horizontal-card {
@@ -11058,7 +11058,7 @@ img, video, iframe {
     font-size: 11px;
   }
   .proof-strip {
-    width: 100%;
+    width: min(calc(100% - 32px), 1200px);
     grid-template-columns: repeat(2, 1fr);
     gap: 16px 12px;
     padding: 18px 14px;
@@ -11090,7 +11090,7 @@ img, video, iframe {
    ========================================================================== */
 @media (max-width: 480px) {
   .header-inner {
-    padding: 0 10px;
+    padding: 0 max(16px, env(safe-area-inset-left));
   }
   .brand-text {
     font-size: 1.1rem;
@@ -18634,9 +18634,11 @@ html, body {
   .container,
   main.container,
   .vocabulary-inner,
-  .page-container {
-    padding-left: 14px !important;
-    padding-right: 14px !important;
+  .page-container,
+  .bpost-container,
+  .pdetail-container {
+    padding-left: max(16px, env(safe-area-inset-left)) !important;
+    padding-right: max(16px, env(safe-area-inset-right)) !important;
     max-width: 100% !important;
   }
 
@@ -18659,9 +18661,11 @@ html, body {
   .container,
   main.container,
   .vocabulary-inner,
-  .page-container {
-    padding-left: 12px !important;
-    padding-right: 12px !important;
+  .page-container,
+  .bpost-container,
+  .pdetail-container {
+    padding-left: max(16px, env(safe-area-inset-left)) !important;
+    padding-right: max(16px, env(safe-area-inset-right)) !important;
   }
 }
 
@@ -18678,7 +18682,7 @@ html, body {
   }
   .header-inner {
     height: 60px;
-    padding: 0 12px;
+    padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -18707,7 +18711,7 @@ html, body {
   }
   .user-dropdown {
     min-width: 0 !important;
-    width: min(calc(100vw - 24px), 320px) !important;
+    width: min(calc(100vw - 32px), 320px) !important;
     right: 0 !important;
     left: auto !important;
   }
@@ -18723,7 +18727,7 @@ html, body {
 
 @media (max-width: 380px) {
   .header-inner {
-    padding: 0 8px;
+    padding: 0 max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left));
   }
   .brand-text {
     font-size: 0.95rem;
@@ -19128,7 +19132,7 @@ html, body {
 @media (max-width: 768px) {
   /* Modal Pomodoro */
   .pomo-modal-card {
-    width: 95vw !important;
+    width: min(calc(100vw - 32px), 440px) !important;
     max-width: 440px !important;
     max-height: 90vh !important;
     overflow-y: auto !important;
@@ -19157,7 +19161,7 @@ html, body {
     min-height: 44px !important;
   }
   .pomo-break-box {
-    width: 95vw !important;
+    width: min(calc(100vw - 32px), 440px) !important;
     padding: 24px 16px !important;
     border-radius: 20px !important;
   }
@@ -19172,7 +19176,7 @@ html, body {
 
   /* Modal Auth & Checkout & Article */
   .auth-modal-card {
-    width: min(calc(100vw - 20px), 440px) !important;
+    width: min(calc(100vw - 32px), 440px) !important;
     padding: 24px 16px !important;
     border-radius: 16px !important;
   }
@@ -19194,7 +19198,17 @@ html, body {
 /* --- 11. TRANG CHỦ & CÁC KHỐI NỘI DUNG CHÍNH (index.html) --- */
 @media (max-width: 768px) {
   .hero {
-    padding: 36px 0 28px !important;
+    padding: 40px max(16px, env(safe-area-inset-left)) 28px !important;
+  }
+  .hero-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .proof-strip {
+    width: min(calc(100% - 32px), 1200px) !important;
+    margin: 16px auto 0 !important;
+    border-radius: 16px !important;
   }
   .hero h1 {
     font-size: clamp(1.75rem, 7vw, 2.4rem) !important;
@@ -19217,6 +19231,12 @@ html, body {
     padding: 14px 12px !important;
     min-height: 48px !important;
     font-size: 0.95rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    padding: 36px max(16px, env(safe-area-inset-left)) 24px !important;
   }
 }
 
