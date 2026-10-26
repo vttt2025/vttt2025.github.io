@@ -169,8 +169,10 @@ Hệ thống nhận diện trạng thái xác thực của người dùng để 
     * Mobile (`<= 768px`): Thu gọn thành pill compact (visual 34px, hitbox 44px) theo đúng quy chuẩn Mục 3.3.
   * *Dropdown tài khoản*: Hiển thị banner CTA nhỏ thúc đẩy nâng cấp kèm thống kê tiến độ học hiện tại.
 * **Học viên PRO (Active Subscriber)**:
-  * *Header ngoài*: Thay thế nút nâng cấp bằng huy hiệu `PRO MEMBER` trang nhã kèm icon SVG `crown-vip` (`RusiIcons.get('crown-vip', { size: 14 })`), ẩn vĩnh viễn các lời mời mua gói trên thanh điều hướng.
-  * *Dropdown tài khoản*: Hiển thị thời hạn bản quyền cụ thể (ví dụ: `Hạn dùng: 28/10/2027` hoặc `Quyền vĩnh viễn`).
+  * *Header ngoài*:
+    * Desktop / Tablet (> 768px): Thay thế nút nâng cấp bằng huy hiệu `PRO MEMBER` trang nhã kèm icon SVG `crown-vip` (`RusiIcons.get('crown-vip', { size: 14 })`), ẩn vĩnh viễn các lời mời mua gói trên thanh điều hướng.
+    * Mobile (<= 768px): Tự động ẩn huy hiệu PRO ngoài thanh header để tránh chật chội và tối ưu hóa không gian cho Avatar; toàn bộ huy hiệu `PRO MEMBER` được gom trọn vẹn vào bên trong Dropdown tài khoản.
+  * *Dropdown tài khoản*: Hiển thị huy hiệu `PRO MEMBER` nổi bật cùng thông tin gói cước và thời hạn bản quyền cụ thể (ví dụ: `Hạn dùng: 28/10/2027` hoặc `Quyền vĩnh viễn`).
 * **Cửa sổ Khóa Nội Dung PRO (PRO Gate Modal)**:
   Khi học viên chưa sở hữu gói PRO tương ứng bấm vào bất kỳ tính năng trả phí nào (Lọ từ vựng nâng cao, Bài nghe video thực tế, Chủ đề luyện nói nâng cao, Đề viết tự luận, Phòng thi TRKI B1–B2), hệ thống lập tức chặn truy cập và kích hoạt modal chuẩn:
   * *Tiêu đề*: Khối heading trang trọng "Nội dung dành riêng cho Hội viên PRO" kèm icon `crown-vip` SVG 24px.

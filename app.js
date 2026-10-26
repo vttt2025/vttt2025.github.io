@@ -1872,7 +1872,7 @@ function renderUserArea() {
             <div class="user-head-info">
               <div style="display:flex;align-items:center;gap:6px">
                 <div class="user-fullname">${esc(user.name || "Học viên Rusi")}</div>
-                ${isPro ? `<span class="user-tier-badge tier-pro">PRO</span>` : `<span class="user-tier-badge tier-free">Free</span>`}
+                ${isPro ? `<span class="user-tier-badge tier-pro" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO MEMBER</span>` : `<span class="user-tier-badge tier-free">Free</span>`}
               </div>
               <div class="user-email">${esc(user.email || "")}</div>
             </div>
@@ -1882,7 +1882,7 @@ function renderUserArea() {
           ${isPro ? `
             <div class="user-pro-vip-card" id="btnUserMenuManagePro" title="Xem quyền lợi và quản lý gói PRO">
               <div class="user-pro-vip-head">
-                <span class="user-pro-vip-badge">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""} ${esc(proInfo ? proInfo.pkgTitle : "PRO VIP")}</span>
+                <span class="user-pro-vip-badge" style="display:inline-flex;align-items:center;gap:5px">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""} PRO MEMBER · ${esc(proInfo ? proInfo.pkgTitle : "PRO VIP")}</span>
                 <span class="user-pro-vip-action">Quản lý →</span>
               </div>
               <div class="user-pro-vip-time">

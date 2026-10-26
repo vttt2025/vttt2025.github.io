@@ -19551,8 +19551,11 @@ body.menu-locked {
   inset: -5px; /* Mở rộng hitbox đạt chuẩn 44x44px */
 }
 
-/* --- Spec 3.3: User Dropdown Trên Mobile & Tablet (<= 768px) Chống Tràn Mép --- */
+/* --- Spec 3.3: User Dropdown Trên Mobile & Tablet (<= 768px) Chống Tràn Mép & Ẩn PRO MEMBER ngoài Header --- */
 @media (max-width: 768px) {
+  .pro-chip-header {
+    display: none !important; /* Ẩn huy hiệu PRO MEMBER ngoài header trên điện thoại, gom trọn vẹn vào dropdown tài khoản */
+  }
   .user-dropdown {
     position: fixed !important;
     top: 62px !important;
