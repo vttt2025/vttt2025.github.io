@@ -2522,7 +2522,7 @@ const showTopicArticle = (jarId) => {
           ${grammarHtml}
           ${customArticle && customArticle.culturalTip ? `
             <div style="margin-top:16px;background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:10px;padding:14px 18px;font-size:0.88rem;color:#92400e;line-height:1.55">
-              <strong>💡 Mẹo văn hóa thực tế:</strong> ${esc(customArticle.culturalTip)}
+              <strong>${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} Mẹo văn hóa thực tế:</strong> ${esc(customArticle.culturalTip)}
             </div>
           ` : ''}
         </section>
@@ -2863,7 +2863,7 @@ const showTopicArticle = (jarId) => {
 
 
 /* =====================================================================
- * TRỤ CỘT 6: LUYỆN NGHE CHÉP CHÍNH TẢ 4 PART (CEFR FORMAT)
+ * CHUYÊN MỤC 6: LUYỆN NGHE CHÉP CHÍNH TẢ 4 PART (CEFR FORMAT)
  * ===================================================================== */
 function initListeningPage() {
   const host = el("#listenHost");
@@ -4144,7 +4144,7 @@ function initListeningPage() {
 
 
 /* =====================================================================
- * TRỤ CỘT 7: LUYỆN NÓI SHADOWING & AI CHẤM ÂM VỊ
+ * CHUYÊN MỤC 7: LUYỆN NÓI SHADOWING & AI CHẤM ÂM VỊ
  * ===================================================================== */
 function initSpeakingPage() {
   const host = el("#speakHost");
@@ -4531,7 +4531,7 @@ function initSpeakingPage() {
 
 
 /* =====================================================================
- * TRỤ CỘT 5: LUYỆN VIẾT TẢ TRANH (ПИСЬМО TRKI) & BÀN PHÍM ẢO CYRILLIC
+ * CHUYÊN MỤC 5: LUYỆN VIẾT TẢ TRANH (ПИСЬМО TRKI) & BÀN PHÍM ẢO CYRILLIC
  * ===================================================================== */
 function initWritingPage() {
   const host = el("#writeHost");
@@ -5022,7 +5022,7 @@ function initWritingPage() {
 
 
 /* =====================================================================
- * TRỤ CỘT 1: PHÒNG THI MÔ PHỎNG TRKI CHUẨN CEFR (CHỐNG GIAN LẬN)
+ * CHUYÊN MỤC 1: PHÒNG THI MÔ PHỎNG TRKI CHUẨN CEFR (CHỐNG GIAN LẬN)
  * ===================================================================== */
 function initMockTestPage() {
   const host = el("#testHost");
@@ -5286,9 +5286,30 @@ function initMockTestPage() {
   const startTest = () => {
     document.body.classList.add("in-workspace");
     started = true;
-    answers = {};
     tabSwitches = 0;
-    timeLeft = currentTest.durationMin * 60;
+
+    const storageKey = "trki_exam_" + currentTest.id;
+    try { sessionStorage.setItem("trki_active_exam_id", currentTest.id); } catch(e) {}
+
+    // Đồng hồ Timestamp chống reload theo PROJECT_SPEC line 118
+    const now = Date.now();
+    let storedEndTime = 0;
+    try { storedEndTime = parseInt(sessionStorage.getItem(storageKey + "_endTime") || "0", 10); } catch(e) {}
+    if (!storedEndTime || storedEndTime <= now) {
+      storedEndTime = now + (currentTest.durationMin || 30) * 60 * 1000;
+      try { sessionStorage.setItem(storageKey + "_endTime", String(storedEndTime)); } catch(e) {}
+    }
+    timeLeft = Math.max(0, Math.floor((storedEndTime - now) / 1000));
+
+    // Khôi phục câu trả lời nếu đã lưu trong session
+    answers = {};
+    try {
+      const savedAnswers = sessionStorage.getItem(storageKey + "_answers");
+      if (savedAnswers) answers = JSON.parse(savedAnswers);
+    } catch(e) {
+      answers = {};
+    }
+
     renderTestRoom();
 
     visibilityHandler = () => {
@@ -5300,12 +5321,18 @@ function initMockTestPage() {
     };
     document.addEventListener("visibilitychange", visibilityHandler);
 
+    if (timer) clearInterval(timer);
     timer = setInterval(() => {
-      timeLeft--;
+      const remainingMs = storedEndTime - Date.now();
+      timeLeft = Math.max(0, Math.floor(remainingMs / 1000));
       const t = el("#timerVal");
       if (t) {
         t.textContent = fmt(timeLeft);
         t.classList.toggle("warn", timeLeft < 300);
+      }
+      const tSidebar = el("#timerValSidebar");
+      if (tSidebar) {
+        tSidebar.textContent = fmt(timeLeft);
       }
       if (timeLeft <= 0) {
         clearInterval(timer);
@@ -5481,6 +5508,13 @@ function initMockTestPage() {
 
     el("#btnExitTest").onclick = () => {
       if (confirm("Bạn có chắc chắn muốn rời khỏi phòng thi? Kết quả hiện tại sẽ không được lưu.")) {
+        try {
+          sessionStorage.removeItem("trki_active_exam_id");
+          if (currentTest && currentTest.id) {
+            sessionStorage.removeItem("trki_exam_" + currentTest.id + "_endTime");
+            sessionStorage.removeItem("trki_exam_" + currentTest.id + "_answers");
+          }
+        } catch(e) {}
         clearInterval(timer);
         if (visibilityHandler) document.removeEventListener("visibilitychange", visibilityHandler);
         document.body.classList.remove("in-workspace");
@@ -5504,6 +5538,9 @@ function initMockTestPage() {
         group.forEach((g) => g.classList.remove("selected"));
         btn.classList.add("selected");
         answers[id] = +btn.dataset.oi;
+        try {
+          sessionStorage.setItem("trki_exam_" + currentTest.id + "_answers", JSON.stringify(answers));
+        } catch(e) {}
 
         const pBtn = el(`#pBtn_${id}`);
         if (pBtn) pBtn.classList.add("done");
@@ -5542,6 +5579,13 @@ function initMockTestPage() {
   const submit = () => {
     started = false;
     clearInterval(timer);
+    try {
+      sessionStorage.removeItem("trki_active_exam_id");
+      if (currentTest && currentTest.id) {
+        sessionStorage.removeItem("trki_exam_" + currentTest.id + "_endTime");
+        sessionStorage.removeItem("trki_exam_" + currentTest.id + "_answers");
+      }
+    } catch(e) {}
     if (visibilityHandler) {
       document.removeEventListener("visibilitychange", visibilityHandler);
       visibilityHandler = null;
@@ -5654,12 +5698,30 @@ function initMockTestPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  renderHub();
+  const checkResumeActiveExam = () => {
+    try {
+      const activeId = sessionStorage.getItem("trki_active_exam_id");
+      if (activeId) {
+        const found = bank.find(t => t.id === activeId);
+        const storedEndTime = parseInt(sessionStorage.getItem("trki_exam_" + activeId + "_endTime") || "0", 10);
+        if (found && storedEndTime > Date.now()) {
+          currentTest = found;
+          startTest();
+          return true;
+        }
+      }
+    } catch(e) {}
+    return false;
+  };
+
+  if (!checkResumeActiveExam()) {
+    renderHub();
+  }
 }
 
 
 /* =====================================================================
- * TRỤ CỘT 3: BLOG DU HỌC & KIẾN THỨC NGA (THEO SEO CLUSTERS)
+ * CHUYÊN MỤC 3: BLOG DU HỌC & KIẾN THỨC NGA (THEO SEO CLUSTERS)
  * ===================================================================== */
 function initBlogPage() {
   const host = el("#blogHost");
@@ -5775,7 +5837,7 @@ function initBlogPage() {
 }
 
 /* =====================================================================
- * TRỤ CỘT 2: SHOP NGA & DỊCH VỤ LIÊN KẾT DU HỌC (VIETQR CHECKOUT)
+ * CHUYÊN MỤC 2: SHOP NGA & DỊCH VỤ LIÊN KẾT DU HỌC (VIETQR CHECKOUT)
  * ===================================================================== */
 function initShopPage() {
   const host = el("#shopHost");

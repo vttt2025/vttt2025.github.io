@@ -7482,6 +7482,7 @@ const LISTENING_LESSONS = [
     "estMinutes": 12,
     "icon": "✈️",
     "partNumber": 1,
+      "part_type": "Part 1",
     "is_pro_only": false,
     "lines": [
       {
@@ -7611,6 +7612,7 @@ const LISTENING_LESSONS = [
     "estMinutes": 12,
     "icon": "🛒",
     "partNumber": 1,
+      "part_type": "Part 1",
     "is_pro_only": false,
     "lines": [
       {
@@ -7719,6 +7721,7 @@ const LISTENING_LESSONS = [
     "estMinutes": 15,
     "icon": "🏢",
     "partNumber": 2,
+      "part_type": "Part 2",
     "is_pro_only": false,
     "lines": [
       {
@@ -7821,6 +7824,7 @@ const LISTENING_LESSONS = [
     "estMinutes": 15,
     "icon": "🥞",
     "partNumber": 2,
+      "part_type": "Part 2",
     "is_pro_only": false,
     "lines": [
       {
@@ -7923,6 +7927,7 @@ const LISTENING_LESSONS = [
     "estMinutes": 18,
     "icon": "📚",
     "partNumber": 3,
+      "part_type": "Part 3",
     "is_pro_only": true,
     "lines": [
       {
@@ -8020,6 +8025,7 @@ const LISTENING_LESSONS = [
     "estMinutes": 15,
     "icon": "🚇",
     "partNumber": 3,
+      "part_type": "Part 3",
     "is_pro_only": true,
     "lines": [
       {
@@ -8112,6 +8118,7 @@ const LISTENING_LESSONS = [
     "estMinutes": 20,
     "icon": "🚀",
     "partNumber": 4,
+      "part_type": "Part 4",
     "is_pro_only": true,
     "lines": [
       {
@@ -8416,6 +8423,7 @@ const SPEAKING_SETS = [
 const WRITING_TASKS = [
   {
     "id": "w1",
+      "task_type": "summary",
     "level": "A1",
     "levelName": "Sơ cấp A1",
     "category": "intro",
@@ -8443,6 +8451,7 @@ const WRITING_TASKS = [
   },
   {
     "id": "w2",
+      "task_type": "summary",
     "level": "A1",
     "levelName": "Sơ cấp A1",
     "category": "daily",
@@ -8470,6 +8479,7 @@ const WRITING_TASKS = [
   },
   {
     "id": "w3",
+      "task_type": "essay",
     "level": "B1",
     "levelName": "Trung cấp B1",
     "category": "letter",
@@ -8497,6 +8507,7 @@ const WRITING_TASKS = [
   },
   {
     "id": "w4",
+      "task_type": "essay",
     "level": "B1",
     "levelName": "Trung cấp B1",
     "category": "essay",
@@ -8524,6 +8535,7 @@ const WRITING_TASKS = [
   },
   {
     "id": "w5",
+      "task_type": "picture_desc",
     "level": "A2",
     "levelName": "Cơ bản A2",
     "category": "photo",
@@ -8551,6 +8563,7 @@ const WRITING_TASKS = [
   },
   {
     "id": "w6",
+      "task_type": "summary",
     "level": "A2",
     "levelName": "Cơ bản A2",
     "category": "letter",
@@ -8578,6 +8591,7 @@ const WRITING_TASKS = [
   },
   {
     "id": "w7",
+      "task_type": "essay",
     "level": "B2",
     "levelName": "Nâng cao B2",
     "category": "essay",
@@ -8606,6 +8620,7 @@ const WRITING_TASKS = [
   },
   {
     "id": "w8",
+      "task_type": "essay",
     "level": "B2",
     "levelName": "Nâng cao B2",
     "category": "letter",

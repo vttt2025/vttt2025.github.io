@@ -17158,7 +17158,11 @@ body[data-page="upgrade"] main.container {
   .toast,
   .bottom-nav,
   .floating-buttons,
-  #vocSidebarHost {
+  #vocSidebarHost,
+  .companion-bubble,
+  #rusikaFloatingWidget,
+  .companion-modal,
+  #antiCheatModal {
     display: none !important;
   }
 

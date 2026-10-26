@@ -1077,9 +1077,11 @@ const Monetization = {
       document.body.appendChild(modal);
     }
 
-    // Thời gian phiên thanh toán 15 phút
+    // Thời gian phiên thanh toán 15 phút tính theo timestamp client (PROJECT_SPEC line 192)
+    const endTime = Date.now() + 15 * 60 * 1000;
     let timeLeft = 15 * 60;
     if (this._timerInterval) clearInterval(this._timerInterval);
+    if (this._pollInterval) clearInterval(this._pollInterval);
 
     const renderModalContent = () => {
       const qrUrl = `https://img.vietqr.io/image/vietinbank-108873919999-compact2.png?amount=${currentPkg.price}&addInfo=${orderId}&accountName=RUSI%20TRKI%20PLATFORM`;
@@ -1192,6 +1194,7 @@ const Monetization = {
       // Đóng modal
       document.getElementById("closeVietQr").onclick = () => {
         clearInterval(this._timerInterval);
+        if (this._pollInterval) clearInterval(this._pollInterval);
         modal.remove();
       };
 
@@ -1266,9 +1269,9 @@ const Monetization = {
 
     renderModalContent();
 
-    // Đồng hồ đếm ngược phiên
+    // Đồng hồ đếm ngược phiên chính xác theo client timestamp (PROJECT_SPEC line 192)
     this._timerInterval = setInterval(() => {
-      timeLeft--;
+      timeLeft = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
       const disp = document.getElementById("vietqrTimerDisplay");
       if (disp) {
         const m = Math.floor(timeLeft / 60).toString().padStart(2, "0");
@@ -1277,10 +1280,36 @@ const Monetization = {
       }
       if (timeLeft <= 0) {
         clearInterval(this._timerInterval);
+        if (this._pollInterval) clearInterval(this._pollInterval);
+        const scanBox = modal.querySelector(".vietqr-scan-box");
+        if (scanBox) {
+          scanBox.style.opacity = "0.2";
+          scanBox.style.filter = "grayscale(1)";
+        }
         toast("Phiên thanh toán đã hết hạn — Vui lòng tạo lại mã đơn mới.");
-        modal.remove();
       }
     }, 1000);
+
+    // Polling tự động kiểm tra trạng thái giao dịch qua Webhook / Casso (PROJECT_SPEC line 198)
+    const pollPaymentStatus = async () => {
+      if (!modal.isConnected) {
+        if (this._pollInterval) clearInterval(this._pollInterval);
+        return;
+      }
+      try {
+        if (window.RusiSupabase && window.RusiSupabase.orders && typeof window.RusiSupabase.orders.checkStatus === "function") {
+          const res = await window.RusiSupabase.orders.checkStatus(orderId);
+          if (res && res.status === "PAID") {
+            clearInterval(this._pollInterval);
+            clearInterval(this._timerInterval);
+            Monetization.setPro(true, currentPkg.id);
+            const confirmBtn = document.getElementById("btnConfirmPaid");
+            if (confirmBtn) confirmBtn.click();
+          }
+        }
+      } catch(e) {}
+    };
+    this._pollInterval = setInterval(pollPaymentStatus, 3000);
   },
 
   /** Modal Quản Lý Gói PRO (Dành cho thành viên đã là PRO) */
@@ -2064,7 +2093,7 @@ function renderIndexProgressIfLoggedIn(user) {
         </div>
         <div class="voc-stat-box">
           <div class="voc-stat-val" style="color:var(--russia-red, #ef4444)">${streak}</div>
-          <div class="voc-stat-label">Chuỗi ngày 🔥</div>
+          <div class="voc-stat-label">Chuỗi ngày ${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 14 }) : ""}</div>
         </div>
       </div>
 
@@ -2342,3 +2371,18 @@ if (typeof window !== "undefined") {
     }
   });
 }
+
+// =====================================================================
+// GLOBAL DOUBLE-CLICK RUSSIAN WORD LOOKUP (PROJECT_SPEC line 140)
+// =====================================================================
+document.addEventListener("dblclick", (e) => {
+  if (e.target.closest("input, textarea, select, button, a, audio, video, [contenteditable]")) return;
+  const selection = (window.getSelection ? window.getSelection().toString() : "").trim();
+  if (!selection) return;
+  const cleanWord = selection.replace(/^[«"'(—\s]+|[»"')!?,.:;—\s]+$/g, "").trim();
+  if (cleanWord.length >= 2 && /[\u0400-\u04FF]/.test(cleanWord)) {
+    if (window.WordDetail && typeof window.WordDetail.open === "function") {
+      window.WordDetail.open(cleanWord);
+    }
+  }
+});
