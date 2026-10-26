@@ -4423,12 +4423,13 @@ body[data-season="winter"] footer { background: #08192d !important; color: #94a3
   color: var(--muted);
 }
 
-/* 2. Floating Cat Chat Bubble Widget */
+/* 2. Floating Cat Chat Bubble Widget (.companion-bubble) */
+.companion-bubble,
 .rusika-floating-widget {
   position: fixed;
   bottom: 24px;
-  right: 24px;
-  z-index: 9980;
+  right: 20px;
+  z-index: 990; /* Luôn thấp hơn Header (1000) và Popover/Drawer (1010) */
   display: flex;
   align-items: center;
   gap: 12px;
@@ -11604,7 +11605,8 @@ img, video, iframe {
 .dau-badge-b2 {
   background: #fdeced;
   color: #c52233;
-  border: 1px solid #fecdd3;
+  border: 1px solid #fecdd3;
+
 }
 
 .dau-badge-c1 {
@@ -19531,4 +19533,39 @@ body.in-workspace .quizlet-card-container {
 
 body.menu-locked {
   overflow: hidden !important;
+}
+
+
+/* --- Spec 3.3 & 9.4: Quy Chuẩn Vùng Chạm Tap Target >= 44x44px --- */
+.btn-icon-compact {
+  width: 34px;
+  height: 34px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-icon-compact::after {
+  content: '';
+  position: absolute;
+  inset: -5px; /* Mở rộng hitbox đạt chuẩn 44x44px */
+}
+
+/* --- Spec 3.3: User Dropdown Trên Mobile & Tablet (<= 768px) Chống Tràn Mép --- */
+@media (max-width: 768px) {
+  .user-dropdown {
+    position: fixed !important;
+    top: 62px !important;
+    right: 12px !important;
+    width: min(calc(100vw - 24px), 320px) !important;
+    max-height: calc(100dvh - 74px) !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+  }
+}
+
+/* --- Spec 8.11: AI Companion Bubble Tự Động Dâng Cao Khi Có Bottom Bar --- */
+body.has-bottom-bar .companion-bubble,
+body.has-bottom-bar .rusika-floating-widget {
+  bottom: 84px !important;
 }

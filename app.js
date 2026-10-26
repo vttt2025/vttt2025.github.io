@@ -19,9 +19,34 @@ const STORE = {
 };
 window.STORE = STORE;
 
+// Chuẩn hóa ngày địa phương YYYY-MM-DD theo Spec Mục 8.12
+const getLocalDateString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Tính khoảng cách ngày theo UTC 00:00:00 chống lệch múi giờ
+const getDiffDays = (dayStr1, dayStr2) => {
+  if (!dayStr1 || !dayStr2) return 999;
+  const parseToUtc = (str) => {
+    if (str.includes('-')) {
+      const parts = str.split('-').map(Number);
+      return Date.UTC(parts[0], parts[1] - 1, parts[2]);
+    }
+    const d = new Date(str);
+    return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  };
+  const t1 = parseToUtc(dayStr1);
+  const t2 = parseToUtc(dayStr2);
+  return Math.round(Math.abs(t1 - t2) / 86400000);
+};
+
 const Progress = {
   /**
-   * Cộng XP và cập nhật chuỗi Streak ngày học.
+   * Cộng XP và cập nhật chuỗi Streak ngày học (XP-Gated Streak & Timezone Safeguard - Spec Mục 8.12).
    * YÊU CẦU BẮT BUỘC: Học viên phải hoàn thành bài học/test mới được cộng XP.
    * Chỗ tính ngày: PHẢI CÓ XP phát sinh trong ngày thì mới tính ngày đó vào chuỗi Streak!
    */
@@ -30,22 +55,25 @@ const Progress = {
     const xp = STORE.get("xp", 0) + n;
     STORE.set("xp", xp);
 
-    // Tính ngày Streak: Phải được XP thì mới tính ngày đó!
-    const today = new Date().toDateString();
-    const lastXpDay = STORE.get("lastXpDay", "");
+    // Tính ngày Streak theo ngày địa phương chuẩn
+    const todayStr = getLocalDateString();
+    const lastXpDayStr = STORE.get("lastXpDay", "");
     let currentStreak = STORE.get("streak", 0);
 
-    if (lastXpDay !== today) {
-      // Lần đầu tiên kiếm được XP trong ngày hôm nay
-      const yesterday = new Date(Date.now() - 86400000).toDateString();
-      if (lastXpDay === yesterday) {
-        currentStreak += 1;
+    if (lastXpDayStr !== todayStr) {
+      if (!lastXpDayStr) {
+        currentStreak = 1;
       } else {
-        currentStreak = 1; // Bắt đầu chuỗi mới
+        const diffDays = getDiffDays(todayStr, lastXpDayStr);
+        if (diffDays === 1) {
+          currentStreak += 1; // Học liên tiếp ngày kế tiếp
+        } else if (diffDays > 1) {
+          currentStreak = 1; // Bắt đầu chuỗi mới sau khi đứt chuỗi
+        }
       }
       STORE.set("streak", currentStreak);
-      STORE.set("lastXpDay", today);
-      STORE.set("lastDay", today);
+      STORE.set("lastXpDay", todayStr);
+      STORE.set("lastDay", todayStr);
     }
 
     updateHeaderChips();
@@ -63,17 +91,19 @@ const Progress = {
   },
 
   /**
-   * Kiểm tra chuỗi Streak khi mở web (Boot).
+   * Kiểm tra chuỗi Streak khi mở web (Boot - Spec Mục 8.12).
    * Tuyệt đối KHÔNG tự ý tăng ngày nếu hôm nay chưa có XP.
-   * Nếu hôm qua không có XP (bỏ lỡ >= 1 ngày), reset streak về 0 để tránh hiển thị ảo.
+   * Nếu bỏ bẫng >= 1 ngày (diffDays > 1), reset streak về 0 để tránh hiển thị ảo.
    */
   checkStreakStatus() {
-    const today = new Date().toDateString();
-    const yesterday = new Date(Date.now() - 86400000).toDateString();
-    const lastXpDay = STORE.get("lastXpDay", STORE.get("lastDay", ""));
+    const todayStr = getLocalDateString();
+    const lastXpDayStr = STORE.get("lastXpDay", STORE.get("lastDay", ""));
 
-    if (lastXpDay && lastXpDay !== today && lastXpDay !== yesterday) {
-      STORE.set("streak", 0);
+    if (lastXpDayStr && lastXpDayStr !== todayStr) {
+      const diffDays = getDiffDays(todayStr, lastXpDayStr);
+      if (diffDays > 1) {
+        STORE.set("streak", 0);
+      }
     }
     updateHeaderChips();
   },
@@ -923,7 +953,7 @@ const Monetization = {
    * Popup cửa sổ "Nội dung dành cho PRO" khi người dùng chưa mua kích vào xem.
    * Có 2 lựa chọn: "Tìm hiểu gói PRO" (chuyển sang upgrade.html) và "Để sau" (đóng cửa sổ).
    */
-  showProGateModal(customTitle = "Nội dung dành cho PRO", customDesc = "") {
+  showProGateModal(customTitle = "Nội dung dành riêng cho Hội viên PRO", customDesc = "") {
     let modal = document.getElementById("proGateModal");
     if (!modal) {
       modal = document.createElement("div");
@@ -932,7 +962,7 @@ const Monetization = {
       document.body.appendChild(modal);
     }
 
-    const defaultDesc = "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng nâng cao, đề thi thử ТРКИ chuẩn quốc tế, bài luyện nghe video thực tế, AI chấm bài tự luận và nhận diện phát âm không giới hạn.";
+    const defaultDesc = "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng B1–B2, đề thi thử ТРКИ chuẩn quốc tế, bài luyện nghe video thực tế, AI chấm bài tự luận và nhận diện phát âm không giới hạn.";
     const descText = customDesc || defaultDesc;
 
     modal.innerHTML = `
@@ -940,7 +970,7 @@ const Monetization = {
         <button class="vietqr-close" id="closeProGate" title="Đóng">&times;</button>
         
         <div class="pro-gate-header">
-          <div class="pro-gate-crown-badge">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 28 }) : ""}</div>
+          <div class="pro-gate-crown-badge">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 24 }) : ""}</div>
           <span class="pro-gate-kicker">RUSI TRKI • ĐẶC QUYỀN HỘI VIÊN</span>
           <h3 class="pro-gate-title">${esc(customTitle)}</h3>
         </div>
@@ -953,8 +983,8 @@ const Monetization = {
           <button type="button" class="btn btn-outline pro-gate-btn-dismiss" id="btnProGateDismiss">
             Để sau
           </button>
-          <a href="upgrade.html" class="btn btn-primary pro-gate-btn-upgrade" id="btnProGateUpgrade">
-            Tìm hiểu gói PRO →
+          <a href="upgrade.html" class="btn btn-primary pro-gate-btn-upgrade" id="btnProGateUpgrade" style="display:inline-flex;align-items:center;gap:6px">
+            Tìm hiểu gói PRO ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "→"}
           </a>
         </div>
       </div>
@@ -1079,7 +1109,7 @@ const Monetization = {
             const isActive = (p.id || "").toLowerCase() === (currentPkg.id || "").toLowerCase();
             return `
             <button type="button" class="vietqr-pkg-tab ${isActive ? "active" : ""}" data-pkg-select="${p.id}">
-              ${p.popular ? `<span class="vietqr-pkg-tab-hot" style="display:inline-flex;align-items:center;gap:3px">HOT ${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 12 }) : ""}</span>` : ""}
+              ${p.popular ? `<span class="vietqr-pkg-tab-hot" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 12 }) : ""} Phổ Biến Nhất</span>` : (p.id === "pro_vip" ? `<span class="vietqr-pkg-tab-hot" style="background:#d97706;color:#fff;display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} VIP Quyền Năng</span>` : "") }
               <span class="vietqr-pkg-tab-badge">${esc(p.badge || "PRO")}</span>
               <span class="vietqr-pkg-tab-title">${esc(p.title)}</span>
               <span class="vietqr-pkg-tab-price">${p.price.toLocaleString("vi-VN")} đ</span>

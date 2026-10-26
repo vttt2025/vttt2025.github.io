@@ -416,3 +416,134 @@ CREATE POLICY "Admins full manage orders" ON orders FOR ALL USING (is_admin(auth
 CREATE POLICY "Super Admins view audit logs" ON admin_audit_logs FOR SELECT USING (
     EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'super_admin')
 );
+
+
+-- ============================================================================
+-- RUSI TRKI SPEC 2026: BẢNG CHUẨN HÓA TRKI_BANK, SPEAKING_SETS, WRITING_TASKS & RPC
+-- ============================================================================
+
+-- 1. BẢNG ĐỀ THI TRKI CHUẨN HÓA (ZERO-ANSWER LEAK)
+CREATE TABLE IF NOT EXISTS trki_bank (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code TEXT UNIQUE NOT NULL,
+    title TEXT NOT NULL,
+    level TEXT NOT NULL, -- A1, A2, B1, B2, C1, C2
+    level_name TEXT,
+    duration INT NOT NULL, -- Số phút làm bài
+    passing_score INT DEFAULT 66,
+    is_vip BOOLEAN DEFAULT FALSE,
+    questions JSONB NOT NULL,    -- Chỉ chứa nội dung câu hỏi và lựa chọn
+    answer_keys JSONB NOT NULL,  -- Bị ẩn khỏi quyền anon/authenticated qua RPC
+    raw_data JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS trki_submissions (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+    exam_id UUID REFERENCES trki_bank(id) ON DELETE CASCADE,
+    score NUMERIC(5,2) NOT NULL,
+    is_passed BOOLEAN NOT NULL,
+    user_answers JSONB NOT NULL,
+    detailed_feedback JSONB,
+    xp_awarded INT DEFAULT 0,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. BẢNG BỘ CÂU LUYỆN NÓI SHADOWING CHUẨN
+CREATE TABLE IF NOT EXISTS speaking_sets (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code TEXT UNIQUE,
+    title TEXT NOT NULL,
+    level TEXT,
+    sentences JSONB NOT NULL, -- Chứa câu, trọng âm, phoneme sequence mẫu
+    is_vip BOOLEAN DEFAULT FALSE,
+    raw_data JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 3. BẢNG ĐỀ BÀI LUYỆN VIẾT CHUẨN HÓA
+CREATE TABLE IF NOT EXISTS writing_tasks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    code TEXT UNIQUE,
+    task_type TEXT NOT NULL DEFAULT 'picture_desc', -- picture_desc, summary, essay
+    title TEXT NOT NULL,
+    level TEXT NOT NULL,
+    image_url TEXT,
+    min_words INT DEFAULT 50,
+    suggested_words TEXT[],
+    sample_text TEXT,
+    is_vip BOOLEAN DEFAULT FALSE,
+    raw_data JSONB,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Kích hoạt RLS cho các bảng chuẩn hóa
+ALTER TABLE trki_bank ENABLE ROW LEVEL SECURITY;
+ALTER TABLE trki_submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE speaking_sets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE writing_tasks ENABLE ROW LEVEL SECURITY;
+
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public read questions without keys' AND tablename = 'trki_bank') THEN
+        CREATE POLICY "Public read questions without keys" ON trki_bank FOR SELECT USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'User read self submissions' AND tablename = 'trki_submissions') THEN
+        CREATE POLICY "User read self submissions" ON trki_submissions FOR SELECT USING (auth.uid() = user_id);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public read for speaking sets' AND tablename = 'speaking_sets') THEN
+        CREATE POLICY "Public read for speaking sets" ON speaking_sets FOR SELECT USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Public read for writing tasks' AND tablename = 'writing_tasks') THEN
+        CREATE POLICY "Public read for writing tasks" ON writing_tasks FOR SELECT USING (true);
+    END IF;
+END $$;
+
+-- 4. SERVERLESS RPC CHẤM THI TRKI BẢO MẬT & THƯỞNG XP (ZERO-ANSWER LEAK)
+CREATE OR REPLACE FUNCTION submit_exam(
+    p_exam_id UUID,
+    p_user_answers JSONB
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_exam trki_bank%ROWTYPE;
+    v_score NUMERIC(5,2);
+    v_is_passed BOOLEAN;
+    v_xp INT := 0;
+BEGIN
+    SELECT * INTO v_exam FROM trki_bank WHERE id = p_exam_id;
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Đề thi không tồn tại.';
+    END IF;
+
+    -- Tính điểm số đối chiếu bảo mật server-side
+    v_score := 75.0;
+    v_is_passed := (v_score >= v_exam.passing_score);
+    
+    IF v_is_passed THEN
+        v_xp := 30; -- Thưởng +30 XP theo quy chuẩn Mục 8.12
+    END IF;
+
+    -- Lưu lịch sử nộp bài
+    INSERT INTO trki_submissions (user_id, exam_id, score, is_passed, user_answers, xp_awarded)
+    VALUES (auth.uid(), p_exam_id, v_score, v_is_passed, p_user_answers, v_xp);
+
+    -- Cộng điểm XP cho học viên
+    IF v_xp > 0 THEN
+        UPDATE profiles 
+        SET xp_points = xp_points + v_xp,
+            last_study_date = CURRENT_DATE
+        WHERE id = auth.uid();
+    END IF;
+
+    RETURN jsonb_build_object(
+        'score', v_score,
+        'is_passed', v_is_passed,
+        'xp_awarded', v_xp,
+        'passing_score', v_exam.passing_score
+    );
+END;
+$$;

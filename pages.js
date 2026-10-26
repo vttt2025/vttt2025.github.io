@@ -1492,10 +1492,11 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                     ` : ""}
                   </div>
 
-                  <!-- COL 3: ACTION BUTTONS (Đã bỏ gắn sao và bỏ tra cứu biến cách theo yêu cầu) -->
+                  <!-- COL 3: ACTION BUTTONS (Spec Mục 1: Phát âm, Đã thuộc, Tra cách chia, Lưu lọ) -->
                   <div class="dau-row-col-actions">
                     <button type="button" class="dau-action-icon-btn btn-speak-item" data-ru="${esc(w.ru)}" title="Phát âm từ này">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""}</button>
                     <button type="button" class="dau-action-icon-btn btn-master-item ${isMastered ? "mastered" : ""}" data-ru="${esc(w.ru)}" title="Đánh dấu đã thuộc / thành thạo">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""}</button>
+                    <button type="button" class="dau-action-icon-btn btn-dict-item" data-ru="${esc(w.ru)}" title="Tra cứu 6 cách & chia thì">${window.RusiIcons ? RusiIcons.get("book-open", { size: 16 }) : ""}</button>
                     <button type="button" class="dau-action-icon-btn btn-addjar-item" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" data-ex="${esc(w.ex || "")}" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""}</button>
                     ${isCustomJar ? `
                       <button type="button" class="dau-action-icon-btn btn-delword-item" style="color:var(--red)" data-ru="${esc(w.ru)}" title="Xóa từ khỏi lọ này">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 16 }) : ""}</button>
@@ -1665,6 +1666,19 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           b.classList.add("playing");
           speak(b.dataset.ru);
           setTimeout(() => b.classList.remove("playing"), 1000);
+        };
+      });
+
+      pane.querySelectorAll(".btn-dict-item").forEach((b) => {
+        b.onclick = () => {
+          const ru = b.dataset.ru;
+          if (typeof window.openDictDetailModal === "function") {
+            window.openDictDetailModal(ru);
+          } else if (typeof window.openDictModal === "function") {
+            window.openDictModal(ru);
+          } else {
+            toast("Đang mở tra cứu 6 cách cho từ: " + ru);
+          }
         };
       });
 
@@ -2133,7 +2147,7 @@ function initVocabPage() {
               ${window.RusiIcons ? RusiIcons.get("trending-up", { size: 22 }) : ""}
             </div>
             <div class="voc-progress-horiz-title">
-              <h3>Tiến Độ Học Từ Vựng</h3>
+              <h3>Tiến Độ Học Ôn</h3>
             </div>
           </div>
 
@@ -2152,13 +2166,13 @@ function initVocabPage() {
             </div>
             <div class="voc-stat-box">
               <div class="voc-stat-val" style="color:var(--russia-red, #c52233)">${streak}</div>
-              <div class="voc-stat-label">Chuỗi ngày 🔥</div>
+              <div class="voc-stat-label">Chuỗi ngày ${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 14 }) : ""}</div>
             </div>
           </div>
 
           <div class="voc-progress-horiz-right">
             <button type="button" class="btn btn-primary btn-sm" id="btnSidebarQuickSrs" style="font-weight:700;padding:12px 20px;border-radius:10px;display:flex;align-items:center;gap:8px">
-              ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Ôn tập flashcard ngay
+              ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Ôn tập ngay ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
             </button>
           </div>
         </div>
@@ -2941,44 +2955,37 @@ function initListeningPage() {
         const russianCategory = `АУДИРОВАНИЕ · ${l.level}`;
 
         return `
-          <article class="topic-card dau-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-listen-id="${l.id}">
-            <div class="topic-card-top">
-              <span class="topic-number">${indexStr}</span>
-              ${isDone ? `
-                <span class="topic-status topic-status-completed">
-                  ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
-                </span>
-              ` : isPro ? `
-                <span class="topic-status topic-status-pro">PRO</span>
-              ` : `
-                <span class="topic-status topic-status-level">${l.level}</span>
-              `}
-            </div>
-
-            <div class="topic-card-main">
-              <span class="topic-icon">
+          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-listen-id="${l.id}">
+            <div class="dau-card-header">
+              <div class="dau-card-icon" style="background:rgba(2,132,199,0.08);color:#0284c7">
                 ${window.RusiIcons ? RusiIcons.get(l.icon || "headphones", { size: 24 }) : ""}
-              </span>
-              <div class="topic-card-text">
-                <h3 class="topic-title">${esc(l.title)}</h3>
-                <p class="topic-desc">${l.vi ? esc(l.vi) + ' · ' : ''}${qCount} câu hỏi · Audio chuẩn Nga</p>
+              </div>
+              <div class="dau-card-header-main">
+                <div class="dau-card-title-row">
+                  <h3 class="dau-card-ru">${esc(l.title)}</h3>
+                  ${isDone ? `
+                    <span class="topic-status topic-status-completed" style="flex-shrink:0">
+                      ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
+                    </span>
+                  ` : isPro ? `
+                    <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
+                  ` : `
+                    <span class="topic-status topic-status-level" style="flex-shrink:0">${l.level}</span>
+                  `}
+                </div>
+                <div class="dau-card-subinfo">
+                  <span>${l.level}</span>
+                  <span class="dau-card-sep">|</span>
+                  <span class="dau-card-count">${qCount} câu</span>
+                </div>
               </div>
             </div>
 
-            <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
-              <span style="width: ${isDone ? 100 : 0}%"></span>
-            </div>
-
-            <div class="topic-footer">
-              <span>${isDone ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng để luyện"}</span>
-              <div class="topic-footer-actions">
-                <button type="button" class="btn-listen-action topic-text-btn" data-listen-id="${l.id}" title="Luyện nghe">
-                  ${window.RusiIcons ? RusiIcons.get("headphones", { size: 13 }) : ""} Luyện nghe
-                </button>
-                <button type="button" class="btn-listen-action topic-circle-btn dau-card-cta" data-listen-id="${l.id}" title="Luyện nghe">
-                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
-                </button>
-              </div>
+            <div class="dau-card-footer">
+              <span style="font-size:0.84rem;color:var(--muted)">${isDone ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng để luyện"}</span>
+              <button type="button" class="btn btn-primary btn-sm btn-listen-action" data-listen-id="${l.id}" style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
+                ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 14 }) : "") : ""} Vào luyện nghe ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
+              </button>
             </div>
           </article>
         `;
@@ -4231,44 +4238,37 @@ function initSpeakingPage() {
         const russianCategory = `ГОВОРЕНИЕ · ${s.level}`;
 
         return `
-          <article class="topic-card dau-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-speak-id="${s.id}">
-            <div class="topic-card-top">
-              <span class="topic-number">${indexStr}</span>
-              ${isDone ? `
-                <span class="topic-status topic-status-completed">
-                  ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
-                </span>
-              ` : isPro ? `
-                <span class="topic-status topic-status-pro">PRO</span>
-              ` : `
-                <span class="topic-status topic-status-level">${s.level}</span>
-              `}
-            </div>
-
-            <div class="topic-card-main">
-              <span class="topic-icon">
+          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-speak-id="${s.id}">
+            <div class="dau-card-header">
+              <div class="dau-card-icon" style="background:rgba(234,88,12,0.08);color:#ea580c">
                 ${window.RusiIcons ? RusiIcons.get(s.icon || "mic-speaking", { size: 24 }) : ""}
-              </span>
-              <div class="topic-card-text">
-                <h3 class="topic-title">${esc(s.title)}</h3>
-                <p class="topic-desc">${s.items.length} mẫu câu · Shadowing & AI chấm điểm</p>
+              </div>
+              <div class="dau-card-header-main">
+                <div class="dau-card-title-row">
+                  <h3 class="dau-card-ru">${esc(s.title)}</h3>
+                  ${isDone ? `
+                    <span class="topic-status topic-status-completed" style="flex-shrink:0">
+                      ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
+                    </span>
+                  ` : isPro ? `
+                    <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
+                  ` : `
+                    <span class="topic-status topic-status-level" style="flex-shrink:0">${s.level}</span>
+                  `}
+                </div>
+                <div class="dau-card-subinfo">
+                  <span>${s.level}</span>
+                  <span class="dau-card-sep">|</span>
+                  <span class="dau-card-count">${(s.items || []).length} câu</span>
+                </div>
               </div>
             </div>
 
-            <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
-              <span style="width: ${isDone ? 100 : 0}%"></span>
-            </div>
-
-            <div class="topic-footer">
-              <span>${isDone ? "Đã luyện tập" : isPro ? "Dành cho thành viên" : "Sẵn sàng để nói"}</span>
-              <div class="topic-footer-actions">
-                <button type="button" class="btn-speak-action topic-text-btn" data-speak-id="${s.id}" title="Luyện nói">
-                  ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 13 }) : ""} Luyện nói
-                </button>
-                <button type="button" class="btn-speak-action topic-circle-btn dau-card-cta" data-speak-id="${s.id}" title="Luyện nói">
-                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
-                </button>
-              </div>
+            <div class="dau-card-footer">
+              <span style="font-size:0.84rem;color:var(--muted)">${isDone ? "Đã luyện tập" : isPro ? "Dành cho thành viên" : "Sẵn sàng để nói"}</span>
+              <button type="button" class="btn btn-primary btn-sm btn-speak-action" data-speak-id="${s.id}" style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
+                ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 14 }) : "") : ""} Luyện nói ngay ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
+              </button>
             </div>
           </article>
         `;
@@ -4626,44 +4626,37 @@ function initWritingPage() {
         const russianCategory = `ПИСЬМО · ${t.level}`;
 
         return `
-          <article class="topic-card dau-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-write-id="${t.id}">
-            <div class="topic-card-top">
-              <span class="topic-number">${indexStr}</span>
-              ${isDone ? `
-                <span class="topic-status topic-status-completed">
-                  ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
-                </span>
-              ` : isPro ? `
-                <span class="topic-status topic-status-pro">PRO</span>
-              ` : `
-                <span class="topic-status topic-status-level">${t.level}</span>
-              `}
-            </div>
-
-            <div class="topic-card-main">
-              <span class="topic-icon">
+          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-write-id="${t.id}">
+            <div class="dau-card-header">
+              <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
                 ${window.RusiIcons ? RusiIcons.get(t.icon || "pen-tool", { size: 24 }) : ""}
-              </span>
-              <div class="topic-card-text">
-                <h3 class="topic-title">${esc(t.title)}</h3>
-                <p class="topic-desc">${t.vi ? esc(t.vi) + ' · ' : ''}Tối thiểu ${t.minWords} từ · Chữa ngữ pháp</p>
+              </div>
+              <div class="dau-card-header-main">
+                <div class="dau-card-title-row">
+                  <h3 class="dau-card-ru">${esc(t.title)}</h3>
+                  ${isDone ? `
+                    <span class="topic-status topic-status-completed" style="flex-shrink:0">
+                      ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
+                    </span>
+                  ` : isPro ? `
+                    <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
+                  ` : `
+                    <span class="topic-status topic-status-level" style="flex-shrink:0">${t.level}</span>
+                  `}
+                </div>
+                <div class="dau-card-subinfo">
+                  <span>${t.level}</span>
+                  <span class="dau-card-sep">|</span>
+                  <span class="dau-card-count">${t.minWords || 40} từ</span>
+                </div>
               </div>
             </div>
 
-            <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
-              <span style="width: ${isDone ? 100 : 0}%"></span>
-            </div>
-
-            <div class="topic-footer">
-              <span>${isDone ? "Đã nộp bài" : isPro ? "Dành cho thành viên" : "Sẵn sàng làm bài"}</span>
-              <div class="topic-footer-actions">
-                <button type="button" class="btn-write-action topic-text-btn" data-write-id="${t.id}" title="Luyện viết">
-                  ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 13 }) : ""} Luyện viết
-                </button>
-                <button type="button" class="btn-write-action topic-circle-btn dau-card-cta" data-write-id="${t.id}" title="Làm bài viết">
-                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
-                </button>
-              </div>
+            <div class="dau-card-footer">
+              <span style="font-size:0.84rem;color:var(--muted)">${isDone ? "Đã nộp bài" : isPro ? "Dành cho thành viên" : "Sẵn sàng làm bài"}</span>
+              <button type="button" class="btn btn-primary btn-sm btn-write-action" data-write-id="${t.id}" style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
+                ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 14 }) : "") : ""} Bắt đầu viết ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
+              </button>
             </div>
           </article>
         `;
@@ -5009,9 +5002,9 @@ function initWritingPage() {
       `;
 
       const first = !Progress.doneList("writeDone").includes(t.id);
-      if (first) Progress.addXp(30);
+      if (first) Progress.addXp(20);
       Progress.markDone("writeDone", t.id);
-      toast("AI Rusika đã chấm xong bài viết của bạn (+30 XP)!");
+      toast("AI Rusika đã chấm xong bài viết của bạn (+20 XP)!");
     };
 
     box.querySelector(".btn-model").onclick = (e) => {
@@ -5131,44 +5124,37 @@ function initMockTestPage() {
         const durMin = Math.round((t.durationSeconds || 1800) / 60);
 
         return `
-          <article class="topic-card dau-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-trki-id="${t.id}">
-            <div class="topic-card-top">
-              <span class="topic-number">${indexStr}</span>
-              ${isDone ? `
-                <span class="topic-status topic-status-completed">
-                  ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
-                </span>
-              ` : isPro ? `
-                <span class="topic-status topic-status-pro">PRO</span>
-              ` : `
-                <span class="topic-status topic-status-level">${t.level}</span>
-              `}
-            </div>
-
-            <div class="topic-card-main">
-              <span class="topic-icon">
-                ${window.RusiIcons ? RusiIcons.get(t.icon || "graduation-cap", { size: 24 }) : ""}
-              </span>
-              <div class="topic-card-text">
-                <h3 class="topic-title">${esc(t.title)}</h3>
-                <p class="topic-desc">${t.levelName ? esc(t.levelName) + ' · ' : ''}${qCount} câu hỏi · ${durMin} phút</p>
+          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-trki-id="${t.id}">
+            <div class="dau-card-header">
+              <div class="dau-card-icon" style="background:rgba(197,34,51,0.08);color:var(--russia-red)">
+                ${window.RusiIcons ? RusiIcons.get(t.icon || "award-badge", { size: 24 }) : ""}
+              </div>
+              <div class="dau-card-header-main">
+                <div class="dau-card-title-row">
+                  <h3 class="dau-card-ru">${esc(t.title)}</h3>
+                  ${isDone ? `
+                    <span class="topic-status topic-status-completed" style="flex-shrink:0">
+                      ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
+                    </span>
+                  ` : isPro ? `
+                    <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
+                  ` : `
+                    <span class="topic-status topic-status-level" style="flex-shrink:0">${t.level}</span>
+                  `}
+                </div>
+                <div class="dau-card-subinfo">
+                  <span>${t.level}</span>
+                  <span class="dau-card-sep">|</span>
+                  <span class="dau-card-count">${qCount} câu</span>
+                </div>
               </div>
             </div>
 
-            <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
-              <span style="width: ${isDone ? 100 : 0}%"></span>
-            </div>
-
-            <div class="topic-footer">
-              <span>${isDone ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng thi thử"}</span>
-              <div class="topic-footer-actions">
-                <button type="button" class="btn-trki-action topic-text-btn" data-trki-id="${t.id}" title="Thi thử">
-                  ${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 13 }) : ""} Thi thử
-                </button>
-                <button type="button" class="btn-trki-action topic-circle-btn dau-card-cta" data-trki-id="${t.id}" title="Vào thi thử">
-                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
-                </button>
-              </div>
+            <div class="dau-card-footer">
+              <span style="font-size:0.84rem;color:var(--muted)">${isDone ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng thi thử"}</span>
+              <button type="button" class="btn btn-primary btn-sm btn-trki-action" data-trki-id="${t.id}" style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
+                ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 14 }) : "") : ""} Vào phòng thi ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
+              </button>
             </div>
           </article>
         `;
@@ -5584,7 +5570,7 @@ function initMockTestPage() {
     STORE.set("bestTest", Math.max(pct, STORE.get("bestTest", 0)));
 
     if (passed) {
-      Progress.addXp(60);
+      Progress.addXp(30);
       Progress.markDone("testsDone", currentTest.title);
     }
 
@@ -6430,7 +6416,7 @@ function initUpgradePage() {
           const isCurrent = isPro && proInfo && (pkg.id || "").toLowerCase() === (proInfo.pkgId || "").toLowerCase();
           return `
           <div class="pricing-card ${pkg.popular ? "popular" : ""} ${isCurrent ? "is-current" : ""}">
-            ${isCurrent ? `<div class="pricing-current-badge">GÓI ĐANG DÙNG</div>` : (pkg.popular ? `<div class="pricing-popular-badge">PHỔ BIẾN NHẤT</div>` : "")}
+            ${isCurrent ? `<div class="pricing-current-badge">GÓI ĐANG DÙNG</div>` : (pkg.popular ? `<div class="pricing-popular-badge" style="display:inline-flex;align-items:center;gap:5px">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 13 }) : ""} PHỔ BIẾN NHẤT</div>` : (pkg.id === "pro_vip" ? `<div class="pricing-popular-badge" style="background:linear-gradient(135deg, #d97706, #b45309);display:inline-flex;align-items:center;gap:5px">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} VIP QUYỀN NĂNG</div>` : ""))}
             <div class="pricing-card-head">
               <span class="pricing-badge">${esc(pkg.badge || "PRO")}</span>
               <h3 class="pricing-title">${esc(pkg.title)}</h3>
