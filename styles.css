@@ -18654,12 +18654,7 @@ body[data-page="upgrade"] main.container {
   }
 }
 
-@media (max-width: 480px) {
-  .header-pomo-chip {
-    padding: 4px 6px;
-    font-size: 0.72rem;
-  }
-}
+
 
 
 /* =====================================================================
@@ -18731,38 +18726,146 @@ html, body {
 
 @media (max-width: 768px) {
   .header {
-    height: 60px;
+    height: 60px !important;
+    min-height: 60px !important;
   }
   .header-inner {
-    height: 60px;
-    padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    height: 60px !important;
+    padding: 0 max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left)) !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+  .header-left {
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    min-width: 0 !important;
+  }
+  .brand {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+    white-space: nowrap !important;
   }
   .brand-mark {
-    width: 32px;
-    height: 32px;
-    font-size: 1.15rem;
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    font-size: 1.12rem !important;
+    border-radius: 8px !important;
   }
   .brand-text {
-    font-size: 1.05rem;
+    font-size: 1.02rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
   }
   .header-actions {
-    gap: 6px;
-    align-items: center;
-    display: flex;
-    flex-shrink: 0;
+    gap: 8px !important;
+    align-items: center !important;
+    display: inline-flex !important;
+    flex-shrink: 0 !important;
+    margin-left: auto !important;
   }
-  .header-pomo-chip {
-    height: 32px;
-    padding: 4px 8px;
-    font-size: 0.76rem;
-    min-height: 32px;
+  /* Khi chưa đăng nhập trên mobile: Ẩn nút Đăng ký ngoài top bar (tránh tràn 400px), giữ Đăng nhập nhỏ gọn */
+  .auth-buttons-group {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
   }
+  .btn-auth-register {
+    display: none !important;
+  }
+  .btn-auth-login {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 6px 14px !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    border-radius: 999px !important;
+    min-height: 34px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    border: 1.5px solid var(--border) !important;
+    background: var(--surface) !important;
+    color: var(--text) !important;
+  }
+  /* Khi đã đăng nhập: Nút Nâng cấp PRO dạng icon tròn nhỏ gọn */
+  .user-area-authenticated {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex-shrink: 0 !important;
+  }
+  .btn-upgrade-pro-header {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    padding: 0 !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+  }
+  .btn-upgrade-pro-header::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: -5px !important; /* Hitbox 44x44px */
+  }
+  .btn-upgrade-pro-header .btn-upgrade-text {
+    display: none !important;
+  }
+  .btn-upgrade-pro-header .btn-upgrade-icon {
+    font-size: 1rem !important;
+    margin: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  /* User trigger dạng avatar tròn */
   .user-trigger {
-    padding: 2px 4px;
-    min-height: 36px;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    border-radius: 50% !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+  }
+  .user-trigger::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: -5px !important; /* Hitbox 44x44px */
+  }
+  .user-trigger .user-name-short {
+    display: none !important;
+  }
+  .user-trigger .caret {
+    display: none !important;
+  }
+  .user-trigger .user-avatar {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    margin: 0 !important;
   }
   .user-dropdown {
     min-width: 0 !important;
@@ -18770,26 +18873,33 @@ html, body {
     right: 0 !important;
     left: auto !important;
   }
+  /* Hamburger menu button */
   .menu-button {
-    width: 44px !important;
-    height: 44px !important;
-    min-width: 44px !important;
-    min-height: 44px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: center !important;
     align-items: center !important;
     gap: 5px !important;
-    border-radius: 12px !important;
+    border-radius: 10px !important;
     padding: 0 !important;
     flex-shrink: 0 !important;
     z-index: 1005 !important;
     cursor: pointer !important;
     box-sizing: border-box !important;
+    position: relative !important;
+  }
+  .menu-button::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: -3px !important; /* Hitbox 44x44px */
   }
   .menu-button span {
     display: block !important;
-    width: 20px !important;
+    width: 18px !important;
     height: 2px !important;
     border-radius: 2px !important;
     transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease !important;
@@ -18801,20 +18911,21 @@ html, body {
   .menu-button.is-open span:last-child {
     transform: translateY(-3.5px) rotate(-45deg) !important;
   }
+  /* Drawer điều hướng khít sát mép dưới top bar 60px */
+  .header-center {
+    top: 60px !important;
+  }
 }
 
 @media (max-width: 380px) {
   .header-inner {
-    padding: 0 max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left));
+    padding: 0 max(12px, env(safe-area-inset-right)) 0 max(12px, env(safe-area-inset-left)) !important;
   }
   .brand-text {
-    font-size: 0.95rem;
+    font-size: 0.94rem !important;
   }
-  .header-pomo-chip .header-pomo-time {
-    font-size: 0.7rem;
-  }
-  .btn-auth-register {
-    display: none !important;
+  .header-actions {
+    gap: 6px !important;
   }
 }
 
@@ -18965,46 +19076,141 @@ html, body {
 @media (max-width: 768px) {
   .dau-workspace-back-bar {
     position: sticky !important;
-    top: 58px !important;
-    z-index: 35 !important;
-    padding: 10px 12px !important;
-    margin-bottom: 14px !important;
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 10px !important;
-    border-radius: 12px !important;
-  }
-  .dau-workspace-back-bar > div:last-child {
-    width: 100% !important;
+    top: 60px !important; /* Khớp chuẩn xác mép dưới của header (60px), không bị đè lấp 2-3px */
+    z-index: 40 !important;
+    padding: 6px 12px !important;
+    margin-bottom: 12px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
-    flex-wrap: wrap !important;
     gap: 8px !important;
-    margin-left: 0 !important;
+    border-radius: 14px !important;
+    min-height: 48px !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    backdrop-filter: blur(12px) !important;
+    -webkit-backdrop-filter: blur(12px) !important;
+    border: 1px solid var(--border) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05) !important;
   }
-  .dau-workspace-info {
-    width: 100% !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    overflow: hidden !important;
-  }
-  .dau-workspace-title {
-    font-size: 0.95rem !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    flex: 1 !important;
-    min-width: 0 !important;
+  [data-theme="dark"] .dau-workspace-back-bar {
+    background: rgba(15, 23, 42, 0.96) !important;
   }
   .dau-back-btn {
-    padding: 8px 12px !important;
-    font-size: 0.84rem !important;
-    min-height: 42px !important;
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
+    border-radius: 10px !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+  }
+  .dau-back-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: -3px !important; /* Hitbox 44x44px */
+  }
+  .dau-back-btn .btn-text {
+    display: none !important;
+  }
+  .dau-workspace-info {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    overflow: hidden !important;
+  }
+  .dau-workspace-title {
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+  .dau-workspace-info .dau-badge {
+    font-size: 0.68rem !important;
+    padding: 2px 6px !important;
+    flex-shrink: 0 !important;
+    border-radius: 6px !important;
+  }
+  .dau-workspace-meta {
+    display: none !important; /* Ẩn câu chữ phụ trợ trên điện thoại để dành không gian cho tiêu đề */
+  }
+  .dau-workspace-back-bar > div:last-child,
+  .dau-workspace-controls,
+  .topic-article-top-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
+  }
+  /* Thu gọn thành icon 38x38px đối với nút thao tác phụ trợ có icon */
+  .dau-workspace-back-bar .btn:has(.btn-text),
+  .dau-workspace-back-bar .dau-top-btn,
+  .topic-article-top-actions .btn {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    border-radius: 10px !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+  }
+  .dau-workspace-back-bar .btn:has(.btn-text)::after,
+  .dau-workspace-back-bar .dau-top-btn::after,
+  .topic-article-top-actions .btn::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: -3px !important; /* Hitbox 44x44px */
+  }
+  .dau-workspace-back-bar .btn .btn-text,
+  .dau-workspace-back-bar .dau-top-btn .btn-text,
+  .topic-article-top-actions .btn .btn-text {
+    display: none !important;
+  }
+  .dau-exam-timer {
+    font-size: 0.95rem !important;
+    padding: 3px 8px !important;
+    background: var(--surface) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+  }
+  .dau-workspace-back-bar .speed-pills {
+    display: inline-flex !important;
+    gap: 3px !important;
+    background: var(--surface-card, #f1f5f9) !important;
+    padding: 2px !important;
+    border-radius: 8px !important;
+  }
+  .dau-workspace-back-bar .speed-pill {
+    padding: 3px 6px !important;
+    font-size: 0.72rem !important;
+    min-width: auto !important;
+    height: 28px !important;
+    border-radius: 6px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Khi màn hình nhỏ <= 480px nếu có controls phức tạp (bài nghe có speed pills + 2 buttons) thì xếp sub-row */
+  .dau-workspace-back-bar:has(.dau-workspace-controls:nth-child(3)) {
+    flex-wrap: wrap !important;
+  }
+  .dau-workspace-back-bar:has(.dau-workspace-controls:nth-child(3)) .dau-workspace-controls {
+    width: 100% !important;
+    justify-content: flex-end !important;
+    padding-top: 6px !important;
+    border-top: 1px dashed var(--border) !important;
+    margin-top: 4px !important;
   }
 }
 
@@ -21350,5 +21556,534 @@ body.has-bottom-bar .rusika-floating-widget {
     min-height: 38px !important;
     font-size: 12.5px !important;
     justify-content: center !important;
+  }
+}
+
+/* =====================================================================
+ * TỐI ƯU KHÔNG GIAN HỌC LỌ TỪ VỰNG & TOPBAR 1 DÒNG DUY NHẤT TRÊN MOBILE
+ * ===================================================================== */
+.dau-topbar-modes {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  flex-shrink: 0 !important;
+  border: none !important;
+}
+
+.dau-topbar-modes .quizlet-mode-btn {
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+  border-radius: 9px !important;
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  border: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  cursor: pointer !important;
+  transition: all 0.18s ease !important;
+  flex-shrink: 0 !important;
+}
+
+.dau-topbar-modes .quizlet-mode-btn:hover {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+  background: var(--primary-soft) !important;
+}
+
+.dau-topbar-modes .quizlet-mode-btn.active {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 2px 8px rgba(23, 87, 166, 0.25) !important;
+}
+
+/* Ẩn hoàn toàn thanh chế độ thứ 2 bên dưới nếu topbar modes đã hiện diện */
+.quizlet-suite > .quizlet-mode-bar {
+  display: none !important;
+}
+
+/* Card từ vựng mở rộng chi tiết (Accordion theo chuẩn PROJECT_SPEC) */
+.dau-vocab-row-card {
+  display: flex !important;
+  flex-direction: column !important;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 8px rgba(16, 42, 76, 0.03);
+  margin-bottom: 10px;
+}
+
+.dau-vocab-row-card:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 4px 14px rgba(23, 87, 166, 0.08);
+}
+
+.dau-vocab-row-card.is-expanded {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 6px 20px rgba(23, 87, 166, 0.09) !important;
+  background: var(--surface) !important;
+}
+
+[data-theme="dark"] .dau-vocab-row-card.is-expanded {
+  border-color: #38bdf8 !important;
+  background: rgba(16, 42, 76, 0.8) !important;
+}
+
+.dau-vocab-row-card.mastered {
+  border-color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.03);
+}
+
+.dau-badge-pill {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: rgba(23, 87, 166, 0.08);
+  color: var(--primary);
+  border: 1px solid rgba(23, 87, 166, 0.15);
+  display: inline-flex;
+  align-items: center;
+}
+
+.dau-badge-pill.pos {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+[data-theme="dark"] .dau-badge-pill.pos {
+  background: #1e293b;
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+.btn-expand-card {
+  transition: transform 0.2s ease;
+}
+
+.dau-vocab-row-card.is-expanded .btn-expand-card {
+  color: var(--primary) !important;
+  border-color: var(--primary) !important;
+  background: var(--primary-soft) !important;
+}
+
+/* =====================================================================
+ * RESPONSIVE MOBILE CHO TOPBAR 1 DÒNG & KHÔNG GIAN HỌC THU GỌN BO GÓC
+ * ===================================================================== */
+@media (max-width: 768px) {
+  /* 1. Đóng dau-workspace-back-bar thành 1 DÒNG DUY NHẤT */
+  .dau-workspace-back-bar.dau-quizlet-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    padding: 6px 8px !important;
+    min-height: 48px !important;
+    position: sticky !important;
+    top: 56px !important;
+    z-index: 50 !important;
+  }
+
+  .dau-workspace-back-bar.dau-quizlet-bar .dau-back-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    border-radius: 9px !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+  }
+
+  .dau-workspace-back-bar.dau-quizlet-bar .dau-back-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: -4px !important; /* Touch target 44x44px */
+  }
+
+  .dau-workspace-back-bar.dau-quizlet-bar .dau-back-btn .btn-text {
+    display: none !important;
+  }
+
+  .dau-workspace-back-bar.dau-quizlet-bar .dau-workspace-info {
+    flex: 0 1 auto !important;
+    max-width: 110px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+
+  .dau-workspace-back-bar.dau-quizlet-bar .dau-workspace-title {
+    font-size: 0.8rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .dau-workspace-back-bar.dau-quizlet-bar .dau-badge {
+    display: none !important;
+  }
+
+  .dau-topbar-modes {
+    gap: 4px !important;
+    margin-left: auto !important;
+  }
+
+  .dau-topbar-modes .quizlet-mode-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    border-radius: 9px !important;
+    position: relative !important;
+  }
+
+  .dau-topbar-modes .quizlet-mode-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: -4px !important; /* Hitbox 44x44px */
+  }
+
+  .dau-topbar-modes .quizlet-mode-btn .btn-text {
+    display: none !important;
+  }
+
+  .dau-topbar-modes .quizlet-mode-btn svg,
+  .dau-topbar-modes .quizlet-mode-btn i {
+    width: 17px !important;
+    height: 17px !important;
+    margin: 0 !important;
+  }
+
+  .dau-workspace-back-bar .dau-top-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    padding: 0 !important;
+    border-radius: 9px !important;
+  }
+
+  /* 2. GIẢM BO GÓC LỚN & PADDING ĐỂ TỐI ĐA HÓA KHÔNG GIAN HỌC TRÊN ĐIỆN THOẠI */
+  .workspace {
+    padding: 6px 4px !important;
+    border-radius: 10px !important;
+  }
+
+  #jarDetailHost .workspace,
+  #jarQuizletSuiteHost,
+  .quizlet-suite {
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 8px !important;
+  }
+
+  /* Flashcard 3D chính */
+  .quizlet-card-container {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+  }
+
+  .quizlet-card {
+    min-height: 290px !important;
+    height: 300px !important;
+    border-radius: 12px !important;
+  }
+
+  .quizlet-card-face {
+    padding: 14px 12px !important;
+    border-radius: 12px !important;
+    border-width: 1.5px !important;
+  }
+
+  .qcard-word {
+    font-size: clamp(1.5rem, 6.2vw, 2rem) !important;
+    line-height: 1.2 !important;
+  }
+
+  .qcard-meaning {
+    font-size: clamp(1.1rem, 4.6vw, 1.35rem) !important;
+  }
+
+  .qcard-ex-box {
+    padding: 8px 10px !important;
+    margin-top: 8px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Thẻ xem nhanh Flashcard preview ở đầu danh sách */
+  .dau-vocab-preview-box {
+    padding: 8px 8px !important;
+    border-radius: 10px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .dau-vocab-preview-card {
+    height: 180px !important;
+    border-radius: 10px !important;
+  }
+
+  .dau-preview-face {
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+  }
+
+  .dau-preview-word {
+    font-size: 1.45rem !important;
+  }
+
+  .dau-preview-meaning {
+    font-size: 1.1rem !important;
+  }
+
+  .dau-preview-nav {
+    margin-top: 8px !important;
+    gap: 12px !important;
+  }
+
+  .dau-preview-nav-btn {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Thanh công cụ danh sách từ */
+  .dau-vocab-toolbar {
+    padding: 8px 10px !important;
+    border-radius: 10px !important;
+    margin: 10px 0 !important;
+    gap: 8px !important;
+  }
+
+  .dau-toolbar-heading {
+    font-size: 0.95rem !important;
+  }
+
+  .dau-vocab-search-wrap {
+    min-width: 100% !important;
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  .dau-vocab-pills-wrap {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    gap: 5px !important;
+  }
+
+  .dau-vocab-pill {
+    padding: 4px 8px !important;
+    font-size: 0.75rem !important;
+  }
+
+  .btn-flash-cta {
+    padding: 4px 10px !important;
+    font-size: 0.75rem !important;
+    margin-left: auto !important;
+  }
+
+  /* Card từ vựng trong danh sách */
+  .dau-vocab-row-card {
+    padding: 10px 10px !important;
+    border-radius: 10px !important;
+    gap: 6px !important;
+  }
+
+  .dau-row-header-wrap {
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+  }
+
+  .dau-row-ru {
+    font-size: 1.05rem !important;
+  }
+
+  .dau-row-vi {
+    font-size: 0.88rem !important;
+  }
+
+  .dau-row-col-actions {
+    border-top: none !important;
+    padding-top: 0 !important;
+    gap: 4px !important;
+  }
+
+  .dau-action-icon-btn {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    font-size: 0.85rem !important;
+    position: relative !important;
+  }
+
+  .dau-action-icon-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: -4px !important;
+  }
+
+  .dau-action-icon-btn svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  .dau-row-expanded-details {
+    margin-top: 8px !important;
+    padding-top: 8px !important;
+  }
+
+  .dau-row-extra-line {
+    font-size: 0.82rem !important;
+    margin-bottom: 4px !important;
+  }
+
+  /* ---------------------------------------------------------------------
+   * ĐÓNG THANH TOPBAR BÀI HỌC CHỦ ĐỀ THÀNH 1 DÒNG DUY NHẤT TRÊN MOBILE
+   * --------------------------------------------------------------------- */
+  .dau-workspace-back-bar.topic-article-nav-bar,
+  .topic-article-nav-bar {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+    padding: 6px 8px !important;
+    min-height: 48px !important;
+    position: sticky !important;
+    top: 56px !important;
+    z-index: 50 !important;
+    margin-bottom: 12px !important;
+  }
+
+  .dau-workspace-back-bar.topic-article-nav-bar .dau-back-btn,
+  .topic-article-nav-bar .dau-back-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    border-radius: 9px !important;
+    flex-shrink: 0 !important;
+    position: relative !important;
+  }
+
+  .dau-workspace-back-bar.topic-article-nav-bar .dau-back-btn::after,
+  .topic-article-nav-bar .dau-back-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: -4px !important; /* Hitbox 44x44px */
+  }
+
+  .dau-workspace-back-bar.topic-article-nav-bar .dau-back-btn .btn-text,
+  .topic-article-nav-bar .dau-back-btn .btn-text {
+    display: none !important;
+  }
+
+  .dau-workspace-back-bar.topic-article-nav-bar .dau-workspace-info,
+  .topic-article-nav-bar .dau-workspace-info {
+    flex: 0 1 auto !important;
+    max-width: 140px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+  }
+
+  .dau-workspace-back-bar.topic-article-nav-bar .dau-workspace-title,
+  .topic-article-nav-bar .dau-workspace-title {
+    font-size: 0.8rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .dau-workspace-back-bar.topic-article-nav-bar .dau-badge,
+  .topic-article-nav-bar .dau-badge {
+    display: none !important;
+  }
+
+  .dau-workspace-back-bar.topic-article-nav-bar .topic-article-top-actions,
+  .topic-article-nav-bar .topic-article-top-actions {
+    width: auto !important;
+    display: inline-flex !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    gap: 5px !important;
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  .dau-workspace-back-bar.topic-article-nav-bar .topic-article-top-actions .btn,
+  .dau-workspace-back-bar.topic-article-nav-bar .topic-article-top-actions button,
+  .topic-article-nav-bar .topic-article-top-actions .btn,
+  .topic-article-nav-bar .topic-article-top-actions button {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    padding: 0 !important;
+    border-radius: 9px !important;
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 0 0 36px !important;
+  }
+
+  .dau-workspace-back-bar.topic-article-nav-bar .topic-article-top-actions .btn::after,
+  .dau-workspace-back-bar.topic-article-nav-bar .topic-article-top-actions button::after,
+  .topic-article-nav-bar .topic-article-top-actions .btn::after,
+  .topic-article-nav-bar .topic-article-top-actions button::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: -4px !important; /* Hitbox 44x44px */
+  }
+
+  .dau-workspace-back-bar.topic-article-nav-bar .topic-article-top-actions .btn .btn-text,
+  .dau-workspace-back-bar.topic-article-nav-bar .topic-article-top-actions button .btn-text,
+  .topic-article-nav-bar .topic-article-top-actions .btn .btn-text,
+  .topic-article-nav-bar .topic-article-top-actions button .btn-text {
+    display: none !important;
+  }
+
+  .dau-workspace-back-bar.topic-article-nav-bar .topic-article-top-actions svg,
+  .dau-workspace-back-bar.topic-article-nav-bar .topic-article-top-actions i,
+  .topic-article-nav-bar .topic-article-top-actions svg,
+  .topic-article-nav-bar .topic-article-top-actions i {
+    width: 17px !important;
+    height: 17px !important;
+    margin: 0 !important;
+  }
+
+}
+
+@media (max-width: 380px) {
+  .dau-workspace-back-bar.dau-quizlet-bar .dau-workspace-info,
+  .dau-workspace-back-bar.topic-article-nav-bar .dau-workspace-info,
+  .topic-article-nav-bar .dau-workspace-info {
+    display: none !important;
   }
 }

@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=5.7" />
+  <link rel="stylesheet" href="styles.css?v=6.1" />
   <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
 </head>
 <body data-page="shop">
@@ -48,9 +48,9 @@
   <script src="rusi-icons.js?v=4.9"></script>
   <script src="data.js?v=4.9"></script>
   <script src="auth.js?v=4.9"></script>
-  <script src="app.js?v=5.7"></script>
-  <script src="pages.js?v=5.7"></script>
-  <script src="pomodoro.js?v=5.7"></script>
+  <script src="app.js?v=6.1"></script>
+  <script src="pages.js?v=6.1"></script>
+  <script src="pomodoro.js?v=6.1"></script>
   <script>
     async function initProductDetailPage() {
       const host = document.getElementById("productDetailHost");
@@ -94,7 +94,7 @@
       host.innerHTML = `
         <div class="pdetail-nav-bar">
           <a href="shop.html" class="dau-back-btn" style="text-decoration:none">
-            ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 16 }) : ""} Quay lại Cửa hàng
+            ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 16 }) : ""} <span class="btn-text">Quay lại Cửa hàng</span>
           </a>
           <span style="font-size:0.85rem;color:var(--muted)">
             Trang chủ / Cửa hàng / <b>${esc(p.categoryName || "Sản phẩm")}</b>
