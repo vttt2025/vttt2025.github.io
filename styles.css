@@ -14796,12 +14796,17 @@ img, video, iframe {
 }
 
 .dau-preview-ex-wrap {
-  background: #f8fafc;
-  border-left: 3px solid var(--primary);
-  border-radius: 0 8px 8px 0;
-  padding: 6px 12px;
+  background: rgba(23, 87, 166, 0.04);
+  border: 1px solid rgba(23, 87, 166, 0.12);
+  border-radius: 10px;
+  padding: 8px 14px;
   text-align: left;
   max-width: 520px;
+}
+
+[data-theme="dark"] .dau-preview-ex-wrap {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .dau-preview-ex {
@@ -15083,11 +15088,16 @@ img, video, iframe {
 }
 
 .dau-row-ex-wrap {
-  margin-top: 5px;
-  padding: 5px 10px;
+  margin-top: 6px;
+  padding: 8px 12px;
   background: rgba(23, 87, 166, 0.04);
-  border-left: 3px solid var(--primary);
-  border-radius: 0 6px 6px 0;
+  border: 1px solid rgba(23, 87, 166, 0.12);
+  border-radius: 10px;
+}
+
+[data-theme="dark"] .dau-row-ex-wrap {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .dau-row-ex {
@@ -15835,9 +15845,14 @@ body[data-page="blog"] .page-hero h1 span {
   display: block;
 }
 
-/* 3. Learn Pages Hero Headings */
+/* 3. Learn Pages Hero Headings - Căn giữa trang theo yêu cầu người dùng */
 .page-title-box {
-  text-align: left;
+  text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
 }
 
 .page-main-hero-title {
@@ -15847,7 +15862,8 @@ body[data-page="blog"] .page-hero h1 span {
   line-height: 1.15;
   letter-spacing: -1.2px;
   color: #102a4c !important;
-  margin: 0;
+  margin: 0 auto !important;
+  text-align: center !important;
   text-transform: uppercase;
 }
 
@@ -15859,6 +15875,15 @@ body[data-page="blog"] .page-hero h1 span {
   letter-spacing: normal;
   text-transform: none;
   margin-top: 8px;
+  text-align: center !important;
+}
+
+.vocabulary-heading {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  text-align: center !important;
+  margin-bottom: 24px;
 }
 
 /* 4. Full Page Shelf seamless background */
@@ -23036,4 +23061,208 @@ body.has-bottom-bar .rusika-floating-widget {
     height: auto !important;
     padding: 14px 14px !important;
   }
+}
+
+/* Bo tròn đẹp cho hộp ví dụ và (loại từ) dưới từ vựng */
+.dau-row-pos-line {
+  font-size: 0.88rem;
+  font-weight: 500;
+  font-style: italic;
+  color: var(--muted, #64748b);
+  line-height: 1.35;
+  margin-top: 2px;
+}
+
+[data-theme="dark"] .dau-row-pos-line {
+  color: #94a3b8;
+}
+
+@media (max-width: 768px) {
+  .dau-row-pos-line {
+    font-size: 0.82rem;
+  }
+}
+
+.dau-row-index {
+  display: none !important;
+}
+
+
+/* =====================================================================
+ * FLASHCARD: MẶT TRƯỚC VÀ MẶT SAU ĐỀU CĂN GIỮA CÂN ĐỐI TUYỆT ĐỐI
+ * ===================================================================== */
+.quizlet-card-front {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  position: relative !important;
+  padding: 32px 24px !important;
+  border-radius: 20px !important;
+}
+
+.quizlet-card-front .qcard-main {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: auto !important;
+  width: 100% !important;
+  gap: 14px !important;
+  text-align: center !important;
+}
+
+.quizlet-card-front .qcard-word {
+  font-size: clamp(2rem, 4vw, 2.85rem) !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  text-align: center !important;
+  color: var(--text, #0f1f38) !important;
+}
+
+.quizlet-card-front .qcard-pos-line {
+  font-size: 0.92rem !important;
+  font-style: italic !important;
+  color: var(--muted, #64748b) !important;
+  text-align: center !important;
+}
+
+.quizlet-card-front .qcard-audio-btn {
+  margin-top: 4px !important;
+}
+
+/* MẶT SAU FLASHCARD: NỘI DUNG CĂN GIỮA, NÚT ICON LỌ GÓC PHẢI */
+.quizlet-card-back {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  position: relative !important;
+  text-align: center !important;
+  padding: 36px 28px 28px 28px !important;
+  overflow-y: auto !important;
+  border-radius: 20px !important;
+}
+
+.quizlet-card-back .qcard-top-row {
+  position: absolute !important;
+  top: 14px !important;
+  right: 16px !important;
+  margin: 0 !important;
+  z-index: 10 !important;
+}
+
+.quizlet-card-back .qcard-main {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: auto !important;
+  width: 100% !important;
+  max-width: 580px !important;
+  text-align: center !important;
+  gap: 14px !important;
+  box-sizing: border-box !important;
+}
+
+.quizlet-card-back .qcard-meaning {
+  text-align: center !important;
+  font-size: clamp(1.4rem, 2.5vw, 1.85rem) !important;
+  font-weight: 800 !important;
+  color: var(--primary, #1757a6) !important;
+  margin-bottom: 2px !important;
+}
+
+.quizlet-card-back .qcard-ex-box {
+  width: 100% !important;
+  max-width: 520px !important;
+  margin: 0 auto !important;
+  text-align: center !important;
+  background: rgba(23, 87, 166, 0.04) !important;
+  border: 1px solid rgba(23, 87, 166, 0.12) !important;
+  border-radius: 12px !important;
+  padding: 10px 14px !important;
+}
+
+[data-theme="dark"] .quizlet-card-back .qcard-ex-box {
+  background: rgba(255, 255, 255, 0.035) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.quizlet-card-back .qcard-ex-text {
+  text-align: center !important;
+  font-size: 0.92rem !important;
+}
+
+.quizlet-card-back .qcard-ex-trans {
+  text-align: center !important;
+  font-size: 0.86rem !important;
+}
+
+.quizlet-card-back .qcard-details-grid {
+  width: 100% !important;
+  max-width: 520px !important;
+  margin: 0 auto !important;
+}
+
+/* NÚT LỌ Ở MẶT SAU: CHỈ HIỂN THỊ ICON LỌ (KHÔNG CHỮ) */
+.qcard-btn-addjar.qcard-icon-only {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+  padding: 0 !important;
+  border-radius: 8px !important;
+  border: 1px solid rgba(23, 87, 166, 0.18) !important;
+  background: rgba(23, 87, 166, 0.05) !important;
+  color: var(--primary, #1757a6) !important;
+  cursor: pointer !important;
+  display: grid !important;
+  place-items: center !important;
+  transition: all 0.18s ease !important;
+}
+
+.qcard-btn-addjar.qcard-icon-only:hover {
+  background: var(--primary, #1757a6) !important;
+  color: #ffffff !important;
+  border-color: var(--primary, #1757a6) !important;
+  transform: scale(1.06) !important;
+}
+
+[data-theme="dark"] .qcard-btn-addjar.qcard-icon-only {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: #93c5fd !important;
+}
+
+[data-theme="dark"] .qcard-btn-addjar.qcard-icon-only:hover {
+  background: var(--primary, #1757a6) !important;
+  color: #ffffff !important;
+}
+
+.dau-vocab-toolbar,
+.dau-vocab-preview-box {
+  display: none !important;
+}
+
+.dau-card-footer.topic-footer,
+.topic-footer,
+.dau-card-compact .dau-card-footer,
+.dau-card.dau-card-compact .dau-card-footer {
+  justify-content: flex-end !important;
+}
+
+.dau-card-compact .dau-card-footer > span:first-child:not(.btn):not(.btn-primary),
+.dau-card.dau-card-compact .dau-card-footer > span:first-child:not(.btn):not(.btn-primary) {
+  display: none !important;
+}
+
+.dau-card-footer.topic-footer .topic-footer-actions,
+.topic-footer .topic-footer-actions {
+  margin-left: auto !important;
+  width: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
 }

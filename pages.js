@@ -484,7 +484,8 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     if (w.pos) parts.push(w.pos);
     if (w.gender) parts.push(w.gender);
     if (parts.length > 0) return parts.join(", ");
-    return w.note || "";
+    if (w.note && w.note.length <= 30 && !w.note.includes("|") && !w.note.includes(".")) return w.note;
+    return "";
   };
 
   const words = (rawWords || []).map((w, idx) => ({
@@ -630,14 +631,8 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
       <div class="quizlet-card-container" id="qCardContainer">
         <div class="quizlet-card ${fFlipped ? "flipped" : ""}" id="qCard">
-          <!-- FRONT FACE (RU) — Chuẩn quốc tế Anki/Quizlet: Từ vựng to rõ, có nút phát âm, ghi chú từ loại & tra 6 cách -->
+          <!-- FRONT FACE (RU) — CĂN GIỮA TUYỆT ĐỐI, BỎ NÚT LƯU THEO YÊU CẦU -->
           <div class="quizlet-card-face quizlet-card-front">
-            <div class="qcard-top-row">
-              <div class="qcard-actions">
-                <button type="button" class="qcard-btn-addjar" id="qAddJarFront" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 15 }) : ""} <span class="btn-text">+ Lưu</span></button>
-              </div>
-            </div>
-
             <div class="qcard-main">
               <div class="qcard-word ru">${esc(currentWord.stress || currentWord.ru)}</div>
               ${getWordType(currentWord) ? `<div class="qcard-pos-line">(${esc(getWordType(currentWord))})</div>` : ""}
@@ -645,14 +640,13 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 20 }) : ""}
               </button>
             </div>
-
           </div>
 
-          <!-- BACK FACE (VI) — ĐẦY ĐỦ NỘI DUNG THEO PROJECT_SPEC -->
+          <!-- BACK FACE (VI) — CĂN GIỮA CÂN ĐỐI, CHỈ CÓ ICON LỌ KHÔNG HIỂN THỊ CHỮ LƯU -->
           <div class="quizlet-card-face quizlet-card-back">
             <div class="qcard-top-row">
               <div class="qcard-actions">
-                <button type="button" class="qcard-btn-addjar" id="qAddJarBack" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 15 }) : ""} <span class="btn-text">+ Lưu</span></button>
+                <button type="button" class="qcard-btn-addjar qcard-icon-only" id="qAddJarBack" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""}</button>
               </div>
             </div>
 
@@ -1460,117 +1454,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
       pane.innerHTML = `
         <div class="dau-vocab-test-container">
-          <!-- TOP INTERACTIVE FLASHCARD PREVIEW CHUẨN PROJECT_SPEC -->
-          <div class="dau-vocab-preview-box" id="dauPreviewBox">
-            <div class="dau-vocab-preview-card ${previewFlipped ? "flipped" : ""}" id="dauPreviewCard">
-              <!-- FRONT FACE -->
-              <div class="dau-preview-face dau-preview-front">
-                <div class="dau-preview-body">
-                  <div class="dau-preview-word ru">${esc(curPreviewWord.stress || curPreviewWord.ru)}</div>
-                  ${getWordType(curPreviewWord) ? `<div class="dau-preview-pos-line">(${esc(getWordType(curPreviewWord))})</div>` : ""}
-                  <button type="button" class="dau-preview-audio-btn" id="btnPreviewAudio" title="Phát âm tiếng Nga">
-                    ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 18 }) : ""}
-                  </button>
-                </div>
-              </div>
-
-              <!-- BACK FACE (ĐẦY ĐỦ NỘI DUNG THEO PROJECT_SPEC) -->
-              <div class="dau-preview-face dau-preview-back">
-                <div class="dau-preview-top">
-                  <div class="dau-preview-actions">
-                    <button type="button" class="dau-preview-audio-btn" id="btnPreviewAudioBack" title="Phát âm tiếng Nga">
-                      ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 18 }) : ""}
-                    </button>
-                  </div>
-                </div>
-                <div class="dau-preview-body">
-                  <div class="dau-preview-meaning">${esc(curPreviewWord.vi)}</div>
-                  ${curPreviewWord.ex ? `
-                    <div class="dau-preview-ex-wrap">
-                      <div class="dau-preview-ex ru">«${esc(curPreviewWord.ex)}»</div>
-                      ${curPreviewWord.ex_vi ? `<div class="dau-preview-ex-vi">${esc(curPreviewWord.ex_vi)}</div>` : ""}
-                    </div>
-                  ` : ""}
-                  ${(curPreviewWord.collocation || curPreviewWord.verb_obj || curPreviewWord.gov || curPreviewWord.syn || curPreviewWord.ant || curPreviewWord.note) ? `
-                    <div class="dau-preview-details-grid">
-                      ${curPreviewWord.collocation ? `
-                        <div class="dau-preview-detail-row">
-                          <span class="dau-preview-detail-lbl">Cụm động từ:</span>
-                          <span class="dau-preview-detail-val ru">${esc(curPreviewWord.collocation)}</span>
-                        </div>
-                      ` : ""}
-                      ${(curPreviewWord.verb_obj || curPreviewWord.gov) ? `
-                        <div class="dau-preview-detail-row">
-                          <span class="dau-preview-detail-lbl">Tân ngữ trực tiếp / Quản cách:</span>
-                          <span class="dau-preview-detail-val ru">${esc(curPreviewWord.verb_obj || curPreviewWord.gov)}</span>
-                        </div>
-                      ` : ""}
-                      ${curPreviewWord.syn ? `
-                        <div class="dau-preview-detail-row">
-                          <span class="dau-preview-detail-lbl">Đồng nghĩa:</span>
-                          <span class="dau-preview-detail-val ru">${esc(curPreviewWord.syn)}</span>
-                        </div>
-                      ` : ""}
-                      ${curPreviewWord.ant ? `
-                        <div class="dau-preview-detail-row">
-                          <span class="dau-preview-detail-lbl">Trái nghĩa / Gần nghĩa:</span>
-                          <span class="dau-preview-detail-val ru">${esc(curPreviewWord.ant)}</span>
-                        </div>
-                      ` : ""}
-                      ${curPreviewWord.note ? `
-                        <div class="dau-preview-detail-row">
-                          <span class="dau-preview-detail-lbl">Ghi chú:</span>
-                          <span class="dau-preview-detail-val">${esc(curPreviewWord.note)}</span>
-                        </div>
-                      ` : ""}
-                    </div>
-                  ` : ""}
-                </div>
-              </div>
-            </div>
-
-            <!-- PREVIEW CARD CONTROLS -->
-            <div class="dau-preview-nav">
-              <button type="button" class="dau-preview-nav-btn" id="btnPreviewPrev" title="Từ trước (Phím ←)">‹</button>
-              <div class="dau-preview-counter">${previewIdx + 1} / ${previewWords.length}</div>
-              <button type="button" class="dau-preview-nav-btn" id="btnPreviewNext" title="Từ tiếp theo (Phím →)">›</button>
-              <button type="button" class="dau-preview-nav-btn" id="btnPreviewAudioNav" title="Phát âm tiếng Nga">
-                ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""}
-              </button>
-            </div>
-          </div>
-
-          <!-- THANH CÔNG CỤ LỌC CHUẨN PROJECT_SPEC (DÒNG 50) -->
-          <div class="dau-vocab-toolbar">
-            <div class="dau-toolbar-left">
-              <h3 class="dau-toolbar-heading">
-                Danh sách từ vựng <span class="dau-count-muted">(${words.length})</span>
-              </h3>
-            </div>
-
-            <div class="dau-toolbar-right">
-              <!-- SEARCH INPUT -->
-              <div class="dau-vocab-search-wrap">
-                <span class="dau-vocab-search-icon">${window.RusiIcons ? RusiIcons.get("search-icon", { size: 14 }) : "🔍"}</span>
-                <input type="text" class="dau-vocab-search-input" id="listSearchInput" placeholder="Tìm từ Nga hoặc Việt..." value="${esc(searchTxt)}" />
-                ${searchTxt ? `<button type="button" class="dau-vocab-search-clear" id="listSearchClear">×</button>` : ""}
-              </div>
-
-              <!-- FILTER PILLS & CTA ĐÚNG THEO SPEC 1 (DÒNG 50) -->
-              <div class="dau-vocab-pills-wrap">
-                <button type="button" class="dau-vocab-pill ${showDetails ? "active" : ""}" id="btnToggleDetails" title="Bật/tắt chi tiết: cụm động từ, tân ngữ, đồng nghĩa, trái nghĩa, ghi chú">
-                  <span>${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 14 }) : ""}</span> Chi tiết
-                </button>
-                <button type="button" class="dau-vocab-pill ${filterMode === "mastered" ? "active" : ""}" id="btnFilterMastered" ${masteredCount === 0 && filterMode !== "mastered" ? "disabled" : ""}>
-                  <span>${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""}</span> ✓ Đã thuộc (${masteredCount})
-                </button>
-                <button type="button" class="btn btn-primary btn-sm btn-flash-cta" id="btnListToStudy" style="font-weight:700">
-                  ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} <span class="btn-text">⚡Flashcard ngay →</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
           <!-- WORD ROW CARDS LIST (DauEnglish style với hỗ trợ Click mở rộng chi tiết) -->
           <div class="dau-vocab-list-wrap" id="dauVocabRowsList">
             ${filtered.length === 0 ? `
@@ -1591,9 +1474,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                     <!-- CỘT 1 (TRÁI): TỪ TIẾNG NGA IN ĐẬM KÈM TRỌNG ÂM & TỪ LOẠI -->
                     <div class="dau-row-col-ru">
                       <div class="dau-row-ru-header">
-                        <span class="dau-row-index">#${idx + 1}</span>
                         <span class="dau-row-ru ru">${esc(displayWord)}</span>
                       </div>
+                      ${getWordType(w) ? `<div class="dau-row-pos-line">(${esc(getWordType(w))})</div>` : ""}
                     </div>
 
                     <!-- CỘT 2 (GIỮA): NGHĨA TIẾNG VIỆT & CÂU VÍ DỤ SONG NGỮ, CỤM ĐỘNG TỪ, QUẢN CÁCH, ĐỒNG/TRÁI NGHĨA, GHI CHÚ -->
@@ -2194,10 +2077,7 @@ function initVocabPage() {
             </div>
 
             <!-- CHÂN THẺ -->
-            <div class="dau-card-footer" style="margin-top:auto;padding-top:10px">
-              <div class="dau-card-status">
-                <span style="font-size:0.8rem;font-weight:600;color:var(--muted)">${isFinished ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng để học"}</span>
-              </div>
+            <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
               <div class="topic-footer-actions">
                 <button type="button" class="btn-jar-list topic-text-btn" data-jar-id="${item.id}" title="Mở danh sách Lọ từ vựng để học Flashcard Spaced Repetition">
                   ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} Lọ từ vựng
@@ -2409,18 +2289,18 @@ function initVocabPage() {
             </div>
           </div>
 
-          <!-- 4 Ô CHỈ SỐ THỐNG KÊ (Đồng bộ màu chuẩn với trang vocabulary) -->
-          <div class="voc-progress-figma-stat">
+          <!-- 4 Ô CHỈ SỐ THỐNG KÊ (Đồng bộ màu chuẩn với trang vocabulary, giữ nguyên giao diện gốc, nhấp xem danh sách từ) -->
+          <div class="voc-progress-figma-stat" id="statMastered" style="cursor:pointer" title="Nhấp để xem danh sách từ đã thuộc">
             <strong class="voc-progress-figma-num val-mastered">${stats.mastered || 0}</strong>
             <span class="voc-progress-figma-label">ĐÃ THUỘC</span>
           </div>
 
-          <div class="voc-progress-figma-stat ${dueCount > 0 ? "is-due" : ""}">
+          <div class="voc-progress-figma-stat ${dueCount > 0 ? "is-due" : ""}" id="statDue" style="cursor:pointer" title="Nhấp để xem danh sách từ cần ôn">
             <strong class="voc-progress-figma-num val-due">${dueCount}</strong>
             <span class="voc-progress-figma-label">CẦN ÔN</span>
           </div>
 
-          <div class="voc-progress-figma-stat">
+          <div class="voc-progress-figma-stat" id="statNew" style="cursor:pointer" title="Nhấp để xem danh sách từ mới">
             <strong class="voc-progress-figma-num val-new">${stats.newCount || 0}</strong>
             <span class="voc-progress-figma-label">TỪ MỚI</span>
           </div>
@@ -2495,6 +2375,19 @@ function initVocabPage() {
       };
     }
 
+    const statMastered = el("#statMastered");
+    if (statMastered) {
+      statMastered.onclick = () => window.openVocabProgressWordsModal("mastered");
+    }
+    const statDue = el("#statDue");
+    if (statDue) {
+      statDue.onclick = () => window.openVocabProgressWordsModal("due");
+    }
+    const statNew = el("#statNew");
+    if (statNew) {
+      statNew.onclick = () => window.openVocabProgressWordsModal("new");
+    }
+
     const btnCreateTop = el("#btnSidebarCreateJar") || el("#btnSidebarCreateJarTop");
     if (btnCreateTop) {
       btnCreateTop.onclick = (e) => {
@@ -2548,6 +2441,292 @@ function initVocabPage() {
         };
       });
     }
+  };
+
+  
+  /**
+   * Modal xem danh sách từ vựng theo tiến độ: Đã thuộc · Cần ôn · Từ mới
+   */
+  window.openVocabProgressWordsModal = function(initialTab = "mastered") {
+    let currentTab = initialTab;
+    let searchTxt = "";
+
+    let modal = document.getElementById("vocProgressWordsModal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "vocProgressWordsModal";
+      modal.className = "anticheat-modal";
+      document.body.appendChild(modal);
+    }
+
+    const renderModalContent = () => {
+      // 1. Gom tất cả từ vựng trong hệ thống
+      const allWordsMap = new Map();
+      if (typeof window.DATA !== "undefined" && Array.isArray(window.DATA.vocabJars)) {
+        window.DATA.vocabJars.forEach(jar => {
+          (jar.words || []).forEach(w => {
+            if (!w || !w.ru) return;
+            const k = w.ru.toLowerCase().trim();
+            if (!allWordsMap.has(k)) {
+              allWordsMap.set(k, { ...w, jarTitle: jar.title || jar.name || "" });
+            }
+          });
+        });
+      }
+
+      const customJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
+      (customJars || []).forEach(jar => {
+        (jar.words || []).forEach(w => {
+          if (!w || !w.ru) return;
+          const k = w.ru.toLowerCase().trim();
+          if (!allWordsMap.has(k)) {
+            allWordsMap.set(k, { ...w, jarTitle: jar.name || "Lọ cá nhân" });
+          }
+        });
+      });
+
+      if (typeof SRS_WORDS !== "undefined" && Array.isArray(SRS_WORDS)) {
+        SRS_WORDS.forEach(w => {
+          if (!w || !w.ru) return;
+          const k = w.ru.toLowerCase().trim();
+          if (!allWordsMap.has(k)) {
+            allWordsMap.set(k, { ...w, jarTitle: "Kho từ SRS (" + (w.level || "A1") + ")" });
+          }
+        });
+      }
+
+      // 2. Phân loại theo tiến độ
+      const masteredListRaw = (typeof STORE !== "undefined") ? STORE.get("vocab_mastered_words", []) : [];
+      const masteredSet = new Set(masteredListRaw.map(r => (r || "").toLowerCase().trim()));
+
+      let srsState = null;
+      if (typeof SRS !== "undefined" && SRS.getState) {
+        try { srsState = SRS.getState(); } catch (e) {}
+      }
+      if (srsState && srsState.cards) {
+        Object.values(srsState.cards).forEach(c => {
+          if (c.mastered && c.ru) {
+            masteredSet.add(c.ru.toLowerCase().trim());
+          }
+        });
+      }
+
+      const now = Date.now();
+      const dueSet = new Set();
+      if (srsState && srsState.cards) {
+        Object.values(srsState.cards).forEach(c => {
+          if (!c.mastered && c.dueDate <= now && c.ru) {
+            dueSet.add(c.ru.toLowerCase().trim());
+          }
+        });
+      }
+
+      const masteredList = [];
+      const dueList = [];
+      const newList = [];
+
+      allWordsMap.forEach((word, k) => {
+        if (masteredSet.has(k)) {
+          masteredList.push(word);
+        } else if (dueSet.has(k)) {
+          dueList.push(word);
+        } else {
+          newList.push(word);
+        }
+      });
+
+      masteredSet.forEach(ruKey => {
+        if (!allWordsMap.has(ruKey)) {
+          masteredList.push({ ru: ruKey, vi: "Từ đã thuộc", jarTitle: "Đã lưu" });
+        }
+      });
+
+      let activeList = currentTab === "mastered" ? masteredList : currentTab === "due" ? dueList : newList;
+      if (searchTxt) {
+        const q = searchTxt.toLowerCase().trim();
+        activeList = activeList.filter(w =>
+          (w.ru && w.ru.toLowerCase().includes(q)) ||
+          (w.vi && w.vi.toLowerCase().includes(q))
+        );
+      }
+
+      modal.innerHTML = `
+        <div class="anticheat-modal-box voc-progress-modal-box" style="text-align:left;max-width:680px;width:95%;padding:22px 24px;border-top:5px solid var(--primary);max-height:88vh;display:flex;flex-direction:column;box-sizing:border-box">
+          <!-- HEADER -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="width:36px;height:36px;border-radius:10px;background:var(--primary-soft,#e3effc);color:var(--primary,#1757a6);display:grid;place-items:center;font-size:1.1rem">
+                ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 20 }) : "📚"}
+              </span>
+              <div>
+                <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:var(--text)">Danh Sách Từ Vựng Tiến Độ</h3>
+                <span style="font-size:0.8rem;color:var(--muted)">Xem và quản lý các từ vựng theo trạng thái học tập</span>
+              </div>
+            </div>
+            <button type="button" id="closeProgressModal" class="btn btn-soft" style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;padding:0;font-size:1.1rem;cursor:pointer" title="Đóng">✕</button>
+          </div>
+
+          <!-- TABS THEO LEVEL-TAB STYLE (PHẲNG, GẠCH CHÂN KHI ACTIVE) -->
+          <div class="voc-progress-modal-tabs" style="display:flex;align-items:center;gap:6px;border-bottom:2px solid var(--border,#d2e0f0);margin-bottom:14px;flex-shrink:0">
+            <button type="button" class="voc-pmodal-tab ${currentTab === "mastered" ? "active" : ""}" data-tab="mastered" style="background:transparent;border:none;padding:10px 14px;cursor:pointer;font-size:0.88rem;font-weight:${currentTab === "mastered" ? "800" : "600"};color:${currentTab === "mastered" ? "var(--green,#16a34a)" : "var(--muted)"};position:relative;display:inline-flex;align-items:center;gap:6px">
+              ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : "✓"} Đã thuộc (${masteredList.length})
+              ${currentTab === "mastered" ? `<span style="position:absolute;bottom:-2px;left:0;right:0;height:3px;background:var(--green,#16a34a);border-radius:2px"></span>` : ""}
+            </button>
+            <button type="button" class="voc-pmodal-tab ${currentTab === "due" ? "active" : ""}" data-tab="due" style="background:transparent;border:none;padding:10px 14px;cursor:pointer;font-size:0.88rem;font-weight:${currentTab === "due" ? "800" : "600"};color:${currentTab === "due" ? "var(--amber,#f59e0b)" : "var(--muted)"};position:relative;display:inline-flex;align-items:center;gap:6px">
+              ${window.RusiIcons ? RusiIcons.get("clock-time", { size: 16 }) : "⏰"} Cần ôn (${dueList.length})
+              ${currentTab === "due" ? `<span style="position:absolute;bottom:-2px;left:0;right:0;height:3px;background:var(--amber,#f59e0b);border-radius:2px"></span>` : ""}
+            </button>
+            <button type="button" class="voc-pmodal-tab ${currentTab === "new" ? "active" : ""}" data-tab="new" style="background:transparent;border:none;padding:10px 14px;cursor:pointer;font-size:0.88rem;font-weight:${currentTab === "new" ? "800" : "600"};color:${currentTab === "new" ? "var(--primary,#1757a6)" : "var(--muted)"};position:relative;display:inline-flex;align-items:center;gap:6px">
+              ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "✨"} Từ mới (${newList.length})
+              ${currentTab === "new" ? `<span style="position:absolute;bottom:-2px;left:0;right:0;height:3px;background:var(--primary,#1757a6);border-radius:2px"></span>` : ""}
+            </button>
+          </div>
+
+          <!-- SEARCH BAR -->
+          <div style="position:relative;margin-bottom:12px;flex-shrink:0">
+            <input type="text" id="vocProgressSearchInput" placeholder="Tìm kiếm từ tiếng Nga hoặc nghĩa tiếng Việt..." value="${searchTxt}" style="width:100%;padding:9px 14px;border:1px solid var(--border);border-radius:10px;font-size:0.9rem;box-sizing:border-box;background:var(--bg);color:var(--text)" />
+            ${searchTxt ? `<button type="button" id="vocProgressSearchClear" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--muted)">×</button>` : ""}
+          </div>
+
+          <!-- LIST CONTAINER -->
+          <div class="voc-progress-words-list" style="flex:1 1 auto;overflow-y:auto;padding-right:4px;display:flex;flex-direction:column;gap:8px">
+            ${activeList.length === 0 ? `
+              <div style="text-align:center;padding:36px 16px;color:var(--muted)">
+                <div style="font-size:2.5rem;margin-bottom:8px">
+                  ${currentTab === "mastered" ? "🏆" : currentTab === "due" ? "🎉" : "📖"}
+                </div>
+                <div style="font-weight:700;font-size:1rem;color:var(--text);margin-bottom:4px">
+                  ${currentTab === "mastered" ? "Chưa có từ nào được đánh dấu đã thuộc" : currentTab === "due" ? "Không có từ nào tới hạn cần ôn tập hôm nay" : "Đã học toàn bộ từ vựng"}
+                </div>
+                <div style="font-size:0.85rem">
+                  ${currentTab === "mastered" ? "Hãy nhấn dấu tích ✓ ở các từ vựng bạn đã nhớ trong danh sách hoặc flashcard để lưu vào đây!" : currentTab === "due" ? "Tuyệt vời! Bạn đã hoàn thành tất cả các phiên ôn tập hôm nay." : "Toàn bộ từ vựng đã được bắt đầu học hoặc đưa vào hàng đợi SRS."}
+                </div>
+              </div>
+            ` : activeList.map((w, idx) => {
+              const displayWord = w.stress || w.ru;
+              return `
+                <div class="voc-pmodal-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:rgba(23,87,166,0.03);border:1px solid var(--border);border-radius:10px;transition:background 0.15s ease">
+                  <div style="flex:1;min-width:0">
+                    <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
+                      <strong class="ru" style="font-size:1.05rem;color:var(--text);cursor:pointer" data-speak-ru="${w.ru}" title="Nhấn để nghe phát âm">${displayWord}</strong>
+                      ${w.pos ? `<span style="font-size:0.8rem;font-style:italic;color:var(--muted)">(${w.pos})</span>` : ""}
+                      ${w.jarTitle ? `<span class="dau-badge" style="font-size:0.68rem;padding:1px 6px;border-radius:4px;background:var(--primary-soft,#e3effc);color:var(--primary,#1757a6)">${w.jarTitle}</span>` : ""}
+                    </div>
+                    <div style="font-size:0.9rem;color:var(--text);margin-top:2px">${w.vi || ""}</div>
+                    ${w.ex ? `<div class="ru" style="font-size:0.82rem;color:var(--muted);margin-top:3px;font-style:italic">«${w.ex}»</div>` : ""}
+                  </div>
+
+                  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                    <button type="button" class="btn btn-soft btn-sm btn-pmodal-speak" data-ru="${w.ru}" style="width:34px;height:34px;padding:0;border-radius:8px;display:grid;place-items:center;cursor:pointer" title="Nghe phát âm">
+                      ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 15 }) : "🔊"}
+                    </button>
+                    ${currentTab === "mastered" ? `
+                      <button type="button" class="btn btn-soft btn-sm btn-pmodal-unmaster" data-ru="${w.ru}" style="padding:6px 10px;font-size:0.8rem;border-radius:8px;color:var(--muted);cursor:pointer" title="Bỏ khỏi danh sách đã thuộc để tiếp tục ôn tập">
+                        Hủy thuộc
+                      </button>
+                    ` : currentTab === "due" ? `
+                      <button type="button" class="btn btn-primary btn-sm btn-pmodal-study-one" data-ru="${w.ru}" style="padding:6px 12px;font-size:0.8rem;font-weight:700;border-radius:8px;cursor:pointer">
+                        Ôn ngay
+                      </button>
+                    ` : `
+                      <button type="button" class="btn btn-outline btn-sm btn-pmodal-add-queue" data-ru="${w.ru}" style="padding:6px 10px;font-size:0.8rem;border-radius:8px;cursor:pointer">
+                        + Học từ này
+                      </button>
+                    `}
+                  </div>
+                </div>
+              `;
+            }).join("")}
+          </div>
+        </div>
+      `;
+
+      modal.onclick = (e) => {
+        if (e.target === modal) modal.remove();
+      };
+      const btnClose = modal.querySelector("#closeProgressModal");
+      if (btnClose) btnClose.onclick = () => modal.remove();
+
+      modal.querySelectorAll(".voc-pmodal-tab").forEach(tab => {
+        tab.onclick = () => {
+          currentTab = tab.dataset.tab;
+          searchTxt = "";
+          renderModalContent();
+        };
+      });
+
+      const inpSearch = modal.querySelector("#vocProgressSearchInput");
+      if (inpSearch) {
+        inpSearch.oninput = (e) => {
+          searchTxt = e.target.value;
+          renderModalContent();
+          const nextInp = modal.querySelector("#vocProgressSearchInput");
+          if (nextInp) {
+            nextInp.focus();
+            nextInp.selectionStart = nextInp.selectionEnd = nextInp.value.length;
+          }
+        };
+      }
+      const clearSearch = modal.querySelector("#vocProgressSearchClear");
+      if (clearSearch) {
+        clearSearch.onclick = () => {
+          searchTxt = "";
+          renderModalContent();
+        };
+      }
+
+      modal.querySelectorAll("[data-speak-ru], .btn-pmodal-speak").forEach(el => {
+        el.onclick = (e) => {
+          e.stopPropagation();
+          const ru = el.dataset.speakRu || el.dataset.ru;
+          if (ru) {
+            if (typeof speak === "function") speak(ru);
+            else if (window.TTS && window.TTS.speakRu) window.TTS.speakRu(ru);
+          }
+        };
+      });
+
+      modal.querySelectorAll(".btn-pmodal-unmaster").forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const ru = btn.dataset.ru;
+          if (!ru) return;
+          let list = (typeof STORE !== "undefined") ? STORE.get("vocab_mastered_words", []) : [];
+          const normRu = ru.toLowerCase().trim();
+          list = list.filter(w => (w || "").toLowerCase().trim() !== normRu);
+          if (typeof STORE !== "undefined") STORE.set("vocab_mastered_words", list);
+          if (typeof SRS !== "undefined" && typeof SRS.unmarkMastered === "function") {
+            SRS.unmarkMastered(normRu);
+          }
+          if (typeof toast === "function") toast(`Đã hủy trạng thái thuộc của «${ru}»`);
+          window.dispatchEvent(new CustomEvent("trki:progress-updated"));
+          renderModalContent();
+        };
+      });
+
+      modal.querySelectorAll(".btn-pmodal-study-one").forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          modal.remove();
+          if (typeof showSrsWorkspace === "function") showSrsWorkspace();
+        };
+      });
+
+      modal.querySelectorAll(".btn-pmodal-add-queue").forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const ru = btn.dataset.ru;
+          if (ru && typeof SRS !== "undefined" && SRS.addToQueue) {
+            SRS.addToQueue(ru);
+            if (typeof toast === "function") toast(`Đã đưa «${ru}» vào hàng đợi ôn tập!`);
+            window.dispatchEvent(new CustomEvent("trki:progress-updated"));
+            renderModalContent();
+          }
+        };
+      });
+    };
+
+    renderModalContent();
   };
 
   const openCreateJarModal = () => {
@@ -3324,8 +3503,7 @@ function initListeningPage() {
               </div>
             </div>
 
-            <div class="dau-card-footer">
-              <span style="font-size:0.84rem;color:var(--muted)">${isDone ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng để luyện"}</span>
+            <div class="dau-card-footer" style="justify-content:flex-end">
               <button type="button" class="btn btn-primary btn-sm btn-listen-action" data-listen-id="${l.id}" style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
                 ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 14 }) : "") : ""} Vào luyện nghe ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
               </button>
@@ -4607,8 +4785,7 @@ function initSpeakingPage() {
               </div>
             </div>
 
-            <div class="dau-card-footer">
-              <span style="font-size:0.84rem;color:var(--muted)">${isDone ? "Đã luyện tập" : isPro ? "Dành cho thành viên" : "Sẵn sàng để nói"}</span>
+            <div class="dau-card-footer" style="justify-content:flex-end">
               <button type="button" class="btn btn-primary btn-sm btn-speak-action" data-speak-id="${s.id}" style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
                 ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 14 }) : "") : ""} Luyện nói ngay ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
               </button>
@@ -4995,8 +5172,7 @@ function initWritingPage() {
               </div>
             </div>
 
-            <div class="dau-card-footer">
-              <span style="font-size:0.84rem;color:var(--muted)">${isDone ? "Đã nộp bài" : isPro ? "Dành cho thành viên" : "Sẵn sàng làm bài"}</span>
+            <div class="dau-card-footer" style="justify-content:flex-end">
               <button type="button" class="btn btn-primary btn-sm btn-write-action" data-write-id="${t.id}" style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
                 ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 14 }) : "") : ""} Bắt đầu viết ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
               </button>
@@ -5493,8 +5669,7 @@ function initMockTestPage() {
               </div>
             </div>
 
-            <div class="dau-card-footer">
-              <span style="font-size:0.84rem;color:var(--muted)">${isDone ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng thi thử"}</span>
+            <div class="dau-card-footer" style="justify-content:flex-end">
               <button type="button" class="btn btn-primary btn-sm btn-trki-action" data-trki-id="${t.id}" style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
                 ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 14 }) : "") : ""} Vào phòng thi ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
               </button>

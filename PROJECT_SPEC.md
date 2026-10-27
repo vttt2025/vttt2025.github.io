@@ -28,13 +28,13 @@
 ### [Module 1] Kho bài học theo các chủ đề gắn với cuộc sống với chuỗi hành động kèm Lọ Từ Vựng & Thuật Toán Spaced Repetition (SM-2) thay qua Flashcard
 * **Giao diện chuẩn Figma (#tu-vung — https://rigor-hall-40167838.figma.site/#tu-vung)**:
   * **Khung chứa Russian Navy Gradient (`.vocabulary-section`)**: Nền gradient chuyển đổi sang trọng từ xanh hải quân Nga (#102a4c đến #08192d) kết hợp vầng sáng tỏa radial xanh dương, bo góc 24px.
-  * **Hàng tiêu đề (`.vocabulary-heading`)**: Tiêu đề lớn (`page-title-box`) `CHINH PHỤC 5.000 TỪ TIẾNG NGA`, tiêu đề phụ span `theo Chủ Đề &amp; Chuỗi Hành Động.`.
+  * **Hàng tiêu đề (`.vocabulary-heading`)**: Tiêu đề lớn (`page-title-box`) `CHINH PHỤC 5.000 TỪ TIẾNG NGA`, tiêu đề phụ span `theo Chủ Đề &amp; Chuỗi Hành Động.`, căn giữa trang chuẩn chỉnh.
   * **Bộ Tab Phân Cấp Chuẩn (`.level-tabs`)**: 6 tab A1 (Sơ cấp), A2 (Cơ bản), B1 (Trung cấp), B2 (Trung cấp cao), C1 (Cao cấp) và C2 (Thành thạo) với vạch đỏ chỉ báo active, cỡ chữ lớn 24px kèm số lượng thẻ.
   * **Lưới thẻ chủ đề chuẩn Figma (`.topic-grid` & `.topic-card`)**:
     - Thẻ kính mờ bo góc 20px, hiệu ứng hover nhấc nổi -5px và viền sáng xanh.
-    - Hàng trên (`.topic-card-top`): Số thứ tự `01`, `02`... bên trái; nhãn trạng thái `Hoàn thành` (xanh ngọc) hoặc `PRO` (đỏ) bên phải.
-    - Khối nội dung chính (`.topic-card-main`): Bố cục ngang với Hộp biểu tượng (`.topic-icon`) bên trái; Tiêu đề thẻ (`h3.topic-title`) bên phải biểu tượng và Mô tả phụ (`p.topic-desc`) nằm dưới tiêu đề bên phải biểu tượng. Bỏ nhãn phân loại cũ.
-    - Chân thẻ (`.topic-footer`): Nhãn trạng thái bên trái (`Đã hoàn thành` / `Dành cho thành viên` / `Sẵn sàng để học`), bên phải gồm nút `[Lọ từ vựng]` (icon archive-jar) và nút tròn mũi tên [→] (icon arrow-right, hoặc icon lock nếu là nội dung PRO).
+    - Hàng trên (`.topic-card-top`): nhãn trạng thái `Hoàn thành` (xanh ngọc) hoặc `PRO` (đỏ) bên phải.
+    - Khối nội dung chính (`.topic-card-main`): Bố cục ngang với Hộp biểu tượng (`.topic-icon`) bên trái; Tiêu đề thẻ (`h3.topic-title`) bên phải biểu tượng và Mô tả phụ (`p.topic-desc`) nằm dưới tiêu đề bên phải biểu tượng.
+    - Chân thẻ (`.topic-footer`): gồm nút `[Lọ từ vựng]` (icon archive-jar) và nút tròn mũi tên [→] (icon arrow-right, hoặc icon lock nếu là nội dung PRO).
     - **Điều hướng & Tương tác**:
       * Bấm vào thẻ hoặc nút mũi tên [→]: Chuyển sang Trang Bài Học Chủ Đề (Topic Lesson Article View) với bối cảnh, hội thoại mẫu, điểm ngữ pháp, bảng từ vựng, tính năng Xuất sang PDF (window.print()) chuẩn chỉnh và mục mở Lọ từ vựng.(Kỹ thuật PDF Print: Bắt buộc cấu hình CSS @media print ẩn toàn bộ header, floating AI bubble, bottom bar và nút bấm, ép nền trang màu trắng chuẩn A4).
       * Bấm vào nút [Lọ từ vựng]: Vào thẳng danh sách các từ vựng trong lọ để xem và học 3D Flashcard Spaced Repetition. 
@@ -46,8 +46,7 @@
     1. Nút `[Lọ từ vựng]`: Gọi icon `archive-jar`, mở ngay giao diện danh sách chi tiết các từ có trong lọ.
     2. Nút tròn `[→]`: Gọi icon `arrow-right`, Chuyển sang Trang Bài Học Chủ Đề.
   * **Bố cục Danh sách từ (`https://dauenglish.com/vocabulary/test/...`)**:
-    - **Thẻ Flashcard xem nhanh trên cùng (`.dau-vocab-preview-box`)**: Cho phép lật thẻ xem nhanh (Space hoặc chạm thẻ), nghe phát âm (icon `volume-high`) và chuyển từ (`‹ 1/20 ›`) ngay trong giao diện danh sách.
-    - **Thanh công cụ lọc (`.dau-vocab-toolbar`)**: Hiển thị tiêu đề *Danh sách từ vựng*, nút bật/tắt *Chi tiết* (cụm động từ, tân ngữ trực tiếp của động từ, đồng nghĩa, trái nghĩa/gần nghĩa, ghi chú), *✓ Đã thuộc*, và nút CTA *⚡Flashcard ngay →*.
+    - **Giao diện danh sách từ vựng tinh giản tối đa**: Đã loại bỏ hoàn toàn khối `.dau-vocab-preview-box` và thanh công cụ `.dau-vocab-toolbar`. Khi mở danh sách Lọ từ vựng, hệ thống hiển thị trực quan ngay danh sách các thẻ từ vựng hàng ngang (`.dau-vocab-row-card`).
     - **Hiển thị danh sách thẻ hàng ngang chuẩn (`.dau-vocab-row-card`)**: Bố cục 3 phần trực quan (Trái: Từ tiếng Nga in đậm kèm trọng âm & từ loại; Giữa: Nghĩa tiếng Việt & câu ví dụ song ngữ, cụm động từ, tân ngữ trực tiếp của động từ, đồng nghĩa, trái nghĩa/gần nghĩa, và ghi chú; Phải: Bộ nút hành động phát âm (icon `volume-high`), ✓ đánh dấu đã thuộc, tra cách chia (icon `book-open`), lưu lọ cá nhân (icon `archive-jar`)).
     - **Kích hoạt tức thì**: Khi bấm `[Lọ từ vựng]` trên lọ từ vựng, hệ thống tự động kích hoạt ngay tab danh sách (`initialMode = "list"`) và hiển thị dữ liệu ngay lập tức, không để xảy ra tình trạng trống trắng.
   * Hỗ trợ học viên PRO tự tạo lọ từ vựng cá nhân (`custom_jars`):
@@ -74,7 +73,7 @@
     - Tương thích mượt mà 3 phiên bản thiết bị: Dàn hàng ngang trên Desktop; 2 hàng co giãn linh hoạt trên Tablet; xếp dọc gọn gàng trên Mobile với tap target chuẩn $\ge 44px$, không phát sinh cuộn ngang.
 
 ### [Module 2] Luyện Viết (Tả Tranh, Viết Tóm Tắt & Viết Theo Chủ Đề)
-* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `pen-tool` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số từ` (ví dụ `A1 | 40 từ`), không hiển thị mô tả, phía dưới giữ nguyên trạng thái viết và nút CTA `[Bắt đầu viết →]` (kèm icon `arrow-right`).
+* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `pen-tool` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số từ` (ví dụ `A1 | 40 từ`), không hiển thị mô tả, phía dưới nút CTA `[Bắt đầu viết →]` (kèm icon `arrow-right`).
 * **3 Phân loại bài viết chuyên sâu:**: Miêu tả tranh (Письмо по картинке): Quan sát 1 hình ảnh hoặc bối cảnh đời sống thực tế tại Nga, miêu tả hành động, con người và bối cảnh xung quanh. Viết tóm tắt (Изложение / Реферирование): Đọc đoạn văn bản mẫu chuẩn TRKI và viết lại nội dung cô đọng theo ý chính, rèn luyện cấu trúc rút gọn mệnh đề. Viết theo chủ đề (Сочинение по теме): Viết đoạn văn nghị luận/thư từ cá nhân theo các chủ đề bám sát kỳ thi (du học, gia đình, công việc, thành phố của tôi).
 * **Hỗ trợ người học**: Khung soạn thảo tích hợp bàn phím ảo Cyrillic cho các ký tự đặc biệt (tự động chuyển chế độ native trên mobile). Danh sách từ vựng gợi ý bắt buộc phải xuất hiện trong bài viết. Bộ đếm từ thời gian thực (Live Word Counter) cảnh báo trực quan khi chưa đạt số lượng từ tối thiểu..
 * **AI Chấm điểm theo 4 tiêu chí CEFR**:
@@ -85,7 +84,7 @@
 * Bảng đối chiếu chi tiết: Hiển thị bảng 3 cột trực quan: `[Câu gốc có lỗi] ➔ [Câu sửa chuẩn chỉnh] ➔ [Giải thích ngữ pháp chuyên sâu]`. Thưởng +20 XP khi hoàn thành bài nộp.
 
 ### [Module 3] Luyện Nghe (YouTube Shadowing, Nghe Hiểu & Nghe Chép Chính Tả)
-* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `headphones` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 8 câu`), không hiển thị mô tả, phía dưới giữ nguyên trạng thái và nút CTA `[Vào luyện nghe →]`.
+* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `headphones` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 8 câu`), không hiển thị mô tả, phía dưới nút CTA `[Vào luyện nghe →]`.
 * **Bố cục Shadowing Studio chuẩn (2 Cột Hiện Đại)**:
   * **Cột trái (Video & Luyện câu trọng tâm)**:
     - Khung video YouTube 16:9 bo góc mượt mà kèm lớp phủ phụ đề nổi (`.dau-shadow-sub-overlay`) hiển thị song ngữ câu đang chọn.
@@ -105,14 +104,14 @@
 * **Xử lý kỹ thuật Audio**: Bắt buộc yêu cầu tương tác bấm nút Play từ người học trước khi phát âm thanh nhằm tuân thủ chính sách trình duyệt (chống chặn autoplay). Bổ sung thông báo fallback dùng Google Chrome / Safari cho nhận diện giọng nói.
 
 ### [Module 4] Luyện Nói (Shadowing, AI Chấm Điểm & Phân Tích Âm Vị)
-* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `mic-speaking` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 8 câu`), không hiển thị mô tả, phía dưới giữ nguyên kỷ lục điểm và nút CTA `[Luyện nói ngay →]` (kèm icon `arrow-right`).
+* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `mic-speaking` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 8 câu`), không hiển thị mô tả, phía dưới nút CTA `[Luyện nói ngay →]` (kèm icon `arrow-right`).
 * **Phương pháp Shadowing chuyên sâu**: Nghe giọng mẫu bản ngữ, thu âm nhại theo tốc độ, độ nảy trọng âm và ngữ điệu câu (Intonation Contours - ИК 1 đến ИК 5). Biểu đồ sóng âm thời gian thực (Audio Waveform Visualizer) so sánh trực quan giữa giọng mẫu và giọng học viên.
 * **Phân tích âm vị (Phoneme Matching)**: Bóc tách và chỉ điểm trực tiếp các lỗi phát âm đặc thù của người học: Hiện tượng vô thanh hóa / hữu thanh hóa phụ âm (б - п, д - т, в - ф, з - с, г - к, ж - ш). Phân biệt cặp phụ âm cứng (твердые) và phụ âm mềm (мягкие). Biến âm của nguyên âm không nhấn (о phát âm thành а, е/я biến âm thành и).
 
 * Trả về bảng phân tích độ khớp âm vị kèm điểm số chi tiết từng từ trong câu.
 
 ### [Module 5] Luyện Thi TRKI (ТРКИ Exam Simulation)
-* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `award-badge` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 15 câu`), không hiển thị mô tả, phía dưới giữ nguyên trạng thái kết quả và nút CTA `[Vào phòng thi →]`.
+* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `award-badge` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 15 câu`), không hiển thị mô tả, phía dưới nút CTA `[Vào phòng thi →]`.
 * **Cấp độ chuẩn**: ТЭУ (A1), ТБУ (A2), ТРКИ-1 (B1), ТРКИ-2 (B2), ТРКИ-3 (C1), ТРКИ-4 (C2).
 * **Phòng thi mô phỏng an toàn**: Đồng hồ Timestamp chống reload: Thời gian thi được tính theo mốc chốt:`endTime = Date.now() + durationMinutes * 60 * 1000`; lưu trong `sessionStorage`. Khi học viên tải lại trang (reload), đồng hồ tiếp tục đếm chính xác dựa trên chênh lệch thời gian thực, không bị reset thời gian làm bài. Tự động thu bài: Khi đồng hồ chạm mốc `00:00`, toàn bộ bài làm lập tức được khóa và tự động nộp bài. Giám sát gian lận chuyển tab (`visibilitychange`): Bắt sự kiện người dùng rời khỏi tab bài thi, hiển thị cảnh báo vi phạm; nếu chuyển tab quá 3 lần, hệ thống tự động khóa bài và chấm dứt phiên thi.
 * **Báo cáo kết quả**: Dự đoán tỷ lệ đỗ chứng chỉ thực tế theo thang điểm chuẩn TRKI ($\ge 66\%$ đạt yêu cầu). Bảng phân tích ngữ pháp, từ vựng chi tiết từng câu sau khi nộp bài. Thưởng +30 XP cho mỗi bài thi thử hoàn thành.
