@@ -16151,14 +16151,14 @@ body[data-page="blog"] .page-hero h1 span {
 }
 
 .topic-circle-btn {
-  background: #f1f5f9 !important;
-  border: 1px solid #cbd5e1 !important;
-  color: #0f1f38 !important;
+  background: #e3effc !important;
+  border: 1px solid rgba(23, 87, 166, 0.25) !important;
+  color: #1757a6 !important;
   border-radius: 50% !important;
   place-items: center !important;
-  width: 30px !important;
-  height: 30px !important;
-  min-width: 30px !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
   display: grid !important;
   cursor: pointer !important;
   transition: all 0.2s ease !important;
@@ -16183,14 +16183,15 @@ body[data-page="blog"] .page-hero h1 span {
 }
 
 .topic-pro .topic-circle-btn {
-  color: #c52233 !important;
-  border-color: #fca5a5 !important;
+  background: #e3effc !important;
+  color: #1757a6 !important;
+  border-color: rgba(23, 87, 166, 0.25) !important;
 }
 
 .topic-pro .topic-circle-btn:hover {
-  background: var(--russia-red, #c52233) !important;
+  background: #1757a6 !important;
   color: #ffffff !important;
-  border-color: var(--russia-red, #c52233) !important;
+  border-color: #1757a6 !important;
 }
 
 .topic-text-btn {
@@ -18936,21 +18937,21 @@ html, body {
     flex-wrap: wrap !important;
     gap: 10px !important;
   }
-  .topic-footer-actions {
+  .topic-footer .topic-footer-actions {
     width: 100% !important;
     display: flex !important;
     align-items: center !important;
     justify-content: space-between !important;
     gap: 8px !important;
   }
-  .topic-text-btn {
+  .topic-footer .topic-text-btn {
     flex: 1 !important;
     min-height: 44px !important;
     display: inline-flex !important;
     align-items: center !important;
     justify-content: center !important;
   }
-  .topic-circle-btn {
+  .topic-footer .topic-circle-btn {
     width: 44px !important;
     height: 44px !important;
     min-width: 44px !important;
@@ -20076,9 +20077,9 @@ body.has-bottom-bar .rusika-floating-widget {
 }
 
 [data-theme="dark"] .topic-circle-btn {
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
-  color: #ffffff !important;
+  background: rgba(56, 189, 248, 0.15) !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+  color: #38bdf8 !important;
 }
 
 [data-theme="dark"] .topic-text-btn {
@@ -20268,9 +20269,9 @@ body.has-bottom-bar .rusika-floating-widget {
 }
 
 .topic-circle-btn {
-  background: #f1f5f9 !important;
-  border: 1px solid #cbd5e1 !important;
-  color: #0f1f38 !important;
+  background: #e3effc !important;
+  border: 1px solid rgba(23, 87, 166, 0.25) !important;
+  color: #1757a6 !important;
   border-radius: 50% !important;
   width: 32px !important;
   height: 32px !important;
@@ -20293,14 +20294,15 @@ body.has-bottom-bar .rusika-floating-widget {
 }
 
 .topic-pro .topic-circle-btn {
-  color: #c52233 !important;
-  border-color: #fca5a5 !important;
+  background: #e3effc !important;
+  color: #1757a6 !important;
+  border-color: rgba(23, 87, 166, 0.25) !important;
 }
 
 .topic-pro .topic-circle-btn:hover {
-  background: #c52233 !important;
+  background: #1757a6 !important;
   color: #ffffff !important;
-  border-color: #c52233 !important;
+  border-color: #1757a6 !important;
 }
 
 /* --- 3. Thanh Tiến Độ Học Hàng Ngang Chuẩn Spec 1 (Dòng 69-76) --- */
@@ -21074,4 +21076,279 @@ body.has-bottom-bar .rusika-floating-widget {
 
 [data-theme="dark"] .header-pomo-chip .header-pomo-time {
   color: #ffffff !important;
+}
+
+
+/* =====================================================================
+ * GIAO DIỆN NÚT VÀ RESPONSIVE CHO TOÀN BỘ THẺ .dau-card.dau-card-compact
+ * 1. Nền xanh đồng bộ như "Lọ từ vựng" cho TẤT CẢ các nút trên mọi thẻ
+ * 2. Tối ưu triệt để hiển thị trên điện thoại & máy tính bảng, không vỡ layout
+ * ===================================================================== */
+
+/* --- 1. NÚT ĐỒNG BỘ NỀN XANH CHUẨN "LỌ TỪ VỰNG" CHO TẤT CẢ THẺ COMPACT --- */
+.dau-card.dau-card-compact .topic-text-btn,
+.dau-card.dau-card-compact .btn-jar-list,
+.dau-card.dau-card-compact .dau-card-footer .btn,
+.dau-card.dau-card-compact .dau-card-footer .btn-primary,
+.dau-card.dau-card-compact .btn-listen-action,
+.dau-card.dau-card-compact .btn-speak-action,
+.dau-card.dau-card-compact .btn-write-action,
+.dau-card.dau-card-compact .btn-trki-action {
+  background: #e3effc !important;
+  border: 1px solid rgba(23, 87, 166, 0.25) !important;
+  color: #1757a6 !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  padding: 6px 14px !important;
+  border-radius: 999px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  height: 32px !important;
+  box-sizing: border-box !important;
+  white-space: nowrap !important;
+  box-shadow: none !important;
+  line-height: 1 !important;
+}
+
+.dau-card.dau-card-compact .topic-text-btn:hover,
+.dau-card.dau-card-compact .btn-jar-list:hover,
+.dau-card.dau-card-compact .dau-card-footer .btn:hover,
+.dau-card.dau-card-compact .dau-card-footer .btn-primary:hover,
+.dau-card.dau-card-compact .btn-listen-action:hover,
+.dau-card.dau-card-compact .btn-speak-action:hover,
+.dau-card.dau-card-compact .btn-write-action:hover,
+.dau-card.dau-card-compact .btn-trki-action:hover {
+  background: #1757a6 !important;
+  color: #ffffff !important;
+  border-color: #1757a6 !important;
+  box-shadow: 0 4px 12px rgba(23, 87, 166, 0.25) !important;
+  transform: translateY(-1px) !important;
+}
+
+.dau-card.dau-card-compact .topic-circle-btn,
+.dau-card.dau-card-compact .btn-topic-article {
+  background: #e3effc !important;
+  border: 1px solid rgba(23, 87, 166, 0.25) !important;
+  color: #1757a6 !important;
+  border-radius: 50% !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  flex-shrink: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  box-shadow: none !important;
+}
+
+.dau-card.dau-card-compact .topic-circle-btn:hover,
+.dau-card.dau-card-compact .btn-topic-article:hover {
+  background: #1757a6 !important;
+  color: #ffffff !important;
+  border-color: #1757a6 !important;
+  box-shadow: 0 4px 12px rgba(23, 87, 166, 0.25) !important;
+  transform: scale(1.08) !important;
+}
+
+/* Chế độ tối Dark Mode */
+[data-theme="dark"] .dau-card.dau-card-compact .topic-text-btn,
+[data-theme="dark"] .dau-card.dau-card-compact .btn-jar-list,
+[data-theme="dark"] .dau-card.dau-card-compact .dau-card-footer .btn,
+[data-theme="dark"] .dau-card.dau-card-compact .dau-card-footer .btn-primary,
+[data-theme="dark"] .dau-card.dau-card-compact .btn-listen-action,
+[data-theme="dark"] .dau-card.dau-card-compact .btn-speak-action,
+[data-theme="dark"] .dau-card.dau-card-compact .btn-write-action,
+[data-theme="dark"] .dau-card.dau-card-compact .btn-trki-action {
+  background: rgba(56, 189, 248, 0.15) !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .dau-card.dau-card-compact .topic-text-btn:hover,
+[data-theme="dark"] .dau-card.dau-card-compact .btn-jar-list:hover,
+[data-theme="dark"] .dau-card.dau-card-compact .dau-card-footer .btn:hover,
+[data-theme="dark"] .dau-card.dau-card-compact .dau-card-footer .btn-primary:hover,
+[data-theme="dark"] .dau-card.dau-card-compact .btn-listen-action:hover,
+[data-theme="dark"] .dau-card.dau-card-compact .btn-speak-action:hover,
+[data-theme="dark"] .dau-card.dau-card-compact .btn-write-action:hover,
+[data-theme="dark"] .dau-card.dau-card-compact .btn-trki-action:hover {
+  background: #38bdf8 !important;
+  color: #0b1727 !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3) !important;
+}
+
+[data-theme="dark"] .dau-card.dau-card-compact .topic-circle-btn,
+[data-theme="dark"] .dau-card.dau-card-compact .btn-topic-article {
+  background: rgba(56, 189, 248, 0.15) !important;
+  border-color: rgba(56, 189, 248, 0.3) !important;
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .dau-card.dau-card-compact .topic-circle-btn:hover,
+[data-theme="dark"] .dau-card.dau-card-compact .btn-topic-article:hover {
+  background: #38bdf8 !important;
+  color: #0b1727 !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3) !important;
+}
+
+/* --- 2. TỐI ƯU RESPONSIVE CHO ĐIỆN THOẠI & MÁY TÍNH BẢNG (<= 768px) --- */
+@media (max-width: 768px) {
+  .dau-card.dau-card-compact {
+    padding: 14px 16px !important;
+    border-radius: 16px !important;
+    min-height: auto !important;
+  }
+  
+  .dau-card.dau-card-compact .dau-card-header {
+    gap: 12px !important;
+    align-items: flex-start !important;
+  }
+  
+  .dau-card.dau-card-compact .dau-card-icon {
+    width: 42px !important;
+    height: 42px !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+    border-radius: 12px !important;
+  }
+
+  .dau-card.dau-card-compact .dau-card-ru {
+    font-size: 1rem !important;
+    line-height: 1.35 !important;
+  }
+
+  .dau-card.dau-card-compact .topic-status {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+    font-size: 11px !important;
+    padding: 2px 8px !important;
+    border-radius: 999px !important;
+  }
+
+  .dau-card.dau-card-compact .dau-card-footer {
+    margin-top: 12px !important;
+    padding-top: 8px !important;
+    border-top: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .dau-card.dau-card-compact .dau-card-status,
+  .dau-card.dau-card-compact .dau-card-footer > span:first-child {
+    font-size: 0.8rem !important;
+    color: var(--muted) !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    flex-shrink: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .dau-card.dau-card-compact .topic-footer-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    width: auto !important;
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  .dau-card.dau-card-compact .topic-text-btn,
+  .dau-card.dau-card-compact .btn-jar-list {
+    flex: 0 0 auto !important;
+    height: 34px !important;
+    min-height: 34px !important;
+    font-size: 11.5px !important;
+    padding: 0 12px !important;
+  }
+
+  .dau-card.dau-card-compact .topic-circle-btn,
+  .dau-card.dau-card-compact .btn-topic-article {
+    width: 34px !important;
+    height: 34px !important;
+    min-width: 34px !important;
+    min-height: 34px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .dau-card.dau-card-compact .dau-card-footer .btn,
+  .dau-card.dau-card-compact .btn-primary {
+    height: 34px !important;
+    min-height: 34px !important;
+    font-size: 11.5px !important;
+    padding: 0 14px !important;
+    flex-shrink: 0 !important;
+  }
+}
+
+/* --- 3. TỐI ƯU CHO ĐIỆN THOẠI NHỎ (<= 420px) --- */
+@media (max-width: 420px) {
+  .dau-card.dau-card-compact {
+    padding: 12px 14px !important;
+  }
+
+  .dau-card.dau-card-compact .dau-card-footer {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  .dau-card.dau-card-compact .dau-card-status,
+  .dau-card.dau-card-compact .dau-card-footer > span:first-child {
+    width: 100% !important;
+    text-align: left !important;
+    font-size: 0.78rem !important;
+    margin-bottom: 2px !important;
+  }
+
+  .dau-card.dau-card-compact .topic-footer-actions {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    margin-left: 0 !important;
+  }
+
+  .dau-card.dau-card-compact .topic-text-btn,
+  .dau-card.dau-card-compact .btn-jar-list {
+    flex: 1 !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    font-size: 12.5px !important;
+    justify-content: center !important;
+  }
+
+  .dau-card.dau-card-compact .topic-circle-btn,
+  .dau-card.dau-card-compact .btn-topic-article {
+    width: 38px !important;
+    height: 38px !important;
+    min-width: 38px !important;
+    min-height: 38px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .dau-card.dau-card-compact .dau-card-footer .btn,
+  .dau-card.dau-card-compact .btn-primary {
+    width: 100% !important;
+    height: 38px !important;
+    min-height: 38px !important;
+    font-size: 12.5px !important;
+    justify-content: center !important;
+  }
 }
