@@ -1562,31 +1562,78 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               const displayWord = w.stress || w.ru;
               return `
                 <div class="dau-vocab-row-card ${isMastered ? "mastered" : ""} ${isExpanded ? "is-expanded" : ""}" data-ru="${esc(w.ru)}" data-idx="${idx}">
-                  <!-- CARD TOP / HEADER: Click to toggle expansion -->
-                  <div class="dau-row-header-wrap" style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;cursor:pointer">
-                    <div style="flex:1 1 auto;min-width:0">
-                      <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap">
+                  <!-- SPEC 1: BỐ CỤC 3 PHẦN TRỰC QUAN -->
+                  <div class="dau-row-main-grid">
+                    <!-- CỘT 1 (TRÁI): TỪ TIẾNG NGA IN ĐẬM KÈM TRỌNG ÂM & TỪ LOẠI -->
+                    <div class="dau-row-col-ru">
+                      <div class="dau-row-ru-header">
                         <span class="dau-row-index">#${idx + 1}</span>
                         <span class="dau-row-ru ru">${esc(displayWord)}</span>
+                      </div>
+                      <div class="dau-row-tags">
                         ${w.gender ? `<span class="dau-badge-pill">${esc(w.gender)}</span>` : ""}
                         ${w.pos ? `<span class="dau-badge-pill pos">${esc(w.pos)}</span>` : ""}
                       </div>
-                      <div class="dau-row-vi">${esc(w.vi)}</div>
-                      ${(!isExpanded && w.note) ? `<div class="dau-row-note-short" style="font-size:0.8rem;color:var(--muted);margin-top:2px">${esc(w.note)}</div>` : ""}
                     </div>
 
-                    <!-- ACTION BUTTONS & CHEVRON -->
-                    <div class="dau-row-col-actions" style="display:flex;align-items:center;gap:5px;flex-shrink:0">
-                      <button type="button" class="dau-action-icon-btn btn-speak-item" data-ru="${esc(w.ru)}" title="Phát âm từ này">
+                    <!-- CỘT 2 (GIỮA): NGHĨA TIẾNG VIỆT & CÂU VÍ DỤ SONG NGỮ, CỤM ĐỘNG TỪ, QUẢN CÁCH, ĐỒNG/TRÁI NGHĨA, GHI CHÚ -->
+                    <div class="dau-row-col-vi">
+                      <div class="dau-row-vi-text">${esc(w.vi)}</div>
+                      ${w.ex ? `
+                        <div class="dau-row-ex-wrap">
+                          <div class="dau-row-ex-line">
+                            <span class="dau-row-ex ru">«${esc(w.ex)}»</span>
+                            <button type="button" class="btn-audio-mini btn-speak-ex" data-ru="${esc(w.ex.replace(/\(.*?\)/g, "").trim())}" title="Nghe câu ví dụ">
+                              ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""}
+                            </button>
+                          </div>
+                          ${w.ex_vi ? `<div class="dau-row-ex-vi">${esc(w.ex_vi)}</div>` : ""}
+                        </div>
+                      ` : ""}
+                      ${isExpanded ? `
+                        <div class="dau-row-expanded-details">
+                          ${(w.collocation || w.verb_obj || w.gov) ? `
+                            <div class="dau-row-extra-line">
+                              <span class="dau-row-extra-label">Cụm từ / Quản cách:</span>
+                              <span class="dau-row-extra-val ru">${esc(w.collocation || w.verb_obj || w.gov)}</span>
+                            </div>
+                          ` : ""}
+                          ${w.syn ? `
+                            <div class="dau-row-extra-line">
+                              <span class="dau-row-extra-label">Đồng nghĩa:</span>
+                              <span class="dau-row-extra-val ru">${esc(w.syn)}</span>
+                            </div>
+                          ` : ""}
+                          ${w.ant ? `
+                            <div class="dau-row-extra-line">
+                              <span class="dau-row-extra-label">Trái nghĩa:</span>
+                              <span class="dau-row-extra-val ru">${esc(w.ant)}</span>
+                            </div>
+                          ` : ""}
+                          ${w.note ? `
+                            <div class="dau-row-extra-line">
+                              <span class="dau-row-extra-label">Ghi chú:</span>
+                              <span class="dau-row-extra-val">${esc(w.note)}</span>
+                            </div>
+                          ` : ""}
+                        </div>
+                      ` : (!w.ex && w.note) ? `
+                        <div class="dau-row-note-short">${esc(w.note)}</div>
+                      ` : ""}
+                    </div>
+
+                    <!-- CỘT 3 (PHẢI): BỘ NÚT HÀNH ĐỘNG (AUDIO, ĐÃ THUỘC, TRA CÁCH CHIA, LƯU LỌ) -->
+                    <div class="dau-row-col-actions">
+                      <button type="button" class="dau-action-icon-btn btn-speak-item" data-ru="${esc(w.ru)}" title="Phát âm tiếng Nga (icon volume-high)">
                         ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""}
                       </button>
                       <button type="button" class="dau-action-icon-btn btn-master-item ${isMastered ? "mastered" : ""}" data-ru="${esc(w.ru)}" title="${isMastered ? "Đã thuộc (Nhấn để hủy)" : "Đánh dấu đã thuộc"}">
                         ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""}
                       </button>
-                      <button type="button" class="dau-action-icon-btn btn-dict-item" data-ru="${esc(w.ru)}" title="Tra cứu 6 cách & chia thì TFlat">
+                      <button type="button" class="dau-action-icon-btn btn-dict-item" data-ru="${esc(w.ru)}" title="Tra cách chia 6 cách & thì (icon book-open)">
                         ${window.RusiIcons ? RusiIcons.get("book-open", { size: 16 }) : ""}
                       </button>
-                      <button type="button" class="dau-action-icon-btn btn-addjar-item" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" data-ex="${esc(w.ex || "")}" title="Lưu vào Lọ cá nhân">
+                      <button type="button" class="dau-action-icon-btn btn-addjar-item" data-ru="${esc(w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" data-ex="${esc(w.ex || "")}" title="Lưu vào Lọ cá nhân (icon archive-jar)">
                         ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""}
                       </button>
                       ${isCustomJar ? `
@@ -1594,58 +1641,11 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                           ${window.RusiIcons ? RusiIcons.get("trash-2", { size: 16 }) : ""}
                         </button>
                       ` : ""}
-                      <button type="button" class="dau-action-icon-btn btn-expand-card" title="${isExpanded ? "Thu gọn chi tiết" : "Mở rộng chi tiết đầy đủ"}">
+                      <button type="button" class="dau-action-icon-btn btn-expand-card" title="${isExpanded ? "Thu gọn chi tiết" : "Mở rộng chi tiết"}">
                         ${window.RusiIcons ? RusiIcons.get(isExpanded ? "chevron-up" : "chevron-down", { size: 15 }) : (isExpanded ? "▴" : "▾")}
                       </button>
                     </div>
                   </div>
-
-                  <!-- EXPANDED ACCORDION DETAILS (Spec 1: Ví dụ song ngữ, cụm động từ, tân ngữ, đồng nghĩa, trái nghĩa, ghi chú) -->
-                  ${isExpanded ? `
-                    <div class="dau-row-expanded-details" style="margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)">
-                      ${w.note ? `
-                        <div class="dau-row-extra-line" style="margin-bottom:6px">
-                          <span class="dau-row-extra-label" style="font-weight:700;font-size:0.78rem;color:var(--muted)">Ghi chú / Ngữ cảnh:</span>
-                          <span class="dau-row-extra-val" style="font-size:0.86rem">${esc(w.note)}</span>
-                        </div>
-                      ` : ""}
-                      ${w.ex ? `
-                        <div class="dau-row-ex-wrap" style="margin-bottom:6px">
-                          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-                            <div class="dau-row-ex ru" style="font-size:0.92rem;line-height:1.4">«${esc(w.ex)}»</div>
-                            <button type="button" class="btn-audio-mini btn-speak-ex" data-ru="${esc(w.ex.replace(/\(.*?\)/g, "").trim())}" title="Nghe câu ví dụ" style="background:none;border:none;cursor:pointer;color:var(--primary);padding:2px 4px;border-radius:4px">
-                              ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""}
-                            </button>
-                          </div>
-                          ${w.ex_vi ? `<div class="dau-row-ex-vi" style="font-size:0.82rem;color:var(--muted);margin-top:2px">${esc(w.ex_vi)}</div>` : ""}
-                        </div>
-                      ` : ""}
-                      ${(w.collocation || w.verb_obj || w.gov) ? `
-                        <div class="dau-row-extra-line" style="margin-bottom:6px">
-                          <span class="dau-row-extra-label" style="font-weight:700;font-size:0.78rem;color:var(--muted)">Cụm từ / Quản cách:</span>
-                          <span class="dau-row-extra-val ru" style="font-weight:700;color:var(--primary)">${esc(w.collocation || w.verb_obj || w.gov)}</span>
-                        </div>
-                      ` : ""}
-                      ${w.syn ? `
-                        <div class="dau-row-extra-line" style="margin-bottom:4px">
-                          <span class="dau-row-extra-label" style="font-weight:700;font-size:0.78rem;color:var(--muted)">Đồng nghĩa:</span>
-                          <span class="dau-row-extra-val ru">${esc(w.syn)}</span>
-                        </div>
-                      ` : ""}
-                      ${w.ant ? `
-                        <div class="dau-row-extra-line" style="margin-bottom:4px">
-                          <span class="dau-row-extra-label" style="font-weight:700;font-size:0.78rem;color:var(--muted)">Trái nghĩa:</span>
-                          <span class="dau-row-extra-val ru">${esc(w.ant)}</span>
-                        </div>
-                      ` : ""}
-                      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-                        <span style="font-size:0.74rem;color:var(--muted)">💡 Chạm thẻ để thu gọn</span>
-                        <button type="button" class="btn-quick-flashcard btn-sync-preview" data-idx="${idx}" style="font-size:0.78rem;padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:inline-flex;align-items:center;gap:5px;font-weight:600;color:var(--primary)">
-                          ${window.RusiIcons ? RusiIcons.get("flashcards-layers", { size: 14 }) : ""} Xem Flashcard 3D
-                        </button>
-                      </div>
-                    </div>
-                  ` : ""}
                 </div>
               `;
             }).join("")}
@@ -2554,7 +2554,7 @@ function initVocabPage() {
         card.onclick = (e) => {
           if (e.target.closest("button") || e.target.closest(".voc-user-jar-card-actions")) return;
           const jId = card.dataset.jarId;
-          if (jId) showJarDetail(jId);
+          if (jId) showJarDetail(jId, "list");
         };
       });
 
@@ -2562,7 +2562,7 @@ function initVocabPage() {
         btn.onclick = (e) => {
           e.stopPropagation();
           const jId = btn.dataset.jarId;
-          if (jId) showJarDetail(jId);
+          if (jId) showJarDetail(jId, "list");
         };
       });
 
@@ -2659,6 +2659,8 @@ const showTopicArticle = (jarId) => {
     const words = jar.words || [];
     const levelBadgeClass = jar.level === "A2" ? "dau-badge-a2" : jar.level === "B1" ? "dau-badge-b1" : jar.level === "B2" ? "dau-badge-b2" : "dau-badge-a1";
     const levelLabel = jar.level === "A1" ? "Sơ cấp" : jar.level === "A2" ? "Cơ bản" : jar.level === "B1" ? "Trung cấp" : "Trung cấp cao";
+    const isUserPro = Boolean(typeof Monetization !== "undefined" && Monetization.isPro && Monetization.isPro());
+    const printDate = new Date().toLocaleDateString("vi-VN", { year: "numeric", month: "2-digit", day: "2-digit" });
 
     // Tạo nội dung hội thoại mẫu
     let dialoguesHtml = "";
@@ -2733,7 +2735,7 @@ const showTopicArticle = (jarId) => {
 
     detail.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
-      <div class="dau-workspace-back-bar topic-article-nav-bar">
+      <div class="dau-workspace-back-bar topic-article-nav-bar no-print">
         <button type="button" class="dau-back-btn" id="btnBackFromArticle">
           ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 16 }) : ""} <span class="btn-text">Quay lại danh sách chủ đề</span>
         </button>
@@ -2742,8 +2744,9 @@ const showTopicArticle = (jarId) => {
           <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(jar.icon || "archive-jar", { size: 20 }) : ""} ${esc(jar.name)}</span>
         </div>
         <div class="topic-article-top-actions">
-          <button type="button" class="btn btn-outline btn-sm" id="btnPrintTopicArticle" title="Xuất PDF hoặc In tài liệu">
-            ${window.RusiIcons ? RusiIcons.get("download", { size: 15 }) : ""} <span class="btn-text">Xuất PDF / In bài học</span>
+          <button type="button" class="btn btn-outline btn-sm is-pro-action" id="btnPrintTopicArticle" title="${isUserPro ? "Xuất PDF / In bài học (PRO)" : "Xuất PDF bài học (Dành riêng cho Hội viên PRO)"}">
+            ${isUserPro ? (window.RusiIcons ? RusiIcons.get("download", { size: 15 }) : "") : (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 15 }) : "")} <span class="btn-text">Xuất PDF</span>
+            <span class="dau-pro-mini-badge" style="font-size:0.62rem;font-weight:800;background:linear-gradient(135deg,#c52233,#800020);color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px">PRO</span>
           </button>
           <button type="button" class="btn btn-primary btn-sm" id="btnOpenJarFromArticleTop" title="Xem lọ từ vựng (${words.length} từ)">
             ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 15 }) : ""} <span class="btn-text">Xem lọ từ vựng (${words.length} từ)</span>
@@ -2755,14 +2758,36 @@ const showTopicArticle = (jarId) => {
       <article class="topic-article-container">
         <!-- HEADER DÀNH RIÊNG KHI XUẤT PDF / IN ẤN -->
         <div class="topic-article-print-header">
-          <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #0f1f38;padding-bottom:12px;margin-bottom:20px">
-            <div>
-              <div style="font-size:18pt;font-weight:800;color:#c52233;letter-spacing:-0.5px">RUSI TRKI — TÀI LIỆU BÀI HỌC CHỦ ĐỀ</div>
-              <div style="font-size:10pt;color:#64748b">Chuyên đề: ${esc(jar.name)} · Trình độ: ${jar.level} (${levelLabel}) · rusitrki.com</div>
+          <div class="print-header-inner">
+            <div class="print-brand-col">
+              <div class="print-brand-badge">
+                <svg class="print-brand-logo-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 44" width="220" height="40" fill="none" aria-label="Logo RUSI TRKI">
+                  <defs>
+                    <linearGradient id="rusiPdfMarkGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#0039A6" />
+                      <stop offset="100%" stop-color="#D52B1E" />
+                    </linearGradient>
+                  </defs>
+                  <rect x="2" y="4" width="36" height="36" rx="9" fill="url(#rusiPdfMarkGrad)" />
+                  <text x="20" y="29" font-family="'Inter', -apple-system, sans-serif" font-size="22" font-weight="900" fill="#ffffff" text-anchor="middle">Я</text>
+                  <text x="46" y="24" font-family="'Inter', -apple-system, sans-serif" font-size="18" font-weight="900" letter-spacing="-0.5">
+                    <tspan fill="#0f1f38">Rusi</tspan><tspan fill="#c52233">TRKI</tspan>
+                  </text>
+                  <rect x="46" y="28" width="30" height="2.5" fill="#cbd5e1" rx="1" />
+                  <rect x="76" y="28" width="30" height="2.5" fill="#0039A6" rx="1" />
+                  <rect x="106" y="28" width="30" height="2.5" fill="#c52233" rx="1" />
+                  <text x="46" y="39" font-family="'Inter', -apple-system, sans-serif" font-size="6.5" font-weight="700" fill="#475569" letter-spacing="0.4">HỆ THỐNG ĐÀO TẠO &amp; KHẢO THÍ TIẾNG NGA</text>
+                </svg>
+              </div>
+              <h1 class="print-doc-heading">TÀI LIỆU BÀI HỌC CHỦ ĐỀ: ${esc(jar.name).toUpperCase()}</h1>
+              <div class="print-meta-pills">
+                <span class="print-pill">Trình độ: <strong>TRKI ${jar.level} (${levelLabel})</strong></span>
+                <span class="print-pill">Quy mô: <strong>${words.length} từ vựng cốt lõi</strong></span>
+                <span class="print-pill">Hệ thống: <strong>rusitrki.com</strong></span>
+              </div>
             </div>
-            <div style="font-size:9pt;color:#64748b;text-align:right">
-              <div>Số lượng từ: ${words.length} từ</div>
-              <div>Ngày xuất: ${new Date().toLocaleDateString("vi-VN")}</div>
+            <div class="print-date-col">
+              <div class="print-doc-date">Ngày xuất: <strong>${printDate}</strong></div>
             </div>
           </div>
         </div>
@@ -2852,6 +2877,14 @@ const showTopicArticle = (jarId) => {
             ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Mở Lọ &amp; Học Flashcard ngay →
           </button>
         </section>
+
+        <!-- CHÂN TRANG KHI IN / XUẤT PDF -->
+        <div class="topic-article-print-footer">
+          <div class="print-footer-simple">
+            <span>RUSI TRKI · Hệ thống đào tạo &amp; khảo thí tiếng Nga chuẩn TRKI</span>
+            <span>rusitrki.com</span>
+          </div>
+        </div>
       </article>
     `;
 
@@ -2864,6 +2897,18 @@ const showTopicArticle = (jarId) => {
     const printBtn = el("#btnPrintTopicArticle");
     if (printBtn) {
       printBtn.onclick = () => {
+        const isPro = Boolean(typeof Monetization !== "undefined" && Monetization.isPro && Monetization.isPro());
+        if (!isPro) {
+          if (typeof Monetization !== "undefined" && typeof Monetization.showProGateModal === "function") {
+            Monetization.showProGateModal(
+              "Tính năng Xuất PDF dành riêng cho Hội viên PRO",
+              "Nâng cấp lên gói PRO để tải xuống và in toàn bộ tài liệu bài học chủ đề tiếng Nga định dạng PDF chuẩn A4 chất lượng cao từ RUSI TRKI."
+            );
+          } else {
+            toast("Tính năng tải tài liệu PDF chỉ dành riêng cho hội viên PRO.");
+          }
+          return;
+        }
         window.print();
       };
     }
@@ -2887,15 +2932,25 @@ const showTopicArticle = (jarId) => {
     let baseJars = localJars;
     if (cloudJars && cloudJars.length) {
       const cloudMap = new Map();
-      cloudJars.forEach(j => cloudMap.set(j.code || j.id, j));
-      const merged = [...cloudJars];
+      cloudJars.forEach(j => {
+        const local = localJars.find(lj => lj.id === j.id || lj.code === j.code);
+        const words = (j.words && j.words.length > 0) ? j.words : (local && local.words ? local.words : []);
+        cloudMap.set(j.code || j.id, { ...j, words });
+      });
+      const merged = Array.from(cloudMap.values());
       localJars.forEach(j => {
         if (!cloudMap.has(j.code || j.id)) merged.push(j);
       });
       baseJars = merged;
     }
-    const jar = [...baseJars, ...customJars].find((j) => j.id === jarId || j.code === jarId);
-    if (!jar) return;
+    let jar = [...baseJars, ...customJars].find((j) => j.id === jarId || j.code === jarId);
+    if (!jar && localJars.length > 0) {
+      jar = localJars.find((j) => j.id === jarId || j.code === jarId);
+    }
+    if (!jar) {
+      console.warn("Không tìm thấy lọ từ vựng:", jarId);
+      return;
+    }
 
     // Kiểm tra quyền truy cập PRO
     const isProJar = Boolean(jar.is_pro_only || jar.is_vip || (jar.level === "B2" && jar.id !== "jar_travel") || jar.id === "jar_bank" || jar.id === "jar_hospital" || jar.id === "jar_dekanat");

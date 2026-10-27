@@ -46,7 +46,7 @@
     1. Nút `[Lọ từ vựng]`: Gọi icon `archive-jar`, mở ngay giao diện danh sách chi tiết các từ có trong lọ.
     2. Nút tròn `[→]`: Gọi icon `arrow-right`, Chuyển sang Trang Bài Học Chủ Đề.
   * **Bố cục Danh sách từ (`https://dauenglish.com/vocabulary/test/...`)**:
-    - **Thẻ Flashcard xem nhanh trên cùng (`.dau-vocab-preview-box`)**: Cho phép lật thẻ xem nhanh (Space hoặc chạm thẻ), nghe phát âm (icon `volume-high`), gắn sao (icon `star`) và chuyển từ (`‹ 1/20 ›`) ngay trong giao diện danh sách.
+    - **Thẻ Flashcard xem nhanh trên cùng (`.dau-vocab-preview-box`)**: Cho phép lật thẻ xem nhanh (Space hoặc chạm thẻ), nghe phát âm (icon `volume-high`) và chuyển từ (`‹ 1/20 ›`) ngay trong giao diện danh sách.
     - **Thanh công cụ lọc (`.dau-vocab-toolbar`)**: Hiển thị tiêu đề *Danh sách từ vựng*, nút bật/tắt *Chi tiết* (cụm động từ, tân ngữ trực tiếp của động từ, đồng nghĩa, trái nghĩa/gần nghĩa, ghi chú), *✓ Đã thuộc*, và nút CTA *⚡Flashcard ngay →*.
     - **Hiển thị danh sách thẻ hàng ngang chuẩn (`.dau-vocab-row-card`)**: Bố cục 3 phần trực quan (Trái: Từ tiếng Nga in đậm kèm trọng âm & từ loại; Giữa: Nghĩa tiếng Việt & câu ví dụ song ngữ, cụm động từ, tân ngữ trực tiếp của động từ, đồng nghĩa, trái nghĩa/gần nghĩa, và ghi chú; Phải: Bộ nút hành động phát âm (icon `volume-high`), ✓ đánh dấu đã thuộc, tra cách chia (icon `book-open`), lưu lọ cá nhân (icon `archive-jar`)).
     - **Kích hoạt tức thì**: Khi bấm `[Lọ từ vựng]` trên lọ từ vựng, hệ thống tự động kích hoạt ngay tab danh sách (`initialMode = "list"`) và hiển thị dữ liệu ngay lập tức, không để xảy ra tình trạng trống trắng.
