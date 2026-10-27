@@ -4,21 +4,38 @@
  * Quy chuẩn:
  * - Chỉ hiển thị khi người dùng đã đăng nhập tài khoản.
  * - Khi click vào nút Pomodoro: Hiển thị dropdown popover nhỏ gọn ngay dưới nút,
- *   gồm 3 thanh kéo nhỏ bé (Tập trung, Nghỉ ngơi, Chu kỳ), đồng hồ hiển thị và nút điều khiển.
+ *   gồm 3 thanh kéo tùy chỉnh (Tập trung, Nghỉ ngơi, Chu kỳ), đồng hồ hiển thị và nút điều khiển.
  * - Đồng bộ thời gian thực cho TẤT CẢ các tab qua localStorage và timestamp targetEndTime.
  * - Không bị mất thời gian khi chuyển trang hoặc reload.
+ * - Tương thích 100% Mobile / Tablet, Event Delegation chống mất listener khi re-render.
  * ============================================================================
  */
 
 (function () {
   "use strict";
 
-  // Web Audio Chime Generator
-  function playPomoSound(type) {
+  // Web Audio Context (mở khóa an toàn trên user gesture)
+  let sharedAudioCtx = null;
+  function ensureAudioContext() {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
+      if (!AudioCtx) return null;
+      if (!sharedAudioCtx) {
+        sharedAudioCtx = new AudioCtx();
+      }
+      if (sharedAudioCtx.state === "suspended") {
+        sharedAudioCtx.resume();
+      }
+      return sharedAudioCtx;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function playPomoSound(type) {
+    try {
+      const ctx = ensureAudioContext();
+      if (!ctx) return;
 
       function playTone(freq, start, duration, gainVal) {
         const osc = ctx.createOscillator();
@@ -34,12 +51,14 @@
       }
 
       if (type === "focus_end") {
-        playTone(523.25, 0, 0.45, 0.35);
-        playTone(659.25, 0.22, 0.7, 0.35);
+        // Chuông báo kết thúc tập trung: 2 nốt ngân cao sáng
+        playTone(523.25, 0, 0.45, 0.35); // C5
+        playTone(659.25, 0.22, 0.7, 0.35); // E5
       } else if (type === "break_end") {
-        playTone(587.33, 0, 0.3, 0.3);
-        playTone(739.99, 0.16, 0.3, 0.3);
-        playTone(880.00, 0.32, 0.8, 0.35);
+        // Chuông báo kết thúc giải lao: 3 nốt vươn lên phấn chấn
+        playTone(587.33, 0, 0.3, 0.3); // D5
+        playTone(739.99, 0.16, 0.3, 0.3); // F#5
+        playTone(880.00, 0.32, 0.8, 0.35); // A5
       }
     } catch (_) {}
   }
@@ -84,7 +103,7 @@
             this.isRunning = true;
             this.startTicker();
           } else {
-            // Hết giờ trong lúc chuyển trang
+            // Hết giờ trong lúc chuyển trang hoặc reload
             this.isRunning = false;
             this.targetEndTime = null;
             if (this.phase === "focus") {
@@ -99,6 +118,10 @@
         } else {
           this.isRunning = false;
           this.targetEndTime = null;
+          if (this.timerId) {
+            clearInterval(this.timerId);
+            this.timerId = null;
+          }
           this.remainingSeconds = typeof saved.remainingSeconds === "number" ? saved.remainingSeconds : (this.focusMin * 60);
         }
       } catch (_) {
@@ -136,20 +159,22 @@
       const oldModal = document.getElementById("pomoModalBackdrop");
       if (oldModal) oldModal.remove();
 
-      // Dropdown Popover nhỏ gọn được gắn vào header
+      // Dropdown Popover nhỏ gọn được gắn vào body (position: fixed)
       let popover = document.getElementById("pomoPopoverDropdown");
       if (!popover) {
         popover = document.createElement("div");
         popover.id = "pomoPopoverDropdown";
         popover.className = "pomo-popover-dropdown";
         popover.style.display = "none";
+        popover.setAttribute("role", "dialog");
+        popover.setAttribute("aria-label", "Đồng hồ Pomodoro tập trung");
         popover.innerHTML = `
           <div class="pomo-pop-header">
             <span class="pomo-pop-title">🍅 Đồng Hồ Pomodoro</span>
             <button type="button" class="pomo-pop-close" id="pomoPopClose" title="Đóng">&times;</button>
           </div>
 
-          <!-- 3 THANH KÉO NHỎ BÉ -->
+          <!-- 3 THANH KÉO TÙY CHỈNH THỜI GIAN -->
           <div class="pomo-pop-sliders" id="pomoPopSlidersBox">
             <div class="pomo-pop-slider-row">
               <div class="pomo-pop-slider-info">
@@ -194,149 +219,187 @@
       }
     },
 
-    bindEvents: function () {
-      const popover = document.getElementById("pomoPopoverDropdown");
-      const btnClose = document.getElementById("pomoPopClose");
-      const btnStart = document.getElementById("pomoPopStart");
-      const btnReset = document.getElementById("pomoPopReset");
+    toggle: function () {
+      this.togglePopover();
+    },
 
-      const sFocus = document.getElementById("pomoPopFocusRange");
-      const sBreak = document.getElementById("pomoPopBreakRange");
-      const sCycles = document.getElementById("pomoPopCyclesRange");
+    open: function () {
+      this.openPopover();
+    },
 
-      // Định vị và toggle popover dưới nút Pomodoro (Hỗ trợ chuẩn Mobile & Mutual Exclusion)
-      const togglePopover = () => {
-        if (!popover) return;
-        const hBtn = document.getElementById("headerPomoBtn");
-        if (!hBtn) return;
+    close: function () {
+      this.closePopover();
+    },
 
-        const isVisible = popover.style.display === "block";
-        if (isVisible) {
-          popover.style.display = "none";
-        } else {
-          // MUTUAL EXCLUSION: Đóng User dropdown và Mobile drawer nếu đang mở
-          const userDd = document.getElementById("userDropdown");
-          if (userDd) userDd.classList.remove("open");
-          const userTrigger = document.getElementById("userTrigger");
-          if (userTrigger) userTrigger.setAttribute("aria-expanded", "false");
-          const nav = document.getElementById("mainNav");
-          if (nav) nav.classList.remove("nav-open");
-          const mobileBtn = document.getElementById("mobileMenuBtn");
-          if (mobileBtn) {
-            mobileBtn.classList.remove("is-open");
-            mobileBtn.setAttribute("aria-expanded", "false");
-          }
-          document.body.classList.remove("menu-locked");
-
-          popover.style.display = "block";
-
-          const isMobile = window.innerWidth <= 768;
-          if (isMobile) {
-            // Định vị an toàn trên điện thoại: chống tràn lề trái và cố định sát mép phải
-            popover.style.top = "62px";
-            popover.style.right = "12px";
-            popover.style.left = "auto";
-            popover.style.width = "min(calc(100vw - 24px), 320px)";
-            popover.style.maxWidth = "calc(100vw - 24px)";
-          } else {
-            const rect = hBtn.getBoundingClientRect();
-            popover.style.top = (rect.bottom + 8) + "px";
-            const rightOffset = window.innerWidth - rect.right;
-            const maxRight = window.innerWidth - 310;
-            popover.style.right = Math.min(Math.max(12, rightOffset), Math.max(12, maxRight)) + "px";
-            popover.style.left = "auto";
-            popover.style.width = "290px";
-          }
-        }
-      };
-
-      const bindHeader = () => {
-        const hBtn = document.getElementById("headerPomoBtn");
-        if (hBtn) {
-          hBtn.onclick = (e) => {
-            e.stopPropagation();
-            togglePopover();
-          };
-        }
-      };
-      bindHeader();
-
-      if (btnClose && popover) {
-        btnClose.onclick = () => {
-          popover.style.display = "none";
-        };
+    togglePopover: function () {
+      let popover = document.getElementById("pomoPopoverDropdown");
+      if (!popover) {
+        this.createDOM();
+        popover = document.getElementById("pomoPopoverDropdown");
       }
+      if (!popover) return;
 
-      // Đóng khi click ra ngoài
-      document.addEventListener("click", (e) => {
-        if (!popover || popover.style.display === "none") return;
-        const hBtn = document.getElementById("headerPomoBtn");
-        if (popover.contains(e.target) || (hBtn && hBtn.contains(e.target))) return;
-        popover.style.display = "none";
-      });
-
-      // Slider Focus
-      if (sFocus) {
-        sFocus.oninput = (e) => {
-          this.focusMin = Number(e.target.value);
-          const badge = document.getElementById("pomoPopFocusBadge");
-          if (badge) badge.textContent = this.focusMin + " phút";
-          if (this.phase === "idle" && !this.isRunning) {
-            this.remainingSeconds = this.focusMin * 60;
-          }
-          this.saveState();
-          this.updateUI();
-        };
-      }
-
-      // Slider Break
-      if (sBreak) {
-        sBreak.oninput = (e) => {
-          this.breakMin = Number(e.target.value);
-          const badge = document.getElementById("pomoPopBreakBadge");
-          if (badge) badge.textContent = this.breakMin + " phút";
-          this.saveState();
-          this.updateUI();
-        };
-      }
-
-      // Slider Cycles
-      if (sCycles) {
-        sCycles.oninput = (e) => {
-          this.totalCycles = Number(e.target.value);
-          const badge = document.getElementById("pomoPopCyclesBadge");
-          if (badge) badge.textContent = this.totalCycles + " chu kỳ";
-          this.saveState();
-          this.updateUI();
-        };
-      }
-
-      // Nút Bắt đầu / Tạm dừng
-      if (btnStart) {
-        btnStart.onclick = () => {
-          if (this.isRunning) {
-            this.pause();
-          } else {
-            this.start();
-          }
-        };
-      }
-
-      // Nút Reset
-      if (btnReset) {
-        btnReset.onclick = () => {
-          this.reset();
-        };
+      const isVisible = popover.style.display === "block";
+      if (isVisible) {
+        this.closePopover();
+      } else {
+        this.openPopover();
       }
     },
 
+    openPopover: function () {
+      ensureAudioContext();
+      let popover = document.getElementById("pomoPopoverDropdown");
+      if (!popover) {
+        this.createDOM();
+        popover = document.getElementById("pomoPopoverDropdown");
+      }
+      if (!popover) return;
+
+      // MUTUAL EXCLUSION: Đóng User dropdown và Mobile drawer nếu đang mở
+      const userDd = document.getElementById("userDropdown");
+      if (userDd) userDd.classList.remove("open");
+      const userTrigger = document.getElementById("userTrigger");
+      if (userTrigger) userTrigger.setAttribute("aria-expanded", "false");
+      const nav = document.getElementById("mainNav");
+      if (nav) nav.classList.remove("nav-open");
+      const mobileBtn = document.getElementById("mobileMenuBtn");
+      if (mobileBtn) {
+        mobileBtn.classList.remove("is-open");
+        mobileBtn.setAttribute("aria-expanded", "false");
+      }
+      document.body.classList.remove("menu-locked");
+
+      popover.style.display = "block";
+      this.positionPopover();
+      this.updateUI();
+    },
+
+    closePopover: function () {
+      const popover = document.getElementById("pomoPopoverDropdown");
+      if (popover) {
+        popover.style.display = "none";
+      }
+    },
+
+    positionPopover: function () {
+      const popover = document.getElementById("pomoPopoverDropdown");
+      const hBtn = document.getElementById("headerPomoBtn");
+      if (!popover) return;
+
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile) {
+        // Định vị an toàn trên điện thoại
+        popover.style.top = "64px";
+        popover.style.right = "12px";
+        popover.style.left = "auto";
+        popover.style.width = "min(calc(100vw - 24px), 320px)";
+        popover.style.maxWidth = "calc(100vw - 24px)";
+      } else if (hBtn) {
+        const rect = hBtn.getBoundingClientRect();
+        popover.style.top = (rect.bottom + 8) + "px";
+        const rightOffset = window.innerWidth - rect.right;
+        const maxRight = window.innerWidth - 310;
+        popover.style.right = Math.min(Math.max(12, rightOffset), Math.max(12, maxRight)) + "px";
+        popover.style.left = "auto";
+        popover.style.width = "290px";
+      }
+    },
+
+    bindEvents: function () {
+      const that = this;
+
+      // SỰ KIỆN TOÀN CỤC: Bấm vào #headerPomoBtn luôn kích hoạt (ngay cả khi header re-render)
+      document.addEventListener("click", function (e) {
+        const hBtn = e.target.closest("#headerPomoBtn");
+        if (hBtn) {
+          e.preventDefault();
+          e.stopPropagation();
+          that.togglePopover();
+          return;
+        }
+
+        const closeBtn = e.target.closest("#pomoPopClose");
+        if (closeBtn) {
+          e.preventDefault();
+          that.closePopover();
+          return;
+        }
+
+        // Bấm ra ngoài popover -> đóng popover
+        const popover = document.getElementById("pomoPopoverDropdown");
+        if (popover && popover.style.display === "block") {
+          if (!popover.contains(e.target)) {
+            that.closePopover();
+          }
+        }
+      });
+
+      // Reposition khi resize màn hình hoặc xoay điện thoại
+      window.addEventListener("resize", function () {
+        const popover = document.getElementById("pomoPopoverDropdown");
+        if (popover && popover.style.display === "block") {
+          that.positionPopover();
+        }
+      });
+
+      // Slider Focus / Break / Cycles qua Event Delegation
+      document.addEventListener("input", function (e) {
+        if (e.target.id === "pomoPopFocusRange") {
+          that.focusMin = Number(e.target.value);
+          const badge = document.getElementById("pomoPopFocusBadge");
+          if (badge) badge.textContent = that.focusMin + " phút";
+          if (!that.isRunning && (that.phase === "idle" || that.phase === "completed")) {
+            that.remainingSeconds = that.focusMin * 60;
+          }
+          that.saveState();
+          that.updateUI();
+        } else if (e.target.id === "pomoPopBreakRange") {
+          that.breakMin = Number(e.target.value);
+          const badge = document.getElementById("pomoPopBreakBadge");
+          if (badge) badge.textContent = that.breakMin + " phút";
+          if (!that.isRunning && that.phase === "break") {
+            that.remainingSeconds = that.breakMin * 60;
+          }
+          that.saveState();
+          that.updateUI();
+        } else if (e.target.id === "pomoPopCyclesRange") {
+          that.totalCycles = Number(e.target.value);
+          const badge = document.getElementById("pomoPopCyclesBadge");
+          if (badge) badge.textContent = that.totalCycles + " chu kỳ";
+          that.saveState();
+          that.updateUI();
+        }
+      });
+
+      // Nút Start / Pause / Reset qua Event Delegation
+      document.addEventListener("click", function (e) {
+        if (e.target.id === "pomoPopStart" || e.target.closest("#pomoPopStart")) {
+          e.preventDefault();
+          ensureAudioContext();
+          if (that.isRunning) {
+            that.pause();
+          } else {
+            that.start();
+          }
+        } else if (e.target.id === "pomoPopReset" || e.target.closest("#pomoPopReset")) {
+          e.preventDefault();
+          that.reset();
+        }
+      });
+    },
+
     startTicker: function () {
-      clearInterval(this.timerId);
+      if (this.timerId) {
+        clearInterval(this.timerId);
+        this.timerId = null;
+      }
       this.timerId = setInterval(() => this.tick(), 1000);
     },
 
     start: function () {
-      if (this.phase === "idle") {
+      ensureAudioContext();
+      if (this.phase === "idle" || this.phase === "completed") {
         this.phase = "focus";
         this.remainingSeconds = this.focusMin * 60;
       }
@@ -353,14 +416,20 @@
         this.remainingSeconds = Math.max(0, Math.round((this.targetEndTime - Date.now()) / 1000));
       }
       this.targetEndTime = null;
-      clearInterval(this.timerId);
+      if (this.timerId) {
+        clearInterval(this.timerId);
+        this.timerId = null;
+      }
       this.saveState();
       this.updateUI();
     },
 
     reset: function () {
       this.isRunning = false;
-      clearInterval(this.timerId);
+      if (this.timerId) {
+        clearInterval(this.timerId);
+        this.timerId = null;
+      }
       this.phase = "idle";
       this.currentCycle = 1;
       this.remainingSeconds = this.focusMin * 60;
@@ -396,20 +465,35 @@
         this.phase = "completed";
         this.isRunning = false;
         this.targetEndTime = null;
-        clearInterval(this.timerId);
-        alert("🎉 Chúc mừng bạn đã hoàn thành xuất sắc toàn bộ " + this.totalCycles + " chu kỳ Pomodoro!");
+        if (this.timerId) {
+          clearInterval(this.timerId);
+          this.timerId = null;
+        }
+
+        // Thông báo hoàn thành tinh tế & cộng XP
+        if (typeof window.toast === "function") {
+          window.toast("🎉 Xuất sắc! Bạn đã hoàn thành toàn bộ " + this.totalCycles + " chu kỳ Pomodoro (+25 XP)!");
+        }
         if (typeof window.XP !== "undefined" && window.XP.add) {
           window.XP.add(25);
         }
-        this.reset();
+
+        this.remainingSeconds = this.focusMin * 60;
+        this.saveState();
+        this.updateUI();
         return;
       }
 
-      // Sang giờ nghỉ
+      // Sang giờ nghỉ giải lao
       this.phase = "break";
       this.remainingSeconds = this.breakMin * 60;
       this.targetEndTime = Date.now() + (this.remainingSeconds * 1000);
       this.isRunning = true;
+
+      if (typeof window.toast === "function") {
+        window.toast("☕ Hết giờ tập trung! Bắt đầu nghỉ giải lao (" + this.breakMin + " phút).");
+      }
+
       this.saveState();
       this.startTicker();
       this.updateUI();
@@ -423,6 +507,11 @@
       this.remainingSeconds = this.focusMin * 60;
       this.targetEndTime = Date.now() + (this.remainingSeconds * 1000);
       this.isRunning = true;
+
+      if (typeof window.toast === "function") {
+        window.toast("🧠 Hết giờ nghỉ! Bắt đầu chu kỳ tập trung " + this.currentCycle + " / " + this.totalCycles + ".");
+      }
+
       this.saveState();
       this.startTicker();
       this.updateUI();
@@ -437,7 +526,7 @@
     updateUI: function () {
       const timeStr = this.formatTime(this.remainingSeconds);
 
-      // 1. Kiểm tra đăng nhập: CHỈ HIỂN THỊ POMODORO KHI ĐÃ ĐĂNG NHẬP
+      // 1. Kiểm tra đăng nhập
       const user = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
       const hBtn = document.getElementById("headerPomoBtn");
       const popover = document.getElementById("pomoPopoverDropdown");
@@ -447,7 +536,7 @@
         hBtn.classList.toggle("is-running", this.isRunning && this.phase === "focus");
         hBtn.classList.toggle("is-break", this.isRunning && this.phase === "break");
         hBtn.title = this.isRunning
-          ? `Đang chạy: ${timeStr} (${this.phase === "break" ? "Nghỉ" : "Tập trung"}) · Bấm để xem`
+          ? `Đang chạy: ${timeStr} (${this.phase === "break" ? "Nghỉ giải lao" : "Tập trung"}) · Chu kỳ ${this.currentCycle}/${this.totalCycles}`
           : `Đồng hồ Pomodoro · Bấm để mở`;
       }
 
@@ -471,6 +560,21 @@
       if (popTime) popTime.textContent = timeStr;
       if (popCycle) popCycle.textContent = `Chu kỳ ${this.currentCycle} / ${this.totalCycles}`;
 
+      // Đồng bộ Sliders & Badges
+      const sFocus = document.getElementById("pomoPopFocusRange");
+      const bFocus = document.getElementById("pomoPopFocusBadge");
+      const sBreak = document.getElementById("pomoPopBreakRange");
+      const bBreak = document.getElementById("pomoPopBreakBadge");
+      const sCycles = document.getElementById("pomoPopCyclesRange");
+      const bCycles = document.getElementById("pomoPopCyclesBadge");
+
+      if (sFocus && document.activeElement !== sFocus) sFocus.value = this.focusMin;
+      if (bFocus) bFocus.textContent = this.focusMin + " phút";
+      if (sBreak && document.activeElement !== sBreak) sBreak.value = this.breakMin;
+      if (bBreak) bBreak.textContent = this.breakMin + " phút";
+      if (sCycles && document.activeElement !== sCycles) sCycles.value = this.totalCycles;
+      if (bCycles) bCycles.textContent = this.totalCycles + " chu kỳ";
+
       if (popPhase) {
         if (this.phase === "focus") {
           popPhase.textContent = "🧠 ĐANG TẬP TRUNG";
@@ -480,6 +584,10 @@
           popPhase.textContent = "☕ NGHỈ GIẢI LAO";
           popPhase.style.background = "#dcfce7";
           popPhase.style.color = "#16a34a";
+        } else if (this.phase === "completed") {
+          popPhase.textContent = "🏆 HOÀN THÀNH XUẤT SẮC";
+          popPhase.style.background = "#fef3c7";
+          popPhase.style.color = "#b45309";
         } else {
           popPhase.textContent = "SẴN SÀNG";
           popPhase.style.background = "#f1f5f9";
@@ -492,16 +600,29 @@
           btnStart.textContent = "Tạm dừng";
           btnStart.style.background = "#ea580c";
           btnStart.style.borderColor = "#ea580c";
+        } else if (this.phase === "focus") {
+          btnStart.textContent = "Tiếp tục học";
+          btnStart.style.background = "#16a34a";
+          btnStart.style.borderColor = "#16a34a";
+        } else if (this.phase === "break") {
+          btnStart.textContent = "Tiếp tục nghỉ";
+          btnStart.style.background = "#0284c7";
+          btnStart.style.borderColor = "#0284c7";
+        } else if (this.phase === "completed") {
+          btnStart.textContent = "Bắt đầu lại";
+          btnStart.style.background = "#c52233";
+          btnStart.style.borderColor = "#c52233";
         } else {
-          btnStart.textContent = (this.phase === "focus" || this.phase === "break") ? "Tiếp tục" : "Bắt đầu học";
+          btnStart.textContent = "Bắt đầu học";
           btnStart.style.background = "#c52233";
           btnStart.style.borderColor = "#c52233";
         }
       }
 
       if (slidersBox) {
-        slidersBox.style.opacity = (this.isRunning || this.phase !== "idle") ? "0.55" : "1";
-        slidersBox.style.pointerEvents = (this.isRunning || this.phase !== "idle") ? "none" : "auto";
+        const disableSliders = this.isRunning || this.phase === "focus" || this.phase === "break";
+        slidersBox.style.opacity = disableSliders ? "0.55" : "1";
+        slidersBox.style.pointerEvents = disableSliders ? "none" : "auto";
       }
 
       // 4. Tiêu đề Tab trình duyệt

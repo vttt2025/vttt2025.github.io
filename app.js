@@ -1865,6 +1865,9 @@ function renderUserArea() {
   // Khi đã đăng nhập: Hiển thị Pomodoro & tiến độ index
   const pomoBtn = document.getElementById("headerPomoBtn");
   if (pomoBtn) pomoBtn.style.display = "inline-flex";
+  if (window.RusiPomodoro && typeof window.RusiPomodoro.updateUI === "function") {
+    window.RusiPomodoro.updateUI();
+  }
   renderIndexProgressIfLoggedIn(user);
 
   // 2. KHI ĐÃ ĐĂNG NHẬP: Avatar + Tên + Nút Nâng cấp PRO / Huy hiệu PRO

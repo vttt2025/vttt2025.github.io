@@ -21014,3 +21014,64 @@ body.has-bottom-bar .rusika-floating-widget {
   background: rgba(255, 255, 255, 0.12) !important;
   border-color: rgba(255, 255, 255, 0.25) !important;
 }
+
+/* =====================================================================
+ * DARK MODE CHO POMODORO POPOVER & HEADER CHIP
+ * ===================================================================== */
+[data-theme="dark"] .pomo-popover-dropdown {
+  background: #0f1f38 !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4) !important;
+}
+
+[data-theme="dark"] .pomo-pop-header {
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .pomo-pop-title {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .pomo-pop-close {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .pomo-pop-close:hover {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .pomo-pop-slider-info {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .pomo-pop-slider-info b {
+  color: #38bdf8 !important;
+}
+
+[data-theme="dark"] .pomo-pop-range {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+[data-theme="dark"] .pomo-pop-controls {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+[data-theme="dark"] .pomo-pop-time {
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .pomo-pop-cycle-text {
+  color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .header-pomo-chip {
+  background: rgba(16, 42, 76, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .header-pomo-chip .header-pomo-time {
+  color: #ffffff !important;
+}
