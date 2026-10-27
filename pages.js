@@ -375,13 +375,22 @@ window.openAddToJarModal = function(wordData) {
       toast(`Đã lưu «${ru}» vào «${jar.name}» thành công!`);
     }
 
-    if (typeof STORE !== "undefined") {
+        if (typeof STORE !== "undefined") {
       STORE.set("custom_jars", currentCustomJars);
     }
     playQuizletSound("correct");
     modal.remove();
 
-    if (typeof window.refreshVocabViews === "function") {
+    // Nếu người dùng đang học trong một lọ (in-workspace):
+    // Giữ nguyên giao diện học tập hiện tại, tuyệt đối KHÔNG đóng lọ hay chuyển tab!
+    const detailHost = document.getElementById("jarDetailHost");
+    const inWorkspace = document.body.classList.contains("in-workspace") || (detailHost && !detailHost.classList.contains("hidden"));
+    if (inWorkspace) {
+      // Nếu từ vừa lưu vào chính lọ hiện đang mở, cập nhật từ mà vẫn giữ nguyên tab hiện tại
+      if (window.currentActiveJarId === jarId && typeof window.refreshActiveWorkspace === "function") {
+        window.refreshActiveWorkspace();
+      }
+    } else if (typeof window.refreshVocabViews === "function") {
       window.refreshVocabViews();
     }
   };
@@ -469,6 +478,15 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
   const isCustomJar = Boolean(options.isCustomJar);
   const onWordListChange = options.onWordListChange;
 
+  const getWordType = (w) => {
+    if (!w) return "";
+    const parts = [];
+    if (w.pos) parts.push(w.pos);
+    if (w.gender) parts.push(w.gender);
+    if (parts.length > 0) return parts.join(", ");
+    return w.note || "";
+  };
+
   const words = (rawWords || []).map((w, idx) => ({
     id: w.id || w.vocab_id || "w-" + idx,
     ru: (w.ru || "").trim(),
@@ -499,7 +517,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     `;
     const btnAdd = container.querySelector("#btnEmptyAddWord");
     if (btnAdd) {
-      btnAdd.onclick = () => openAddWordToJarModal(jarId, onWordListChange);
+      btnAdd.onclick = () => openAddWordToJarModal(jarId, () => { if (onWordListChange) onWordListChange(currentMode); });
     }
     return;
   }
@@ -615,7 +633,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           <!-- FRONT FACE (RU) — Chuẩn quốc tế Anki/Quizlet: Từ vựng to rõ, có nút phát âm, ghi chú từ loại & tra 6 cách -->
           <div class="quizlet-card-face quizlet-card-front">
             <div class="qcard-top-row">
-              <span class="qcard-badge" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Nga</span>
               <div class="qcard-actions">
                 <button type="button" class="qcard-btn-addjar" id="qAddJarFront" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 15 }) : ""} <span class="btn-text">+ Lưu</span></button>
               </div>
@@ -623,7 +640,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
             <div class="qcard-main">
               <div class="qcard-word ru">${esc(currentWord.stress || currentWord.ru)}</div>
-              ${currentWord.note ? `<div class="qcard-note-pill">${esc(currentWord.note)}</div>` : ""}
+              ${getWordType(currentWord) ? `<div class="qcard-pos-line">(${esc(getWordType(currentWord))})</div>` : ""}
               <button type="button" class="qcard-audio-btn" id="qAudioFront" title="Phát âm tiếng Nga">
                 ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 20 }) : ""}
               </button>
@@ -634,11 +651,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           <!-- BACK FACE (VI) — ĐẦY ĐỦ NỘI DUNG THEO PROJECT_SPEC -->
           <div class="quizlet-card-face quizlet-card-back">
             <div class="qcard-top-row">
-              <span class="qcard-badge vi" style="display:inline-flex;align-items:center;gap:4px">
-                ${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Việt
-                ${currentWord.pos ? `<span class="qcard-pos-badge">${esc(currentWord.pos)}</span>` : ""}
-                ${currentWord.gender ? `<span class="qcard-gender-badge">${esc(currentWord.gender)}</span>` : ""}
-              </span>
               <div class="qcard-actions">
                 <button type="button" class="qcard-btn-addjar" id="qAddJarBack" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 15 }) : ""} <span class="btn-text">+ Lưu</span></button>
               </div>
@@ -653,9 +665,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 <div class="qcard-ex-box">
                   <div class="qcard-ex-header">
                     <span class="qcard-ex-label">Ví dụ ngữ cảnh</span>
-                    <button type="button" class="qcard-ex-audio-btn" id="qAudioBackEx" title="Nghe câu ví dụ">
-                      ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""} <span class="btn-text">Nghe</span>
-                    </button>
                   </div>
                   <div class="qcard-ex-text ru">«${esc(currentWord.ex)}»</div>
                   ${currentWord.ex_vi ? `<div class="qcard-ex-trans">${esc(currentWord.ex_vi)}</div>` : ""}
@@ -789,13 +798,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       e.stopPropagation();
       speak(currentWord.ru);
     };
-    const audioEx = pane.querySelector("#qAudioBackEx");
-    if (audioEx) {
-      audioEx.onclick = (e) => {
-        e.stopPropagation();
-        speak(currentWord.ex);
-      };
-    }
 
     // Add to jar
     const addJarCurrent = (e) => {
@@ -942,7 +944,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           <button type="button" class="btn btn-soft btn-sm" id="btnLearnAudio" style="margin-top:6px;display:inline-flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""} Nghe phát âm</button>
         </div>
 
-        <p style="font-size:0.9rem;font-weight:700;color:var(--muted);margin-bottom:12px">Chọn nghĩa tiếng Việt chính xác (Phím 1-4):</p>
         <div class="learn-options-grid" id="learnOptions">
           ${optionsList.map((opt, i) => `
             <button type="button" class="learn-opt-btn" data-opt="${esc(opt)}" data-key="${i + 1}">
@@ -1178,7 +1179,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         <div class="match-header">
           <div>
             <div style="font-size:0.85rem;font-weight:700;color:var(--muted)">GHÉP THẺ QUIZLET</div>
-            <div style="font-size:0.9rem;font-weight:600">Ghép từ tiếng Nga với nghĩa tiếng Việt tương ứng</div>
           </div>
           <div class="match-timer" id="matchTimer">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 16 }) : ""} 0.0s</div>
         </div>
@@ -1465,15 +1465,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             <div class="dau-vocab-preview-card ${previewFlipped ? "flipped" : ""}" id="dauPreviewCard">
               <!-- FRONT FACE -->
               <div class="dau-preview-face dau-preview-front">
-                <div class="dau-preview-top">
-                  <span class="dau-preview-tag" style="display:inline-flex;align-items:center;gap:4px">
-                    ${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Nga
-                    ${curPreviewWord.pos ? `<span class="dau-badge-pill pos">${esc(curPreviewWord.pos)}</span>` : ""}
-                    ${curPreviewWord.gender ? `<span class="dau-badge-pill gender">${esc(curPreviewWord.gender)}</span>` : ""}
-                  </span>
-                </div>
                 <div class="dau-preview-body">
                   <div class="dau-preview-word ru">${esc(curPreviewWord.stress || curPreviewWord.ru)}</div>
+                  ${getWordType(curPreviewWord) ? `<div class="dau-preview-pos-line">(${esc(getWordType(curPreviewWord))})</div>` : ""}
                   <button type="button" class="dau-preview-audio-btn" id="btnPreviewAudio" title="Phát âm tiếng Nga">
                     ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 18 }) : ""}
                   </button>
@@ -1483,9 +1477,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               <!-- BACK FACE (ĐẦY ĐỦ NỘI DUNG THEO PROJECT_SPEC) -->
               <div class="dau-preview-face dau-preview-back">
                 <div class="dau-preview-top">
-                  <span class="dau-preview-tag vi" style="display:inline-flex;align-items:center;gap:4px">
-                    ${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Việt
-                  </span>
                   <div class="dau-preview-actions">
                     <button type="button" class="dau-preview-audio-btn" id="btnPreviewAudioBack" title="Phát âm tiếng Nga">
                       ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 18 }) : ""}
@@ -1603,10 +1594,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                         <span class="dau-row-index">#${idx + 1}</span>
                         <span class="dau-row-ru ru">${esc(displayWord)}</span>
                       </div>
-                      <div class="dau-row-tags">
-                        ${w.gender ? `<span class="dau-badge-pill">${esc(w.gender)}</span>` : ""}
-                        ${w.pos ? `<span class="dau-badge-pill pos">${esc(w.pos)}</span>` : ""}
-                      </div>
                     </div>
 
                     <!-- CỘT 2 (GIỮA): NGHĨA TIẾNG VIỆT & CÂU VÍ DỤ SONG NGỮ, CỤM ĐỘNG TỪ, QUẢN CÁCH, ĐỒNG/TRÁI NGHĨA, GHI CHÚ -->
@@ -1616,9 +1603,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                         <div class="dau-row-ex-wrap">
                           <div class="dau-row-ex-line">
                             <span class="dau-row-ex ru">«${esc(w.ex)}»</span>
-                            <button type="button" class="btn-audio-mini btn-speak-ex" data-ru="${esc(w.ex.replace(/\(.*?\)/g, "").trim())}" title="Nghe câu ví dụ">
-                              ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""}
-                            </button>
                           </div>
                           ${w.ex_vi ? `<div class="dau-row-ex-vi">${esc(w.ex_vi)}</div>` : ""}
                         </div>
@@ -1838,14 +1822,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         };
       });
 
-      // Example sentence audio
-      pane.querySelectorAll(".btn-speak-ex").forEach((b) => {
-        b.onclick = (e) => {
-          e.stopPropagation();
-          speak(b.dataset.ru);
-        };
-      });
-
       // Sync preview flashcard button
       pane.querySelectorAll(".btn-sync-preview").forEach((b) => {
         b.onclick = (e) => {
@@ -1921,7 +1897,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 toast(`Đã xóa từ «${wordRu}» khỏi lọ!`);
                 words = target.words;
                 previewWords = [...words];
-                if (onWordListChange) onWordListChange();
+                if (onWordListChange) onWordListChange(currentMode);
                 renderListUI();
               }
             }
@@ -2305,7 +2281,7 @@ function initVocabPage() {
               <div class="page-title-box">
                 <h1 class="page-main-hero-title">
                   CHINH PHỤC 5.000 TỪ TIẾNG NGA<br />
-                  <span>theo Chủ Đề &amp; Chuỗi Hành Động.</span>
+                  <span>Học Chủ Đề &amp; Chuỗi Hành Động</span>
                 </h1>
               </div>
             </div>
@@ -2429,8 +2405,7 @@ function initVocabPage() {
               ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 20 }) : `<svg aria-hidden="true" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24"><path d="M7 3h10M8 3v4L6 9v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9l-2-2V3"></path><path d="M6 11h12"></path></svg>`}
             </span>
             <div>
-              <strong class="voc-progress-figma-title">Tiến Độ Học Ôn</strong>
-              <small class="voc-progress-figma-sub">Lặp lại ngắt quãng SM-2</small>
+              <strong class="voc-progress-figma-title">Tiến Độ</strong>
             </div>
           </div>
 
@@ -3009,7 +2984,7 @@ const showTopicArticle = (jarId) => {
       if (isCustom) {
         const btnAdd = el("#btnAddWordCustom");
         if (btnAdd) {
-          btnAdd.onclick = () => openAddWordToJarModal(jar.id, () => showJarDetail(jar.id, "list"));
+          btnAdd.onclick = () => openAddWordToJarModal(jar.id, () => showJarDetail(jar.id, getActiveWorkspaceMode()));
         }
         const btnDel = el("#btnDeleteCustomJar");
         if (btnDel) {
@@ -3209,7 +3184,15 @@ const showTopicArticle = (jarId) => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  window.refreshVocabViews = renderVocabHub;
+  window.refreshVocabViews = () => {
+    const detail = el("#jarDetailHost");
+    const inWorkspace = document.body.classList.contains("in-workspace") || (detail && !detail.classList.contains("hidden"));
+    if (inWorkspace) {
+      // Đang học trong một Lọ: Tuyệt đối KHÔNG đóng lọ hay reset view/tab
+      return;
+    }
+    renderVocabHub();
+  };
 
   // Lắng nghe sự kiện đồng bộ tiến độ thời gian thực để cập nhật thanh tiến độ
   window.addEventListener("trki:progress-updated", () => {
@@ -3408,7 +3391,7 @@ function initListeningPage() {
               <div class="page-title-box">
                 <h1 class="page-main-hero-title">
                   CHINH PHỤC KỸ NĂNG NGHE<br />
-                  <span>giọng đọc chuẩn Nga &amp; Video tương tác</span>
+                  <span>YouTube Shadowing, Nghe hiểu, Nghe chép chính tả</span>
                 </h1>
               </div>
             </div>
@@ -4689,7 +4672,7 @@ function initSpeakingPage() {
               <div class="page-title-box">
                 <h1 class="page-main-hero-title">
                   LUYỆN NÓI SHADOWING<br />
-                  <span>phản xạ giao tiếp &amp; AI sửa phát âm</span>
+                  <span>Shadowing, AI chấm điểm, phân tích phát âm</span>
                 </h1>
               </div>
             </div>
@@ -5077,7 +5060,7 @@ function initWritingPage() {
               <div class="page-title-box">
                 <h1 class="page-main-hero-title">
                   LUYỆN VIẾT CHUẨN TRKI<br />
-                  <span>tả tranh, email &amp; AI chữa ngữ pháp</span>
+                  <span>Tả tranh, viết tóm tắt, viết theo chủ đề</span>
                 </h1>
               </div>
             </div>
@@ -5584,8 +5567,8 @@ function initMockTestPage() {
             <div class="vocabulary-heading">
               <div class="page-title-box">
                 <h1 class="page-main-hero-title">
-                  PHÒNG THI MÔ PHỎNG CHUẨN TRKI<br />
-                  <span>chuẩn CEFR</span>
+                  THI THỬ TRKI<br />
+                  <span>Mô phỏng đề thi A1, A2, B1, B2, C1, C2 chuẩn CEFR</span>
                 </h1>
               </div>
             </div>

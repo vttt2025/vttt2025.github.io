@@ -2103,7 +2103,7 @@ function getSynchronizedVocabStats() {
 window.getSynchronizedVocabStats = getSynchronizedVocabStats;
 
 /**
- * Hiển thị thẻ Tiến Độ Học Ôn trên trang index.html khi người dùng đã đăng nhập thành công (Chuẩn Spec Mục 1).
+ * Hiển thị thẻ Tiến độ trên trang index.html khi người dùng đã đăng nhập thành công (Chuẩn Spec Mục 1).
  */
 function renderIndexProgressIfLoggedIn(user) {
   const host = document.getElementById("indexUserProgressHost");

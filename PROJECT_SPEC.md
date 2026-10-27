@@ -69,7 +69,7 @@
   * **Kích hoạt tự động**: Hiển thị trên `vocabulary.html`.
   * **Thiết kế kính mờ bo góc 20px, hiệu ứng hover nhấc nổi -5px và viền sáng xanh**:
     - kích thước bề rộng ngang bằng khung trang (`width: min(100% - 48px, 1200px)`), chiều cao tối ưu nhỏ gọn (~80px - 90px).
-    - Giữ nguyên vẹn 100% câu chữ chuẩn gốc: Tiêu đề *Tiến Độ Học Ôn*.
+    - Giữ nguyên vẹn 100% câu chữ chuẩn gốc: Tiêu đề *Tiến Độ*.
     - 4 ô chỉ số thống kê từ vựng cốt lõi: Đã thuộc (`mastered`), Cần ôn tập (`dueCards`), Từ mới (`newCount`), Chuỗi ngày (icon `flame-streak`), kèm nút CTA `[Ôn tập ngay →]`.
     - Tương thích mượt mà 3 phiên bản thiết bị: Dàn hàng ngang trên Desktop; 2 hàng co giãn linh hoạt trên Tablet; xếp dọc gọn gàng trên Mobile với tap target chuẩn $\ge 44px$, không phát sinh cuộn ngang.
 

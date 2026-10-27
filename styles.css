@@ -8762,13 +8762,13 @@ footer {
 
 .site-footer .footer-inner,
 footer .footer-inner {
-  display: grid;
-  grid-template-columns: 1fr 1.5fr 1fr;
-  align-items: center;
-  gap: 32px;
-  width: 100%;
-  max-width: 1260px;
-  margin: 0 auto;
+  display: grid !important;
+  grid-template-columns: auto 1fr !important;
+  align-items: center !important;
+  gap: 20px 32px !important;
+  width: 100% !important;
+  max-width: 1240px !important;
+  margin: 0 auto !important;
 }
 
 .footer-brand {
@@ -8791,30 +8791,46 @@ footer .footer-inner {
   color: #38bdf8 !important;
 }
 
+.footer-col-brand {
+  grid-column: 1 / 2 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
 .footer-desc,
 footer > p {
+  grid-column: 2 / 3 !important;
   color: #94a3b8 !important;
   font-size: 13px !important;
   line-height: 1.6 !important;
-  text-align: center !important;
+  text-align: right !important;
   margin: 0 !important;
 }
 
+/* Các liên kết chuyên mục chân trang CÙNG 1 DÒNG CHUẨN ĐẸP */
 .footer-links {
+  grid-column: 1 / -1 !important;
   display: flex !important;
-  justify-content: flex-end !important;
+  flex-direction: row !important;
+  justify-content: center !important;
   align-items: center !important;
-  gap: 18px !important;
-  flex-wrap: wrap !important;
+  gap: 28px !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  width: 100% !important;
+  padding: 16px 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-sizing: border-box !important;
 }
 
 .footer-links a {
   color: #cbd5e1 !important;
-  font-size: 13px !important;
+  font-size: 13.5px !important;
   font-weight: 600 !important;
   text-decoration: none !important;
+  white-space: nowrap !important;
   transition: color 0.16s ease, transform 0.16s ease !important;
-  padding: 4px 2px !important;
+  padding: 4px 6px !important;
 }
 
 .footer-links a:hover {
@@ -8829,46 +8845,83 @@ footer > small {
   text-align: center !important;
   border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
   grid-column: 1 / -1 !important;
-  padding-top: 24px !important;
+  padding-top: 20px !important;
   display: block !important;
+  margin: 0 !important;
 }
 
 /* Footer Responsive Tối ưu Mobile & Tablet */
 @media (max-width: 960px) {
   .site-footer,
   footer {
-    padding: 40px 20px 24px !important;
+    padding: 36px 20px 20px !important;
   }
   .site-footer .footer-inner,
   footer .footer-inner {
     grid-template-columns: 1fr !important;
     text-align: center !important;
     justify-items: center !important;
-    gap: 22px !important;
+    gap: 16px !important;
   }
   .footer-col-brand {
+    grid-column: 1 / -1 !important;
     display: flex !important;
     justify-content: center !important;
     width: 100% !important;
   }
+  .footer-desc {
+    grid-column: 1 / -1 !important;
+    text-align: center !important;
+    max-width: 600px !important;
+    margin: 0 auto !important;
+  }
   .footer-links {
+    grid-column: 1 / -1 !important;
     justify-content: center !important;
-    gap: 14px 20px !important;
+    gap: 18px !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+  .footer-links::-webkit-scrollbar {
+    display: none !important;
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .site-footer,
   footer {
-    padding: 32px 16px 20px !important;
+    padding: 28px 12px 18px !important;
   }
   .footer-links {
-    gap: 10px 16px !important;
+    gap: 12px !important;
+    justify-content: center !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    padding: 12px 2px !important;
+    width: 100% !important;
   }
   .footer-links a {
-    font-size: 12.5px !important;
+    font-size: 13px !important;
+    padding: 4px 2px !important;
   }
   .footer-desc {
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 400px) {
+  .footer-links {
+    gap: 10px !important;
+    justify-content: flex-start !important;
+    padding: 10px 4px !important;
+  }
+  .footer-links a {
     font-size: 12px !important;
   }
 }
@@ -12645,7 +12698,7 @@ img, video, iframe {
     grid-template-columns: 1fr;
   }
   .quizlet-card {
-    height: 300px;
+    height: auto !important;
   }
   .qcard-word {
     font-size: 1.8rem;
@@ -15156,8 +15209,8 @@ body.in-workspace .quizlet-card-container {
 }
 
 body.in-workspace .quizlet-card {
-  min-height: 360px;
-  height: 380px;
+  min-height: 320px !important;
+  height: auto !important;
 }
 
 body.in-workspace .qcard-word.ru {
@@ -19292,11 +19345,11 @@ html, body {
 /* --- 8. FLASHCARD QUIZLET & TỪ VỰNG (vocabulary.html) --- */
 @media (max-width: 768px) {
   body.in-workspace .quizlet-card {
-    min-height: 260px !important;
-    height: 290px !important;
-    border-radius: 16px !important;
-    padding: 20px 14px !important;
-  }
+  min-height: 260px !important;
+  height: auto !important;
+  border-radius: 16px !important;
+  padding: 0 !important;
+}
   .quizlet-card-ru {
     font-size: 1.8rem !important;
   }
@@ -19971,25 +20024,8 @@ body.has-bottom-bar .rusika-floating-widget {
   color: var(--muted, #64748b) !important;
 }
 
-.qcard-ex-audio-btn {
-  appearance: none !important;
-  background: #ffffff !important;
-  border: 1px solid var(--border, #cbd5e1) !important;
-  color: var(--primary, #1757a6) !important;
-  font-size: 0.74rem !important;
-  font-weight: 700 !important;
-  border-radius: 6px !important;
-  padding: 2px 8px !important;
-  cursor: pointer !important;
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  transition: all 0.15s ease !important;
-}
-.qcard-ex-audio-btn:hover {
-  background: var(--primary-soft, #eff6ff) !important;
-  border-color: var(--primary, #1757a6) !important;
-}
+.qcard-ex-audio-btn { display: none !important; }
+.qcard-ex-audio-btn:hover { display: none !important; }
 
 .qcard-ex-text {
   font-size: 0.95rem !important;
@@ -21693,29 +21729,11 @@ body.has-bottom-bar .rusika-floating-widget {
   background: rgba(16, 185, 129, 0.03);
 }
 
-.dau-badge-pill {
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 6px;
-  background: rgba(23, 87, 166, 0.08);
-  color: var(--primary);
-  border: 1px solid rgba(23, 87, 166, 0.15);
-  display: inline-flex;
-  align-items: center;
-}
+.dau-badge-pill { display: none !important; }
 
-.dau-badge-pill.pos {
-  background: #f1f5f9;
-  color: #475569;
-  border-color: #cbd5e1;
-}
+.dau-badge-pill.pos { display: none !important; }
 
-[data-theme="dark"] .dau-badge-pill.pos {
-  background: #1e293b;
-  color: #94a3b8;
-  border-color: #334155;
-}
+[data-theme="dark"] .dau-badge-pill.pos { display: none !important; }
 
 .btn-expand-card {
   display: none !important;
@@ -22853,5 +22871,169 @@ body.has-bottom-bar .rusika-floating-widget {
   }
   .dau-vocab-pills-wrap::-webkit-scrollbar {
     display: none !important;
+  }
+}
+
+.btn-speak-ex { display: none !important; }
+
+/* =====================================================================
+ * TỰ ĐỘNG MỞ RỘNG THẺ FLASHCARD THEO NỘI DUNG CHI TIẾT & (LOẠI TỪ)
+ * ===================================================================== */
+.qcard-badge,
+.dau-preview-tag {
+  display: none !important;
+}
+
+.qcard-top-row,
+.dau-preview-top {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  margin-bottom: 6px !important;
+}
+
+.qcard-pos-line,
+.dau-preview-pos-line {
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+  font-style: italic !important;
+  color: var(--muted, #64748b) !important;
+  margin-top: 4px !important;
+  margin-bottom: 8px !important;
+  line-height: 1.35 !important;
+  text-align: center !important;
+}
+
+[data-theme="dark"] .qcard-pos-line,
+[data-theme="dark"] .dau-preview-pos-line {
+  color: #94a3b8 !important;
+}
+
+.quizlet-card {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: auto !important;
+  min-height: 320px !important;
+  height: auto !important;
+  position: relative !important;
+  transform-style: preserve-3d !important;
+  cursor: pointer !important;
+}
+
+.quizlet-card-face {
+  grid-area: 1 / 1 / 2 / 2 !important;
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 320px !important;
+  align-self: stretch !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  scrollbar-width: none !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  padding: 24px 28px !important;
+}
+
+.quizlet-card-front {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+}
+
+.quizlet-card-back {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  gap: 12px !important;
+}
+
+.quizlet-card-back .qcard-main {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  text-align: left !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  padding: 4px 0 0 0 !important;
+  gap: 12px !important;
+}
+
+.quizlet-card-back .qcard-meaning {
+  text-align: center !important;
+  margin-bottom: 4px !important;
+}
+
+.qcard-ex-box,
+.qcard-details-grid,
+.dau-preview-details-grid {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.dau-vocab-preview-card {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: auto !important;
+  min-height: 200px !important;
+  height: auto !important;
+  position: relative !important;
+  transform-style: preserve-3d !important;
+  perspective: 1000px !important;
+  cursor: pointer !important;
+}
+
+.dau-preview-face {
+  grid-area: 1 / 1 / 2 / 2 !important;
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 200px !important;
+  align-self: stretch !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  scrollbar-width: none !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  padding: 18px 22px !important;
+}
+
+.dau-preview-front {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+.dau-preview-back {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+}
+
+@media (max-width: 640px) {
+  .quizlet-card {
+    min-height: 280px !important;
+    height: auto !important;
+  }
+  .quizlet-card-face {
+    min-height: 280px !important;
+    height: auto !important;
+    padding: 16px 14px !important;
+  }
+  .dau-vocab-preview-card {
+    min-height: 180px !important;
+    height: auto !important;
+  }
+  .dau-preview-face {
+    min-height: 180px !important;
+    height: auto !important;
+    padding: 14px 14px !important;
   }
 }
