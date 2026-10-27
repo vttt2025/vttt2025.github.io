@@ -1841,15 +1841,20 @@ function renderUserArea() {
   if (!host) return;
 
   const user = (window.Auth && window.Auth.user) || STORE.get("auth_user", null);
-  const isPro = Monetization.isPro();
-  const proInfo = Monetization.getProInfo();
+  const isPro = typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : false;
+  const proInfo = typeof Monetization !== "undefined" && typeof Monetization.getProInfo === "function" ? Monetization.getProInfo() : null;
+  const canShowPomo = Boolean(user && isPro);
+
+  // 1. KHI CHƯA ĐĂNG NHẬP HOẶC KHÔNG PHẢI PRO: Ẩn Pomodoro
+  const pomoBtn = document.getElementById("headerPomoBtn");
+  const pomoPop = document.getElementById("pomoPopoverDropdown");
+  if (!canShowPomo) {
+    if (pomoBtn) pomoBtn.style.display = "none";
+    if (pomoPop) pomoPop.style.display = "none";
+  }
 
   // 1. KHI CHƯA ĐĂNG NHẬP: Duy nhất 2 nút Đăng nhập & Đăng ký (ẩn Pomodoro & ẩn tiến độ index)
   if (!user) {
-    const pomoBtn = document.getElementById("headerPomoBtn");
-    if (pomoBtn) pomoBtn.style.display = "none";
-    const pomoPop = document.getElementById("pomoPopoverDropdown");
-    if (pomoPop) pomoPop.style.display = "none";
     renderIndexProgressIfLoggedIn(null);
 
     const pageName = window.location.pathname.split("/").pop() || "index.html";
@@ -1862,10 +1867,9 @@ function renderUserArea() {
     return;
   }
 
-  // Khi đã đăng nhập: Hiển thị Pomodoro & tiến độ index
-  const pomoBtn = document.getElementById("headerPomoBtn");
-  if (pomoBtn) pomoBtn.style.display = "inline-flex";
-  if (window.RusiPomodoro && typeof window.RusiPomodoro.updateUI === "function") {
+  // Khi đã đăng nhập: CHỈ hiển thị Pomodoro nếu là tài khoản PRO
+  if (pomoBtn) pomoBtn.style.display = canShowPomo ? "inline-flex" : "none";
+  if (canShowPomo && window.RusiPomodoro && typeof window.RusiPomodoro.updateUI === "function") {
     window.RusiPomodoro.updateUI();
   }
   renderIndexProgressIfLoggedIn(user);

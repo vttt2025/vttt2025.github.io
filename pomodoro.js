@@ -248,6 +248,10 @@
     },
 
     openPopover: function () {
+      const user = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
+      const isPro = typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : false;
+      if (!user || !isPro) return;
+
       ensureAudioContext();
       let popover = document.getElementById("pomoPopoverDropdown");
       if (!popover) {
@@ -315,6 +319,9 @@
         if (hBtn) {
           e.preventDefault();
           e.stopPropagation();
+          const user = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
+          const isPro = typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : false;
+          if (!user || !isPro) return;
           that.togglePopover();
           return;
         }
@@ -526,13 +533,15 @@
     updateUI: function () {
       const timeStr = this.formatTime(this.remainingSeconds);
 
-      // 1. Kiểm tra đăng nhập
+      // 1. Kiểm tra đăng nhập VÀ PRO: Chỉ hiển thị khi đã đăng nhập và là Pro
       const user = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
+      const isPro = typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : false;
+      const canShow = Boolean(user && isPro);
       const hBtn = document.getElementById("headerPomoBtn");
       const popover = document.getElementById("pomoPopoverDropdown");
 
       if (hBtn) {
-        hBtn.style.display = user ? "inline-flex" : "none";
+        hBtn.style.display = canShow ? "inline-flex" : "none";
         hBtn.classList.toggle("is-running", this.isRunning && this.phase === "focus");
         hBtn.classList.toggle("is-break", this.isRunning && this.phase === "break");
         hBtn.title = this.isRunning
@@ -540,7 +549,7 @@
           : `Đồng hồ Pomodoro · Bấm để mở`;
       }
 
-      if (!user && popover) {
+      if (!canShow && popover) {
         popover.style.display = "none";
       }
 

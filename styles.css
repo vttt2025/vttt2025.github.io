@@ -13893,29 +13893,42 @@ img, video, iframe {
 
 @media (max-width: 480px) {
   .qcard-srs-rating-bar {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
   }
 }
 
 .btn-srs-rate {
-  padding: 8px 6px;
-  border-radius: 8px;
+  padding: 10px 8px;
+  border-radius: 10px;
   border: 1px solid var(--border);
   background: var(--surface);
-  font-size: 0.82rem;
+  font-size: 0.88rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: center;
   align-items: center;
-  gap: 2px;
+  gap: 6px;
   transition: all 0.15s ease;
+  user-select: none;
+}
+
+@media (max-width: 480px) {
+  .btn-srs-rate {
+    padding: 8px 3px;
+    font-size: 0.78rem;
+    gap: 3px;
+  }
+  .btn-srs-rate svg {
+    width: 13px !important;
+    height: 13px !important;
+  }
 }
 
 .btn-srs-rate small {
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: var(--muted);
+  display: none !important;
 }
 
 .btn-srs-again:hover {
@@ -19848,32 +19861,41 @@ body.has-bottom-bar .rusika-floating-widget {
 }
 
 .quizlet-card {
-  min-height: 380px !important;
-  height: 380px !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: 1fr !important;
+  min-height: 340px !important;
+  height: auto !important;
+  position: relative !important;
+  transform-style: preserve-3d !important;
+  cursor: pointer !important;
 }
 
 @media (max-width: 640px) {
   .quizlet-card {
-    min-height: 360px !important;
-    height: 360px !important;
+    min-height: 290px !important;
+    height: auto !important;
   }
 }
 
 .quizlet-card-face {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  scrollbar-width: thin !important;
-  scrollbar-color: rgba(148, 163, 184, 0.4) transparent !important;
-  padding: 22px 26px !important;
+  grid-area: 1 / 1 / 2 / 2 !important;
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
   box-sizing: border-box !important;
+  overflow: visible !important;
+  scrollbar-width: none !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+  padding: 22px 26px !important;
 }
 
 .quizlet-card-face::-webkit-scrollbar {
-  width: 4px;
-}
-.quizlet-card-face::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.4);
-  border-radius: 4px;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .qcard-word {
@@ -20043,18 +20065,38 @@ body.has-bottom-bar .rusika-floating-widget {
 
 @media (max-width: 480px) {
   .qcard-srs-rating-bar {
-    grid-template-columns: repeat(2, 1fr) !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 4px !important;
   }
 }
 
-/* Đảm bảo preview card cũng không bị tràn dữ liệu */
+/* Đảm bảo preview card tự động mở rộng theo nội dung và không có thanh cuộn */
 .dau-vocab-preview-card {
-  height: 240px !important;
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  grid-template-rows: 1fr !important;
+  min-height: 200px !important;
+  height: auto !important;
+  position: relative !important;
+  perspective: 1000px !important;
+  cursor: pointer !important;
 }
 .dau-preview-face {
-  overflow-y: auto !important;
-  overflow-x: hidden !important;
-  scrollbar-width: thin !important;
+  grid-area: 1 / 1 / 2 / 2 !important;
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+  scrollbar-width: none !important;
+  backface-visibility: hidden !important;
+  -webkit-backface-visibility: hidden !important;
+}
+.dau-preview-face::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 .dau-preview-nav {
   display: flex !important;
@@ -21007,7 +21049,7 @@ body.has-bottom-bar .rusika-floating-widget {
   border-color: rgba(141, 188, 239, 0.4);
 }
 
-/* Cụm trái: Icon lọ từ vựng + Tiêu đề + Phụ đề SM-2 */
+/* Cụm trái: Icon lọ từ vựng + Tiêu đề + Phụ đề SM-2 (Đồng bộ font & màu chữ chuẩn Vocabulary) */
 .voc-progress-figma-left {
   display: flex;
   align-items: center;
@@ -21021,8 +21063,8 @@ body.has-bottom-bar .rusika-floating-widget {
   min-width: 44px;
   min-height: 44px;
   border-radius: 12px;
-  background: rgba(23, 87, 166, 0.12);
-  color: #1757a6;
+  background: var(--primary-soft, #e3effc);
+  color: var(--primary, #1757a6);
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -21034,15 +21076,15 @@ body.has-bottom-bar .rusika-floating-widget {
 }
 
 [data-theme="dark"] .voc-progress-figma-icon {
-  background: rgba(23, 87, 166, 0.3);
-  color: #8dbcef;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
 }
 
 .voc-progress-figma-title {
   display: block;
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--russia-navy, #102a4c);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text, #0f1f38);
   line-height: 1.3;
 }
 
@@ -21052,15 +21094,19 @@ body.has-bottom-bar .rusika-floating-widget {
 
 .voc-progress-figma-sub {
   display: block;
-  font-size: 0.72rem;
-  color: #7890a8;
+  font-size: 0.75rem;
+  color: var(--muted, #53657a);
   margin-top: 2px;
   font-weight: 500;
 }
 
-/* 4 Ô chỉ số với đường phân cách đứng (border-l) chuẩn Figma */
+[data-theme="dark"] .voc-progress-figma-sub {
+  color: var(--muted, #94a3b8);
+}
+
+/* 4 Ô chỉ số với đường phân cách đứng (border-l) chuẩn Vocabulary */
 .voc-progress-figma-stat {
-  border-left: 1px solid rgba(216, 224, 232, 0.9);
+  border-left: 1px solid var(--border, #d2e0f0);
   padding-left: 16px;
   display: flex;
   flex-direction: column;
@@ -21069,20 +21115,49 @@ body.has-bottom-bar .rusika-floating-widget {
 }
 
 [data-theme="dark"] .voc-progress-figma-stat {
-  border-left-color: rgba(255, 255, 255, 0.1);
+  border-left-color: var(--border, rgba(255, 255, 255, 0.1));
 }
 
 .voc-progress-figma-num {
   display: block;
-  font-size: 1.18rem;
+  font-size: 1.25rem;
   font-weight: 800;
   line-height: 1.25;
-  color: var(--russia-navy, #102a4c);
+  color: var(--text, #0f1f38);
   font-feature-settings: "tnum";
 }
 
 [data-theme="dark"] .voc-progress-figma-num {
   color: #ffffff;
+}
+
+.voc-progress-figma-num.val-mastered {
+  color: var(--green, #16a34a) !important;
+}
+
+.voc-progress-figma-num.val-due {
+  color: var(--amber, #f59e0b) !important;
+}
+
+.voc-progress-figma-num.val-new {
+  color: var(--primary, #1757a6) !important;
+}
+
+.voc-progress-figma-num.val-streak {
+  color: var(--primary, #1757a6) !important;
+}
+
+[data-theme="dark"] .voc-progress-figma-num.val-mastered {
+  color: #4ade80 !important;
+}
+
+[data-theme="dark"] .voc-progress-figma-num.val-due {
+  color: #fbbf24 !important;
+}
+
+[data-theme="dark"] .voc-progress-figma-num.val-new,
+[data-theme="dark"] .voc-progress-figma-num.val-streak {
+  color: #38bdf8 !important;
 }
 
 .voc-progress-figma-label {
@@ -21091,18 +21166,22 @@ body.has-bottom-bar .rusika-floating-widget {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #7890a8;
+  color: var(--muted, #53657a);
   margin-top: 3px;
 }
 
-/* Nút CTA Ôn tập ngay: màu đỏ thương hiệu #c52233 chuẩn Figma */
+[data-theme="dark"] .voc-progress-figma-label {
+  color: var(--muted, #94a3b8);
+}
+
+/* Nút CTA Ôn tập ngay: Đồng bộ màu xanh thương hiệu var(--primary) của trang vocabulary */
 .voc-progress-figma-btn {
   min-height: 44px;
   padding: 0 22px;
   border-radius: 12px;
-  background: #c52233 !important;
+  background: var(--primary, #1757a6) !important;
   color: #ffffff !important;
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   font-weight: 700;
   border: none !important;
   cursor: pointer;
@@ -21111,17 +21190,27 @@ body.has-bottom-bar .rusika-floating-widget {
   align-items: center;
   justify-content: center;
   transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 14px rgba(197, 34, 51, 0.25);
+  box-shadow: 0 4px 14px rgba(23, 87, 166, 0.25);
 }
 
 .voc-progress-figma-btn:hover {
-  background: #a81a28 !important;
+  background: var(--primary-dark, #102a4c) !important;
   transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(197, 34, 51, 0.35);
+  box-shadow: 0 6px 18px rgba(23, 87, 166, 0.35);
 }
 
 .voc-progress-figma-btn:active {
   transform: translateY(0);
+}
+
+[data-theme="dark"] .voc-progress-figma-btn {
+  background: #38bdf8 !important;
+  color: #0b1727 !important;
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.3);
+}
+
+[data-theme="dark"] .voc-progress-figma-btn:hover {
+  background: #7dd3fc !important;
 }
 
 /* Responsive Tablet (769px - 1024px) */
@@ -21629,7 +21718,7 @@ body.has-bottom-bar .rusika-floating-widget {
 }
 
 .btn-expand-card {
-  transition: transform 0.2s ease;
+  display: none !important;
 }
 
 .dau-vocab-row-card.is-expanded .btn-expand-card {
@@ -21763,7 +21852,7 @@ body.has-bottom-bar .rusika-floating-widget {
 
   .quizlet-card {
     min-height: 290px !important;
-    height: 300px !important;
+    height: auto !important;
     border-radius: 12px !important;
   }
 
@@ -21796,7 +21885,8 @@ body.has-bottom-bar .rusika-floating-widget {
   }
 
   .dau-vocab-preview-card {
-    height: 180px !important;
+    min-height: 180px !important;
+    height: auto !important;
     border-radius: 10px !important;
   }
 
@@ -22656,5 +22746,112 @@ body.has-bottom-bar .rusika-floating-widget {
 
   a[href]:after {
     content: none !important;
+  }
+}
+
+/* =====================================================================
+ * TỐI ƯU BỐ CỤC DANH SÁCH TỪ VỰNG & FLASHCARD 3D CHUẨN DAUENGLISH
+ * ===================================================================== */
+.qcard-hint,
+.dau-preview-footer {
+  display: none !important;
+}
+
+.dau-row-main-grid {
+  display: grid;
+  grid-template-columns: minmax(160px, 2.2fr) minmax(240px, 3.8fr) auto;
+  gap: 18px;
+  align-items: start;
+  width: 100%;
+}
+
+.dau-row-col-ru {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dau-row-ru-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dau-row-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dau-row-col-vi {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dau-row-vi-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--primary);
+  line-height: 1.35;
+}
+
+.dau-row-col-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .dau-row-main-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .dau-row-col-actions {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 6px !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    border-top: 1px dashed var(--border) !important;
+    padding-top: 8px !important;
+  }
+
+  /* Điều hướng trên mobile gom thành 1 hàng tối ưu */
+  .dau-preview-nav,
+  .quizlet-controls {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .dau-vocab-pills-wrap {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+    gap: 6px !important;
+    width: 100% !important;
+    align-items: center !important;
+  }
+  .dau-vocab-pills-wrap::-webkit-scrollbar {
+    display: none !important;
   }
 }
