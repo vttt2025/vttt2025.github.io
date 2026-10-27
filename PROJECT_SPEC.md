@@ -34,7 +34,6 @@
     - Thẻ kính mờ bo góc 20px, hiệu ứng hover nhấc nổi -5px và viền sáng xanh.
     - Hàng trên (`.topic-card-top`): Số thứ tự `01`, `02`... bên trái; nhãn trạng thái `Hoàn thành` (xanh ngọc) hoặc `PRO` (đỏ) bên phải.
     - Khối nội dung chính (`.topic-card-main`): Bố cục ngang với Hộp biểu tượng (`.topic-icon`) bên trái; Tiêu đề thẻ (`h3.topic-title`) bên phải biểu tượng và Mô tả phụ (`p.topic-desc`) nằm dưới tiêu đề bên phải biểu tượng. Bỏ nhãn phân loại cũ.
-    - Thanh tiến độ (`.topic-progress`): Cao 4px bo tròn, dải màu xanh biển / xanh lá khi hoàn thành.
     - Chân thẻ (`.topic-footer`): Nhãn trạng thái bên trái (`Đã hoàn thành` / `Dành cho thành viên` / `Sẵn sàng để học`), bên phải gồm nút `[Lọ từ vựng]` (icon archive-jar) và nút tròn mũi tên [→] (icon arrow-right, hoặc icon lock nếu là nội dung PRO).
     - **Điều hướng & Tương tác**:
       * Bấm vào thẻ hoặc nút mũi tên [→]: Chuyển sang Trang Bài Học Chủ Đề (Topic Lesson Article View) với bối cảnh, hội thoại mẫu, điểm ngữ pháp, bảng từ vựng, tính năng Xuất sang PDF (window.print()) chuẩn chỉnh và mục mở Lọ từ vựng.(Kỹ thuật PDF Print: Bắt buộc cấu hình CSS @media print ẩn toàn bộ header, floating AI bubble, bottom bar và nút bấm, ép nền trang màu trắng chuẩn A4).

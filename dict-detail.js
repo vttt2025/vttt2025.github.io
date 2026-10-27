@@ -431,6 +431,105 @@ const WordDetail = (() => {
     });
   }
 
+  
+  /* ---------- Tra cứu thời gian thực từ ru.wiktionary.org ---------- */
+  async function fetchWiktionaryRealtime(word) {
+    const cleanWord = stripStress(word).trim().toLowerCase();
+    if (!cleanWord) return null;
+    const url = `https://ru.wiktionary.org/w/api.php?action=parse&page=${encodeURIComponent(cleanWord)}&prop=text&format=json&origin=*`;
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      const html = data?.parse?.text?.["*"] || "";
+      if (!html) return null;
+
+      // 1. Trích xuất định nghĩa tiếng Nga từ thẻ <ol>
+      let defs = [];
+      const olMatch = html.match(/<ol>([\s\S]*?)<\/ol>/i);
+      if (olMatch) {
+        const liMatches = olMatch[1].match(/<li>([\s\S]*?)<\/li>/gi);
+        if (liMatches) {
+          defs = liMatches.slice(0, 5).map(li => {
+            return li
+              .replace(/<span class="example-block"[\s\S]*?<\/span>/gi, "")
+              .replace(/<span class="example"[\s\S]*?<\/span>/gi, "")
+              .replace(/<[^>]+>/g, " ")
+              .replace(/&nbsp;/g, " ")
+              .replace(/&#9670;/g, "")
+              .replace(/\s+/g, " ")
+              .trim();
+          }).filter(Boolean);
+        }
+      }
+
+      // 2. Trích xuất bảng biến cách / chia thì (morfotable)
+      let tableHtml = "";
+      const tableMatch = html.match(/<table[^>]*class="[^"]*(?:morfotable|inflection-table)[^"]*"[\s\S]*?<\/table>/i);
+      if (tableMatch) {
+        tableHtml = tableMatch[0]
+          .replace(/href="[^"]*"/gi, 'href="javascript:void(0)"')
+          .replace(/style="[^"]*"/gi, "");
+      }
+
+      // 3. Trích xuất audio phát âm trên Wikimedia Commons nếu có
+      let audioUrl = "";
+      const audioMatch = html.match(/src="([^"]+upload\.wikimedia\.org[^"]+\.(?:ogg|mp3))"/i) ||
+                         html.match(/href="([^"]+upload\.wikimedia\.org[^"]+\.(?:ogg|mp3))"/i);
+      if (audioMatch) {
+        audioUrl = audioMatch[1];
+        if (audioUrl.startsWith("//")) audioUrl = "https:" + audioUrl;
+      }
+
+      return {
+        word: cleanWord,
+        defs,
+        tableHtml,
+        audioUrl,
+        wiktUrl: `https://ru.wiktionary.org/wiki/${encodeURIComponent(cleanWord)}`
+      };
+    } catch (e) {
+      console.warn("Lỗi tra cứu ru.wiktionary.org:", e);
+      return null;
+    }
+  }
+
+  function wiktionaryHTML(wikt) {
+    if (!wikt) return `<div class="wd-wikt-loading">Đang tải dữ liệu thời gian thực từ ru.wiktionary.org...</div>`;
+    const defsHtml = (wikt.defs && wikt.defs.length)
+      ? `<ul class="wd-wikt-defs">${wikt.defs.map((d, i) => `<li><span class="wd-wikt-num">${i + 1}.</span> ${esc(d)}</li>`).join("")}</ul>`
+      : `<p class="wd-empty">Đang hiển thị nghĩa từ điển chuẩn.</p>`;
+
+    const audioBtn = wikt.audioUrl
+      ? `<button type="button" class="btn btn-soft btn-sm wd-wikt-audio-btn" data-audio="${esc(wikt.audioUrl)}" title="Nghe ghi âm người bản ngữ trên Wikimedia Commons">
+          ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : "🔊"} Nghe giọng bản xứ (Wikimedia)
+        </button>`
+      : "";
+
+    const tableBlock = wikt.tableHtml
+      ? `<div class="wd-wikt-table-wrap">
+          <div class="wd-wikt-subheading">Bảng biến cách / chia thì (ru.wiktionary.org)</div>
+          <div class="wd-wikt-table-scroll">${wikt.tableHtml}</div>
+        </div>`
+      : "";
+
+    return `
+      <div class="wd-wikt-container">
+        <div class="wd-wikt-header">
+          <span class="wd-wikt-badge">🌐 ru.wiktionary.org · Realtime</span>
+          ${audioBtn}
+        </div>
+        ${defsHtml}
+        ${tableBlock}
+        <div class="wd-wikt-footer">
+          <a href="${esc(wikt.wiktUrl)}" target="_blank" rel="noopener" class="wd-wikt-link">
+            ${window.RusiIcons ? RusiIcons.get("external-link", { size: 13 }) : "↗"} Xem bài gốc đầy đủ trên ru.wiktionary.org
+          </a>
+        </div>
+      </div>
+    `;
+  }
+
   /* ---------- render chính ---------- */
   function render(entry, extra) {
     const isRu = /^[\u0400-\u04FF]/.test(entry.ru || "");
@@ -463,8 +562,13 @@ const WordDetail = (() => {
         </div>
       </div>`;
 
+    const wiktSection = isRu
+      ? sectionHTML("wiktionary", "🌐", "Dữ liệu thời gian thực (ru.wiktionary.org)", wiktionaryHTML(extra?.wikt || null), true, "Realtime")
+      : "";
+
     const secs = [
       meaningSec,
+      wiktSection,
       isRu && extra && extra.gov ? sectionHTML("gov", "🧩", "Kết cấu đi kèm", govHTML(extra.gov, entry.ru), true) : "",
       sectionHTML("ex", "💬", "Ví dụ", examplesHTML(e2)),
       extra && (extra.syn || extra.ant) ? sectionHTML("rel", "↔️", "Đồng nghĩa · Trái nghĩa", relHTML(extra)) : "",
@@ -511,18 +615,42 @@ const WordDetail = (() => {
 
     if (!isCyrillic(ru)) return;
 
-    // tải dữ liệu bổ sung rồi render lại
+    // Tải song song: Dữ liệu bổ sung cục bộ + Dữ liệu thời gian thực từ ru.wiktionary.org
     try {
+      let extra = {};
       if (window.RusiDict && RusiDict.Extra) {
-        const extra = await RusiDict.Extra.for(ru);
+        try { extra = (await RusiDict.Extra.for(ru)) || {}; } catch(e){}
+      }
+      // Tra cứu thời gian thực từ ru.wiktionary.org
+      fetchWiktionaryRealtime(ru).then(wiktData => {
         if (current && current.ru === ru) {
-          if (extra && extra.audio) current.audio = extra.audio;
+          extra.wikt = wiktData;
+          if (wiktData?.audioUrl && !current.audio) {
+            current.audio = wiktData.audioUrl;
+          }
           current.extra = extra;
           render(entry, extra);
+          // Gắn sự kiện cho nút audio wiktionary
+          const wiktAudioBtn = shell.querySelector(".wd-wikt-audio-btn");
+          if (wiktAudioBtn) {
+            wiktAudioBtn.onclick = () => {
+              const url = wiktAudioBtn.dataset.audio;
+              if (url) {
+                const a = new Audio(url);
+                a.play().catch(() => playAudio(ru));
+              }
+            };
+          }
         }
+      }).catch(() => {});
+
+      if (current && current.ru === ru) {
+        if (extra && extra.audio) current.audio = extra.audio;
+        current.extra = extra;
+        render(entry, extra);
       }
     } catch (e) {
-      /* im lặng — modal vẫn hoạt động với dữ liệu cơ bản */
+      /* modal vẫn hoạt động mượt mà với dữ liệu cơ bản */
     }
   }
 

@@ -590,19 +590,22 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
       <div class="quizlet-card-container" id="qCardContainer">
         <div class="quizlet-card ${fFlipped ? "flipped" : ""}" id="qCard">
-          <!-- FRONT FACE (RU) -->
+          <!-- FRONT FACE (RU) — Chuẩn quốc tế Anki/Quizlet: Từ vựng to rõ, có nút phát âm, ghi chú từ loại & tra 6 cách -->
           <div class="quizlet-card-face quizlet-card-front">
             <div class="qcard-top-row">
               <span class="qcard-badge" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Nga</span>
               <div class="qcard-actions">
-                <button type="button" class="qcard-btn-addjar" id="qAddJarFront" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""} + Lưu</button>
+                <button type="button" class="qcard-btn-action" id="qDictFront" title="Tra cứu 6 cách & chia thì">${window.RusiIcons ? RusiIcons.get("book-open", { size: 15 }) : ""} Tra từ</button>
+                <button type="button" class="qcard-btn-addjar" id="qAddJarFront" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 15 }) : ""} + Lưu</button>
               </div>
             </div>
 
             <div class="qcard-main">
               <div class="qcard-word ru">${esc(currentWord.stress || currentWord.ru)}</div>
-              ${currentWord.note ? `<div class="scroll-pos">${esc(currentWord.note)}</div>` : ""}
-              <button type="button" class="qcard-audio-btn" id="qAudioFront" title="Phát âm tiếng Nga">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 18 }) : ""}</button>
+              ${currentWord.note ? `<div class="qcard-note-pill">${esc(currentWord.note)}</div>` : ""}
+              <button type="button" class="qcard-audio-btn" id="qAudioFront" title="Phát âm tiếng Nga">
+                ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 20 }) : ""}
+              </button>
             </div>
 
             <div class="qcard-hint">
@@ -610,24 +613,36 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             </div>
           </div>
 
-          <!-- BACK FACE (VI) -->
+          <!-- BACK FACE (VI) — Chuẩn quốc tế: Nghĩa to, khối ví dụ ngữ cảnh song ngữ có audio riêng, không tràn viền -->
           <div class="quizlet-card-face quizlet-card-back">
             <div class="qcard-top-row">
               <span class="qcard-badge vi" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Việt</span>
               <div class="qcard-actions">
-                <button type="button" class="qcard-btn-addjar" id="qAddJarBack" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""} + Lưu</button>
+                <button type="button" class="qcard-btn-action" id="qDictBack" title="Tra cứu 6 cách & chia thì">${window.RusiIcons ? RusiIcons.get("book-open", { size: 15 }) : ""} Tra từ</button>
+                <button type="button" class="qcard-btn-addjar" id="qAddJarBack" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 15 }) : ""} + Lưu</button>
               </div>
             </div>
 
             <div class="qcard-main">
               <div class="qcard-meaning">${esc(currentWord.vi)}</div>
               ${currentWord.ex ? `
-                <div class="qcard-ex-wrap">
-                  <div class="qcard-ex ru">«${esc(currentWord.ex)}»</div>
-                  ${currentWord.ex_vi ? `<div class="qcard-ex-vi">${esc(currentWord.ex_vi)}</div>` : ""}
+                <div class="qcard-ex-box">
+                  <div class="qcard-ex-header">
+                    <span class="qcard-ex-label">Ví dụ ngữ cảnh</span>
+                    <button type="button" class="qcard-ex-audio-btn" id="qAudioBackEx" title="Nghe câu ví dụ">
+                      ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""} Nghe
+                    </button>
+                  </div>
+                  <div class="qcard-ex-text ru">«${esc(currentWord.ex)}»</div>
+                  ${currentWord.ex_vi ? `<div class="qcard-ex-trans">${esc(currentWord.ex_vi)}</div>` : ""}
                 </div>
               ` : ""}
-              ${currentWord.ex ? `<button type="button" class="qcard-audio-btn" id="qAudioBackEx" title="Phát âm câu ví dụ" style="margin-top:6px">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""}</button>` : ""}
+              ${currentWord.syn ? `
+                <div class="qcard-tag-row">
+                  <span class="qcard-tag-label">Đồng nghĩa:</span>
+                  <span class="qcard-tag-val">${esc(currentWord.syn)}</span>
+                </div>
+              ` : ""}
             </div>
 
             <div class="qcard-hint">
@@ -637,17 +652,17 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         </div>
       </div>
 
-      <!-- CONTROLS: CĂN CHUẨN TRUNG TÂM, XÓA XÁO TRỘN, CHỈ TỪ KHÓ, TỰ ĐỌC, TOÀN MÀN HÌNH -->
-      <div class="quizlet-controls" style="display:flex;justify-content:center;align-items:center;margin:18px 0;width:100%">
+      <!-- CONTROLS: CĂN GIỮA TUYỆT ĐỐI THEO CARD < 1/26 > (Req 6) -->
+      <div class="quizlet-controls" style="display:flex;justify-content:center;align-items:center;margin:20px auto;width:100%;max-width:860px;box-sizing:border-box">
         <div class="quizlet-nav-wrap" style="margin:0 auto;display:inline-flex;align-items:center;justify-content:center;gap:18px">
           <button type="button" class="quizlet-nav-btn" id="qNavPrev" title="Thẻ trước (Phím ←)">‹</button>
-          <div class="quizlet-counter" style="font-weight:700;font-size:1.1rem;min-width:70px;text-align:center">${fIdx + 1} / ${fActiveWords.length}</div>
+          <div class="quizlet-counter" style="font-weight:700;font-size:1.15rem;min-width:80px;text-align:center">${fIdx + 1} / ${fActiveWords.length}</div>
           <button type="button" class="quizlet-nav-btn" id="qNavNext" title="Thẻ sau (Phím →)">›</button>
         </div>
       </div>
 
-      <!-- SRS SPACED REPETITION RATING BAR -->
-      <div class="qcard-srs-rating-bar" style="margin-top:14px">
+      <!-- SRS SPACED REPETITION RATING BAR: Căn đều 860px chuẩn card -->
+      <div class="qcard-srs-rating-bar" style="margin:16px auto 0;max-width:860px;width:100%;box-sizing:border-box">
         <button type="button" class="btn-srs-rate btn-srs-again" data-rate="again" title="Chưa nhớ - Ôn lại ngay sau 5 thẻ">
           <span style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""} Quên</span>
           <small>&lt; 10 phút</small>
@@ -727,6 +742,31 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       };
     });
 
+    // Tra từ modal
+    const openDictWord = (w) => {
+      if (typeof window.openDictDetailModal === "function") {
+        window.openDictDetailModal(w);
+      } else if (typeof window.openDictModal === "function") {
+        window.openDictModal(w);
+      } else {
+        toast("Tra từ: " + w);
+      }
+    };
+    const btnDictF = pane.querySelector("#qDictFront");
+    if (btnDictF) {
+      btnDictF.onclick = (e) => {
+        e.stopPropagation();
+        openDictWord(currentWord.ru);
+      };
+    }
+    const btnDictB = pane.querySelector("#qDictBack");
+    if (btnDictB) {
+      btnDictB.onclick = (e) => {
+        e.stopPropagation();
+        openDictWord(currentWord.ru);
+      };
+    }
+
     // Audio
     pane.querySelector("#qAudioFront").onclick = (e) => {
       e.stopPropagation();
@@ -751,11 +791,25 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     if (ajBack) ajBack.onclick = addJarCurrent;
   };
 
-  // Keyboard shortcut listener for Flashcards
+  // Keyboard shortcut listener for Flashcards & List Preview (Spec 1, Dòng 50 & 64)
   const handleKeydown = (e) => {
-    if (currentMode !== "flashcard") return;
     const isEditing = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
     if (isEditing) return;
+
+    // Phím Space trong giao diện danh sách từ vựng: lật thẻ xem nhanh (.dau-vocab-preview-box)
+    if (currentMode === "list") {
+      if (e.code === "Space") {
+        e.preventDefault();
+        const pCard = container.querySelector("#dauPreviewCard");
+        if (pCard) {
+          pCard.classList.toggle("flipped");
+          playQuizletSound("flip");
+        }
+      }
+      return;
+    }
+
+    if (currentMode !== "flashcard") return;
 
     if (e.code === "Space") {
       e.preventDefault();
@@ -1337,11 +1391,18 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       let isMastered = false;
       if (idx !== -1) {
         list.splice(idx, 1);
+        if (typeof SRS !== "undefined" && typeof SRS.unmarkMastered === "function") {
+          SRS.unmarkMastered(norm);
+        }
       } else {
         list.push(ruWord);
         isMastered = true;
+        if (typeof SRS !== "undefined" && typeof SRS.markMastered === "function") {
+          SRS.markMastered(norm);
+        }
       }
       if (typeof STORE !== "undefined") STORE.set("vocab_mastered_words", list);
+      window.dispatchEvent(new CustomEvent("trki:progress-updated"));
       return isMastered;
     };
 
@@ -1381,6 +1442,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 <div class="dau-preview-top">
                   <span class="dau-preview-tag" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Nga</span>
                   <div class="dau-preview-actions">
+                    <button type="button" class="dau-preview-btn-star ${isCurStarred ? "starred" : ""}" id="btnPreviewStar" title="${isCurStarred ? "Bỏ gắn sao" : "Gắn sao thẻ này"}">
+                      ${window.RusiIcons ? RusiIcons.get("star", { size: 15, filled: isCurStarred }) : "★"}
+                    </button>
                     <button type="button" class="dau-preview-btn-addjar" id="btnPreviewAddJar" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} + Lọ</button>
                   </div>
                 </div>
@@ -1399,6 +1463,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 <div class="dau-preview-top">
                   <span class="dau-preview-tag vi" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("flag", { size: 14 }) : ""} Tiếng Việt</span>
                   <div class="dau-preview-actions">
+                    <button type="button" class="dau-preview-btn-star ${isCurStarred ? "starred" : ""}" id="btnPreviewStarBack" title="${isCurStarred ? "Bỏ gắn sao" : "Gắn sao thẻ này"}">
+                      ${window.RusiIcons ? RusiIcons.get("star", { size: 15, filled: isCurStarred }) : "★"}
+                    </button>
                     <button type="button" class="dau-preview-btn-addjar" id="btnPreviewAddJarBack" title="Lưu vào Lọ cá nhân">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} + Lọ</button>
                   </div>
                 </div>
@@ -1429,12 +1496,12 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           <div class="dau-vocab-toolbar">
             <div class="dau-toolbar-left">
               <h3 class="dau-toolbar-heading">
-                Thuật ngữ trong học phần này <span class="dau-count-muted">(${words.length})</span>
+                Danh sách từ vựng <span class="dau-count-muted">(${words.length})</span>
               </h3>
             </div>
 
             <div class="dau-toolbar-right">
-              <!-- FILTER PILLS: BỎ PHẦN TÌM KIẾM TỪ & BỎ GẮN SAO THEO YÊU CẦU -->
+              <!-- FILTER PILLS & CTA ĐÚNG THEO SPEC 1 (DÒNG 51) -->
               <div class="dau-vocab-pills-wrap">
                 <button type="button" class="dau-vocab-pill ${showDetails ? "active" : ""}" id="btnToggleDetails" title="Hiện hoặc ẩn chi tiết câu ví dụ, từ loại, đồng nghĩa">
                   <span>${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 14 }) : ""}</span> Chi tiết
@@ -1446,7 +1513,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                   <span>${sortMode === "alphabetical" ? "A → Z" : "Thứ tự gốc"}</span> ${window.RusiIcons ? RusiIcons.get("chevron-down", { size: 12 }) : ""}
                 </button>
                 <button type="button" class="btn btn-primary btn-sm btn-flash-cta" id="btnListToStudy" style="font-weight:700">
-                  ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Học Flashcard ngay →
+                  ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Flashcard ngay →
                 </button>
               </div>
             </div>
@@ -1475,7 +1542,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                     ${w.note ? `<div class="dau-row-note">${esc(w.note)}</div>` : ""}
                   </div>
 
-                  <!-- COL 2: MEANING & EXAMPLES -->
+                  <!-- COL 2: MEANING & EXAMPLES & DETAILS (Spec 1, Dòng 52) -->
                   <div class="dau-row-col-meaning">
                     <div class="dau-row-vi">${esc(w.vi)}</div>
                     ${(w.ex && showDetails) ? `
@@ -1484,10 +1551,22 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                         ${w.ex_vi ? `<div class="dau-row-ex-vi">${esc(w.ex_vi)}</div>` : ""}
                       </div>
                     ` : ""}
+                    ${(showDetails && (w.collocation || w.verb_obj || w.gov)) ? `
+                      <div class="dau-row-extra-line">
+                        <span class="dau-row-extra-label">Cụm từ / Quản cách:</span>
+                        <span class="dau-row-extra-val ru">${esc(w.collocation || w.verb_obj || w.gov)}</span>
+                      </div>
+                    ` : ""}
                     ${(w.syn && showDetails) ? `
-                      <div class="dau-row-syn">
-                        <span style="font-weight:700;color:var(--muted)">Đồng nghĩa:</span>
-                        <span style="color:var(--primary);font-weight:600">${esc(w.syn)}</span>
+                      <div class="dau-row-extra-line">
+                        <span class="dau-row-extra-label">Đồng nghĩa:</span>
+                        <span class="dau-row-extra-val ru">${esc(w.syn)}</span>
+                      </div>
+                    ` : ""}
+                    ${(w.ant && showDetails) ? `
+                      <div class="dau-row-extra-line">
+                        <span class="dau-row-extra-label">Trái nghĩa:</span>
+                        <span class="dau-row-extra-val ru">${esc(w.ant)}</span>
                       </div>
                     ` : ""}
                   </div>
@@ -1769,21 +1848,75 @@ function initVocabPage() {
   window.exitSrsToVocab = showMainLayout;
 
   const showSrsWorkspace = () => {
+    // Thu thập danh sách từ cần ôn tập theo Spaced Repetition (ưu tiên từ due / đang học)
+    let reviewWords = [];
+    if (typeof SRS !== "undefined" && SRS.getState) {
+      try {
+        const st = SRS.getState();
+        const dueCards = SRS.getDueCards(st, 50);
+        if (dueCards && dueCards.length) {
+          reviewWords = dueCards.map(c => ({
+            ru: c.ru,
+            vi: c.vi,
+            pos: c.pos,
+            ex: c.ex,
+            note: c.note || c.pos || "",
+            stress: c.stress || c.ru
+          }));
+        }
+      } catch (e) {
+        console.warn("Lỗi lấy thẻ đến hạn:", e);
+      }
+    }
+
+    // Nếu chưa có thẻ đến hạn từ SRS, gom các từ cốt lõi từ các lọ để sẵn sàng học ngay
+    if (!reviewWords.length) {
+      const allJars = getVocabJars();
+      allJars.forEach(j => {
+        if (j.raw && Array.isArray(j.raw.words)) {
+          j.raw.words.forEach(w => {
+            if (reviewWords.length < 30) reviewWords.push(w);
+          });
+        }
+      });
+    }
+
+    // Mở trực tiếp không gian học Flashcard chuẩn y hệt như ở Lọ từ vựng (Chuẩn yêu cầu người dùng)
     document.body.classList.add("in-workspace");
     const mainLayout = el("#vocMainLayout");
     if (mainLayout) mainLayout.classList.add("hidden");
-    const detail = el("#jarDetailHost");
-    if (detail) detail.classList.add("hidden");
     const srsPane = el("#vocPaneAlgorithm");
-    if (srsPane) srsPane.classList.remove("hidden");
-    if (!algorithmInited) {
-      algorithmInited = true;
-      initSrsPage();
-    }
-    const backBtn = el("#btnBackFromSrs");
-    if (backBtn) backBtn.onclick = showMainLayout;
-    if (typeof window.startSrsFlashcardDirectly === "function") {
-      window.startSrsFlashcardDirectly();
+    if (srsPane) srsPane.classList.add("hidden");
+    const detail = el("#jarDetailHost");
+    if (detail) {
+      detail.classList.remove("hidden");
+      detail.innerHTML = `
+        <!-- STICKY TOP BACK BAR -->
+        <div class="dau-workspace-back-bar">
+          <button type="button" class="dau-back-btn" id="btnBackJars">
+            ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 16 }) : "←"} Quay lại kho từ vựng
+          </button>
+          <div class="dau-workspace-info">
+            <span class="dau-badge dau-badge-a1">SPACED REPETITION</span>
+            <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 22 }) : ""} Ôn tập Flashcard (${reviewWords.length} từ)</span>
+          </div>
+        </div>
+
+        <div class="workspace" style="padding:14px 4px;border:none;background:transparent;box-shadow:none">
+          <div id="jarQuizletSuiteHost"></div>
+        </div>
+      `;
+
+      el("#btnBackJars").onclick = () => {
+        showMainLayout();
+      };
+
+      window.initQuizletSuite(el("#jarQuizletSuiteHost"), reviewWords, {
+        jarId: "srs_quick_review",
+        jarName: "Ôn tập Spaced Repetition",
+        initialMode: "flashcard"
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -1898,41 +2031,52 @@ function initVocabPage() {
         const indexStr = String((currentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, "0");
         const wordsCount = item.wordsCount || (item.words ? item.words.length : 0);
         const lessonsCount = Math.ceil(wordsCount / 10) || 1;
-        const russianCategory = item.levelName || `СЛОВАРЬ · ${item.level}`;
+        const topicDesc = item.desc || `${wordsCount} từ vựng cốt lõi · ${lessonsCount} bài học`;
+
+        const masteredSet = new Set((typeof STORE !== "undefined") ? STORE.get("vocab_mastered_words", []) : []);
+        let masteredInJar = 0;
+        if (Array.isArray(item.words) && item.words.length > 0) {
+          item.words.forEach(w => {
+            const k = (w.ru || "").trim().toLowerCase();
+            if (masteredSet.has(k)) masteredInJar++;
+          });
+        }
+        const progressPercent = isDone ? 100 : (wordsCount > 0 ? Math.min(100, Math.round((masteredInJar / wordsCount) * 100)) : 0);
+        const isFinished = isDone || (progressPercent === 100 && wordsCount > 0);
 
         return `
-          <article class="topic-card dau-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-vocab-id="${item.id}" data-kind="jar" data-pro="${isPro}">
-            <div class="topic-card-top">
-              <span class="topic-number">${indexStr}</span>
-              ${isDone ? `
-                <span class="topic-status topic-status-completed">
-                  ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
-                </span>
-              ` : isPro ? `
-                <span class="topic-status topic-status-pro">PRO</span>
-              ` : `
-                <span class="topic-status topic-status-level">${item.level}</span>
-              `}
-            </div>
-
-            <div class="topic-card-main">
-              <span class="topic-icon">
+          <!-- GIAO DIỆN THẺ TỐI GIẢN CHUẨN MỚI .dau-card-compact (Đồng bộ toàn hệ thống, không có thanh tiến độ) -->
+          <article class="dau-card dau-card-compact ${isFinished ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-vocab-id="${item.id}" data-kind="jar" data-pro="${isPro}">
+            <div class="dau-card-header">
+              <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
                 ${window.RusiIcons ? RusiIcons.get(item.icon || "archive-jar", { size: 24 }) : ""}
-              </span>
-              <div class="topic-card-text">
-                <h3 class="topic-title">${esc(item.title)}</h3>
-                <p class="topic-desc">${wordsCount} từ vựng · ${lessonsCount} bài học</p>
+              </div>
+              <div class="dau-card-header-main">
+                <div class="dau-card-title-row">
+                  <h3 class="dau-card-ru">${esc(item.title)}</h3>
+                  ${isFinished ? `
+                    <span class="topic-status topic-status-completed" style="flex-shrink:0">
+                      ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
+                    </span>
+                  ` : isPro ? `
+                    <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
+                  ` : ""}
+                </div>
+                <div class="dau-card-subinfo">
+                  <span>${item.level || currentLevel}</span>
+                  <span class="dau-card-sep">•</span>
+                  <span class="dau-card-count">${wordsCount} từ vựng</span>
+                </div>
               </div>
             </div>
 
-            <div class="topic-progress" aria-label="Tiến độ ${isDone ? 100 : 0}%">
-              <span style="width: ${isDone ? 100 : 0}%"></span>
-            </div>
-
-            <div class="topic-footer">
-              <span>${isDone ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng để học"}</span>
+            <!-- CHÂN THẺ -->
+            <div class="dau-card-footer" style="margin-top:auto;padding-top:10px">
+              <div class="dau-card-status">
+                <span style="font-size:0.8rem;font-weight:600;color:var(--muted)">${isFinished ? "Đã hoàn thành" : isPro ? "Dành cho thành viên" : "Sẵn sàng để học"}</span>
+              </div>
               <div class="topic-footer-actions">
-                <button type="button" class="btn-jar-list topic-text-btn" data-jar-id="${item.id}" title="Lọ từ vựng">
+                <button type="button" class="btn-jar-list topic-text-btn" data-jar-id="${item.id}" title="Mở danh sách Lọ từ vựng để học Flashcard Spaced Repetition">
                   ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} Lọ từ vựng
                 </button>
                 <button type="button" class="btn-topic-article topic-circle-btn" data-jar-id="${item.id}" title="Xem bài học chủ đề">
@@ -2014,10 +2158,13 @@ function initVocabPage() {
               <div class="page-title-box">
                 <h1 class="page-main-hero-title">
                   CHINH PHỤC 5.000 TỪ TIẾNG NGA<br />
-                  <span>theo Chủ Đề &amp; Chuỗi Hành Động</span>
+                  <span>theo Chủ Đề &amp; Chuỗi Hành Động.</span>
                 </h1>
               </div>
             </div>
+
+            <!-- THẺ TIẾN ĐỘ HỌC TỪ VỰNG CHUẨN FIGMA (Đặt trước Level Tabs theo thiết kế https://rigor-hall-40167838.figma.site/vocabulary) -->
+            <div id="vocabProgressHorizontalHost" style="margin-bottom: 28px;"></div>
 
             <div class="level-tabs" role="tablist" aria-label="Chọn cấp độ từ vựng" id="vocabLevelTabs">
               <button class="level-tab ${currentLevel === "A1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A1">
@@ -2055,9 +2202,6 @@ function initVocabPage() {
             <div class="topic-grid" id="vocabCardsGrid"></div>
             <div class="dau-pagination" id="vocabPagination"></div>
 
-            <!-- THẺ TIẾN ĐỘ HỌC TỪ VỰNG (THANH NGANG DÀI DƯỚI PAGINATION) -->
-            <div id="vocabProgressHorizontalHost"></div>
-
             <!-- LỌ TỪ VỰNG CỦA BẠN (SAU THANH TIẾN ĐỘ) -->
             <div id="vocabUserJarsHost"></div>
           </div>
@@ -2084,18 +2228,12 @@ function initVocabPage() {
     const sidebarHost = el("#vocSidebarHost");
     if (!progressHost && !userJarsHost && !sidebarHost) return;
 
-    let stats = { newCount: 0, reviewing: 0, learning: 0, mastered: 0 };
-    let dueCount = 0;
-    if (typeof SRS !== "undefined" && SRS.getState) {
-      try {
-        const st = SRS.getState();
-        stats = SRS.getStats(st);
-        dueCount = SRS.getDueCards(st, 9999).length;
-      } catch (e) {
-        console.warn("SRS stats error:", e);
-      }
-    }
-    const streak = (typeof STORE !== "undefined") ? STORE.get("streak", 0) : 0;
+    const syncStats = (typeof window.getSynchronizedVocabStats === "function")
+      ? window.getSynchronizedVocabStats()
+      : { mastered: 0, dueCount: 0, newCount: 0, streak: 0 };
+    const stats = { mastered: syncStats.mastered, newCount: syncStats.newCount };
+    const dueCount = syncStats.dueCount;
+    const streak = syncStats.streak;
 
     let customJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
     if (!customJars || !customJars.length) {
@@ -2135,49 +2273,47 @@ function initVocabPage() {
 
     const user = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
     if (progressHost) {
-      if (!user) {
-        progressHost.style.display = "none";
-        progressHost.innerHTML = "";
-      } else {
-        progressHost.style.display = "block";
-        progressHost.innerHTML = `
-        <div class="voc-progress-horizontal-card">
-          <div class="voc-progress-horiz-left">
-            <div class="voc-progress-horiz-icon">
-              ${window.RusiIcons ? RusiIcons.get("trending-up", { size: 22 }) : ""}
-            </div>
-            <div class="voc-progress-horiz-title">
-              <h3>Tiến Độ Học Ôn</h3>
+      progressHost.style.display = "block";
+      progressHost.innerHTML = `
+        <div class="voc-progress-figma-card" id="vocProgressFigmaCard">
+          <!-- CỤM TRÁI: ICON + TIÊU ĐỀ + PHỤ ĐỀ (Figma: archive jar icon + Tiến Độ Học Ôn + Lặp lại ngắt quãng SM-2) -->
+          <div class="voc-progress-figma-left">
+            <span class="voc-progress-figma-icon">
+              ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 20 }) : `<svg aria-hidden="true" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24"><path d="M7 3h10M8 3v4L6 9v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9l-2-2V3"></path><path d="M6 11h12"></path></svg>`}
+            </span>
+            <div>
+              <strong class="voc-progress-figma-title">Tiến Độ Học Ôn</strong>
+              <small class="voc-progress-figma-sub">Lặp lại ngắt quãng SM-2</small>
             </div>
           </div>
 
-          <div class="voc-progress-horiz-stats">
-            <div class="voc-stat-box">
-              <div class="voc-stat-val" style="color:var(--green, #16a34a)">${stats.mastered || 0}</div>
-              <div class="voc-stat-label">Đã thuộc</div>
-            </div>
-            <div class="voc-stat-box">
-              <div class="voc-stat-val" style="color:var(--orange, #ea580c)">${dueCount}</div>
-              <div class="voc-stat-label">Cần ôn tập</div>
-            </div>
-            <div class="voc-stat-box">
-              <div class="voc-stat-val" style="color:var(--blue, #2563eb)">${stats.newCount || 0}</div>
-              <div class="voc-stat-label">Từ mới</div>
-            </div>
-            <div class="voc-stat-box">
-              <div class="voc-stat-val" style="color:var(--russia-red, #c52233)">${streak}</div>
-              <div class="voc-stat-label">Chuỗi ngày ${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 14 }) : ""}</div>
-            </div>
+          <!-- 4 Ô CHỈ SỐ THỐNG KÊ (Figma: Đã thuộc, Cần ôn, Từ mới, Chuỗi ngày với vạch ngăn đứng) -->
+          <div class="voc-progress-figma-stat">
+            <strong class="voc-progress-figma-num" style="color:var(--russia-green, #16a34a)">${stats.mastered || 0}</strong>
+            <span class="voc-progress-figma-label">ĐÃ THUỘC</span>
           </div>
 
-          <div class="voc-progress-horiz-right">
-            <button type="button" class="btn btn-primary btn-sm" id="btnSidebarQuickSrs" style="font-weight:700;padding:12px 20px;border-radius:10px;display:flex;align-items:center;gap:8px">
-              ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Ôn tập ngay ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
-            </button>
+          <div class="voc-progress-figma-stat ${dueCount > 0 ? "is-due" : ""}">
+            <strong class="voc-progress-figma-num" style="color:var(--russia-amber, #d97706)">${dueCount}</strong>
+            <span class="voc-progress-figma-label">CẦN ÔN</span>
           </div>
+
+          <div class="voc-progress-figma-stat">
+            <strong class="voc-progress-figma-num" style="color:var(--primary, #1757a6)">${stats.newCount || 0}</strong>
+            <span class="voc-progress-figma-label">TỪ MỚI</span>
+          </div>
+
+          <div class="voc-progress-figma-stat">
+            <strong class="voc-progress-figma-num" style="color:var(--russia-red, #c52233)">${streak} ngày</strong>
+            <span class="voc-progress-figma-label">CHUỖI NGÀY</span>
+          </div>
+
+          <!-- NÚT CTA (Figma: bg #c52233, rounded-xl, Ôn tập ngay) -->
+          <button type="button" class="btn voc-progress-figma-btn" id="btnSidebarQuickSrs">
+            Ôn tập ngay
+          </button>
         </div>
       `;
-      }
     }
 
     if (userJarsHost) {
@@ -2237,7 +2373,7 @@ function initVocabPage() {
       };
     }
 
-    const btnCreateTop = el("#btnSidebarCreateJar");
+    const btnCreateTop = el("#btnSidebarCreateJar") || el("#btnSidebarCreateJarTop");
     if (btnCreateTop) {
       btnCreateTop.onclick = (e) => {
         e.preventDefault();
@@ -2858,6 +2994,14 @@ const showTopicArticle = (jarId) => {
   };
 
   window.refreshVocabViews = renderVocabHub;
+
+  // Lắng nghe sự kiện đồng bộ tiến độ thời gian thực để cập nhật thanh tiến độ
+  window.addEventListener("trki:progress-updated", () => {
+    if (typeof renderVocabSidebar === "function") {
+      renderVocabSidebar();
+    }
+  });
+
   renderVocabHub();
 }
 

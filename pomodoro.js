@@ -204,7 +204,7 @@
       const sBreak = document.getElementById("pomoPopBreakRange");
       const sCycles = document.getElementById("pomoPopCyclesRange");
 
-      // Định vị và toggle popover dưới nút Pomodoro
+      // Định vị và toggle popover dưới nút Pomodoro (Hỗ trợ chuẩn Mobile & Mutual Exclusion)
       const togglePopover = () => {
         if (!popover) return;
         const hBtn = document.getElementById("headerPomoBtn");
@@ -214,13 +214,39 @@
         if (isVisible) {
           popover.style.display = "none";
         } else {
-          const rect = hBtn.getBoundingClientRect();
+          // MUTUAL EXCLUSION: Đóng User dropdown và Mobile drawer nếu đang mở
+          const userDd = document.getElementById("userDropdown");
+          if (userDd) userDd.classList.remove("open");
+          const userTrigger = document.getElementById("userTrigger");
+          if (userTrigger) userTrigger.setAttribute("aria-expanded", "false");
+          const nav = document.getElementById("mainNav");
+          if (nav) nav.classList.remove("nav-open");
+          const mobileBtn = document.getElementById("mobileMenuBtn");
+          if (mobileBtn) {
+            mobileBtn.classList.remove("is-open");
+            mobileBtn.setAttribute("aria-expanded", "false");
+          }
+          document.body.classList.remove("menu-locked");
+
           popover.style.display = "block";
-          popover.style.top = (rect.bottom + 8) + "px";
-          // Căn phải khớp với mép phải của nút
-          const rightOffset = window.innerWidth - rect.right;
-          popover.style.right = Math.max(12, rightOffset) + "px";
-          popover.style.left = "auto";
+
+          const isMobile = window.innerWidth <= 768;
+          if (isMobile) {
+            // Định vị an toàn trên điện thoại: chống tràn lề trái và cố định sát mép phải
+            popover.style.top = "62px";
+            popover.style.right = "12px";
+            popover.style.left = "auto";
+            popover.style.width = "min(calc(100vw - 24px), 320px)";
+            popover.style.maxWidth = "calc(100vw - 24px)";
+          } else {
+            const rect = hBtn.getBoundingClientRect();
+            popover.style.top = (rect.bottom + 8) + "px";
+            const rightOffset = window.innerWidth - rect.right;
+            const maxRight = window.innerWidth - 310;
+            popover.style.right = Math.min(Math.max(12, rightOffset), Math.max(12, maxRight)) + "px";
+            popover.style.left = "auto";
+            popover.style.width = "290px";
+          }
         }
       };
 

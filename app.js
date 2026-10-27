@@ -1731,6 +1731,14 @@ function renderHeader() {
   };
 
   const openMobileMenu = () => {
+    // Đóng Pomodoro popover và User dropdown nếu đang mở (Mutual Exclusion - Spec 3.3)
+    const pomoPop = document.getElementById("pomoPopoverDropdown");
+    if (pomoPop) pomoPop.style.display = "none";
+    const userDd = document.getElementById("userDropdown");
+    if (userDd) userDd.classList.remove("open");
+    const userTrigger = document.getElementById("userTrigger");
+    if (userTrigger) userTrigger.setAttribute("aria-expanded", "false");
+
     if (nav) nav.classList.add("nav-open");
     if (mobileBtn) {
       mobileBtn.classList.add("is-open");
@@ -1867,8 +1875,8 @@ function renderUserArea() {
     .join("")
     .toUpperCase();
   const avatar = user.photo
-    ? `<img class="user-avatar" src="${esc(user.photo)}" alt="${esc(user.name)}" referrerpolicy="no-referrer" />`
-    : `<span class="user-avatar user-avatar-fallback">${esc(initials)}</span>`;
+    ? `<img class="user-avatar ${isPro ? "is-pro" : ""}" src="${esc(user.photo)}" alt="${esc(user.name)}" referrerpolicy="no-referrer" />`
+    : `<span class="user-avatar user-avatar-fallback ${isPro ? "is-pro" : ""}">${esc(initials)}</span>`;
   const shortName = (user.name || "Học viên").split(/\s+/)[0];
 
   const adminEmails = (window.ADMIN_EMAILS || []).map((e) => String(e).toLowerCase().trim());
@@ -1876,13 +1884,8 @@ function renderUserArea() {
 
   host.innerHTML = `
     <div class="user-area-authenticated">
-      <!-- PHẦN NÂNG CẤP PRO HIỂN THỊ KHI NGƯỜI DÙNG ĐĂNG NHẬP -->
-      ${isPro ? `
-        <button class="pro-chip-header" id="btnManageProHeader" type="button" title="Gói PRO đang kích hoạt — Bấm để xem và quản lý">
-          <span>${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 16 }) : ""}</span>
-          <span>PRO MEMBER</span>
-        </button>
-      ` : `
+      <!-- PHẦN NÂNG CẤP PRO: Khi đã là PRO thì KHÔNG hiển thị nút PRO MEMBER ngoài header (Req 1), viền bo avatar tự động chuyển màu vàng (Req 4) -->
+      ${isPro ? "" : `
         <button class="btn-upgrade-pro-header" id="btnUpgradeHeader" type="button" title="Mở khóa 100% đề thi TRKI và AI">
           <span class="btn-upgrade-icon">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""}</span>
           <span class="btn-upgrade-text">Nâng cấp PRO</span>
@@ -1890,7 +1893,7 @@ function renderUserArea() {
       `}
 
       <div class="user-menu" id="userMenu">
-        <button class="user-trigger" id="userTrigger" type="button" aria-haspopup="true" aria-expanded="false">
+        <button class="user-trigger ${isPro ? "is-pro" : ""}" id="userTrigger" type="button" aria-haspopup="true" aria-expanded="false" title="${isPro ? "Học viên PRO (Viền vàng) — Bấm để mở menu" : "Tài khoản học viên"}">
           ${avatar}
           <span class="user-name-short">${esc(shortName)}</span>
           <span class="caret" aria-hidden="true">${window.RusiIcons ? RusiIcons.get("chevron-down", { size: 12 }) : ""}</span>
@@ -2017,6 +2020,19 @@ function renderUserArea() {
       e.stopPropagation();
       const open = dropdown.classList.toggle("open");
       trigger.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) {
+        // Đóng Pomodoro popover và Mobile drawer khi mở User menu (Mutual Exclusion)
+        const pomoPop = document.getElementById("pomoPopoverDropdown");
+        if (pomoPop) pomoPop.style.display = "none";
+        const nav = document.getElementById("mainNav");
+        if (nav) nav.classList.remove("nav-open");
+        const mobileBtn = document.getElementById("mobileMenuBtn");
+        if (mobileBtn) {
+          mobileBtn.classList.remove("is-open");
+          mobileBtn.setAttribute("aria-expanded", "false");
+        }
+        document.body.classList.remove("menu-locked");
+      }
     });
   }
 
@@ -2040,18 +2056,9 @@ function renderUserArea() {
 }
 
 /**
- * Hiển thị thẻ Tiến Độ Học Từ Vựng trên trang index.html khi người dùng đã đăng nhập thành công.
+ * Hàm tính toán tiến độ học chuẩn xác, đồng bộ giữa SRS và danh sách từ đã thuộc (Req 5 & Spec Mục 1).
  */
-function renderIndexProgressIfLoggedIn(user) {
-  const host = document.getElementById("indexUserProgressHost");
-  if (!host) return;
-
-  if (!user) {
-    host.style.display = "none";
-    host.innerHTML = "";
-    return;
-  }
-
+function getSynchronizedVocabStats() {
   let stats = { newCount: 0, reviewing: 0, learning: 0, mastered: 0 };
   let dueCount = 0;
   if (typeof SRS !== "undefined" && SRS.getState) {
@@ -2063,48 +2070,49 @@ function renderIndexProgressIfLoggedIn(user) {
       console.warn("SRS stats error:", e);
     }
   }
+
+  const masteredWords = (typeof STORE !== "undefined") ? STORE.get("vocab_mastered_words", []) : [];
+  const srsMastered = (stats && stats.mastered) || 0;
+  const totalMastered = Math.max(masteredWords.length, srsMastered);
+
+  // Đếm tổng số từ vựng trong tất cả các lọ hệ thống
+  let totalWordsInJars = 0;
+  if (typeof window.DATA !== "undefined" && Array.isArray(window.DATA.vocabJars)) {
+    window.DATA.vocabJars.forEach(j => { totalWordsInJars += (j.words || []).length; });
+  }
+  if (totalWordsInJars === 0) totalWordsInJars = 360;
+
+  const totalLearnedOrReview = (stats.learning || 0) + (stats.reviewing || 0);
+  const calculatedNew = Math.max(0, totalWordsInJars - totalMastered - totalLearnedOrReview);
   const streak = (typeof STORE !== "undefined") ? STORE.get("streak", 0) : 0;
 
-  host.style.display = "block";
-  host.innerHTML = `
-    <div class="voc-progress-horizontal-card">
-      <div class="voc-progress-horiz-left">
-        <div class="voc-progress-horiz-icon">
-          ${window.RusiIcons ? RusiIcons.get("trending-up", { size: 22 }) : ""}
-        </div>
-        <div class="voc-progress-horiz-title">
-          <h3>Tiến Độ Học &amp; Ôn Tập Từ Vựng Của Bạn</h3>
-          <p>Thuật toán Spaced Repetition (SM-2) tự động theo dõi và gợi ý từ vựng cần ôn đúng thời điểm.</p>
-        </div>
-      </div>
-
-      <div class="voc-progress-horiz-stats">
-        <div class="voc-stat-box">
-          <div class="voc-stat-val" style="color:var(--green, #22c55e)">${stats.mastered || 0}</div>
-          <div class="voc-stat-label">Đã thuộc</div>
-        </div>
-        <div class="voc-stat-box ${dueCount > 0 ? "is-due" : ""}">
-          <div class="voc-stat-val" style="color:var(--orange, #f59e0b)">${dueCount}</div>
-          <div class="voc-stat-label">Cần ôn tập</div>
-        </div>
-        <div class="voc-stat-box">
-          <div class="voc-stat-val" style="color:var(--blue, #38bdf8)">${stats.newCount || 0}</div>
-          <div class="voc-stat-label">Từ mới</div>
-        </div>
-        <div class="voc-stat-box">
-          <div class="voc-stat-val" style="color:var(--russia-red, #ef4444)">${streak}</div>
-          <div class="voc-stat-label">Chuỗi ngày ${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 14 }) : ""}</div>
-        </div>
-      </div>
-
-      <div class="voc-progress-horiz-right">
-        <a href="vocabulary.html" class="btn btn-primary btn-sm voc-progress-horiz-cta">
-          ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Ôn tập flashcard ngay →
-        </a>
-      </div>
-    </div>
-  `;
+  return {
+    mastered: totalMastered,
+    dueCount,
+    newCount: calculatedNew,
+    streak
+  };
 }
+window.getSynchronizedVocabStats = getSynchronizedVocabStats;
+
+/**
+ * Hiển thị thẻ Tiến Độ Học Ôn trên trang index.html khi người dùng đã đăng nhập thành công (Chuẩn Spec Mục 1).
+ */
+function renderIndexProgressIfLoggedIn(user) {
+  const host = document.getElementById("indexUserProgressHost");
+  if (!host) return;
+  // Theo chuẩn mới: Loại bỏ thẻ tiến độ ở index.html khi đăng nhập để giữ giao diện trang chủ tinh gọn
+  host.style.display = "none";
+  host.innerHTML = "";
+}
+
+// Lắng nghe sự kiện đồng bộ tiến độ thời gian thực
+window.addEventListener("trki:progress-updated", () => {
+  const user = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
+  if (user) {
+    renderIndexProgressIfLoggedIn(user);
+  }
+});
 
 /**
  * Cầu nối: khi trạng thái auth đổi, re-render khu vực user trong header.
