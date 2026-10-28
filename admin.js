@@ -112,7 +112,9 @@
             { v: "A1", l: "A1 (ТЭУ) — Sơ cấp" },
             { v: "A2", l: "A2 (ТБУ) — Cơ bản" },
             { v: "B1", l: "B1 (ТРКИ-1) — Trung cấp 1" },
-            { v: "B2", l: "B2 (ТРКИ-2) — Trung cấp 2" }
+            { v: "B2", l: "B2 (ТРКИ-2) — Trung cấp 2" },
+            { v: "C1", l: "C1 (ТРКИ-3) — Cao cấp" },
+            { v: "C2", l: "C2 (ТРКИ-4) — Thành thạo" }
           ],
           defaultValue: "A1"
         },
@@ -166,11 +168,14 @@
             { v: "A1", l: "A1 (Sơ cấp)" },
             { v: "A2", l: "A2 (Cơ bản)" },
             { v: "B1", l: "B1 (Trung cấp 1)" },
-            { v: "B2", l: "B2 (Trung cấp 2)" }
+            { v: "B2", l: "B2 (Trung cấp 2)" },
+            { v: "C1", l: "C1 (Cao cấp)" },
+            { v: "C2", l: "C2 (Thành thạo)" }
           ],
           defaultValue: "A1"
         },
         { key: "levelName", label: "Tên hiển thị cấp độ", type: "text", defaultValue: "Sơ cấp A1" },
+        { key: "color", label: "Mã màu chủ đề (Hex)", type: "text", defaultValue: "#0039A6" },
         { key: "desc", label: "Mô tả ngữ cảnh sử dụng & mục tiêu", type: "textarea" },
         {
           key: "is_pro_only",
@@ -181,6 +186,91 @@
             { v: "true", l: "Chỉ dành cho PRO" }
           ]
         }
+      ]
+    },
+
+    TOPIC_ARTICLES: {
+      slug: "TOPIC_ARTICLES",
+      group: "study",
+      label: "Bài học chủ đề (Article)",
+      singular: "Bài học chủ đề",
+      icon: "book-open-blog",
+      webUrl: "vocabulary.html",
+      desc: "Nội dung bài đọc chi tiết theo chủ đề: Bối cảnh đời sống, hội thoại mẫu, điểm ngữ pháp và bảng từ vựng.",
+      source: () => {
+        const raw = window.TOPIC_ARTICLES || {};
+        return Object.keys(raw).map((k) => ({
+          id: k,
+          intro: raw[k].intro || "",
+          audioUrl: raw[k].audioUrl || "",
+          dialogues: Array.isArray(raw[k].dialogues) ? raw[k].dialogues : [],
+          grammar: raw[k].grammar || { title: "", rule: "", examples: [] },
+          vocabTable: Array.isArray(raw[k].vocabTable) ? raw[k].vocabTable : []
+        }));
+      },
+      createDefault: () => ({
+        id: "chu_de_moi",
+        intro: "Giới thiệu bối cảnh thực tế đời sống sinh viên và giao tiếp tại Nga...",
+        audioUrl: "",
+        dialogues: [
+          { speaker: "Анна", role: "Sinh viên", ru: "Привет! Как дела?", vi: "Chào bạn! Bạn khỏe không?" }
+        ],
+        grammar: {
+          title: "Điểm ngữ pháp cốt lõi",
+          rule: "Mô tả quy tắc ngữ pháp trong bài học...",
+          examples: [
+            { ru: "Я изучаю русский язык.", vi: "Tôi đang học tiếng Nga." }
+          ]
+        },
+        vocabTable: [
+          { ru: "студент", stress: "студе́нт", pos: "Noun", vi: "sinh viên nam", exampleRu: "Он студент.", exampleVi: "Anh ấy là sinh viên." }
+        ]
+      }),
+      fields: [
+        { key: "id", label: "Mã chủ đề (khớp với ID Lọ từ vựng)", type: "text", required: true, help: "Ví dụ: nghe_nghiep, do_an_uong..." },
+        { key: "intro", label: "Đoạn văn bối cảnh giới thiệu", type: "textarea", rows: 4, required: true },
+        { key: "audioUrl", label: "URL File âm thanh (tùy chọn)", type: "text" }
+      ]
+    },
+
+    GRAMMAR_LESSONS: {
+      slug: "GRAMMAR_LESSONS",
+      group: "study",
+      label: "Ngữ pháp chuyên sâu",
+      singular: "Bài ngữ pháp",
+      icon: "sparkles-clean",
+      webUrl: "vocabulary.html",
+      desc: "Tổng hợp các bài học ngữ pháp chuyên sâu: Các Cách (Падежи), Thể động từ, Giới từ và bảng chia mẫu.",
+      source: () => (window.GRAMMAR_LESSONS || []),
+      createDefault: () => ({
+        id: "grammar_" + Date.now().toString().slice(-4),
+        title: "Bài ngữ pháp mới",
+        vi: "Ý nghĩa và cách dùng trong giao tiếp",
+        topic: "Chủ đề liên quan: Đời sống",
+        rules: [
+          "Quy tắc 1: Cách dùng cơ bản trong câu.",
+          "Quy tắc 2: Quy tắc biến đổi đuôi từ."
+        ],
+        table: {
+          head: ["Nguyên mẫu", "Dạng biến đổi", "Ví dụ"],
+          rows: [
+            ["книга (nữ)", "книгу", "Я читаю книгу."]
+          ]
+        },
+        quickQuiz: [
+          {
+            q: "Chọn dạng đúng của từ...",
+            options: ["книга", "книгу", "книге", "книгой"],
+            a: 1,
+            explain: "Tân ngữ trực tiếp dùng cách 4: đuôi -а đổi thành -у."
+          }
+        ]
+      }),
+      fields: [
+        { key: "id", label: "Mã bài học (ID)", type: "text", required: true, help: "Ví dụ: accusative, genitive, verb_aspect..." },
+        { key: "title", label: "Tiêu đề tiếng Nga", type: "text", required: true },
+        { key: "vi", label: "Ý nghĩa & diễn giải tiếng Việt", type: "text", required: true },
+        { key: "topic", label: "Chủ đề liên quan", type: "text" }
       ]
     },
 
@@ -472,7 +562,58 @@
       ]
     },
 
-    BLOG_POSTS: {
+        ORDERS: {
+      slug: "ORDERS",
+      group: "commerce",
+      label: "Đơn hàng & Giao dịch",
+      singular: "Đơn hàng",
+      icon: "shopping-bag",
+      webUrl: "index.html#pricing",
+      source: () => (window.SHOP_ORDERS || []),
+      desc: "Quản lý đơn hàng mua gói học PRO, sách và giáo trình tiếng Nga qua VietQR.",
+      createDefault: () => ({
+        id: "ORD-" + Date.now().toString().slice(-6),
+        userEmail: "",
+        packageId: "pro_6m",
+        packageName: "Gói Luyện Thi 6 Tháng",
+        amount: 299000,
+        paymentMethod: "VietQR",
+        status: "pending",
+        createdAt: new Date().toISOString()
+      }),
+      fields: [
+        { key: "id", label: "Mã đơn hàng", type: "text", required: true },
+        { key: "userEmail", label: "Email học viên", type: "text", required: true },
+        { key: "packageId", label: "Mã gói / Mã sách", type: "text", required: true },
+        { key: "packageName", label: "Tên gói cước", type: "text", required: true },
+        { key: "amount", label: "Số tiền thanh toán (VNĐ)", type: "number", required: true },
+        {
+          key: "paymentMethod",
+          label: "Phương thức thanh toán",
+          type: "select",
+          options: [
+            { v: "VietQR", l: "VietQR Chuyển khoản" },
+            { v: "MOMO", l: "Ví MoMo" },
+            { v: "Card", l: "Thẻ ngân hàng / Visa" }
+          ],
+          defaultValue: "VietQR"
+        },
+        {
+          key: "status",
+          label: "Trạng thái thanh toán",
+          type: "select",
+          options: [
+            { v: "pending", l: "Chờ thanh toán (Pending)" },
+            { v: "paid", l: "Đã kích hoạt PRO (Paid)" },
+            { v: "cancelled", l: "Đã hủy (Cancelled)" }
+          ],
+          defaultValue: "pending"
+        },
+        { key: "createdAt", label: "Thời gian tạo đơn", type: "text" }
+      ]
+    },
+
+BLOG_POSTS: {
       slug: "BLOG_POSTS",
       group: "commerce",
       label: "Cẩm nang Blog",
@@ -728,6 +869,13 @@
 
     if (listStudy) listStudy.innerHTML = "";
     if (listCommerce) listCommerce.innerHTML = "";
+
+    const countStudy = COLLECTION_KEYS.filter((k) => COLLECTIONS[k].group === "study").length;
+    const countCommerce = COLLECTION_KEYS.filter((k) => COLLECTIONS[k].group === "commerce").length;
+    const bStudy = document.getElementById("badgeCountStudy");
+    const bCommerce = document.getElementById("badgeCountCommerce");
+    if (bStudy) bStudy.textContent = countStudy;
+    if (bCommerce) bCommerce.textContent = countCommerce;
 
     COLLECTION_KEYS.forEach((key) => {
       const col = COLLECTIONS[key];
@@ -1478,6 +1626,10 @@
       return renderTrkiPartsBuilder(draft.parts || []);
     } else if (slug === "VOCAB_JARS" || slug === "VOCAB_LESSONS") {
       return renderVocabWordsBuilder(draft.words || []);
+    } else if (slug === "TOPIC_ARTICLES") {
+      return renderTopicArticleBuilder(draft.dialogues || [], draft.grammar || {}, draft.vocabTable || []);
+    } else if (slug === "GRAMMAR_LESSONS") {
+      return renderGrammarBuilder(draft.rules || [], draft.table || {}, draft.quickQuiz || []);
     } else if (slug === "LISTENING_LESSONS") {
       return renderListeningBuilder(draft.lines || [], draft.questions || []);
     } else if (slug === "SPEAKING_SETS") {
@@ -1611,25 +1763,80 @@
     let rowsHtml = "";
     words.forEach((w, idx) => {
       rowsHtml += `
-        <div class="payload-array-row">
-          <span class="payload-array-row-num">#${idx + 1}</span>
-          <div class="payload-array-row-fields">
-            <div class="p-form-row" style="margin-bottom:6px">
-              <input type="text" class="p-input" placeholder="Từ tiếng Nga (trọng âm)..." value="${escAttr(w.ru || "")}" oninput="window.updateVocabWord(${idx}, 'ru', this.value)" />
-              <input type="text" class="p-input" placeholder="Nghĩa tiếng Việt..." value="${escAttr(w.vi || "")}" oninput="window.updateVocabWord(${idx}, 'vi', this.value)" />
-              <input type="text" class="p-input" placeholder="Ghi chú (giống từ, quản cách)..." value="${escAttr(w.note || "")}" oninput="window.updateVocabWord(${idx}, 'note', this.value)" style="max-width:200px" />
-            </div>
-            <input type="text" class="p-input" placeholder="Ví dụ câu song ngữ..." value="${escAttr(w.ex || "")}" oninput="window.updateVocabWord(${idx}, 'ex', this.value)" />
+        <div class="payload-array-row" style="margin-bottom:12px;padding:12px;background:var(--p-card-bg,#fff);border:1px solid var(--p-border,#e5e7eb);border-radius:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="payload-array-row-num" style="font-weight:700;color:var(--p-primary,#0039A6)">#${idx + 1} - ${escAttr(w.ru || "Từ mới")}</span>
+            <button class="p-btn-icon" type="button" onclick="window.removeVocabWord(${idx})" title="Xóa từ này" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
           </div>
-          <button class="p-btn-icon" type="button" onclick="window.removeVocabWord(${idx})" title="Xóa từ này">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
+          <div class="payload-array-row-fields" style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:8px">
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:2px">Từ tiếng Nga & trọng âm (*)</label>
+                <input type="text" class="p-input" placeholder="ví dụ: я́блоко" value="${escAttr(w.ru || "")}" oninput="window.updateVocabWord(${idx}, 'ru', this.value)" />
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:2px">Nghĩa tiếng Việt (*)</label>
+                <input type="text" class="p-input" placeholder="quả táo" value="${escAttr(w.vi || "")}" oninput="window.updateVocabWord(${idx}, 'vi', this.value)" />
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:2px">Từ loại (POS)</label>
+                <select class="p-input" onchange="window.updateVocabWord(${idx}, 'pos', this.value)">
+                  <option value="" ${!w.pos ? 'selected' : ''}>-- Chọn từ loại --</option>
+                  <option value="danh từ" ${w.pos === 'danh từ' ? 'selected' : ''}>Danh từ (Существительное)</option>
+                  <option value="động từ" ${w.pos === 'động từ' ? 'selected' : ''}>Động từ (Глагол)</option>
+                  <option value="tính từ" ${w.pos === 'tính từ' ? 'selected' : ''}>Tính từ (Прилагательное)</option>
+                  <option value="phó từ" ${w.pos === 'phó từ' ? 'selected' : ''}>Phó từ (Наречие)</option>
+                  <option value="đại từ" ${w.pos === 'đại từ' ? 'selected' : ''}>Đại từ (Местоимение)</option>
+                  <option value="giới từ" ${w.pos === 'giới từ' ? 'selected' : ''}>Giới từ (Предлог)</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:2px">Giống / Thể động từ</label>
+                <input type="text" class="p-input" placeholder="đực/cái/trung hoặc НСВ/СВ" value="${escAttr(w.gender || w.aspect || "")}" oninput="window.updateVocabWord(${idx}, 'gender', this.value)" />
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:8px">
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:2px">Cụm kết hợp (Collocation)</label>
+                <input type="text" class="p-input" placeholder="ăn táo (есть яблоко)..." value="${escAttr(w.collocation || "")}" oninput="window.updateVocabWord(${idx}, 'collocation', this.value)" />
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:2px">Đồng nghĩa (Synonyms)</label>
+                <input type="text" class="p-input" placeholder="từ đồng nghĩa..." value="${escAttr(Array.isArray(w.synonyms) ? w.synonyms.join(', ') : (w.synonyms || ''))}" oninput="window.updateVocabWord(${idx}, 'synonyms', this.value.split(',').map(s=>s.trim()).filter(Boolean))" />
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:2px">Trái nghĩa (Antonyms)</label>
+                <input type="text" class="p-input" placeholder="từ trái nghĩa..." value="${escAttr(Array.isArray(w.antonyms) ? w.antonyms.join(', ') : (w.antonyms || ''))}" oninput="window.updateVocabWord(${idx}, 'antonyms', this.value.split(',').map(s=>s.trim()).filter(Boolean))" />
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:2px">Chủ đề con (Sub-topic)</label>
+                <input type="text" class="p-input" placeholder="Trái cây, Thực phẩm..." value="${escAttr(w.sub_topic || "")}" oninput="window.updateVocabWord(${idx}, 'sub_topic', this.value)" />
+              </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:2px">Câu ví dụ song ngữ</label>
+                <input type="text" class="p-input" placeholder="Я люблю сладкие яблоки (Tôi thích những quả táo ngọt)..." value="${escAttr(w.ex || "")}" oninput="window.updateVocabWord(${idx}, 'ex', this.value)" />
+              </div>
+              <div>
+                <label style="font-size:11px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:2px">Ghi chú ngữ pháp / Quản cách</label>
+                <input type="text" class="p-input" placeholder="cách 2 số nhiều: яблок..." value="${escAttr(w.note || "")}" oninput="window.updateVocabWord(${idx}, 'note', this.value)" />
+              </div>
+            </div>
+          </div>
         </div>
       `;
     });
 
     return `
       <div class="payload-array-container">
-        <div class="payload-array-header">
-          <span style="font-weight:700">Danh sách mẩu từ vựng (${words.length} từ)</span>
+        <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div>
+            <span style="font-weight:700;font-size:15px">Danh sách từ vựng chuyên sâu (${words.length} từ)</span>
+            <div style="font-size:12px;color:var(--p-text-muted);margin-top:2px">Hỗ trợ đầy đủ trọng âm, từ loại, cụm kết hợp (collocation), từ đồng nghĩa, trái nghĩa và ví dụ song ngữ theo Spec Module 1.</div>
+          </div>
           <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addVocabWord()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm từ mới</button>
         </div>
         <div class="payload-array-items">
@@ -1642,7 +1849,7 @@
   window.addVocabWord = function () {
     if (!State.currentDraft) return;
     State.currentDraft.words = State.currentDraft.words || [];
-    State.currentDraft.words.push({ ru: "", vi: "", note: "", ex: "" });
+    State.currentDraft.words.push({ ru: "", vi: "", pos: "danh từ", gender: "", collocation: "", synonyms: [], antonyms: [], ex: "", note: "", sub_topic: "" });
     refreshStructureTab();
   };
 
@@ -1655,6 +1862,474 @@
   window.updateVocabWord = function (idx, field, val) {
     if (!State.currentDraft || !State.currentDraft.words || !State.currentDraft.words[idx]) return;
     State.currentDraft.words[idx][field] = val;
+  };
+
+  // --- Topic Article Builder (Dialogues, Grammar, Vocab Table) ---
+  function renderTopicArticleBuilder(dialogues, grammar, vocabTable) {
+    let diaHtml = "";
+    (dialogues || []).forEach((d, idx) => {
+      diaHtml += `
+        <div class="payload-array-row" style="margin-bottom:8px;padding:10px;background:var(--p-card-bg,#fff);border:1px solid var(--p-border,#e5e7eb);border-radius:6px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+            <span class="payload-array-row-num" style="font-weight:700">#${idx + 1}</span>
+            <input type="text" class="p-input" placeholder="Người nói (Анна / Иван)..." value="${escAttr(d.who || "")}" oninput="window.updateArticleDialogue(${idx}, 'who', this.value)" style="max-width:180px" />
+            <button class="p-btn-icon" type="button" onclick="window.removeArticleDialogue(${idx})" title="Xóa dòng" style="margin-left:auto;color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <textarea class="p-input" rows="2" placeholder="Lời thoại tiếng Nga (có trọng âm)..." oninput="window.updateArticleDialogue(${idx}, 'ru', this.value)">${escAttr(d.ru || "")}</textarea>
+            <textarea class="p-input" rows="2" placeholder="Dịch nghĩa tiếng Việt..." oninput="window.updateArticleDialogue(${idx}, 'vi', this.value)">${escAttr(d.vi || "")}</textarea>
+          </div>
+        </div>
+      `;
+    });
+
+    let vtHtml = "";
+    (vocabTable || []).forEach((v, idx) => {
+      vtHtml += `
+        <div style="display:grid;grid-template-columns:1fr 100px 1.5fr 36px;gap:8px;align-items:center;margin-bottom:6px">
+          <input type="text" class="p-input" placeholder="Từ vựng (trọng âm)..." value="${escAttr(v.word || "")}" oninput="window.updateArticleVocabRow(${idx}, 'word', this.value)" />
+          <input type="text" class="p-input" placeholder="Loại từ..." value="${escAttr(v.type || "")}" oninput="window.updateArticleVocabRow(${idx}, 'type', this.value)" />
+          <input type="text" class="p-input" placeholder="Giải nghĩa tiếng Việt..." value="${escAttr(v.meaning || "")}" oninput="window.updateArticleVocabRow(${idx}, 'meaning', this.value)" />
+          <button class="p-btn-icon" type="button" onclick="window.removeArticleVocabRow(${idx})" title="Xóa" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
+        </div>
+      `;
+    });
+
+    const g = grammar || {};
+
+    return `
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <!-- Section 1: Đối thoại -->
+        <div class="payload-array-container">
+          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-weight:700;font-size:14px">1. Hội thoại mẫu song ngữ (${(dialogues || []).length} lượt thoại)</span>
+            <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addArticleDialogue()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm lời thoại</button>
+          </div>
+          <div class="payload-array-items">
+            ${diaHtml || '<div style="text-align:center;padding:16px;color:var(--p-text-muted)">Chưa có hội thoại nào. Bấm "Thêm lời thoại" để tạo.</div>'}
+          </div>
+        </div>
+
+        <!-- Section 2: Ngữ pháp trọng điểm -->
+        <div class="payload-array-container" style="padding:14px;background:var(--p-card-bg,#fff);border:1px solid var(--p-border,#e5e7eb);border-radius:8px">
+          <span style="font-weight:700;font-size:14px;display:block;margin-bottom:10px">2. Ngữ pháp trọng điểm trong bài đọc</span>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:4px">Tiêu đề điểm ngữ pháp</label>
+              <input type="text" class="p-input" placeholder="ví dụ: Quy tắc sử dụng giới từ В và НА..." value="${escAttr(g.title || "")}" oninput="window.updateArticleGrammar('title', this.value)" />
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:4px">Nội dung quy tắc / Giải thích chi tiết</label>
+              <textarea class="p-input" rows="3" placeholder="Trình bày cấu trúc, ví dụ minh họa và quy tắc ngữ pháp..." oninput="window.updateArticleGrammar('rule', this.value)">${escAttr(g.rule || "")}</textarea>
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:4px">Lưu ý & trường hợp đặc biệt (Note)</label>
+              <input type="text" class="p-input" placeholder="Ngoại lệ hoặc bẫy hay gặp trong kỳ thi..." value="${escAttr(g.note || "")}" oninput="window.updateArticleGrammar('note', this.value)" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Bảng từ vựng trọng tâm -->
+        <div class="payload-array-container">
+          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-weight:700;font-size:14px">3. Bảng từ vựng trọng tâm (${(vocabTable || []).length} mục)</span>
+            <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.addArticleVocabRow()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm từ</button>
+          </div>
+          <div class="payload-array-items">
+            ${vtHtml || '<div style="text-align:center;padding:16px;color:var(--p-text-muted)">Chưa có từ vựng bảng biểu.</div>'}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  window.addArticleDialogue = function () {
+    if (!State.currentDraft) return;
+    State.currentDraft.dialogues = State.currentDraft.dialogues || [];
+    State.currentDraft.dialogues.push({ who: "", ru: "", vi: "" });
+    refreshStructureTab();
+  };
+
+  window.removeArticleDialogue = function (idx) {
+    if (!State.currentDraft || !State.currentDraft.dialogues) return;
+    State.currentDraft.dialogues.splice(idx, 1);
+    refreshStructureTab();
+  };
+
+  window.updateArticleDialogue = function (idx, field, val) {
+    if (!State.currentDraft || !State.currentDraft.dialogues || !State.currentDraft.dialogues[idx]) return;
+    State.currentDraft.dialogues[idx][field] = val;
+  };
+
+  window.updateArticleGrammar = function (field, val) {
+    if (!State.currentDraft) return;
+    State.currentDraft.grammar = State.currentDraft.grammar || {};
+    State.currentDraft.grammar[field] = val;
+  };
+
+  window.addArticleVocabRow = function () {
+    if (!State.currentDraft) return;
+    State.currentDraft.vocabTable = State.currentDraft.vocabTable || [];
+    State.currentDraft.vocabTable.push({ word: "", type: "n.", meaning: "" });
+    refreshStructureTab();
+  };
+
+  window.removeArticleVocabRow = function (idx) {
+    if (!State.currentDraft || !State.currentDraft.vocabTable) return;
+    State.currentDraft.vocabTable.splice(idx, 1);
+    refreshStructureTab();
+  };
+
+  window.updateArticleVocabRow = function (idx, field, val) {
+    if (!State.currentDraft || !State.currentDraft.vocabTable || !State.currentDraft.vocabTable[idx]) return;
+    State.currentDraft.vocabTable[idx][field] = val;
+  };
+
+  // --- Grammar Lessons Builder (Rules, Table, Quick Quiz) ---
+  function renderGrammarBuilder(rules, table, quickQuiz) {
+    let rulesHtml = "";
+    (rules || []).forEach((r, idx) => {
+      rulesHtml += `
+        <div class="payload-array-row" style="margin-bottom:10px;padding:12px;background:var(--p-card-bg,#fff);border:1px solid var(--p-border,#e5e7eb);border-radius:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span class="payload-array-row-num" style="font-weight:700">Quy tắc #${idx + 1}</span>
+            <button class="p-btn-icon" type="button" onclick="window.removeGrammarRule(${idx})" title="Xóa quy tắc" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <input type="text" class="p-input" placeholder="Tiêu đề quy tắc..." value="${escAttr(r.title || "")}" oninput="window.updateGrammarRule(${idx}, 'title', this.value)" />
+            <textarea class="p-input" rows="2" placeholder="Giải thích chi tiết công thức và quy tắc..." oninput="window.updateGrammarRule(${idx}, 'content', this.value)">${escAttr(r.content || "")}</textarea>
+            <input type="text" class="p-input" placeholder="Ví dụ song ngữ (phân cách bằng dấu chấm phẩy)..." value="${escAttr(Array.isArray(r.examples) ? r.examples.join('; ') : (r.examples || ''))}" oninput="window.updateGrammarRule(${idx}, 'examples', this.value.split(';').map(s=>s.trim()).filter(Boolean))" />
+          </div>
+        </div>
+      `;
+    });
+
+    let quizHtml = "";
+    (quickQuiz || []).forEach((q, idx) => {
+      const opts = q.options || [];
+      quizHtml += `
+        <div class="payload-array-row" style="margin-bottom:12px;padding:12px;background:var(--p-card-bg,#fff);border:1px solid var(--p-border,#e5e7eb);border-radius:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="payload-array-row-num" style="font-weight:700">Câu củng cố #${idx + 1}</span>
+            <button class="p-btn-icon" type="button" onclick="window.removeGrammarQuiz(${idx})" title="Xóa câu hỏi" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <input type="text" class="p-input" placeholder="Câu hỏi hoặc câu cần điền từ..." value="${escAttr(q.q || q.question || "")}" oninput="window.updateGrammarQuiz(${idx}, 'q', this.value)" />
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:6px">
+              ${[0, 1, 2, 3].map(oi => `
+                <div style="display:flex;align-items:center;gap:4px">
+                  <input type="radio" name="g_correct_${idx}" ${q.answer === oi ? 'checked' : ''} onchange="window.updateGrammarQuiz(${idx}, 'answer', ${oi})" title="Đáp án đúng" />
+                  <input type="text" class="p-input" placeholder="Lựa chọn ${String.fromCharCode(65 + oi)}" value="${escAttr(opts[oi] || '')}" oninput="window.updateGrammarQuizOption(${idx}, ${oi}, this.value)" />
+                </div>
+              `).join('')}
+            </div>
+            <input type="text" class="p-input" placeholder="Giải thích ngữ pháp ngắn gọn khi chọn..." value="${escAttr(q.explain || "")}" oninput="window.updateGrammarQuiz(${idx}, 'explain', this.value)" />
+          </div>
+        </div>
+      `;
+    });
+
+    return `
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <!-- Section 1: Quy tắc -->
+        <div class="payload-array-container">
+          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-weight:700;font-size:14px">1. Các quy tắc ngữ pháp (${(rules || []).length} quy tắc)</span>
+            <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addGrammarRule()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm quy tắc</button>
+          </div>
+          <div class="payload-array-items">
+            ${rulesHtml || '<div style="text-align:center;padding:16px;color:var(--p-text-muted)">Chưa có quy tắc nào. Bấm "Thêm quy tắc" để tạo.</div>'}
+          </div>
+        </div>
+
+        <!-- Section 2: Trắc nghiệm củng cố -->
+        <div class="payload-array-container">
+          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-weight:700;font-size:14px">2. Bài tập trắc nghiệm củng cố (${(quickQuiz || []).length} câu hỏi)</span>
+            <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.addGrammarQuiz()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu hỏi</button>
+          </div>
+          <div class="payload-array-items">
+            ${quizHtml || '<div style="text-align:center;padding:16px;color:var(--p-text-muted)">Chưa có câu hỏi trắc nghiệm. Bấm "Thêm câu hỏi" để tạo.</div>'}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  window.addGrammarRule = function () {
+    if (!State.currentDraft) return;
+    State.currentDraft.rules = State.currentDraft.rules || [];
+    State.currentDraft.rules.push({ title: "", content: "", examples: [] });
+    refreshStructureTab();
+  };
+
+  window.removeGrammarRule = function (idx) {
+    if (!State.currentDraft || !State.currentDraft.rules) return;
+    State.currentDraft.rules.splice(idx, 1);
+    refreshStructureTab();
+  };
+
+  window.updateGrammarRule = function (idx, field, val) {
+    if (!State.currentDraft || !State.currentDraft.rules || !State.currentDraft.rules[idx]) return;
+    State.currentDraft.rules[idx][field] = val;
+  };
+
+  window.addGrammarQuiz = function () {
+    if (!State.currentDraft) return;
+    State.currentDraft.quickQuiz = State.currentDraft.quickQuiz || [];
+    State.currentDraft.quickQuiz.push({ q: "", options: ["", "", "", ""], answer: 0, explain: "" });
+    refreshStructureTab();
+  };
+
+  window.removeGrammarQuiz = function (idx) {
+    if (!State.currentDraft || !State.currentDraft.quickQuiz) return;
+    State.currentDraft.quickQuiz.splice(idx, 1);
+    refreshStructureTab();
+  };
+
+  window.updateGrammarQuiz = function (idx, field, val) {
+    if (!State.currentDraft || !State.currentDraft.quickQuiz || !State.currentDraft.quickQuiz[idx]) return;
+    State.currentDraft.quickQuiz[idx][field] = val;
+  };
+
+  window.updateGrammarQuizOption = function (qIdx, optIdx, val) {
+    if (!State.currentDraft || !State.currentDraft.quickQuiz || !State.currentDraft.quickQuiz[qIdx]) return;
+    State.currentDraft.quickQuiz[qIdx].options = State.currentDraft.quickQuiz[qIdx].options || [];
+    State.currentDraft.quickQuiz[qIdx].options[optIdx] = val;
+  };
+
+  // --- Topic Article Builder (Dialogues, Grammar, Vocab Table) ---
+  function renderTopicArticleBuilder(dialogues, grammar, vocabTable) {
+    let diaHtml = "";
+    (dialogues || []).forEach((d, idx) => {
+      diaHtml += `
+        <div class="payload-array-row" style="margin-bottom:8px;padding:10px;background:var(--p-card-bg,#fff);border:1px solid var(--p-border,#e5e7eb);border-radius:6px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+            <span class="payload-array-row-num" style="font-weight:700">#${idx + 1}</span>
+            <input type="text" class="p-input" placeholder="Người nói (Анна / Иван)..." value="${escAttr(d.who || "")}" oninput="window.updateArticleDialogue(${idx}, 'who', this.value)" style="max-width:180px" />
+            <button class="p-btn-icon" type="button" onclick="window.removeArticleDialogue(${idx})" title="Xóa dòng" style="margin-left:auto;color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <textarea class="p-input" rows="2" placeholder="Lời thoại tiếng Nga (có trọng âm)..." oninput="window.updateArticleDialogue(${idx}, 'ru', this.value)">${escAttr(d.ru || "")}</textarea>
+            <textarea class="p-input" rows="2" placeholder="Dịch nghĩa tiếng Việt..." oninput="window.updateArticleDialogue(${idx}, 'vi', this.value)">${escAttr(d.vi || "")}</textarea>
+          </div>
+        </div>
+      `;
+    });
+
+    let vtHtml = "";
+    (vocabTable || []).forEach((v, idx) => {
+      vtHtml += `
+        <div style="display:grid;grid-template-columns:1fr 100px 1.5fr 36px;gap:8px;align-items:center;margin-bottom:6px">
+          <input type="text" class="p-input" placeholder="Từ vựng (trọng âm)..." value="${escAttr(v.word || "")}" oninput="window.updateArticleVocabRow(${idx}, 'word', this.value)" />
+          <input type="text" class="p-input" placeholder="Loại từ..." value="${escAttr(v.type || "")}" oninput="window.updateArticleVocabRow(${idx}, 'type', this.value)" />
+          <input type="text" class="p-input" placeholder="Giải nghĩa tiếng Việt..." value="${escAttr(v.meaning || "")}" oninput="window.updateArticleVocabRow(${idx}, 'meaning', this.value)" />
+          <button class="p-btn-icon" type="button" onclick="window.removeArticleVocabRow(${idx})" title="Xóa" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
+        </div>
+      `;
+    });
+
+    const g = grammar || {};
+
+    return `
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <!-- Section 1: Đối thoại -->
+        <div class="payload-array-container">
+          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-weight:700;font-size:14px">1. Hội thoại mẫu song ngữ (${(dialogues || []).length} lượt thoại)</span>
+            <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addArticleDialogue()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm lời thoại</button>
+          </div>
+          <div class="payload-array-items">
+            ${diaHtml || '<div style="text-align:center;padding:16px;color:var(--p-text-muted)">Chưa có hội thoại nào. Bấm "Thêm lời thoại" để tạo.</div>'}
+          </div>
+        </div>
+
+        <!-- Section 2: Ngữ pháp trọng điểm -->
+        <div class="payload-array-container" style="padding:14px;background:var(--p-card-bg,#fff);border:1px solid var(--p-border,#e5e7eb);border-radius:8px">
+          <span style="font-weight:700;font-size:14px;display:block;margin-bottom:10px">2. Ngữ pháp trọng điểm trong bài đọc</span>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:4px">Tiêu đề điểm ngữ pháp</label>
+              <input type="text" class="p-input" placeholder="ví dụ: Quy tắc sử dụng giới từ В và НА..." value="${escAttr(g.title || "")}" oninput="window.updateArticleGrammar('title', this.value)" />
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:4px">Nội dung quy tắc / Giải thích chi tiết</label>
+              <textarea class="p-input" rows="3" placeholder="Trình bày cấu trúc, ví dụ minh họa và quy tắc ngữ pháp..." oninput="window.updateArticleGrammar('rule', this.value)">${escAttr(g.rule || "")}</textarea>
+            </div>
+            <div>
+              <label style="font-size:12px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:4px">Lưu ý & trường hợp đặc biệt (Note)</label>
+              <input type="text" class="p-input" placeholder="Ngoại lệ hoặc bẫy hay gặp trong kỳ thi..." value="${escAttr(g.note || "")}" oninput="window.updateArticleGrammar('note', this.value)" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Bảng từ vựng trọng tâm -->
+        <div class="payload-array-container">
+          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-weight:700;font-size:14px">3. Bảng từ vựng trọng tâm (${(vocabTable || []).length} mục)</span>
+            <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.addArticleVocabRow()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm từ</button>
+          </div>
+          <div class="payload-array-items">
+            ${vtHtml || '<div style="text-align:center;padding:16px;color:var(--p-text-muted)">Chưa có từ vựng bảng biểu.</div>'}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  window.addArticleDialogue = function () {
+    if (!State.currentDraft) return;
+    State.currentDraft.dialogues = State.currentDraft.dialogues || [];
+    State.currentDraft.dialogues.push({ who: "", ru: "", vi: "" });
+    refreshStructureTab();
+  };
+
+  window.removeArticleDialogue = function (idx) {
+    if (!State.currentDraft || !State.currentDraft.dialogues) return;
+    State.currentDraft.dialogues.splice(idx, 1);
+    refreshStructureTab();
+  };
+
+  window.updateArticleDialogue = function (idx, field, val) {
+    if (!State.currentDraft || !State.currentDraft.dialogues || !State.currentDraft.dialogues[idx]) return;
+    State.currentDraft.dialogues[idx][field] = val;
+  };
+
+  window.updateArticleGrammar = function (field, val) {
+    if (!State.currentDraft) return;
+    State.currentDraft.grammar = State.currentDraft.grammar || {};
+    State.currentDraft.grammar[field] = val;
+  };
+
+  window.addArticleVocabRow = function () {
+    if (!State.currentDraft) return;
+    State.currentDraft.vocabTable = State.currentDraft.vocabTable || [];
+    State.currentDraft.vocabTable.push({ word: "", type: "n.", meaning: "" });
+    refreshStructureTab();
+  };
+
+  window.removeArticleVocabRow = function (idx) {
+    if (!State.currentDraft || !State.currentDraft.vocabTable) return;
+    State.currentDraft.vocabTable.splice(idx, 1);
+    refreshStructureTab();
+  };
+
+  window.updateArticleVocabRow = function (idx, field, val) {
+    if (!State.currentDraft || !State.currentDraft.vocabTable || !State.currentDraft.vocabTable[idx]) return;
+    State.currentDraft.vocabTable[idx][field] = val;
+  };
+
+  // --- Grammar Lessons Builder (Rules, Table, Quick Quiz) ---
+  function renderGrammarBuilder(rules, table, quickQuiz) {
+    let rulesHtml = "";
+    (rules || []).forEach((r, idx) => {
+      rulesHtml += `
+        <div class="payload-array-row" style="margin-bottom:10px;padding:12px;background:var(--p-card-bg,#fff);border:1px solid var(--p-border,#e5e7eb);border-radius:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <span class="payload-array-row-num" style="font-weight:700">Quy tắc #${idx + 1}</span>
+            <button class="p-btn-icon" type="button" onclick="window.removeGrammarRule(${idx})" title="Xóa quy tắc" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <input type="text" class="p-input" placeholder="Tiêu đề quy tắc..." value="${escAttr(r.title || "")}" oninput="window.updateGrammarRule(${idx}, 'title', this.value)" />
+            <textarea class="p-input" rows="2" placeholder="Giải thích chi tiết công thức và quy tắc..." oninput="window.updateGrammarRule(${idx}, 'content', this.value)">${escAttr(r.content || "")}</textarea>
+            <input type="text" class="p-input" placeholder="Ví dụ song ngữ (phân cách bằng dấu chấm phẩy)..." value="${escAttr(Array.isArray(r.examples) ? r.examples.join('; ') : (r.examples || ''))}" oninput="window.updateGrammarRule(${idx}, 'examples', this.value.split(';').map(s=>s.trim()).filter(Boolean))" />
+          </div>
+        </div>
+      `;
+    });
+
+    let quizHtml = "";
+    (quickQuiz || []).forEach((q, idx) => {
+      const opts = q.options || [];
+      quizHtml += `
+        <div class="payload-array-row" style="margin-bottom:12px;padding:12px;background:var(--p-card-bg,#fff);border:1px solid var(--p-border,#e5e7eb);border-radius:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="payload-array-row-num" style="font-weight:700">Câu củng cố #${idx + 1}</span>
+            <button class="p-btn-icon" type="button" onclick="window.removeGrammarQuiz(${idx})" title="Xóa câu hỏi" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <input type="text" class="p-input" placeholder="Câu hỏi hoặc câu cần điền từ..." value="${escAttr(q.q || q.question || "")}" oninput="window.updateGrammarQuiz(${idx}, 'q', this.value)" />
+            <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:6px">
+              ${[0, 1, 2, 3].map(oi => `
+                <div style="display:flex;align-items:center;gap:4px">
+                  <input type="radio" name="g_correct_${idx}" ${q.answer === oi ? 'checked' : ''} onchange="window.updateGrammarQuiz(${idx}, 'answer', ${oi})" title="Đáp án đúng" />
+                  <input type="text" class="p-input" placeholder="Lựa chọn ${String.fromCharCode(65 + oi)}" value="${escAttr(opts[oi] || '')}" oninput="window.updateGrammarQuizOption(${idx}, ${oi}, this.value)" />
+                </div>
+              `).join('')}
+            </div>
+            <input type="text" class="p-input" placeholder="Giải thích ngữ pháp ngắn gọn khi chọn..." value="${escAttr(q.explain || "")}" oninput="window.updateGrammarQuiz(${idx}, 'explain', this.value)" />
+          </div>
+        </div>
+      `;
+    });
+
+    return `
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <!-- Section 1: Quy tắc -->
+        <div class="payload-array-container">
+          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-weight:700;font-size:14px">1. Các quy tắc ngữ pháp (${(rules || []).length} quy tắc)</span>
+            <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addGrammarRule()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm quy tắc</button>
+          </div>
+          <div class="payload-array-items">
+            ${rulesHtml || '<div style="text-align:center;padding:16px;color:var(--p-text-muted)">Chưa có quy tắc nào. Bấm "Thêm quy tắc" để tạo.</div>'}
+          </div>
+        </div>
+
+        <!-- Section 2: Trắc nghiệm củng cố -->
+        <div class="payload-array-container">
+          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-weight:700;font-size:14px">2. Bài tập trắc nghiệm củng cố (${(quickQuiz || []).length} câu hỏi)</span>
+            <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.addGrammarQuiz()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu hỏi</button>
+          </div>
+          <div class="payload-array-items">
+            ${quizHtml || '<div style="text-align:center;padding:16px;color:var(--p-text-muted)">Chưa có câu hỏi trắc nghiệm. Bấm "Thêm câu hỏi" để tạo.</div>'}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  window.addGrammarRule = function () {
+    if (!State.currentDraft) return;
+    State.currentDraft.rules = State.currentDraft.rules || [];
+    State.currentDraft.rules.push({ title: "", content: "", examples: [] });
+    refreshStructureTab();
+  };
+
+  window.removeGrammarRule = function (idx) {
+    if (!State.currentDraft || !State.currentDraft.rules) return;
+    State.currentDraft.rules.splice(idx, 1);
+    refreshStructureTab();
+  };
+
+  window.updateGrammarRule = function (idx, field, val) {
+    if (!State.currentDraft || !State.currentDraft.rules || !State.currentDraft.rules[idx]) return;
+    State.currentDraft.rules[idx][field] = val;
+  };
+
+  window.addGrammarQuiz = function () {
+    if (!State.currentDraft) return;
+    State.currentDraft.quickQuiz = State.currentDraft.quickQuiz || [];
+    State.currentDraft.quickQuiz.push({ q: "", options: ["", "", "", ""], answer: 0, explain: "" });
+    refreshStructureTab();
+  };
+
+  window.removeGrammarQuiz = function (idx) {
+    if (!State.currentDraft || !State.currentDraft.quickQuiz) return;
+    State.currentDraft.quickQuiz.splice(idx, 1);
+    refreshStructureTab();
+  };
+
+  window.updateGrammarQuiz = function (idx, field, val) {
+    if (!State.currentDraft || !State.currentDraft.quickQuiz || !State.currentDraft.quickQuiz[idx]) return;
+    State.currentDraft.quickQuiz[idx][field] = val;
+  };
+
+  window.updateGrammarQuizOption = function (qIdx, optIdx, val) {
+    if (!State.currentDraft || !State.currentDraft.quickQuiz || !State.currentDraft.quickQuiz[qIdx]) return;
+    State.currentDraft.quickQuiz[qIdx].options = State.currentDraft.quickQuiz[qIdx].options || [];
+    State.currentDraft.quickQuiz[qIdx].options[optIdx] = val;
   };
 
   // --- Listening Lessons Dialog & Quiz Builder ---
@@ -2183,6 +2858,76 @@
           icon: row.icon || "book-open-blog",
           author: row.author || "RUSI Editorial",
           readTime: row.read_time || "5 phút đọc"
+        })
+      },
+
+      GRAMMAR_LESSONS: {
+        table: "grammar_lessons",
+        conflict: "code",
+        deleteCol: "code",
+        label: "Bài học Ngữ pháp",
+        idKey: (doc) => doc.id,
+        toRow: (doc) => ({
+          code: String(doc.id).trim(),
+          title: doc.title || "Bài học ngữ pháp",
+          vi: doc.vi || "",
+          level: doc.level || "A1",
+          level_name: doc.levelName || "Sơ cấp A1",
+          topic: doc.topic || "cases",
+          topic_name: doc.topicName || "Biến cách",
+          icon: doc.icon || "book-open",
+          est_minutes: Number(doc.estMinutes) || 15,
+          is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
+          raw_data: {
+            rules: Array.isArray(doc.rules) ? doc.rules : [],
+            table: doc.table || null,
+            quickQuiz: Array.isArray(doc.quickQuiz) ? doc.quickQuiz : []
+          },
+          updated_at: new Date().toISOString()
+        }),
+        fromRow: (row) => ({
+          id: row.code || row.id,
+          title: row.title || "",
+          vi: row.vi || "",
+          level: row.level || "A1",
+          levelName: row.level_name || "Sơ cấp A1",
+          topic: row.topic || "cases",
+          topicName: row.topic_name || "Biến cách",
+          icon: row.icon || "book-open",
+          estMinutes: Number(row.est_minutes) || 15,
+          is_pro_only: Boolean(row.is_pro_only),
+          rules: (row.raw_data && Array.isArray(row.raw_data.rules)) ? row.raw_data.rules : [],
+          table: (row.raw_data && row.raw_data.table) ? row.raw_data.table : null,
+          quickQuiz: (row.raw_data && Array.isArray(row.raw_data.quickQuiz)) ? row.raw_data.quickQuiz : []
+        })
+      },
+
+      ORDERS: {
+        table: "orders",
+        conflict: "order_code",
+        deleteCol: "order_code",
+        label: "Đơn hàng & Giao dịch",
+        idKey: (doc) => doc.id,
+        toRow: (doc) => ({
+          order_code: String(doc.id).trim(),
+          user_email: doc.userEmail || "",
+          package_id: doc.packageId || "",
+          package_name: doc.packageName || "",
+          amount: Number(doc.amount) || 0,
+          payment_method: doc.paymentMethod || "VietQR",
+          status: doc.status || "pending",
+          created_at: doc.createdAt || new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }),
+        fromRow: (row) => ({
+          id: row.order_code || row.id,
+          userEmail: row.user_email || "",
+          packageId: row.package_id || "",
+          packageName: row.package_name || "",
+          amount: Number(row.amount) || 0,
+          paymentMethod: row.payment_method || "VietQR",
+          status: row.status || "pending",
+          createdAt: row.created_at || ""
         })
       }
     },

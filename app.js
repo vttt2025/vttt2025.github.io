@@ -2334,7 +2334,8 @@ function mergeAdminData() {
     "LISTENING_LESSONS",
     "SPEAKING_SETS",
     "WRITING_TASKS",
-    "VOCAB_LESSONS"
+    "VOCAB_LESSONS",
+    "GRAMMAR_LESSONS"
   ];
   const deletedMap = store.__deleted || {};
 
@@ -2371,6 +2372,25 @@ function mergeAdminData() {
     const updated = Array.from(map.values());
     target.splice(0, target.length, ...updated);
   });
+
+  // Merge TOPIC_ARTICLES (Object keyed by topic ID)
+  if (store.TOPIC_ARTICLES && typeof window.TOPIC_ARTICLES === "object" && window.TOPIC_ARTICLES !== null) {
+    const deletedArticles = new Set(deletedMap.TOPIC_ARTICLES || []);
+    deletedArticles.forEach((k) => {
+      delete window.TOPIC_ARTICLES[k];
+    });
+    if (Array.isArray(store.TOPIC_ARTICLES)) {
+      store.TOPIC_ARTICLES.forEach((art) => {
+        const k = art.id || art.topic_id;
+        if (!k || deletedArticles.has(k)) return;
+        const clean = { ...art };
+        delete clean.__admin;
+        delete clean.__source;
+        delete clean.__fromSupabase;
+        window.TOPIC_ARTICLES[k] = clean;
+      });
+    }
+  }
 
   if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
     try {
