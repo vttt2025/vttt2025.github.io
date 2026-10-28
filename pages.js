@@ -1882,11 +1882,11 @@ function initVocabPage() {
       detail.innerHTML = `
         <!-- STICKY TOP BACK BAR WITH EMBEDDED MODES (SINGLE LINE) -->
         <div class="dau-workspace-back-bar dau-quizlet-bar" id="dauQuizletBackBar">
-          <button type="button" class="dau-back-btn" id="btnBackJars" title="Quay lại kho từ vựng">
-            ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 16 }) : "←"} <span class="btn-text">Quay lại kho từ vựng</span>
+          <button type="button" class="dau-back-btn" id="btnBackJars" title="Quay lại kho từ vựng" aria-label="Quay lại kho từ vựng">
+            ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
           </button>
           <div class="dau-workspace-info">
-            <span class="dau-badge dau-badge-a1">SRS</span>
+            <span class="dau-badge dau-badge-cat">SRS</span>
             <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 18 }) : ""} Ôn tập (${reviewWords.length} từ)</span>
           </div>
           <div class="quizlet-mode-bar dau-topbar-modes" id="dauTopbarModes">
@@ -2883,11 +2883,10 @@ const showTopicArticle = (jarId) => {
     detail.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar topic-article-nav-bar no-print">
-        <button type="button" class="dau-back-btn" id="btnBackFromArticle">
-          ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 16 }) : ""} <span class="btn-text">Quay lại danh sách chủ đề</span>
+        <button type="button" class="dau-back-btn" id="btnBackFromArticle" title="Quay lại danh sách chủ đề" aria-label="Quay lại danh sách chủ đề">
+          ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
         </button>
         <div class="dau-workspace-info">
-          <span class="dau-badge ${levelBadgeClass}">${jar.level || "A1"} · ${levelLabel}</span>
           <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(jar.icon || "archive-jar", { size: 20 }) : ""} ${esc(jar.name)}</span>
         </div>
         <div class="topic-article-top-actions">
@@ -3119,11 +3118,11 @@ const showTopicArticle = (jarId) => {
       detail.innerHTML = `
         <!-- STICKY TOP BACK BAR WITH EMBEDDED MODES (SINGLE LINE) -->
         <div class="dau-workspace-back-bar dau-quizlet-bar" id="dauQuizletBackBar">
-          <button type="button" class="dau-back-btn" id="btnBackJars" title="Quay lại kho từ vựng">
-            ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 16 }) : "←"} <span class="btn-text">Quay lại kho Lọ từ vựng</span>
+          <button type="button" class="dau-back-btn" id="btnBackJars" title="Quay lại kho Lọ từ vựng" aria-label="Quay lại kho Lọ từ vựng">
+            ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
           </button>
           <div class="dau-workspace-info">
-            <span class="dau-badge ${isCustom ? "dau-badge-custom" : jar.level === "A2" ? "dau-badge-a2" : jar.level === "B1" ? "dau-badge-b1" : jar.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${isCustom ? "LỌ CỦA TÔI" : (jar.level || "A1")}</span>
+            ${isCustom ? '<span class="dau-badge dau-badge-custom">LỌ CỦA TÔI</span>' : ''}
             <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(jar.icon || "archive-jar", { size: 18 }) : ""} ${esc(jar.name)}</span>
           </div>
 
@@ -3228,11 +3227,10 @@ const showTopicArticle = (jarId) => {
       detail.innerHTML = `
         <!-- STICKY TOP BACK BAR -->
         <div class="dau-workspace-back-bar">
-          <button type="button" class="dau-back-btn" id="btnBackLessons">
-            <i data-rusi-icon="arrow-left" data-size="16"></i> <span class="btn-text">Quay lại danh sách từ vựng</span>
+          <button type="button" class="dau-back-btn" id="btnBackLessons" title="Quay lại danh sách từ vựng" aria-label="Quay lại danh sách từ vựng">
+            <i data-rusi-icon="arrow-left" data-size="18"></i>
           </button>
           <div class="dau-workspace-info">
-            <span class="dau-badge ${found.level === "A2" ? "dau-badge-a2" : found.level === "B1" ? "dau-badge-b1" : found.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${found.level || "A1"}</span>
             <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(found.scene || "book-open-blog", { size: 22 }) : ""} ${esc(found.ru)}</span>
           </div>
           <span class="dau-workspace-meta" style="font-size:0.85rem;color:var(--muted)">${found.words.length} từ vựng trọng tâm</span>
@@ -3640,11 +3638,10 @@ function initListeningPage() {
     host.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
-        <button type="button" class="dau-back-btn" id="btnBackLisList">
-          <i data-rusi-icon="arrow-left" data-size="16"></i> <span class="btn-text">Quay lại danh sách bài nghe</span>
+        <button type="button" class="dau-back-btn" id="btnBackLisList" title="Quay lại danh sách bài nghe" aria-label="Quay lại danh sách bài nghe">
+          <i data-rusi-icon="arrow-left" data-size="18"></i>
         </button>
         <div class="dau-workspace-info">
-          <span class="dau-badge ${lesson.level === "A2" ? "dau-badge-a2" : lesson.level === "B1" ? "dau-badge-b1" : lesson.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${lesson.level}</span>
           <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(lesson.icon || "headphones", { size: 22 }) : ""} Part ${lesson.partNumber || 1} · ${esc(lesson.title)}</span>
         </div>
         <div class="dau-workspace-controls" style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
@@ -4915,11 +4912,10 @@ function initSpeakingPage() {
     host.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
-        <button type="button" class="dau-back-btn" id="btnBackSpList">
-          <i data-rusi-icon="arrow-left" data-size="16"></i> <span class="btn-text">Quay lại danh sách chủ đề nói</span>
+        <button type="button" class="dau-back-btn" id="btnBackSpList" title="Quay lại danh sách chủ đề nói" aria-label="Quay lại danh sách chủ đề nói">
+          <i data-rusi-icon="arrow-left" data-size="18"></i>
         </button>
         <div class="dau-workspace-info">
-          <span class="dau-badge ${set.level === "A2" ? "dau-badge-a2" : set.level === "B1" ? "dau-badge-b1" : set.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${set.level}</span>
           <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(set.icon || "mic-speaking", { size: 22 }) : ""} ${esc(set.title)}</span>
         </div>
         <div class="dau-workspace-meta" style="font-size:0.85rem;color:var(--muted);margin-left:auto">
@@ -5299,11 +5295,10 @@ function initWritingPage() {
     host.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
-        <button type="button" class="dau-back-btn" id="btnBackWriteList">
-          <i data-rusi-icon="arrow-left" data-size="16"></i> <span class="btn-text">Quay lại danh sách bài viết</span>
+        <button type="button" class="dau-back-btn" id="btnBackWriteList" title="Quay lại danh sách bài viết" aria-label="Quay lại danh sách bài viết">
+          <i data-rusi-icon="arrow-left" data-size="18"></i>
         </button>
         <div class="dau-workspace-info">
-          <span class="dau-badge ${t.level === "A2" ? "dau-badge-a2" : t.level === "B1" ? "dau-badge-b1" : t.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${t.level}</span>
           <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(t.icon || "pen-tool", { size: 22 }) : ""} ${esc(t.title)}</span>
         </div>
         <span class="dau-workspace-meta" style="font-size:0.85rem;color:var(--muted);margin-left:auto">Mục tiêu: tối thiểu <b>${t.minWords} từ</b></span>
@@ -5904,11 +5899,10 @@ function initMockTestPage() {
     let html = `
       <!-- STICKY TOP BACK BAR WITH TIMER -->
       <div class="dau-workspace-back-bar">
-        <button type="button" class="dau-back-btn" id="btnExitTest">
-          <i data-rusi-icon="arrow-left" data-size="16"></i> <span class="btn-text">Thoát phòng thi</span>
+        <button type="button" class="dau-back-btn" id="btnExitTest" title="Thoát phòng thi" aria-label="Thoát phòng thi">
+          <i data-rusi-icon="arrow-left" data-size="18"></i>
         </button>
         <div class="dau-workspace-info">
-          <span class="dau-badge ${currentTest.level === "A2" ? "dau-badge-a2" : currentTest.level === "B1" ? "dau-badge-b1" : currentTest.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${currentTest.level}</span>
           <span class="dau-workspace-title">${esc(currentTest.title)}</span>
         </div>
         <div class="dau-workspace-controls" style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0">
@@ -6139,11 +6133,10 @@ function initMockTestPage() {
     host.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
-        <button type="button" class="dau-back-btn" id="btnReviewBack">
-          <i data-rusi-icon="arrow-left" data-size="16"></i> <span class="btn-text">Quay lại danh sách đề thi</span>
+        <button type="button" class="dau-back-btn" id="btnReviewBack" title="Quay lại danh sách đề thi" aria-label="Quay lại danh sách đề thi">
+          <i data-rusi-icon="arrow-left" data-size="18"></i>
         </button>
         <div class="dau-workspace-info">
-          <span class="dau-badge ${currentTest.level === "A2" ? "dau-badge-a2" : currentTest.level === "B1" ? "dau-badge-b1" : currentTest.level === "B2" ? "dau-badge-b2" : "dau-badge-a1"}">${currentTest.level}</span>
           <span class="dau-workspace-title">Kết quả khảo thí: ${esc(currentTest.title)}</span>
         </div>
         <button class="btn btn-primary btn-sm dau-top-btn" id="btnRetryTop" title="Thi lại đề này">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 15 }) : ""} <span class="btn-text">Thi lại đề này</span></button>

@@ -11912,6 +11912,45 @@ img, video, iframe {
   border-color: var(--primary);
 }
 
+/* Nút quay lại trong dau-workspace-back-bar chỉ hiển thị icon (đồng bộ trên mọi thiết bị & Desktop) */
+.dau-workspace-back-bar .dau-back-btn {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.dau-workspace-back-bar .dau-back-btn .btn-text {
+  display: none !important;
+}
+
+.dau-workspace-back-bar .dau-back-btn svg,
+.dau-workspace-back-bar .dau-back-btn i {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+}
+
+/* Ẩn triệt để hiển thị mức độ A1 - C2 trong dau-workspace-back-bar */
+.dau-workspace-back-bar .dau-badge-a1,
+.dau-workspace-back-bar .dau-badge-a2,
+.dau-workspace-back-bar .dau-badge-b1,
+.dau-workspace-back-bar .dau-badge-b2,
+.dau-workspace-back-bar .dau-badge-c1,
+.dau-workspace-back-bar .dau-badge-c2 {
+  display: none !important;
+}
+
 .dau-workspace-info {
   display: flex;
   align-items: center;
