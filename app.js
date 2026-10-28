@@ -1424,8 +1424,8 @@ const SPEAK_VOICE_PREF = [
 const _voiceCache = {};
 
 function pickVoice(lang) {
-  if (!("speechSynthesis" in window)) return null;
-  const voices = speechSynthesis.getVoices().filter((v) =>
+  if (typeof window === "undefined" || !("speechSynthesis" in window) || !window.speechSynthesis) return null;
+  const voices = window.speechSynthesis.getVoices().filter((v) =>
     v.lang && v.lang.toLowerCase().startsWith(lang.slice(0, 2).toLowerCase())
   );
   if (!voices.length) return null;
@@ -1442,18 +1442,18 @@ function pickVoice(lang) {
 }
 
 function speak(text, lang = null, rate = 0.9) {
-  if (!("speechSynthesis" in window)) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window) || !window.speechSynthesis) {
     toast("Trình duyệt không hỗ trợ đọc — hãy dùng Chrome/Edge.");
     return;
   }
   const l = lang || detectLang(text);
-  speechSynthesis.cancel();
+  window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = l;
   u.rate = rate;
   const voice = pickVoice(l);
   if (voice) u.voice = voice;
-  speechSynthesis.speak(u);
+  window.speechSynthesis.speak(u);
 }
 
 /** Nghe phát âm chậm — dùng trong modal chi tiết từ. */
@@ -1462,8 +1462,8 @@ function speakSlow(text, lang = null) {
 }
 
 // Một số trình duyệt nạp danh sách giọng bất đồng bộ — nạp sớm để chọn được giọng tốt.
-if ("speechSynthesis" in window) {
-  speechSynthesis.onvoiceschanged = () => {
+if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = () => {
     Object.keys(_voiceCache).forEach((k) => delete _voiceCache[k]);
   };
 }
@@ -1543,12 +1543,17 @@ function currentSeason() {
 
 /** Giao diện Sáng cố định (Russian Winter Cool Blue) */
 function applyLightTheme() {
-  document.documentElement.setAttribute("data-theme", "light");
-  document.body.setAttribute("data-theme", "light");
-  document.body.dataset.season = "winter";
+  if (typeof document !== "undefined") {
+    if (document.documentElement) document.documentElement.setAttribute("data-theme", "light");
+    if (document.body) {
+      document.body.setAttribute("data-theme", "light");
+      document.body.dataset.season = "winter";
+    }
+  }
 }
 
 function applySeason(season = "winter") {
+  if (typeof document === "undefined" || !document.body) return;
   document.body.dataset.season = "winter";
 
   let fx = document.getElementById("seasonFx");
@@ -1559,6 +1564,7 @@ function applySeason(season = "winter") {
     fx.setAttribute("aria-hidden", "true");
     document.body.appendChild(fx);
   }
+  if (!fx) return;
   fx.innerHTML = "";
 
   for (let i = 0; i < 8; i++) {
@@ -1566,7 +1572,9 @@ function applySeason(season = "winter") {
     s.textContent = i % 2 === 0 ? "*" : "•";
     s.style.fontSize = i % 2 === 0 ? (9 + Math.random() * 8 + "px") : "5px";
     s.style.left = Math.random() * 100 + "vw";
-    s.style.setProperty("--drift", Math.round(Math.random() * 100 - 50) + "px");
+    if (s.style && typeof s.style.setProperty === "function") {
+      s.style.setProperty("--drift", Math.round(Math.random() * 100 - 50) + "px");
+    }
     const dur = 7 + Math.random() * 6;
     s.style.animationDuration = dur.toFixed(2) + "s";
     s.style.animationDelay = (-Math.random() * dur).toFixed(2) + "s";

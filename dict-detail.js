@@ -121,7 +121,7 @@ const WordDetail = (() => {
     shell.classList.add("hidden");
     shell.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
-    if (window.speechSynthesis) speechSynthesis.cancel();
+    if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
     if (audioEl) { audioEl.pause(); }
     const hook = onClosedHook;
     onClosedHook = null;

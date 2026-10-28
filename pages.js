@@ -3794,8 +3794,8 @@ function initListeningPage() {
         clearTimeout(currentSpeakTimer);
         currentSpeakTimer = null;
       }
-      if ("speechSynthesis" in window) {
-        speechSynthesis.cancel();
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
       }
       renderHub();
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -4149,8 +4149,8 @@ function initListeningPage() {
         clearTimeout(currentSpeakTimer);
         currentSpeakTimer = null;
       }
-      if ("speechSynthesis" in window) {
-        speechSynthesis.cancel();
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
       }
 
       let remainingRepeats = repeatCount;
