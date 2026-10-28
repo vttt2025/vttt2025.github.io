@@ -20,6 +20,12 @@
 
   var client = null;
 
+  // Kiểm tra định dạng UUID hợp lệ (ngăn ngừa lỗi 400 Bad Request từ PostgreSQL khi dùng Firebase Auth UID)
+  function isValidUUID(str) {
+    if (!str || typeof str !== "string") return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+  }
+
   function getClient() {
     if (client) return client;
     if (typeof window.supabase === "undefined" || !window.supabase.createClient) {
@@ -130,7 +136,7 @@
     profile: {
       get: async function (userId) {
         var sb = getClient();
-        if (!sb || !userId) return null;
+        if (!sb || !userId || !isValidUUID(userId)) return null;
         try {
           var res = await sb.from("profiles").select("*").eq("id", userId).single();
           if (res.error) return null;
@@ -142,7 +148,7 @@
 
       upsert: async function (profileData) {
         var sb = getClient();
-        if (!sb || !profileData || !profileData.id) return false;
+        if (!sb || !profileData || !profileData.id || !isValidUUID(profileData.id)) return false;
         try {
           profileData.updated_at = new Date().toISOString();
           var res = await sb.from("profiles").upsert(profileData);
@@ -154,7 +160,7 @@
 
       syncGamification: async function (userId, streak, xp, mascotLevel) {
         var sb = getClient();
-        if (!sb || !userId) return false;
+        if (!sb || !userId || !isValidUUID(userId)) return false;
         try {
           var payload = {
             id: userId,
@@ -203,7 +209,7 @@
 
       getAll: async function (userId) {
         var sb = getClient();
-        if (!sb || !userId) return [];
+        if (!sb || !userId || !isValidUUID(userId)) return [];
         try {
           var res = await sb.from("vocab_jars").select("*").eq("user_id", userId).order("created_at", { ascending: false });
           if (res.error) return [];
@@ -215,7 +221,7 @@
 
       save: async function (userId, jar) {
         var sb = getClient();
-        if (!sb || !userId || !jar) return false;
+        if (!sb || !userId || !jar || !isValidUUID(userId)) return false;
         try {
           var row = {
             id: jar.id || undefined,
@@ -234,7 +240,7 @@
 
       delete: async function (userId, jarId) {
         var sb = getClient();
-        if (!sb || !userId || !jarId) return false;
+        if (!sb || !userId || !jarId || !isValidUUID(userId)) return false;
         try {
           var res = await sb.from("vocab_jars").delete().eq("id", jarId).eq("user_id", userId);
           return !res.error;
@@ -245,7 +251,7 @@
 
       syncLocalJarsToCloud: async function (userId, localJars) {
         var sb = getClient();
-        if (!sb || !userId || !Array.isArray(localJars)) return false;
+        if (!sb || !userId || !Array.isArray(localJars) || !isValidUUID(userId)) return false;
         try {
           for (var i = 0; i < localJars.length; i++) {
             await RusiSupabase.jars.save(userId, localJars[i]);
@@ -331,7 +337,7 @@
 
       saveResult: async function (userId, testId, resultData) {
         var sb = getClient();
-        if (!sb || !userId) return false;
+        if (!sb || !userId || !isValidUUID(userId)) return false;
         try {
           var payload = {
             user_id: userId,

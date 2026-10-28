@@ -85,7 +85,9 @@ const Progress = {
       renderIndexProgressIfLoggedIn(user);
     }
 
-    if (window.RusiSupabase && window.RusiSupabase.isReady() && window.Auth && window.Auth.user && window.Auth.user.uid) {
+    const isUUID = window.Auth && window.Auth.user && window.Auth.user.uid &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(window.Auth.user.uid);
+    if (window.RusiSupabase && window.RusiSupabase.isReady() && isUUID) {
       window.RusiSupabase.profile.syncGamification(window.Auth.user.uid, currentStreak, xp).catch(() => {});
     }
   },

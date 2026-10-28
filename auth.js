@@ -105,13 +105,17 @@
             if (u) {
               this.user = formatFirebaseUser(u);
               store.set("auth_user", this.user);
+              // Chỉ đồng bộ sang Supabase nếu UID là chuẩn UUID hợp lệ (người dùng Firebase Auth dùng LocalStorage + Firebase)
               if (window.RusiSupabase && window.RusiSupabase.isReady() && this.user && this.user.uid) {
-                window.RusiSupabase.profile.upsert({
-                  id: this.user.uid,
-                  email: this.user.email,
-                  full_name: this.user.name,
-                  avatar_url: this.user.photo
-                }).catch(() => {});
+                const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(this.user.uid);
+                if (isUUID) {
+                  window.RusiSupabase.profile.upsert({
+                    id: this.user.uid,
+                    email: this.user.email,
+                    full_name: this.user.name,
+                    avatar_url: this.user.photo
+                  }).catch(() => {});
+                }
               }
             } else {
               // Khi Firebase không có phiên đăng nhập
