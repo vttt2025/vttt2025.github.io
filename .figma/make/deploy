@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+build_dir=".figma/make/deploy-dist"
+rm -rf "$build_dir"
+mkdir -p "$build_dir"
+
+cp -- *.html *.css *.js .nojekyll CNAME robots.txt sitemap.xml "$build_dir/"
+cp -R -- assets data login signup "$build_dir/"
+
+[[ -f "$build_dir/index.html" ]] || {
+  echo "Expected build output at $build_dir" >&2
+  exit 1
+}
+
+figma make deploy --build-dir "$build_dir"

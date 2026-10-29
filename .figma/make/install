@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# The previewed root site is dependency-free static HTML, CSS, and JavaScript.
+exit 0
