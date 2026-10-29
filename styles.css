@@ -21285,3 +21285,9 @@ body.has-bottom-bar .rusika-floating-widget {
 #chuyen-muc {
   padding: 50px 0 0;
 }
+
+@media (max-width: 768px) {
+  #phuong-phap {
+    padding: 50px 16px;
+  }
+}
