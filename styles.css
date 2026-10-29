@@ -21265,3 +21265,23 @@ body.has-bottom-bar .rusika-floating-widget {
   align-items: center !important;
   gap: 8px !important;
 }
+/* Visual editor: index page section spacing (instance-specific). */
+#cam-nhan {
+  padding: 50px 0;
+}
+
+#faq {
+  padding: 50px 0;
+}
+
+#khoa-hoc {
+  padding: 50px 0;
+}
+
+#phuong-phap {
+  padding: 50px 80px;
+}
+
+#chuyen-muc {
+  padding: 50px 0 0;
+}
