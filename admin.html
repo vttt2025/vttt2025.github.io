@@ -48,7 +48,7 @@
       <div class="payload-gate-logo" style="background:#ef4444"><i data-rusi-icon="x" data-size="28" style="color:#fff"></i></div>
       <h2 style="margin:0 0 8px 0;font-size:20px;font-weight:700">Từ chối truy cập</h2>
       <p id="deniedInfo" style="color:var(--p-text);font-weight:600;margin-bottom:6px"></p>
-      <p style="color:var(--p-text-muted);margin:0 0 24px 0;font-size:13px">Email này chưa được cấp quyền Quản trị viên trong <code>firebase-config.js</code>.</p>
+      <p style="color:var(--p-text-muted);margin:0 0 24px 0;font-size:13px">Tài khoản này chưa được cấp vai trò quản trị trong hồ sơ Supabase.</p>
       <div style="display:flex;flex-direction:column;gap:10px">
         <button class="p-btn p-btn-primary" id="btnSwitchAccount" type="button"><i data-rusi-icon="refresh-cw" data-size="16"></i> Đổi tài khoản Gmail khác</button>
         <button class="p-btn p-btn-secondary" id="btnDevBypass2" type="button"><i data-rusi-icon="zap-xp" data-size="16"></i> Mở bằng Dev Mode (Cục bộ)</button>
@@ -280,14 +280,11 @@
   <!-- SCRIPTS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="supabase-client.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="firebase-config.js"></script>
-  <script src="rusi-icons.js?v=3.2"></script>
+  <script src="supabase-client.js?v=7.0"></script>
+<script src="rusi-icons.js?v=3.2"></script>
   <script src="data.js?v=4.9"></script>
-  <script src="auth.js?v=3.2"></script>
-  <script src="app.js?v=6.5"></script>
+  <script src="auth.js?v=7.0"></script>
+  <script src="app.js?v=7.0"></script>
   <script src="admin.js?v=3.2"></script>
 </body>
 </html>

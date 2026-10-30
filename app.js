@@ -761,49 +761,24 @@ const Monetization = {
   /** Kiểm tra trạng thái PRO của người dùng hiện tại */
   isPro() {
     const user = this.getCurrentUser();
-    // 1. Kiểm tra trạng thái PRO gắn liền theo tài khoản (UID)
-    if (user && user.uid) {
-      const userPro = STORE.get("pro_user_" + user.uid, null);
-      if (userPro && userPro.active) {
-        if (userPro.expiresAt && !userPro.isLifetime) {
-          if (new Date(userPro.expiresAt).getTime() < Date.now()) {
-            return false;
-          }
-        }
-        return true;
-      }
-    }
-    // 2. Fallback tương thích ngược với khóa cục bộ
-    const legacy = Boolean(STORE.get("is_pro", false));
-    if (legacy) {
-      const exp = STORE.get("pro_expires", null);
-      if (exp && new Date(exp).getTime() < Date.now()) {
-        return false;
-      }
-      return true;
-    }
-    return false;
+    if (!user || !user.is_pro) return false;
+    if (user.pro_expires_at && new Date(user.pro_expires_at).getTime() < Date.now()) return false;
+    return true;
   },
 
   /** Lấy thông tin chi tiết gói PRO đã kích hoạt */
   getProInfo() {
     if (!this.isPro()) return null;
     const user = this.getCurrentUser();
-    let proData = null;
-    if (user && user.uid) {
-      proData = STORE.get("pro_user_" + user.uid, null);
-    }
-    if (!proData && STORE.get("is_pro", false)) {
-      proData = {
-        active: true,
-        pkgId: STORE.get("pro_active_pkg", "pro_1y"),
-        pkgTitle: "Gói Chuyên Nghiệp 1 Năm",
-        expiresAt: STORE.get("pro_expires", new Date(Date.now() + 365 * 86400000).toISOString()),
-        isLifetime: false,
-        activatedAt: new Date().toISOString()
-      };
-    }
-    if (!proData) return null;
+    if (!user) return null;
+    const proData = {
+      active: true,
+      pkgId: STORE.get("pro_active_pkg", "pro_1y"),
+      pkgTitle: "Gói PRO",
+      expiresAt: user.pro_expires_at,
+      isLifetime: !user.pro_expires_at,
+      activatedAt: null
+    };
 
     let expiresFormatted = "Đang kích hoạt";
     if (proData.isLifetime || proData.pkgId === "pro_vip") {
@@ -826,58 +801,15 @@ const Monetization = {
     };
   },
 
-  /** Kích hoạt hoặc hủy kích hoạt gói PRO */
-  setPro(status = true, pkgId = "pro_1y") {
-    const user = this.getCurrentUser();
-    const pkgs = this.getPackages();
-    const normId = (pkgId || "pro_1y").toLowerCase();
-    const pkg = pkgs.find((p) => (p.id || "").toLowerCase() === normId) || {
-      id: pkgId,
-      title: "Gói PRO",
-      badge: "PRO"
-    };
-
-    let expiresAt = null;
-    let isLifetime = false;
-    if (normId === "pro_vip") {
-      isLifetime = true;
-      expiresAt = new Date(Date.now() + 100 * 365 * 86400000).toISOString();
-    } else if (normId === "pro_6m") {
-      expiresAt = new Date(Date.now() + 180 * 86400000).toISOString();
-    } else {
-      expiresAt = new Date(Date.now() + 365 * 86400000).toISOString();
+  /** Quyền PRO chỉ được cập nhật từ profiles sau khi quản trị duyệt đơn. */
+  async setPro() {
+    if (window.Auth && typeof window.Auth.refreshProfile === "function") {
+      await window.Auth.refreshProfile();
     }
-
-    const proData = {
-      active: status,
-      pkgId: pkg.id,
-      pkgTitle: pkg.title,
-      isLifetime,
-      expiresAt,
-      activatedAt: new Date().toISOString()
-    };
-
-    if (user && user.uid) {
-      STORE.set("pro_user_" + user.uid, status ? proData : null);
-    }
-    STORE.set("is_pro", status);
-    if (status) {
-      STORE.set("pro_expires", expiresAt);
-      STORE.set("pro_active_pkg", pkg.id);
-    } else {
-      STORE.set("pro_expires", null);
-      STORE.set("pro_active_pkg", null);
-    }
-
-    // Cập nhật giao diện toàn hệ thống
     updateHeaderChips();
     if (typeof renderUserArea === "function") renderUserArea();
     if (typeof window.renderPricingGrid === "function") window.renderPricingGrid();
-
-    // Bắn sự kiện đồng bộ đa tab & các component
-    try {
-      window.dispatchEvent(new CustomEvent("trki:pro-updated", { detail: proData }));
-    } catch (_) {}
+    return this.isPro();
   },
 
   /** Lấy danh sách gói cước chuẩn */
@@ -1069,7 +1001,7 @@ const Monetization = {
     let ordNum = STORE.get("last_order_num", 1092) + 1;
     STORE.set("last_order_num", ordNum);
     const userTag = (user.email ? user.email.split("@")[0] : (user.name || "USER")).replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 8);
-    const orderId = `RUSI_${ordNum}_${userTag || "PRO"}`;
+    const orderId = `RUSI_${Date.now()}_${userTag || "PRO"}`;
 
     let modal = document.getElementById("vietqrModal");
     if (!modal) {
@@ -1228,43 +1160,43 @@ const Monetization = {
         };
       });
 
-      // Xử lý xác thực tự động (Simulation Webhook Instant Verification)
+      // Ghi nhận đơn Supabase ở trạng thái chờ quản trị xác nhận.
       const confirmBtn = document.getElementById("btnConfirmPaid");
       if (confirmBtn) {
-        confirmBtn.onclick = () => {
+        confirmBtn.onclick = async () => {
           confirmBtn.disabled = true;
-          confirmBtn.innerHTML = `<span class="vietqr-spinner"></span> Đang xác thực chữ ký số VietinBank...`;
-
-          setTimeout(() => {
-            // Kích hoạt PRO thành công
-            Monetization.setPro(true, currentPkg.id);
-            clearInterval(Monetization._timerInterval);
-
-            // Hiển thị màn hình chúc mừng (Celebration)
-            modal.innerHTML = `
-              <div class="vietqr-card" style="max-width:540px">
-                <div class="vietqr-success-card">
-                  <div class="vietqr-success-icon">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 48 }) : ""}</div>
-                  <h3>Nâng Cấp PRO Thành Công!</h3>
-                  <p>Chúc mừng <b>${esc(user.name || user.email)}</b>! Tài khoản của bạn đã được nâng cấp lên <b>${esc(currentPkg.title)}</b>.</p>
-                  
-                  <div class="vietqr-success-box">
-                    <div class="vietqr-success-row"><span>Gói kích hoạt:</span><b>${esc(currentPkg.title)}</b></div>
-                    <div class="vietqr-success-row"><span>Thời hạn:</span><b>${currentPkg.id === "pro_vip" ? "Vĩnh viễn (Trọn đời)" : "Đã kích hoạt 365 ngày"}</b></div>
-                    <div class="vietqr-success-row"><span>Mã giao dịch:</span><code>${orderId}</code></div>
-                    <div class="vietqr-success-row"><span>Trạng thái:</span><b style="color:#059669;display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} ĐÃ KÍCH HOẠT TỨC THÌ</b></div>
-                  </div>
-
-                  <button class="btn btn-primary btn-lg" id="btnVietQrFinish" style="width:100%;margin-top:20px;background:var(--primary);border-color:var(--primary)">
-                    ${window.RusiIcons ? RusiIcons.get("rocket", { size: 16 }) : ""} Bắt đầu trải nghiệm các tính năng PRO ngay
-                  </button>
+          confirmBtn.innerHTML = `<span class="vietqr-spinner"></span> Đang ghi nhận đơn hàng...`;
+          const result = await window.RusiSupabase?.orders?.createPending({
+            id: orderId,
+            userId: user.uid,
+            packageId: currentPkg.id,
+            amount: currentPkg.price
+          });
+          if (!result?.ok) {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = `${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} Tôi đã chuyển khoản xong (Gửi duyệt)`;
+            toast(result?.message || "Không thể ghi nhận đơn hàng. Vui lòng thử lại.");
+            return;
+          }
+          STORE.set("pro_active_pkg", currentPkg.id);
+          clearInterval(Monetization._timerInterval);
+          modal.innerHTML = `
+            <div class="vietqr-card" style="max-width:540px">
+              <div class="vietqr-success-card">
+                <div class="vietqr-success-icon">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 48 }) : ""}</div>
+                <h3>Đã Ghi Nhận Thanh Toán</h3>
+                <p>Đơn của <b>${esc(user.name || user.email)}</b> đang chờ quản trị xác nhận.</p>
+                <div class="vietqr-success-box">
+                  <div class="vietqr-success-row"><span>Gói đăng ký:</span><b>${esc(currentPkg.title)}</b></div>
+                  <div class="vietqr-success-row"><span>Mã giao dịch:</span><code>${orderId}</code></div>
+                  <div class="vietqr-success-row"><span>Trạng thái:</span><b>CHỜ DUYỆT</b></div>
                 </div>
+                <button class="btn btn-primary btn-lg" id="btnVietQrFinish" style="width:100%;margin-top:20px">
+                  Đóng
+                </button>
               </div>
-            `;
-
-            toast(`Chúc mừng ${user.name || "bạn"}! Tài khoản đã là PRO VIP.`);
-            document.getElementById("btnVietQrFinish").onclick = () => modal.remove();
-          }, 1200);
+            </div>`;
+          document.getElementById("btnVietQrFinish").onclick = () => modal.remove();
         };
       }
     };
@@ -1301,12 +1233,12 @@ const Monetization = {
       try {
         if (window.RusiSupabase && window.RusiSupabase.orders && typeof window.RusiSupabase.orders.checkStatus === "function") {
           const res = await window.RusiSupabase.orders.checkStatus(orderId);
-          if (res && res.status === "PAID") {
+          if (res && String(res.status).toLowerCase() === "paid") {
             clearInterval(this._pollInterval);
             clearInterval(this._timerInterval);
-            Monetization.setPro(true, currentPkg.id);
-            const confirmBtn = document.getElementById("btnConfirmPaid");
-            if (confirmBtn) confirmBtn.click();
+            await Monetization.setPro();
+            toast("Đơn hàng đã được duyệt. Quyền PRO đã cập nhật.");
+            modal.remove();
           }
         }
       } catch(e) {}

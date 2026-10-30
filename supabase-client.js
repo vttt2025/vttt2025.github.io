@@ -13,6 +13,7 @@
  *   - window.RusiSupabase.jars: { getAll, save, delete, syncAll }
  *   - window.RusiSupabase.tests: { getPublished, saveResult, getHistory }
  *   - window.RusiSupabase.auth: { signInGoogle, signInEmail, signUpEmail, signOut, getSession }
+ *   - window.RusiSupabase.orders: { createPending, checkStatus, getMine }
  */
 
 (function () {
@@ -162,15 +163,11 @@
         var sb = getClient();
         if (!sb || !userId || !isValidUUID(userId)) return false;
         try {
-          var payload = {
-            id: userId,
-            streak_count: streak || 0,
-            xp_points: xp || 0,
-            last_study_date: new Date().toISOString().split("T")[0],
-            updated_at: new Date().toISOString()
-          };
-          if (mascotLevel) payload.mascot_level = mascotLevel;
-          var res = await sb.from("profiles").upsert(payload);
+          var res = await sb.rpc("sync_my_progress", {
+            p_streak: Number(streak) || 0,
+            p_xp: Number(xp) || 0,
+            p_mascot_level: Number(mascotLevel) || 1
+          });
           return !res.error;
         } catch (_) {
           return false;
@@ -599,7 +596,80 @@
     },
 
     /* =========================================================================
-     * 5. SUPABASE AUTH BRIDGES
+     * 11. ĐƠN HÀNG VIETQR — CHỈ TẠO CHỜ DUYỆT, KHÔNG TỰ KÍCH HOẠT PRO
+     * ========================================================================= */
+    orders: {
+      createPending: async function (order) {
+        var sb = getClient();
+        if (!sb || !order || !order.id || !order.userId) {
+          return { ok: false, message: "Thiếu thông tin đơn hàng." };
+        }
+        try {
+          var row = {
+            id: order.id,
+            user_id: order.userId,
+            package_id: order.packageId,
+            amount: Number(order.amount) || 0,
+            payment_method: "VIETQR",
+            status: "pending"
+          };
+          var res = await sb.from("orders").insert(row).select().single();
+          if (res.error) return { ok: false, message: res.error.message, error: res.error };
+          return { ok: true, data: res.data };
+        } catch (error) {
+          return { ok: false, message: error.message, error: error };
+        }
+      },
+
+      checkStatus: async function (orderId) {
+        var sb = getClient();
+        if (!sb || !orderId) return null;
+        try {
+          var res = await sb.from("orders").select("id,status,package_id,amount,paid_at").eq("id", orderId).maybeSingle();
+          return res.error ? null : res.data;
+        } catch (_) {
+          return null;
+        }
+      },
+
+      getMine: async function () {
+        var sb = getClient();
+        if (!sb) return [];
+        try {
+          var res = await sb.from("orders").select("*").order("created_at", { ascending: false });
+          return res.error ? [] : (res.data || []);
+        } catch (_) {
+          return [];
+        }
+      },
+
+      createShopPending: async function (order) {
+        var sb = getClient();
+        if (!sb || !order || !order.id || !order.userId) {
+          return { ok: false, message: "Thiếu thông tin đơn hàng." };
+        }
+        try {
+          var row = {
+            id: order.id,
+            user_id: order.userId,
+            amount: Number(order.amount) || 0,
+            items: Array.isArray(order.items) ? order.items : [],
+            customer_name: order.customerName || "",
+            customer_phone: order.customerPhone || "",
+            delivery_address: order.deliveryAddress || "",
+            status: "pending"
+          };
+          var res = await sb.from("shop_orders").insert(row).select().single();
+          if (res.error) return { ok: false, message: res.error.message, error: res.error };
+          return { ok: true, data: res.data };
+        } catch (error) {
+          return { ok: false, message: error.message, error: error };
+        }
+      }
+    },
+
+    /* =========================================================================
+     * 12. SUPABASE AUTH
      * ========================================================================= */
     auth: {
       signInGoogle: async function (redirectTo) {

@@ -2863,70 +2863,53 @@ BLOG_POSTS: {
 
       GRAMMAR_LESSONS: {
         table: "grammar_lessons",
-        conflict: "code",
-        deleteCol: "code",
+        conflict: "id",
+        deleteCol: "id",
         label: "Bài học Ngữ pháp",
         idKey: (doc) => doc.id,
         toRow: (doc) => ({
-          code: String(doc.id).trim(),
+          id: String(doc.id).trim(),
           title: doc.title || "Bài học ngữ pháp",
           vi: doc.vi || "",
-          level: doc.level || "A1",
-          level_name: doc.levelName || "Sơ cấp A1",
           topic: doc.topic || "cases",
-          topic_name: doc.topicName || "Biến cách",
-          icon: doc.icon || "book-open",
-          est_minutes: Number(doc.estMinutes) || 15,
-          is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
-          raw_data: {
-            rules: Array.isArray(doc.rules) ? doc.rules : [],
-            table: doc.table || null,
-            quickQuiz: Array.isArray(doc.quickQuiz) ? doc.quickQuiz : []
-          },
-          updated_at: new Date().toISOString()
+          rules: Array.isArray(doc.rules) ? doc.rules : [],
+          table_data: doc.table || null,
+          questions: Array.isArray(doc.quickQuiz) ? doc.quickQuiz : []
         }),
         fromRow: (row) => ({
-          id: row.code || row.id,
+          id: row.id,
           title: row.title || "",
           vi: row.vi || "",
-          level: row.level || "A1",
-          levelName: row.level_name || "Sơ cấp A1",
           topic: row.topic || "cases",
-          topicName: row.topic_name || "Biến cách",
-          icon: row.icon || "book-open",
-          estMinutes: Number(row.est_minutes) || 15,
-          is_pro_only: Boolean(row.is_pro_only),
-          rules: (row.raw_data && Array.isArray(row.raw_data.rules)) ? row.raw_data.rules : [],
-          table: (row.raw_data && row.raw_data.table) ? row.raw_data.table : null,
-          quickQuiz: (row.raw_data && Array.isArray(row.raw_data.quickQuiz)) ? row.raw_data.quickQuiz : []
+          rules: Array.isArray(row.rules) ? row.rules : [],
+          table: row.table_data || null,
+          quickQuiz: Array.isArray(row.questions) ? row.questions : []
         })
       },
 
       ORDERS: {
         table: "orders",
-        conflict: "order_code",
-        deleteCol: "order_code",
+        conflict: "id",
+        deleteCol: "id",
         label: "Đơn hàng & Giao dịch",
         idKey: (doc) => doc.id,
         toRow: (doc) => ({
-          order_code: String(doc.id).trim(),
-          user_email: doc.userEmail || "",
+          id: String(doc.id).trim(),
+          user_id: doc.userId || null,
           package_id: doc.packageId || "",
-          package_name: doc.packageName || "",
           amount: Number(doc.amount) || 0,
-          payment_method: doc.paymentMethod || "VietQR",
-          status: doc.status || "pending",
-          created_at: doc.createdAt || new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          payment_method: String(doc.paymentMethod || "VIETQR").toUpperCase(),
+          status: String(doc.status || "pending").toLowerCase()
         }),
         fromRow: (row) => ({
-          id: row.order_code || row.id,
-          userEmail: row.user_email || "",
+          id: row.id,
+          userId: row.user_id || "",
+          userEmail: "",
           packageId: row.package_id || "",
-          packageName: row.package_name || "",
+          packageName: row.package_id || "",
           amount: Number(row.amount) || 0,
           paymentMethod: row.payment_method || "VietQR",
-          status: row.status || "pending",
+          status: String(row.status || "pending").toLowerCase(),
           createdAt: row.created_at || ""
         })
       }
@@ -3964,13 +3947,6 @@ BLOG_POSTS: {
     const deniedGate = document.getElementById("deniedGate");
     const appEl = document.getElementById("payloadApp");
 
-    if (State.devMode || localStorage.getItem(DEV_MODE_KEY) === "true") {
-      if (loginGate) loginGate.style.display = "none";
-      if (deniedGate) deniedGate.style.display = "none";
-      if (appEl) appEl.style.display = "flex";
-      return;
-    }
-
     if (!isAuthed || !window.Auth || !window.Auth.user) {
       if (loginGate) loginGate.style.display = "flex";
       if (deniedGate) deniedGate.style.display = "none";
@@ -3979,8 +3955,8 @@ BLOG_POSTS: {
     }
 
     const email = String(window.Auth.user.email || "").toLowerCase().trim();
-    const adminEmails = (window.ADMIN_EMAILS || []).map((e) => String(e).toLowerCase().trim());
-    const isAdmin = adminEmails.includes(email);
+    const role = String(window.Auth.user.role || "student");
+    const isAdmin = role === "academic_admin" || role === "super_admin";
 
     if (isAdmin) {
       if (loginGate) loginGate.style.display = "none";
@@ -4002,10 +3978,8 @@ BLOG_POSTS: {
   }
 
   function enableDevMode() {
-    State.devMode = true;
-    localStorage.setItem(DEV_MODE_KEY, "true");
-    applyAuthState(true);
-    toast("Đã kích hoạt Chế độ Dev Mode offline.");
+    localStorage.removeItem(DEV_MODE_KEY);
+    toast("Chế độ bỏ qua đăng nhập đã bị vô hiệu hóa. Hãy dùng tài khoản Supabase có quyền quản trị.");
   }
 
   // =========================================================================
@@ -4058,10 +4032,10 @@ BLOG_POSTS: {
     if (switchBtn) switchBtn.onclick = () => window.Auth && window.Auth.signInWithGoogle();
 
     const dev1 = document.getElementById("btnDevBypass");
-    if (dev1) dev1.onclick = enableDevMode;
+    if (dev1) dev1.style.display = "none";
 
     const dev2 = document.getElementById("btnDevBypass2");
-    if (dev2) dev2.onclick = enableDevMode;
+    if (dev2) dev2.style.display = "none";
 
     const pushSb = document.getElementById("btnPushAllToSb");
     if (pushSb) pushSb.onclick = () => window.syncAllToSupabase();

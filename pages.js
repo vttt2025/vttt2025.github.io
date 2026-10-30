@@ -5055,7 +5055,7 @@ function initWritingPage() {
   const CYRILLIC_KEYS = [
     ["Й", "Ц", "У", "К", "Е", "Н", "Г", "Ш", "Щ", "З", "Х", "Ъ"],
     ["Ф", "Ы", "В", "А", "П", "Р", "О", "Л", "Д", "Ж", "Э"],
-    ["Я", "CH", "С", "М", "И", "Т", "Ь", "Б", "Ю", "Ё"]
+    ["Я", "Ч", "С", "М", "И", "Т", "Ь", "Б", "Ю", "Ё"]
   ];
 
   let currentLevel = "A1";
@@ -6557,6 +6557,13 @@ function initShopPage() {
   };
 
   const openCheckoutModal = (total) => {
+    const currentUser = window.Auth && window.Auth.user;
+    if (!currentUser || String(currentUser.uid || "").startsWith("guest_")) {
+      if (window.Monetization && typeof window.Monetization.showAuthRequiredModal === "function") {
+        window.Monetization.showAuthRequiredModal("Đăng nhập để đặt hàng", "Vui lòng đăng nhập để lưu đơn hàng và theo dõi trạng thái xác nhận trên Supabase.");
+      }
+      return;
+    }
     let m = document.getElementById("checkoutModal");
     if (!m) {
       m = document.createElement("div");
@@ -6595,8 +6602,26 @@ function initShopPage() {
     `;
 
     document.getElementById("cancelCheckout").onclick = () => m.remove();
-    document.getElementById("confirmPaidOrder").onclick = () => {
+    document.getElementById("confirmPaidOrder").onclick = async () => {
       const name = document.getElementById("custName").value.trim() || "Quý khách";
+      const phone = document.getElementById("custPhone").value.trim();
+      const address = document.getElementById("custAddress").value.trim();
+      const button = document.getElementById("confirmPaidOrder");
+      button.disabled = true;
+      const result = await window.RusiSupabase?.orders?.createShopPending({
+        id: orderId,
+        userId: currentUser.uid,
+        amount: total,
+        items: cart,
+        customerName: name,
+        customerPhone: phone,
+        deliveryAddress: address
+      });
+      if (!result?.ok) {
+        button.disabled = false;
+        toast(result?.message || "Không thể ghi nhận đơn hàng. Vui lòng thử lại.");
+        return;
+      }
       cart = [];
       saveCart();
       m.remove();

@@ -5,7 +5,10 @@ build_dir=".figma/make/deploy-dist"
 rm -rf "$build_dir"
 mkdir -p "$build_dir"
 
-cp -- *.html *.css *.js .nojekyll CNAME robots.txt sitemap.xml "$build_dir/"
+cp -- *.html *.css .nojekyll CNAME robots.txt sitemap.xml "$build_dir/"
+for script in *.js; do
+  [[ "$script" == "firebase-config.js" ]] || cp -- "$script" "$build_dir/"
+done
 cp -R -- assets data login signup "$build_dir/"
 
 [[ -f "$build_dir/index.html" ]] || {
