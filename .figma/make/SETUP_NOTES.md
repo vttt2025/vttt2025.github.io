@@ -10,8 +10,14 @@ not loaded by the deployed site.
    `supabase-only-migration.sql`. For an existing project, run only the additive
    migration after taking a database backup.
 2. In Authentication → Providers, enable Email and Google as needed.
-3. In Authentication → URL Configuration, add the published site and Figma
-   preview origins to the allowed redirect URLs.
+3. In Authentication → URL Configuration:
+   - Set Site URL to `https://rusitrki.com`.
+   - Add `https://rusitrki.com/**` to Redirect URLs.
+   - Add the exact active Figma preview origin followed by `/**`, for example
+     `https://app-g6oifbo2lcwsmkqdea3peximmp5xi53ngc6vowi5lpfkvknjxbdq.makeproxy-c.figma.site/**`.
+   Supabase falls back to Site URL when the requested callback is not in this
+   list; leaving Site URL as localhost redirects OAuth sessions to
+   `http://localhost:3000`.
 4. After the first account signs in, grant the intended administrator:
 
    ```sql

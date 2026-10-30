@@ -43,7 +43,9 @@
           auth: {
             persistSession: true,
             autoRefreshToken: true,
-            detectSessionInUrl: true
+            detectSessionInUrl: true,
+            // Authorization Code + PKCE: token không xuất hiện trong URL callback.
+            flowType: "pkce"
           }
         }
       );

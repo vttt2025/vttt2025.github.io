@@ -34,6 +34,23 @@
       : null;
   }
 
+  function clearSensitiveAuthUrl() {
+    const hash = window.location.hash || "";
+    const search = window.location.search || "";
+    const hasSensitiveHash = /(?:access_token|refresh_token|provider_token)=/i.test(hash);
+    const hasAuthCode = /(?:^|[?&])code=/.test(search);
+    if (!hasSensitiveHash && !hasAuthCode) return;
+
+    const params = new URLSearchParams(search);
+    params.delete("code");
+    const cleanSearch = params.toString();
+    window.history.replaceState(
+      null,
+      document.title,
+      window.location.pathname + (cleanSearch ? "?" + cleanSearch : "")
+    );
+  }
+
   function formatUser(user, profile) {
     if (!user) return null;
     const meta = user.user_metadata || {};
@@ -112,6 +129,7 @@
 
         const { data } = await client.auth.getSession();
         await this._hydrateUser(data?.session?.user || null);
+        clearSensitiveAuthUrl();
 
         if (!this._subscription) {
           const result = client.auth.onAuthStateChange((_event, session) => {
