@@ -52,6 +52,22 @@
     };
   }
 
+  function normalizeAuthError(error) {
+    if (!error) return null;
+    const message = String(error.message || error);
+    const lower = message.toLowerCase();
+    if (lower.includes("invalid login credentials")) {
+      return { ...error, message: "Email hoặc mật khẩu không chính xác, hoặc tài khoản chưa được tạo trên Supabase." };
+    }
+    if (lower.includes("email not confirmed")) {
+      return { ...error, message: "Email chưa được xác nhận. Vui lòng mở email xác nhận rồi đăng nhập lại." };
+    }
+    if (lower.includes("user already registered")) {
+      return { ...error, message: "Email này đã được đăng ký. Vui lòng chuyển sang trang đăng nhập." };
+    }
+    return error;
+  }
+
   const Auth = {
     user: null,
     _listeners: [],
@@ -133,19 +149,20 @@
     async signInWithGoogle() {
       const client = getClient();
       if (!client) return { user: null, error: { message: "Supabase chưa sẵn sàng." } };
-      const redirectTo = window.location.origin + window.location.pathname + window.location.search;
+      // OAuth callback chỉ dùng URL sạch; auth-page.js đã lưu đích cuối vào localStorage.
+      const redirectTo = window.location.origin + window.location.pathname;
       const { data, error } = await client.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo }
       });
-      return { user: data?.user || null, error };
+      return { user: data?.user || null, error: normalizeAuthError(error) };
     },
 
     async signInWithEmail(email, password) {
       const client = getClient();
       if (!client) return { user: null, error: { message: "Supabase chưa sẵn sàng." } };
       const { data, error } = await client.auth.signInWithPassword({ email, password });
-      if (error) return { user: null, error };
+      if (error) return { user: null, error: normalizeAuthError(error) };
       const user = await this._hydrateUser(data.user);
       this._emit(user);
       return { user, error: null };
@@ -160,7 +177,7 @@
         password,
         options: { data: { full_name: fullName } }
       });
-      if (error) return { user: null, error };
+      if (error) return { user: null, error: normalizeAuthError(error) };
       if (!data.session) {
         return {
           user: null,

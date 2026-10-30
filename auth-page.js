@@ -133,6 +133,19 @@
     const isSignupPage = document.body.dataset.page === "signup";
     const store = getStore();
 
+    // Supabase trả lỗi OAuth qua query hoặc hash; hiển thị thay vì để trang im lặng.
+    const callbackParams = new URLSearchParams(
+      window.location.search || (window.location.hash.startsWith("#") ? "?" + window.location.hash.slice(1) : "")
+    );
+    const callbackError = callbackParams.get("error_description") || callbackParams.get("error");
+    if (callbackError) {
+      const errorBox = document.getElementById("authErrorMsg");
+      if (errorBox) {
+        errorBox.textContent = decodeURIComponent(callbackError.replace(/\+/g, " "));
+        errorBox.style.display = "block";
+      }
+    }
+
     // 1. Kiểm tra trạng thái đăng nhập hiện tại
     const currentUser = (window.Auth && window.Auth.user) || store.get("auth_user", null);
 
@@ -282,7 +295,9 @@
             res = await window.Auth.signInWithEmail(email, password);
           }
 
-          if (res && res.error) {
+          if (res && res.needsEmailConfirmation) {
+            showError(res.error?.message || "Vui lòng kiểm tra email để xác nhận tài khoản.");
+          } else if (res && res.error) {
             showError(res.error.message || "Đã xảy ra lỗi. Vui lòng thử lại.");
           } else if (res && res.user) {
             executeRedirect();
