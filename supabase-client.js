@@ -27,6 +27,27 @@
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
   }
 
+  // Wrapper timeout cho các query Supabase nhằm tránh treo vĩnh viễn khi mạng gián đoạn
+  function withTimeout(promise, ms) {
+    if (!promise || typeof promise.then !== "function") return promise;
+    var timer = null;
+    var timeout = new Promise(function (_, reject) {
+      timer = setTimeout(function () {
+        reject(new Error("Supabase query timeout after " + (ms || 3500) + "ms"));
+      }, ms || 3500);
+    });
+    return Promise.race([
+      Promise.resolve(promise).then(function (res) {
+        if (timer) clearTimeout(timer);
+        return res;
+      }, function (err) {
+        if (timer) clearTimeout(timer);
+        throw err;
+      }),
+      timeout
+    ]);
+  }
+
   function getClient() {
     if (client) return client;
     if (typeof window.supabase === "undefined" || !window.supabase.createClient) {
@@ -443,20 +464,31 @@
           if (res.error || !res.data) return null;
           return res.data.map(function (row) {
             var raw = row.raw_data || {};
+            if (typeof raw === "string") {
+              try { raw = JSON.parse(raw); } catch (_) { raw = {}; }
+            }
+            var wordsList = (raw && Array.isArray(raw.suggested_words) && raw.suggested_words.length)
+              ? raw.suggested_words
+              : (Array.isArray(row.suggested_words) ? row.suggested_words : []);
+            var tipsList = (raw && Array.isArray(raw.tips) && raw.tips.length)
+              ? raw.tips
+              : (Array.isArray(row.tips) ? row.tips : []);
             return {
               id: row.code || row.id,
               level: row.level || "A1",
               levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
               category: row.category || "intro",
               categoryName: row.category_name || "Tự giới thiệu",
+              task_type: raw.task_type || (row.category === "photo" ? "picture_desc" : "summary"),
               icon: row.icon || "pen-tool",
               estMinutes: row.est_minutes || 15,
               title: row.title,
               prompt: row.prompt || "",
               vi: row.vi || "",
+              image_url: row.image_url || raw.image_url || "",
               minWords: row.min_words || 20,
-              suggested_words: raw.suggested_words || row.suggested_words || [],
-              tips: raw.tips || row.tips || [],
+              suggested_words: wordsList,
+              tips: tipsList,
               model: raw.model || row.model_answer || "",
               is_pro_only: Boolean(row.is_pro_only)
             };

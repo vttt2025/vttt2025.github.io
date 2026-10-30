@@ -31,8 +31,10 @@ class SPAHandler(http.server.SimpleHTTPRequestHandler):
         return super().do_GET()
 
 if __name__ == '__main__':
-    socketserver.TCPServer.allow_reuse_address = True
-    with socketserver.TCPServer(("", PORT), SPAHandler) as httpd:
+    # Su dung ThreadingHTTPServer de phuc vu da luong dong thoi, tranh tinh trang trinh duyet mo nhieu ket noi lam treo / loading mai
+    server_class = getattr(http.server, 'ThreadingHTTPServer', socketserver.ThreadingTCPServer)
+    server_class.allow_reuse_address = True
+    with server_class(("", PORT), SPAHandler) as httpd:
         print(f"RusiTRKI server running at http://localhost:{PORT}")
         print("Serving 404.html for any not-found path (like GitHub Pages).")
         try:

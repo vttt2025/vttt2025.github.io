@@ -2208,8 +2208,11 @@ function triggerPageInit() {
             console.error("[App] Lỗi khi thực thi initPage() (retry):", err);
           }
         }
-      } else if (retries >= 30) {
+      } else if (retries >= 150) {
         clearInterval(retryTimer);
+        try {
+          document.querySelectorAll(".rusi-skeleton-hub").forEach(s => s.style.display = "none");
+        } catch (_) {}
       }
     }, 40);
   }

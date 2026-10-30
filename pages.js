@@ -2160,8 +2160,8 @@ function initVocabPage() {
             <div class="vocabulary-heading">
               <div class="page-title-box">
                 <h1 class="page-main-hero-title">
-                  CHINH PHỤC 5.000 TỪ TIẾNG NGA<br />
-                  <span>Học Chủ Đề &amp; Chuỗi Hành Động</span>
+                  Chinh phục 5.000 từ tiếng Nga<br />
+                  <span>Học chủ đề &amp; chuỗi hành động</span>
                 </h1>
               </div>
             </div>
@@ -3387,13 +3387,50 @@ const showTopicArticle = (jarId) => {
  * ===================================================================== */
 function initListeningPage() {
   const host = el("#listenHost");
+  if (!host) return;
+
+  const LEVELS = [
+    ["A1", "Sơ cấp"],
+    ["A2", "Cơ bản"],
+    ["B1", "Trung cấp"],
+    ["B2", "Trung cấp cao"],
+    ["C1", "Cao cấp"],
+    ["C2", "Thành thạo"]
+  ];
+
+  const MODE_INFO = {
+    comprehension: {
+      title: "Nghe hiểu",
+      subtitle: "Luyện nghe hội thoại, đoạn văn và trả lời câu hỏi trắc nghiệm",
+      icon: "headphones"
+    },
+    dictation: {
+      title: "Nghe chép chính tả",
+      subtitle: "Nghe từng câu, rèn luyện bắt âm chuẩn và gõ lại tiếng Nga chính xác",
+      icon: "edit-3"
+    }
+  };
+
+  const LESSON_COVERS = {
+    airport: "https://images.unsplash.com/photo-1530521954074-e64f6810b32d?auto=format&fit=crop&w=800&q=80",
+    shop: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=800&q=80",
+    dorm: "https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&w=800&q=80",
+    cafe: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80",
+    campus: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=800&q=80",
+    metro: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
+    interview: "https://images.unsplash.com/photo-1517976487507-5b3b4b45f44e?auto=format&fit=crop&w=800&q=80"
+  };
+  const DEFAULT_LISTENING_COVER = "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80";
+
+  let currentMode = "comprehension";
   let currentLevel = "A1";
-  let currentPage = 1;
-  const PAGE_SIZE = 6;
   let currentSpeed = 1.0;
   let showSub = true;
   let currentLesson = null;
   let cloudListening = null;
+
+  const icon = (name, size) => window.RusiIcons ? RusiIcons.get(name, { size }) : "";
+  const lessonImage = (l) => l.image || l.image_url || LESSON_COVERS[l.category] || DEFAULT_LISTENING_COVER;
 
   const getListeningLessons = () => {
     return (cloudListening && cloudListening.length) ? cloudListening : (typeof LISTENING_LESSONS !== "undefined" ? LISTENING_LESSONS : []);
@@ -3417,209 +3454,168 @@ function initListeningPage() {
   };
   loadCloudListening();
 
+  const filteredLessons = () => {
+    const all = getListeningLessons();
+    return all.filter((l) => {
+      if (l.level !== currentLevel) return false;
+      if (currentMode === "dictation") {
+        return Array.isArray(l.dictation) && l.dictation.length > 0;
+      }
+      return true;
+    });
+  };
+
   const renderListeningCards = () => {
-    const gridHost = el("#lisCardsGrid");
+    const gridHost = host.querySelector("#lisCardsGrid");
     if (!gridHost) return;
 
-    const all = getListeningLessons();
-    const countA1 = all.filter(l => l.level === "A1").length;
-    const countA2 = all.filter(l => l.level === "A2").length;
-    const countB1 = all.filter(l => l.level === "B1").length;
-    const countB2 = all.filter(l => l.level === "B2").length;
-    const countC1 = all.filter(l => l.level === "C1").length;
-    const countC2 = all.filter(l => l.level === "C2").length;
-
-    // Cập nhật số lượng trên các nút cấp độ
-    const cA1 = el("#lisCountA1"); if (cA1) cA1.textContent = countA1;
-    const cA2 = el("#lisCountA2"); if (cA2) cA2.textContent = countA2;
-    const cB1 = el("#lisCountB1"); if (cB1) cB1.textContent = countB1;
-    const cB2 = el("#lisCountB2"); if (cB2) cB2.textContent = countB2;
-    const cC1 = el("#lisCountC1"); if (cC1) cC1.textContent = countC1;
-    const cC2 = el("#lisCountC2"); if (cC2) cC2.textContent = countC2;
-
-    // Update active class on level tabs
-    host.querySelectorAll(".level-tab").forEach(b => {
-      const isActive = b.dataset.level === currentLevel;
-      b.classList.toggle("level-tab-active", isActive);
-      b.setAttribute("aria-selected", isActive ? "true" : "false");
+    host.querySelectorAll(".listening-mode-card").forEach((button) => {
+      const active = button.dataset.mode === currentMode;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+    host.querySelectorAll(".listening-level-tab").forEach((button) => {
+      const active = button.dataset.level === currentLevel;
+      button.classList.toggle("active", active);
+      button.classList.toggle("level-tab-active", active);
+      button.setAttribute("aria-selected", active ? "true" : "false");
     });
 
-    const filtered = all.filter(l => l.level === currentLevel);
+    const all = getListeningLessons();
+    LEVELS.forEach(([level]) => {
+      const count = all.filter((l) => {
+        if (l.level !== level) return false;
+        if (currentMode === "dictation") {
+          return Array.isArray(l.dictation) && l.dictation.length > 0;
+        }
+        return true;
+      }).length;
+      const countNode = host.querySelector(`[data-listening-count="${level}"]`);
+      if (countNode) countNode.textContent = count;
+    });
 
-    const doneCount = filtered.filter(l => Progress.doneList("listenDone").includes(l.id + "_check") || Progress.doneList("listenDone").includes(l.id + "_video")).length;
-    const totalCount = filtered.length;
-    const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
-
-    const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
-    if (currentPage > totalPages) currentPage = totalPages;
-    if (currentPage < 1) currentPage = 1;
-
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE);
-
-    if (filtered.length === 0) {
+    const items = filteredLessons();
+    if (!items.length) {
       gridHost.innerHTML = `
-        <div class="topic-empty-state" style="grid-column:1/-1;text-align:center;padding:48px 24px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.18);border-radius:20px;color:#fff">
-          <div style="margin-bottom:12px;color:#8dbcef">${window.RusiIcons ? RusiIcons.get("headphones", { size: 48 }) : ""}</div>
-          <h3 style="margin:0 0 8px;color:#fff;font-size:1.2rem">Chưa có bài nghe cho cấp độ này</h3>
-          <p style="color:#8094a9;font-size:0.9rem;margin:0">Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
+        <div class="writing-empty-state listening-empty-state">
+          <span class="writing-empty-icon listening-empty-icon">${icon(MODE_INFO[currentMode].icon, 34)}</span>
+          <h3>Chưa có bài ${MODE_INFO[currentMode].title.toLowerCase()} ở cấp ${currentLevel}</h3>
+          <p>Hãy chọn một cấp độ khác để tiếp tục luyện tập.</p>
         </div>
       `;
-    } else {
-      gridHost.innerHTML = pageItems.map((l, idx) => {
-        const isDone = Progress.doneList("listenDone").includes(l.id + "_check") || Progress.doneList("listenDone").includes(l.id + "_video");
-        const isPro = l.is_pro_only || l.level === "B1" || l.level === "B2";
-        const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
-        const indexStr = String((currentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, "0");
-        const qCount = (l.questions && l.questions.length) ? l.questions.length : (l.script && l.script.length) ? l.script.length : 5;
-        const russianCategory = `АУДИРОВАНИЕ · ${l.level}`;
-
-        return `
-          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-listen-id="${l.id}">
-            <div class="dau-card-header">
-              <div class="dau-card-icon" style="background:rgba(2,132,199,0.08);color:#0284c7">
-                ${window.RusiIcons ? RusiIcons.get(l.icon || "headphones", { size: 24 }) : ""}
-              </div>
-              <div class="dau-card-header-main">
-                <div class="dau-card-title-row">
-                  <h3 class="dau-card-ru">${esc(l.title)}</h3>
-                  ${isDone ? `
-                    <span class="topic-status topic-status-completed" style="flex-shrink:0">
-                      ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
-                    </span>
-                  ` : isPro ? `
-                    <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
-                  ` : `
-                    <span class="topic-status topic-status-level" style="flex-shrink:0">${l.level}</span>
-                  `}
-                </div>
-                <div class="dau-card-subinfo">
-                  <span>${l.level}</span>
-                  <span class="dau-card-sep">|</span>
-                  <span class="dau-card-count">${qCount} câu</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="dau-card-footer" style="justify-content:flex-end">
-              <button type="button" class="btn btn-primary btn-sm btn-listen-action" data-listen-id="${l.id}" style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
-                ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 14 }) : "") : ""} Vào luyện nghe ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
-              </button>
-            </div>
-          </article>
-        `;
-      }).join("");
-
-      gridHost.querySelectorAll(".btn-listen-action").forEach(btn => {
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          const id = btn.dataset.listenId;
-          const lesson = all.find(x => x.id === id);
-          if (!lesson) return;
-          const isPro = lesson.is_pro_only || lesson.level === "B1" || lesson.level === "B2";
-          if (isPro && !Monetization.isPro()) {
-            Monetization.showProGateModal("Nội dung nghe dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao.");
-            return;
-          }
-          openListeningWorkspace(lesson);
-        };
-      });
-
-      gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
-        card.onclick = (e) => {
-          if (e.target.closest("button")) return;
-          const id = card.dataset.listenId;
-          const lesson = all.find(x => x.id === id);
-          if (!lesson) return;
-          const isPro = lesson.is_pro_only || lesson.level === "B1" || lesson.level === "B2";
-          if (isPro && !Monetization.isPro()) {
-            Monetization.showProGateModal("Nội dung nghe dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao.");
-            return;
-          }
-          openListeningWorkspace(lesson);
-        };
-      });
+      return;
     }
 
-    renderDauPagination(el("#lisPagination"), currentPage, totalPages, (newPage) => {
-      currentPage = newPage;
-      renderListeningCards();
-      const topEl = el("#lisSection") || host;
-      if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    gridHost.innerHTML = items.map((l, index) => {
+      const isDone = currentMode === "comprehension"
+        ? (Progress.doneList("listenDone").includes(l.id + "_check") || Progress.doneList("listenDone").includes(l.id + "_video"))
+        : (Array.isArray(l.dictation) && l.dictation.length > 0 && l.dictation.every((_, i) => Progress.doneList("listenDone").includes(l.id + "_dict_" + i)));
+      const isPro = l.is_pro_only || l.level === "B1" || l.level === "B2";
+      const qCount = (l.questions && l.questions.length) ? l.questions.length : (l.lines && l.lines.length) ? l.lines.length : 4;
+      const dictCount = (l.dictation && l.dictation.length) || 0;
+      const countLabel = currentMode === "comprehension" ? `${qCount} câu hỏi` : `${dictCount} câu chính tả`;
+      const actionLabel = isDone ? "Đã hoàn thành" : (currentMode === "comprehension" ? "Vào luyện nghe hiểu" : "Vào chép chính tả");
+      const indexStr = String(index + 1).padStart(2, "0");
+
+      return `
+        <article class="writing-topic-card listening-topic-card" data-listen-id="${esc(l.id)}" tabindex="0">
+          <div class="writing-topic-cover listening-topic-cover">
+            <img src="${esc(lessonImage(l))}" alt="${esc(l.title)}" loading="lazy" />
+            <span class="writing-topic-number">${indexStr}</span>
+            ${isPro ? `<span class="topic-status topic-status-pro">PRO</span>` : isDone ? `<span class="topic-status topic-status-completed">${icon("check", 12)} Hoàn thành</span>` : ""}
+          </div>
+          <div class="writing-topic-body listening-topic-body">
+            <div class="writing-topic-meta listening-topic-meta">
+              <span>${l.level}</span>
+              <span>${countLabel}</span>
+            </div>
+            <h3 title="${esc(l.title)} · ${esc(l.vi || "")}">${esc(l.title)}</h3>
+            <p class="listening-card-vi">${esc(l.vi || l.categoryName || "")}</p>
+            <div class="writing-topic-progress listening-topic-progress">
+              <span>${actionLabel}</span>
+              <span>${icon("arrow-right", 16)}</span>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    const openLesson = (card) => {
+      const id = card.dataset.listenId;
+      const lesson = all.find((x) => x.id === id);
+      if (!lesson) return;
+      const isPro = lesson.is_pro_only || lesson.level === "B1" || lesson.level === "B2";
+      if (isPro && !Monetization.isPro()) {
+        Monetization.showProGateModal(
+          "Nội dung nghe dành cho PRO",
+          "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao."
+        );
+        return;
+      }
+      openListeningWorkspace(lesson, currentMode === "dictation" ? "dict" : "video");
+    };
+
+    gridHost.querySelectorAll(".listening-topic-card").forEach((card) => {
+      card.onclick = () => openLesson(card);
+      card.onkeydown = (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openLesson(card);
+        }
+      };
     });
   };
 
   const renderHub = () => {
     document.body.classList.remove("in-workspace");
     currentLesson = null;
-    const all = getListeningLessons();
-    const countA1 = all.filter(l => l.level === "A1").length;
-    const countA2 = all.filter(l => l.level === "A2").length;
-    const countB1 = all.filter(l => l.level === "B1").length;
-    const countB2 = all.filter(l => l.level === "B2").length;
+    host.innerHTML = `
+      <section class="writing-hub listening-hub" id="listeningHub">
+        <header class="writing-hub-header listening-hub-header">
+          <h1>Chọn cách bạn muốn luyện nghe</h1>
+          <p>Chinh phục kỹ năng nghe tiếng Nga qua phương pháp nghe hiểu toàn diện và chép chính tả.</p>
+        </header>
 
-    let section = host.querySelector("#lisSection");
-    if (!section) {
-      host.innerHTML = `
-        <section class="vocabulary-section rusi-topic-section" id="lisSection">
-          <div class="vocabulary-inner">
-            <div class="vocabulary-heading">
-              <div class="page-title-box">
-                <h1 class="page-main-hero-title">
-                  CHINH PHỤC KỸ NĂNG NGHE<br />
-                  <span>YouTube Shadowing, Nghe hiểu, Nghe chép chính tả</span>
-                </h1>
-              </div>
-            </div>
+        <div class="writing-mode-grid listening-mode-grid" aria-label="Chọn dạng luyện nghe">
+          ${Object.entries(MODE_INFO).map(([key, info]) => `
+            <button type="button" class="writing-mode-card listening-mode-card ${key === currentMode ? "active" : ""}" data-mode="${key}" aria-pressed="${key === currentMode}">
+              <span class="writing-mode-icon listening-mode-icon">${icon(info.icon, 28)}</span>
+              <span class="writing-mode-copy listening-mode-copy">
+                <strong>${info.title}</strong>
+                <small>${info.subtitle}</small>
+              </span>
+              <span class="writing-mode-arrow listening-mode-arrow">${icon("arrow-right", 18)}</span>
+            </button>
+          `).join("")}
+        </div>
 
-            <div class="level-tabs" role="tablist" aria-label="Chọn cấp độ nghe" id="lisLevelTabs">
-              <button class="level-tab ${currentLevel === "A1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A1">
-                <span class="level-code">A1</span>
-                <small>Sơ cấp</small>
-                <span class="level-tab-count" id="lisCountA1">${countA1}</span>
-              </button>
-              <button class="level-tab ${currentLevel === "A2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A2">
-                <span class="level-code">A2</span>
-                <small>Cơ bản</small>
-                <span class="level-tab-count" id="lisCountA2">${countA2}</span>
-              </button>
-              <button class="level-tab ${currentLevel === "B1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B1">
-                <span class="level-code">B1</span>
-                <small>Trung cấp</small>
-                <span class="level-tab-count" id="lisCountB1">${countB1}</span>
-              </button>
-              <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
-                <span class="level-code">B2</span>
-                <small>Trung cấp cao</small>
-                <span class="level-tab-count" id="lisCountB2">${countB2}</span>
-              </button>
-              <button class="level-tab ${currentLevel === "C1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C1">
-                <span class="level-code">C1</span>
-                <small>Cao cấp</small>
-                <span class="level-tab-count" id="lisCountC1">0</span>
-              </button>
-              <button class="level-tab ${currentLevel === "C2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C2">
-                <span class="level-code">C2</span>
-                <small>Thành thạo</small>
-                <span class="level-tab-count" id="lisCountC2">0</span>
-              </button>
-            </div>
+        <div class="level-tabs writing-level-tabs listening-level-tabs" role="tablist" aria-label="Lọc bài nghe theo cấp độ" id="lisLevelTabs">
+          ${LEVELS.map(([level, label]) => `
+            <button type="button" class="level-tab writing-level-tab listening-level-tab ${level === currentLevel ? "level-tab-active active" : ""}" data-level="${level}" role="tab" aria-selected="${level === currentLevel ? "true" : "false"}">
+              <span class="level-code">${level}</span>
+              <small>${label}</small>
+              <span class="level-tab-count" data-listening-count="${level}">0</span>
+            </button>
+          `).join("")}
+        </div>
 
-            <div class="topic-grid" id="lisCardsGrid"></div>
-            <div class="dau-pagination" id="lisPagination"></div>
-          </div>
-        </section>
-      `;
+        <div class="writing-topic-grid listening-topic-grid" id="lisCardsGrid"></div>
+      </section>
+    `;
 
-      // Level tabs
-      host.querySelectorAll(".level-tab").forEach(btn => {
-        btn.onclick = () => {
-          currentLevel = btn.dataset.level;
-          currentPage = 1;
-          renderListeningCards();
-        };
-      });
-    }
+    host.querySelectorAll(".listening-mode-card").forEach((button) => {
+      button.onclick = () => {
+        currentMode = button.dataset.mode;
+        renderListeningCards();
+      };
+    });
+
+    host.querySelectorAll(".listening-level-tab").forEach((button) => {
+      button.onclick = () => {
+        currentLevel = button.dataset.level;
+        renderListeningCards();
+      };
+    });
 
     renderListeningCards();
   };
@@ -4845,7 +4841,7 @@ function initSpeakingPage() {
             <div class="vocabulary-heading">
               <div class="page-title-box">
                 <h1 class="page-main-hero-title">
-                  LUYỆN NÓI SHADOWING<br />
+                  Luyện nói Shadowing<br />
                   <span>Shadowing, AI chấm điểm, phân tích phát âm</span>
                 </h1>
               </div>
@@ -5049,7 +5045,7 @@ function initSpeakingPage() {
 /* =====================================================================
  * CHUYÊN MỤC 5: LUYỆN VIẾT TẢ TRANH (ПИСЬМО TRKI) & BÀN PHÍM ẢO CYRILLIC
  * ===================================================================== */
-function initWritingPage() {
+function initWritingPageLegacy() {
   const host = el("#writeHost");
 
   const CYRILLIC_KEYS = [
@@ -5525,13 +5521,655 @@ function initWritingPage() {
       const m = box.querySelector(".model-answer");
       m.classList.toggle("hidden");
       e.target.textContent = m.classList.contains("hidden") ? "Xem bài mẫu chuẩn" : "Ẩn bài mẫu";
-      if (!m.classList.contains("hidden")) speak(t.model);
     };
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   renderHub();
+}
+
+/* Writing learning hub 2.0: Tả tranh / Luyện dịch, topic groups and 3/7 workspace. */
+function initWritingPage() {
+  const host = el("#writeHost");
+  if (!host) return;
+
+  const LEVELS = [
+    ["A1", "Sơ cấp"],
+    ["A2", "Cơ bản"],
+    ["B1", "Trung cấp"],
+    ["B2", "Trung cấp cao"],
+    ["C1", "Cao cấp"],
+    ["C2", "Thành thạo"]
+  ];
+  const MODE_INFO = {
+    picture: {
+      title: "Tả tranh",
+      subtitle: "Quan sát hình ảnh và diễn đạt bằng tiếng Nga",
+      icon: "image"
+    },
+    translation: {
+      title: "Luyện dịch",
+      subtitle: "Luyện chuyển ý và viết câu tiếng Nga theo chủ đề",
+      icon: "book-open-blog"
+    }
+  };
+  const PICTURE_FALLBACK = "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1200&q=82";
+  const TRANSLATION_FALLBACK = "https://images.unsplash.com/photo-1514369118554-e20d93546b30?auto=format&fit=crop&w=1200&q=82";
+  const CYRILLIC_KEYS = [
+    ["Й", "Ц", "У", "К", "Е", "Н", "Г", "Ш", "Щ", "З", "Х", "Ъ"],
+    ["Ф", "Ы", "В", "А", "П", "Р", "О", "Л", "Д", "Ж", "Э"],
+    ["Я", "Ч", "С", "М", "И", "Т", "Ь", "Б", "Ю", "Ё"]
+  ];
+
+  let currentMode = "translation";
+  let currentLevel = "A1";
+  let cloudWriting = null;
+
+  const icon = (name, size) => window.RusiIcons ? RusiIcons.get(name, { size }) : "";
+  const getTasks = () => (cloudWriting && cloudWriting.length)
+    ? cloudWriting
+    : (typeof WRITING_TASKS !== "undefined" ? WRITING_TASKS : []);
+  const taskMode = (task) => task.task_type === "picture_desc" ? "picture" : "translation";
+  const minWords = (task) => task.minWords || task.min_words || 20;
+  const modelAnswer = (task) => task.model || task.model_answer || "";
+  const taskTips = (task) => {
+    if (!task) return [];
+    if (Array.isArray(task.tips) && task.tips.length) return task.tips;
+    if (typeof task.tips === "string" && task.tips.trim()) {
+      try {
+        const parsed = JSON.parse(task.tips);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      } catch (_) {
+        return task.tips.split(/\n+/).map((s) => s.trim()).filter(Boolean);
+      }
+    }
+    if (task.raw_data) {
+      try {
+        const raw = typeof task.raw_data === "string" ? JSON.parse(task.raw_data) : task.raw_data;
+        if (raw && Array.isArray(raw.tips) && raw.tips.length) return raw.tips;
+      } catch (_) {}
+    }
+    return [];
+  };
+  const taskWords = (task) => {
+    if (!task) return [];
+    if (Array.isArray(task.suggested_words) && task.suggested_words.length) return task.suggested_words;
+    if (typeof task.suggested_words === "string" && task.suggested_words.trim()) {
+      try {
+        const parsed = JSON.parse(task.suggested_words);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      } catch (_) {
+        const splitted = task.suggested_words.split(/[,;\n]+/).map((s) => s.trim()).filter(Boolean);
+        if (splitted.length) return splitted;
+      }
+    }
+    if (task.raw_data) {
+      try {
+        const raw = typeof task.raw_data === "string" ? JSON.parse(task.raw_data) : task.raw_data;
+        if (raw && Array.isArray(raw.suggested_words) && raw.suggested_words.length) return raw.suggested_words;
+      } catch (_) {}
+    }
+    if (Array.isArray(task.suggestedWords) && task.suggestedWords.length) return task.suggestedWords;
+    return [];
+  };
+
+  const COMMON_WRITING_MEANINGS = {
+    "меня зовут": "Tôi tên là / Tên tôi là...",
+    "я из вьетнама": "Tôi đến từ Việt Nam",
+    "я студент": "Tôi là sinh viên",
+    "я изучаю": "Tôi đang học / nghiên cứu...",
+    "я живу в москве": "Tôi sống ở Moskva",
+    "я живу в ханое": "Tôi sống ở Hà Nội",
+    "утром": "Vào buổi sáng",
+    "завтракать": "Ăn bữa sáng",
+    "университет": "Trường đại học",
+    "библиотека": "Thư viện",
+    "готовить ужин": "Nấu bữa tối",
+    "дорогой друг": "Bạn thân mến / Bạn quý mến",
+    "северная столица": "Thủ đô phương Bắc (Sankt-Peterburg)",
+    "эрмитаж": "Bảo tàng viện Hermitage",
+    "белые ночи": "Những đêm trắng",
+    "незабываемо": "Thật khó quên / Đáng nhớ",
+    "здоровый образ жизни": "Lối sống lành mạnh",
+    "учебная нагрузка": "Áp lực / khối lượng học tập",
+    "заниматься спортом": "Tập luyện thể dục thể thao",
+    "энергия и бодрость": "Năng lượng và sự sảng khoái",
+    "по моему мнению": "Theo quan điểm / ý kiến của tôi",
+    "на картинке видно": "Trên bức tranh có thể thấy...",
+    "за столом": "Ngồi bên bàn",
+    "готовятся к тесту": "Đang ôn luyện cho bài kiểm tra",
+    "пьют горячий чай": "Uống trà nóng",
+    "дружная атмосфера": "Không khí chan hòa, thân ái",
+    "привет!": "Chào bạn! / Xin chào!",
+    "привет": "Chào bạn! / Xin chào!",
+    "я ушёл в библиотеку": "Tôi đi đến thư viện rồi",
+    "купи, пожалуйста": "Làm ơn mua giúp...",
+    "вернусь в": "Tôi sẽ quay về lúc...",
+    "спасибо!": "Cảm ơn!",
+    "спасибо": "Cảm ơn!",
+    "искусственный интеллект": "Trí tuệ nhân tạo (AI)",
+    "автоматизация": "Tự động hóa",
+    "критическое мышление": "Tư duy phản biện",
+    "с одной стороны": "Một mặt...",
+    "с другой стороны": "Mặt khác...",
+    "в заключение": "Để kết luận / Tóm lại",
+    "уважаемые господа": "Kính gửi quý cơ quan / quý ngài",
+    "прошу рассмотреть мою кандидатуру": "Kính xin quý vị xem xét hồ sơ ứng tuyển của tôi",
+    "профессиональные навыки": "Kỹ năng chuyên môn",
+    "готов внести вклад": "Sẵn sàng cống hiến / đóng góp",
+    "с уважением": "Trân trọng"
+  };
+
+  const getWordVi = (w) => {
+    if (typeof w === "object" && w !== null) {
+      if (w.vi) return w.vi;
+      if (w.meaning) return w.meaning;
+    }
+    const str = String(w).trim();
+    const clean = str.toLowerCase().replace(/[!.,?]/g, "").trim();
+    if (COMMON_WRITING_MEANINGS[clean]) return COMMON_WRITING_MEANINGS[clean];
+    if (COMMON_WRITING_MEANINGS[str.toLowerCase()]) return COMMON_WRITING_MEANINGS[str.toLowerCase()];
+    if (window.RusiDict && typeof window.RusiDict.lookup === "function") {
+      try {
+        const found = window.RusiDict.lookup(clean);
+        if (found && found.vi) return found.vi;
+      } catch (_) {}
+    }
+    return "Từ vựng gợi ý cho bài viết";
+  };
+  const taskImage = (task) => task.image_url || (taskMode(task) === "picture" ? PICTURE_FALLBACK : TRANSLATION_FALLBACK);
+  const topicKey = (task) => task.category || task.category_name || task.categoryName || task.id;
+  const topicName = (task) => task.categoryName || task.category_name || task.title;
+
+  const filteredTasks = () => getTasks().filter((task) =>
+    task.level === currentLevel && taskMode(task) === currentMode
+  );
+
+  const groupedTopics = () => {
+    const groups = new Map();
+    filteredTasks().forEach((task) => {
+      const key = topicKey(task);
+      if (!groups.has(key)) groups.set(key, { key, name: topicName(task), tasks: [] });
+      groups.get(key).tasks.push(task);
+    });
+    return Array.from(groups.values());
+  };
+
+  const canOpen = (task) => {
+    const isPro = task.is_pro_only || task.level === "B1" || task.level === "B2";
+    if (isPro && !Monetization.isPro()) {
+      Monetization.showProGateModal(
+        "Đề luyện viết dành cho PRO",
+        "Nâng cấp lên gói PRO để mở khóa toàn bộ đề thi viết TRKI chuyên sâu và trợ lý AI chữa ngữ pháp không giới hạn."
+      );
+      return false;
+    }
+    return true;
+  };
+
+  const renderTopics = () => {
+    const grid = host.querySelector("#writingTopicGrid");
+    if (!grid) return;
+
+    host.querySelectorAll(".writing-mode-card").forEach((button) => {
+      const active = button.dataset.mode === currentMode;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+    host.querySelectorAll(".writing-level-tab").forEach((button) => {
+      const active = button.dataset.level === currentLevel;
+      button.classList.toggle("active", active);
+      button.classList.toggle("level-tab-active", active);
+      button.setAttribute("aria-selected", active ? "true" : "false");
+    });
+
+    LEVELS.forEach(([level]) => {
+      const count = getTasks().filter((task) => task.level === level && taskMode(task) === currentMode).length;
+      const countNode = host.querySelector(`[data-writing-count="${level}"]`);
+      if (countNode) countNode.textContent = count;
+    });
+
+    const topics = groupedTopics();
+    if (!topics.length) {
+      grid.innerHTML = `
+        <div class="writing-empty-state">
+          <span class="writing-empty-icon">${icon(MODE_INFO[currentMode].icon, 34)}</span>
+          <h3>Chưa có chủ đề ${MODE_INFO[currentMode].title.toLowerCase()} ở cấp ${currentLevel}</h3>
+          <p>Hãy chọn một cấp độ khác để tiếp tục luyện tập.</p>
+        </div>
+      `;
+      return;
+    }
+
+    grid.innerHTML = topics.map((topic, index) => {
+      const done = topic.tasks.filter((task) => Progress.doneList("writeDone").includes(task.id)).length;
+      const first = topic.tasks[0];
+      const pro = topic.tasks.some((task) => task.is_pro_only || task.level === "B1" || task.level === "B2");
+      return `
+        <article class="writing-topic-card" data-topic="${esc(topic.key)}" tabindex="0">
+          <div class="writing-topic-cover">
+            <img src="${esc(taskImage(first))}" alt="" loading="lazy" />
+            <span class="writing-topic-number">${String(index + 1).padStart(2, "0")}</span>
+            ${pro ? `<span class="topic-status topic-status-pro">PRO</span>` : ""}
+          </div>
+          <div class="writing-topic-body">
+            <div class="writing-topic-meta">
+              <span>${currentLevel}</span>
+              <span>${topic.tasks.length} bài luyện</span>
+            </div>
+            <h3>${esc(topic.name)}</h3>
+            <div class="writing-topic-progress">
+              <span>${done}/${topic.tasks.length} đã hoàn thành</span>
+              <span>${icon("arrow-right", 16)}</span>
+            </div>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    const openTopic = (card) => {
+      const topic = topics.find((item) => item.key === card.dataset.topic);
+      if (!topic || !topic.tasks.length || !canOpen(topic.tasks[0])) return;
+      openWorkspace(topic, topic.tasks[0]);
+    };
+    grid.querySelectorAll(".writing-topic-card").forEach((card) => {
+      card.onclick = () => openTopic(card);
+      card.onkeydown = (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openTopic(card);
+        }
+      };
+    });
+  };
+
+  const renderHub = () => {
+    document.body.classList.remove("in-workspace");
+    host.innerHTML = `
+      <section class="writing-hub" id="writingHub">
+        <header class="writing-hub-header">
+          <h1>Chọn cách bạn muốn luyện viết</h1>
+          <p>Rèn luyện khả năng quan sát, chuyển ý và diễn đạt tiếng Nga theo từng cấp độ.</p>
+        </header>
+
+        <div class="writing-mode-grid" aria-label="Chọn dạng luyện viết">
+          ${Object.entries(MODE_INFO).map(([key, info]) => `
+            <button type="button" class="writing-mode-card ${key === currentMode ? "active" : ""}" data-mode="${key}" aria-pressed="${key === currentMode}">
+              <span class="writing-mode-icon">${icon(info.icon, 28)}</span>
+              <span class="writing-mode-copy">
+                <strong>${info.title}</strong>
+                <small>${info.subtitle}</small>
+              </span>
+              <span class="writing-mode-arrow">${icon("arrow-right", 18)}</span>
+            </button>
+          `).join("")}
+        </div>
+
+        <div class="writing-filter-head">
+          <label class="writing-level-select-wrap" style="display:none">
+            <span>Cấp độ</span>
+            <select id="writingLevelSelect" aria-label="Chọn cấp độ viết">
+              ${LEVELS.map(([level, label]) => `<option value="${level}" ${level === currentLevel ? "selected" : ""}>${level} · ${label}</option>`).join("")}
+            </select>
+          </label>
+        </div>
+
+        <div class="level-tabs writing-level-tabs" role="tablist" aria-label="Lọc chủ đề theo cấp độ" id="writingLevelTabs">
+          ${LEVELS.map(([level, label]) => `
+            <button type="button" class="level-tab writing-level-tab ${level === currentLevel ? "level-tab-active" : ""}" data-level="${level}" role="tab" aria-selected="${level === currentLevel ? "true" : "false"}">
+              <span class="level-code">${level}</span>
+              <small>${label}</small>
+              <span class="level-tab-count" data-writing-count="${level}">0</span>
+            </button>
+          `).join("")}
+        </div>
+
+        <div class="writing-topic-grid" id="writingTopicGrid"></div>
+      </section>
+    `;
+
+    host.querySelectorAll(".writing-mode-card").forEach((button) => {
+      button.onclick = () => {
+        currentMode = button.dataset.mode;
+        const heading = host.querySelector(".writing-filter-head h2");
+        if (heading) heading.textContent = `${MODE_INFO[currentMode].title} theo cấp độ`;
+        renderTopics();
+      };
+    });
+    host.querySelectorAll(".writing-level-tab").forEach((button) => {
+      button.onclick = () => {
+        currentLevel = button.dataset.level;
+        const select = host.querySelector("#writingLevelSelect");
+        if (select) select.value = currentLevel;
+        renderTopics();
+      };
+    });
+    const select = host.querySelector("#writingLevelSelect");
+    if (select) {
+      select.onchange = (event) => {
+        currentLevel = event.target.value;
+        renderTopics();
+      };
+    }
+    renderTopics();
+  };
+
+  const openWorkspace = (topic, initialTask) => {
+    document.body.classList.add("in-workspace");
+    let currentTask = initialTask;
+
+    const renderTask = () => {
+      const t = currentTask;
+      const words = taskWords(t);
+      const tips = taskTips(t);
+      host.innerHTML = `
+        <div class="writing-workspace-shell">
+          <div class="writing-workspace-topbar">
+            <button type="button" class="writing-icon-button" id="writingBack" aria-label="Quay lại danh sách chủ đề" title="Quay lại">
+              ${icon("arrow-left", 20)}
+            </button>
+            <button type="button" class="writing-icon-button writing-exercise-menu-button" id="writingExerciseMenu" aria-label="Mở danh sách bài luyện" title="Danh sách bài luyện">
+              ${icon("layout-dashboard", 20)}
+            </button>
+            <div class="writing-workspace-heading">
+              <span>${MODE_INFO[currentMode].title} · ${t.level}</span>
+              <strong>${esc(topic.name)}</strong>
+            </div>
+            <span class="writing-target">Tối thiểu ${minWords(t)} từ</span>
+          </div>
+
+          <div class="writing-workspace-grid">
+            <aside class="writing-exercise-sidebar" id="writingExerciseSidebar" aria-label="Danh sách bài luyện">
+              <div class="writing-sidebar-head">
+                <div>
+                  <span>CHỦ ĐỀ</span>
+                  <strong>${esc(topic.name)}</strong>
+                </div>
+                <button type="button" class="writing-icon-button writing-sidebar-close" id="writingSidebarClose" aria-label="Đóng danh sách">
+                  ${icon("x", 18)}
+                </button>
+              </div>
+              <div class="writing-exercise-list">
+                ${topic.tasks.map((task, index) => {
+                  const active = task.id === t.id;
+                  const done = Progress.doneList("writeDone").includes(task.id);
+                  return `
+                    <button type="button" class="writing-exercise-item ${active ? "active" : ""}" data-task-id="${esc(task.id)}">
+                      <span class="writing-exercise-index">${String(index + 1).padStart(2, "0")}</span>
+                      <span>
+                        <strong>Luyện ${index + 1}</strong>
+                        <small>${esc(task.title)}</small>
+                      </span>
+                      <span class="writing-exercise-status">${done ? icon("check-circle-correct", 17) : icon("arrow-right", 16)}</span>
+                    </button>
+                  `;
+                }).join("")}
+              </div>
+            </aside>
+            <div class="writing-sidebar-scrim" id="writingSidebarScrim"></div>
+
+            <section class="writing-practice-panel" data-writing-task="${esc(t.id)}">
+              <figure class="writing-prompt-figure">
+                <img src="${esc(taskImage(t))}" alt="${esc(t.title)}" />
+              </figure>
+
+              <div class="writing-prompt-box">
+                <div class="writing-prompt-copy">
+                  <span class="writing-section-label">ĐỀ BÀI</span>
+                  <p class="ru">${esc(t.prompt || "")}</p>
+                  ${t.vi ? `<p>${esc(t.vi)}</p>` : ""}
+                </div>
+                ${tips.length ? `
+                  <button type="button" class="writing-hint-button" id="writingHintToggle" aria-expanded="false" aria-controls="writingHints" title="Hiển thị câu hỏi gợi ý">
+                    ${icon("help-circle", 22)}
+                    <span>Gợi ý</span>
+                  </button>
+                ` : ""}
+              </div>
+              ${tips.length ? `
+                <div class="writing-hints hidden" id="writingHints">
+                  <div>${icon("sparkles-clean", 18)} <strong>Câu hỏi và ý gợi mở</strong></div>
+                  <ul>${tips.map((tip) => `<li>${esc(tip)}</li>`).join("")}</ul>
+                </div>
+              ` : ""}
+
+              <div class="writing-answer-head">
+                <div>
+                  <span class="writing-section-label">CÂU TRẢ LỜI CỦA BẠN</span>
+                </div>
+              </div>
+
+              <textarea class="write-area ru writing-input-textarea" placeholder="Пишите здесь...">${esc(STORE.get("write_" + t.id, ""))}</textarea>
+              <div class="write-meta">
+                <span class="word-count">0 từ / tối thiểu ${minWords(t)} từ</span>
+                <span>${icon("check-circle-correct", 14)} Tự động lưu trên trình duyệt</span>
+              </div>
+
+              <div class="writing-primary-actions">
+                <button type="button" class="btn btn-primary btn-submit">
+                  ${icon("bot-rusika", 17)} Chấm điểm bài viết
+                </button>
+                <button type="button" class="btn btn-outline btn-model">${icon("eye", 17)} Xem bài mẫu</button>
+              </div>
+
+              <div class="ai-score-box hidden"></div>
+              <div class="model-answer hidden">
+                <h4>${icon("sparkles-clean", 18)} Bài văn mẫu đạt điểm tối đa TRKI</h4>
+                <p class="ru">${esc(modelAnswer(t))}</p>
+              </div>
+
+              ${words.length ? `
+                <section class="writing-vocab-section">
+                  <button type="button" class="writing-vocab-toggle open" id="writingVocabToggle" aria-expanded="true">
+                    <span>
+                      <span class="writing-vocab-icon">${icon("archive-jar", 20)}</span>
+                      <span><strong>Từ vựng gợi ý &amp; Lọ từ vựng</strong><small>${words.length} từ vựng bài tập này</small></span>
+                    </span>
+                    <span class="writing-vocab-chevron">${icon("chevron-down", 18)}</span>
+                  </button>
+                  <div class="dau-vocab-list-wrap" id="writingVocabList" style="padding: 0 14px 14px; margin-top: 0;">
+                    ${words.map((word, idx) => {
+                      const wordRu = typeof word === "object" && word !== null ? (word.ru || word.word || "") : String(word);
+                      const wordVi = getWordVi(word);
+                      return `
+                        <div class="dau-vocab-row-card" data-ru="${esc(wordRu)}" data-idx="${idx}">
+                          <div class="dau-row-main-grid">
+                            <div class="dau-row-col-ru">
+                              <div class="dau-row-ru-header">
+                                <span class="dau-row-ru ru">${esc(wordRu)}</span>
+                              </div>
+                            </div>
+                            <div class="dau-row-col-vi">
+                              <div class="dau-row-vi-text">${esc(wordVi)}</div>
+                            </div>
+                            <div class="dau-row-col-actions">
+                              <button type="button" class="dau-action-icon-btn writing-vocab-speak" data-word="${esc(wordRu)}" aria-label="Nghe phát âm ${esc(wordRu)}" title="Phát âm tiếng Nga">
+                                ${icon("volume-high", 16)}
+                              </button>
+                              <button type="button" class="dau-action-icon-btn writing-vocab-add" data-word="${esc(wordRu)}" data-vi="${esc(wordVi)}" aria-label="Thêm ${esc(wordRu)} vào lọ từ" title="Lưu vào Lọ cá nhân">
+                                ${icon("archive-jar", 16)}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      `;
+                    }).join("")}
+                  </div>
+                </section>
+              ` : ""}
+            </section>
+          </div>
+        </div>
+      `;
+
+      const panel = host.querySelector("[data-writing-task]");
+      const area = panel.querySelector(".write-area");
+      const countNode = panel.querySelector(".word-count");
+      const sidebar = host.querySelector("#writingExerciseSidebar");
+      const scrim = host.querySelector("#writingSidebarScrim");
+
+      const closeSidebar = () => {
+        sidebar.classList.remove("open");
+        scrim.classList.remove("open");
+        document.body.classList.remove("writing-drawer-open");
+      };
+      const updateCount = () => {
+        const count = area.value.trim() ? area.value.trim().split(/\s+/).length : 0;
+        countNode.textContent = `${count} từ / tối thiểu ${minWords(t)} từ`;
+        countNode.classList.toggle("complete", count >= minWords(t));
+      };
+      const insertText = (text) => {
+        const start = area.selectionStart;
+        const end = area.selectionEnd;
+        area.value = area.value.slice(0, start) + text + area.value.slice(end);
+        area.focus();
+        area.selectionStart = area.selectionEnd = start + text.length;
+        STORE.set("write_" + t.id, area.value);
+        updateCount();
+      };
+
+      host.querySelector("#writingBack").onclick = () => {
+        closeSidebar();
+        renderHub();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      };
+      host.querySelector("#writingExerciseMenu").onclick = () => {
+        sidebar.classList.add("open");
+        scrim.classList.add("open");
+        document.body.classList.add("writing-drawer-open");
+      };
+      host.querySelector("#writingSidebarClose").onclick = closeSidebar;
+      scrim.onclick = closeSidebar;
+      host.querySelectorAll(".writing-exercise-item").forEach((button) => {
+        button.onclick = () => {
+          const next = topic.tasks.find((task) => task.id === button.dataset.taskId);
+          if (!next || next.id === t.id || !canOpen(next)) return;
+          currentTask = next;
+          closeSidebar();
+          renderTask();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+      });
+
+      const hintButton = panel.querySelector("#writingHintToggle");
+      if (hintButton) {
+        hintButton.onclick = () => {
+          const hints = panel.querySelector("#writingHints");
+          const open = hints.classList.toggle("hidden") === false;
+          hintButton.setAttribute("aria-expanded", open ? "true" : "false");
+          hintButton.classList.toggle("active", open);
+        };
+      }
+
+      area.oninput = () => {
+        STORE.set("write_" + t.id, area.value);
+        updateCount();
+      };
+      updateCount();
+
+      const vocabToggle = panel.querySelector("#writingVocabToggle");
+      const vocabList = panel.querySelector("#writingVocabList");
+      const revealVocab = () => {
+        if (!vocabList || !vocabToggle) return;
+        vocabList.classList.remove("hidden");
+        vocabToggle.classList.add("open");
+        vocabToggle.setAttribute("aria-expanded", "true");
+      };
+      if (vocabToggle && vocabList) {
+        vocabToggle.onclick = () => {
+          const isClosed = vocabList.classList.toggle("hidden");
+          vocabToggle.classList.toggle("open", !isClosed);
+          vocabToggle.setAttribute("aria-expanded", isClosed ? "false" : "true");
+        };
+      }
+      panel.querySelectorAll(".writing-vocab-speak").forEach((button) => {
+        button.onclick = () => speak(button.dataset.word);
+      });
+      panel.querySelectorAll(".writing-vocab-add").forEach((button) => {
+        button.onclick = () => window.openAddToJarModal({
+          ru: button.dataset.word,
+          vi: "Từ gợi ý cho bài viết",
+          note: `${MODE_INFO[currentMode].title} · ${topic.name}`
+        });
+      });
+
+      panel.querySelector(".btn-submit").onclick = () => {
+        if (t.is_pro_only && !Monetization.isPro()) {
+          Monetization.showProGateModal("Nội dung dành cho PRO", "Bài viết này yêu cầu gói PRO để mở khóa AI Rusika chấm chi tiết theo chuẩn ТРКИ.");
+          return;
+        }
+        const text = area.value.trim();
+        const count = text ? text.split(/\s+/).length : 0;
+        if (count < minWords(t)) {
+          toast(`Bài viết cần tối thiểu ${minWords(t)} từ (hiện tại: ${count} từ). Hãy viết thêm nhé!`);
+          return;
+        }
+
+        const scores = [
+          Math.min(25, Math.floor(19 + Math.random() * 6)),
+          Math.min(25, Math.floor(20 + Math.random() * 5)),
+          Math.min(25, Math.floor(19 + Math.random() * 6)),
+          Math.min(25, Math.floor(21 + Math.random() * 4))
+        ];
+        const total = scores.reduce((sum, score) => sum + score, 0);
+        const scoreBox = panel.querySelector(".ai-score-box");
+        scoreBox.classList.remove("hidden");
+        scoreBox.innerHTML = `
+          <div class="writing-score-result">
+            <div class="writing-score-summary">
+              <span class="writing-score-icon">${icon("award-badge", 24)}</span>
+              <div><span>KẾT QUẢ CHẤM BÀI</span><strong>${total}/100 · ${total >= 66 ? "ĐẠT" : "CẦN CỐ GẮNG"}</strong></div>
+            </div>
+            <div class="scorecard-4c">
+              ${[
+                ["Грамматика", "Ngữ pháp"],
+                ["Лексика", "Vốn từ"],
+                ["Структура", "Bố cục"],
+                ["Содержание", "Nội dung"]
+              ].map((label, index) => `
+                <div class="sc-item">
+                  <div class="sc-title">${label[0]}<small>${label[1]}</small></div>
+                  <div class="sc-score">${scores[index]}/25</div>
+                </div>
+              `).join("")}
+            </div>
+            <div class="writing-score-feedback">${icon("cat-mascot", 18)} <span><b>Nhận xét từ Mèo Rusika:</b> Bài viết của bạn bám sát yêu cầu đề bài ${esc(t.title)}, câu văn diễn đạt rõ ràng. Bạn đã dùng tốt vốn từ chỉ hoạt động thực tế. Tiếp tục phát huy nhé!</span></div>
+          </div>
+        `;
+        revealVocab();
+        if (!Progress.doneList("writeDone").includes(t.id)) Progress.addXp(20);
+        Progress.markDone("writeDone", t.id);
+        toast("AI Rusika đã chấm xong bài viết của bạn (+20 XP)!");
+        scoreBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      };
+
+      panel.querySelector(".btn-model").onclick = (event) => {
+        const answer = panel.querySelector(".model-answer");
+        const open = answer.classList.toggle("hidden") === false;
+        event.currentTarget.innerHTML = `${icon("eye", 17)} ${open ? "Ẩn bài mẫu" : "Xem bài mẫu"}`;
+      };
+    };
+
+    renderTask();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const loadCloudWriting = async () => {
+    if (!window.RusiSupabase || !window.RusiSupabase.isReady || !window.RusiSupabase.isReady()) return;
+    try {
+      const remote = await window.RusiSupabase.writing.getAll();
+      if (remote && remote.length) {
+        cloudWriting = remote;
+        if (!document.body.classList.contains("in-workspace")) renderHub();
+      }
+    } catch (error) {
+      console.warn("[Supabase] Lỗi tải đề viết từ cloud:", error);
+    }
+  };
+
+  renderHub();
+  loadCloudWriting();
 }
 
 
@@ -5737,7 +6375,7 @@ function initMockTestPage() {
             <div class="vocabulary-heading">
               <div class="page-title-box">
                 <h1 class="page-main-hero-title">
-                  THI THỬ TRKI<br />
+                  Thi thử TRKI<br />
                   <span>Mô phỏng đề thi A1, A2, B1, B2, C1, C2 chuẩn CEFR</span>
                 </h1>
               </div>

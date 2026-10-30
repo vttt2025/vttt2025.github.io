@@ -86,7 +86,13 @@
   }
 
   const Auth = {
-    user: null,
+    user: (function () {
+      try {
+        return getStore().get("auth_user", null);
+      } catch (_) {
+        return null;
+      }
+    })(),
     _listeners: [],
     _readyPromise: null,
     _subscription: null,
