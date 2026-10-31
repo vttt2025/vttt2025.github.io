@@ -4,6 +4,11 @@ import os
 import sys
 
 PORT = 8000
+if len(sys.argv) > 1:
+    try:
+        PORT = int(sys.argv[1])
+    except ValueError:
+        pass
 
 class SPAHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):

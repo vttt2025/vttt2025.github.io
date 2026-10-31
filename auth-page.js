@@ -208,6 +208,10 @@
         try {
           if (window.Auth && typeof window.Auth.signInWithGoogle === "function") {
             const res = await window.Auth.signInWithGoogle();
+            if (res && res.error) {
+              showError(res.error.message || "Đăng nhập Google thất bại.");
+              return;
+            }
             if (res && res.user) {
               executeRedirect();
               return;

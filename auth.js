@@ -173,6 +173,11 @@
     async signInWithGoogle() {
       const client = getClient();
       if (!client) return { user: null, error: { message: "Supabase chưa sẵn sàng." } };
+      if (typeof window !== "undefined" && window.location.protocol === "file:") {
+        const msg = "Không thể đăng nhập Google khi mở file trực tiếp (file://). Vui lòng chạy máy chủ web cục bộ (ví dụ chạy lệnh: python server.py) và truy cập qua http://localhost:8000";
+        alert(msg);
+        return { user: null, error: { message: msg } };
+      }
       // OAuth callback chỉ dùng URL sạch; auth-page.js đã lưu đích cuối vào localStorage.
       const redirectTo = window.location.origin + window.location.pathname;
       const { data, error } = await client.auth.signInWithOAuth({

@@ -709,10 +709,19 @@
       signInGoogle: async function (redirectTo) {
         var sb = getClient();
         if (!sb) throw new Error("Supabase client chưa khởi tạo.");
+        var target = redirectTo;
+        if (!target && typeof window !== "undefined") {
+          if (window.location.protocol === "file:") {
+            var msg = "Không thể đăng nhập Google khi mở file trực tiếp (file://). Vui lòng chạy máy chủ web cục bộ (ví dụ: python server.py) và truy cập qua http://localhost:8000";
+            alert(msg);
+            throw new Error(msg);
+          }
+          target = window.location.origin + window.location.pathname;
+        }
         return await sb.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: redirectTo || window.location.origin + window.location.pathname
+            redirectTo: target
           }
         });
       },
