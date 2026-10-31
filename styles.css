@@ -20081,6 +20081,7 @@ body.has-bottom-bar .rusika-floating-widget {
   width: 100% !important;
   margin: 28px 0 0 0 !important;
   box-sizing: border-box !important;
+  background: transparent !important;
 }
 
 /* Tablet (768px - 1024px): 2 hàng co giãn linh hoạt chuẩn Spec */
@@ -20396,7 +20397,7 @@ body.has-bottom-bar .rusika-floating-widget {
   gap: 16px;
   padding: 20px 24px;
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, var(--surface), var(--primary-soft));
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   border: 1px solid rgba(216, 224, 232, 0.9);
@@ -20412,7 +20413,7 @@ body.has-bottom-bar .rusika-floating-widget {
 }
 
 [data-theme="dark"] .voc-progress-figma-card {
-  background: rgba(255, 255, 255, 0.06);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(23, 87, 166, 0.15));
   border-color: rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
 }
@@ -22451,3 +22452,1040 @@ body.has-bottom-bar .rusika-floating-widget {
     padding: 50px 16px;
   }
 }
+
+/* =====================================================================
+ * CHUYÊN MỤC 6.1: GIAO DIỆN LUYỆN NGHE CHÉP CHÍNH TẢ 3/7 WORKSPACE
+ * Audio Player sóng âm, Cloze Input, Từ vựng nên học & Sidebar danh sách câu
+ * ===================================================================== */
+.lis-dict-workspace-shell {
+  width: min(100%, 1320px);
+  margin: 0 auto;
+  padding: 16px 0 64px;
+}
+
+/* 1. Thanh điều hướng trên cùng (Topbar) */
+.lis-dict-topbar {
+  position: sticky;
+  top: 71px;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  margin-bottom: 20px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 4px 20px rgba(16, 42, 76, 0.05);
+}
+
+[data-theme="dark"] .lis-dict-topbar {
+  background: rgba(16, 42, 76, 0.94);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.lis-dict-topbar-back {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lis-dict-topbar-back:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: translateX(-2px);
+}
+
+.lis-dict-topbar-heading {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.lis-dict-topbar-subtitle {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.lis-dict-topbar-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lis-dict-topbar-menu-btn {
+  display: none;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.lis-dict-menu-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  border-radius: 10px;
+  padding: 2px 6px;
+  line-height: 1;
+}
+
+/* Bố cục lưới 3/7 */
+.lis-dict-workspace-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(280px, 3fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.lis-dict-main-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+/* 2. Khung phát âm thanh (Audio Player) */
+.lis-dict-player-card {
+  padding: 22px 24px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  box-shadow: 0 4px 20px rgba(16, 42, 76, 0.05);
+}
+
+.lis-dict-waveform-wrap {
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  padding: 0 16px;
+  background: linear-gradient(180deg, rgba(23, 87, 166, 0.04), rgba(23, 87, 166, 0.08));
+  border: 1px solid rgba(23, 87, 166, 0.12);
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+[data-theme="dark"] .lis-dict-waveform-wrap {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.lis-dict-wave-bar {
+  flex: 1;
+  max-width: 5px;
+  background: rgba(23, 87, 166, 0.32);
+  border-radius: 4px;
+  transition: height 0.18s ease, background-color 0.2s ease;
+}
+
+[data-theme="dark"] .lis-dict-wave-bar {
+  background: rgba(141, 188, 239, 0.4);
+}
+
+.lis-dict-player-card.is-playing .lis-dict-wave-bar {
+  background: var(--primary);
+  animation: lisDictWavePulse 0.75s ease-in-out infinite alternate;
+}
+
+[data-theme="dark"] .lis-dict-player-card.is-playing .lis-dict-wave-bar {
+  background: #38bdf8;
+}
+
+@keyframes lisDictWavePulse {
+  0% { transform: scaleY(0.4); }
+  50% { transform: scaleY(1.15); }
+  100% { transform: scaleY(0.6); }
+}
+
+.lis-dict-wave-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 0%;
+  background: rgba(23, 87, 166, 0.12);
+  pointer-events: none;
+  transition: width 0.1s linear;
+}
+
+.lis-dict-player-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.lis-dict-ctrl-left,
+.lis-dict-ctrl-center,
+.lis-dict-ctrl-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lis-dict-btn-replay {
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.lis-dict-btn-replay:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.lis-dict-btn-skip {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.lis-dict-btn-skip:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.lis-dict-btn-play {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--primary);
+  color: #ffffff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(23, 87, 166, 0.3);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lis-dict-btn-play:hover {
+  transform: scale(1.06);
+  background: var(--primary-dark);
+  box-shadow: 0 8px 24px rgba(23, 87, 166, 0.4);
+}
+
+.lis-dict-btn-speed {
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.lis-dict-btn-speed:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.lis-dict-btn-loop {
+  height: 40px;
+  padding: 0 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.lis-dict-btn-loop:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.lis-dict-btn-loop.is-active {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary);
+  font-weight: 800;
+}
+
+/* 3. Thanh công cụ chỉnh tốc độ và hiển thị */
+.lis-dict-toolbar-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  box-shadow: 0 2px 10px rgba(16, 42, 76, 0.03);
+}
+
+.lis-dict-percent-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.lis-dict-percent-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-right: 4px;
+}
+
+.lis-dict-pct-btn {
+  height: 34px;
+  min-width: 48px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.lis-dict-pct-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.lis-dict-pct-btn.is-active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px rgba(23, 87, 166, 0.25);
+}
+
+.lis-dict-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lis-dict-btn-toggle-answer {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.lis-dict-btn-toggle-answer:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.lis-dict-btn-toggle-answer.is-showing {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.lis-dict-tool-icon-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.lis-dict-tool-icon-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.lis-dict-tool-icon-btn.is-saved {
+  color: #f59e0b;
+  border-color: #f59e0b;
+  background: #fef3c7;
+}
+
+/* 4. Khu vực làm bài chính (Chép chính tả) */
+.lis-dict-practice-card {
+  padding: 28px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  box-shadow: 0 4px 20px rgba(16, 42, 76, 0.05);
+}
+
+.lis-dict-sentence-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 8px;
+  font-size: 1.32rem;
+  line-height: 2.2;
+}
+
+.lis-dict-static-word {
+  font-weight: 700;
+  color: var(--text);
+  border-bottom: 2px dashed rgba(23, 87, 166, 0.25);
+  padding: 0 2px;
+}
+
+.lis-dict-punct {
+  font-weight: 700;
+  color: var(--text);
+  margin-left: -4px;
+}
+
+.lis-dict-word-input {
+  font-family: inherit;
+  font-size: 1.12rem;
+  font-weight: 700;
+  height: 44px;
+  padding: 0 8px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  text-align: center;
+  color: var(--text);
+  background: var(--bg);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.lis-dict-word-input:focus {
+  border-color: var(--primary);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(23, 87, 166, 0.15);
+}
+
+.lis-dict-word-input.is-correct {
+  border-color: var(--green) !important;
+  background: var(--green-soft) !important;
+  color: var(--green) !important;
+  cursor: default;
+}
+
+.lis-dict-word-input.is-wrong {
+  border-color: var(--russia-red) !important;
+  background: var(--secondary-soft) !important;
+}
+
+.lis-dict-input-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.84rem;
+  color: var(--muted);
+  margin-top: 18px;
+  padding: 8px 12px;
+  background: rgba(245, 158, 11, 0.06);
+  border-radius: 10px;
+  border-left: 3px solid #f59e0b;
+}
+
+.lis-dict-note-bulb {
+  font-size: 1.05rem;
+  flex-shrink: 0;
+}
+
+/* Đáp án khi bấm Hiện kết quả */
+.lis-dict-answer-box {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(23, 87, 166, 0.04), rgba(23, 87, 166, 0.08));
+  border: 1px solid rgba(23, 87, 166, 0.18);
+  animation: lisDictFadeIn 0.25s ease;
+}
+
+@keyframes lisDictFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.lis-dict-answer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.lis-dict-answer-tag {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.lis-dict-answer-ru {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.lis-dict-answer-vi {
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 4px;
+}
+
+.lis-dict-celebration {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: var(--green-soft);
+  color: #15803d;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border: 1px solid rgba(22, 163, 74, 0.25);
+  animation: lisDictPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes lisDictPop {
+  0% { transform: scale(0.96); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* 5. Khung phụ dưới: Từ vựng nên học */
+.lis-dict-vocab-box {
+  border-radius: 20px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lis-dict-vocab-box.is-locked {
+  padding: 22px 24px;
+  background: rgba(238, 244, 251, 0.7);
+  border: 1.5px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+[data-theme="dark"] .lis-dict-vocab-box.is-locked {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.lis-dict-lock-badge {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.lis-dict-lock-icon {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 14px;
+  background: rgba(23, 87, 166, 0.1);
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lis-dict-lock-copy strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.lis-dict-lock-copy p {
+  margin: 0;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.lis-dict-vocab-box.is-unlocked {
+  padding: 24px;
+  background: linear-gradient(135deg, var(--surface), var(--primary-soft));
+  border: 1.5px solid rgba(23, 87, 166, 0.22);
+  box-shadow: 0 4px 20px rgba(16, 42, 76, 0.05);
+  animation: lisDictFadeIn 0.35s ease;
+}
+
+[data-theme="dark"] .lis-dict-vocab-box.is-unlocked {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(23, 87, 166, 0.15));
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.lis-dict-vocab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.lis-dict-vocab-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lis-dict-vocab-sparkle {
+  color: var(--primary);
+}
+
+.lis-dict-vocab-header-left strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.lis-dict-vocab-header-left small {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.lis-dict-vocab-count-pill {
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.lis-dict-vocab-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.lis-dict-vocab-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: all 0.2s ease;
+}
+
+.lis-dict-vocab-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 3px 12px rgba(16, 42, 76, 0.06);
+}
+
+.lis-dict-vocab-item-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.lis-dict-vocab-ru-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.lis-dict-vocab-ru {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.lis-dict-vocab-pos {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.lis-dict-vocab-vi {
+  margin: 0;
+  font-size: 0.86rem;
+  color: var(--muted);
+}
+
+.lis-dict-vocab-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lis-dict-vocab-btn-action {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.lis-dict-vocab-btn-action:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+
+/* 6. Sidebar danh sách các câu luyện (Bên phải chia 3/7) */
+.lis-dict-sidebar-panel {
+  position: sticky;
+  top: 152px;
+  padding: 20px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  box-shadow: 0 4px 20px rgba(16, 42, 76, 0.05);
+}
+
+.lis-dict-sidebar-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.lis-dict-sidebar-eyebrow {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.lis-dict-sidebar-title {
+  margin: 3px 0 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.lis-dict-sidebar-close-btn {
+  display: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+.lis-dict-sidebar-progress-box {
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.lis-dict-sidebar-progress-text {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+.lis-dict-sidebar-progress-text strong {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.lis-dict-progress-track {
+  height: 6px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.lis-dict-progress-fill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+.lis-dict-sentence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: calc(100vh - 360px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.lis-dict-sentence-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lis-dict-sentence-item:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  transform: translateX(-2px);
+}
+
+.lis-dict-sentence-item.is-active {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, var(--surface), var(--primary-soft));
+  box-shadow: 0 4px 16px rgba(23, 87, 166, 0.12);
+}
+
+.lis-dict-sentence-num {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--muted);
+  padding: 4px 7px;
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.lis-dict-sentence-item.is-active .lis-dict-sentence-num {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.lis-dict-sentence-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.lis-dict-sentence-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.lis-dict-sentence-snippet {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lis-dict-sentence-status {
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.lis-dict-sentence-item.is-done .lis-dict-sentence-status {
+  color: var(--green);
+}
+
+/* Footer điều hướng */
+.lis-dict-nav-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.lis-dict-nav-counter {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Responsive Tablet & Mobile */
+@media (max-width: 1024px) {
+  .lis-dict-workspace-grid {
+    grid-template-columns: minmax(0, 6.5fr) minmax(240px, 3.5fr);
+    gap: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .lis-dict-topbar {
+    top: 61px;
+    margin-bottom: 14px;
+    padding: 8px 12px;
+  }
+  .lis-dict-topbar-menu-btn {
+    display: inline-flex;
+  }
+  .lis-dict-workspace-grid {
+    display: block;
+  }
+  .lis-dict-practice-card {
+    padding: 18px 14px;
+  }
+  .lis-dict-sentence-flow {
+    font-size: 1.15rem;
+    line-height: 2.1;
+  }
+  .lis-dict-word-input {
+    font-size: 16px !important;
+    height: 42px;
+  }
+  .lis-dict-sidebar-panel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: min(86vw, 340px);
+    z-index: 1005;
+    border-radius: 20px 0 0 20px;
+    transform: translateX(100%);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: -8px 0 32px rgba(16, 42, 76, 0.2);
+    display: flex;
+    flex-direction: column;
+  }
+  .lis-dict-sidebar-panel.is-open {
+    transform: translateX(0);
+  }
+  .lis-dict-sidebar-close-btn {
+    display: inline-flex;
+  }
+  .lis-dict-sidebar-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    z-index: 1004;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  .lis-dict-sidebar-scrim.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .lis-dict-vocab-box.is-locked {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  .lis-dict-lock-badge {
+    flex-direction: column;
+    text-align: center;
+  }
+  .lis-dict-player-controls {
+    justify-content: center;
+  }
+}
+

@@ -3552,7 +3552,11 @@ function initListeningPage() {
         );
         return;
       }
-      openListeningWorkspace(lesson, currentMode === "dictation" ? "dict" : "video");
+      if (currentMode === "dictation") {
+        openDictationWorkspace(lesson);
+      } else {
+        openListeningWorkspace(lesson, "video");
+      }
     };
 
     gridHost.querySelectorAll(".listening-topic-card").forEach((card) => {
@@ -4593,51 +4597,841 @@ function initListeningPage() {
     };
   };
 
-  const modeDict = (mb, lesson) => {
-    if (!Array.isArray(lesson.dictation) || lesson.dictation.length === 0) {
-      mb.innerHTML = `<div class="empty-state">Bài này chưa có phần chính tả.</div>`;
-      return;
+  /* =====================================================================
+   * GIAO DIỆN CHÉP CHÍNH TẢ 3/7 WORKSPACE HIỆN ĐẠI (AUDIO SÓNG ÂM & CLOZE INPUT)
+   * ===================================================================== */
+  const DICT_SENTENCE_VOCAB_DB = {
+    "Вот, пожалуйста.": [
+      { ru: "пожалуйста", vi: "xin vui lòng, không có gì", pos: "Thán từ", stress: "пожа́луйста" },
+      { ru: "вот", vi: "đây, này", pos: "Tiểu từ", stress: "вот" }
+    ],
+    "У вас есть багаж?": [
+      { ru: "багаж", vi: "hành lý ký gửi", pos: "Danh từ", stress: "бага́ж" },
+      { ru: "есть", vi: "có, hiện hữu", pos: "Động từ", stress: "есть" }
+    ],
+    "Спасибо! А где паспортный контроль?": [
+      { ru: "паспортный контроль", vi: "kiểm tra hộ chiếu", pos: "Cụm danh từ", stress: "па́спортный контро́ль" },
+      { ru: "паспорт", vi: "hộ chiếu", pos: "Danh từ", stress: "па́спорт" },
+      { ru: "спасибо", vi: "cảm ơn", pos: "Thán từ", stress: "спаси́бо" }
+    ],
+    "Сколько стоит этот сыр?": [
+      { ru: "стоить", vi: "có giá, trị giá", pos: "Động từ", stress: "сто́ить" },
+      { ru: "сыр", vi: "phô mai", pos: "Danh từ", stress: "сыр" }
+    ],
+    "Скажите, а рыба свежая?": [
+      { ru: "свежий", vi: "tươi mới, tươi sống", pos: "Tính từ", stress: "све́жий" },
+      { ru: "рыба", vi: "cá", pos: "Danh từ", stress: "ры́ба" }
+    ],
+    "Спасибо, возьму!": [
+      { ru: "взять", vi: "lấy, mua", pos: "Động từ (HT)", stress: "взять" },
+      { ru: "спасибо", vi: "cảm ơn", pos: "Thán từ", stress: "спаси́бо" }
+    ],
+    "Мой ключ номер 412.": [
+      { ru: "ключ", vi: "chìa khóa", pos: "Danh từ", stress: "ключ" },
+      { ru: "номер", vi: "số phòng", pos: "Danh từ", stress: "но́мер" }
+    ],
+    "Прачечная на цокольном этаже.": [
+      { ru: "прачечная", vi: "phòng giặt là", pos: "Danh từ", stress: "пра́чечная" },
+      { ru: "этаж", vi: "tầng gác", pos: "Danh từ", stress: "эта́ж" }
+    ],
+    "Спасибо за информацию!": [
+      { ru: "информация", vi: "thông tin", pos: "Danh từ", stress: "информа́ция" },
+      { ru: "спасибо", vi: "cảm ơn", pos: "Thán từ", stress: "спаси́бо" }
+    ],
+    "Вам помочь определиться?": [
+      { ru: "определиться", vi: "quyết định, lựa chọn", pos: "Động từ", stress: "определи́ться" },
+      { ru: "помочь", vi: "giúp đỡ", pos: "Động từ", stress: "помо́чь" }
+    ],
+    "Да, пожалуйста, блинчики с семгой.": [
+      { ru: "блинчики", vi: "bánh blini Nga", pos: "Danh từ số nhiều", stress: "бли́нчики" },
+      { ru: "сёмга", vi: "cá hồi", pos: "Danh từ", stress: "сёмга" }
+    ],
+    "С вас 480 рублей.": [
+      { ru: "рубль", vi: "đồng Rúp Nga", pos: "Danh từ", stress: "рубль" }
+    ],
+    "Где оформить читательский билет?": [
+      { ru: "оформить", vi: "làm thủ tục, đăng ký", pos: "Động từ (HT)", stress: "офо́рмить" },
+      { ru: "читательский билет", vi: "thẻ thư viện", pos: "Cụm danh từ", stress: "чита́тельский биле́т" }
+    ],
+    "Учебники выдаются на один семестр.": [
+      { ru: "учебник", vi: "sách giáo trình", pos: "Danh từ", stress: "уче́бник" },
+      { ru: "семестр", vi: "học kỳ", pos: "Danh từ", stress: "семе́стр" }
+    ],
+    "Справка о стипендии на втором этаже.": [
+      { ru: "стипендия", vi: "học bổng", pos: "Danh từ", stress: "стипе́ндия" },
+      { ru: "справка", vi: "giấy xác nhận", pos: "Danh từ", stress: "спра́вка" }
+    ],
+    "Осторожно, двери закрываются.": [
+      { ru: "осторожно", vi: "cẩn thận, chú ý", pos: "Trạng từ", stress: "осторо́жно" },
+      { ru: "двери", vi: "cửa tàu, cửa ra vào", pos: "Danh từ số nhiều", stress: "две́ри" },
+      { ru: "закрываться", vi: "đóng lại", pos: "Động từ phản thân", stress: "закрыва́ются" }
+    ],
+    "Следующая станция — «Театральная».": [
+      { ru: "следующий", vi: "tiếp theo, kế tiếp", pos: "Tính từ", stress: "сле́дующий" },
+      { ru: "станция", vi: "nhà ga tàu điện", pos: "Danh từ", stress: "ста́нция" }
+    ],
+    "Переход на Замоскворецкую линию.": [
+      { ru: "переход", vi: "lối chuyển tuyến", pos: "Danh từ", stress: "перехо́д" },
+      { ru: "линия", vi: "tuyến đường metro", pos: "Danh từ", stress: "ли́ния" }
+    ],
+    "Юрий Гагарин совершил первый космический полет.": [
+      { ru: "космический", vi: "thuộc vũ trụ", pos: "Tính từ", stress: "косми́ческий" },
+      { ru: "полет", vi: "chuyến bay", pos: "Danh từ", stress: "полёт" },
+      { ru: "совершить", vi: "thực hiện", pos: "Động từ (HT)", stress: "соверши́ть" }
+    ],
+    "Путь человечества открылся благодаря исследователям.": [
+      { ru: "человечество", vi: "nhân loại, loài người", pos: "Danh từ", stress: "челове́чество" },
+      { ru: "исследователь", vi: "nhà thám hiểm, nghiên cứu", pos: "Danh từ", stress: "иссле́дователь" },
+      { ru: "благодаря", vi: "nhờ vào (+Cách 3)", pos: "Giới từ", stress: "благодаря́" }
+    ],
+    "Космонавт готов лететь к далеким мирам.": [
+      { ru: "космонавт", vi: "nhà du hành vũ trụ", pos: "Danh từ", stress: "космона́вт" },
+      { ru: "мир", vi: "thế giới, vũ trụ", pos: "Danh từ", stress: "мир" },
+      { ru: "далекий", vi: "xa xôi, xa xăm", pos: "Tính từ", stress: "далёкий" }
+    ]
+  };
+
+  const getSentenceVocab = (sentenceText, lesson) => {
+    const trimmed = (sentenceText || "").trim();
+    if (DICT_SENTENCE_VOCAB_DB[trimmed]) {
+      return DICT_SENTENCE_VOCAB_DB[trimmed];
     }
-    mb.innerHTML = lesson.dictation
-      .map(
-        (s, i) => `
-      <div class="sentence-check" data-i="${i}">
-        <div class="sc-actions">
-          <button class="btn btn-soft btn-sm play-dict">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""} <span class="btn-text">Nghe</span> câu ${i + 1}</button>
-          <span class="sim-result" style="margin-left:auto"></span>
-        </div>
-        <textarea class="ru" placeholder="Gõ chính tả lại câu tiếng Nga bạn nghe được..."></textarea>
-        <div class="sc-actions"><button class="btn btn-primary btn-sm check-dict">Kiểm tra</button></div>
-      </div>`
-      )
-      .join("");
-    mb.querySelectorAll(".play-dict").forEach((b, i) => (b.onclick = () => speak(lesson.dictation[i], "ru-RU", currentSpeed)));
-    mb.querySelectorAll(".check-dict").forEach((btn, i) => {
-      btn.onclick = () => {
-        const box = btn.closest(".sentence-check");
-        const val = box.querySelector("textarea").value;
-        const sim = similarity(val, lesson.dictation[i]);
-        const badge = box.querySelector(".sim-result");
-        badge.innerHTML = `<span class="sim-badge ${sim >= 80 ? "sim-high" : sim >= 50 ? "sim-mid" : "sim-low"}">${sim}% chính xác</span>`;
-        box.classList.toggle("correct", sim >= 80);
-        box.classList.toggle("wrong", sim < 80);
-        const old = box.querySelector(".dict-answer");
-        if (old) old.remove();
-        if (sim < 80) {
-          const p = document.createElement("p");
-          p.className = "ru dict-answer";
-          p.style.cssText = "color:var(--green);font-size:.9rem;margin-top:8px";
-          p.textContent = "Đáp án chuẩn: " + lesson.dictation[i];
-          badge.insertAdjacentElement("afterend", p);
-        } else {
-          const key = lesson.id + "_dict_" + i;
-          if (!Progress.doneList("listenDone").includes(key)) {
-            Progress.markDone("listenDone", key);
-            Progress.addXp(10);
-          }
+    // Tìm đối chiếu trong blanks của bài
+    const matched = [];
+    if (Array.isArray(lesson.blanks)) {
+      lesson.blanks.forEach((b) => {
+        if (b.blank && trimmed.toLowerCase().includes(b.blank.toLowerCase())) {
+          matched.push({
+            ru: b.blank,
+            vi: b.hint || "Từ khóa trong câu",
+            pos: "Từ vựng chính",
+            stress: b.blank
+          });
         }
+      });
+    }
+    if (matched.length > 0) return matched;
+
+    // Trích xuất các từ có độ dài >= 4
+    const words = trimmed.replace(/[.,!?;:«»""'']/g, "").split(/\s+/).filter(w => w.length >= 4);
+    if (words.length > 0) {
+      return words.slice(0, 2).map(w => ({
+        ru: w,
+        vi: "Từ vựng trong bài",
+        pos: "Từ vựng",
+        stress: w
+      }));
+    }
+    return [{ ru: trimmed.split(/\s+/)[0] || "слово", vi: "Từ trong câu", pos: "Từ vựng", stress: trimmed.split(/\s+/)[0] || "слово" }];
+  };
+
+  const openDictationWorkspace = (lesson) => {
+    currentLesson = lesson;
+    document.body.classList.add("in-workspace");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // Thu thập danh sách câu luyện trong bài
+    const rawSentences = (Array.isArray(lesson.dictation) && lesson.dictation.length > 0)
+      ? lesson.dictation
+      : (Array.isArray(lesson.lines) && lesson.lines.length > 0 ? lesson.lines.map(l => l.ru) : ["Вот, пожалуйста."]);
+
+    const sentences = rawSentences.map((raw, idx) => {
+      const lineMatch = (lesson.lines || []).find(l => l.ru && (l.ru.includes(raw) || raw.includes(l.ru)));
+      const vi = lineMatch ? lineMatch.vi : (lesson.vi || "");
+      return {
+        idx,
+        ru: raw,
+        vi,
+        vocab: getSentenceVocab(raw, lesson)
       };
     });
+
+    let currentSentenceIdx = 0;
+    let currentBlankPct = 50;
+    let showAnswer = false;
+    let isPlaying = false;
+    let isLooping = false;
+    let speed = 1.0;
+    let loopTimeout = null;
+    let progressTimer = null;
+    let unlockedVocab = {};
+
+    // Sóng âm giả lập (32 cột chiều cao từ 20% đến 95%)
+    const WAVE_BARS = [24, 38, 55, 72, 60, 42, 30, 48, 68, 85, 92, 75, 52, 35, 58, 80, 88, 70, 45, 62, 78, 65, 40, 56, 74, 82, 64, 45, 32, 50, 40, 26];
+
+    const isSentenceDone = (idx) => {
+      const key = `${lesson.id}_dict_${idx}`;
+      return Progress.doneList("listenDone").includes(key);
+    };
+
+    const stopAudio = () => {
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      clearTimeout(loopTimeout);
+      clearInterval(progressTimer);
+      isPlaying = false;
+      const playerCard = host.querySelector("#dictPlayerCard");
+      if (playerCard) playerCard.classList.remove("is-playing");
+      const playBtn = host.querySelector("#btnDictPlay");
+      if (playBtn) playBtn.innerHTML = icon("play-control", 24);
+      const prog = host.querySelector("#dictWaveProgress");
+      if (prog) prog.style.width = "0%";
+    };
+
+    const playCurrentAudio = () => {
+      stopAudio();
+      const s = sentences[currentSentenceIdx];
+      if (!s) return;
+
+      isPlaying = true;
+      const playerCard = host.querySelector("#dictPlayerCard");
+      if (playerCard) playerCard.classList.add("is-playing");
+      const playBtn = host.querySelector("#btnDictPlay");
+      if (playBtn) playBtn.innerHTML = icon("pause", 24);
+
+      const prog = host.querySelector("#dictWaveProgress");
+      const estDurationMs = Math.max(2200, (s.ru.length * 95) / speed);
+      const startTime = Date.now();
+
+      progressTimer = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const pct = Math.min(100, (elapsed / estDurationMs) * 100);
+        if (prog) prog.style.width = `${pct}%`;
+        if (pct >= 100) {
+          clearInterval(progressTimer);
+        }
+      }, 50);
+
+      if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
+        const u = new SpeechSynthesisUtterance(s.ru);
+        u.lang = "ru-RU";
+        u.rate = speed;
+        if (typeof pickVoice === "function") {
+          const v = pickVoice("ru-RU");
+          if (v) u.voice = v;
+        }
+        u.onend = () => {
+          stopAudio();
+          if (isLooping) {
+            loopTimeout = setTimeout(playCurrentAudio, 1200);
+          }
+        };
+        u.onerror = () => {
+          stopAudio();
+        };
+        window.speechSynthesis.speak(u);
+      } else {
+        setTimeout(() => {
+          stopAudio();
+          if (isLooping) {
+            loopTimeout = setTimeout(playCurrentAudio, 1200);
+          }
+        }, estDurationMs);
+      }
+    };
+
+    const tokenizeSentence = (sentenceText) => {
+      const tokens = [];
+      const regex = /([а-яА-ЯёЁa-zA-Z0-9\-]+|[^а-яА-ЯёЁa-zA-Z0-9\s]+|\s+)/g;
+      let m;
+      while ((m = regex.exec(sentenceText)) !== null) {
+        const val = m[1];
+        if (/^\s+$/.test(val)) continue;
+        const isWord = /^[а-яА-ЯёЁa-zA-Z0-9\-]+$/.test(val);
+        tokens.push({ text: val, isWord });
+      }
+      return tokens;
+    };
+
+    const getBlankSet = (tokens, pct) => {
+      const wordIndices = [];
+      tokens.forEach((t, i) => { if (t.isWord) wordIndices.push(i); });
+      if (pct >= 100) return new Set(wordIndices);
+
+      const sorted = [...wordIndices].sort((a, b) => tokens[b].text.length - tokens[a].text.length);
+      const count = Math.max(1, Math.round(wordIndices.length * (pct / 100)));
+      return new Set(sorted.slice(0, count));
+    };
+
+    const renderWorkspace = () => {
+      const s = sentences[currentSentenceIdx];
+      const doneCount = sentences.filter((_, i) => isSentenceDone(i)).length;
+      const pctDone = Math.round((doneCount / sentences.length) * 100);
+      const isCurrentDone = isSentenceDone(currentSentenceIdx);
+      const isUnlocked = isCurrentDone || !!unlockedVocab[currentSentenceIdx];
+
+      host.innerHTML = `
+        <div class="lis-dict-workspace-shell">
+          <!-- 1. Thanh điều hướng trên cùng -->
+          <div class="lis-dict-topbar">
+            <button type="button" class="lis-dict-topbar-back" id="btnDictBack" title="Quay lại danh sách bài nghe" aria-label="Quay lại">
+              ${icon("arrow-left", 20)}
+            </button>
+            <div class="lis-dict-topbar-heading">
+              <span class="lis-dict-topbar-subtitle">Nghe chép chính tả · ${lesson.level}</span>
+              <h1 class="lis-dict-topbar-title">${esc(lesson.title)}</h1>
+            </div>
+            <button type="button" class="lis-dict-topbar-menu-btn" id="btnDictToggleSidebar" aria-label="Danh sách câu" title="Xem danh sách câu">
+              ${icon("list", 20)}
+              <span class="lis-dict-menu-badge">${sentences.length}</span>
+            </button>
+          </div>
+
+          <!-- Bố cục 3/7: 7 phần bên trái làm bài, 3 phần bên phải danh sách câu -->
+          <div class="lis-dict-workspace-grid">
+            <!-- CỘT TRÁI (7 PHẦN): KHUNG LÀM BÀI CHÍNH -->
+            <main class="lis-dict-main-panel">
+              <!-- 2. Khung phát âm thanh (Audio Player) -->
+              <section class="lis-dict-player-card" id="dictPlayerCard">
+                <div class="lis-dict-waveform-wrap" aria-label="Giao diện sóng âm phát âm thanh">
+                  <div class="lis-dict-wave-progress" id="dictWaveProgress"></div>
+                  ${WAVE_BARS.map(h => `<div class="lis-dict-wave-bar" style="height:${h}%"></div>`).join("")}
+                </div>
+
+                <div class="lis-dict-player-controls">
+                  <!-- Cụm trái: Phát lại 1 -->
+                  <div class="lis-dict-ctrl-left">
+                    <button type="button" class="lis-dict-btn-replay" id="btnDictReplay" title="Phát lại từ đầu câu này">
+                      ${icon("rotate-ccw", 16)} <span>Phát lại 1</span>
+                    </button>
+                  </div>
+
+                  <!-- Cụm giữa: Tua lùi, Play/Pause, Tua tới -->
+                  <div class="lis-dict-ctrl-center">
+                    <button type="button" class="lis-dict-btn-skip" id="btnDictSkipBack" title="Tua lùi lại 5s">
+                      ${icon("skip-back", 18)}
+                    </button>
+                    <button type="button" class="lis-dict-btn-play" id="btnDictPlay" title="Phát / Dừng âm thanh">
+                      ${icon("play-control", 24)}
+                    </button>
+                    <button type="button" class="lis-dict-btn-skip" id="btnDictSkipFwd" title="Tua tiến tới">
+                      ${icon("skip-forward", 18)}
+                    </button>
+                  </div>
+
+                  <!-- Cụm phải: Tốc độ phát (1x) & Tự lặp -->
+                  <div class="lis-dict-ctrl-right">
+                    <button type="button" class="lis-dict-btn-speed" id="btnDictSpeed" title="Thay đổi tốc độ phát">
+                      <span id="dictSpeedText">${speed}x</span>
+                    </button>
+                    <button type="button" class="lis-dict-btn-loop ${isLooping ? "is-active" : ""}" id="btnDictLoop" title="Chế độ tự lặp lại câu">
+                      ${icon("repeat", 16)} <span>Tự lặp</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              <!-- 3. Thanh công cụ chỉnh tốc độ và hiển thị -->
+              <div class="lis-dict-toolbar-card">
+                <div class="lis-dict-percent-group" role="group" aria-label="Mức độ ẩn từ gợi ý">
+                  <span class="lis-dict-percent-label">Độ khó:</span>
+                  <button type="button" class="lis-dict-pct-btn ${currentBlankPct === 30 ? "is-active" : ""}" data-pct="30" title="Chỉ ẩn 30% từ (Dễ)">30%</button>
+                  <button type="button" class="lis-dict-pct-btn ${currentBlankPct === 50 ? "is-active" : ""}" data-pct="50" title="Ẩn 50% từ (Vừa)">50%</button>
+                  <button type="button" class="lis-dict-pct-btn ${currentBlankPct === 100 ? "is-active" : ""}" data-pct="100" title="Ẩn toàn bộ 100% từ (Thử thách)">100%</button>
+                </div>
+
+                <div class="lis-dict-toolbar-right">
+                  <button type="button" class="lis-dict-btn-toggle-answer ${showAnswer ? "is-showing" : ""}" id="btnToggleAnswer">
+                    ${icon(showAnswer ? "eye-off" : "eye", 16)}
+                    <span>${showAnswer ? "Ẩn kết quả" : "Hiện kết quả"}</span>
+                  </button>
+                  <button type="button" class="lis-dict-tool-icon-btn" id="btnDictDetail" title="Xem phân tích chi tiết câu">
+                    ${icon("file-text", 18)}
+                  </button>
+                  <button type="button" class="lis-dict-tool-icon-btn" id="btnDictBookmark" title="Lưu câu vào sổ tay yêu thích">
+                    ${icon("bookmark", 18)}
+                  </button>
+                  <button type="button" class="lis-dict-tool-icon-btn" id="btnDictAsk" title="Hỏi trợ lý AI Rusika về câu này">
+                    ${icon("message-circle", 18)}
+                  </button>
+                </div>
+              </div>
+
+              <!-- 4. Khu vực làm bài chính (Chép chính tả) -->
+              <section class="lis-dict-practice-card" id="dictPracticeCard">
+                <div class="lis-dict-sentence-flow" id="dictSentenceFlow"></div>
+
+                <div class="lis-dict-input-note">
+                  <span class="lis-dict-note-bulb">💡</span> Tắt bộ gõ tiếng Việt để tự chuyển ô khi điền đúng
+                </div>
+
+                <!-- Khung hiển thị đáp án khi bấm nút Hiện kết quả -->
+                <div class="lis-dict-answer-box ${showAnswer ? "" : "hidden"}" id="dictAnswerBox">
+                  <div class="lis-dict-answer-header">
+                    <span class="lis-dict-answer-tag">${icon("check", 14)} Đáp án chuẩn</span>
+                    <button type="button" class="btn-icon dict-vocab-btn-action" id="btnDictSpeakAnswer" title="Nghe câu này">
+                      ${icon("volume-high", 16)}
+                    </button>
+                  </div>
+                  <div class="lis-dict-answer-ru ru">${esc(s.ru)}</div>
+                  ${s.vi ? `<div class="lis-dict-answer-vi">${esc(s.vi)}</div>` : ""}
+                </div>
+
+                <!-- Banner chúc mừng khi hoàn thành câu -->
+                <div class="lis-dict-celebration ${isCurrentDone ? "" : "hidden"}" id="dictCelebration">
+                  ${icon("check-circle-correct", 20)}
+                  <span>Xuất sắc! Bạn đã chép chính xác câu này (+10 XP)</span>
+                </div>
+
+                <!-- Điều hướng câu trước / câu sau -->
+                <div class="lis-dict-nav-footer">
+                  <button type="button" class="btn btn-outline btn-sm" id="btnDictPrevSentence" ${currentSentenceIdx === 0 ? "disabled" : ""}>
+                    ${icon("chevron-left", 16)} Câu trước
+                  </button>
+                  <span class="lis-dict-nav-counter">Câu ${currentSentenceIdx + 1} / ${sentences.length}</span>
+                  <button type="button" class="btn btn-primary btn-sm" id="btnDictNextSentence" ${currentSentenceIdx === sentences.length - 1 ? "disabled" : ""}>
+                    Câu tiếp theo ${icon("chevron-right", 16)}
+                  </button>
+                </div>
+              </section>
+
+              <!-- 5. Khung phụ dưới là (Từ vựng nên học) -->
+              <section class="lis-dict-vocab-box ${isUnlocked ? "is-unlocked" : "is-locked"}" id="dictVocabBox">
+                ${!isUnlocked ? `
+                  <!-- Trạng thái KHÓA -->
+                  <div class="lis-dict-lock-badge">
+                    <span class="lis-dict-lock-icon">${icon("lock", 26)}</span>
+                    <div class="lis-dict-lock-copy">
+                      <strong>Chép xong câu để xem ${s.vocab.length} từ nên học</strong>
+                      <p>Từ vựng nằm ngay trong câu, hiện sớm sẽ lộ đáp án.</p>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-outline btn-sm" id="btnUnlockVocabEarly" title="Mở khóa xem từ vựng ngay">
+                    ${icon("eye", 14)} <span>Xem sớm</span>
+                  </button>
+                ` : `
+                  <!-- Trạng thái ĐÃ MỞ KHÓA -->
+                  <div class="lis-dict-vocab-header">
+                    <div class="lis-dict-vocab-header-left">
+                      <span class="lis-dict-vocab-sparkle">${icon("sparkles-clean", 20)}</span>
+                      <div>
+                        <strong>Từ vựng nên học trong câu</strong>
+                        <small>Nhấp icon lọ để lưu trực tiếp vào Lọ từ vựng cá nhân</small>
+                      </div>
+                    </div>
+                    <span class="lis-dict-vocab-count-pill">${s.vocab.length} từ</span>
+                  </div>
+
+                  <div class="lis-dict-vocab-list">
+                    ${s.vocab.map(v => `
+                      <div class="lis-dict-vocab-item">
+                        <div class="lis-dict-vocab-item-main">
+                          <div class="lis-dict-vocab-ru-line">
+                            <strong class="lis-dict-vocab-ru ru">${esc(v.stress || v.ru)}</strong>
+                            ${v.pos ? `<span class="lis-dict-vocab-pos">${esc(v.pos)}</span>` : ""}
+                          </div>
+                          <p class="lis-dict-vocab-vi">${esc(v.vi)}</p>
+                        </div>
+                        <div class="lis-dict-vocab-actions">
+                          <button type="button" class="lis-dict-vocab-btn-action dict-vocab-speak" data-word="${esc(v.ru)}" title="Nghe phát âm từ này">
+                            ${icon("volume-high", 18)}
+                          </button>
+                          <button type="button" class="lis-dict-vocab-btn-action dict-vocab-addjar" data-ru="${esc(v.ru)}" data-vi="${esc(v.vi)}" data-stress="${esc(v.stress || v.ru)}" data-pos="${esc(v.pos || "")}" title="Thêm vào Lọ từ vựng của bạn">
+                            ${icon("archive-jar", 18)}
+                          </button>
+                        </div>
+                      </div>
+                    `).join("")}
+                  </div>
+                `}
+              </section>
+            </main>
+
+            <!-- CỘT PHẢI (3 PHẦN): DANH SÁCH CÁC CÂU LUYỆN TRONG BÀI -->
+            <aside class="lis-dict-sidebar-panel" id="dictSidebarPanel">
+              <div class="lis-dict-sidebar-header">
+                <div>
+                  <span class="lis-dict-sidebar-eyebrow">DANH SÁCH CÂU</span>
+                  <h3 class="lis-dict-sidebar-title">${esc(lesson.title)}</h3>
+                </div>
+                <button type="button" class="lis-dict-sidebar-close-btn" id="btnDictCloseSidebar" aria-label="Đóng danh sách">
+                  ${icon("x", 18)}
+                </button>
+              </div>
+
+              <div class="lis-dict-sidebar-progress-box">
+                <div class="lis-dict-sidebar-progress-text">
+                  <span>Tiến độ bài</span>
+                  <strong>${doneCount}/${sentences.length} câu</strong>
+                </div>
+                <div class="lis-dict-progress-track">
+                  <div class="lis-dict-progress-fill" style="width: ${pctDone}%"></div>
+                </div>
+              </div>
+
+              <div class="lis-dict-sentence-list">
+                ${sentences.map((st, i) => {
+                  const active = i === currentSentenceIdx;
+                  const done = isSentenceDone(i);
+                  const num = String(i + 1).padStart(2, "0");
+                  return `
+                    <button type="button" class="lis-dict-sentence-item ${active ? "is-active" : ""} ${done ? "is-done" : ""}" data-sent-idx="${i}">
+                      <span class="lis-dict-sentence-num">${num}</span>
+                      <div class="lis-dict-sentence-info">
+                        <strong class="lis-dict-sentence-label">Câu ${i + 1}</strong>
+                        <small class="lis-dict-sentence-snippet">${esc(st.vi || st.ru)}</small>
+                      </div>
+                      <span class="lis-dict-sentence-status">
+                        ${done ? icon("check-circle-correct", 18) : active ? icon("edit-3", 16) : icon("arrow-right", 16)}
+                      </span>
+                    </button>
+                  `;
+                }).join("")}
+              </div>
+            </aside>
+            <div class="lis-dict-sidebar-scrim" id="dictSidebarScrim"></div>
+          </div>
+        </div>
+      `;
+
+      // Render các ô cloze input cho câu hiện tại
+      renderClozeSentence();
+      bindWorkspaceEvents();
+    };
+
+    const renderClozeSentence = () => {
+      const flow = host.querySelector("#dictSentenceFlow");
+      if (!flow) return;
+
+      const s = sentences[currentSentenceIdx];
+      const tokens = tokenizeSentence(s.ru);
+      const blankSet = getBlankSet(tokens, currentBlankPct);
+      const isDone = isSentenceDone(currentSentenceIdx);
+
+      flow.innerHTML = tokens.map((token, i) => {
+        if (!token.isWord) {
+          return `<span class="lis-dict-punct">${esc(token.text)}</span>`;
+        }
+        if (!blankSet.has(i)) {
+          return `<span class="lis-dict-static-word">${esc(token.text)}</span>`;
+        }
+        // Từ bị ẩn cần điền
+        const cleanWord = token.text.replace(/[.,!?;:«»""'']/g, "");
+        const dots = ".".repeat(Math.min(7, Math.max(3, cleanWord.length)));
+        const width = Math.max(52, cleanWord.length * 15 + 20);
+        const val = isDone ? cleanWord : "";
+        const correctCls = isDone ? "is-correct" : "";
+        const readonlyAttr = isDone ? "readonly" : "";
+
+        return `
+          <input type="text"
+            class="lis-dict-word-input ${correctCls}"
+            data-expected="${esc(cleanWord)}"
+            style="width: ${width}px;"
+            placeholder="[ ${dots} ]"
+            value="${esc(val)}"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
+            ${readonlyAttr}
+          />
+        `;
+      }).join("");
+
+      // Gắn sự kiện gõ phím & tự chuyển ô khi điền đúng
+      const inputs = Array.from(flow.querySelectorAll(".lis-dict-word-input"));
+      const norm = (str) => (str || "").trim().toLowerCase().replace(/[.,!?;:«»""'']/g, "").replace(/ё/g, "е");
+
+      inputs.forEach((input, idx) => {
+        input.oninput = () => {
+          const expected = input.dataset.expected || "";
+          if (norm(input.value) === norm(expected) && norm(input.value).length > 0) {
+            input.classList.add("is-correct");
+            input.classList.remove("is-wrong");
+            input.readOnly = true;
+            input.value = expected; // Chuẩn hóa hoa thường chuẩn xác
+
+            // Tìm ô input chưa hoàn thành kế tiếp để tự động focus
+            const nextInput = inputs.find(inp => !inp.classList.contains("is-correct"));
+            if (nextInput) {
+              nextInput.focus();
+            } else {
+              // Hoàn thành câu!
+              handleSentenceFinished();
+            }
+          }
+        };
+
+        input.onkeydown = (e) => {
+          if (e.key === " " || e.key === "Tab" || e.key === "Enter") {
+            e.preventDefault();
+            const currIdx = inputs.indexOf(input);
+            if (currIdx < inputs.length - 1) inputs[currIdx + 1].focus();
+          } else if (e.key === "Backspace" && input.value === "") {
+            const currIdx = inputs.indexOf(input);
+            if (currIdx > 0 && !inputs[currIdx - 1].readOnly) {
+              inputs[currIdx - 1].focus();
+            }
+          }
+        };
+      });
+
+      // Focus vào ô input đầu tiên chưa điền
+      const firstEmpty = inputs.find(inp => !inp.classList.contains("is-correct"));
+      if (firstEmpty) {
+        setTimeout(() => firstEmpty.focus(), 80);
+      }
+    };
+
+    const handleSentenceFinished = () => {
+      const key = `${lesson.id}_dict_${currentSentenceIdx}`;
+      if (!Progress.doneList("listenDone").includes(key)) {
+        Progress.markDone("listenDone", key);
+        Progress.addXp(10);
+        toast("Xuất sắc! Đã hoàn thành câu (+10 XP) 🎉");
+      }
+      if (typeof playQuizletSound === "function") {
+        playQuizletSound("correct");
+      }
+
+      // Mở khóa từ vựng
+      unlockedVocab[currentSentenceIdx] = true;
+
+      // Cập nhật giao diện
+      const celeb = host.querySelector("#dictCelebration");
+      if (celeb) celeb.classList.remove("hidden");
+
+      renderWorkspace();
+    };
+
+    const bindWorkspaceEvents = () => {
+      // 1. Quay lại Hub
+      const backBtn = host.querySelector("#btnDictBack");
+      if (backBtn) {
+        backBtn.onclick = () => {
+          stopAudio();
+          document.body.classList.remove("in-workspace");
+          renderHub();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+      }
+
+      // 2. Audio Player Controls
+      const playBtn = host.querySelector("#btnDictPlay");
+      if (playBtn) {
+        playBtn.onclick = () => {
+          if (isPlaying) {
+            stopAudio();
+          } else {
+            playCurrentAudio();
+          }
+        };
+      }
+
+      const replayBtn = host.querySelector("#btnDictReplay");
+      if (replayBtn) {
+        replayBtn.onclick = () => {
+          playCurrentAudio();
+        };
+      }
+
+      const skipBackBtn = host.querySelector("#btnDictSkipBack");
+      if (skipBackBtn) {
+        skipBackBtn.onclick = () => {
+          playCurrentAudio();
+          toast("Phát lại câu từ đầu");
+        };
+      }
+
+      const skipFwdBtn = host.querySelector("#btnDictSkipFwd");
+      if (skipFwdBtn) {
+        skipFwdBtn.onclick = () => {
+          stopAudio();
+        };
+      }
+
+      const speedBtn = host.querySelector("#btnDictSpeed");
+      if (speedBtn) {
+        speedBtn.onclick = () => {
+          const speeds = [0.75, 0.85, 1.0, 1.25];
+          const curIdx = speeds.indexOf(speed);
+          speed = speeds[(curIdx + 1) % speeds.length];
+          const text = host.querySelector("#dictSpeedText");
+          if (text) text.textContent = `${speed}x`;
+          toast(`Tốc độ phát: ${speed}x`);
+          if (isPlaying) playCurrentAudio();
+        };
+      }
+
+      const loopBtn = host.querySelector("#btnDictLoop");
+      if (loopBtn) {
+        loopBtn.onclick = () => {
+          isLooping = !isLooping;
+          loopBtn.classList.toggle("is-active", isLooping);
+          toast(isLooping ? "Đã bật chế độ tự lặp" : "Đã tắt chế độ tự lặp");
+        };
+      }
+
+      // 3. Mức độ gợi ý %
+      host.querySelectorAll(".lis-dict-pct-btn").forEach((b) => {
+        b.onclick = () => {
+          currentBlankPct = parseInt(b.dataset.pct, 10) || 50;
+          host.querySelectorAll(".lis-dict-pct-btn").forEach(btn => btn.classList.remove("is-active"));
+          b.classList.add("is-active");
+          renderClozeSentence();
+        };
+      });
+
+      // 4. Ẩn / Hiện kết quả
+      const toggleAnsBtn = host.querySelector("#btnToggleAnswer");
+      if (toggleAnsBtn) {
+        toggleAnsBtn.onclick = () => {
+          showAnswer = !showAnswer;
+          const ansBox = host.querySelector("#dictAnswerBox");
+          if (ansBox) ansBox.classList.toggle("hidden", !showAnswer);
+          toggleAnsBtn.classList.toggle("is-showing", showAnswer);
+          toggleAnsBtn.innerHTML = `
+            ${icon(showAnswer ? "eye-off" : "eye", 16)}
+            <span>${showAnswer ? "Ẩn kết quả" : "Hiện kết quả"}</span>
+          `;
+        };
+      }
+
+      const speakAnsBtn = host.querySelector("#btnDictSpeakAnswer");
+      if (speakAnsBtn) {
+        speakAnsBtn.onclick = () => {
+          speak(sentences[currentSentenceIdx].ru, "ru-RU", speed);
+        };
+      }
+
+      // Icon chi tiết, lưu, hỏi bài
+      const detailBtn = host.querySelector("#btnDictDetail");
+      if (detailBtn) {
+        detailBtn.onclick = () => {
+          const s = sentences[currentSentenceIdx];
+          alert(`📖 CHI TIẾT CÂU LUYỆN:\n\n• Tiếng Nga: ${s.ru}\n• Dịch nghĩa: ${s.vi || "Chưa có"}\n• Cấp độ: ${lesson.level}\n• Chủ đề: ${lesson.title}`);
+        };
+      }
+
+      const bookmarkBtn = host.querySelector("#btnDictBookmark");
+      if (bookmarkBtn) {
+        let saved = (typeof STORE !== "undefined") ? STORE.get("saved_dict_sentences", []) : [];
+        const isSaved = saved.includes(sentences[currentSentenceIdx].ru);
+        bookmarkBtn.classList.toggle("is-saved", isSaved);
+
+        bookmarkBtn.onclick = () => {
+          saved = (typeof STORE !== "undefined") ? STORE.get("saved_dict_sentences", []) : [];
+          const ru = sentences[currentSentenceIdx].ru;
+          if (saved.includes(ru)) {
+            saved = saved.filter(x => x !== ru);
+            bookmarkBtn.classList.remove("is-saved");
+            toast("Đã bỏ lưu câu này!");
+          } else {
+            saved.push(ru);
+            bookmarkBtn.classList.add("is-saved");
+            toast("Đã lưu câu vào sổ tay yêu thích!");
+          }
+          if (typeof STORE !== "undefined") STORE.set("saved_dict_sentences", saved);
+        };
+      }
+
+      const askBtn = host.querySelector("#btnDictAsk");
+      if (askBtn) {
+        askBtn.onclick = () => {
+          toast("Trợ lý Rusika: Hãy lắng nghe kỹ âm đuôi và các giới từ kết nối trong câu nhé!");
+        };
+      }
+
+      // 5. Mở khóa sớm từ vựng
+      const unlockEarlyBtn = host.querySelector("#btnUnlockVocabEarly");
+      if (unlockEarlyBtn) {
+        unlockEarlyBtn.onclick = () => {
+          unlockedVocab[currentSentenceIdx] = true;
+          renderWorkspace();
+        };
+      }
+
+      // Phát âm từ vựng
+      host.querySelectorAll(".dict-vocab-speak").forEach((b) => {
+        b.onclick = () => {
+          const w = b.dataset.word;
+          if (w) speak(w, "ru-RU", 0.85);
+        };
+      });
+
+      // Thêm từ vào Lọ từ vựng cá nhân
+      host.querySelectorAll(".dict-vocab-addjar").forEach((b) => {
+        b.onclick = () => {
+          if (typeof openAddJarModal === "function") {
+            openAddJarModal({
+              ru: b.dataset.ru,
+              vi: b.dataset.vi,
+              stress: b.dataset.stress,
+              note: b.dataset.pos
+            });
+          } else {
+            toast(`Đã chọn lưu từ «${b.dataset.ru}» vào Lọ từ vựng`);
+          }
+        };
+      });
+
+      // 6. Chuyển câu qua danh sách Sidebar
+      host.querySelectorAll(".lis-dict-sentence-item").forEach((b) => {
+        b.onclick = () => {
+          const idx = parseInt(b.dataset.sentIdx, 10);
+          if (idx !== currentSentenceIdx) {
+            stopAudio();
+            currentSentenceIdx = idx;
+            showAnswer = false;
+            renderWorkspace();
+            closeMobileDrawer();
+          }
+        };
+      });
+
+      // Điều hướng câu trước / sau
+      const prevBtn = host.querySelector("#btnDictPrevSentence");
+      if (prevBtn) {
+        prevBtn.onclick = () => {
+          if (currentSentenceIdx > 0) {
+            stopAudio();
+            currentSentenceIdx--;
+            showAnswer = false;
+            renderWorkspace();
+          }
+        };
+      }
+
+      const nextBtn = host.querySelector("#btnDictNextSentence");
+      if (nextBtn) {
+        nextBtn.onclick = () => {
+          if (currentSentenceIdx < sentences.length - 1) {
+            stopAudio();
+            currentSentenceIdx++;
+            showAnswer = false;
+            renderWorkspace();
+          }
+        };
+      }
+
+      // Mobile Drawer Sidebar
+      const toggleSidebarBtn = host.querySelector("#btnDictToggleSidebar");
+      const closeSidebarBtn = host.querySelector("#btnDictCloseSidebar");
+      const sidebarPanel = host.querySelector("#dictSidebarPanel");
+      const scrim = host.querySelector("#dictSidebarScrim");
+
+      const openMobileDrawer = () => {
+        if (sidebarPanel) sidebarPanel.classList.add("is-open");
+        if (scrim) scrim.classList.add("is-open");
+      };
+
+      const closeMobileDrawer = () => {
+        if (sidebarPanel) sidebarPanel.classList.remove("is-open");
+        if (scrim) scrim.classList.remove("is-open");
+      };
+
+      if (toggleSidebarBtn) toggleSidebarBtn.onclick = openMobileDrawer;
+      if (closeSidebarBtn) closeSidebarBtn.onclick = closeMobileDrawer;
+      if (scrim) scrim.onclick = closeMobileDrawer;
+    };
+
+    renderWorkspace();
+  };
+
+  const modeDict = (mb, lesson) => {
+    openDictationWorkspace(lesson);
   };
 
   const modeCheck = (mb, lesson) => {
