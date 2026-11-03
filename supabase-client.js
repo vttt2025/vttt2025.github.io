@@ -219,7 +219,8 @@
               desc: row.description || "",
               icon: row.icon || "archive-jar",
               is_system: true,
-              words: Array.isArray(row.words) ? row.words : []
+              words: Array.isArray(row.words) ? row.words : [],
+              article: row.article || null
             };
           });
         } catch (_) {

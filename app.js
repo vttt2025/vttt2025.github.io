@@ -1851,80 +1851,55 @@ function renderUserArea() {
           <div class="user-dropdown-head">
             ${avatar}
             <div class="user-head-info">
-              <div style="display:flex;align-items:center;gap:6px">
-                <div class="user-fullname">${esc(user.name || "Học viên Rusi")}</div>
-                ${isPro ? `<span class="user-tier-badge tier-pro" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO MEMBER</span>` : `<span class="user-tier-badge tier-free">Free</span>`}
-              </div>
+              <div class="user-fullname">${esc(user.name || "Học viên Rusi")}</div>
               <div class="user-email">${esc(user.email || "")}</div>
             </div>
+            ${isPro ? `<span class="user-tier-badge tier-pro" style="display:inline-flex;align-items:center;gap:3px;font-size:0.68rem;padding:2px 7px;flex-shrink:0">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 11 }) : ""} PRO</span>` : `<span class="user-tier-badge tier-free" style="font-size:0.68rem;padding:2px 6px;flex-shrink:0">Free</span>`}
           </div>
 
-          <!-- CARD NÂNG CẤP HOẶC QUẢN LÝ PRO TRONG USER MENU -->
-          ${isPro ? `
-            <div class="user-pro-vip-card" id="btnUserMenuManagePro" title="Xem quyền lợi và quản lý gói PRO">
-              <div class="user-pro-vip-head">
-                <span class="user-pro-vip-badge" style="display:inline-flex;align-items:center;gap:5px">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""} PRO MEMBER · ${esc(proInfo ? proInfo.pkgTitle : "PRO VIP")}</span>
-                <span class="user-pro-vip-action">Quản lý →</span>
-              </div>
-              <div class="user-pro-vip-time">
-                ${proInfo && proInfo.isLifetime ? `${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""} Đặc quyền VIP Trọn Đời` : `${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Hạn dùng: ${esc((proInfo && proInfo.expiresFormatted) || "Đang kích hoạt")}`}
-              </div>
-            </div>
-          ` : `
-            <div class="user-pro-cta-card" id="btnUserMenuUpgrade" title="Nâng cấp tài khoản PRO ngay">
-              <div class="user-pro-cta-left">
-                <span class="user-pro-cta-icon">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 20 }) : ""}</span>
-                <div>
-                  <div class="user-pro-cta-title">Nâng cấp PRO VIP</div>
-                  <div class="user-pro-cta-desc">Mở khóa 100% đề thi TRKI & AI</div>
-                </div>
-              </div>
-              <span class="user-pro-cta-btn">Nâng cấp</span>
-            </div>
-          `}
-
-          <!-- PHẦN ĐIỂM XP VÀ CHUỖI STREAK HIỂN THỊ TRANG TRỌNG -->
-          <div class="user-stats-bar">
-            <div class="user-stat-card">
-              <span class="user-stat-icon">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""}</span>
-              <div>
-                <div class="user-stat-val" id="userMenuXp">${STORE.get("xp", 0)} XP</div>
-                <div class="user-stat-lbl">Kinh nghiệm</div>
-              </div>
-            </div>
-            <div class="user-stat-card">
-              <span class="user-stat-icon">${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 16 }) : ""}</span>
-              <div>
-                <div class="user-stat-val" id="userMenuStreak">${STORE.get("streak", 0)} ngày</div>
-                <div class="user-stat-lbl">Chuỗi Streak</div>
-              </div>
-            </div>
+          <!-- COMPACT STATS ROW -->
+          <div class="user-stats-bar-compact">
+            <span class="user-stat-pill">
+              ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 13 }) : ""}
+              <b>${STORE.get("xp", 0)} XP</b>
+            </span>
+            <span class="user-stat-pill">
+              ${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 13 }) : ""}
+              <b>${STORE.get("streak", 0)} ngày</b>
+            </span>
           </div>
 
           <div class="user-dropdown-divider"></div>
 
+          <!-- COMPACT ACTION ITEMS: KHÔNG TRÙNG LẶP -->
           <a class="user-dropdown-item" href="index.html#progress" role="menuitem">
-            <span>${window.RusiIcons ? RusiIcons.get("layout-dashboard", { size: 18 }) : ""}</span>
-            <span>Tiến độ của tôi</span>
+            <span>${window.RusiIcons ? RusiIcons.get("layout-dashboard", { size: 16 }) : ""}</span>
+            <span>Tiến độ học tập</span>
           </a>
-          <a class="user-dropdown-item" href="vocabulary.html" role="menuitem">
-            <span>${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 18 }) : ""}</span>
-            <span>Lọ từ vựng & Flashcard</span>
-          </a>
-          <a class="user-dropdown-item" href="mock-test.html" role="menuitem">
-            <span>${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 18 }) : ""}</span>
-            <span>Luyện thi TRKI</span>
-          </a>
+
+          ${!isPro ? `
+            <a class="user-dropdown-item user-dropdown-upgrade" id="btnUserMenuUpgrade" href="upgrade.html" role="menuitem" style="color:var(--primary);font-weight:700">
+              <span>${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 16 }) : ""}</span>
+              <span>Nâng cấp PRO</span>
+            </a>
+          ` : `
+            <div class="user-dropdown-item user-dropdown-manage-pro" id="btnUserMenuManagePro" role="menuitem" style="cursor:pointer;color:#059669;font-weight:700">
+              <span>${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 16 }) : ""}</span>
+              <span>Quản lý gói PRO</span>
+            </div>
+          `}
+
           ${isAdmin ? `
-          <a class="user-dropdown-item" href="admin.html" role="menuitem">
-            <span>${window.RusiIcons ? RusiIcons.get("settings-gear", { size: 18 }) : ""}</span>
-            <span>Quản trị hệ thống</span>
-          </a>` : ""}
+            <a class="user-dropdown-item" href="admin.html" role="menuitem">
+              <span>${window.RusiIcons ? RusiIcons.get("settings-gear", { size: 16 }) : ""}</span>
+              <span>Quản trị hệ thống</span>
+            </a>
+          ` : ""}
 
           <div class="user-dropdown-divider"></div>
 
           <button class="user-dropdown-item user-dropdown-signout" id="btnSignOut" type="button" role="menuitem">
-            <span>${window.RusiIcons ? RusiIcons.get("log-out", { size: 18 }) : ""}</span>
+            <span>${window.RusiIcons ? RusiIcons.get("log-out", { size: 16 }) : ""}</span>
             <span>Đăng xuất</span>
           </button>
         </div>

@@ -110,11 +110,22 @@
 
 * Trả về bảng phân tích độ khớp âm vị kèm điểm số chi tiết từng từ trong câu.
 
-### [Module 5] Luyện Thi TRKI (ТРКИ Exam Simulation)
-* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `award-badge` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 15 câu`), không hiển thị mô tả, phía dưới nút CTA `[Vào phòng thi →]`.
+### [Module 5] Luyện Thi TRKI (ТРКИ Exam Simulation & Dual-Track CBT)
+* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `award-badge` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 34 câu`), không hiển thị mô tả, phía dưới 2 nút CTA: `[Chọn phần luyện ▾]` và `[Vào thi Full →]`.
 * **Cấp độ chuẩn**: ТЭУ (A1), ТБУ (A2), ТРКИ-1 (B1), ТРКИ-2 (B2), ТРКИ-3 (C1), ТРКИ-4 (C2).
-* **Phòng thi mô phỏng an toàn**: Đồng hồ Timestamp chống reload: Thời gian thi được tính theo mốc chốt:`endTime = Date.now() + durationMinutes * 60 * 1000`; lưu trong `sessionStorage`. Khi học viên tải lại trang (reload), đồng hồ tiếp tục đếm chính xác dựa trên chênh lệch thời gian thực, không bị reset thời gian làm bài. Tự động thu bài: Khi đồng hồ chạm mốc `00:00`, toàn bộ bài làm lập tức được khóa và tự động nộp bài. Giám sát gian lận chuyển tab (`visibilitychange`): Bắt sự kiện người dùng rời khỏi tab bài thi, hiển thị cảnh báo vi phạm; nếu chuyển tab quá 3 lần, hệ thống tự động khóa bài và chấm dứt phiên thi.
-* **Báo cáo kết quả**: Dự đoán tỷ lệ đỗ chứng chỉ thực tế theo thang điểm chuẩn TRKI ($\ge 66\%$ đạt yêu cầu). Bảng phân tích ngữ pháp, từ vựng chi tiết từng câu sau khi nộp bài. Thưởng +30 XP cho mỗi bài thi thử hoàn thành.
+* **Mô hình Luyện thi 2 Luồng (Dual-Track Assessment)**:
+  1. *Luyện theo Phân môn (Субтесты)*: Hỗ trợ modal popup chọn riêng từng phân môn (1. Leksika & Grammatika, 2. Chtenie, 3. Audirovanie) hoặc liên kết sang Viết (`writing.html`) và Nói (`speaking.html`).
+  2. *Thi mô phỏng Tổng hợp (Full Simulation)*: Đề thi tích hợp các phân môn trắc nghiệm trên cùng một phiên làm bài.
+* **Phòng thi trực tuyến chia đôi màn hình (Split-Pane CBT Workspace)**:
+  - *Субтест 2: Đọc hiểu (Чтение)*: Chia đôi màn hình độc lập (Cột trái neo đoạn văn bản đọc hiểu tiếng Nga kèm công cụ A-/A+ chỉnh cỡ chữ và nút toggle bản dịch; Cột phải cuộn câu hỏi và lựa chọn đáp án).
+  - *Субтест 3: Nghe hiểu (Аудирование)*: Cột trái neo trình phát audio ru-RU; Cột phải hiển thị câu hỏi và đáp án.
+  - *Nút Đặt cờ xem lại (⚑ Flag Question)*: Tích hợp trên từng câu hỏi, lưu trạng thái vào `sessionStorage`.
+  - *Bảng câu hỏi (Question Palette)*: Hiển thị 3 trạng thái trực quan: Đã làm (xanh), Đặt cờ (vàng/cam), Chưa làm (trắng).
+* **Phòng thi mô phỏng an toàn**: Đồng hồ Timestamp chống reload (lưu `endTime` vào `sessionStorage`). Tự động thu bài khi hết giờ. Giám sát gian lận chuyển tab (`visibilitychange`, cảnh báo vi phạm tối đa 3 lần).
+* **Báo cáo kết quả chuẩn chứng chỉ Nga (Official TORFL Report)**: 
+  - Đánh giá phân môn theo mốc chuẩn quốc gia Liên bang Nga: Từng phân môn phải đạt $\ge 66\%$ mới công nhận ĐẠT (**СДАНО**).
+  - Quy chế thi lại 1 kỹ năng (Правило одной пересдачи): Nếu đạt chuẩn các phân môn và có đúng 1 phân môn từ $60\% - 65\%$, hệ thống tự động cấp trạng thái Bảo lưu và thông báo đủ điều kiện thi lại riêng môn đó.
+  - Thẻ chứng chỉ điện tử thiết kế Baltic Navy trang trọng kèm bảng phân tích ngữ pháp, từ vựng chi tiết từng câu. Thưởng +30 XP cho mỗi bài thi thử hoàn thành.
 
 ### [Module 6] BLOG (Cẩm nang du học, KTX, Đời sống Nga)
 * **Kênh SEO tự nhiên**: Hệ thống bài viết chuyên sâu: Trải nghiệm ký túc xá, review các trường đại học hàng đầu (MGU, HSE, RUDN, KFU...), hướng dẫn thủ tục thị thực visa, đăng ký tạm trú MVD, mở thẻ ngân hàng Mir/Sberbank, cẩm nang săn học bổng Hiệp định.

@@ -14,77 +14,42 @@ function el(sel) {
   return document.querySelector(sel);
 }
 
-function renderDauPagination(containerEl, currentPage, totalPages, onPageChange) {
+function renderDauPagination(containerEl, currentPage, totalPages, onPageChange, options) {
   if (!containerEl) return;
-  if (!totalPages || totalPages <= 1) {
+  if (!totalPages || totalPages <= 1 || currentPage >= totalPages) {
     containerEl.innerHTML = "";
     containerEl.style.display = "none";
     return;
   }
   containerEl.style.display = "flex";
 
-  const pages = [];
-  if (totalPages <= 7) {
-    for (let i = 1; i <= totalPages; i++) pages.push(i);
-  } else {
-    pages.push(1);
-    if (currentPage > 3) pages.push("...");
-    const start = Math.max(2, currentPage - 1);
-    const end = Math.min(totalPages - 1, currentPage + 1);
-    for (let i = start; i <= end; i++) pages.push(i);
-    if (currentPage < totalPages - 2) pages.push("...");
-    pages.push(totalPages);
+  const remaining = (options && typeof options.remainingCount === "number")
+    ? options.remainingCount
+    : (typeof options === "number" ? options : Math.max(0, (totalPages - currentPage) * 6));
+
+  if (remaining <= 0) {
+    containerEl.innerHTML = "";
+    containerEl.style.display = "none";
+    return;
   }
 
-  let html = `
-    <button type="button" class="dau-page-btn dau-page-prev" ${currentPage <= 1 ? "disabled" : ""} aria-label="Trang trước">
-      ‹
+  const unit = (options && options.unit) ? options.unit : "bài";
+  const downIcon = window.RusiIcons ? RusiIcons.get("chevron-down", { size: 18 }) : "▾";
+
+  containerEl.innerHTML = `
+    <button type="button" class="dau-load-more-btn" aria-label="Xem thêm ${remaining} ${unit}">
+      ${downIcon}
+      <span>Xem thêm (${remaining} ${unit})</span>
     </button>
   `;
 
-  pages.forEach(p => {
-    if (p === "...") {
-      html += `<span class="dau-page-ellipsis">…</span>`;
-    } else {
-      html += `
-        <button type="button" class="dau-page-btn dau-page-num ${p === currentPage ? "active" : ""}" data-page="${p}">
-          ${p}
-        </button>
-      `;
-    }
-  });
-
-  html += `
-    <button type="button" class="dau-page-btn dau-page-next" ${currentPage >= totalPages ? "disabled" : ""} aria-label="Trang sau">
-      ›
-    </button>
-  `;
-
-  containerEl.innerHTML = html;
-
-  const prevBtn = containerEl.querySelector(".dau-page-prev");
-  if (prevBtn) {
-    prevBtn.onclick = (e) => {
-      e.preventDefault();
-      if (currentPage > 1) onPageChange(currentPage - 1);
-    };
-  }
-
-  const nextBtn = containerEl.querySelector(".dau-page-next");
-  if (nextBtn) {
-    nextBtn.onclick = (e) => {
-      e.preventDefault();
-      if (currentPage < totalPages) onPageChange(currentPage + 1);
-    };
-  }
-
-  containerEl.querySelectorAll(".dau-page-num").forEach(btn => {
+  const btn = containerEl.querySelector(".dau-load-more-btn");
+  if (btn) {
     btn.onclick = (e) => {
       e.preventDefault();
-      const page = parseInt(btn.dataset.page, 10);
-      if (page && page !== currentPage) onPageChange(page);
+      onPageChange(currentPage + 1);
     };
-  });
+  }
 }
 
 function lessonCardHtml(lesson, kindLabel) {
@@ -1954,11 +1919,22 @@ function initVocabPage() {
     const localJars = typeof VOCAB_JARS !== "undefined" ? VOCAB_JARS : [];
     let baseJars = localJars;
     if (cloudJars && cloudJars.length) {
-      const cloudMap = new Map();
-      cloudJars.forEach(j => cloudMap.set(j.code || j.id, j));
-      const merged = [...cloudJars];
+      const localMap = new Map();
+      localJars.forEach(j => localMap.set(j.code || j.id, j));
+      const merged = cloudJars.map(cj => {
+        const lj = localMap.get(cj.code || cj.id);
+        if (lj) {
+          if (!cj.code && lj.code) cj.code = lj.code;
+          if (!cj.article && lj.article) cj.article = lj.article;
+          if ((!cj.words || cj.words.length < (lj.words || []).length) && lj.words) {
+            cj.words = lj.words;
+            cj.word_count = lj.words.length;
+          }
+        }
+        return cj;
+      });
       localJars.forEach(j => {
-        if (!cloudMap.has(j.code || j.id)) merged.push(j);
+        if (!cloudJars.some(cj => (cj.code || cj.id) === (j.code || j.id))) merged.push(j);
       });
       baseJars = merged;
     }
@@ -1966,6 +1942,7 @@ function initVocabPage() {
     const systemJars = baseJars.filter(j => j.is_system !== false && !String(j.id).startsWith("custom-"));
     const jars = systemJars.map(j => ({
       id: j.id,
+      code: j.code || j.id,
       kind: "jar",
       level: j.level || "A1",
       levelName: j.levelName || (j.level === "B2" ? "Trung cấp cao B2" : j.level === "B1" ? "Trung cấp B1" : j.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
@@ -2018,8 +1995,8 @@ function initVocabPage() {
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
 
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+    const pageItems = filtered.slice(0, currentPage * PAGE_SIZE);
+    const remainingCount = Math.max(0, filtered.length - pageItems.length);
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
@@ -2034,7 +2011,7 @@ function initVocabPage() {
         const isDone = Progress.doneList("vocabDone").includes(item.id);
         const isPro = Boolean(item.is_pro_only);
         const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
-        const indexStr = String((currentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, "0");
+        const indexStr = String(idx + 1).padStart(2, "0");
         const wordsCount = item.wordsCount || (item.words ? item.words.length : 0);
         const lessonsCount = Math.ceil(wordsCount / 10) || 1;
         const topicDesc = item.desc || `${wordsCount} từ vựng cốt lõi · ${lessonsCount} bài học`;
@@ -2134,9 +2111,7 @@ function initVocabPage() {
     renderDauPagination(el("#vocabPagination"), currentPage, totalPages, (newPage) => {
       currentPage = newPage;
       renderVocabCards();
-      const topEl = el("#vocabSection") || el("#jarsShelfHost");
-      if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    }, { remainingCount, unit: "bài" });
 
     renderVocabSidebar();
   };
@@ -2777,7 +2752,7 @@ function initVocabPage() {
 
 const showTopicArticle = (jarId) => {
     const allJars = getVocabJars();
-    const item = allJars.find(j => j.id === jarId);
+    const item = allJars.find(j => j.id === jarId || j.code === jarId || (j.raw && (j.raw.code === jarId || j.raw.id === jarId)));
     if (!item) return;
     const jar = item.raw || item;
 
@@ -2801,7 +2776,7 @@ const showTopicArticle = (jarId) => {
 
     // Lấy nội dung bài học chuyên sâu
     const articlesMap = (typeof TOPIC_ARTICLES !== "undefined") ? TOPIC_ARTICLES : {};
-    const customArticle = jar.article || articlesMap[jar.id] || null;
+    const customArticle = jar.article || (jar.code && articlesMap[jar.code]) || (item.code && articlesMap[item.code]) || articlesMap[jar.id] || null;
 
     const words = jar.words || [];
     const levelBadgeClass = jar.level === "A2" ? "dau-badge-a2" : jar.level === "B1" ? "dau-badge-b1" : jar.level === "B2" ? "dau-badge-b2" : "dau-badge-a1";
@@ -2864,6 +2839,64 @@ const showTopicArticle = (jarId) => {
             <p>Vận dụng các cụm động từ đi kèm trong các câu ví dụ thực tế giúp hình thành phản xạ ngôn ngữ tự nhiên.</p>
           </div>
         </div>
+      `;
+    }
+
+    // Chuỗi hành động & Mẫu câu ngữ cảnh (Action Chains Table từ file Excel)
+    let actionChainsHtml = "";
+    if (customArticle && customArticle.actionChains && customArticle.actionChains.length) {
+      actionChainsHtml = `
+        <!-- PHẦN: CHUỖI HÀNH ĐỘNG & MẪU CÂU NGỮ CẢNH -->
+        <section class="topic-article-section">
+          <h2 class="topic-article-sec-title">
+            <span class="sec-badge">II</span> Chuỗi hành động &amp; Mẫu câu ngữ cảnh
+          </h2>
+          <div class="topic-action-chains-wrapper">
+            ${customArticle.actionChains.map((group, gIdx) => `
+              <div class="topic-action-chain-group" style="margin-bottom:24px">
+                <h3 style="font-size:1.05rem;font-weight:700;color:var(--primary);margin:0 0 10px 0;display:flex;align-items:center;gap:6px">
+                  ${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 16 }) : "✦"} ${esc(group.subTopic || ("Nhóm " + (gIdx + 1)))}
+                </h3>
+                <div class="topic-vocab-table-wrapper" style="overflow-x:auto">
+                  <table class="topic-vocab-table">
+                    <thead>
+                      <tr>
+                        <th style="width:40px;text-align:center">#</th>
+                        <th>Đối tượng / Từ vựng</th>
+                        <th>Hành động / Công dụng</th>
+                        <th>Ngữ cảnh / Địa điểm</th>
+                        <th>Ví dụ thực tế (Nga — Việt)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${group.items.map((it, idx) => `
+                        <tr>
+                          <td style="text-align:center;color:#94a3b8;font-weight:700">${idx + 1}</td>
+                          <td style="min-width:130px">
+                            <div class="topic-word-ru">${esc(it.target || "—")}</div>
+                            ${it.target_vi ? `<div class="topic-word-vi" style="font-size:0.82rem;color:#475569">${esc(it.target_vi)}</div>` : ""}
+                          </td>
+                          <td style="min-width:140px">
+                            <div style="font-weight:600;color:#0f1f38">${esc(it.action || "—")}</div>
+                            ${it.action_vi ? `<div style="font-size:0.82rem;color:#64748b">${esc(it.action_vi)}</div>` : ""}
+                          </td>
+                          <td style="min-width:140px">
+                            <div style="color:#1e293b">${esc(it.place || "—")}</div>
+                            ${it.place_vi ? `<div style="font-size:0.82rem;color:#64748b">${esc(it.place_vi)}</div>` : ""}
+                          </td>
+                          <td style="min-width:240px">
+                            ${it.ex ? `<div class="topic-word-ex" style="font-weight:600;color:var(--primary);margin-bottom:2px">«${esc(it.ex)}»</div>` : ""}
+                            ${it.ex_vi ? `<div style="font-size:0.82rem;color:#475569">${esc(it.ex_vi)}</div>` : ""}
+                          </td>
+                        </tr>
+                      `).join("")}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </section>
       `;
     }
 
@@ -2965,20 +2998,22 @@ const showTopicArticle = (jarId) => {
           </div>
         </section>
 
-        <!-- PHẦN 2: HỘI THOẠI MẪU & CÂU GIAO TIẾP THEN CHỐT -->
+        ${actionChainsHtml}
+
+        <!-- PHẦN HỘI THOẠI MẪU & CÂU GIAO TIẾP THEN CHỐT -->
         <section class="topic-article-section">
           <h2 class="topic-article-sec-title">
-            <span class="sec-badge">II</span> Hội thoại mẫu &amp; Mẫu câu then chốt
+            <span class="sec-badge">${actionChainsHtml ? "III" : "II"}</span> Hội thoại mẫu &amp; Mẫu câu then chốt
           </h2>
           <div class="topic-dialogue-box">
             ${dialoguesHtml}
           </div>
         </section>
 
-        <!-- PHẦN 3: ĐIỂM NGỮ PHÁP & LƯU Ý VĂN HÓA -->
+        <!-- PHẦN ĐIỂM NGỮ PHÁP & LƯU Ý VĂN HÓA -->
         <section class="topic-article-section">
           <h2 class="topic-article-sec-title">
-            <span class="sec-badge">III</span> Điểm ngữ pháp &amp; Bí kíp sinh tồn
+            <span class="sec-badge">${actionChainsHtml ? "IV" : "III"}</span> Điểm ngữ pháp &amp; Bí kíp sinh tồn
           </h2>
           ${grammarHtml}
           ${customArticle && customArticle.culturalTip ? `
@@ -2988,10 +3023,10 @@ const showTopicArticle = (jarId) => {
           ` : ''}
         </section>
 
-        <!-- PHẦN 4: BẢNG TỪ VỰNG TRỌNG TÂM -->
+        <!-- PHẦN BẢNG TỪ VỰNG TRỌNG TÂM -->
         <section class="topic-article-section">
           <h2 class="topic-article-sec-title">
-            <span class="sec-badge">IV</span> Bảng từ vựng trọng tâm (${words.length} từ)
+            <span class="sec-badge">${actionChainsHtml ? "V" : "IV"}</span> Bảng từ vựng trọng tâm (${words.length} từ)
           </h2>
           <div class="topic-vocab-table-wrapper">
             <table class="topic-vocab-table">
@@ -3080,8 +3115,11 @@ const showTopicArticle = (jarId) => {
       const cloudMap = new Map();
       cloudJars.forEach(j => {
         const local = localJars.find(lj => lj.id === j.id || lj.code === j.code);
-        const words = (j.words && j.words.length > 0) ? j.words : (local && local.words ? local.words : []);
-        cloudMap.set(j.code || j.id, { ...j, words });
+        const words = (local && local.words && (!j.words || j.words.length < local.words.length))
+          ? local.words
+          : (j.words && j.words.length > 0 ? j.words : (local && local.words ? local.words : []));
+        const article = j.article || (local ? local.article : null);
+        cloudMap.set(j.code || j.id, { ...j, code: j.code || (local ? local.code : j.id), words, article });
       });
       const merged = Array.from(cloudMap.values());
       localJars.forEach(j => {
@@ -3418,7 +3456,7 @@ function initListeningPage() {
     cafe: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80",
     campus: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=800&q=80",
     metro: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
-    interview: "https://images.unsplash.com/photo-1517976487507-5b3b4b45f44e?auto=format&fit=crop&w=800&q=80"
+    interview: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"
   };
   const DEFAULT_LISTENING_COVER = "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80";
 
@@ -3428,6 +3466,7 @@ function initListeningPage() {
   let showSub = true;
   let currentLesson = null;
   let cloudListening = null;
+  const WAVE_BARS = [24, 38, 55, 72, 60, 42, 30, 48, 68, 85, 92, 75, 52, 35, 58, 80, 88, 70, 45, 62, 78, 65, 40, 56, 74, 82, 64, 45, 32, 50, 40, 26];
 
   const icon = (name, size) => window.RusiIcons ? RusiIcons.get(name, { size }) : "";
   const lessonImage = (l) => l.image || l.image_url || LESSON_COVERS[l.category] || DEFAULT_LISTENING_COVER;
@@ -3506,34 +3545,68 @@ function initListeningPage() {
       return;
     }
 
-    gridHost.innerHTML = items.map((l, index) => {
+    gridHost.innerHTML = items.map((l) => {
       const isDone = currentMode === "comprehension"
-        ? (Progress.doneList("listenDone").includes(l.id + "_check") || Progress.doneList("listenDone").includes(l.id + "_video"))
+        ? (Progress.doneList("listenDone").includes(l.id + "_comp") || Progress.doneList("listenDone").includes(l.id + "_check") || Progress.doneList("listenDone").includes(l.id + "_video"))
         : (Array.isArray(l.dictation) && l.dictation.length > 0 && l.dictation.every((_, i) => Progress.doneList("listenDone").includes(l.id + "_dict_" + i)));
       const isPro = l.is_pro_only || l.level === "B1" || l.level === "B2";
+      const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
       const qCount = (l.questions && l.questions.length) ? l.questions.length : (l.lines && l.lines.length) ? l.lines.length : 4;
       const dictCount = (l.dictation && l.dictation.length) || 0;
       const countLabel = currentMode === "comprehension" ? `${qCount} câu hỏi` : `${dictCount} câu chính tả`;
       const actionLabel = isDone ? "Đã hoàn thành" : (currentMode === "comprehension" ? "Vào luyện nghe hiểu" : "Vào chép chính tả");
-      const indexStr = String(index + 1).padStart(2, "0");
+
+      const getListeningIconKey = (item) => {
+        const cat = ((item.category || "") + " " + (item.id || "")).toLowerCase();
+        if (cat.includes("airport") || cat.includes("plane")) return "plane";
+        if (cat.includes("cafe") || cat.includes("coffee")) return "coffee";
+        if (cat.includes("metro") || cat.includes("train")) return "train";
+        if (cat.includes("city") || cat.includes("hotel")) return "building-2";
+        if (cat.includes("interview") || cat.includes("work") || cat.includes("job")) return "briefcase";
+        if (cat.includes("weather")) return "sun";
+        if (cat.includes("shopping") || cat.includes("shop")) return "shopping-cart";
+        if (cat.includes("restaurant") || cat.includes("food")) return "utensils";
+        if (item.icon && window.RusiIcons && RusiIcons.has && RusiIcons.has(item.icon)) return item.icon;
+        return currentMode === "dictation" ? "edit-3" : "headphones";
+      };
+
+      const iconKey = getListeningIconKey(l);
+      const iconSvg = window.RusiIcons ? RusiIcons.get(iconKey, { size: 24 }) : icon("headphones", 24);
 
       return `
-        <article class="writing-topic-card listening-topic-card" data-listen-id="${esc(l.id)}" tabindex="0">
-          <div class="writing-topic-cover listening-topic-cover">
-            <img src="${esc(lessonImage(l))}" alt="${esc(l.title)}" loading="lazy" />
-            <span class="writing-topic-number">${indexStr}</span>
-            ${isPro ? `<span class="topic-status topic-status-pro">PRO</span>` : isDone ? `<span class="topic-status topic-status-completed">${icon("check", 12)} Hoàn thành</span>` : ""}
-          </div>
-          <div class="writing-topic-body listening-topic-body">
-            <div class="writing-topic-meta listening-topic-meta">
-              <span>${l.level}</span>
-              <span>${countLabel}</span>
+        <!-- GIAO DIỆN THẺ TỐI GIẢN CHUẨN MỚI .dau-card-compact (Đồng bộ từ vựng, dùng 100% SVG RusiIcons) -->
+        <article class="dau-card dau-card-compact listening-topic-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-listen-id="${esc(l.id)}" tabindex="0">
+          <div class="dau-card-header">
+            <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
+              ${iconSvg}
             </div>
-            <h3 title="${esc(l.title)} · ${esc(l.vi || "")}">${esc(l.title)}</h3>
-            <p class="listening-card-vi">${esc(l.vi || l.categoryName || "")}</p>
-            <div class="writing-topic-progress listening-topic-progress">
-              <span>${actionLabel}</span>
-              <span>${icon("arrow-right", 16)}</span>
+            <div class="dau-card-header-main">
+              <div class="dau-card-title-row">
+                <h3 class="dau-card-ru" title="${esc(l.title)} · ${esc(l.vi || "")}">${esc(l.title)}</h3>
+                ${isDone ? `
+                  <span class="topic-status topic-status-completed" style="flex-shrink:0">
+                    ${icon("check", 12)} Hoàn thành
+                  </span>
+                ` : isPro ? `
+                  <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
+                ` : ""}
+              </div>
+              <div class="dau-card-subinfo">
+                <span>${l.level}</span>
+                <span class="dau-card-sep">•</span>
+                <span class="dau-card-count">${countLabel}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
+            <div class="topic-footer-actions">
+              <button type="button" class="btn-listen-action topic-text-btn" data-listen-id="${esc(l.id)}" title="${actionLabel}">
+                ${currentMode === "dictation" ? icon("edit-3", 14) : icon("headphones", 14)} ${actionLabel}
+              </button>
+              <button type="button" class="topic-circle-btn" data-listen-id="${esc(l.id)}" title="${actionLabel}" aria-label="${actionLabel}">
+                ${isPro && !isUnlocked ? (icon("lock-pro", 16) || icon("lock", 16)) : icon("arrow-right", 16)}
+              </button>
             </div>
           </div>
         </article>
@@ -3555,7 +3628,7 @@ function initListeningPage() {
       if (currentMode === "dictation") {
         openDictationWorkspace(lesson);
       } else {
-        openListeningWorkspace(lesson, "video");
+        openComprehensionWorkspace(lesson);
       }
     };
 
@@ -3566,6 +3639,13 @@ function initListeningPage() {
           event.preventDefault();
           openLesson(card);
         }
+      };
+    });
+    gridHost.querySelectorAll(".btn-listen-action, .topic-circle-btn").forEach((btn) => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const card = btn.closest(".listening-topic-card");
+        if (card) openLesson(card);
       };
     });
   };
@@ -4725,6 +4805,597 @@ function initListeningPage() {
     return [{ ru: trimmed.split(/\s+/)[0] || "слово", vi: "Từ trong câu", pos: "Từ vựng", stress: trimmed.split(/\s+/)[0] || "слово" }];
   };
 
+  /* =====================================================================
+   * KHÔNG GIAN LUYỆN NGHE HIỂU (COMPREHENSION WORKSPACE)
+   * Bố cục 3/7: 3 phần menu câu hỏi bên trái, 7 phần phát audio & trắc nghiệm
+   * ===================================================================== */
+  const openComprehensionWorkspace = (lesson) => {
+    currentLesson = lesson;
+    document.body.classList.add("in-workspace");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+
+    const questions = (Array.isArray(lesson.questions) && lesson.questions.length > 0)
+      ? lesson.questions
+      : [
+          {
+            q: "Nội dung chính của đoạn hội thoại là gì?",
+            options: ["Chào hỏi và làm quen", "Hỏi đường và đi lại", "Mua sắm trong cửa hàng", "Ở sân bay làm thủ tục"],
+            a: 0,
+            exp: "Dựa vào các câu chào hỏi và giới thiệu của nhân vật."
+          }
+        ];
+
+    const lines = Array.isArray(lesson.lines) ? lesson.lines : [];
+
+    let currentQIdx = 0;
+    const userAnswers = {};      // qIdx -> selected option index
+    const checkedQuestions = {}; // qIdx -> boolean (đã chấm đáp án chưa)
+    let isPlaying = false;
+    let currentSpeed = 1.0;
+    let currentLineIdx = -1;
+    let playTimeout = null;
+    let showTranscript = false;
+    let isFinished = false;
+
+    // Helper kiểm tra câu đã trả lời / đúng / sai
+    const isAnswered = (idx) => userAnswers[idx] !== undefined;
+    const isChecked = (idx) => !!checkedQuestions[idx];
+    const isCorrect = (idx) => isChecked(idx) && userAnswers[idx] === questions[idx].a;
+
+    const updatePlaybackUI = () => {
+      const playerCard = host.querySelector("#compPlayerCard");
+      if (playerCard) playerCard.classList.toggle("is-playing", isPlaying);
+
+      const playBtn = host.querySelector("#btnCompPlay");
+      if (playBtn) {
+        playBtn.innerHTML = isPlaying ? icon("pause-control", 24) : icon("play-control", 24);
+        playBtn.title = isPlaying ? "Tạm dừng" : "Phát bài nghe";
+      }
+
+      host.querySelectorAll(".lis-comp-dialogue-line").forEach(lineEl => {
+        const lineIdx = Number(lineEl.dataset.lineIdx);
+        lineEl.classList.toggle("is-active", lineIdx === currentLineIdx);
+      });
+    };
+
+    const pauseAudio = () => {
+      isPlaying = false;
+      if (playTimeout) {
+        clearTimeout(playTimeout);
+        playTimeout = null;
+      }
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        try { window.speechSynthesis.cancel(); } catch (_) {}
+      }
+      updatePlaybackUI();
+    };
+
+    const stopAudio = () => {
+      isPlaying = false;
+      currentLineIdx = -1;
+      if (playTimeout) {
+        clearTimeout(playTimeout);
+        playTimeout = null;
+      }
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        try { window.speechSynthesis.cancel(); } catch (_) {}
+      }
+      updatePlaybackUI();
+    };
+
+    const speakLineSeq = (idx) => {
+      if (!isPlaying || idx >= lines.length) {
+        stopAudio();
+        return;
+      }
+      currentLineIdx = idx;
+      updatePlaybackUI();
+
+      const line = lines[idx];
+      const textToSpeak = line ? (line.ru || "") : "";
+      if (!textToSpeak) {
+        speakLineSeq(idx + 1);
+        return;
+      }
+
+      if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
+        try { window.speechSynthesis.cancel(); } catch (_) {}
+        const u = new SpeechSynthesisUtterance(textToSpeak);
+        u.lang = "ru-RU";
+        u.rate = currentSpeed;
+        if (typeof pickVoice === "function") {
+          const v = pickVoice("ru-RU");
+          if (v) u.voice = v;
+        }
+        u.onend = () => {
+          if (isPlaying) {
+            playTimeout = setTimeout(() => {
+              if (isPlaying) {
+                speakLineSeq(idx + 1);
+              }
+            }, 550);
+          }
+        };
+        u.onerror = () => {
+          if (isPlaying) {
+            playTimeout = setTimeout(() => {
+              if (isPlaying) speakLineSeq(idx + 1);
+            }, 600);
+          }
+        };
+        window.speechSynthesis.speak(u);
+      } else {
+        const dur = Math.max(1600, (textToSpeak.length * 82) / currentSpeed);
+        playTimeout = setTimeout(() => {
+          if (isPlaying) {
+            speakLineSeq(idx + 1);
+          }
+        }, dur + 400);
+      }
+    };
+
+    const renderWorkspace = () => {
+      const q = questions[currentQIdx] || questions[0];
+      const answeredCount = Object.keys(userAnswers).length;
+      const checkedCount = Object.keys(checkedQuestions).length;
+      const correctCount = Object.keys(checkedQuestions).filter(i => isCorrect(Number(i))).length;
+      const pctDone = Math.round((answeredCount / questions.length) * 100);
+
+      host.innerHTML = `
+        <div class="lis-dict-workspace-shell lis-comp-workspace-shell">
+          <!-- TOPBAR STICKY -->
+          <div class="lis-dict-topbar">
+            <button type="button" class="lis-dict-topbar-back" id="btnCompBack" title="Quay lại danh sách bài nghe" aria-label="Quay lại">
+              ${icon("arrow-left", 20)}
+            </button>
+            <div class="lis-dict-topbar-heading">
+              <span class="lis-dict-topbar-subtitle">Nghe hiểu trắc nghiệm · ${esc(lesson.level || "A1")}</span>
+              <h1 class="lis-dict-topbar-title">${esc(lesson.title)}</h1>
+            </div>
+            <button type="button" class="lis-dict-topbar-menu-btn" id="btnCompToggleSidebar" aria-label="Danh sách câu hỏi" title="Xem danh sách câu hỏi">
+              ${icon("list", 20)}
+              <span class="lis-dict-menu-badge">${questions.length}</span>
+            </button>
+          </div>
+
+          <!-- BỐ CỤC LƯỚI 3/7: 3 PHẦN MENU BÊN TRÁI, 7 PHẦN LÀM BÀI BÊN PHẢI -->
+          <div class="lis-dict-workspace-grid">
+            <!-- CỘT TRÁI (3 PHẦN): DANH SÁCH CÁC CÂU HỎI TRẮC NGHIỆM -->
+            <aside class="lis-dict-sidebar-panel" id="compSidebarPanel">
+              <div class="lis-dict-sidebar-header">
+                <div>
+                  <span class="lis-dict-sidebar-eyebrow">CHỦ ĐỀ NGHE HIỂU</span>
+                  <h3 class="lis-dict-sidebar-title">${esc(lesson.title)}</h3>
+                </div>
+                <button type="button" class="lis-dict-sidebar-close-btn" id="btnCompCloseSidebar" aria-label="Đóng danh sách">
+                  ${icon("x", 18)}
+                </button>
+              </div>
+
+              <div class="lis-dict-sidebar-progress-box">
+                <div class="lis-dict-sidebar-progress-text">
+                  <span>Tiến độ trả lời</span>
+                  <strong>${answeredCount}/${questions.length} câu</strong>
+                </div>
+                <div class="lis-dict-progress-track">
+                  <div class="lis-dict-progress-fill" style="width: ${pctDone}%"></div>
+                </div>
+              </div>
+
+              <div class="lis-dict-sentence-list">
+                ${questions.map((item, i) => {
+                  const active = i === currentQIdx;
+                  const answered = isAnswered(i);
+                  const checked = isChecked(i);
+                  const correct = isCorrect(i);
+                  const num = String(i + 1).padStart(2, "0");
+                  let statusSnippet = "Chưa trả lời";
+                  let statusIcon = icon("arrow-right", 16);
+
+                  if (checked) {
+                    if (correct) {
+                      statusSnippet = "Chính xác ✓";
+                      statusIcon = icon("check-circle-correct", 17);
+                    } else {
+                      statusSnippet = "Chưa đúng ✕";
+                      statusIcon = icon("alert-triangle", 16);
+                    }
+                  } else if (answered) {
+                    statusSnippet = "Đã chọn đáp án";
+                    statusIcon = icon("edit-3", 16);
+                  }
+
+                  return `
+                    <button type="button" class="lis-dict-sentence-item ${active ? "is-active" : ""} ${checked ? (correct ? "is-done" : "is-wrong") : answered ? "is-selected" : ""}" data-q-idx="${i}">
+                      <span class="lis-dict-sentence-num">${num}</span>
+                      <div class="lis-dict-sentence-info">
+                        <strong class="lis-dict-sentence-label">Câu ${i + 1}</strong>
+                        <small class="lis-dict-sentence-snippet">${statusSnippet}</small>
+                      </div>
+                      <span class="lis-dict-sentence-status">
+                        ${statusIcon}
+                      </span>
+                    </button>
+                  `;
+                }).join("")}
+              </div>
+            </aside>
+
+            <!-- CỘT PHẢI (7 PHẦN): AUDIO PLAYER & KHUNG TRẮC NGHIỆM -->
+            <main class="lis-dict-main-panel">
+              <!-- 1. KHUNG PHÁT ÂM THANH (AUDIO PLAYER) -->
+              <section class="lis-dict-player-card ${isPlaying ? "is-playing" : ""}" id="compPlayerCard">
+                <div class="lis-dict-waveform-wrap" aria-label="Giao diện sóng âm phát âm thanh">
+                  ${WAVE_BARS.map(h => `<div class="lis-dict-wave-bar" style="height:${h}%"></div>`).join("")}
+                </div>
+
+                <div class="lis-dict-player-controls">
+                  <!-- Cụm trái: Phát lại từ đầu -->
+                  <div class="lis-dict-ctrl-left">
+                    <button type="button" class="lis-dict-btn-replay" id="btnCompReplay" title="Phát lại toàn bộ bài nghe từ đầu">
+                      ${icon("rotate-ccw", 16)} <span>Phát lại</span>
+                    </button>
+                  </div>
+
+                  <!-- Cụm giữa: Tua lùi, Play/Pause, Tua tới -->
+                  <div class="lis-dict-ctrl-center">
+                    <button type="button" class="lis-dict-btn-skip" id="btnCompSkipBack" title="Câu trước">
+                      ${icon("skip-back", 18)}
+                    </button>
+                    <button type="button" class="lis-dict-btn-play" id="btnCompPlay" title="${isPlaying ? "Tạm dừng" : "Phát bài nghe"}">
+                      ${isPlaying ? icon("pause-control", 24) : icon("play-control", 24)}
+                    </button>
+                    <button type="button" class="lis-dict-btn-skip" id="btnCompSkipFwd" title="Câu tiếp theo">
+                      ${icon("skip-forward", 18)}
+                    </button>
+                  </div>
+
+                  <!-- Cụm phải: Tốc độ phát & Bật lời thoại -->
+                  <div class="lis-dict-ctrl-right">
+                    <button type="button" class="lis-dict-btn-speed" id="btnCompSpeed" title="Thay đổi tốc độ phát">
+                      <span>${currentSpeed}x</span>
+                    </button>
+                    <button type="button" class="lis-dict-btn-speed" id="btnCompToggleTranscript" title="Xem hoặc ẩn lời thoại đoạn nghe">
+                      ${icon("languages", 16)} <span>${showTranscript ? "Ẩn lời thoại" : "Lời thoại"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- LỜI THOẠI HỘI THOẠI NGA - VIỆT (TÙY CHỌN ẨN/HIỆN) -->
+                ${showTranscript && lines.length ? `
+                  <div class="lis-comp-dialogue-box" id="compDialogueBox">
+                    <div style="font-size:0.8rem;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+                      ${icon("book-open-blog", 14)} Lời thoại bài nghe (Bấm vào câu để nghe riêng câu đó):
+                    </div>
+                    ${lines.map((ln, idx) => `
+                      <div class="lis-comp-dialogue-line ${idx === currentLineIdx ? "is-active" : ""}" data-line-idx="${idx}">
+                        <strong>${esc(ln.who || "Người nói")}:</strong>
+                        <span class="ru">${esc(ln.ru || "")}</span>
+                        <span class="line-vi">${esc(ln.vi || "")}</span>
+                      </div>
+                    `).join("")}
+                  </div>
+                ` : ""}
+              </section>
+
+              <!-- 2. KHUNG CÂU HỎI TRẮC NGHIỆM -->
+              <section class="lis-comp-quiz-card" id="compQuizCard">
+                <div class="lis-comp-quiz-header">
+                  <span class="lis-comp-q-badge">CÂU ${currentQIdx + 1} / ${questions.length}</span>
+                  <span class="lis-comp-q-status ${isChecked(currentQIdx) ? (isCorrect(currentQIdx) ? "is-correct" : "is-wrong") : ""}">
+                    ${isChecked(currentQIdx) ? (isCorrect(currentQIdx) ? "✓ Đã chấm: Chính xác" : "✕ Đã chấm: Chưa chính xác") : isAnswered(currentQIdx) ? "Đã chọn đáp án (chưa chấm)" : "Chưa trả lời"}
+                  </span>
+                </div>
+
+                <h3 class="lis-comp-question-title">${esc(q.q)}</h3>
+
+                <div class="lis-comp-options-list">
+                  ${q.options.map((opt, optIdx) => {
+                    const isSelected = userAnswers[currentQIdx] === optIdx;
+                    const checked = isChecked(currentQIdx);
+                    const isRightOption = optIdx === q.a;
+                    let optCls = "";
+                    if (checked) {
+                      if (isRightOption) optCls = "is-correct";
+                      else if (isSelected) optCls = "is-wrong";
+                    } else if (isSelected) {
+                      optCls = "is-selected";
+                    }
+
+                    return `
+                      <button type="button" class="lis-comp-option-btn ${optCls}" data-opt-idx="${optIdx}" ${checked ? "disabled" : ""}>
+                        <span class="lis-comp-option-letter">${["A", "B", "C", "D"][optIdx] || (optIdx + 1)}</span>
+                        <span class="lis-comp-option-text">${esc(opt)}</span>
+                        <span class="lis-comp-option-check">
+                          ${checked && isRightOption ? icon("check-circle-correct", 18) : checked && isSelected ? icon("alert-triangle", 18) : ""}
+                        </span>
+                      </button>
+                    `;
+                  }).join("")}
+                </div>
+
+                <!-- GIẢI THÍCH ĐÁP ÁN KHI ĐÃ CHẤM -->
+                ${isChecked(currentQIdx) ? `
+                  <div class="lis-comp-explanation ${isCorrect(currentQIdx) ? "is-pass" : "is-fail"}">
+                    <strong>${isCorrect(currentQIdx) ? "✓ Xuất sắc! " : "✕ Hãy chú ý: "}</strong>
+                    ${esc(q.exp || (isCorrect(currentQIdx) ? "Bạn đã nắm bắt rất chuẩn thông tin từ audio." : `Đáp án chính xác là: ${q.options[q.a]}.`))}
+                  </div>
+                ` : ""}
+
+                <!-- THANH THAO TÁC / ĐIỀU HƯỚNG CÂU HỎI -->
+                <div class="lis-comp-actions-bar">
+                  <button type="button" class="btn btn-outline btn-sm" id="btnCompPrevQ" ${currentQIdx === 0 ? "disabled" : ""}>
+                    ${icon("arrow-left", 16)} Câu trước
+                  </button>
+
+                  <div style="display:flex;gap:10px">
+                    ${!isChecked(currentQIdx) ? `
+                      <button type="button" class="btn btn-primary" id="btnCompCheckQ" ${userAnswers[currentQIdx] === undefined ? "disabled" : ""}>
+                        ${icon("check-circle-correct", 17)} Chấm đáp án
+                      </button>
+                    ` : (currentQIdx < questions.length - 1) ? `
+                      <button type="button" class="btn btn-primary" id="btnCompNextQ">
+                        Câu tiếp theo ${icon("arrow-right", 16)}
+                      </button>
+                    ` : `
+                      <button type="button" class="btn btn-primary" id="btnCompFinish">
+                        ${icon("trophy-reward", 17)} Xem tổng kết điểm
+                      </button>
+                    `}
+                  </div>
+
+                  ${currentQIdx < questions.length - 1 && !isChecked(currentQIdx) ? `
+                    <button type="button" class="btn btn-outline btn-sm" id="btnCompNextQDirect">
+                      Bỏ qua ${icon("arrow-right", 16)}
+                    </button>
+                  ` : `<span></span>`}
+                </div>
+              </section>
+
+              <!-- 3. BẢNG TỔNG KẾT KHI ĐÃ HOÀN THÀNH TOÀN BỘ CÂU HỎI -->
+              ${(isFinished || checkedCount === questions.length) ? `
+                <section class="lis-comp-result-card" style="padding:26px 28px;border-radius:20px;background:var(--surface);border:1.5px solid var(--border);box-shadow:0 6px 24px rgba(16,42,76,0.06);text-align:center">
+                  <div style="font-size:2.5rem;margin-bottom:10px">
+                    ${correctCount >= Math.ceil(questions.length * 0.7) ? "🎉" : "💪"}
+                  </div>
+                  <h3 style="font-size:1.4rem;font-weight:800;margin-bottom:8px">
+                    ${correctCount >= Math.ceil(questions.length * 0.7) ? "Xuất sắc! Bạn đã hoàn thành bài nghe hiểu" : "Cố lên! Bạn hãy luyện nghe lại để đạt điểm tối đa"}
+                  </h3>
+                  <p style="color:var(--muted);font-size:0.95rem;margin-bottom:18px">
+                    Kết quả của bạn: <b>${correctCount}/${questions.length} câu đúng</b> (${Math.round((correctCount / questions.length) * 100)}%)
+                  </p>
+                  <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+                    <button type="button" class="btn btn-outline" id="btnCompRetry">
+                      ${icon("rotate-ccw", 16)} Làm lại bài này
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnCompDoneBack">
+                      ${icon("check-circle-correct", 16)} Hoàn tất & Quay về
+                    </button>
+                  </div>
+                </section>
+              ` : ""}
+            </main>
+          </div>
+          <div class="lis-dict-sidebar-scrim" id="compSidebarScrim"></div>
+        </div>
+      `;
+
+      // BIND CÁC SỰ KIỆN TƯƠNG TÁC
+      // 1. Quay lại
+      const backBtn = host.querySelector("#btnCompBack");
+      if (backBtn) {
+        backBtn.onclick = () => {
+          stopAudio();
+          document.body.classList.remove("in-workspace");
+          renderHub();
+        };
+      }
+
+      // 2. Mobile Drawer Sidebar Toggle
+      const toggleSidebarBtn = host.querySelector("#btnCompToggleSidebar");
+      const closeSidebarBtn = host.querySelector("#btnCompCloseSidebar");
+      const sidebarPanel = host.querySelector("#compSidebarPanel");
+      const scrim = host.querySelector("#compSidebarScrim");
+
+      const openMobileDrawer = () => {
+        if (sidebarPanel) sidebarPanel.classList.add("is-open");
+        if (scrim) scrim.classList.add("is-open");
+      };
+
+      const closeMobileDrawer = () => {
+        if (sidebarPanel) sidebarPanel.classList.remove("is-open");
+        if (scrim) scrim.classList.remove("is-open");
+      };
+
+      if (toggleSidebarBtn) toggleSidebarBtn.onclick = openMobileDrawer;
+      if (closeSidebarBtn) closeSidebarBtn.onclick = closeMobileDrawer;
+      if (scrim) scrim.onclick = closeMobileDrawer;
+
+      // 3. Chọn câu hỏi trong sidebar menu
+      host.querySelectorAll(".lis-dict-sentence-item").forEach(item => {
+        item.onclick = () => {
+          const qIdx = Number(item.dataset.qIdx);
+          if (!isNaN(qIdx) && qIdx >= 0 && qIdx < questions.length) {
+            currentQIdx = qIdx;
+            closeMobileDrawer();
+            renderWorkspace();
+          }
+        };
+      });
+
+      // 4. Audio Player controls
+      const playBtn = host.querySelector("#btnCompPlay");
+      if (playBtn) {
+        playBtn.onclick = () => {
+          if (isPlaying) {
+            pauseAudio();
+          } else {
+            isPlaying = true;
+            speakLineSeq(currentLineIdx >= 0 ? currentLineIdx : 0);
+          }
+        };
+      }
+
+      const replayBtn = host.querySelector("#btnCompReplay");
+      if (replayBtn) {
+        replayBtn.onclick = () => {
+          stopAudio();
+          isPlaying = true;
+          speakLineSeq(0);
+        };
+      }
+
+      const skipBackBtn = host.querySelector("#btnCompSkipBack");
+      if (skipBackBtn) {
+        skipBackBtn.onclick = () => {
+          const target = currentLineIdx > 0 ? currentLineIdx - 1 : 0;
+          stopAudio();
+          isPlaying = true;
+          speakLineSeq(target);
+        };
+      }
+
+      const skipFwdBtn = host.querySelector("#btnCompSkipFwd");
+      if (skipFwdBtn) {
+        skipFwdBtn.onclick = () => {
+          const target = currentLineIdx < lines.length - 1 ? currentLineIdx + 1 : 0;
+          stopAudio();
+          isPlaying = true;
+          speakLineSeq(target);
+        };
+      }
+
+      const speedBtn = host.querySelector("#btnCompSpeed");
+      if (speedBtn) {
+        speedBtn.onclick = () => {
+          const speeds = [0.75, 1.0, 1.25];
+          const nextIdx = (speeds.indexOf(currentSpeed) + 1) % speeds.length;
+          currentSpeed = speeds[nextIdx];
+          const span = speedBtn.querySelector("span");
+          if (span) span.textContent = `${currentSpeed}x`;
+          toast(`Tốc độ phát: ${currentSpeed}x`);
+        };
+      }
+
+      const toggleTransBtn = host.querySelector("#btnCompToggleTranscript");
+      if (toggleTransBtn) {
+        toggleTransBtn.onclick = () => {
+          showTranscript = !showTranscript;
+          renderWorkspace();
+        };
+      }
+
+      // Click vào 1 dòng trong hội thoại để phát riêng câu đó
+      host.querySelectorAll(".lis-comp-dialogue-line").forEach(lineEl => {
+        lineEl.onclick = () => {
+          const lineIdx = Number(lineEl.dataset.lineIdx);
+          if (!isNaN(lineIdx) && lineIdx >= 0 && lineIdx < lines.length) {
+            stopAudio();
+            isPlaying = true;
+            speakLineSeq(lineIdx);
+          }
+        };
+      });
+
+      // 5. Chọn đáp án trắc nghiệm
+      host.querySelectorAll(".lis-comp-option-btn:not(:disabled)").forEach(optBtn => {
+        optBtn.onclick = () => {
+          const optIdx = Number(optBtn.dataset.optIdx);
+          userAnswers[currentQIdx] = optIdx;
+          renderWorkspace();
+        };
+      });
+
+      // 6. Chấm đáp án câu hiện tại
+      const checkBtn = host.querySelector("#btnCompCheckQ");
+      if (checkBtn) {
+        checkBtn.onclick = () => {
+          if (userAnswers[currentQIdx] !== undefined) {
+            checkedQuestions[currentQIdx] = true;
+            if (isCorrect(currentQIdx)) {
+              toast("Chính xác! Bạn làm rất tốt.");
+            } else {
+              toast("Chưa chính xác, hãy xem lại giải thích nhé.");
+            }
+            // Nếu đã trả lời và chấm hết tất cả các câu
+            if (Object.keys(checkedQuestions).length === questions.length) {
+              const passKey = lesson.id + "_comp";
+              if (!Progress.doneList("listenDone").includes(passKey)) {
+                Progress.markDone("listenDone", passKey);
+                Progress.addXp(15);
+                toast("Chúc mừng! Đã hoàn thành bài luyện nghe hiểu (+15 XP)");
+              }
+            }
+            renderWorkspace();
+          }
+        };
+      }
+
+      // 7. Điều hướng câu trước / sau
+      const prevQBtn = host.querySelector("#btnCompPrevQ");
+      if (prevQBtn) {
+        prevQBtn.onclick = () => {
+          if (currentQIdx > 0) {
+            currentQIdx--;
+            renderWorkspace();
+          }
+        };
+      }
+
+      const nextQBtn = host.querySelector("#btnCompNextQ");
+      if (nextQBtn) {
+        nextQBtn.onclick = () => {
+          if (currentQIdx < questions.length - 1) {
+            currentQIdx++;
+            renderWorkspace();
+          }
+        };
+      }
+
+      const nextQDirect = host.querySelector("#btnCompNextQDirect");
+      if (nextQDirect) {
+        nextQDirect.onclick = () => {
+          if (currentQIdx < questions.length - 1) {
+            currentQIdx++;
+            renderWorkspace();
+          }
+        };
+      }
+
+      // 8. Nút hoàn tất / làm lại
+      const finishBtn = host.querySelector("#btnCompFinish");
+      if (finishBtn) {
+        finishBtn.onclick = () => {
+          isFinished = true;
+          renderWorkspace();
+        };
+      }
+
+      const retryBtn = host.querySelector("#btnCompRetry");
+      if (retryBtn) {
+        retryBtn.onclick = () => {
+          for (const k in userAnswers) delete userAnswers[k];
+          for (const k in checkedQuestions) delete checkedQuestions[k];
+          currentQIdx = 0;
+          isFinished = false;
+          renderWorkspace();
+        };
+      }
+
+      const doneBackBtn = host.querySelector("#btnCompDoneBack");
+      if (doneBackBtn) {
+        doneBackBtn.onclick = () => {
+          stopAudio();
+          document.body.classList.remove("in-workspace");
+          renderHub();
+        };
+      }
+    };
+
+    renderWorkspace();
+  };
+
+
   const openDictationWorkspace = (lesson) => {
     currentLesson = lesson;
     document.body.classList.add("in-workspace");
@@ -4755,9 +5426,6 @@ function initListeningPage() {
     let loopTimeout = null;
     let progressTimer = null;
     let unlockedVocab = {};
-
-    // Sóng âm giả lập (32 cột chiều cao từ 20% đến 95%)
-    const WAVE_BARS = [24, 38, 55, 72, 60, 42, 30, 48, 68, 85, 92, 75, 52, 35, 58, 80, 88, 70, 45, 62, 78, 65, 40, 56, 74, 82, 64, 45, 32, 50, 40, 26];
 
     const isSentenceDone = (idx) => {
       const key = `${lesson.id}_dict_${idx}`;
@@ -4878,9 +5546,52 @@ function initListeningPage() {
             </button>
           </div>
 
-          <!-- Bố cục 3/7: 7 phần bên trái làm bài, 3 phần bên phải danh sách câu -->
+          <!-- Bố cục 3/7: 3 phần bên trái danh sách câu, 7 phần bên phải làm bài -->
           <div class="lis-dict-workspace-grid">
-            <!-- CỘT TRÁI (7 PHẦN): KHUNG LÀM BÀI CHÍNH -->
+            <!-- CỘT TRÁI (3 PHẦN): DANH SÁCH CÁC CÂU LUYỆN TRONG BÀI -->
+            <aside class="lis-dict-sidebar-panel" id="dictSidebarPanel">
+              <div class="lis-dict-sidebar-header">
+                <div>
+                  <span class="lis-dict-sidebar-eyebrow">CHỦ ĐỀ</span>
+                  <h3 class="lis-dict-sidebar-title">${esc(lesson.title)}</h3>
+                </div>
+                <button type="button" class="lis-dict-sidebar-close-btn" id="btnDictCloseSidebar" aria-label="Đóng danh sách">
+                  ${icon("x", 18)}
+                </button>
+              </div>
+
+              <div class="lis-dict-sidebar-progress-box">
+                <div class="lis-dict-sidebar-progress-text">
+                  <span>Tiến độ bài</span>
+                  <strong>${doneCount}/${sentences.length} câu</strong>
+                </div>
+                <div class="lis-dict-progress-track">
+                  <div class="lis-dict-progress-fill" style="width: ${pctDone}%"></div>
+                </div>
+              </div>
+
+              <div class="lis-dict-sentence-list">
+                ${sentences.map((st, i) => {
+                  const active = i === currentSentenceIdx;
+                  const done = isSentenceDone(i);
+                  const num = String(i + 1).padStart(2, "0");
+                  return `
+                    <button type="button" class="lis-dict-sentence-item ${active ? "is-active" : ""} ${done ? "is-done" : ""}" data-sent-idx="${i}">
+                      <span class="lis-dict-sentence-num">${num}</span>
+                      <div class="lis-dict-sentence-info">
+                        <strong class="lis-dict-sentence-label">Câu ${i + 1}</strong>
+                        <small class="lis-dict-sentence-snippet">${done ? "Đã hoàn thành" : "Nghe &amp; chép chính tả"}</small>
+                      </div>
+                      <span class="lis-dict-sentence-status">
+                        ${done ? icon("check-circle-correct", 17) : active ? icon("edit-3", 16) : icon("arrow-right", 16)}
+                      </span>
+                    </button>
+                  `;
+                }).join("")}
+              </div>
+            </aside>
+
+            <!-- CỘT PHẢI (7 PHẦN): KHUNG LÀM BÀI CHÍNH -->
             <main class="lis-dict-main-panel">
               <!-- 2. Khung phát âm thanh (Audio Player) -->
               <section class="lis-dict-player-card" id="dictPlayerCard">
@@ -5037,51 +5748,8 @@ function initListeningPage() {
                 `}
               </section>
             </main>
-
-            <!-- CỘT PHẢI (3 PHẦN): DANH SÁCH CÁC CÂU LUYỆN TRONG BÀI -->
-            <aside class="lis-dict-sidebar-panel" id="dictSidebarPanel">
-              <div class="lis-dict-sidebar-header">
-                <div>
-                  <span class="lis-dict-sidebar-eyebrow">DANH SÁCH CÂU</span>
-                  <h3 class="lis-dict-sidebar-title">${esc(lesson.title)}</h3>
-                </div>
-                <button type="button" class="lis-dict-sidebar-close-btn" id="btnDictCloseSidebar" aria-label="Đóng danh sách">
-                  ${icon("x", 18)}
-                </button>
-              </div>
-
-              <div class="lis-dict-sidebar-progress-box">
-                <div class="lis-dict-sidebar-progress-text">
-                  <span>Tiến độ bài</span>
-                  <strong>${doneCount}/${sentences.length} câu</strong>
-                </div>
-                <div class="lis-dict-progress-track">
-                  <div class="lis-dict-progress-fill" style="width: ${pctDone}%"></div>
-                </div>
-              </div>
-
-              <div class="lis-dict-sentence-list">
-                ${sentences.map((st, i) => {
-                  const active = i === currentSentenceIdx;
-                  const done = isSentenceDone(i);
-                  const num = String(i + 1).padStart(2, "0");
-                  return `
-                    <button type="button" class="lis-dict-sentence-item ${active ? "is-active" : ""} ${done ? "is-done" : ""}" data-sent-idx="${i}">
-                      <span class="lis-dict-sentence-num">${num}</span>
-                      <div class="lis-dict-sentence-info">
-                        <strong class="lis-dict-sentence-label">Câu ${i + 1}</strong>
-                        <small class="lis-dict-sentence-snippet">${esc(st.vi || st.ru)}</small>
-                      </div>
-                      <span class="lis-dict-sentence-status">
-                        ${done ? icon("check-circle-correct", 18) : active ? icon("edit-3", 16) : icon("arrow-right", 16)}
-                      </span>
-                    </button>
-                  `;
-                }).join("")}
-              </div>
-            </aside>
-            <div class="lis-dict-sidebar-scrim" id="dictSidebarScrim"></div>
           </div>
+          <div class="lis-dict-sidebar-scrim" id="dictSidebarScrim"></div>
         </div>
       `;
 
@@ -5526,8 +6194,8 @@ function initSpeakingPage() {
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
 
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+    const pageItems = filtered.slice(0, currentPage * PAGE_SIZE);
+    const remainingCount = Math.max(0, filtered.length - pageItems.length);
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
@@ -5542,7 +6210,7 @@ function initSpeakingPage() {
         const isDone = Progress.doneList("speakDone").includes(s.id);
         const isPro = s.is_pro_only || s.level === "B1" || s.level === "B2";
         const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
-        const indexStr = String((currentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, "0");
+        const indexStr = String(idx + 1).padStart(2, "0");
         const russianCategory = `ГОВОРЕНИЕ · ${s.level}`;
 
         return `
@@ -5566,22 +6234,27 @@ function initSpeakingPage() {
                 </div>
                 <div class="dau-card-subinfo">
                   <span>${s.level}</span>
-                  <span class="dau-card-sep">|</span>
+                  <span class="dau-card-sep">•</span>
                   <span class="dau-card-count">${(s.items || []).length} câu</span>
                 </div>
               </div>
             </div>
 
-            <div class="dau-card-footer" style="justify-content:flex-end">
-              <button type="button" class="btn btn-primary btn-sm btn-speak-action" data-speak-id="${s.id}" style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
-                ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 14 }) : "") : ""} Luyện nói ngay ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
-              </button>
+            <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
+              <div class="topic-footer-actions">
+                <button type="button" class="btn-speak-action topic-text-btn" data-speak-id="${s.id}" title="Luyện nói ngay">
+                  ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 14 }) : ""} Luyện nói ngay
+                </button>
+                <button type="button" class="topic-circle-btn btn-speak-circle" data-speak-id="${s.id}" title="Luyện nói ngay" aria-label="Luyện nói ngay">
+                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
+                </button>
+              </div>
             </div>
           </article>
         `;
       }).join("");
 
-      gridHost.querySelectorAll(".btn-speak-action").forEach(btn => {
+      gridHost.querySelectorAll(".btn-speak-action, .btn-speak-circle").forEach(btn => {
         btn.onclick = (e) => {
           e.stopPropagation();
           const id = btn.dataset.speakId;
@@ -5615,9 +6288,7 @@ function initSpeakingPage() {
     renderDauPagination(el("#spPagination"), currentPage, totalPages, (newPage) => {
       currentPage = newPage;
       renderSpeakingCards();
-      const topEl = el("#spSection") || host;
-      if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    }, { remainingCount, unit: "bài" });
   };
 
   const renderHub = () => {
@@ -5698,138 +6369,625 @@ function initSpeakingPage() {
     document.body.classList.add("in-workspace");
     const todayKey = "speak_today_" + new Date().toDateString();
     const attemptsToday = STORE.get(todayKey, 0);
+    const items = set.items || [];
+
+    let currentSentenceIdx = 0;
+    let currentMode = "shadowing"; // 'shadowing' | 'dictation'
+    let currentSpeed = 1.0;
+    let loopMode = 0; // 0: tắt, 5: lặp 5 lần
+    let loopRemaining = 0;
+    let isRecording = false;
+    let mediaTab = "video"; // 'video' | 'wave'
+    let recognitionInstance = null;
+
+    // Helper: Tính điểm hoàn thành và trung bình
+    const getStats = () => {
+      let done = 0;
+      let totalScore = 0;
+      let scoredCount = 0;
+      items.forEach((_, idx) => {
+        const sc = STORE.get("speak_" + set.id + "_" + idx, null);
+        if (sc !== null) {
+          totalScore += sc;
+          scoredCount++;
+          if (sc >= 70) done++;
+        }
+      });
+      const avg = scoredCount > 0 ? Math.round(totalScore / scoredCount) : 0;
+      const pct = items.length > 0 ? Math.round((done / items.length) * 100) : 0;
+      return { done, avg, pct, xp: done * 15 };
+    };
+
+    // YouTube clip giáo dục tiếng Nga chuẩn TRKI
+    const ytId = set.youtube_id || "e6lFvAQp0LE";
+    const startQ = set.start_sec ? `&start=${set.start_sec}` : "";
+    const endQ = set.end_sec ? `&end=${set.end_sec}` : "";
+    const ytVideoUrl = set.video_url || `https://www.youtube-nocookie.com/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1${startQ}${endQ}`;
 
     host.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
-        <button type="button" class="dau-back-btn" id="btnBackSpList" title="Quay lại danh sách chủ đề nói" aria-label="Quay lại danh sách chủ đề nói">
-          <i data-rusi-icon="arrow-left" data-size="18"></i>
+        <button type="button" class="dau-back-btn" id="btnBackSpList" title="Quay lại danh sách bài nói" aria-label="Quay lại">
+          ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
         </button>
         <div class="dau-workspace-info">
           <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(set.icon || "mic-speaking", { size: 22 }) : ""} ${esc(set.title)}</span>
+          <span class="dau-workspace-badge">${set.level || "A1"}</span>
         </div>
+
+        <!-- Mode Switch Pills: Shadowing vs Dictation -->
+        <div class="sp-ws-mode-pills" style="margin: 0 16px;">
+          <button type="button" class="sp-ws-mode-btn is-active" id="btnModeShadowing">Shadowing (Luyện nói)</button>
+          <button type="button" class="sp-ws-mode-btn" id="btnModeDictation">Dictation (Chép chính tả)</button>
+        </div>
+
+        <button type="button" class="btn btn-outline btn-sm sp-mobile-bar-btn" id="btnToggleMobilePlaylist">
+          ${window.RusiIcons ? RusiIcons.get("list-tasks", { size: 15 }) : "📋"} Danh sách (<span id="spMobileDoneCount">0</span>/${items.length})
+        </button>
+
         <div class="dau-workspace-meta" style="font-size:0.85rem;color:var(--muted);margin-left:auto">
-          Đã luyện hôm nay: <b>${attemptsToday}/2 lượt miễn phí</b> ${Monetization.isPro() ? '<b style="color:var(--green)">(PRO Không giới hạn)</b>' : ""}
+          Đã luyện: <b>${attemptsToday}/2 lượt miễn phí</b> ${Monetization.isPro() ? '<b style="color:var(--green)">(PRO)</b>' : ""}
         </div>
       </div>
 
-      <div class="workspace" style="max-width:920px;margin:0 auto">
-        <div style="text-align:center;margin-bottom:18px">
-          <p style="color:var(--muted);font-size:0.92rem;margin:0;display:flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} ${esc(set.phonemeTarget || "Bấm nút nghe để nghe phát âm mẫu, sau đó bấm nút micro và đọc to câu tiếng Nga.")}</p>
-        </div>
+      <!-- WORKSPACE 2 CỘT (ĐẬU TOEIC STYLE) -->
+      <div class="sp-ws-grid" style="max-width:1440px;margin:18px auto;padding:0 16px;">
+        
+        <!-- CỘT TRÁI (65%): MEDIA + TRANSCRIPT + CONTROLS -->
+        <main class="sp-ws-main-panel">
+          
+          <!-- 1. Media Player Screen (16:9 Viewport) -->
+          <section class="sp-media-card">
+            <div class="sp-media-tabs">
+              <div class="sp-media-tab-btns">
+                <button type="button" class="sp-media-tab-btn is-active" id="btnTabVideo">Video bài học</button>
+                <button type="button" class="sp-media-tab-btn" id="btnTabWave">Sóng âm Audio</button>
+              </div>
+              <span style="font-size:0.75rem;color:var(--muted);display:flex;align-items:center;gap:4px">
+                ${window.RusiIcons ? RusiIcons.get("waveform-audio", { size: 14 }) : ""} Âm thanh chuẩn phòng thu
+              </span>
+            </div>
 
-        <div id="speakWaveBox" class="waveform-box">
-          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-          <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-        </div>
-
-        ${set.items.map((item, i) => {
-          const best = STORE.get("speak_" + set.id + "_" + i, null);
-          return `
-            <div class="speak-item" data-i="${i}" style="text-align:center">
-              <p class="target ru" style="font-size:1.35rem;font-weight:700;line-height:1.55;margin-bottom:8px">
-                ${esc(item.ru)} <button type="button" class="btn btn-outline btn-sm btn-tts" style="margin-left:8px;vertical-align:middle">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""} <span class="btn-text">Nghe mẫu</span></button>
-              </p>
-              <p class="target-vi" style="font-size:0.95rem;margin-bottom:14px;color:var(--muted)">${esc(item.vi)}</p>
-              <div style="display:flex;gap:16px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:10px">
-                <button class="mic-btn" aria-label="Nói">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 22 }) : ""}</button>
-                ${best !== null ? `<div class="score-ring ${best >= 80 ? "" : best >= 50 ? "mid" : "low"}" title="Kết quả tốt nhất">${best}%</div>` : ""}
-                <span class="speak-status" style="color:var(--muted);font-size:.88rem">Bấm mic và đọc câu tiếng Nga</span>
+            <div class="sp-video-viewport" id="spVideoViewport">
+              <iframe id="spYoutubePlayer" src="${ytVideoUrl}" title="Video luyện nói tiếng Nga" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+              <div class="sp-soundwave-viewport" id="spSoundwaveViewport" style="display:none;">
+                <div class="sp-soundwave-art" id="spSoundwaveArt">
+                  ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 32 }) : "🔊"}
+                </div>
+                <div class="sp-soundwave-bars">
+                  <div class="sp-sw-bar"></div><div class="sp-sw-bar"></div><div class="sp-sw-bar"></div>
+                  <div class="sp-sw-bar"></div><div class="sp-sw-bar"></div><div class="sp-sw-bar"></div>
+                  <div class="sp-sw-bar"></div>
+                </div>
+                <div id="spAudioWaveText" style="font-size:0.88rem;color:rgba(255,255,255,0.8);text-align:center;max-width:85%;font-weight:600"></div>
               </div>
             </div>
-          `;
-        }).join("")}
+          </section>
+
+          <!-- 2. Transcript Viewer & Trọng âm -->
+          <section class="sp-transcript-card">
+            <div class="sp-transcript-header">
+              <span class="sp-sent-badge" id="spSentIndexBadge">Câu 01 / ${String(items.length).padStart(2, "0")}</span>
+              <button type="button" class="sp-btn-tool" id="btnToggleTranslation">Ẩn/Hiện dịch (T)</button>
+            </div>
+
+            <div class="sp-target-sentence" id="spTargetSentence"></div>
+            <div class="sp-target-translation" id="spTargetTranslation"></div>
+
+            <!-- Khung tương tác Shadowing / Dictation -->
+            <div class="sp-interactive-box">
+              
+              <!-- Chế độ Shadowing -->
+              <div id="spShadowingPanel">
+                <div class="sp-voice-feedback-row">
+                  <div class="sp-voice-status">
+                    <span id="spVoiceStatusIcon">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 18 }) : "🎤"}</span>
+                    <span id="spVoiceStatusText">Bấm phím <b>R</b> hoặc nút <b>Luyện nói</b> để bắt đầu thu âm.</span>
+                  </div>
+                  <div class="sp-score-badge" id="spAiScoreBadge" style="display:none;">
+                    Điểm: <span id="spAiScoreVal">0</span>/100
+                  </div>
+                </div>
+                <div id="spVoiceRecognizedBox" style="display:none;margin-top:10px;padding:10px 14px;border-radius:10px;background:rgba(0,0,0,0.2);border:1px solid var(--border);font-size:0.88rem;"></div>
+              </div>
+
+              <!-- Chế độ Dictation -->
+              <div id="spDictationPanel" style="display:none;">
+                <div class="sp-dictation-row">
+                  <input type="text" class="sp-dictation-input" id="spDictationInput" placeholder="Nghe và gõ lại câu ở trên rồi nhấn Enter..." autocomplete="off" spellcheck="false" />
+                  <button type="button" class="sp-btn-action sp-btn-listen" id="btnCheckDictation">Kiểm tra</button>
+                </div>
+                <div class="sp-dictation-feedback" id="spDictationFeedback"></div>
+              </div>
+
+            </div>
+          </section>
+
+          <!-- 3. Thanh công cụ điều khiển -->
+          <section class="sp-controls-card">
+            <div class="sp-ctrl-group">
+              <button type="button" class="sp-btn-action sp-btn-listen" id="btnPlaySentence">
+                ${window.RusiIcons ? RusiIcons.get("play", { size: 16 }) : "▶"} Nghe câu này <kbd>Space</kbd>
+              </button>
+              <button type="button" class="sp-btn-action sp-btn-record" id="btnRecord">
+                ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 16 }) : "🎤"} Luyện nói <kbd>R</kbd>
+              </button>
+            </div>
+
+            <div class="sp-ctrl-group">
+              <button type="button" class="sp-btn-tool" id="btnLoopToggle" title="Tự động lặp 5 lần">
+                ${window.RusiIcons ? RusiIcons.get("rotate-ccw", { size: 14 }) : ""} Lặp: <span id="spLoopText">Tắt</span> <kbd>L</kbd>
+              </button>
+              <button type="button" class="sp-btn-tool" id="btnSpeedToggle" title="Điều chỉnh tốc độ phát">
+                ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} <span id="spSpeedText">1.0x</span>
+              </button>
+              <button type="button" class="sp-btn-tool" id="btnPrevSentence" title="Câu trước">${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 14 }) : ""} Trước</button>
+              <button type="button" class="sp-btn-tool" id="btnNextSentence" title="Câu sau">Sau ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : ""}</button>
+            </div>
+          </section>
+
+          <!-- 4. Hướng dẫn phím tắt chân trang -->
+          <section class="sp-shortcuts-card">
+            <span><kbd>Space</kbd> Nghe/Dừng</span>
+            <span><kbd>R</kbd> Thu âm/Dừng</span>
+            <span><kbd>L</kbd> Lặp lại 5 lần</span>
+            <span><kbd>←</kbd> <kbd>→</kbd> Chuyển câu</span>
+            <span><kbd>T</kbd> Bật/tắt dịch</span>
+            <span><kbd>Enter</kbd> Kiểm tra chính tả</span>
+          </section>
+
+        </main>
+
+        <!-- CỘT PHẢI (35%): TIẾN ĐỘ & DANH SÁCH CÂU (PLAYLIST) -->
+        <aside class="sp-ws-sidebar-panel" id="spSidebarPanel">
+          <div class="sp-sidebar-header">
+            <div class="sp-stats-grid">
+              <div class="sp-stat-card">
+                <span class="sp-stat-value" id="spStatCompleted">0/${items.length}</span>
+                <span class="sp-stat-label">Hoàn thành</span>
+              </div>
+              <div class="sp-stat-card">
+                <span class="sp-stat-value" id="spStatAvgScore">--</span>
+                <span class="sp-stat-label">Điểm TB</span>
+              </div>
+              <div class="sp-stat-card">
+                <span class="sp-stat-value" id="spStatTotalXp" style="color:var(--amber);">+0</span>
+                <span class="sp-stat-label">Kinh nghiệm</span>
+              </div>
+            </div>
+            <div class="sp-progress-track">
+              <div class="sp-progress-fill" id="spProgressFill"></div>
+            </div>
+          </div>
+
+          <!-- Danh sách câu cuộn mượt -->
+          <div class="sp-playlist-scroll" id="spPlaylistScroll"></div>
+        </aside>
+
+        <!-- Scrim nền cho Mobile Drawer -->
+        <div class="sp-sidebar-scrim" id="spSidebarScrim"></div>
+
       </div>
     `;
 
+    // Cập nhật thống kê header
+    const updateStatsUI = () => {
+      const stats = getStats();
+      const stComp = el("#spStatCompleted"); if (stComp) stComp.textContent = `${stats.done}/${items.length}`;
+      const stAvg = el("#spStatAvgScore"); if (stAvg) stAvg.textContent = stats.avg > 0 ? `${stats.avg}%` : "--";
+      const stXp = el("#spStatTotalXp"); if (stXp) stXp.textContent = `+${stats.xp} XP`;
+      const fill = el("#spProgressFill"); if (fill) fill.style.width = `${stats.pct}%`;
+      const mobDone = el("#spMobileDoneCount"); if (mobDone) mobDone.textContent = stats.done;
+    };
+
+    // Render danh sách playlist
+    const renderPlaylist = () => {
+      const hostList = el("#spPlaylistScroll");
+      if (!hostList) return;
+
+      hostList.innerHTML = items.map((it, idx) => {
+        const sc = STORE.get("speak_" + set.id + "_" + idx, null);
+        const isDone = sc !== null && sc >= 70;
+        const numStr = String(idx + 1).padStart(2, "0");
+        const isActive = idx === currentSentenceIdx;
+
+        return `
+          <button type="button" class="sp-playlist-item ${isActive ? "is-active" : ""}" data-idx="${idx}" id="spPlayItem_${idx}">
+            <span class="sp-item-num">${numStr}</span>
+            <div style="min-width:0">
+              <div class="sp-item-text">${esc(it.ru || it.text || "")}</div>
+              <small style="color:var(--muted);font-size:0.72rem;">${esc(it.vi || it.translation || "")}</small>
+            </div>
+            <span class="sp-item-score ${isDone ? "is-done" : ""}">
+              ${sc !== null ? `${sc}%` : "--"}
+            </span>
+          </button>
+        `;
+      }).join("");
+
+      hostList.querySelectorAll(".sp-playlist-item").forEach(btn => {
+        btn.onclick = () => {
+          const idx = parseInt(btn.dataset.idx, 10);
+          loadSentence(idx);
+          playCurrentSentence();
+          // Đóng drawer trên mobile nếu đang mở
+          const side = el("#spSidebarPanel");
+          const scrim = el("#spSidebarScrim");
+          if (side) side.classList.remove("is-open");
+          if (scrim) scrim.classList.remove("is-open");
+        };
+      });
+
+      updateStatsUI();
+    };
+
+    // Nạp câu hiện hành
+    const loadSentence = (idx) => {
+      if (idx < 0 || idx >= items.length) return;
+      currentSentenceIdx = idx;
+      const currentItem = items[idx];
+
+      const badge = el("#spSentIndexBadge");
+      if (badge) badge.textContent = `Câu ${String(idx + 1).padStart(2, "0")} / ${String(items.length).padStart(2, "0")}`;
+
+      const targetBox = el("#spTargetSentence");
+      if (targetBox) {
+        // Nhấn mạnh từ ngữ nếu có hoặc hiển thị câu văn
+        const rawText = esc(currentItem.ru || currentItem.text || "");
+        targetBox.innerHTML = rawText;
+      }
+
+      const transBox = el("#spTargetTranslation");
+      if (transBox) transBox.textContent = currentItem.vi || currentItem.translation || "";
+
+      const waveText = el("#spAudioWaveText");
+      if (waveText) waveText.textContent = currentItem.ru || currentItem.text || "";
+
+      // Reset các trạng thái của câu
+      const dictInput = el("#spDictationInput");
+      if (dictInput) dictInput.value = "";
+      const dictFb = el("#spDictationFeedback");
+      if (dictFb) dictFb.style.display = "none";
+      const aiBadge = el("#spAiScoreBadge");
+      if (aiBadge) {
+        const sc = STORE.get("speak_" + set.id + "_" + idx, null);
+        if (sc !== null) {
+          aiBadge.style.display = "inline-flex";
+          el("#spAiScoreVal").textContent = sc;
+        } else {
+          aiBadge.style.display = "none";
+        }
+      }
+      const recBox = el("#spVoiceRecognizedBox");
+      if (recBox) recBox.style.display = "none";
+
+      const statusTxt = el("#spVoiceStatusText");
+      if (statusTxt) statusTxt.innerHTML = "Bấm phím <b>R</b> hoặc nút <b>Luyện nói</b> để bắt đầu thu âm.";
+
+      // Highlight câu trong playlist & cuộn đến
+      document.querySelectorAll(".sp-playlist-item").forEach((btn, i) => {
+        btn.classList.toggle("is-active", i === idx);
+      });
+      const activeBtn = el(`#spPlayItem_${idx}`);
+      if (activeBtn) activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    };
+
+    // Phát âm câu
+    const playCurrentSentence = (isAutoLoop = false) => {
+      const it = items[currentSentenceIdx];
+      if (!it) return;
+
+      const waveView = el("#spSoundwaveViewport");
+      if (waveView) waveView.classList.add("is-playing");
+
+      const text = it.ru || it.text || "";
+      const lang = detectLang(text);
+
+      speak(text, lang, currentSpeed);
+
+      // Ước tính thời gian phát để tắt hiệu ứng sóng âm & xử lý lặp lại
+      const duration = Math.max(1800, (text.length * 90) / currentSpeed);
+      setTimeout(() => {
+        if (waveView) waveView.classList.remove("is-playing");
+        if (loopRemaining > 1) {
+          loopRemaining--;
+          const loopTxt = el("#spLoopText");
+          if (loopTxt) loopTxt.textContent = `Còn ${loopRemaining}`;
+          setTimeout(() => playCurrentSentence(true), 600);
+        } else if (loopRemaining === 1) {
+          loopRemaining = 0;
+          const loopTxt = el("#spLoopText");
+          if (loopTxt) loopTxt.textContent = "5 lần";
+        }
+      }, duration);
+    };
+
+    // Thu âm Speech Recognition
+    const startRecording = () => {
+      if (!Monetization.isPro()) {
+        const used = STORE.get(todayKey, 0);
+        if (used >= 2) {
+          Monetization.showProGateModal("Lượt luyện nói hôm nay đã hết", "Bạn đã dùng hết 2 lượt luyện nói miễn phí hôm nay. Nâng cấp lên gói PRO để mở khóa AI chấm âm vị không giới hạn số lượt.");
+          return;
+        }
+      }
+
+      if (!SR) {
+        toast("Trình duyệt không hỗ trợ nhận dạng giọng nói — dùng Chrome/Edge nhé.");
+        return;
+      }
+
+      if (isRecording) {
+        stopRecording();
+        return;
+      }
+
+      isRecording = true;
+      const btnRec = el("#btnRecord");
+      if (btnRec) btnRec.classList.add("is-recording");
+      const statusTxt = el("#spVoiceStatusText");
+      if (statusTxt) statusTxt.innerHTML = "<b style='color:#ef4444'>Đang nghe...</b> Hãy đọc rõ câu trên!";
+
+      const it = items[currentSentenceIdx];
+      const targetText = it.ru || it.text || "";
+      const lang = detectLang(targetText);
+
+      recognitionInstance = new SR();
+      recognitionInstance.lang = lang;
+      recognitionInstance.interimResults = false;
+      recognitionInstance.maxAlternatives = 3;
+
+      recognitionInstance.onresult = (ev) => {
+        const heard = ev.results[0][0].transcript;
+        const sim = similarity(heard, targetText);
+
+        const aiBadge = el("#spAiScoreBadge");
+        if (aiBadge) {
+          aiBadge.style.display = "inline-flex";
+          el("#spAiScoreVal").textContent = sim;
+        }
+
+        const recBox = el("#spVoiceRecognizedBox");
+        if (recBox) {
+          recBox.style.display = "block";
+          recBox.innerHTML = `
+            ${window.RusiIcons ? RusiIcons.get("bot-rusika", { size: 16 }) : "🤖"} AI nghe được: <b style="color:var(--primary)">"${esc(heard)}"</b><br>
+            ${window.RusiIcons ? RusiIcons.get("target", { size: 16 }) : "🎯"} Độ chính xác: <b>${sim}%</b> ${sim >= 80 ? "— Phát âm rất chuẩn!" : "— Hãy chú ý trọng âm và phát âm rõ từng từ"}
+          `;
+        }
+
+        STORE.set("speak_" + set.id + "_" + currentSentenceIdx, Math.max(sim, STORE.get("speak_" + set.id + "_" + currentSentenceIdx, 0)));
+        STORE.set(todayKey, STORE.get(todayKey, 0) + 1);
+
+        const key = "speakDone_" + set.id + "_" + currentSentenceIdx;
+        const bestBefore = STORE.get("speak_" + set.id + "_" + currentSentenceIdx, 0);
+        if (sim >= 70 && sim >= bestBefore && !Progress.doneList("speakDone").includes(key)) {
+          Progress.markDone("speakDone", key);
+          Progress.addXp(15);
+        }
+
+        if (statusTxt) statusTxt.innerHTML = sim >= 80 ? "<b style='color:var(--green)'>Xuất sắc!</b> Hãy chuyển sang câu tiếp theo." : "Đã ghi nhận! Bạn có thể nghe lại mẫu rồi thử lại.";
+        renderPlaylist();
+      };
+
+      recognitionInstance.onerror = () => {
+        if (statusTxt) statusTxt.textContent = "Không nghe rõ — hãy nói to hơn trong không gian yên tĩnh nhé.";
+        stopRecording();
+      };
+
+      recognitionInstance.onend = () => {
+        stopRecording();
+      };
+
+      try {
+        recognitionInstance.start();
+      } catch (e) {
+        stopRecording();
+      }
+    };
+
+    const stopRecording = () => {
+      isRecording = false;
+      const btnRec = el("#btnRecord");
+      if (btnRec) btnRec.classList.remove("is-recording");
+      if (recognitionInstance) {
+        try { recognitionInstance.stop(); } catch (e) {}
+      }
+    };
+
+    // Kiểm tra Chép chính tả (Dictation)
+    const checkDictation = () => {
+      const input = el("#spDictationInput");
+      const fb = el("#spDictationFeedback");
+      if (!input || !fb) return;
+
+      const typed = input.value.trim();
+      const it = items[currentSentenceIdx];
+      const target = (it.ru || it.text || "").trim();
+
+      if (!typed) {
+        fb.style.display = "block";
+        fb.style.background = "rgba(239, 68, 68, 0.12)";
+        fb.style.color = "#ef4444";
+        fb.textContent = "Vui lòng gõ nội dung câu bạn nghe được trước khi kiểm tra.";
+        return;
+      }
+
+      const sim = similarity(typed, target);
+      STORE.set("speak_" + set.id + "_" + currentSentenceIdx, Math.max(sim, STORE.get("speak_" + set.id + "_" + currentSentenceIdx, 0)));
+      
+      const key = "speakDone_" + set.id + "_" + currentSentenceIdx;
+      if (sim >= 70 && !Progress.doneList("speakDone").includes(key)) {
+        Progress.markDone("speakDone", key);
+        Progress.addXp(15);
+      }
+
+      fb.style.display = "block";
+      if (sim >= 90) {
+        fb.style.background = "rgba(16, 185, 129, 0.12)";
+        fb.style.color = "var(--green)";
+        fb.innerHTML = `✓ Chính xác tuyệt đối! (${sim}%). Làm rất tốt!`;
+      } else {
+        fb.style.background = "rgba(245, 158, 11, 0.12)";
+        fb.style.color = "var(--amber)";
+        fb.innerHTML = `Độ chính xác: <b>${sim}%</b>. Câu đúng là: <b style="color:var(--text)">${esc(target)}</b>`;
+      }
+
+      renderPlaylist();
+    };
+
+    // Chuyển đổi qua lại giữa Shadowing & Dictation
+    const setWorkspaceMode = (mode) => {
+      currentMode = mode;
+      const btnShad = el("#btnModeShadowing");
+      const btnDict = el("#btnModeDictation");
+      const pnlShad = el("#spShadowingPanel");
+      const pnlDict = el("#spDictationPanel");
+      const btnRec = el("#btnRecord");
+
+      if (btnShad) btnShad.classList.toggle("is-active", mode === "shadowing");
+      if (btnDict) btnDict.classList.toggle("is-active", mode === "dictation");
+      if (pnlShad) pnlShad.style.display = mode === "shadowing" ? "block" : "none";
+      if (pnlDict) pnlDict.style.display = mode === "dictation" ? "block" : "none";
+
+      if (btnRec) {
+        if (mode === "dictation") {
+          btnRec.innerHTML = `${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : "✓"} Kiểm tra <kbd>Enter</kbd>`;
+          btnRec.onclick = checkDictation;
+        } else {
+          btnRec.innerHTML = `${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 16 }) : "🎤"} Luyện nói <kbd>R</kbd>`;
+          btnRec.onclick = startRecording;
+        }
+      }
+    };
+
+    // Keyboard Shortcuts Listener
+    const onWorkspaceKeydown = (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          checkDictation();
+        }
+        return;
+      }
+
+      if (e.code === "Space") {
+        e.preventDefault();
+        playCurrentSentence();
+      } else if (e.key === "r" || e.key === "R") {
+        e.preventDefault();
+        if (currentMode === "shadowing") startRecording();
+      } else if (e.key === "l" || e.key === "L") {
+        e.preventDefault();
+        toggleLoop();
+      } else if (e.code === "ArrowRight") {
+        e.preventDefault();
+        if (currentSentenceIdx < items.length - 1) {
+          loadSentence(currentSentenceIdx + 1);
+          playCurrentSentence();
+        }
+      } else if (e.code === "ArrowLeft") {
+        e.preventDefault();
+        if (currentSentenceIdx > 0) {
+          loadSentence(currentSentenceIdx - 1);
+          playCurrentSentence();
+        }
+      } else if (e.key === "t" || e.key === "T") {
+        e.preventDefault();
+        toggleTranslationBlur();
+      }
+    };
+
+    const toggleTranslationBlur = () => {
+      const trans = el("#spTargetTranslation");
+      if (trans) trans.classList.toggle("is-blurred");
+    };
+
+    const toggleLoop = () => {
+      loopMode = loopMode === 0 ? 5 : 0;
+      loopRemaining = loopMode;
+      const txt = el("#spLoopText");
+      if (txt) txt.textContent = loopMode === 0 ? "Tắt" : "5 lần";
+      const btn = el("#btnLoopToggle");
+      if (btn) btn.classList.toggle("is-active", loopMode > 0);
+      if (loopMode > 0) playCurrentSentence();
+    };
+
+    const toggleSpeed = () => {
+      const speeds = [0.75, 1.0, 1.25];
+      const nextIdx = (speeds.indexOf(currentSpeed) + 1) % speeds.length;
+      currentSpeed = speeds[nextIdx];
+      const txt = el("#spSpeedText");
+      if (txt) txt.textContent = `${currentSpeed}x`;
+    };
+
+    // Đăng ký sự kiện
+    document.addEventListener("keydown", onWorkspaceKeydown);
+
     el("#btnBackSpList").onclick = () => {
+      document.removeEventListener("keydown", onWorkspaceKeydown);
       document.body.classList.remove("in-workspace");
       renderHub();
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const waveBox = el("#speakWaveBox");
+    el("#btnModeShadowing").onclick = () => setWorkspaceMode("shadowing");
+    el("#btnModeDictation").onclick = () => setWorkspaceMode("dictation");
 
-    host.querySelectorAll(".btn-tts").forEach((b, i) => {
-      b.onclick = () => {
-        if (waveBox) waveBox.classList.add("active");
-        speak(set.items[i].ru);
-        setTimeout(() => {
-          if (waveBox) waveBox.classList.remove("active");
-        }, 2500);
+    el("#btnTabVideo").onclick = () => {
+      mediaTab = "video";
+      el("#btnTabVideo").classList.add("is-active");
+      el("#btnTabWave").classList.remove("is-active");
+      el("#spYoutubePlayer").style.display = "block";
+      el("#spSoundwaveViewport").style.display = "none";
+    };
+
+    el("#btnTabWave").onclick = () => {
+      mediaTab = "wave";
+      el("#btnTabWave").classList.add("is-active");
+      el("#btnTabVideo").classList.remove("is-active");
+      el("#spYoutubePlayer").style.display = "none";
+      el("#spSoundwaveViewport").style.display = "flex";
+    };
+
+    el("#btnPlaySentence").onclick = () => playCurrentSentence();
+    el("#btnRecord").onclick = startRecording;
+    el("#btnLoopToggle").onclick = toggleLoop;
+    el("#btnSpeedToggle").onclick = toggleSpeed;
+    el("#btnToggleTranslation").onclick = toggleTranslationBlur;
+    el("#btnCheckDictation").onclick = checkDictation;
+
+    el("#btnNextSentence").onclick = () => {
+      if (currentSentenceIdx < items.length - 1) {
+        loadSentence(currentSentenceIdx + 1);
+        playCurrentSentence();
+      }
+    };
+    el("#btnPrevSentence").onclick = () => {
+      if (currentSentenceIdx > 0) {
+        loadSentence(currentSentenceIdx - 1);
+        playCurrentSentence();
+      }
+    };
+
+    // Mobile drawer toggle
+    const mobBtn = el("#btnToggleMobilePlaylist");
+    const sidePnl = el("#spSidebarPanel");
+    const sideScrim = el("#spSidebarScrim");
+    if (mobBtn && sidePnl && sideScrim) {
+      mobBtn.onclick = () => {
+        sidePnl.classList.toggle("is-open");
+        sideScrim.classList.toggle("is-open");
       };
-    });
-
-    host.querySelectorAll(".mic-btn").forEach((btn, i) => {
-      btn.onclick = () => {
-        if (!Monetization.isPro()) {
-          const used = STORE.get(todayKey, 0);
-          if (used >= 2) {
-            Monetization.showProGateModal("Lượt luyện nói hôm nay đã hết", "Bạn đã dùng hết 2 lượt luyện nói miễn phí hôm nay. Nâng cấp lên gói PRO để mở khóa AI chấm âm vị không giới hạn số lượt.");
-            return;
-          }
-        }
-
-        if (!SR) {
-          toast("Trình duyệt không hỗ trợ nhận dạng giọng nói — dùng Chrome/Edge nhé.");
-          return;
-        }
-        if (btn.classList.contains("rec")) return;
-        btn.classList.add("rec");
-        if (waveBox) waveBox.classList.add("active");
-        const status = btn.closest(".speak-item").querySelector(".speak-status");
-        status.innerHTML = (window.RusiIcons ? RusiIcons.get("waveform-audio", { size: 14 }) : "") + " Đang nghe... hãy đọc rõ từng từ câu trên";
-        const rec = new SR();
-        rec.lang = "ru-RU";
-        rec.interimResults = false;
-        rec.maxAlternatives = 3;
-        rec.onresult = (ev) => {
-          const heard = ev.results[0][0].transcript;
-          const sim = similarity(heard, set.items[i].ru);
-          const item = btn.closest(".speak-item");
-          const old = item.querySelector(".score-ring");
-          if (old) old.remove();
-          item.querySelector(".target").insertAdjacentHTML(
-            "afterend",
-            `<div class="score-ring ${sim >= 80 ? "" : sim >= 50 ? "mid" : "low"}" style="margin-bottom:14px">${sim}%</div>`
-          );
-          item.querySelector(".heard")?.remove();
-          item.insertAdjacentHTML(
-            "beforeend",
-            `<div class="heard">
-              ${window.RusiIcons ? RusiIcons.get("bot-rusika", { size: 16 }) : ""} AI nhận dạng: <b class="ru" style="color:var(--primary)">${esc(heard)}</b><br>
-              ${window.RusiIcons ? RusiIcons.get("target", { size: 16 }) : ""} Độ chuẩn âm vị: <b>${sim}%</b> ${sim >= 80 ? "— Phát âm rất chuẩn!" : "— Lưu ý trọng âm và biến âm"}
-            </div>`
-          );
-
-          STORE.set("speak_" + set.id + "_" + i, Math.max(sim, STORE.get("speak_" + set.id + "_" + i, 0)));
-          STORE.set(todayKey, STORE.get(todayKey, 0) + 1);
-
-          const key = "speakDone_" + set.id + "_" + i;
-          const bestBefore = STORE.get("speak_" + set.id + "_" + i, 0);
-          if (sim >= 70 && sim >= bestBefore && !Progress.doneList("speakDone").includes(key)) {
-            Progress.markDone("speakDone", key);
-            Progress.addXp(10);
-          }
-          status.textContent = sim >= 80 ? "Xuất sắc! Luyện tiếp câu dưới nhé" : "Bấm nghe lại mẫu rồi thử lại nhé!";
-        };
-        rec.onerror = () => {
-          status.textContent = "Không nghe rõ — hãy đọc to hơn trong không gian yên tĩnh nhé.";
-        };
-        rec.onend = () => {
-          btn.classList.remove("rec");
-          if (waveBox) waveBox.classList.remove("active");
-        };
-        rec.start();
-        setTimeout(() => {
-          try {
-            rec.stop();
-          } catch (e) {}
-        }, 7000);
+      sideScrim.onclick = () => {
+        sidePnl.classList.remove("is-open");
+        sideScrim.classList.remove("is-open");
       };
-    });
+    }
+
+    // Khởi chạy câu đầu tiên & playlist
+    renderPlaylist();
+    loadSentence(0);
   };
 
   renderHub();
@@ -5912,8 +7070,8 @@ function initWritingPageLegacy() {
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
 
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+    const pageItems = filtered.slice(0, currentPage * PAGE_SIZE);
+    const remainingCount = Math.max(0, filtered.length - pageItems.length);
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
@@ -5952,22 +7110,27 @@ function initWritingPageLegacy() {
                 </div>
                 <div class="dau-card-subinfo">
                   <span>${t.level}</span>
-                  <span class="dau-card-sep">|</span>
+                  <span class="dau-card-sep">•</span>
                   <span class="dau-card-count">${t.minWords || 40} từ</span>
                 </div>
               </div>
             </div>
 
-            <div class="dau-card-footer" style="justify-content:flex-end">
-              <button type="button" class="btn btn-primary btn-sm btn-write-action" data-write-id="${t.id}" style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
-                ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 14 }) : "") : ""} Bắt đầu viết ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
-              </button>
+            <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
+              <div class="topic-footer-actions">
+                <button type="button" class="btn-write-action topic-text-btn" data-write-id="${t.id}" title="Bắt đầu viết">
+                  ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 14 }) : ""} Bắt đầu viết
+                </button>
+                <button type="button" class="topic-circle-btn btn-write-circle" data-write-id="${t.id}" title="Bắt đầu viết" aria-label="Bắt đầu viết">
+                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
+                </button>
+              </div>
             </div>
           </article>
         `;
       }).join("");
 
-      gridHost.querySelectorAll(".btn-write-action").forEach(btn => {
+      gridHost.querySelectorAll(".btn-write-action, .btn-write-circle").forEach(btn => {
         btn.onclick = (e) => {
           e.stopPropagation();
           const id = btn.dataset.writeId;
@@ -6001,9 +7164,7 @@ function initWritingPageLegacy() {
     renderDauPagination(el("#wPagination"), currentPage, totalPages, (newPage) => {
       currentPage = newPage;
       renderWritingCards();
-      const topEl = el("#wSection") || host;
-      if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    }, { remainingCount, unit: "bài" });
   };
 
   const renderHub = () => {
@@ -6356,8 +7517,9 @@ function initWritingPage() {
     ["Я", "Ч", "С", "М", "И", "Т", "Ь", "Б", "Ю", "Ё"]
   ];
 
-  let currentMode = "translation";
-  let currentLevel = "A1";
+  const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const initialMode = (urlParams && urlParams.get("mode")) ? urlParams.get("mode") : "picture";
+  let currentMode = MODE_INFO[initialMode] ? initialMode : "picture";
   let cloudWriting = null;
 
   const icon = (name, size) => window.RusiIcons ? RusiIcons.get(name, { size }) : "";
@@ -6365,6 +7527,14 @@ function initWritingPage() {
     ? cloudWriting
     : (typeof WRITING_TASKS !== "undefined" ? WRITING_TASKS : []);
   const taskMode = (task) => task.task_type === "picture_desc" ? "picture" : "translation";
+
+  const getFirstLevelWithTasks = (mode) => {
+    const tasks = getTasks();
+    const found = LEVELS.find(([lvl]) => tasks.some((t) => t.level === lvl && taskMode(t) === mode));
+    return found ? found[0] : "A1";
+  };
+
+  let currentLevel = getFirstLevelWithTasks(currentMode);
   const minWords = (task) => task.minWords || task.min_words || 20;
   const modelAnswer = (task) => task.model || task.model_answer || "";
   const taskTips = (task) => {
@@ -6536,26 +7706,70 @@ function initWritingPage() {
       return;
     }
 
-    grid.innerHTML = topics.map((topic, index) => {
+    grid.innerHTML = topics.map((topic) => {
       const done = topic.tasks.filter((task) => Progress.doneList("writeDone").includes(task.id)).length;
       const first = topic.tasks[0];
       const pro = topic.tasks.some((task) => task.is_pro_only || task.level === "B1" || task.level === "B2");
+      const isUnlocked = !pro || (typeof Monetization !== "undefined" && Monetization.isPro());
+      const isAllDone = done === topic.tasks.length && topic.tasks.length > 0;
+      const actionLabel = isAllDone ? "Đã hoàn thành" : (currentMode === "picture" ? "Vào tả tranh" : "Vào luyện dịch");
+
+      const getWritingIconKey = (t, item) => {
+        const key = (((t && t.key) || "") + " " + ((item && item.category) || "")).toLowerCase();
+        if (key.includes("daily") || key.includes("routine") || key.includes("time")) return "timer-clock";
+        if (key.includes("travel") || key.includes("trip")) return "plane";
+        if (key.includes("study") || key.includes("school") || key.includes("exam")) return "graduation-cap";
+        if (key.includes("city") || key.includes("home") || key.includes("house")) return "building-2";
+        if (key.includes("work") || key.includes("job") || key.includes("career")) return "briefcase";
+        if (key.includes("food") || key.includes("cafe")) return "utensils";
+        if (key.includes("family") || key.includes("friend")) return "heart";
+        if (item && item.icon && window.RusiIcons && RusiIcons.has && RusiIcons.has(item.icon)) return item.icon;
+        if (currentMode === "picture") return "image";
+        if (currentMode === "translation") return "book-open-blog";
+        return "pen-tool";
+      };
+
+      const iconKey = getWritingIconKey(topic, first);
+      const iconSvg = window.RusiIcons ? RusiIcons.get(iconKey, { size: 24 }) : icon("pen-tool", 24);
+
       return `
-        <article class="writing-topic-card" data-topic="${esc(topic.key)}" tabindex="0">
-          <div class="writing-topic-cover">
-            <img src="${esc(taskImage(first))}" alt="" loading="lazy" />
-            <span class="writing-topic-number">${String(index + 1).padStart(2, "0")}</span>
-            ${pro ? `<span class="topic-status topic-status-pro">PRO</span>` : ""}
-          </div>
-          <div class="writing-topic-body">
-            <div class="writing-topic-meta">
-              <span>${currentLevel}</span>
-              <span>${topic.tasks.length} bài luyện</span>
+        <!-- GIAO DIỆN THẺ TỐI GIẢN CHUẨN MỚI .dau-card-compact (Đồng bộ từ vựng, dùng 100% SVG RusiIcons) -->
+        <article class="dau-card dau-card-compact writing-topic-card ${isAllDone ? 'topic-completed' : ''} ${pro ? 'topic-pro' : ''}" data-topic="${esc(topic.key)}" tabindex="0">
+          <div class="dau-card-header">
+            <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
+              ${iconSvg}
             </div>
-            <h3>${esc(topic.name)}</h3>
-            <div class="writing-topic-progress">
-              <span>${done}/${topic.tasks.length} đã hoàn thành</span>
-              <span>${icon("arrow-right", 16)}</span>
+            <div class="dau-card-header-main">
+              <div class="dau-card-title-row">
+                <h3 class="dau-card-ru" title="${esc(topic.name)}">${esc(topic.name)}</h3>
+                ${isAllDone ? `
+                  <span class="topic-status topic-status-completed" style="flex-shrink:0">
+                    ${icon("check", 12)} Hoàn thành
+                  </span>
+                ` : pro ? `
+                  <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
+                ` : ""}
+              </div>
+              <div class="dau-card-subinfo">
+                <span>${currentLevel}</span>
+                <span class="dau-card-sep">•</span>
+                <span class="dau-card-count">${topic.tasks.length} bài luyện</span>
+                ${done > 0 ? `
+                  <span class="dau-card-sep">•</span>
+                  <span style="color:#10b981;font-weight:600">${done}/${topic.tasks.length} xong</span>
+                ` : ""}
+              </div>
+            </div>
+          </div>
+
+          <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
+            <div class="topic-footer-actions">
+              <button type="button" class="btn-write-action topic-text-btn" data-topic="${esc(topic.key)}" title="${actionLabel}">
+                ${icon("pen-tool", 14)} ${actionLabel}
+              </button>
+              <button type="button" class="topic-circle-btn" data-topic="${esc(topic.key)}" title="${actionLabel}" aria-label="${actionLabel}">
+                ${pro && !isUnlocked ? (icon("lock-pro", 16) || icon("lock", 16)) : icon("arrow-right", 16)}
+              </button>
             </div>
           </div>
         </article>
@@ -6574,6 +7788,13 @@ function initWritingPage() {
           event.preventDefault();
           openTopic(card);
         }
+      };
+    });
+    grid.querySelectorAll(".btn-write-action, .topic-circle-btn").forEach((btn) => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const card = btn.closest(".writing-topic-card");
+        if (card) openTopic(card);
       };
     });
   };
@@ -6626,6 +7847,9 @@ function initWritingPage() {
     host.querySelectorAll(".writing-mode-card").forEach((button) => {
       button.onclick = () => {
         currentMode = button.dataset.mode;
+        if (!getTasks().some((t) => t.level === currentLevel && taskMode(t) === currentMode)) {
+          currentLevel = getFirstLevelWithTasks(currentMode);
+        }
         const heading = host.querySelector(".writing-filter-head h2");
         if (heading) heading.textContent = `${MODE_INFO[currentMode].title} theo cấp độ`;
         renderTopics();
@@ -6704,16 +7928,34 @@ function initWritingPage() {
             <div class="writing-sidebar-scrim" id="writingSidebarScrim"></div>
 
             <section class="writing-practice-panel" data-writing-task="${esc(t.id)}">
-              <figure class="writing-prompt-figure">
-                <img src="${esc(taskImage(t))}" alt="${esc(t.title)}" />
-              </figure>
+              ${taskMode(t) === "picture" ? `
+                <figure class="writing-prompt-figure">
+                  <img src="${esc(taskImage(t))}" alt="${esc(t.title)}" />
+                </figure>
 
-              <div class="writing-prompt-box">
-                <div class="writing-prompt-copy">
-                  <span class="writing-section-label">ĐỀ BÀI</span>
-                  <p class="ru">${esc(t.prompt || "")}</p>
-                  ${t.vi ? `<p>${esc(t.vi)}</p>` : ""}
+                <div class="writing-prompt-box">
+                  <div class="writing-prompt-copy">
+                    <span class="writing-section-label">ĐỀ BÀI MIÊU TẢ TRANH</span>
+                    <p class="ru">${esc(t.prompt || "")}</p>
+                    ${t.vi ? `<p>${esc(t.vi)}</p>` : ""}
+                  </div>
+              ` : `
+                <!-- DẠNG LUYỆN DỊCH: BỎ ẢNH, HIỂN THỊ ĐOẠN VĂN TIẾNG NGA CẦN DỊCH -->
+                <div class="writing-translation-card">
+                  <div class="writing-translation-head">
+                    <span class="writing-section-label">${icon("book-open-blog", 16)} ĐỀ BÀI (ĐOẠN VĂN TIẾNG NGA CẦN DỊCH)</span>
+                    <span class="writing-badge-lang">RU → VI</span>
+                  </div>
+                  <div class="writing-translation-passage ru">${esc(t.prompt || "")}</div>
+                  ${t.vi ? `<div class="writing-translation-hint">${icon("help-circle", 15)} <span><strong>Gợi ý ngữ cảnh:</strong> ${esc(t.vi)}</span></div>` : ""}
                 </div>
+
+                <div class="writing-prompt-box writing-prompt-box-trans">
+                  <div class="writing-prompt-copy">
+                    <span class="writing-section-label">HƯỚNG DẪN DỊCH</span>
+                    <p>Hãy dịch chính xác đoạn văn tiếng Nga phía trên sang tiếng Việt tự nhiên và trôi chảy.</p>
+                  </div>
+              `}
                 ${tips.length ? `
                   <button type="button" class="writing-hint-button" id="writingHintToggle" aria-expanded="false" aria-controls="writingHints" title="Hiển thị câu hỏi gợi ý">
                     ${icon("help-circle", 22)}
@@ -6955,6 +8197,9 @@ function initWritingPage() {
       const remote = await window.RusiSupabase.writing.getAll();
       if (remote && remote.length) {
         cloudWriting = remote;
+        if (!getTasks().some((t) => t.level === currentLevel && taskMode(t) === currentMode)) {
+          currentLevel = getFirstLevelWithTasks(currentMode);
+        }
         if (!document.body.classList.contains("in-workspace")) renderHub();
       }
     } catch (error) {
@@ -6972,6 +8217,7 @@ function initWritingPage() {
  * ===================================================================== */
 function initMockTestPage() {
   const host = el("#testHost");
+  if (!host) return;
   let bank = typeof TRKI_BANK !== "undefined" ? TRKI_BANK : [MOCK_TEST];
 
   let currentLevel = "A1";
@@ -6979,7 +8225,9 @@ function initMockTestPage() {
   const PAGE_SIZE = 6;
 
   let currentTest = bank[0];
+  let activePartId = null; // null = thi full toan bo de; hoac "gram", "reading", "listening"
   let answers = {};
+  let flagged = {};
   let timeLeft = 0;
   let timer = null;
   let started = false;
@@ -7012,6 +8260,110 @@ function initMockTestPage() {
 
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
+  const openSubtestPickerModal = (test) => {
+    let modal = document.getElementById("trkiSubtestModal");
+    if (!modal) {
+      modal = document.createElement("div");
+      modal.id = "trkiSubtestModal";
+      modal.className = "trki-modal-backdrop";
+      document.body.appendChild(modal);
+    }
+
+    const totalQ = test.parts ? test.parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0) : 34;
+
+    modal.innerHTML = `
+      <div class="trki-modal-card">
+        <button type="button" class="trki-modal-close" id="btnCloseSubtestModal" title="Đóng cửa sổ" aria-label="Đóng cửa sổ">✕</button>
+
+        <div class="trki-modal-header">
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+              <span class="topic-status topic-status-level">${test.level}</span>
+              <span style="font-size:0.75rem;font-weight:700;color:var(--primary);background:var(--primary-soft);padding:3px 9px;border-radius:6px">5 Phân Môn Chuẩn Quốc Tế</span>
+            </div>
+            <h3 class="trki-modal-title">${esc(test.title)}</h3>
+            <div style="font-size:0.85rem;color:var(--muted)">Chọn hình thức làm bài phù hợp với mục tiêu ôn luyện của bạn:</div>
+          </div>
+        </div>
+
+        <!-- HERO OPTION: THI TOÀN DIỆN (FULL SIMULATION) -->
+        <div class="trki-modal-full-hero">
+          <div class="trki-modal-full-left">
+            <span style="font-size:0.75rem;font-weight:800;letter-spacing:1px;color:#f3c969;text-transform:uppercase">MÔ PHỎNG THI THẬT</span>
+            <div class="trki-modal-full-title">Thi Toàn Diện (Full Exam)</div>
+            <div class="trki-modal-full-desc">Làm trọn bộ tất cả các phần (${totalQ} câu · ${test.durationMin || 45} phút) có tính giờ và giám sát theo quy chuẩn khảo thí.</div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm btn-modal-start-full" style="background:var(--russia-red);border-color:var(--russia-red);flex-shrink:0;font-weight:700">
+            Bắt đầu thi Full →
+          </button>
+        </div>
+
+        <!-- MODULAR SUBTESTS LIST -->
+        <div class="trki-modal-parts-heading">Hoặc chọn từng phân môn để luyện tập tập trung:</div>
+        <div class="trki-modal-parts-list">
+          ${(test.parts || []).map((p, pIdx) => {
+            const pDur = p.durationMin || (p.id === 'gram' ? 25 : p.id === 'reading' ? 15 : p.id === 'writing' ? 25 : p.id === 'speaking' ? 15 : 10);
+            const pIcon = p.id === 'reading' ? 'book-open' : p.id === 'listening' ? 'headphones' : p.id === 'writing' ? 'pen-tool' : p.id === 'speaking' ? 'mic-speaking' : 'award-badge';
+            const pCount = p.questions ? p.questions.length : p.writing_tasks ? p.writing_tasks.length : p.speaking_tasks ? p.speaking_tasks.length : 1;
+            const pLabel = p.writing_tasks ? `${pCount} bài viết` : p.speaking_tasks ? `${pCount} tình huống` : `${pCount} câu`;
+            return `
+              <div class="trki-part-item">
+                <div class="trki-part-info">
+                  <div class="trki-part-icon">
+                    ${window.RusiIcons ? RusiIcons.get(pIcon, { size: 20 }) : ""}
+                  </div>
+                  <div>
+                    <div class="trki-part-name">${esc(p.name)}</div>
+                    <div class="trki-part-meta">${esc(p.vi)} · <b>${pLabel}</b> (${pDur} phút)</div>
+                  </div>
+                </div>
+                <button type="button" class="btn btn-primary btn-sm btn-modal-start-part" data-part-id="${p.id}" style="font-weight:700;flex-shrink:0">
+                  Luyện phần này →
+                </button>
+              </div>
+            `;
+          }).join("")}
+
+
+        </div>
+      </div>
+    `;
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") closeModal();
+    };
+    document.addEventListener("keydown", onKeyDown);
+
+    const closeModal = () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.classList.remove("modal-open");
+      if (modal) modal.remove();
+    };
+    document.body.classList.add("modal-open");
+
+    modal.onclick = (e) => {
+      if (e.target === modal) closeModal();
+    };
+    const btnClose = modal.querySelector("#btnCloseSubtestModal");
+    if (btnClose) btnClose.onclick = closeModal;
+
+    const btnStartFull = modal.querySelector(".btn-modal-start-full");
+    if (btnStartFull) {
+      btnStartFull.onclick = () => {
+        closeModal();
+        startTest(test, null);
+      };
+    }
+
+    modal.querySelectorAll(".btn-modal-start-part").forEach(btn => {
+      btn.onclick = () => {
+        const pId = btn.dataset.partId;
+        closeModal();
+        startTest(test, pId);
+      };
+    });
+  };
+
   const renderTrkiCards = () => {
     const gridHost = el("#trkiCardsGrid");
     if (!gridHost) return;
@@ -7040,16 +8392,12 @@ function initMockTestPage() {
 
     const filtered = bank.filter(t => t.level === currentLevel);
 
-    const doneCount = filtered.filter(t => Progress.doneList("trkiDone").includes(t.id)).length;
-    const totalCount = filtered.length;
-    const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
-
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
     if (currentPage < 1) currentPage = 1;
 
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    const pageItems = filtered.slice(startIndex, startIndex + PAGE_SIZE);
+    const pageItems = filtered.slice(0, currentPage * PAGE_SIZE);
+    const remainingCount = Math.max(0, filtered.length - pageItems.length);
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
@@ -7064,48 +8412,57 @@ function initMockTestPage() {
         const isDone = Progress.doneList("trkiDone").includes(t.id);
         const isPro = t.is_pro_only || t.level === "B1" || t.level === "B2";
         const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
-        const indexStr = String((currentPage - 1) * PAGE_SIZE + idx + 1).padStart(2, "0");
-        const russianCategory = `ТРКИ · ${t.level}`;
-        const qCount = t.questionsCount || (t.questions ? t.questions.length : 15);
-        const durMin = Math.round((t.durationSeconds || 1800) / 60);
+        const qCount = t.questionsCount || (t.questions ? t.questions.length : (t.parts ? t.parts.reduce((a, b) => a + (b.questions ? b.questions.length : 0), 0) : 34));
+        const durMin = Math.round((t.durationSeconds || (t.durationMin ? t.durationMin * 60 : 2700)) / 60);
 
         return `
-          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-trki-id="${t.id}">
+          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-trki-id="${t.id}" style="cursor:pointer">
             <div class="dau-card-header">
               <div class="dau-card-icon" style="background:rgba(197,34,51,0.08);color:var(--russia-red)">
                 ${window.RusiIcons ? RusiIcons.get(t.icon || "award-badge", { size: 24 }) : ""}
               </div>
               <div class="dau-card-header-main">
-                <div class="dau-card-title-row">
-                  <h3 class="dau-card-ru">${esc(t.title)}</h3>
-                  ${isDone ? `
-                    <span class="topic-status topic-status-completed" style="flex-shrink:0">
-                      ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
-                    </span>
-                  ` : isPro ? `
-                    <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
-                  ` : `
-                    <span class="topic-status topic-status-level" style="flex-shrink:0">${t.level}</span>
-                  `}
-                </div>
-                <div class="dau-card-subinfo">
-                  <span>${t.level}</span>
-                  <span class="dau-card-sep">|</span>
-                  <span class="dau-card-count">${qCount} câu</span>
-                </div>
+                ${(() => {
+                  const cleanTitle = (t.title || "").replace(/\s*\([^)]*\)/g, "").trim();
+                  return `
+                    <div class="dau-card-title-row">
+                      <h3 class="dau-card-ru">${esc(cleanTitle)}</h3>
+                      ${isDone ? `
+                        <span class="topic-status topic-status-completed" style="flex-shrink:0">
+                          ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
+                        </span>
+                      ` : isPro ? `
+                        <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
+                      ` : `
+                        <span class="topic-status topic-status-level" style="flex-shrink:0">${t.level}</span>
+                      `}
+                    </div>
+                    <div class="dau-card-subinfo">
+                      <span class="dau-card-count">${qCount} câu hỏi</span>
+                      <span class="dau-card-sep">•</span>
+                      <span>${durMin} phút</span>
+                    </div>
+                  `;
+                })()}
               </div>
             </div>
 
-            <div class="dau-card-footer" style="justify-content:flex-end">
-              <button type="button" class="btn btn-primary btn-sm btn-trki-action" data-trki-id="${t.id}" style="display:inline-flex;align-items:center;gap:6px;font-weight:700">
-                ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 14 }) : "") : ""} Vào phòng thi ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : "→"}
-              </button>
+            <div class="dau-card-footer topic-footer trki-card-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
+              <div class="topic-footer-actions">
+                <button type="button" class="btn-trki-parts topic-text-btn" data-trki-id="${t.id}" title="Chọn từng phần để luyện tập">
+                  ${window.RusiIcons ? RusiIcons.get("flashcards-layers", { size: 14 }) : ""} Chọn phần ▾
+                </button>
+                <button type="button" class="btn-trki-full topic-text-btn topic-text-btn-primary" data-trki-id="${t.id}" title="Vào thi toàn diện cả 5 phần">
+                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 13 }) : "") : ""} Vào thi Full →
+                </button>
+              </div>
             </div>
           </article>
         `;
       }).join("");
 
-      gridHost.querySelectorAll(".btn-trki-action").forEach(btn => {
+      // Action: Click "Vào thi Full"
+      gridHost.querySelectorAll(".btn-trki-full").forEach(btn => {
         btn.onclick = (e) => {
           e.stopPropagation();
           const id = btn.dataset.trkiId;
@@ -7116,14 +8473,30 @@ function initMockTestPage() {
             Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
             return;
           }
-          currentTest = test;
-          startTest();
+          startTest(test, null);
         };
       });
 
+      // Action: Click "Chọn phần luyện ▾"
+      gridHost.querySelectorAll(".btn-trki-parts").forEach(btn => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.trkiId;
+          const test = bank.find(x => x.id === id);
+          if (!test) return;
+          const isPro = test.is_pro_only || test.level === "B1" || test.level === "B2";
+          if (isPro && !Monetization.isPro()) {
+            Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
+            return;
+          }
+          openSubtestPickerModal(test);
+        };
+      });
+
+      // Action: Click card body opens Subtest Picker Modal
       gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
         card.onclick = (e) => {
-          if (e.target.closest("button")) return;
+          if (e.target.closest("button") || e.target.closest("a")) return;
           const id = card.dataset.trkiId;
           const test = bank.find(x => x.id === id);
           if (!test) return;
@@ -7132,8 +8505,7 @@ function initMockTestPage() {
             Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
             return;
           }
-          currentTest = test;
-          startTest();
+          openSubtestPickerModal(test);
         };
       });
     }
@@ -7141,14 +8513,13 @@ function initMockTestPage() {
     renderDauPagination(el("#trkiPagination"), currentPage, totalPages, (newPage) => {
       currentPage = newPage;
       renderTrkiCards();
-      const topEl = el("#trkiSection") || host;
-      if (topEl) topEl.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
+    }, { remainingCount, unit: "đề thi" });
   };
 
   const renderHub = () => {
     started = false;
     answers = {};
+    flagged = {};
     tabSwitches = 0;
     if (timer) clearInterval(timer);
     if (visibilityHandler) {
@@ -7208,7 +8579,7 @@ function initMockTestPage() {
               </button>
             </div>
 
-            <div class="topic-grid" id="trkiCardsGrid"></div>
+            <div class="topic-grid" id="trkiCardsGrid" style="margin-top:24px"></div>
             <div class="dau-pagination" id="trkiPagination"></div>
           </div>
         </section>
@@ -7228,20 +8599,35 @@ function initMockTestPage() {
     renderTrkiCards();
   };
 
-  const startTest = () => {
+  const startTest = (test = null, partId = null) => {
+    if (test) currentTest = test;
+    activePartId = partId;
+
     document.body.classList.add("in-workspace");
     started = true;
     tabSwitches = 0;
 
-    const storageKey = "trki_exam_" + currentTest.id;
-    try { sessionStorage.setItem("trki_active_exam_id", currentTest.id); } catch(e) {}
+    const modal = document.getElementById("trkiSubtestModal");
+    if (modal) modal.remove();
 
-    // Đồng hồ Timestamp chống reload theo PROJECT_SPEC line 118
+    const storageKey = "trki_exam_" + currentTest.id + "_" + (activePartId || "full");
+    try {
+      sessionStorage.setItem("trki_active_exam_id", currentTest.id);
+      sessionStorage.setItem("trki_active_part_id", activePartId || "full");
+    } catch(e) {}
+
+    // Xác định các phần sẽ làm
+    const activeParts = activePartId ? (currentTest.parts || []).filter(p => p.id === activePartId) : (currentTest.parts || []);
+    const examDurationMin = activePartId
+      ? (activeParts[0] && activeParts[0].durationMin ? activeParts[0].durationMin : 20)
+      : (currentTest.durationMin || 45);
+
+    // Đồng hồ Timestamp chống reload
     const now = Date.now();
     let storedEndTime = 0;
     try { storedEndTime = parseInt(sessionStorage.getItem(storageKey + "_endTime") || "0", 10); } catch(e) {}
     if (!storedEndTime || storedEndTime <= now) {
-      storedEndTime = now + (currentTest.durationMin || 30) * 60 * 1000;
+      storedEndTime = now + examDurationMin * 60 * 1000;
       try { sessionStorage.setItem(storageKey + "_endTime", String(storedEndTime)); } catch(e) {}
     }
     timeLeft = Math.max(0, Math.floor((storedEndTime - now) / 1000));
@@ -7253,6 +8639,15 @@ function initMockTestPage() {
       if (savedAnswers) answers = JSON.parse(savedAnswers);
     } catch(e) {
       answers = {};
+    }
+
+    // Khôi phục cờ đánh dấu
+    flagged = {};
+    try {
+      const savedFlagged = sessionStorage.getItem(storageKey + "_flagged");
+      if (savedFlagged) flagged = JSON.parse(savedFlagged);
+    } catch(e) {
+      flagged = {};
     }
 
     renderTestRoom();
@@ -7326,7 +8721,17 @@ function initMockTestPage() {
       renderHub();
       return;
     }
-    const totalQuestions = currentTest.parts.reduce((acc, p) => acc + ((p && p.questions) ? p.questions.length : 0), 0);
+
+    const activeParts = activePartId
+      ? currentTest.parts.filter(p => p.id === activePartId)
+      : currentTest.parts;
+
+    const totalQuestions = activeParts.reduce((acc, p) => acc + ((p && p.questions) ? p.questions.length : 0), 0);
+    const totalAnswered = Object.keys(answers).length;
+
+    const roomTitle = activePartId
+      ? `${esc(currentTest.title)} · ${esc(activeParts[0] ? activeParts[0].vi : "")}`
+      : `${esc(currentTest.title)} (Thi Toàn Diện)`;
 
     let html = `
       <!-- STICKY TOP BACK BAR WITH TIMER -->
@@ -7335,7 +8740,7 @@ function initMockTestPage() {
           <i data-rusi-icon="arrow-left" data-size="18"></i>
         </button>
         <div class="dau-workspace-info">
-          <span class="dau-workspace-title">${esc(currentTest.title)}</span>
+          <span class="dau-workspace-title">${roomTitle}</span>
         </div>
         <div class="dau-workspace-controls" style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0">
           <div class="dau-exam-timer" style="font-weight:700;font-size:1.05rem;color:var(--secondary);display:inline-flex;align-items:center;gap:4px">
@@ -7349,7 +8754,7 @@ function initMockTestPage() {
         <div class="mock-main">
     `;
 
-    currentTest.parts.forEach((part, pi) => {
+    activeParts.forEach((part, pi) => {
       html += `
         <div class="mock-part" id="part_${part.id}">
           <div class="mock-part-title">
@@ -7359,44 +8764,188 @@ function initMockTestPage() {
       `;
 
       if (part.text) {
+        // SPLIT-PANE LAYOUT FOR READING
         html += `
-          <div class="reading-box">
-            <h4 style="margin-bottom:8px">Текст для чтения (Đoạn văn đọc hiểu):</h4>
-            <p class="ru" style="line-height:1.75;margin-bottom:12px">${esc(part.text.ru)}</p>
-            <div style="display:flex;justify-content:flex-end">
-              <button type="button" class="btn btn-outline btn-sm btn-reading-trans" data-text-idx="${pi}">Dịch nghĩa tiếng Việt</button>
+          <div class="cbt-split-container">
+            <div class="cbt-pane-media">
+              <div class="cbt-reading-header">
+                <span class="cbt-media-tag">Текст для чтения</span>
+                <div class="cbt-reading-tools">
+                  <button type="button" class="btn-cbt-tool btn-font-dec" title="Thu nhỏ cỡ chữ">A-</button>
+                  <button type="button" class="btn-cbt-tool btn-font-inc" title="Phóng to cỡ chữ">A+</button>
+                  <button type="button" class="btn-cbt-tool btn-reading-trans" data-text-idx="${pi}">Bản dịch</button>
+                </div>
+              </div>
+              <div class="cbt-reading-body">
+                <p class="ru cbt-passage-text" id="readingText_${pi}">${esc(part.text.ru)}</p>
+                <div class="reading-vi-trans hidden" style="margin-top:12px;padding:12px 14px;background:var(--bg);border-radius:8px;font-size:0.88rem;color:var(--muted);line-height:1.6">
+                  ${esc(part.text.vi)}
+                </div>
+              </div>
             </div>
-            <div class="reading-vi-trans hidden" style="margin-top:10px;padding:10px 14px;background:var(--bg);border-radius:8px;font-size:0.88rem;color:var(--muted)">
-              ${esc(part.text.vi)}
-            </div>
-          </div>
+            <div class="cbt-pane-questions">
         `;
-      }
-
-      if (part.lines) {
-        html += `
-          <div class="audio-player-sim">
-            <button class="btn btn-primary btn-sm" id="playAudio">${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn ghi âm hội thoại</button>
-            <span style="font-size:0.82rem;color:var(--muted);margin-left:12px">Bấm để nghe đoạn đối thoại chuẩn bản xứ</span>
-          </div>
-        `;
-      }
-
-      part.questions.forEach((q, qi) => {
-        const id = part.id + "_" + qi;
-        html += `
-          <div class="quiz-q" id="qBox_${id}">
-            <p class="q-text"><span class="ru">${qi + 1}. ${esc(q.q)}</span></p>
-            <div class="options">
-              ${q.options.map((opt, oi) => `
-                <button type="button" class="option ru ${answers[id] === oi ? "selected" : ""}" data-id="${id}" data-oi="${oi}">
-                  ${esc(opt)}
+        part.questions.forEach((q, qi) => {
+          const id = part.id + "_" + qi;
+          const isFlag = !!flagged[id];
+          html += `
+            <div class="quiz-q" id="qBox_${id}">
+              <div class="quiz-q-header">
+                <span class="quiz-q-num">Câu ${qi + 1} / ${part.questions.length}</span>
+                <button type="button" class="btn-flag-q ${isFlag ? 'is-flagged' : ''}" data-id="${id}">
+                  ${window.RusiIcons ? RusiIcons.get("flag", { size: 13 }) : ""} <span>${isFlag ? "Đã đặt cờ" : "Đặt cờ"}</span>
                 </button>
-              `).join("")}
+              </div>
+              <p class="q-text"><span class="ru">${esc(q.q)}</span></p>
+              <div class="options">
+                ${q.options.map((opt, oi) => `
+                  <button type="button" class="option ru ${answers[id] === oi ? "selected" : ""}" data-id="${id}" data-oi="${oi}">
+                    ${esc(opt)}
+                  </button>
+                `).join("")}
+              </div>
+            </div>
+          `;
+        });
+        html += `
             </div>
           </div>
         `;
-      });
+      } else if (part.lines) {
+        // SPLIT-PANE LAYOUT FOR LISTENING
+        html += `
+          <div class="cbt-split-container">
+            <div class="cbt-pane-media cbt-listening-pane">
+              <div class="cbt-reading-header">
+                <span class="cbt-media-tag">Аудиозапись диалога</span>
+              </div>
+              <div class="cbt-audio-box">
+                <div class="cbt-audio-icon">
+                  ${window.RusiIcons ? RusiIcons.get("headphones", { size: 26 }) : ""}
+                </div>
+                <h4 class="cbt-audio-title">Lắng nghe hội thoại bản xứ</h4>
+                <p class="cbt-audio-note">Nghe kỹ ngữ điệu và thông tin trong đoạn ghi âm để chọn đáp án chính xác bên phải.</p>
+                <div class="cbt-audio-controls">
+                  <button type="button" class="btn btn-primary btn-sm" id="playAudio">
+                    ${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="cbt-pane-questions">
+        `;
+        part.questions.forEach((q, qi) => {
+          const id = part.id + "_" + qi;
+          const isFlag = !!flagged[id];
+          html += `
+            <div class="quiz-q" id="qBox_${id}">
+              <div class="quiz-q-header">
+                <span class="quiz-q-num">Câu ${qi + 1} / ${part.questions.length}</span>
+                <button type="button" class="btn-flag-q ${isFlag ? 'is-flagged' : ''}" data-id="${id}">
+                  ${window.RusiIcons ? RusiIcons.get("flag", { size: 13 }) : ""} <span>${isFlag ? "Đã đặt cờ" : "Đặt cờ"}</span>
+                </button>
+              </div>
+              <p class="q-text"><span class="ru">${esc(q.q)}</span></p>
+              <div class="options">
+                ${q.options.map((opt, oi) => `
+                  <button type="button" class="option ru ${answers[id] === oi ? "selected" : ""}" data-id="${id}" data-oi="${oi}">
+                    ${esc(opt)}
+                  </button>
+                `).join("")}
+              </div>
+            </div>
+          `;
+        });
+        html += `
+            </div>
+          </div>
+        `;
+      } else if (part.writing_tasks) {
+        // PHẦN 4: KỸ NĂNG VIẾT (СУБТЕСТ ПИСЬМО)
+        html += `
+          <div class="cbt-writing-container" style="padding:22px 24px;border-radius:18px;background:var(--surface);border:1.5px solid var(--border);margin-top:14px;box-shadow:0 2px 12px rgba(16,42,76,0.03)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;color:var(--primary);font-weight:800;font-size:0.92rem;text-transform:uppercase;letter-spacing:0.05em">
+              ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 18 }) : ""}
+              <span>BÀI THI VIẾT (СУБТЕСТ ПИСЬМО) · ${part.durationMin || 25} PHÚT</span>
+            </div>
+        `;
+        part.writing_tasks.forEach((wt, wti) => {
+          const wId = "write_" + part.id + "_" + wti;
+          const savedText = answers[wId] || "";
+          const wordCount = savedText.trim() ? savedText.trim().split(/\s+/).length : 0;
+          html += `
+            <div class="trki-writing-task-box" id="qBox_${wId}" style="margin-bottom:20px">
+              <div style="background:linear-gradient(135deg,rgba(23,87,166,0.04),rgba(30,64,175,0.02));border-radius:14px;padding:18px 20px;border:1px solid rgba(23,87,166,0.18);margin-bottom:16px">
+                <div style="font-weight:800;font-size:1.05rem;color:var(--text);margin-bottom:8px">${esc(wt.title)}</div>
+                <div class="ru" style="font-size:1.15rem;font-weight:600;line-height:1.75;color:var(--text);margin-bottom:10px">${esc(wt.prompt)}</div>
+                <div style="font-size:0.9rem;color:var(--muted);line-height:1.55">${esc(wt.vi)}</div>
+              </div>
+              <textarea class="trki-exam-textarea ru" data-wid="${wId}" data-min="${wt.minWords || 35}" placeholder="Пишите ваш текст здесь..." style="width:100%;min-height:160px;padding:16px 18px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface);font-size:1.05rem;font-family:inherit;line-height:1.7;color:var(--text);box-sizing:border-box">${esc(savedText)}</textarea>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:0.86rem;color:var(--muted);flex-wrap:wrap;gap:8px">
+                <span class="trki-word-counter" id="counter_${wId}">Dung lượng: <b style="color:var(--text)">${wordCount} từ</b> (Tối thiểu ${wt.minWords || 35} từ)</span>
+                <span style="color:var(--green);display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Tự động lưu bài làm</span>
+              </div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      } else if (part.speaking_tasks) {
+        // PHẦN 5: KỸ NĂNG NÓI (СУБТЕСТ ГОВОРЕНИЕ)
+        html += `
+          <div class="cbt-speaking-container" style="padding:22px 24px;border-radius:18px;background:var(--surface);border:1.5px solid var(--border);margin-top:14px;box-shadow:0 2px 12px rgba(16,42,76,0.03)">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;color:var(--russia-red);font-weight:800;font-size:0.92rem;text-transform:uppercase;letter-spacing:0.05em">
+              ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 18 }) : ""}
+              <span>BÀI THI NÓI (СУБТЕСТ ГОВОРЕНИЕ) · ${part.durationMin || 15} PHÚT</span>
+            </div>
+        `;
+        part.speaking_tasks.forEach((st, sti) => {
+          const sId = "speak_" + part.id + "_" + sti;
+          html += `
+            <div class="trki-speaking-task-box" id="qBox_${sId}" style="background:var(--bg);border-radius:14px;padding:18px 20px;border:1px solid var(--border);margin-bottom:18px">
+              <div style="font-weight:800;font-size:1.02rem;color:var(--text);margin-bottom:8px">${esc(st.title)}</div>
+              <div class="ru" style="font-size:1.15rem;font-weight:600;line-height:1.75;color:var(--text);margin-bottom:8px">${esc(st.prompt)}</div>
+              <div style="font-size:0.88rem;color:var(--muted);line-height:1.55;margin-bottom:16px">${esc(st.vi)}</div>
+              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                <button type="button" class="btn btn-outline btn-sm btn-trki-suggested" data-sid="${sId}" style="font-size:0.84rem">
+                  ${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} Câu gợi ý phản xạ
+                </button>
+                <button type="button" class="btn btn-primary btn-sm btn-trki-mic" data-sid="${sId}" style="display:inline-flex;align-items:center;gap:6px;font-size:0.84rem">
+                  ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 14 }) : ""} Luyện phát âm / Ghi âm
+                </button>
+                <span class="trki-mic-status" id="micStatus_${sId}" style="font-size:0.84rem;color:var(--muted)"></span>
+              </div>
+              <div class="trki-suggested-box hidden" id="suggestedBox_${sId}" style="margin-top:14px;padding:14px 16px;background:var(--surface);border:1px dashed var(--border);border-radius:10px;font-size:0.95rem;line-height:1.65">
+                <strong style="color:var(--primary)">Gợi ý mẫu:</strong> <span class="ru">${esc(st.suggested || "")}</span>
+              </div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+      } else if (Array.isArray(part.questions)) {
+        // STANDARD (GRAMMAR & VOCABULARY)
+        part.questions.forEach((q, qi) => {
+          const id = part.id + "_" + qi;
+          const isFlag = !!flagged[id];
+          html += `
+            <div class="quiz-q" id="qBox_${id}">
+              <div class="quiz-q-header">
+                <span class="quiz-q-num">Câu ${qi + 1} / ${part.questions.length}</span>
+                <button type="button" class="btn-flag-q ${isFlag ? 'is-flagged' : ''}" data-id="${id}">
+                  ${window.RusiIcons ? RusiIcons.get("flag", { size: 13 }) : ""} <span>${isFlag ? "Đã đặt cờ" : "Đặt cờ"}</span>
+                </button>
+              </div>
+              <p class="q-text"><span class="ru">${esc(q.q)}</span></p>
+              <div class="options">
+                ${q.options.map((opt, oi) => `
+                  <button type="button" class="option ru ${answers[id] === oi ? "selected" : ""}" data-id="${id}" data-oi="${oi}">
+                    ${esc(opt)}
+                  </button>
+                `).join("")}
+              </div>
+            </div>
+          `;
+        });
+      }
 
       html += `</div>`;
     });
@@ -7417,11 +8966,12 @@ function initMockTestPage() {
 
           <div class="question-palette-head">
             <span>BẢNG CÂU HỎI</span>
-            <span style="color:var(--primary);font-size:0.8rem" id="answeredCount">0/${totalQuestions}</span>
+            <span style="color:var(--primary);font-size:0.8rem" id="answeredCount">${totalAnswered}/${totalQuestions}</span>
           </div>
 
           <div class="palette-legend">
             <span><span class="dot dot-done"></span> Đã làm</span>
+            <span><span class="dot dot-flagged"></span> Đặt cờ</span>
             <span><span class="dot dot-undone"></span> Chưa làm</span>
           </div>
 
@@ -7429,13 +8979,28 @@ function initMockTestPage() {
     `;
 
     let pNum = 0;
-    currentTest.parts.forEach((part) => {
-      part.questions.forEach((q, qi) => {
-        pNum++;
-        const id = part.id + "_" + qi;
-        const isDone = answers[id] !== undefined;
-        html += `<button type="button" class="palette-btn ${isDone ? "done" : ""}" id="pBtn_${id}" data-jump="${id}">${pNum}</button>`;
-      });
+    activeParts.forEach((part) => {
+      if (Array.isArray(part.questions)) {
+        part.questions.forEach((q, qi) => {
+          pNum++;
+          const id = part.id + "_" + qi;
+          const isDone = answers[id] !== undefined;
+          const isFlag = !!flagged[id];
+          html += `<button type="button" class="palette-btn ${isDone ? "done" : ""} ${isFlag ? "flagged" : ""}" id="pBtn_${id}" data-jump="${id}" title="Câu ${pNum}${isFlag ? ' (Đã đặt cờ)' : ''}">${pNum}</button>`;
+        });
+      } else if (part.writing_tasks) {
+        part.writing_tasks.forEach((wt, wti) => {
+          const wId = "write_" + part.id + "_" + wti;
+          const isDone = !!(answers[wId] && answers[wId].trim().length > 10);
+          html += `<button type="button" class="palette-btn palette-btn-skill ${isDone ? "done" : ""}" id="pBtn_${wId}" data-jump="${wId}" title="Viết: ${wt.title}">W${wti + 1}</button>`;
+        });
+      } else if (part.speaking_tasks) {
+        part.speaking_tasks.forEach((st, sti) => {
+          const sId = "speak_" + part.id + "_" + sti;
+          const isDone = !!answers[sId];
+          html += `<button type="button" class="palette-btn palette-btn-skill ${isDone ? "done" : ""}" id="pBtn_${sId}" data-jump="${sId}" title="Nói: ${st.title}">S${sti + 1}</button>`;
+        });
+      }
     });
 
     html += `
@@ -7449,14 +9014,20 @@ function initMockTestPage() {
     `;
 
     host.innerHTML = html;
+    if (window.RusiIcons && typeof RusiIcons.render === "function") {
+      RusiIcons.render(host);
+    }
 
     el("#btnExitTest").onclick = () => {
       if (confirm("Bạn có chắc chắn muốn rời khỏi phòng thi? Kết quả hiện tại sẽ không được lưu.")) {
+        const storageKey = "trki_exam_" + currentTest.id + "_" + (activePartId || "full");
         try {
           sessionStorage.removeItem("trki_active_exam_id");
+          sessionStorage.removeItem("trki_active_part_id");
           if (currentTest && currentTest.id) {
-            sessionStorage.removeItem("trki_exam_" + currentTest.id + "_endTime");
-            sessionStorage.removeItem("trki_exam_" + currentTest.id + "_answers");
+            sessionStorage.removeItem(storageKey + "_endTime");
+            sessionStorage.removeItem(storageKey + "_answers");
+            sessionStorage.removeItem(storageKey + "_flagged");
           }
         } catch(e) {}
         clearInterval(timer);
@@ -7467,14 +9038,60 @@ function initMockTestPage() {
       }
     };
 
+    // Tools for Split-Pane Reading
+    host.querySelectorAll(".btn-font-inc").forEach(b => {
+      b.onclick = () => {
+        const p = b.closest(".cbt-pane-media").querySelector(".cbt-passage-text");
+        if (p) {
+          const cur = parseFloat(window.getComputedStyle(p).fontSize) || 16;
+          if (cur < 24) p.style.fontSize = (cur + 2) + "px";
+        }
+      };
+    });
+    host.querySelectorAll(".btn-font-dec").forEach(b => {
+      b.onclick = () => {
+        const p = b.closest(".cbt-pane-media").querySelector(".cbt-passage-text");
+        if (p) {
+          const cur = parseFloat(window.getComputedStyle(p).fontSize) || 16;
+          if (cur > 14) p.style.fontSize = (cur - 2) + "px";
+        }
+      };
+    });
     host.querySelectorAll(".btn-reading-trans").forEach(btn => {
       btn.onclick = () => {
-        const transBox = btn.closest(".reading-box").querySelector(".reading-vi-trans");
-        transBox.classList.toggle("hidden");
-        btn.textContent = transBox.classList.contains("hidden") ? "Dịch nghĩa tiếng Việt" : "Ẩn bản dịch";
+        const transBox = btn.closest(".cbt-pane-media")
+          ? btn.closest(".cbt-pane-media").querySelector(".reading-vi-trans")
+          : btn.closest(".reading-box").querySelector(".reading-vi-trans");
+        if (transBox) {
+          transBox.classList.toggle("hidden");
+          btn.textContent = transBox.classList.contains("hidden") ? "Bản dịch" : "Ẩn dịch";
+        }
       };
     });
 
+    // Flag Question event
+    host.querySelectorAll(".btn-flag-q").forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        flagged[id] = !flagged[id];
+        const storageKey = "trki_exam_" + currentTest.id + "_" + (activePartId || "full");
+        try {
+          sessionStorage.setItem(storageKey + "_flagged", JSON.stringify(flagged));
+        } catch(e) {}
+
+        btn.classList.toggle("is-flagged", flagged[id]);
+        const span = btn.querySelector("span");
+        if (span) span.textContent = flagged[id] ? "Đã đặt cờ" : "Đặt cờ";
+
+        const pBtn = el(`#pBtn_${id}`);
+        if (pBtn) {
+          pBtn.classList.toggle("flagged", flagged[id]);
+        }
+      };
+    });
+
+    // Option selection event
     host.querySelectorAll(".option").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.dataset.id;
@@ -7482,8 +9099,9 @@ function initMockTestPage() {
         group.forEach((g) => g.classList.remove("selected"));
         btn.classList.add("selected");
         answers[id] = +btn.dataset.oi;
+        const storageKey = "trki_exam_" + currentTest.id + "_" + (activePartId || "full");
         try {
-          sessionStorage.setItem("trki_exam_" + currentTest.id + "_answers", JSON.stringify(answers));
+          sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers));
         } catch(e) {}
 
         const pBtn = el(`#pBtn_${id}`);
@@ -7508,10 +9126,42 @@ function initMockTestPage() {
     });
 
     const play = el("#playAudio");
+    let isTestAudioPlaying = false;
     if (play) {
       play.onclick = () => {
-        const lisPart = currentTest.parts.find((p) => p.lines);
-        if (lisPart) speak(lisPart.lines.map((l) => l.ru).join(" "), "ru-RU", 0.85);
+        if (isTestAudioPlaying) {
+          if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
+          isTestAudioPlaying = false;
+          play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
+          return;
+        }
+        const lisPart = activeParts.find((p) => p.lines);
+        if (!lisPart || !Array.isArray(lisPart.lines) || !lisPart.lines.length) return;
+        const fullText = lisPart.lines.map((l) => l.ru || "").filter(Boolean).join(" ");
+        if (!fullText) return;
+
+        isTestAudioPlaying = true;
+        play.innerHTML = `${window.RusiIcons ? RusiIcons.get("pause-control", { size: 16 }) : ""} Tạm dừng đối thoại`;
+
+        if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(fullText);
+          u.lang = "ru-RU";
+          u.rate = 0.85;
+          if (typeof pickVoice === "function") {
+            const v = pickVoice("ru-RU");
+            if (v) u.voice = v;
+          }
+          u.onend = () => {
+            isTestAudioPlaying = false;
+            if (play) play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
+          };
+          u.onerror = () => {
+            isTestAudioPlaying = false;
+            if (play) play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
+          };
+          window.speechSynthesis.speak(u);
+        }
       };
     }
 
@@ -7523,11 +9173,15 @@ function initMockTestPage() {
   const submit = () => {
     started = false;
     clearInterval(timer);
+
+    const storageKey = "trki_exam_" + currentTest.id + "_" + (activePartId || "full");
     try {
       sessionStorage.removeItem("trki_active_exam_id");
+      sessionStorage.removeItem("trki_active_part_id");
       if (currentTest && currentTest.id) {
-        sessionStorage.removeItem("trki_exam_" + currentTest.id + "_endTime");
-        sessionStorage.removeItem("trki_exam_" + currentTest.id + "_answers");
+        sessionStorage.removeItem(storageKey + "_endTime");
+        sessionStorage.removeItem(storageKey + "_answers");
+        sessionStorage.removeItem(storageKey + "_flagged");
       }
     } catch(e) {}
     if (visibilityHandler) {
@@ -7535,12 +9189,17 @@ function initMockTestPage() {
       visibilityHandler = null;
     }
 
+    const activeParts = activePartId
+      ? currentTest.parts.filter(p => p.id === activePartId)
+      : currentTest.parts;
+
     const detail = [];
     let total = 0;
     let correct = 0;
-    currentTest.parts.forEach((part) => {
+    activeParts.forEach((part) => {
       let pc = 0;
-      part.questions.forEach((q, qi) => {
+      const questions = Array.isArray(part.questions) ? part.questions : [];
+      questions.forEach((q, qi) => {
         total++;
         const given = answers[part.id + "_" + qi];
         if (given === q.a) {
@@ -7548,19 +9207,50 @@ function initMockTestPage() {
           pc++;
         }
       });
-      detail.push({ part, pct: Math.round((pc / part.questions.length) * 100), count: pc, total: part.questions.length });
+      const pct = questions.length > 0 ? Math.round((pc / questions.length) * 100) : 100;
+      detail.push({
+        part,
+        pct,
+        count: pc,
+        total: questions.length,
+        passed: pct >= (currentTest.passPercent || 66)
+      });
     });
 
-    const pct = Math.round((correct / total) * 100);
-    const passed = pct >= currentTest.passPercent;
-    const best = Math.max(pct, STORE.get("bestTest_" + currentTest.id, 0));
-    STORE.set("bestTest_" + currentTest.id, best);
-    STORE.set("bestTest", Math.max(pct, STORE.get("bestTest", 0)));
+    const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+    const requiredPassPct = currentTest.passPercent || 66;
 
-    if (passed) {
-      Progress.addXp(30);
-      Progress.markDone("testsDone", currentTest.title);
+    // Check TRKI Official Passing Standards
+    const allSubtestsPassed = detail.every(d => d.pct >= requiredPassPct);
+    const failedParts = detail.filter(d => d.pct < requiredPassPct);
+    const singleRetakeEligible = !activePartId && failedParts.length === 1 && failedParts[0].pct >= 60;
+
+    let examStatus = "fail";
+    let statusBadgeText = `НЕ СДАНО (CHƯA ĐẠT · Chuẩn ≥ ${requiredPassPct}%)`;
+    let statusDesc = "Theo chuẩn ТРКИ, bạn cần đạt tối thiểu 66% để đạt yêu cầu. Hãy rà soát lại các câu sai bên dưới để ôn luyện bổ sung.";
+
+    if (allSubtestsPassed) {
+      examStatus = "pass";
+      statusBadgeText = activePartId
+        ? `СДАНО · ĐẠT YÊU CẦU ${activeParts[0].vi}`
+        : `СДАНО · ĐẠT CHỨNG CHỈ ТРКИ ${currentTest.level}`;
+      statusDesc = activePartId
+        ? `Chúc mừng! Bạn đã hoàn thành tốt phân môn này với tỷ lệ đạt ${pct}%. Bạn có thể tiếp tục luyện các phần khác hoặc thi toàn diện!`
+        : `Chúc mừng! Bạn đã vượt qua tất cả các phân môn khảo thí với điểm số ≥ 66% theo chuẩn quốc gia Liên bang Nga.`;
+      Progress.addXp(activePartId ? 15 : 30);
+      if (!activePartId) {
+        Progress.markDone("trkiDone", currentTest.id);
+      }
+    } else if (singleRetakeEligible) {
+      examStatus = "retake";
+      statusBadgeText = `BẢO LƯU KẾT QUẢ · ĐƯỢC THI LẠI 1 PHÂN MÔN`;
+      statusDesc = `Theo quy chế TRKI chính thức, bạn đạt chuẩn ${detail.length - 1}/${detail.length} phân môn và phân môn "${failedParts[0].part.vi}" đạt ${failedParts[0].pct}% (ngưỡng 60%-65%). Bạn đủ điều kiện bảo lưu và chỉ phải thi lại riêng phân môn này!`;
     }
+
+    const bestKey = "bestTest_" + currentTest.id + (activePartId ? "_" + activePartId : "");
+    const best = Math.max(pct, STORE.get(bestKey, 0));
+    STORE.set(bestKey, best);
+    STORE.set("bestTest", Math.max(pct, STORE.get("bestTest", 0)));
 
     host.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
@@ -7569,87 +9259,173 @@ function initMockTestPage() {
           <i data-rusi-icon="arrow-left" data-size="18"></i>
         </button>
         <div class="dau-workspace-info">
-          <span class="dau-workspace-title">Kết quả khảo thí: ${esc(currentTest.title)}</span>
+          <span class="dau-workspace-title">Kết quả khảo thí ТРКИ: ${esc(currentTest.title)}</span>
         </div>
-        <button class="btn btn-primary btn-sm dau-top-btn" id="btnRetryTop" title="Thi lại đề này">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 15 }) : ""} <span class="btn-text">Thi lại đề này</span></button>
+        <button class="btn btn-primary btn-sm dau-top-btn" id="btnRetryTop" title="Thi lại">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 15 }) : ""} <span class="btn-text">Thi lại</span></button>
       </div>
 
-      <div class="workspace" style="padding:32px 24px">
-        <div style="text-align:center;margin-bottom:28px">
-          <div style="margin-bottom:12px;color:${passed ? "var(--primary)" : "var(--muted)"}">${window.RusiIcons ? RusiIcons.get(passed ? "trophy-reward" : "sparkles-clean", { size: 54 }) : ""}</div>
-          <span class="pro-chip">${esc(currentTest.level)} · KẾT QUẢ KHẢO THÍ CHÍNH THỨC</span>
-          <h2 style="font-size:1.8rem;margin:8px 0">${correct}/${total} câu đúng — ${pct}%</h2>
-          <p style="margin:6px 0 16px;color:var(--muted)">Điểm cao nhất cấp độ này: <b>${best}%</b></p>
-          <div class="pass-badge ${passed ? "yes" : "no"}" style="font-size:1rem;padding:8px 20px">
-            ${passed ? "ĐẠT CHUẨN NĂNG LỰC TRKI " + currentTest.level : "CHƯA ĐẠT (Yêu cầu chuẩn ≥ " + currentTest.passPercent + "%)"}
+      <div class="workspace" style="padding:28px 20px;max-width:1100px;margin:0 auto">
+        <!-- OFFICIAL CERTIFICATE BANNER -->
+        <div class="trki-cert-box">
+          <div class="trki-cert-decor-top">
+            ${window.RusiIcons ? RusiIcons.get("award-badge", { size: 32 }) : ""}
           </div>
+          <h2 class="trki-cert-title">
+            ${activePartId ? `KẾT QUẢ ÔN LUYỆN: ${esc(activeParts[0].vi)}` : `KẾT QUẢ KHẢO THÍ CHỨNG CHỈ TIẾNG NGA QUỐC TẾ ТРКИ`}
+          </h2>
+          <div class="trki-cert-subtitle">
+            ${activePartId ? `${esc(currentTest.title)} · TRÌNH ĐỘ ${esc(currentTest.level)}` : `ГОСУДАРСТВЕННЫЙ СЕРТИФИКАЦИОННЫЙ ОТЧЁТ · TRÌNH ĐỘ ${esc(currentTest.level)}`}
+          </div>
+
+          <div class="trki-cert-score-main">${correct}/${total} CÂU ĐÚNG · ${pct}%</div>
+
+          <div>
+            <span class="trki-cert-badge ${examStatus}">
+              ${window.RusiIcons ? RusiIcons.get(examStatus === "pass" ? "check-circle" : examStatus === "retake" ? "flag" : "shield-anti-cheat", { size: 18 }) : ""}
+              ${statusBadgeText}
+            </span>
+          </div>
+
+          <p class="trki-cert-meta">${statusDesc}</p>
         </div>
 
-        <h3 style="margin:24px 0 12px;display:flex;align-items:center;gap:8px">${window.RusiIcons ? RusiIcons.get("bar-chart-2", { size: 20 }) : ""} Thống kê tỷ lệ đạt theo từng kỹ năng:</h3>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));gap:12px;margin-bottom:28px">
-          ${detail
-            .map(
-              (d) => `
-            <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px">
-              <div style="font-size:0.85rem;color:var(--muted)">${esc(d.part.vi)}</div>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-                <b style="font-size:1.2rem;color:var(--primary)">${d.count}/${d.total} câu</b>
-                <b style="font-size:1.2rem">${d.pct}%</b>
+        <h3 style="margin:24px 0 14px;display:flex;align-items:center;gap:8px;font-size:1.15rem;color:var(--russia-navy)">
+          ${window.RusiIcons ? RusiIcons.get("bar-chart-2", { size: 20 }) : ""} Thống kê tỷ lệ đạt:
+        </h3>
+
+        <div class="trki-subtest-results-grid">
+          ${detail.map((d) => `
+            <div class="trki-subtest-result-card">
+              <div class="trki-subtest-card-top">
+                <span class="trki-subtest-card-name">${esc(d.part.vi)}</span>
+                <span class="trki-subtest-status-pill ${d.passed ? 'pass' : 'fail'}">
+                  ${d.passed ? 'СДАНО' : 'НЕ СДАНО'}
+                </span>
               </div>
-            </div>`
-            )
-            .join("")}
+              <div class="trki-subtest-card-stat">
+                <b style="font-size:1.1rem;color:var(--primary)">${d.count}/${d.total} câu</b>
+                <b style="font-size:1.1rem">${d.pct}%</b>
+              </div>
+              <div class="trki-subtest-bar-wrap">
+                <div class="trki-subtest-bar-fill ${d.passed ? 'pass' : 'fail'}" style="width:${d.pct}%"></div>
+              </div>
+            </div>
+          `).join("")}
+
+          ${activePartId ? `
+            <div class="trki-subtest-result-card" style="border-style:dashed;background:rgba(23,87,166,0.04);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px">
+              <div style="font-weight:700;color:var(--russia-navy);margin-bottom:6px">Luyện các phần khác của đề này</div>
+              <p style="font-size:0.82rem;color:var(--muted);margin:0 0 10px">Bạn có thể chọn làm tiếp các phần còn lại để hoàn thành toàn diện.</p>
+              <button type="button" class="btn btn-outline btn-sm" id="btnChooseOtherParts" style="font-weight:700">
+                Chọn phần khác ▾
+              </button>
+            </div>
+          ` : `
+            <!-- Auxiliary Cards for Writing & Speaking in full 5-skill TRKI perspective -->
+            <div class="trki-subtest-result-card" style="border-style:dashed;background:rgba(23,87,166,0.02)">
+              <div class="trki-subtest-card-top">
+                <span class="trki-subtest-card-name">Субтест 4: Письмо (Kỹ năng Viết)</span>
+                <span class="trki-subtest-status-pill" style="background:rgba(23,87,166,0.08);color:var(--russia-blue)">TỰ LUẬN AI</span>
+              </div>
+              <p style="font-size:0.82rem;color:var(--muted);margin:6px 0 10px;line-height:1.4">Tả tranh và viết tóm tắt đề thi chuẩn TRKI.</p>
+              <a href="writing.html" style="font-size:0.85rem;font-weight:700;color:var(--russia-blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+                Luyện Viết ngay ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 12 }) : "→"}
+              </a>
+            </div>
+
+            <div class="trki-subtest-result-card" style="border-style:dashed;background:rgba(197,34,51,0.02)">
+              <div class="trki-subtest-card-top">
+                <span class="trki-subtest-card-name">Субтест 5: Говорение (Kỹ năng Nói)</span>
+                <span class="trki-subtest-status-pill" style="background:rgba(197,34,51,0.08);color:var(--russia-red)">VẤN ĐÁP AI</span>
+              </div>
+              <p style="font-size:0.82rem;color:var(--muted);margin:6px 0 10px;line-height:1.4">Shadowing và phản xạ tình huống chuẩn TRKI.</p>
+              <a href="speaking.html" style="font-size:0.85rem;font-weight:700;color:var(--russia-red);text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+                Luyện Nói ngay ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 12 }) : "→"}
+              </a>
+            </div>
+          `}
         </div>
 
-        <h3 style="margin:28px 0 14px;display:flex;align-items:center;gap:8px">${window.RusiIcons ? RusiIcons.get("file-text", { size: 20 }) : ""} Bảng phân tích đáp án & giải thích ngữ pháp chi tiết:</h3>
+        <h3 style="margin:28px 0 14px;display:flex;align-items:center;gap:8px;font-size:1.15rem;color:var(--russia-navy)">
+          ${window.RusiIcons ? RusiIcons.get("file-text", { size: 20 }) : ""} Bảng phân tích đáp án & giải thích ngữ pháp chi tiết:
+        </h3>
         <div id="reviewHost"></div>
 
         <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
-          <button class="btn btn-primary" id="retryTest">Làm lại đề khác</button>
+          <button class="btn btn-primary" id="retryTest">${activePartId ? "Làm lại phần này" : "Làm lại đề này"}</button>
+          <button class="btn btn-outline" id="btnBackToHub">Quay lại danh sách đề thi</button>
           <button class="btn btn-outline" onclick="window.scrollTo({top:0,behavior:'smooth'})">Lên đầu trang ↑</button>
         </div>
       </div>
     `;
 
     const review = el("#reviewHost");
-    currentTest.parts.forEach((part) => {
+    activeParts.forEach((part) => {
       review.innerHTML += `
-        <div style="margin:16px 0 8px;font-weight:700;color:var(--primary);border-bottom:1px solid var(--border);padding-bottom:4px">
+        <div style="margin:18px 0 10px;font-weight:700;color:var(--russia-navy);border-bottom:1px solid var(--border);padding-bottom:6px;font-size:1.05rem">
           ${esc(part.name)} (${esc(part.vi)})
         </div>`;
-      review.innerHTML += part.questions
-        .map((q, qi) => {
-          const given = answers[part.id + "_" + qi];
-          const ok = given === q.a;
+      if (Array.isArray(part.questions) && part.questions.length > 0) {
+        review.innerHTML += part.questions
+          .map((q, qi) => {
+            const given = answers[part.id + "_" + qi];
+            const ok = given === q.a;
+            return `
+          <div class="quiz-q" style="margin-bottom:14px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--surface)">
+            <p class="q-text" style="font-weight:700">${qi + 1}. <span class="ru">${esc(q.q)}</span></p>
+            <div style="font-size:.9rem;margin:8px 0">
+              Bạn chọn: <b class="ru" style="color:${ok ? "var(--green)" : "var(--red)"}">${given !== undefined ? esc(q.options[given]) : "— bỏ trống —"}</b>
+              ${ok ? '<span style="color:var(--green)"> (Chính xác)</span>' : '<span style="color:var(--red)"> (Sai)</span>'}
+            </div>
+            ${ok ? "" : `<div style="font-size:.9rem;margin-bottom:8px">Đáp án đúng: <b class="ru" style="color:var(--green)">${esc(q.options[q.a])}</b></div>`}
+            <div class="explain" style="margin-top:8px;padding:10px 12px;background:var(--bg);border-radius:8px;font-size:0.86rem;line-height:1.5">
+              ${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} <b>Giải thích quy tắc:</b> ${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}
+            </div>
+          </div>`;
+          })
+          .join("");
+      } else if (Array.isArray(part.writing_tasks)) {
+        review.innerHTML += part.writing_tasks.map((wt, wti) => {
+          const wId = "write_" + part.id + "_" + wti;
+          const userText = answers[wId] || "";
           return `
-        <div class="quiz-q" style="margin-bottom:14px;padding:14px;border:1px solid var(--border);border-radius:10px;background:var(--surface)">
-          <p class="q-text" style="font-weight:700">${qi + 1}. <span class="ru">${esc(q.q)}</span></p>
-          <div style="font-size:.9rem;margin:8px 0">
-            Bạn chọn: <b class="ru" style="color:${ok ? "var(--green)" : "var(--red)"}">${given !== undefined ? esc(q.options[given]) : "— bỏ trống —"}</b>
-            ${ok ? '<span style="color:var(--green)"> (Chính xác)</span>' : '<span style="color:var(--red)"> (Sai)</span>'}
-          </div>
-          ${ok ? "" : `<div style="font-size:.9rem;margin-bottom:8px">Đáp án đúng: <b class="ru" style="color:var(--green)">${esc(q.options[q.a])}</b></div>`}
-          <div class="explain">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} <b>Giải thích quy tắc:</b> ${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}</div>
-        </div>`;
-        })
-        .join("");
+            <div class="quiz-q" style="margin-bottom:14px;padding:16px;border:1px solid var(--border);border-radius:12px;background:var(--surface)">
+              <p class="q-text" style="font-weight:700">${wti + 1}. <span class="ru">${esc(wt.title)}</span></p>
+              <div style="font-size:.9rem;margin:8px 0;line-height:1.6">
+                <strong>Bài làm của bạn:</strong>
+                <div style="background:var(--bg);padding:10px 14px;border-radius:8px;margin-top:6px;white-space:pre-wrap">${esc(userText) || "— Chưa nộp bài viết —"}</div>
+              </div>
+            </div>`;
+        }).join("");
+      }
     });
 
+    const otherPartsBtn = el("#btnChooseOtherParts");
+    if (otherPartsBtn) {
+      otherPartsBtn.onclick = () => openSubtestPickerModal(currentTest);
+    }
+
     el("#btnReviewBack").onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); window.scrollTo({ top: 0, behavior: "smooth" }); };
-    el("#btnRetryTop").onclick = startTest;
-    el("#retryTest").onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); };
+    el("#btnRetryTop").onclick = () => startTest(currentTest, activePartId);
+    el("#retryTest").onclick = () => startTest(currentTest, activePartId);
+    el("#btnBackToHub").onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); };
+    if (window.RusiIcons && typeof RusiIcons.render === "function") {
+      RusiIcons.render(host);
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const checkResumeActiveExam = () => {
     try {
       const activeId = sessionStorage.getItem("trki_active_exam_id");
+      const activePart = sessionStorage.getItem("trki_active_part_id");
       if (activeId) {
         const found = bank.find(t => t.id === activeId);
-        const storedEndTime = parseInt(sessionStorage.getItem("trki_exam_" + activeId + "_endTime") || "0", 10);
+        const partParam = activePart === "full" ? null : activePart;
+        const storageKey = "trki_exam_" + activeId + "_" + (partParam || "full");
+        const storedEndTime = parseInt(sessionStorage.getItem(storageKey + "_endTime") || "0", 10);
         if (found && storedEndTime > Date.now()) {
-          currentTest = found;
-          startTest();
+          startTest(found, partParam);
           return true;
         }
       }
@@ -7750,17 +9526,17 @@ function initBlogPage() {
       document.body.appendChild(m);
     }
     m.innerHTML = `
-      <div class="anticheat-modal-box" style="max-width:760px;text-align:left;max-height:88vh;overflow-y:auto;border-top-color:var(--primary)">
+      <div class="anticheat-modal-box bpost-modal-content" style="max-width:960px;width:min(94vw, 960px);text-align:left;max-height:88vh;overflow-y:auto;border-top-color:var(--primary);padding:32px 36px;border-radius:20px;">
         <div style="display:flex;justify-content:space-between;align-items:start">
           <span class="pro-chip">${esc(post.categoryName || "CẨM NANG DU HỌC")}</span>
-          <button class="btn btn-outline btn-sm" id="closeArticle" style="padding:2px 8px">&times; Đóng</button>
+          <button class="btn btn-outline btn-sm" id="closeArticle" style="padding:4px 12px;display:inline-flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("x", { size: 16 }) : "&times;"} Đóng</button>
         </div>
-        <h2 style="margin:12px 0 6px">${esc(post.title)}</h2>
-        <div style="color:var(--muted);font-size:0.85rem;margin-bottom:16px">
+        <h2 style="margin:16px 0 8px;font-size:1.85rem;line-height:1.35">${esc(post.title)}</h2>
+        <div style="color:var(--muted);font-size:0.88rem;margin-bottom:18px">
           Tác giả: <b>${esc(post.author || "RUSI Editorial")}</b> · Ngày: ${esc(post.date || "")}
         </div>
-        ${post.cover ? `<img src="${esc(post.cover)}" style="width:100%;max-height:300px;object-fit:cover;border-radius:10px;margin-bottom:18px" alt="" />` : ""}
-        <div style="line-height:1.75;font-size:0.95rem;color:var(--text);white-space:pre-line">
+        ${post.cover ? `<img src="${esc(post.cover)}" style="width:100%;max-height:360px;object-fit:cover;border-radius:14px;margin-bottom:20px" alt="" />` : ""}
+        <div style="line-height:1.85;font-size:1.05rem;color:var(--text);white-space:pre-line">
           ${esc(post.content || post.excerpt)}
         </div>
         <div style="background:var(--primary-soft);border-radius:10px;padding:16px;margin-top:24px;text-align:center">
@@ -8110,23 +9886,8 @@ function initIndexPage() {
       return true;
     });
 
-    // Banner thông tin trạng thái học viên phía trên bảng giá
-    const alertBannerHtml = `
-      <div class="pricing-auth-banner logged-in" style="grid-column:1/-1">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span>${window.RusiIcons ? RusiIcons.get("users-students", { size: 16 }) : ""}</span>
-          <span>Đang chọn gói cho tài khoản: <b>${esc(user.name || "Học viên")}</b> <code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px">${esc(user.email || "Khách")}</code></span>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          ${isPro ? `<span class="pro-chip-header" style="font-size:0.75rem;padding:3px 10px">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} PRO VIP (${esc(proInfo ? proInfo.pkgTitle : "Active")})</span>` : `<span class="user-tier-badge tier-free" style="font-size:0.75rem;padding:3px 9px">Học viên Free</span>`}
-          <a href="upgrade.html" class="btn btn-sm btn-outline" style="font-size:0.78rem;padding:3px 10px;text-decoration:none">
-            Xem bảng so sánh chi tiết →
-          </a>
-        </div>
-      </div>
-    `;
-
-    pricingHost.innerHTML = alertBannerHtml + pkgs.map((pkg) => {
+    // Không hiển thị banner pricing-auth-banner logged-in theo yêu cầu
+    pricingHost.innerHTML = pkgs.map((pkg) => {
       const isCurrentPlan = isPro && proInfo && (pkg.id || "").toLowerCase() === (proInfo.pkgId || "").toLowerCase();
       
       // Nút hành động chuẩn theo trạng thái auth & pro
@@ -8326,11 +10087,94 @@ function initIndexPage() {
       });
     }
 
+    // Thao tác kéo chuột (Desktop) và vuốt tay (Mobile/Tablet)
+    let startX = 0;
+    let currentX = 0;
+    let isDragging = false;
+    let hasMoved = false;
+
+    const onPointerDown = (clientX) => {
+      stopTimer();
+      isDragging = true;
+      hasMoved = false;
+      startX = clientX;
+      currentX = clientX;
+      if (track) {
+        track.style.transition = "none";
+        track.style.cursor = "grabbing";
+      }
+    };
+
+    const onPointerMove = (clientX) => {
+      if (!isDragging) return;
+      currentX = clientX;
+      const diffX = currentX - startX;
+      if (Math.abs(diffX) > 6) {
+        hasMoved = true;
+      }
+      if (track) {
+        track.style.transform = `translateX(${diffX * 0.38}px)`;
+      }
+    };
+
+    const onPointerUp = () => {
+      if (!isDragging) return;
+      isDragging = false;
+      if (track) {
+        track.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
+        track.style.transform = "translateX(0)";
+        track.style.cursor = "grab";
+      }
+      const diffX = currentX - startX;
+      const SWIPE_THRESHOLD = 40;
+      if (hasMoved && Math.abs(diffX) >= SWIPE_THRESHOLD) {
+        if (diffX < 0) {
+          // Kéo sang trái -> Slide tiếp theo
+          nextSlide();
+        } else {
+          // Kéo sang phải -> Slide trước đó
+          prevSlide();
+        }
+      }
+      startTimer();
+    };
+
     if (slider) {
       slider.onmouseenter = stopTimer;
       slider.onmouseleave = startTimer;
-      slider.ontouchstart = stopTimer;
-      slider.ontouchend = startTimer;
+
+      // Touch events
+      slider.addEventListener("touchstart", (e) => {
+        if (e.touches && e.touches[0]) {
+          onPointerDown(e.touches[0].clientX);
+        }
+      }, { passive: true });
+
+      slider.addEventListener("touchmove", (e) => {
+        if (e.touches && e.touches[0]) {
+          onPointerMove(e.touches[0].clientX);
+        }
+      }, { passive: true });
+
+      slider.addEventListener("touchend", onPointerUp);
+      slider.addEventListener("touchcancel", onPointerUp);
+
+      // Mouse drag events
+      slider.addEventListener("mousedown", (e) => {
+        onPointerDown(e.clientX);
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (isDragging) {
+          onPointerMove(e.clientX);
+        }
+      });
+
+      window.addEventListener("mouseup", () => {
+        if (isDragging) {
+          onPointerUp();
+        }
+      });
     }
 
     startTimer();
