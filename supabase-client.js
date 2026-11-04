@@ -48,6 +48,117 @@
     ]);
   }
 
+  /* =========================================================================
+   * BỘ NHỚ ĐỆM TRÌNH DUYỆT (BROWSER CACHE FOR 0ms INSTANT NAVIGATION)
+   * Lưu tạm thời dữ liệu Supabase vào Memory + SessionStorage để tăng tốc chuyển trang tức thì
+   * ========================================================================= */
+  var DEFAULT_CACHE_TTL_MS = 15 * 60 * 1000; // 15 phút
+  var _memoryCache = new Map();
+  var CACHE_PREFIX = "rusi_sb_cache:";
+
+  var RusiCache = {
+    get: function (key) {
+      if (!key) return null;
+      var now = Date.now();
+      // 1. Kiểm tra RAM Memory Cache trước (0ms)
+      if (_memoryCache.has(key)) {
+        var memEntry = _memoryCache.get(key);
+        if (memEntry && memEntry.expiresAt > now) {
+          return memEntry.data;
+        }
+        _memoryCache.delete(key);
+      }
+      // 2. Kiểm tra SessionStorage (giữ dữ liệu trong phiên duyệt web)
+      try {
+        if (typeof window !== "undefined" && window.sessionStorage) {
+          var raw = window.sessionStorage.getItem(CACHE_PREFIX + key);
+          if (raw) {
+            var item = JSON.parse(raw);
+            if (item && item.expiresAt > now) {
+              _memoryCache.set(key, item);
+              return item.data;
+            }
+            window.sessionStorage.removeItem(CACHE_PREFIX + key);
+          }
+        }
+      } catch (_) {}
+      return null;
+    },
+
+    set: function (key, data, ttlMs) {
+      if (!key || data === undefined || data === null) return;
+      var ttl = typeof ttlMs === "number" ? ttlMs : DEFAULT_CACHE_TTL_MS;
+      var entry = {
+        data: data,
+        expiresAt: Date.now() + ttl,
+        cachedAt: Date.now()
+      };
+      _memoryCache.set(key, entry);
+      try {
+        if (typeof window !== "undefined" && window.sessionStorage) {
+          window.sessionStorage.setItem(CACHE_PREFIX + key, JSON.stringify(entry));
+        }
+      } catch (_) {}
+    },
+
+    clear: function () {
+      _memoryCache.clear();
+      try {
+        if (typeof window !== "undefined" && window.sessionStorage) {
+          var toRemove = [];
+          for (var i = 0; i < window.sessionStorage.length; i++) {
+            var k = window.sessionStorage.key(i);
+            if (k && k.indexOf(CACHE_PREFIX) === 0) {
+              toRemove.push(k);
+            }
+          }
+          toRemove.forEach(function (k) {
+            window.sessionStorage.removeItem(k);
+          });
+        }
+      } catch (_) {}
+    },
+
+    invalidate: function (prefix) {
+      if (!prefix) return RusiCache.clear();
+      _memoryCache.forEach(function (_, k) {
+        if (k.indexOf(prefix) === 0) _memoryCache.delete(k);
+      });
+      try {
+        if (typeof window !== "undefined" && window.sessionStorage) {
+          var toRemove = [];
+          for (var i = 0; i < window.sessionStorage.length; i++) {
+            var k = window.sessionStorage.key(i);
+            if (k && k.indexOf(CACHE_PREFIX + prefix) === 0) {
+              toRemove.push(k);
+            }
+          }
+          toRemove.forEach(function (k) {
+            window.sessionStorage.removeItem(k);
+          });
+        }
+      } catch (_) {}
+    },
+
+    withCache: async function (key, fetcher, ttlMs) {
+      var cached = RusiCache.get(key);
+      if (cached !== null) {
+        return cached;
+      }
+      try {
+        var data = await fetcher();
+        if (data !== null && data !== undefined && (!Array.isArray(data) || data.length > 0)) {
+          RusiCache.set(key, data, ttlMs);
+        }
+        return data;
+      } catch (err) {
+        var fallback = _memoryCache.has(key) ? _memoryCache.get(key).data : null;
+        if (fallback) return fallback;
+        throw err;
+      }
+    }
+  };
+
   function getClient() {
     if (client) return client;
     if (typeof window.supabase === "undefined" || !window.supabase.createClient) {
@@ -78,6 +189,44 @@
     }
   }
 
+  function sanitizeVocabRow(w) {
+    if (!w) return w;
+    if (typeof window !== "undefined" && typeof window.formatRussianGrammar === "function") {
+      if (w.pos) w.pos = window.formatRussianGrammar(w.pos);
+      if (w.gender) w.gender = window.formatRussianGrammar(null, null, w.gender);
+    }
+    if (w.example_ru) {
+      w.example_ru = w.example_ru.replace(/\u00E9/g, "е\u0301").replace(/\u00E1/g, "а\u0301")
+        .replace(/редаќции/g, "реда́кции").replace(/овощи́/g, "о́вощи")
+        .replace(/создаёт оде́жды/g, "создаёт оде́жду")
+        .replace(/рабо́той в фирме\./g, "рабо́той в фи́рме.");
+    }
+    if (w.example_vi) {
+      w.example_vi = w.example_vi.replace(/trên buổi concert/g, "tại buổi hòa nhạc");
+    }
+    if (w.word_with_stress) {
+      w.word_with_stress = w.word_with_stress.replace(/\bC(?=[а-яА-ЯёЁ\u0301])/g, "С")
+        .replace(/\bO(?=[а-яА-ЯёЁ\u0301])/g, "О")
+        .replace(/\bB(?=[а-яА-ЯёЁ\u0301])/g, "В")
+        .replace(/собира́ть данны\b/g, "собира́ть да́нные")
+        .replace(/анализи́ровать данны\b/g, "анализи́ровать да́нные");
+    }
+    if (w.word_normalized === "школьник") {
+      w.example_ru = "Шко́льник у́чится в шко́ле.";
+      w.example_vi = "Học sinh đang học ở trường học.";
+      w.gender = "м./ж.";
+    }
+    if (w.word_normalized === "художник") {
+      w.example_ru = "Худо́жник рису́ет карти́ны в мастерско́й.";
+      w.example_vi = "Họa sĩ đang vẽ tranh ở xưởng vẽ.";
+      w.gender = "м./ж.";
+    }
+    if (["студент", "преподаватель", "учитель", "спортсмен", "артист", "журналист", "переводчик", "писатель"].indexOf(w.word_normalized) !== -1) {
+      w.gender = "м./ж.";
+    }
+    return w;
+  }
+
   var RusiSupabase = {
     /** Kiểm tra xem Client đã sẵn sàng hoạt động chưa */
     isReady: function () {
@@ -90,7 +239,16 @@
     /** Đặt lại client khi thay đổi key hoặc cấu hình */
     resetClient: function () {
       client = null;
+      RusiCache.clear();
       return getClient();
+    },
+
+    /** Truy cập trực tiếp vào hệ thống Browser Cache */
+    cache: RusiCache,
+
+    /** Xóa toàn bộ dữ liệu lưu tạm trong Cache trình duyệt */
+    clearCache: function () {
+      RusiCache.clear();
     },
 
     /**
@@ -203,29 +361,92 @@
      * ========================================================================= */
     jars: {
       getSystemJars: async function () {
-        var sb = getClient();
-        if (!sb) return [];
-        try {
-          var res = await withTimeout(sb.from("vocab_jars").select("*").eq("is_system", true).order("created_at", { ascending: true }), 3500);
-          if (res.error || !res.data) return [];
-          return (res.data || []).map(function (row) {
-            return {
-              id: row.code || row.id,
-              code: row.code || row.id,
-              name: row.jar_name,
-              title: row.jar_name,
-              level: row.level || "A1",
-              levelName: row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1",
-              desc: row.description || "",
-              icon: row.icon || "archive-jar",
-              is_system: true,
-              words: Array.isArray(row.words) ? row.words : [],
-              article: row.article || null
-            };
-          });
-        } catch (_) {
-          return [];
-        }
+        return RusiCache.withCache("jars:system", async function () {
+          var sb = getClient();
+          if (!sb) return [];
+          try {
+            var res = await withTimeout(sb.from("vocab_jars").select("*").eq("is_system", true).order("created_at", { ascending: true }), 3500);
+            if (res.error || !res.data) return [];
+            return (res.data || []).map(function (row) {
+              return {
+                id: row.code || row.id,
+                code: row.code || row.id,
+                name: row.jar_name,
+                title: row.jar_name,
+                level: row.level || "A1",
+                levelName: row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1",
+                desc: row.description || "",
+                icon: row.icon || "archive-jar",
+                is_system: true,
+                words: (Array.isArray(row.words) ? row.words : []).map(function (w) {
+                  if (typeof window !== "undefined" && typeof window.formatRussianGrammar === "function") {
+                    if (w.pos) w.pos = window.formatRussianGrammar(w.pos);
+                    if (w.gender) w.gender = window.formatRussianGrammar(null, null, w.gender);
+                  }
+                  // Chuẩn hóa và làm sạch lỗi ký tự Latin / trọng âm / ví dụ lệch giống
+                  if (w.ex) {
+                    w.ex = w.ex.replace(/\u00E9/g, "е\u0301").replace(/\u00E1/g, "а\u0301")
+                      .replace(/редаќции/g, "реда́кции").replace(/овощи́/g, "о́вощи")
+                      .replace(/создаёт оде́жды/g, "создаёт оде́жду")
+                      .replace(/рабо́той в фирме\./g, "рабо́той в фи́рме.");
+                  }
+                  if (w.ex_vi) {
+                    w.ex_vi = w.ex_vi.replace(/trên buổi concert/g, "tại buổi hòa nhạc");
+                  }
+                  if (w.ru) {
+                    w.ru = w.ru.replace(/\bC(?=[а-яА-ЯёЁ\u0301])/g, "С")
+                      .replace(/\bO(?=[а-яА-ЯёЁ\u0301])/g, "О")
+                      .replace(/\bB(?=[а-яА-ЯёЁ\u0301])/g, "В")
+                      .replace(/собира́ть данны\b/g, "собира́ть да́нные")
+                      .replace(/анализи́ровать данны\b/g, "анализи́ровать да́нные");
+                    if (w.ru.includes("Шко́льник") && w.ex && w.ex.includes("Шко́льница")) {
+                      w.ex = "Шко́льник у́чится в шко́ле.";
+                      w.ex_vi = "Học sinh đang học ở trường học.";
+                    }
+                    if (w.ru.includes("Худо́жник") && w.ex && w.ex.includes("Худо́жница")) {
+                      w.ex = "Худо́жник рису́ет карти́ны в мастерско́й.";
+                      w.ex_vi = "Họa sĩ đang vẽ tranh ở xưởng vẽ.";
+                    }
+                  }
+                  return w;
+                }),
+                article: (function (art) {
+                  if (!art) return null;
+                  try {
+                    var str = JSON.stringify(art);
+                    str = str.replace(/\u00E9/g, "е\u0301").replace(/\u00E1/g, "а\u0301")
+                      .replace(/редаќции/g, "реда́кции").replace(/овощи́/g, "о́вощи")
+                      .replace(/создаёт оде́жды/g, "создаёт оде́жду")
+                      .replace(/рисова́ть  карти́ны/g, "рисова́ть карти́ны")
+                      .replace(/рабо́той в фирме\./g, "рабо́той в фи́рме.")
+                      .replace(/клие́нта в юриди́ческой фи́рме\./g, "клие́нта в фи́рме.")
+                      .replace(/trên buổi concert/g, "tại buổi hòa nhạc");
+                    var parsed = JSON.parse(str);
+                    if (parsed.actionChains) {
+                      parsed.actionChains.forEach(function (ac) {
+                        (ac.items || []).forEach(function (it) {
+                          if (it.target && it.target.indexOf("Шко́льник") !== -1) {
+                            it.ex = "Шко́льник у́чится в шко́ле.";
+                            it.ex_vi = "Học sinh đang học ở trường học.";
+                          }
+                          if (it.target && it.target.indexOf("Худо́жник") !== -1) {
+                            it.ex = "Худо́жник рису́ет карти́ны в мастерско́й.";
+                            it.ex_vi = "Họa sĩ đang vẽ tranh ở xưởng vẽ.";
+                          }
+                        });
+                      });
+                    }
+                    return parsed;
+                  } catch (_) {
+                    return art;
+                  }
+                })(row.article)
+              };
+            });
+          } catch (_) {
+            return [];
+          }
+        });
       },
 
       getAll: async function (userId) {
@@ -289,25 +510,33 @@
      * ========================================================================= */
     vocabularies: {
       getByTopic: async function (topicId) {
-        var sb = getClient();
-        if (!sb || !topicId) return [];
-        try {
-          var res = await sb.from("vocabularies").select("*").eq("topic_id", topicId).order("created_at", { ascending: true });
-          return res.data || [];
-        } catch (_) {
-          return [];
-        }
+        if (!topicId) return [];
+        return RusiCache.withCache("vocab:topic:" + topicId, async function () {
+          var sb = getClient();
+          if (!sb) return [];
+          try {
+            var res = await sb.from("vocabularies").select("*").eq("topic_id", topicId).order("created_at", { ascending: true });
+            var data = res.data || [];
+            return data.map(sanitizeVocabRow);
+          } catch (_) {
+            return [];
+          }
+        });
       },
 
       getByTopicCode: async function (topicCode) {
-        var sb = getClient();
-        if (!sb || !topicCode) return [];
-        try {
-          var res = await sb.from("vocabularies").select("*").eq("topic_code", topicCode).order("created_at", { ascending: true });
-          return res.data || [];
-        } catch (_) {
-          return [];
-        }
+        if (!topicCode) return [];
+        return RusiCache.withCache("vocab:topic_code:" + topicCode, async function () {
+          var sb = getClient();
+          if (!sb) return [];
+          try {
+            var res = await sb.from("vocabularies").select("*").eq("topic_code", topicCode).order("created_at", { ascending: true });
+            var data = res.data || [];
+            return data.map(sanitizeVocabRow);
+          } catch (_) {
+            return [];
+          }
+        });
       },
 
       search: async function (keyword) {
@@ -316,7 +545,7 @@
         try {
           var k = keyword.trim().toLowerCase();
           var res = await sb.from("vocabularies").select("*").or("word_normalized.ilike.%" + k + "%,meaning_vi.ilike.%" + k + "%").limit(50);
-          return res.data || [];
+          return (res.data || []).map(sanitizeVocabRow);
         } catch (_) {
           return [];
         }
@@ -328,32 +557,35 @@
      * ========================================================================= */
     tests: {
       getPublished: async function (level) {
-        var sb = getClient();
-        if (!sb) return null;
-        try {
-          var q = sb.from("trki_tests").select("*").eq("is_published", true);
-          if (level && level !== "all") q = q.eq("level", level);
-          var res = await withTimeout(q, 3500);
-          if (res.error || !res.data) return null;
-          return res.data.map(function (row) {
-            var raw = row.raw_data || {};
-            return {
-              id: row.code || row.id,
-              level: row.level,
-              levelName: row.level_name || ("TRKI " + row.level),
-              category: row.category || row.sub_test_type || "full",
-              title: row.title,
-              durationMin: row.duration_minutes || 45,
-              passPercent: row.passing_score || 60,
-              is_pro_only: Boolean(row.is_pro_only),
-              icon: row.icon || "graduation-cap",
-              parts: raw.parts || []
-            };
-          });
-        } catch (e) {
-          console.warn("[RusiSupabase] Lỗi lấy đề thi TRKI:", e);
-          return null;
-        }
+        var cacheKey = "tests:" + (level || "all");
+        return RusiCache.withCache(cacheKey, async function () {
+          var sb = getClient();
+          if (!sb) return null;
+          try {
+            var q = sb.from("trki_tests").select("*").eq("is_published", true);
+            if (level && level !== "all") q = q.eq("level", level);
+            var res = await withTimeout(q, 3500);
+            if (res.error || !res.data) return null;
+            return res.data.map(function (row) {
+              var raw = row.raw_data || {};
+              return {
+                id: row.code || row.id,
+                level: row.level,
+                levelName: row.level_name || ("TRKI " + row.level),
+                category: row.category || row.sub_test_type || "full",
+                title: row.title,
+                durationMin: row.duration_minutes || 45,
+                passPercent: row.passing_score || 60,
+                is_pro_only: Boolean(row.is_pro_only),
+                icon: row.icon || "graduation-cap",
+                parts: raw.parts || []
+              };
+            });
+          } catch (e) {
+            console.warn("[RusiSupabase] Lỗi lấy đề thi TRKI:", e);
+            return null;
+          }
+        });
       },
 
       saveResult: async function (userId, testId, resultData) {
@@ -383,37 +615,40 @@
      * ========================================================================= */
     listening: {
       getAll: async function (level) {
-        var sb = getClient();
-        if (!sb) return null;
-        try {
-          var q = sb.from("listening_lessons").select("*").order("part_number", { ascending: true });
-          if (level && level !== "all") q = q.eq("level", level);
-          var res = await withTimeout(q, 3500);
-          if (res.error || !res.data) return null;
-          return res.data.map(function (row) {
-            var raw = row.raw_data || {};
-            return {
-              id: row.code || row.id,
-              title: row.title,
-              vi: row.vi || row.translation_vi || "",
-              level: row.level || "A1",
-              levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
-              category: row.category || "airport",
-              categoryName: row.category_name || "Bài nghe",
-              estMinutes: row.est_minutes || 10,
-              icon: row.icon || "headphones",
-              partNumber: row.part_number || 1,
-              is_pro_only: Boolean(row.is_pro_only),
-              lines: raw.lines || [],
-              blanks: raw.blanks || [],
-              dictation: raw.dictation || [],
-              questions: raw.questions || []
-            };
-          });
-        } catch (e) {
-          console.warn("[RusiSupabase] Lỗi lấy bài nghe:", e);
-          return null;
-        }
+        var cacheKey = "listening:" + (level || "all");
+        return RusiCache.withCache(cacheKey, async function () {
+          var sb = getClient();
+          if (!sb) return null;
+          try {
+            var q = sb.from("listening_lessons").select("*").order("part_number", { ascending: true });
+            if (level && level !== "all") q = q.eq("level", level);
+            var res = await withTimeout(q, 3500);
+            if (res.error || !res.data) return null;
+            return res.data.map(function (row) {
+              var raw = row.raw_data || {};
+              return {
+                id: row.code || row.id,
+                title: row.title,
+                vi: row.vi || row.translation_vi || "",
+                level: row.level || "A1",
+                levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
+                category: row.category || "airport",
+                categoryName: row.category_name || "Bài nghe",
+                estMinutes: row.est_minutes || 10,
+                icon: row.icon || "headphones",
+                partNumber: row.part_number || 1,
+                is_pro_only: Boolean(row.is_pro_only),
+                lines: raw.lines || [],
+                blanks: raw.blanks || [],
+                dictation: raw.dictation || [],
+                questions: raw.questions || []
+              };
+            });
+          } catch (e) {
+            console.warn("[RusiSupabase] Lỗi lấy bài nghe:", e);
+            return null;
+          }
+        });
       }
     },
 
@@ -422,32 +657,35 @@
      * ========================================================================= */
     speaking: {
       getAll: async function (level) {
-        var sb = getClient();
-        if (!sb) return null;
-        try {
-          var q = sb.from("speaking_lessons").select("*");
-          if (level && level !== "all") q = q.eq("level", level);
-          var res = await withTimeout(q, 3500);
-          if (res.error || !res.data) return null;
-          return res.data.map(function (row) {
-            var raw = row.raw_data || {};
-            return {
-              id: row.code || row.id,
-              title: row.title,
-              level: row.level || "A1",
-              levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
-              category: row.category || "greeting",
-              categoryName: row.category_name || "Chào hỏi",
-              phonemeTarget: row.phoneme_target || "",
-              icon: row.icon || "mic-speaking",
-              is_pro_only: Boolean(row.is_pro_only),
-              items: raw.items || (row.sentence_ru ? [{ ru: row.sentence_ru, vi: "" }] : [])
-            };
-          });
-        } catch (e) {
-          console.warn("[RusiSupabase] Lỗi lấy bài nói:", e);
-          return null;
-        }
+        var cacheKey = "speaking:" + (level || "all");
+        return RusiCache.withCache(cacheKey, async function () {
+          var sb = getClient();
+          if (!sb) return null;
+          try {
+            var q = sb.from("speaking_lessons").select("*");
+            if (level && level !== "all") q = q.eq("level", level);
+            var res = await withTimeout(q, 3500);
+            if (res.error || !res.data) return null;
+            return res.data.map(function (row) {
+              var raw = row.raw_data || {};
+              return {
+                id: row.code || row.id,
+                title: row.title,
+                level: row.level || "A1",
+                levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
+                category: row.category || "greeting",
+                categoryName: row.category_name || "Chào hỏi",
+                phonemeTarget: row.phoneme_target || "",
+                icon: row.icon || "mic-speaking",
+                is_pro_only: Boolean(row.is_pro_only),
+                items: raw.items || (row.sentence_ru ? [{ ru: row.sentence_ru, vi: "" }] : [])
+              };
+            });
+          } catch (e) {
+            console.warn("[RusiSupabase] Lỗi lấy bài nói:", e);
+            return null;
+          }
+        });
       }
     },
 
@@ -456,48 +694,51 @@
      * ========================================================================= */
     writing: {
       getAll: async function (level) {
-        var sb = getClient();
-        if (!sb) return null;
-        try {
-          var q = sb.from("writing_topics").select("*");
-          if (level && level !== "all") q = q.eq("level", level);
-          var res = await withTimeout(q, 3500);
-          if (res.error || !res.data) return null;
-          return res.data.map(function (row) {
-            var raw = row.raw_data || {};
-            if (typeof raw === "string") {
-              try { raw = JSON.parse(raw); } catch (_) { raw = {}; }
-            }
-            var wordsList = (raw && Array.isArray(raw.suggested_words) && raw.suggested_words.length)
-              ? raw.suggested_words
-              : (Array.isArray(row.suggested_words) ? row.suggested_words : []);
-            var tipsList = (raw && Array.isArray(raw.tips) && raw.tips.length)
-              ? raw.tips
-              : (Array.isArray(row.tips) ? row.tips : []);
-            return {
-              id: row.code || row.id,
-              level: row.level || "A1",
-              levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
-              category: row.category || "intro",
-              categoryName: row.category_name || "Tự giới thiệu",
-              task_type: raw.task_type || (row.category === "photo" ? "picture_desc" : "summary"),
-              icon: row.icon || "pen-tool",
-              estMinutes: row.est_minutes || 15,
-              title: row.title,
-              prompt: row.prompt || "",
-              vi: row.vi || "",
-              image_url: row.image_url || raw.image_url || "",
-              minWords: row.min_words || 20,
-              suggested_words: wordsList,
-              tips: tipsList,
-              model: raw.model || row.model_answer || "",
-              is_pro_only: Boolean(row.is_pro_only)
-            };
-          });
-        } catch (e) {
-          console.warn("[RusiSupabase] Lỗi lấy đề viết:", e);
-          return null;
-        }
+        var cacheKey = "writing:" + (level || "all");
+        return RusiCache.withCache(cacheKey, async function () {
+          var sb = getClient();
+          if (!sb) return null;
+          try {
+            var q = sb.from("writing_topics").select("*");
+            if (level && level !== "all") q = q.eq("level", level);
+            var res = await withTimeout(q, 3500);
+            if (res.error || !res.data) return null;
+            return res.data.map(function (row) {
+              var raw = row.raw_data || {};
+              if (typeof raw === "string") {
+                try { raw = JSON.parse(raw); } catch (_) { raw = {}; }
+              }
+              var wordsList = (raw && Array.isArray(raw.suggested_words) && raw.suggested_words.length)
+                ? raw.suggested_words
+                : (Array.isArray(row.suggested_words) ? row.suggested_words : []);
+              var tipsList = (raw && Array.isArray(raw.tips) && raw.tips.length)
+                ? raw.tips
+                : (Array.isArray(row.tips) ? row.tips : []);
+              return {
+                id: row.code || row.id,
+                level: row.level || "A1",
+                levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
+                category: row.category || "intro",
+                categoryName: row.category_name || "Tự giới thiệu",
+                task_type: raw.task_type || (row.category === "photo" ? "picture_desc" : "summary"),
+                icon: row.icon || "pen-tool",
+                estMinutes: row.est_minutes || 15,
+                title: row.title,
+                prompt: row.prompt || "",
+                vi: row.vi || "",
+                image_url: row.image_url || raw.image_url || "",
+                minWords: row.min_words || 20,
+                suggested_words: wordsList,
+                tips: tipsList,
+                model: raw.model || row.model_answer || "",
+                is_pro_only: Boolean(row.is_pro_only)
+              };
+            });
+          } catch (e) {
+            console.warn("[RusiSupabase] Lỗi lấy đề viết:", e);
+            return null;
+          }
+        });
       }
     },
 
@@ -506,32 +747,35 @@
      * ========================================================================= */
     blog: {
       getAll: async function (category) {
-        var sb = getClient();
-        if (!sb) return null;
-        try {
-          var q = sb.from("blog_posts").select("*").eq("published", true).order("created_at", { ascending: false });
-          if (category && category !== "all") q = q.eq("category", category);
-          var res = await withTimeout(q, 3500);
-          if (res.error || !res.data) return null;
-          return res.data.map(function (row) {
-            return {
-              slug: row.slug,
-              title: row.title,
-              category: row.category,
-              categoryName: row.category_name || row.category,
-              cover: row.cover_image || "assets/red-square.jpg",
-              excerpt: row.excerpt || "",
-              content: row.content_markdown || row.excerpt || "",
-              date: row.date || new Date(row.created_at).toLocaleDateString("vi-VN"),
-              icon: row.icon || "book-open-blog",
-              author: row.author || "RUSI Editorial",
-              readTime: row.read_time || "5 phút đọc"
-            };
-          });
-        } catch (e) {
-          console.warn("[RusiSupabase] Lỗi lấy bài blog:", e);
-          return null;
-        }
+        var cacheKey = "blog:" + (category || "all");
+        return RusiCache.withCache(cacheKey, async function () {
+          var sb = getClient();
+          if (!sb) return null;
+          try {
+            var q = sb.from("blog_posts").select("*").eq("published", true).order("created_at", { ascending: false });
+            if (category && category !== "all") q = q.eq("category", category);
+            var res = await withTimeout(q, 3500);
+            if (res.error || !res.data) return null;
+            return res.data.map(function (row) {
+              return {
+                slug: row.slug,
+                title: row.title,
+                category: row.category,
+                categoryName: row.category_name || row.category,
+                cover: row.cover_image || "assets/red-square.jpg",
+                excerpt: row.excerpt || "",
+                content: row.content_markdown || row.excerpt || "",
+                date: row.date || new Date(row.created_at).toLocaleDateString("vi-VN"),
+                icon: row.icon || "book-open-blog",
+                author: row.author || "RUSI Editorial",
+                readTime: row.read_time || "5 phút đọc"
+              };
+            });
+          } catch (e) {
+            console.warn("[RusiSupabase] Lỗi lấy bài blog:", e);
+            return null;
+          }
+        });
       }
     },
 
@@ -540,30 +784,33 @@
      * ========================================================================= */
     shop: {
       getAll: async function (category) {
-        var sb = getClient();
-        if (!sb) return null;
-        try {
-          var q = sb.from("shop_products").select("*").order("price", { ascending: true });
-          if (category && category !== "all") q = q.eq("category", category);
-          var res = await withTimeout(q, 3500);
-          if (res.error || !res.data) return null;
-          return res.data.map(function (row) {
-            return {
-              id: row.code || row.id,
-              category: row.category,
-              categoryName: row.category_name || "",
-              title: row.title,
-              desc: row.description || "",
-              price: Number(row.price),
-              priceOld: row.original_price ? Number(row.original_price) : undefined,
-              image: row.image || (row.image_urls && row.image_urls[0]) || "",
-              badge: row.badge || ""
-            };
-          });
-        } catch (e) {
-          console.warn("[RusiSupabase] Lỗi lấy sản phẩm shop:", e);
-          return null;
-        }
+        var cacheKey = "shop:" + (category || "all");
+        return RusiCache.withCache(cacheKey, async function () {
+          var sb = getClient();
+          if (!sb) return null;
+          try {
+            var q = sb.from("shop_products").select("*").order("price", { ascending: true });
+            if (category && category !== "all") q = q.eq("category", category);
+            var res = await withTimeout(q, 3500);
+            if (res.error || !res.data) return null;
+            return res.data.map(function (row) {
+              return {
+                id: row.code || row.id,
+                category: row.category,
+                categoryName: row.category_name || "",
+                title: row.title,
+                desc: row.description || "",
+                price: Number(row.price),
+                priceOld: row.original_price ? Number(row.original_price) : undefined,
+                image: row.image || (row.image_urls && row.image_urls[0]) || "",
+                badge: row.badge || ""
+              };
+            });
+          } catch (e) {
+            console.warn("[RusiSupabase] Lỗi lấy sản phẩm shop:", e);
+            return null;
+          }
+        });
       }
     },
 
@@ -572,26 +819,28 @@
      * ========================================================================= */
     grammar: {
       getAll: async function () {
-        var sb = getClient();
-        if (!sb) return null;
-        try {
-          var res = await sb.from("grammar_lessons").select("*").order("id", { ascending: true });
-          if (res.error || !res.data) return null;
-          return res.data.map(function (row) {
-            return {
-              id: row.id,
-              title: row.title,
-              vi: row.vi || "",
-              topic: row.topic || "",
-              rules: Array.isArray(row.rules) ? row.rules : [],
-              table: row.table_data || {},
-              questions: Array.isArray(row.questions) ? row.questions : []
-            };
-          });
-        } catch (e) {
-          console.warn("[RusiSupabase] Lỗi lấy bài ngữ pháp:", e);
-          return null;
-        }
+        return RusiCache.withCache("grammar:all", async function () {
+          var sb = getClient();
+          if (!sb) return null;
+          try {
+            var res = await sb.from("grammar_lessons").select("*").order("id", { ascending: true });
+            if (res.error || !res.data) return null;
+            return res.data.map(function (row) {
+              return {
+                id: row.id,
+                title: row.title,
+                vi: row.vi || "",
+                topic: row.topic || "",
+                rules: Array.isArray(row.rules) ? row.rules : [],
+                table: row.table_data || {},
+                questions: Array.isArray(row.questions) ? row.questions : []
+              };
+            });
+          } catch (e) {
+            console.warn("[RusiSupabase] Lỗi lấy bài ngữ pháp:", e);
+            return null;
+          }
+        });
       }
     },
 
@@ -600,33 +849,35 @@
      * ========================================================================= */
     packages: {
       getAll: async function () {
-        var sb = getClient();
-        if (!sb) return null;
-        try {
-          var res = await sb.from("packages").select("*").order("price", { ascending: true });
-          if (res.error || !res.data) return null;
-          var seen = {};
-          var list = [];
-          res.data.forEach(function (row) {
-            var rawId = (row.id || "").toLowerCase();
-            if (!rawId || seen[rawId]) return;
-            seen[rawId] = true;
-            list.push({
-              id: rawId,
-              badge: row.badge || "",
-              title: row.title,
-              desc: row.description || "",
-              price: Number(row.price),
-              priceOld: row.price_old ? Number(row.price_old) : undefined,
-              popular: Boolean(row.popular),
-              features: Array.isArray(row.feature_list) ? row.feature_list : (row.features && row.features.list) || []
+        return RusiCache.withCache("packages:all", async function () {
+          var sb = getClient();
+          if (!sb) return null;
+          try {
+            var res = await sb.from("packages").select("*").order("price", { ascending: true });
+            if (res.error || !res.data) return null;
+            var seen = {};
+            var list = [];
+            res.data.forEach(function (row) {
+              var rawId = (row.id || "").toLowerCase();
+              if (!rawId || seen[rawId]) return;
+              seen[rawId] = true;
+              list.push({
+                id: rawId,
+                badge: row.badge || "",
+                title: row.title,
+                desc: row.description || "",
+                price: Number(row.price),
+                priceOld: row.price_old ? Number(row.price_old) : undefined,
+                popular: Boolean(row.popular),
+                features: Array.isArray(row.feature_list) ? row.feature_list : (row.features && row.features.list) || []
+              });
             });
-          });
-          return list;
-        } catch (e) {
-          console.warn("[RusiSupabase] Lỗi lấy gói cước:", e);
-          return null;
-        }
+            return list;
+          } catch (e) {
+            console.warn("[RusiSupabase] Lỗi lấy gói cước:", e);
+            return null;
+          }
+        });
       }
     },
 

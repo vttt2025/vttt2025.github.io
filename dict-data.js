@@ -23,6 +23,14 @@ const RusiDict = {
       .replace(/đ/g, "d");
   },
 
+  /** Chuẩn hóa từ loại sang ký hiệu tiếng Nga chuẩn. */
+  formatPos(pos, gram) {
+    if (typeof window !== "undefined" && typeof window.formatRussianGrammar === "function") {
+      return window.formatRussianGrammar(pos, gram);
+    }
+    return pos || gram || "";
+  },
+
   /** Tải (và cache) một hướng từ điển. */
   load(dir) {
     if (this._cache[dir]) return Promise.resolve(this._cache[dir]);
@@ -63,7 +71,7 @@ const RusiDict = {
         dir,
         ru: r[0],
         pron: r[1],
-        pos: r[2],
+        pos: this.formatPos(r[2], r[6]),
         cat: r[3],
         vi: r[4],
         ex: r[5],
@@ -86,7 +94,7 @@ const RusiDict = {
             dir: "ru-vi",
             ru: w.ru,
             pron: "",
-            pos: w.pos || "",
+            pos: this.formatPos(w.pos || "", ""),
             cat: "",
             vi: w.vi || "",
             ex: w.ex || "",

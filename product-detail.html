@@ -55,7 +55,8 @@
       const params = new URLSearchParams(window.location.search);
       const id = params.get("id") || params.get("product") || "alenka-100g";
 
-      let products = (typeof window.SHOP_PRODUCTS !== "undefined") ? window.SHOP_PRODUCTS : [];
+      const cached = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("shop:all") : null;
+      let products = (cached && cached.length) ? cached : [];
 
       // Try fetching from Supabase if available
       if (window.RusiSupabase && typeof window.RusiSupabase.shop?.getAll === "function") {

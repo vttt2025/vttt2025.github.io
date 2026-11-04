@@ -222,6 +222,16 @@
       category: "controls",
       paths: '<polyline points="6 9 12 15 18 9"/>'
     },
+    "chevron-left": {
+      name: "Mũi Tên Trái (Chevron Left)",
+      category: "controls",
+      paths: '<polyline points="15 18 9 12 15 6"/>'
+    },
+    "chevron-right": {
+      name: "Mũi Tên Phải (Chevron Right)",
+      category: "controls",
+      paths: '<polyline points="9 18 15 12 9 6"/>'
+    },
     "log-out": {
       name: "Đăng Xuất (Log Out)",
       category: "controls",
@@ -518,6 +528,36 @@
       name: "Cảnh Báo & Lưu Ý (Alert Triangle)",
       category: "utilities",
       paths: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>'
+    },
+    "list": {
+      name: "Danh Sách (List Menu)",
+      category: "utilities",
+      paths: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>'
+    },
+    "rotate-ccw": {
+      name: "Phát Lại / Tua Lại (Rotate Counter-Clockwise)",
+      category: "media",
+      paths: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>'
+    },
+    "languages": {
+      name: "Ngôn Ngữ & Dịch Nghĩa (Languages)",
+      category: "utilities",
+      paths: '<path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/>'
+    },
+    "repeat": {
+      name: "Tự Lặp Lại (Repeat)",
+      category: "media",
+      paths: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>'
+    },
+    "bookmark": {
+      name: "Lưu Đánh Dấu (Bookmark)",
+      category: "utilities",
+      paths: '<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>'
+    },
+    "message-circle": {
+      name: "Trò Chuyện & Hỏi Bài (Message Circle)",
+      category: "utilities",
+      paths: '<path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/>'
     }
   };
 
@@ -579,6 +619,8 @@
     "arrow-right": "arrow-right", "arrow": "arrow-right", "next": "arrow-right", "tiep": "arrow-right", "→": "arrow-right",
     "arrow-left": "arrow-left", "back": "arrow-left", "quay-lai": "arrow-left", "←": "arrow-left",
     "chevron-down": "chevron-down", "chevron": "chevron-down", "down": "chevron-down", "caret": "chevron-down", "▾": "chevron-down", "▼": "chevron-down",
+    "chevron-left": "chevron-left", "prev": "chevron-left", "lui": "chevron-left", "<": "chevron-left", "‹": "chevron-left", "chevron-prev": "chevron-left",
+    "chevron-right": "chevron-right", "tien": "chevron-right", ">": "chevron-right", "›": "chevron-right", "chevron-next": "chevron-right",
     "log-out": "log-out", "logout": "log-out", "signout": "log-out", "exit": "log-out", "dang-xuat": "log-out", "🚪": "log-out",
     "search-icon": "search-icon", "search": "search-icon", "tim-kiem": "search-icon", "tra-cuu": "search-icon", "🔍": "search-icon", "🔎": "search-icon",
 
@@ -587,6 +629,12 @@
     "trash-2": "trash-2", "trash": "trash-2", "delete": "trash-2", "del": "trash-2", "xoa": "trash-2", "🗑️": "trash-2", "🗑": "trash-2",
     "check": "check", "tick": "check", "done": "check", "✓": "check", "✔": "check",
     "x": "x", "close": "x", "clear": "x", "dong": "x", "✕": "x", "✖": "x",
+    "list": "list", "menu": "list", "danh-sach": "list", "📋": "list", "📑": "list",
+    "rotate-ccw": "rotate-ccw", "replay": "rotate-ccw", "phat-lai": "rotate-ccw",
+    "languages": "languages", "transcript": "languages", "subtitles": "languages", "dich": "languages", "loi-thoai": "languages",
+    "repeat": "repeat", "loop": "repeat", "tu-lap": "repeat",
+    "bookmark": "bookmark", "save-mark": "bookmark", "so-tay": "bookmark", "🔖": "bookmark",
+    "message-circle": "message-circle", "chat": "message-circle", "hoi-bai": "message-circle", "💬": "message-circle",
     "plus": "plus", "add": "plus", "them": "plus", "+": "plus", "➕": "plus",
     "edit-3": "edit-3", "edit": "edit-3", "sua": "edit-3",
     "refresh-cw": "refresh-cw", "refresh": "refresh-cw", "sync": "refresh-cw", "reload": "refresh-cw", "dong-bo": "refresh-cw", "🔄": "refresh-cw", "🔁": "refresh-cw",
@@ -635,11 +683,11 @@
     "newspaper": "newspaper", "📰": "newspaper", "bao-chi": "newspaper",
     "message-square": "message-square", "💬": "message-square", "chat": "message-square",
     "flag": "flag", "🇷🇺": "flag", "🇻🇳": "flag", "quoc-ky": "flag",
-    "heart": "heart", "❤️": "heart", "gia-dinh": "heart",
-    "activity": "activity", "sport": "activity", "the-thao": "activity", "⚽": "activity", "🎾": "activity", "🏀": "activity",
-    "pill": "pill", "medicine": "pill", "thuoc": "pill", "hieu-thuoc": "pill", "duoc": "pill", "💊": "pill",
-    "shirt": "shirt", "clothing": "shirt", "clothes": "shirt", "quan-ao": "shirt", "giat": "shirt", "👕": "shirt", "🧺": "shirt",
-    "snowflake": "snowflake", "snow": "snowflake", "winter": "snowflake", "tuyet": "snowflake", "mua-dong": "snowflake", "❄️": "snowflake", "❄": "snowflake",
+    "heart": "heart", "❤️": "heart", "gia-dinh": "heart",
+    "activity": "activity", "sport": "activity", "the-thao": "activity", "⚽": "activity", "🎾": "activity", "🏀": "activity",
+    "pill": "pill", "medicine": "pill", "thuoc": "pill", "hieu-thuoc": "pill", "duoc": "pill", "💊": "pill",
+    "shirt": "shirt", "clothing": "shirt", "clothes": "shirt", "quan-ao": "shirt", "giat": "shirt", "👕": "shirt", "🧺": "shirt",
+    "snowflake": "snowflake", "snow": "snowflake", "winter": "snowflake", "tuyet": "snowflake", "mua-dong": "snowflake", "❄️": "snowflake", "❄": "snowflake",
     "alert-triangle": "alert-triangle", "warning": "alert-triangle", "canh-bao": "alert-triangle", "⚠️": "alert-triangle", "⚠": "alert-triangle", "door": "inbox", "🚪": "inbox",
     "🍬": "shopping-bag-shop", "🌿": "sparkles-clean", "🪆": "award-badge"
   };

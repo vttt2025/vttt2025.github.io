@@ -218,7 +218,7 @@ const WordDetail = (() => {
       out = declTable(CASE_ROWS.map((c) => [c, forms.pn.s ? forms.pn.s[idx(c.key)] : "", forms.pn.p ? forms.pn.p[idx(c.key)] : ""]), ["", "Số ít", "Số nhiều"]);
     } else if (forms.a) {
       out = declTable(CASE_ROWS.map((c) => [c, forms.a.m[idx(c.key)], forms.a.f[idx(c.key)], forms.a.n[idx(c.key)], forms.a.p[idx(c.key)]]),
-        ["", "Giống đực", "Giống nữ", "Trung", "Số nhiều"]);
+        ["", "м. (đực)", "ж. (cái)", "ср. (trung)", "мн. (nhiều)"]);
     } else if (forms.sa) {
       out = `<div class="wd-sa-grid">
         <div><span class="meta-label">Он (anh ấy)</span><b class="ru">${esc(forms.sa.m)}</b></div>
@@ -262,8 +262,8 @@ const WordDetail = (() => {
   function verbHTML(v) {
     const persons = ["я", "ты", "он / она", "мы", "вы", "они"];
     const aspect = v.perf
-      ? `<span class="wd-aspect">совершенный вид · chia <b>tương lai</b></span>`
-      : `<span class="wd-aspect">несовершенный вид · chia <b>hiện tại</b></span>`;
+      ? `<span class="wd-aspect">совершенный вид (св) · chia <b>tương lai</b></span>`
+      : `<span class="wd-aspect">несовершенный вид (нсв) · chia <b>hiện tại</b></span>`;
     let html = aspect;
     if (v.pres && v.pres.some(Boolean)) {
       html += `<table class="wd-table"><thead><tr><th>${v.perf ? "Будущее — tương lai" : "Настоящее — hiện tại"}</th><th></th></tr></thead><tbody>

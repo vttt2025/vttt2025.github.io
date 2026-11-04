@@ -1645,8 +1645,8 @@ function renderHeader() {
       </nav>
 
       <div class="header-right header-actions">
-        <button type="button" class="header-pomo-chip" id="headerPomoBtn" title="Đồng hồ Pomodoro tập trung" style="display:none">
-          <span class="header-pomo-icon" id="headerPomoIcon">🍅</span>
+        <button type="button" class="header-pomo-chip" id="headerPomoBtn" title="Đồng hồ Pomodoro tập trung" style="display:none" aria-label="Đồng hồ Pomodoro tập trung">
+          <span class="header-pomo-dot" id="headerPomoDot" aria-hidden="true"></span>
           <span class="header-pomo-time" id="headerPomoTime">25:00</span>
         </button>
         <div id="userArea" class="user-area"></div>
@@ -2001,10 +2001,13 @@ function getSynchronizedVocabStats() {
 
   // Đếm tổng số từ vựng trong tất cả các lọ hệ thống
   let totalWordsInJars = 0;
-  if (typeof window.DATA !== "undefined" && Array.isArray(window.DATA.vocabJars)) {
+  const cachedJars = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("jars:system") : null;
+  if (Array.isArray(cachedJars) && cachedJars.length > 0) {
+    cachedJars.forEach(j => { totalWordsInJars += (j.words || []).length; });
+  } else if (typeof window.DATA !== "undefined" && Array.isArray(window.DATA.vocabJars)) {
     window.DATA.vocabJars.forEach(j => { totalWordsInJars += (j.words || []).length; });
   }
-  if (totalWordsInJars === 0) totalWordsInJars = 360;
+  if (totalWordsInJars === 0) totalWordsInJars = 500;
 
   const totalLearnedOrReview = (stats.learning || 0) + (stats.reviewing || 0);
   const calculatedNew = Math.max(0, totalWordsInJars - totalMastered - totalLearnedOrReview);
@@ -2207,11 +2210,53 @@ function bootApp() {
   try { applySeason("winter"); } catch (e) { console.error("[Boot] applySeason:", e); }
   try { Progress.checkStreakStatus(); } catch (e) { console.error("[Boot] checkStreakStatus:", e); }
   try { bindAuthToHeader(); } catch (e) { console.error("[Boot] bindAuthToHeader:", e); }
-  try { mergeAdminData(); } catch (e) { console.error("[Boot] mergeAdminData:", e); }
+  // Xóa bỏ hoàn toàn dữ liệu lưu trữ local cũ, chuyển sang 100% Supabase Cloud + Browser Cache
+  try {
+    localStorage.removeItem("trki_admin_data");
+    localStorage.removeItem("trki_local_data");
+    localStorage.removeItem("rusi_local_data");
+  } catch (_) {}
+  try { warmBrowserCache(); } catch (e) { console.warn("[Boot] warmBrowserCache:", e); }
 
   triggerPageInit();
 }
 window.bootApp = bootApp;
+
+/**
+ * Khởi động nạp trước bộ nhớ đệm (Browser Cache Warmup).
+ * Tải ngầm các bảng dữ liệu Supabase vào RusiCache (Memory + SessionStorage)
+ * giúp người học chuyển trang tức thì (0ms) mà không cần tải lại mạng.
+ */
+function warmBrowserCache() {
+  if (typeof window === "undefined" || !window.RusiSupabase) return;
+  const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 600));
+  idle(() => {
+    try {
+      if (window.RusiSupabase.jars && typeof window.RusiSupabase.jars.getSystemJars === "function") {
+        window.RusiSupabase.jars.getSystemJars().catch(() => {});
+      }
+      if (window.RusiSupabase.listening && typeof window.RusiSupabase.listening.getAll === "function") {
+        window.RusiSupabase.listening.getAll().catch(() => {});
+      }
+      if (window.RusiSupabase.speaking && typeof window.RusiSupabase.speaking.getAll === "function") {
+        window.RusiSupabase.speaking.getAll().catch(() => {});
+      }
+      if (window.RusiSupabase.writing && typeof window.RusiSupabase.writing.getAll === "function") {
+        window.RusiSupabase.writing.getAll().catch(() => {});
+      }
+      if (window.RusiSupabase.tests && typeof window.RusiSupabase.tests.getPublished === "function") {
+        window.RusiSupabase.tests.getPublished().catch(() => {});
+      }
+      if (window.RusiSupabase.shop && typeof window.RusiSupabase.shop.getAll === "function") {
+        window.RusiSupabase.shop.getAll().catch(() => {});
+      }
+      if (window.RusiSupabase.packages && typeof window.RusiSupabase.packages.getAll === "function") {
+        window.RusiSupabase.packages.getAll().catch(() => {});
+      }
+    } catch (_) {}
+  });
+}
+window.warmBrowserCache = warmBrowserCache;
 
 // Đảm bảo app boot dù document đã ready hay chưa
 if (document.readyState === "loading") {
@@ -2228,103 +2273,8 @@ window.addEventListener("pageshow", (event) => {
   }
 });
 
-/**
- * Gộp dữ liệu admin từ localStorage vào các mảng toàn cục (TRKI_BANK,
- * VOCAB_JARS, SHOP_PRODUCTS, PACKAGES, VOCAB_LESSONS, ...).
- * Hỗ trợ ghi đè theo ID, thêm mới, hoặc ẩn/xóa (soft delete).
- * Dùng .splice() để đột biến mảng in-place giúp các module đang tham chiếu
- * lập tức nhận dữ liệu mới mà không cần re-bind biến toàn cục.
- */
 function mergeAdminData() {
-  let store;
-  try {
-    store = JSON.parse(localStorage.getItem("trki_admin_data") || "{}");
-  } catch (e) {
-    return;
-  }
-  if (!store || typeof store !== "object") return;
-  const arrays = [
-    "TRKI_BANK",
-    "VOCAB_JARS",
-    "SHOP_PRODUCTS",
-    "PACKAGES",
-    "BLOG_POSTS",
-    "LISTENING_LESSONS",
-    "SPEAKING_SETS",
-    "WRITING_TASKS",
-    "VOCAB_LESSONS",
-    "GRAMMAR_LESSONS"
-  ];
-  const deletedMap = store.__deleted || {};
-
-  arrays.forEach((name) => {
-    const list = store[name];
-    const target = window[name];
-    if (!Array.isArray(target)) return;
-
-    const deletedSet = new Set(deletedMap[name] || []);
-    const map = new Map();
-
-    // Nạp item gốc trừ các item đã bị đánh dấu xoá
-    target.forEach((it) => {
-      const key = it.id || it.slug || it.title;
-      if (key && !deletedSet.has(key)) {
-        map.set(key, it);
-      }
-    });
-
-    // Merge/ghi đè các item từ admin
-    if (Array.isArray(list)) {
-      list.forEach((it) => {
-        const clean = { ...it };
-        delete clean.__admin;
-        delete clean.__source;
-        delete clean.__fromSupabase;
-        const key = clean.id || clean.slug || clean.title;
-        if (!key || deletedSet.has(key)) return;
-        map.set(key, clean);
-      });
-    }
-
-    // Đột biến mảng in-place
-    const updated = Array.from(map.values());
-    target.splice(0, target.length, ...updated);
-  });
-
-  // Merge TOPIC_ARTICLES (Object keyed by topic ID)
-  if (store.TOPIC_ARTICLES && typeof window.TOPIC_ARTICLES === "object" && window.TOPIC_ARTICLES !== null) {
-    const deletedArticles = new Set(deletedMap.TOPIC_ARTICLES || []);
-    deletedArticles.forEach((k) => {
-      delete window.TOPIC_ARTICLES[k];
-    });
-    if (Array.isArray(store.TOPIC_ARTICLES)) {
-      store.TOPIC_ARTICLES.forEach((art) => {
-        const k = art.id || art.topic_id;
-        if (!k || deletedArticles.has(k)) return;
-        const clean = { ...art };
-        delete clean.__admin;
-        delete clean.__source;
-        delete clean.__fromSupabase;
-        window.TOPIC_ARTICLES[k] = clean;
-      });
-    }
-  }
-
-  if (typeof window !== "undefined" && typeof window.dispatchEvent === "function") {
-    try {
-      window.dispatchEvent(new CustomEvent("trki:data-updated"));
-    } catch (e) {}
-  }
-}
-
-// Lắng nghe sự kiện storage giữa các tab: Khi Admin lưu dữ liệu ở 1 tab,
-// tất cả các tab khác (mock-test.html, shop.html, v.v.) sẽ tự động merge ngay.
-if (typeof window !== "undefined") {
-  window.addEventListener("storage", (e) => {
-    if (e.key === "trki_admin_data") {
-      mergeAdminData();
-    }
-  });
+  // Đã loại bỏ hoàn toàn việc đọc/gộp dữ liệu từ localStorage theo yêu cầu kiến trúc đám mây 100%
 }
 
 // =====================================================================

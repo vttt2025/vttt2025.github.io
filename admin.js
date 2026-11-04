@@ -152,8 +152,8 @@
         icon: "archive-jar",
         is_pro_only: false,
         words: [
-          { ru: "сло́во", vi: "từ ngữ", note: "danh từ giống trung (оно)", ex: "Русское слово." },
-          { ru: "кни́га", vi: "quyển sách", note: "danh từ giống cái (она)", ex: "Я читаю интересную книгу." }
+          { ru: "сло́во", vi: "từ ngữ", note: "сущ. ср. (оно)", ex: "Русское слово." },
+          { ru: "кни́га", vi: "quyển sách", note: "сущ. ж. (она)", ex: "Я читаю интересную книгу." }
         ]
       }),
       fields: [
@@ -223,7 +223,7 @@
           ]
         },
         vocabTable: [
-          { ru: "студент", stress: "студе́нт", pos: "Noun", vi: "sinh viên nam", exampleRu: "Он студент.", exampleVi: "Anh ấy là sinh viên." }
+          { ru: "студент", stress: "студе́нт", pos: "сущ.", gender: "м.", vi: "sinh viên nam", exampleRu: "Он студент.", exampleVi: "Anh ấy là sinh viên." }
         ]
       }),
       fields: [
@@ -761,6 +761,9 @@ BLOG_POSTS: {
   }
 
   function syncDataToWeb() {
+    if (window.RusiSupabase && typeof window.RusiSupabase.clearCache === "function") {
+      window.RusiSupabase.clearCache();
+    }
     if (typeof window.mergeAdminData === "function") {
       window.mergeAdminData();
     }
@@ -1781,18 +1784,24 @@ BLOG_POSTS: {
               <div>
                 <label style="font-size:11px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:2px">Từ loại (POS)</label>
                 <select class="p-input" onchange="window.updateVocabWord(${idx}, 'pos', this.value)">
-                  <option value="" ${!w.pos ? 'selected' : ''}>-- Chọn từ loại --</option>
-                  <option value="danh từ" ${w.pos === 'danh từ' ? 'selected' : ''}>Danh từ (Существительное)</option>
-                  <option value="động từ" ${w.pos === 'động từ' ? 'selected' : ''}>Động từ (Глагол)</option>
-                  <option value="tính từ" ${w.pos === 'tính từ' ? 'selected' : ''}>Tính từ (Прилагательное)</option>
-                  <option value="phó từ" ${w.pos === 'phó từ' ? 'selected' : ''}>Phó từ (Наречие)</option>
-                  <option value="đại từ" ${w.pos === 'đại từ' ? 'selected' : ''}>Đại từ (Местоимение)</option>
-                  <option value="giới từ" ${w.pos === 'giới từ' ? 'selected' : ''}>Giới từ (Предлог)</option>
+                  <option value="" ${!w.pos ? 'selected' : ''}>-- Chọn từ loại chuẩn Nga --</option>
+                  <option value="сущ." ${w.pos === 'сущ.' || w.pos === 'danh từ' || w.pos === 'Noun' ? 'selected' : ''}>сущ. (Danh từ — Имя существительное)</option>
+                  <option value="прил." ${w.pos === 'прил.' || w.pos === 'tính từ' || w.pos === 'Adj' ? 'selected' : ''}>прил. (Tính từ — Имя прилагательное)</option>
+                  <option value="гл." ${w.pos === 'гл.' || w.pos === 'động từ' || w.pos === 'Verb' ? 'selected' : ''}>гл. (Động từ — Глагол)</option>
+                  <option value="нар." ${w.pos === 'нар.' || w.pos === 'phó từ' || w.pos === 'trạng từ' || w.pos === 'Adv' ? 'selected' : ''}>нар. (Trạng từ — Наречие)</option>
+                  <option value="мест." ${w.pos === 'мест.' || w.pos === 'đại từ' ? 'selected' : ''}>мест. (Đại từ — Местоимение)</option>
+                  <option value="числ." ${w.pos === 'числ.' || w.pos === 'số từ' ? 'selected' : ''}>числ. (Số từ — Имя числительное)</option>
+                  <option value="прич." ${w.pos === 'прич.' || w.pos === 'tính động từ' ? 'selected' : ''}>прич. (Tính động từ — Причастие)</option>
+                  <option value="деепр." ${w.pos === 'деепр.' || w.pos === 'trạng động từ' ? 'selected' : ''}>деепр. (Trạng động từ — Деепричастие)</option>
+                  <option value="предл." ${w.pos === 'предл.' || w.pos === 'giới từ' ? 'selected' : ''}>предл. (Giới từ — Предлог)</option>
+                  <option value="союз" ${w.pos === 'союз' || w.pos === 'liên từ' ? 'selected' : ''}>союз (Liên từ — Союз)</option>
+                  <option value="част." ${w.pos === 'част.' || w.pos === 'trợ từ' || w.pos === 'tiểu từ' ? 'selected' : ''}>част. (Trợ từ — Частица)</option>
+                  <option value="межд." ${w.pos === 'межд.' || w.pos === 'thán từ' ? 'selected' : ''}>межд. (Thán từ — Междометие)</option>
                 </select>
               </div>
               <div>
                 <label style="font-size:11px;font-weight:600;color:var(--p-text-muted);display:block;margin-bottom:2px">Giống / Thể động từ</label>
-                <input type="text" class="p-input" placeholder="đực/cái/trung hoặc НСВ/СВ" value="${escAttr(w.gender || w.aspect || "")}" oninput="window.updateVocabWord(${idx}, 'gender', this.value)" />
+                <input type="text" class="p-input" placeholder="м./ж./ср. hoặc нсв/св" value="${escAttr(w.gender || w.aspect || "")}" oninput="window.updateVocabWord(${idx}, 'gender', this.value)" />
               </div>
             </div>
 
@@ -1849,7 +1858,7 @@ BLOG_POSTS: {
   window.addVocabWord = function () {
     if (!State.currentDraft) return;
     State.currentDraft.words = State.currentDraft.words || [];
-    State.currentDraft.words.push({ ru: "", vi: "", pos: "danh từ", gender: "", collocation: "", synonyms: [], antonyms: [], ex: "", note: "", sub_topic: "" });
+    State.currentDraft.words.push({ ru: "", vi: "", pos: "сущ.", gender: "", collocation: "", synonyms: [], antonyms: [], ex: "", note: "", sub_topic: "" });
     refreshStructureTab();
   };
 

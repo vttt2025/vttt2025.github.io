@@ -154,12 +154,12 @@
       });
     },
 
-    createDOM: function () {
+        createDOM: function () {
       // Ẩn modal cũ nếu còn tồn tại
       const oldModal = document.getElementById("pomoModalBackdrop");
       if (oldModal) oldModal.remove();
 
-      // Dropdown Popover nhỏ gọn được gắn vào body (position: fixed)
+      // Dropdown Popover tối giản, nhẹ nhàng gắn vào body (position: fixed)
       let popover = document.getElementById("pomoPopoverDropdown");
       if (!popover) {
         popover = document.createElement("div");
@@ -169,49 +169,77 @@
         popover.setAttribute("role", "dialog");
         popover.setAttribute("aria-label", "Đồng hồ Pomodoro tập trung");
         popover.innerHTML = `
+          <!-- 1. HEADER: TỐI GIẢN & THANH THOÁT -->
           <div class="pomo-pop-header">
-            <span class="pomo-pop-title">🍅 Đồng Hồ Pomodoro</span>
-            <button type="button" class="pomo-pop-close" id="pomoPopClose" title="Đóng">&times;</button>
-          </div>
-
-          <!-- 3 THANH KÉO TÙY CHỈNH THỜI GIAN -->
-          <div class="pomo-pop-sliders" id="pomoPopSlidersBox">
-            <div class="pomo-pop-slider-row">
-              <div class="pomo-pop-slider-info">
-                <span>Tập trung</span>
-                <b id="pomoPopFocusBadge">${this.focusMin} phút</b>
-              </div>
-              <input type="range" min="5" max="60" step="5" value="${this.focusMin}" class="pomo-pop-range" id="pomoPopFocusRange">
+            <div class="pomo-pop-title-wrap">
+              <span class="pomo-pop-title-dot" aria-hidden="true"></span>
+              <span class="pomo-pop-title">Pomodoro Timer</span>
             </div>
-
-            <div class="pomo-pop-slider-row">
-              <div class="pomo-pop-slider-info">
-                <span>Nghỉ ngơi</span>
-                <b id="pomoPopBreakBadge">${this.breakMin} phút</b>
-              </div>
-              <input type="range" min="1" max="30" step="1" value="${this.breakMin}" class="pomo-pop-range" id="pomoPopBreakRange">
-            </div>
-
-            <div class="pomo-pop-slider-row">
-              <div class="pomo-pop-slider-info">
-                <span>Chu kỳ</span>
-                <b id="pomoPopCyclesBadge">${this.totalCycles} chu kỳ</b>
-              </div>
-              <input type="range" min="1" max="8" step="1" value="${this.totalCycles}" class="pomo-pop-range" id="pomoPopCyclesRange">
+            <div class="pomo-pop-header-actions">
+              <button type="button" class="pomo-pop-icon-btn" id="pomoPopToggleSettings" title="Tùy chỉnh thời gian" aria-label="Tùy chỉnh thời gian">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              </button>
+              <button type="button" class="pomo-pop-icon-btn pomo-pop-close" id="pomoPopClose" title="Đóng" aria-label="Đóng">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
             </div>
           </div>
 
-          <!-- THỜI GIAN VÀ ĐIỀU KHIỂN GỌN GÀNG -->
-          <div class="pomo-pop-controls">
-            <div class="pomo-pop-timer-box">
-              <div class="pomo-pop-phase-badge" id="pomoPopPhase">SẴN SÀNG</div>
-              <div class="pomo-pop-time" id="pomoPopTime">${this.formatTime(this.remainingSeconds)}</div>
-              <div class="pomo-pop-cycle-text" id="pomoPopCycle">Chu kỳ ${this.currentCycle} / ${this.totalCycles}</div>
+          <!-- 2. HERO TIMER: TRUNG TÂM TẬP TRUNG, KHÔNG GIAN THOÁNG ĐÃNG -->
+          <div class="pomo-pop-hero">
+            <div class="pomo-pop-phase-pill" id="pomoPopPhase">
+              <span class="pomo-phase-dot" id="pomoPhaseDot"></span>
+              <span class="pomo-phase-text" id="pomoPopPhaseText">Sẵn sàng</span>
             </div>
+            <div class="pomo-pop-time" id="pomoPopTime">${this.formatTime(this.remainingSeconds)}</div>
+            <div class="pomo-pop-cycle-row">
+              <div class="pomo-cycle-dots" id="pomoCycleDots" aria-label="Chu kỳ tiến độ"></div>
+              <span class="pomo-pop-cycle-text" id="pomoPopCycle">Chu kỳ ${this.currentCycle} / ${this.totalCycles}</span>
+            </div>
+          </div>
 
-            <div class="pomo-pop-btn-group">
-              <button type="button" class="btn btn-primary btn-sm pomo-pop-btn-main" id="pomoPopStart">Bắt đầu học</button>
-              <button type="button" class="btn btn-soft btn-sm pomo-pop-btn-reset" id="pomoPopReset">Reset</button>
+          <!-- 3. BỘ NÚT ĐIỀU KHIỂN GỌN GÀNG -->
+          <div class="pomo-pop-actions">
+            <button type="button" class="pomo-btn-main" id="pomoPopStart">
+              <span class="pomo-btn-icon" id="pomoPopStartIcon">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              </span>
+              <span id="pomoPopStartText">Bắt đầu học</span>
+            </button>
+            <button type="button" class="pomo-btn-reset" id="pomoPopReset" title="Đặt lại đồng hồ" aria-label="Đặt lại">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            </button>
+          </div>
+
+          <!-- 4. TÙY CHỈNH THỜI GIAN (COLLAPSIBLE / TIẾT KIỆM KHÔNG GIAN) -->
+          <div class="pomo-pop-settings" id="pomoPopSlidersBox" style="display:none;">
+            <div class="pomo-presets-row">
+              <button type="button" class="pomo-preset-btn" data-focus="25" data-break="5">25 / 5m</button>
+              <button type="button" class="pomo-preset-btn" data-focus="45" data-break="10">45 / 10m</button>
+              <button type="button" class="pomo-preset-btn" data-focus="50" data-break="10">50 / 10m</button>
+            </div>
+            <div class="pomo-sliders-list">
+              <div class="pomo-slider-item">
+                <div class="pomo-slider-info">
+                  <span class="pomo-slider-label">Tập trung</span>
+                  <span class="pomo-slider-val" id="pomoPopFocusBadge">${this.focusMin} phút</span>
+                </div>
+                <input type="range" min="5" max="60" step="5" value="${this.focusMin}" class="pomo-range" id="pomoPopFocusRange">
+              </div>
+              <div class="pomo-slider-item">
+                <div class="pomo-slider-info">
+                  <span class="pomo-slider-label">Nghỉ ngơi</span>
+                  <span class="pomo-slider-val" id="pomoPopBreakBadge">${this.breakMin} phút</span>
+                </div>
+                <input type="range" min="1" max="30" step="1" value="${this.breakMin}" class="pomo-range" id="pomoPopBreakRange">
+              </div>
+              <div class="pomo-slider-item">
+                <div class="pomo-slider-info">
+                  <span class="pomo-slider-label">Chu kỳ</span>
+                  <span class="pomo-slider-val" id="pomoPopCyclesBadge">${this.totalCycles} chu kỳ</span>
+                </div>
+                <input type="range" min="1" max="8" step="1" value="${this.totalCycles}" class="pomo-range" id="pomoPopCyclesRange">
+              </div>
             </div>
           </div>
         `;
@@ -297,16 +325,16 @@
         popover.style.top = "64px";
         popover.style.right = "12px";
         popover.style.left = "auto";
-        popover.style.width = "min(calc(100vw - 24px), 320px)";
+        popover.style.width = "min(calc(100vw - 24px), 300px)";
         popover.style.maxWidth = "calc(100vw - 24px)";
       } else if (hBtn) {
         const rect = hBtn.getBoundingClientRect();
         popover.style.top = (rect.bottom + 8) + "px";
         const rightOffset = window.innerWidth - rect.right;
-        const maxRight = window.innerWidth - 310;
+        const maxRight = window.innerWidth - 300;
         popover.style.right = Math.min(Math.max(12, rightOffset), Math.max(12, maxRight)) + "px";
         popover.style.left = "auto";
-        popover.style.width = "290px";
+        popover.style.width = "280px";
       }
     },
 
@@ -323,6 +351,31 @@
           const isPro = typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : false;
           if (!user || !isPro) return;
           that.togglePopover();
+          return;
+        }
+
+        const toggleSettingsBtn = e.target.closest("#pomoPopToggleSettings");
+        if (toggleSettingsBtn) {
+          e.preventDefault();
+          const box = document.getElementById("pomoPopSlidersBox");
+          if (box) {
+            const isHidden = box.style.display === "none";
+            box.style.display = isHidden ? "block" : "none";
+            toggleSettingsBtn.classList.toggle("is-active", isHidden);
+          }
+          return;
+        }
+
+        const presetBtn = e.target.closest(".pomo-preset-btn");
+        if (presetBtn && (!that.isRunning || that.phase === "idle" || that.phase === "completed")) {
+          e.preventDefault();
+          that.focusMin = Number(presetBtn.dataset.focus) || 25;
+          that.breakMin = Number(presetBtn.dataset.break) || 5;
+          if (!that.isRunning) {
+            that.remainingSeconds = that.focusMin * 60;
+          }
+          that.saveState();
+          that.updateUI();
           return;
         }
 
@@ -349,6 +402,14 @@
           that.positionPopover();
         }
       });
+
+      // Reposition khi cuộn trang trên Desktop / Tablet
+      window.addEventListener("scroll", function () {
+        const popover = document.getElementById("pomoPopoverDropdown");
+        if (popover && popover.style.display === "block" && window.innerWidth > 768) {
+          that.positionPopover();
+        }
+      }, { passive: true });
 
       // Slider Focus / Break / Cycles qua Event Delegation
       document.addEventListener("input", function (e) {
@@ -441,7 +502,9 @@
       this.currentCycle = 1;
       this.remainingSeconds = this.focusMin * 60;
       this.targetEndTime = null;
-      document.title = document.title.replace(/^\([0-9:]+\)\s*/, "");
+      if (typeof document.title === "string") {
+        document.title = document.title.replace(/^\([0-9:]+\)\s*/, "");
+      }
       this.saveState();
       this.updateUI();
     },
@@ -553,21 +616,53 @@
         popover.style.display = "none";
       }
 
-      // 2. Chip trên Header
+      // 2. Chip trên Header: Trạng thái tinh tế, nhẹ nhàng
       const hTime = document.getElementById("headerPomoTime");
-      const hIcon = document.getElementById("headerPomoIcon");
+      const hDot = document.getElementById("headerPomoDot");
       if (hTime) hTime.textContent = timeStr;
-      if (hIcon) hIcon.textContent = (this.phase === "break") ? "☕" : "🍅";
+      if (hDot) {
+        hDot.className = "header-pomo-dot" + (this.isRunning && this.phase === "focus" ? " is-focus" : this.isRunning && this.phase === "break" ? " is-break" : "");
+      }
 
       // 3. Trong Popover dropdown
       const popTime = document.getElementById("pomoPopTime");
       const popPhase = document.getElementById("pomoPopPhase");
+      const popPhaseText = document.getElementById("pomoPopPhaseText");
       const popCycle = document.getElementById("pomoPopCycle");
+      const cycleDotsHost = document.getElementById("pomoCycleDots");
       const btnStart = document.getElementById("pomoPopStart");
+      const btnStartText = document.getElementById("pomoPopStartText");
+      const btnStartIcon = document.getElementById("pomoPopStartIcon");
       const slidersBox = document.getElementById("pomoPopSlidersBox");
 
       if (popTime) popTime.textContent = timeStr;
       if (popCycle) popCycle.textContent = `Chu kỳ ${this.currentCycle} / ${this.totalCycles}`;
+
+      // Render các chấm chu kỳ tiến độ
+      if (cycleDotsHost) {
+        let dotsHtml = "";
+        for (let i = 1; i <= this.totalCycles; i++) {
+          const dotState = (i < this.currentCycle) ? "is-done" : (i === this.currentCycle ? (this.isRunning ? "is-active running" : "is-active") : "is-pending");
+          dotsHtml += `<span class="pomo-cycle-dot ${dotState}" title="Chu kỳ ${i}"></span>`;
+        }
+        cycleDotsHost.innerHTML = dotsHtml;
+      }
+
+      // Cập nhật Phase Pill nhã nhặn
+      if (popPhase) {
+        popPhase.className = "pomo-pop-phase-pill " + (this.phase || "idle") + (this.isRunning ? " is-running" : "");
+      }
+      if (popPhaseText) {
+        if (this.phase === "focus") {
+          popPhaseText.textContent = this.isRunning ? "Đang tập trung" : "Tạm dừng tập trung";
+        } else if (this.phase === "break") {
+          popPhaseText.textContent = this.isRunning ? "Nghỉ giải lao" : "Tạm dừng nghỉ";
+        } else if (this.phase === "completed") {
+          popPhaseText.textContent = "Hoàn thành xuất sắc";
+        } else {
+          popPhaseText.textContent = "Sẵn sàng";
+        }
+      }
 
       // Đồng bộ Sliders & Badges
       const sFocus = document.getElementById("pomoPopFocusRange");
@@ -584,53 +679,40 @@
       if (sCycles && document.activeElement !== sCycles) sCycles.value = this.totalCycles;
       if (bCycles) bCycles.textContent = this.totalCycles + " chu kỳ";
 
-      if (popPhase) {
-        if (this.phase === "focus") {
-          popPhase.textContent = "🧠 ĐANG TẬP TRUNG";
-          popPhase.style.background = "#e0f2fe";
-          popPhase.style.color = "#0284c7";
-        } else if (this.phase === "break") {
-          popPhase.textContent = "☕ NGHỈ GIẢI LAO";
-          popPhase.style.background = "#dcfce7";
-          popPhase.style.color = "#16a34a";
-        } else if (this.phase === "completed") {
-          popPhase.textContent = "🏆 HOÀN THÀNH XUẤT SẮC";
-          popPhase.style.background = "#fef3c7";
-          popPhase.style.color = "#b45309";
-        } else {
-          popPhase.textContent = "SẴN SÀNG";
-          popPhase.style.background = "#f1f5f9";
-          popPhase.style.color = "#64748b";
-        }
-      }
+      // Đánh dấu active trên preset buttons
+      const presets = document.querySelectorAll(".pomo-preset-btn");
+      presets.forEach(p => {
+        const isMatch = Number(p.dataset.focus) === this.focusMin && Number(p.dataset.break) === this.breakMin;
+        p.classList.toggle("is-active", isMatch);
+      });
+
+      // Nút Start / Pause với Icon tối giản
+      const playSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+      const pauseSvg = `<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>`;
 
       if (btnStart) {
+        btnStart.className = "pomo-btn-main " + (this.phase || "idle") + (this.isRunning ? " is-running" : "");
         if (this.isRunning) {
-          btnStart.textContent = "Tạm dừng";
-          btnStart.style.background = "#ea580c";
-          btnStart.style.borderColor = "#ea580c";
+          if (btnStartText) btnStartText.textContent = "Tạm dừng";
+          if (btnStartIcon) btnStartIcon.innerHTML = pauseSvg;
         } else if (this.phase === "focus") {
-          btnStart.textContent = "Tiếp tục học";
-          btnStart.style.background = "#16a34a";
-          btnStart.style.borderColor = "#16a34a";
+          if (btnStartText) btnStartText.textContent = "Tiếp tục học";
+          if (btnStartIcon) btnStartIcon.innerHTML = playSvg;
         } else if (this.phase === "break") {
-          btnStart.textContent = "Tiếp tục nghỉ";
-          btnStart.style.background = "#0284c7";
-          btnStart.style.borderColor = "#0284c7";
+          if (btnStartText) btnStartText.textContent = "Tiếp tục nghỉ";
+          if (btnStartIcon) btnStartIcon.innerHTML = playSvg;
         } else if (this.phase === "completed") {
-          btnStart.textContent = "Bắt đầu lại";
-          btnStart.style.background = "#c52233";
-          btnStart.style.borderColor = "#c52233";
+          if (btnStartText) btnStartText.textContent = "Bắt đầu lại";
+          if (btnStartIcon) btnStartIcon.innerHTML = playSvg;
         } else {
-          btnStart.textContent = "Bắt đầu học";
-          btnStart.style.background = "#c52233";
-          btnStart.style.borderColor = "#c52233";
+          if (btnStartText) btnStartText.textContent = "Bắt đầu học";
+          if (btnStartIcon) btnStartIcon.innerHTML = playSvg;
         }
       }
 
       if (slidersBox) {
         const disableSliders = this.isRunning || this.phase === "focus" || this.phase === "break";
-        slidersBox.style.opacity = disableSliders ? "0.55" : "1";
+        slidersBox.style.opacity = disableSliders ? "0.6" : "1";
         slidersBox.style.pointerEvents = disableSliders ? "none" : "auto";
       }
 
@@ -638,7 +720,9 @@
       if (this.isRunning) {
         document.title = `(${timeStr}) Pomodoro · RUSI TRKI`;
       } else {
+        if (typeof document.title === "string") {
         document.title = document.title.replace(/^\([0-9:]+\)\s*/, "");
+      }
       }
     }
   };
