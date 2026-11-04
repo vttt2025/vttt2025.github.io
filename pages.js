@@ -10,6 +10,14 @@ function dauNormalize(str) {
     .trim();
 }
 
+function stripQuotes(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/[«»"“”„]/g, "")
+    .replace(/&quot;|&laquo;|&raquo;/g, "")
+    .trim();
+}
+
 function el(sel) {
   return document.querySelector(sel);
 }
@@ -212,7 +220,7 @@ window.openAddToJarModal = function(wordData) {
   if (!customJars || !customJars.length) {
     customJars = [{
       id: "custom-jar-default",
-      name: "Lọ từ vựng yêu thích",
+      name: "Lọ yêu thích",
       icon: "archive-jar",
       desc: "Lọ chứa các từ vựng bạn yêu thích và đã lưu",
       words: [],
@@ -246,7 +254,7 @@ window.openAddToJarModal = function(wordData) {
           <button type="button" class="btn btn-soft btn-sm" id="previewSpeakBtn" style="padding:6px 10px;border-radius:50%" title="Nghe phát âm">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : "Nghe"}</button>
         </div>
         <div class="vi-word">${esc(vi)}</div>
-        ${ex ? `<div style="font-size:0.82rem;color:var(--muted);margin-top:6px;border-top:1px dashed var(--border);padding-top:6px;font-style:italic">«${esc(ex)}»</div>` : ""}
+        ${ex ? `<div style="font-size:0.82rem;color:var(--muted);margin-top:6px;border-top:1px dashed var(--border);padding-top:6px;font-style:italic">${esc(stripQuotes(ex))}</div>` : ""}
       </div>
 
       <label style="display:block;margin-bottom:12px">
@@ -472,13 +480,13 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     note: (w.note || w.pos || w.trans || "").trim(),
     pos: (w.pos || "").trim(),
     gender: (w.gender || "").trim(),
-    ex: (w.ex || "").trim(),
+    ex: stripQuotes(w.ex),
     ex_vi: (w.ex_vi || "").trim(),
-    collocation: (w.collocation || "").trim(),
+    collocation: stripQuotes(w.collocation),
     verb_obj: (w.verb_obj || w.gov || "").trim(),
     gov: (w.gov || "").trim(),
-    syn: (w.syn || "").trim(),
-    ant: (w.ant || "").trim()
+    syn: stripQuotes(w.syn),
+    ant: stripQuotes(w.ant)
   }));
 
   if (words.length === 0) {
@@ -636,7 +644,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                   <div class="qcard-ex-header">
                     <span class="qcard-ex-label">Ví dụ ngữ cảnh</span>
                   </div>
-                  <div class="qcard-ex-text ru">«${esc(currentWord.ex)}»</div>
+                  <div class="qcard-ex-text ru">${esc(currentWord.ex)}</div>
                   ${currentWord.ex_vi ? `<div class="qcard-ex-trans">${esc(currentWord.ex_vi)}</div>` : ""}
                 </div>
               ` : ""}
@@ -1285,7 +1293,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               <div style="font-size:0.85rem;font-weight:700;color:var(--muted);margin-bottom:6px">CÂU ${idx + 1}:</div>
               ${q.type === "choice" ? `
                 <div style="font-size:1.25rem;font-weight:800;margin-bottom:10px" class="ru">
-                  «${esc(q.ru)}» có nghĩa là gì?
+                  ${esc(q.ru)} có nghĩa là gì?
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:8px">
                   ${q.options.map((opt) => `
@@ -1297,7 +1305,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 </div>
               ` : `
                 <div style="font-size:1.25rem;font-weight:800;margin-bottom:10px" class="ru">
-                  «${esc(q.ru)}» có nghĩa là «${esc(q.statement)}»?
+                  ${esc(q.ru)} có nghĩa là ${esc(q.statement)}?
                 </div>
                 <div style="display:flex;gap:12px">
                   <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer">
@@ -1461,7 +1469,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                       ${w.ex ? `
                         <div class="dau-row-ex-wrap">
                           <div class="dau-row-ex-line">
-                            <span class="dau-row-ex ru">«${esc(w.ex)}»</span>
+                            <span class="dau-row-ex ru">${esc(w.ex)}</span>
                           </div>
                           ${w.ex_vi ? `<div class="dau-row-ex-vi">${esc(w.ex_vi)}</div>` : ""}
                         </div>
@@ -1992,10 +2000,10 @@ function initVocabPage() {
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
-        <div class="topic-empty-state" style="grid-column:1/-1;text-align:center;padding:48px 24px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.18);border-radius:20px;color:#fff">
-          <div style="margin-bottom:12px;color:#8dbcef">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 48 }) : ""}</div>
-          <h3 style="margin:0 0 8px;color:#fff;font-size:1.2rem">Chưa có lọ từ vựng cho cấp độ này</h3>
-          <p style="color:#8094a9;font-size:0.9rem;margin:0">Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
+        <div class="writing-empty-state vocab-empty-state topic-empty-state">
+          <span class="writing-empty-icon vocab-empty-icon">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 34 }) : ""}</span>
+          <h3>Chưa có lọ từ vựng cho cấp độ này</h3>
+          <p>Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
         </div>
       `;
     } else {
@@ -2021,7 +2029,7 @@ function initVocabPage() {
 
         return `
           <!-- GIAO DIỆN THẺ TỐI GIẢN CHUẨN MỚI .dau-card-compact (Đồng bộ toàn hệ thống, không có thanh tiến độ) -->
-          <article class="dau-card dau-card-compact ${isFinished ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-vocab-id="${item.id}" data-kind="jar" data-pro="${isPro}">
+          <article class="dau-card dau-card-compact ${isFinished ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-vocab-id="${item.id}" data-kind="jar" data-pro="${isPro}">
             <div class="dau-card-header">
               <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
                 ${window.RusiIcons ? RusiIcons.get(item.icon || "archive-jar", { size: 24 }) : ""}
@@ -2048,12 +2056,18 @@ function initVocabPage() {
             <!-- CHÂN THẺ -->
             <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
               <div class="topic-footer-actions">
-                <button type="button" class="btn-jar-list topic-text-btn" data-jar-id="${item.id}" title="Mở danh sách Lọ từ vựng để học Flashcard Spaced Repetition">
-                  ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} Lọ từ vựng
-                </button>
-                <button type="button" class="btn-topic-article topic-circle-btn" data-jar-id="${item.id}" title="Xem bài học chủ đề">
-                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
-                </button>
+                ${isPro && !isUnlocked ? `
+                  <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
+                    ${window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : ""}
+                  </span>
+                ` : `
+                  <button type="button" class="btn-jar-list topic-text-btn" data-jar-id="${item.id}" title="Mở danh sách Lọ từ vựng để học Flashcard Spaced Repetition">
+                    ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} Lọ từ vựng
+                  </button>
+                  <button type="button" class="btn-topic-article topic-circle-btn" data-jar-id="${item.id}" title="Xem bài học chủ đề">
+                    ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : ""}
+                  </button>
+                `}
               </div>
             </div>
           </article>
@@ -2209,7 +2223,7 @@ function initVocabPage() {
     if (!customJars || !customJars.length) {
       customJars = [{
         id: "custom-jar-default",
-        name: "Lọ từ vựng yêu thích",
+        name: "Lọ yêu thích",
         icon: "archive-jar",
         desc: "Lọ chứa các từ vựng bạn yêu thích và đã lưu",
         words: [],
@@ -2218,13 +2232,13 @@ function initVocabPage() {
       }];
       if (typeof STORE !== "undefined") STORE.set("custom_jars", customJars);
     } else {
-      // Xóa dấu sao khỏi tên và đổi icon cho lọ yêu thích mặc định
+      // Đổi tên và icon thành "Lọ yêu thích" cho lọ mặc định
       let changed = false;
       customJars.forEach(j => {
         if (j.id === "custom-jar-default") {
-          const cleaned = (j.name || "Lọ từ vựng yêu thích").replace(/[★⭐*]/g, "").trim();
-          if (j.name !== cleaned || j.icon !== "archive-jar") {
-            j.name = cleaned;
+          const targetName = "Lọ yêu thích";
+          if (j.name !== targetName || j.icon !== "archive-jar") {
+            j.name = targetName;
             j.icon = "archive-jar";
             changed = true;
           }
@@ -2246,10 +2260,10 @@ function initVocabPage() {
       progressHost.style.display = "block";
       progressHost.innerHTML = `
         <div class="voc-progress-figma-card" id="vocProgressFigmaCard">
-          <!-- CỤM TRÁI: ICON + TIÊU ĐỀ + PHỤ ĐỀ (Figma: archive jar icon + Tiến Độ Học Ôn + Lặp lại ngắt quãng SM-2) -->
+          <!-- CỤM TRÁI: ICON + TIÊU ĐỀ + PHỤ ĐỀ (Figma: progress icon + Tiến Độ Học Ôn + Lặp lại ngắt quãng SM-2) -->
           <div class="voc-progress-figma-left">
             <span class="voc-progress-figma-icon">
-              ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 20 }) : `<svg aria-hidden="true" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" viewBox="0 0 24 24"><path d="M7 3h10M8 3v4L6 9v10a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V9l-2-2V3"></path><path d="M6 11h12"></path></svg>`}
+              ${window.RusiIcons ? RusiIcons.get("trending-up", { size: 20 }) : `<svg aria-hidden="true" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>`}
             </span>
             <div>
               <strong class="voc-progress-figma-title">Tiến Độ</strong>
@@ -2302,6 +2316,7 @@ function initVocabPage() {
             ${customJars.map(j => {
               const wCount = (j.words || []).length;
               const isDefault = j.id === "custom-jar-default";
+              const jarDisplayName = isDefault ? "Lọ yêu thích" : (j.name || "Lọ từ vựng");
               return `
                 <div class="voc-user-jar-card" data-jar-id="${esc(j.id)}">
                   <div class="voc-user-jar-card-top">
@@ -2309,7 +2324,7 @@ function initVocabPage() {
                       ${window.RusiIcons ? RusiIcons.get(j.icon || "archive-jar", { size: 20 }) : ""}
                     </div>
                     <div style="flex:1;min-width:0">
-                      <div class="voc-user-jar-card-name" title="${esc(j.name)}">${esc(j.name)}</div>
+                      <div class="voc-user-jar-card-name" title="${esc(jarDisplayName)}">${esc(jarDisplayName)}</div>
                       <div class="voc-user-jar-card-count">${wCount} từ vựng</div>
                     </div>
                   </div>
@@ -2324,12 +2339,6 @@ function initVocabPage() {
                 </div>
               `;
             }).join("")}
-
-            <div class="voc-user-jar-card voc-user-jar-card-add" id="btnSidebarCreateJarBottom" style="border:1.5px dashed var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;min-height:110px;text-align:center">
-              <span style="color:var(--primary);font-weight:700;font-size:0.95rem;display:flex;align-items:center;gap:6px">
-                ${window.RusiIcons ? RusiIcons.get("plus", { size: 16 }) : ""} Thêm lọ từ vựng mới
-              </span>
-            </div>
           </div>
         </section>
       `;
@@ -2364,20 +2373,10 @@ function initVocabPage() {
       };
     }
 
-    const btnCreateBottom = el("#btnSidebarCreateJarBottom");
-    if (btnCreateBottom) {
-      btnCreateBottom.onclick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        openCreateJarModal();
-      };
-    }
-
     const jarsContainer = userJarsHost || sidebarHost;
     if (jarsContainer) {
-      // Cho phép bấm trực tiếp vào bất kỳ vị trí nào trên thẻ Lọ từ vựng (bỏ qua nút tạo lọ)
+      // Cho phép bấm trực tiếp vào bất kỳ vị trí nào trên thẻ Lọ từ vựng
       jarsContainer.querySelectorAll(".voc-user-jar-card").forEach(card => {
-        if (card.id === "btnSidebarCreateJarBottom" || card.classList.contains("voc-user-jar-card-add")) return;
         card.style.cursor = "pointer";
         card.onclick = (e) => {
           if (e.target.closest("button") || e.target.closest(".voc-user-jar-card-actions")) return;
@@ -2529,7 +2528,7 @@ function initVocabPage() {
                 <span style="font-size:0.8rem;color:var(--muted)">Xem và quản lý các từ vựng theo trạng thái học tập</span>
               </div>
             </div>
-            <button type="button" id="closeProgressModal" class="btn btn-soft" style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;padding:0;font-size:1.1rem;cursor:pointer" title="Đóng">✕</button>
+            <button type="button" id="closeProgressModal" class="btn btn-soft" style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;padding:0;cursor:pointer" title="Đóng">${window.RusiIcons ? RusiIcons.get("x", { size: 18 }) : "✕"}</button>
           </div>
 
           <!-- TABS THEO LEVEL-TAB STYLE (PHẲNG, GẠCH CHÂN KHI ACTIVE) -->
@@ -2558,8 +2557,8 @@ function initVocabPage() {
           <div class="voc-progress-words-list" style="flex:1 1 auto;overflow-y:auto;padding-right:4px;display:flex;flex-direction:column;gap:8px">
             ${activeList.length === 0 ? `
               <div style="text-align:center;padding:36px 16px;color:var(--muted)">
-                <div style="font-size:2.5rem;margin-bottom:8px">
-                  ${currentTab === "mastered" ? "🏆" : currentTab === "due" ? "🎉" : "📖"}
+                <div style="margin-bottom:12px;color:var(--primary);display:flex;justify-content:center">
+                  ${window.RusiIcons ? (currentTab === "mastered" ? RusiIcons.get("trophy", { size: 44 }) : currentTab === "due" ? RusiIcons.get("check-circle-correct", { size: 44 }) : RusiIcons.get("book-open", { size: 44 })) : (currentTab === "mastered" ? "🏆" : currentTab === "due" ? "🎉" : "📖")}
                 </div>
                 <div style="font-weight:700;font-size:1rem;color:var(--text);margin-bottom:4px">
                   ${currentTab === "mastered" ? "Chưa có từ nào được đánh dấu đã thuộc" : currentTab === "due" ? "Không có từ nào tới hạn cần ôn tập hôm nay" : "Đã học toàn bộ từ vựng"}
@@ -2579,7 +2578,7 @@ function initVocabPage() {
                       ${w.jarTitle ? `<span class="dau-badge" style="font-size:0.68rem;padding:1px 6px;border-radius:4px;background:var(--primary-soft,#e3effc);color:var(--primary,#1757a6)">${w.jarTitle}</span>` : ""}
                     </div>
                     <div style="font-size:0.9rem;color:var(--text);margin-top:2px">${w.vi || ""}</div>
-                    ${w.ex ? `<div class="ru" style="font-size:0.82rem;color:var(--muted);margin-top:3px;font-style:italic">«${w.ex}»</div>` : ""}
+                    ${w.ex ? `<div class="ru" style="font-size:0.82rem;color:var(--muted);margin-top:3px;font-style:italic">${esc(stripQuotes(w.ex))}</div>` : ""}
                   </div>
 
                   <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
@@ -2700,30 +2699,79 @@ function initVocabPage() {
     if (!m) {
       m = document.createElement("div");
       m.id = "createJarModal";
-      m.className = "anticheat-modal";
+      m.className = "create-jar-modal";
       document.body.appendChild(m);
     }
     m.innerHTML = `
-      <div class="anticheat-modal-box" style="text-align:left;max-width:440px">
-        <h3 style="margin-bottom:12px;display:flex;align-items:center;gap:8px">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 20 }) : ""} Tạo Lọ Từ Vựng Cá Nhân</h3>
-        <p style="font-size:0.85rem;color:var(--muted);margin:0 0 16px">Gom nhóm các từ vựng theo chủ đề riêng của bạn để dễ dàng ôn tập theo Spaced Repetition.</p>
-        <label style="display:block;margin-bottom:16px">
-          <span style="font-size:0.85rem;font-weight:700;display:block;margin-bottom:6px">Tên lọ từ vựng:</span>
-          <input type="text" id="newJarName" placeholder="Ví dụ: Từ vựng KTX & Nấu ăn" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;font-size:0.95rem;box-sizing:border-box" autofocus />
-        </label>
-        <div style="display:flex;gap:10px;justify-content:flex-end">
-          <button type="button" class="btn btn-outline btn-sm" id="cancelJar">Hủy</button>
-          <button type="button" class="btn btn-primary btn-sm" id="saveJar">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Tạo lọ ngay</button>
+      <div class="create-jar-box">
+        <button type="button" class="create-jar-close" id="closeCreateJarModal" title="Đóng cửa sổ" aria-label="Đóng cửa sổ">
+          ${window.RusiIcons ? RusiIcons.get("x", { size: 16 }) : "✕"}
+        </button>
+
+        <div class="create-jar-header">
+          <div class="create-jar-icon">
+            ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 22 }) : ""}
+          </div>
+          <div>
+            <h3 class="create-jar-title">Tạo Lọ Từ Vựng Cá Nhân</h3>
+            <p class="create-jar-desc">Gom nhóm các từ vựng theo chủ đề riêng của bạn để dễ dàng ôn tập theo Spaced Repetition.</p>
+          </div>
+        </div>
+
+        <div class="create-jar-body">
+          <label class="create-jar-label" for="newJarName">
+            <span>Tên lọ từ vựng:</span>
+            <input type="text" id="newJarName" class="create-jar-input" placeholder="Ví dụ: Từ vựng KTX & Nấu ăn" autocomplete="off" autofocus />
+          </label>
+        </div>
+
+        <div class="create-jar-actions">
+          <button type="button" class="btn btn-outline btn-sm create-jar-btn-cancel" id="cancelJar">Hủy</button>
+          <button type="button" class="btn btn-primary btn-sm create-jar-btn-save" id="saveJar">
+            ${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Tạo lọ ngay
+          </button>
         </div>
       </div>
     `;
-    m.onclick = (e) => {
-      if (e.target === m) m.remove();
+
+    const closeModal = () => {
+      document.removeEventListener("keydown", onKeyDown);
+      m.remove();
     };
-    document.getElementById("cancelJar").onclick = () => m.remove();
-    document.getElementById("saveJar").onclick = () => {
-      const name = document.getElementById("newJarName").value.trim();
-      if (!name) { toast("Vui lòng nhập tên lọ từ vựng"); document.getElementById("newJarName").focus(); return; }
+
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") closeModal();
+    };
+    document.addEventListener("keydown", onKeyDown);
+
+    m.onclick = (e) => {
+      if (e.target === m) closeModal();
+    };
+
+    const btnClose = m.querySelector("#closeCreateJarModal");
+    if (btnClose) btnClose.onclick = closeModal;
+
+    const btnCancel = m.querySelector("#cancelJar");
+    if (btnCancel) btnCancel.onclick = closeModal;
+
+    const inputName = m.querySelector("#newJarName");
+    if (inputName) {
+      setTimeout(() => inputName.focus(), 60);
+      inputName.onkeydown = (e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          doSave();
+        }
+      };
+    }
+
+    const doSave = () => {
+      const name = (inputName ? inputName.value : "").trim();
+      if (!name) {
+        toast("Vui lòng nhập tên lọ từ vựng");
+        if (inputName) inputName.focus();
+        return;
+      }
       const customJars = STORE.get("custom_jars", []);
       customJars.push({
         id: "custom-jar-" + Date.now(),
@@ -2736,9 +2784,12 @@ function initVocabPage() {
       });
       STORE.set("custom_jars", customJars);
       toast("Đã tạo lọ từ vựng mới thành công!");
-      m.remove();
+      closeModal();
       renderVocabHub();
     };
+
+    const btnSave = m.querySelector("#saveJar");
+    if (btnSave) btnSave.onclick = doSave;
   };
 
 const showTopicArticle = (jarId) => {
@@ -2876,7 +2927,7 @@ const showTopicArticle = (jarId) => {
                             ${it.place_vi ? `<div style="font-size:0.82rem;color:#64748b;white-space:pre-line">${esc(it.place_vi)}</div>` : ""}
                           </td>
                           <td style="min-width:240px">
-                            ${it.ex ? `<div class="topic-word-ex ru" style="font-weight:600;color:var(--primary);margin-bottom:2px;white-space:pre-line">«${esc(it.ex)}»</div>` : ""}
+                            ${it.ex ? `<div class="topic-word-ex ru" style="font-weight:600;color:var(--primary);margin-bottom:2px;white-space:pre-line">${esc(stripQuotes(it.ex))}</div>` : ""}
                             ${it.ex_vi ? `<div style="font-size:0.82rem;color:#475569;white-space:pre-line">${esc(it.ex_vi)}</div>` : ""}
                           </td>
                         </tr>
@@ -2903,7 +2954,7 @@ const showTopicArticle = (jarId) => {
         </td>
         <td style="min-width:130px" class="topic-word-vi">${esc(w.vi)}</td>
         <td style="min-width:220px">
-          <div class="topic-word-ex ru" style="font-weight:600;color:var(--primary,#0039a6);margin-bottom:2px">«${w.ex ? esc(w.ex) : '—'}»</div>
+          <div class="topic-word-ex ru" style="font-weight:600;color:var(--primary,#0039a6);margin-bottom:2px">${w.ex ? esc(stripQuotes(w.ex)) : '—'}</div>
           ${w.ex_vi ? `<div style="font-size:0.82rem;color:#475569;line-height:1.35">${esc(w.ex_vi)}</div>` : ''}
         </td>
       </tr>
@@ -3443,41 +3494,386 @@ function initListeningPage() {
   let showSub = true;
   let currentLesson = null;
   let cloudListening = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("listening:all") : null;
-  const WAVE_BARS = [24, 38, 55, 72, 60, 42, 30, 48, 68, 85, 92, 75, 52, 35, 58, 80, 88, 70, 45, 62, 78, 65, 40, 56, 74, 82, 64, 45, 32, 50, 40, 26];
+  /**
+   * BỘ TẠO SÓNG ÂM REALTIME THEO ÂM THANH THỰC (RUSI REALTIME AUDIO WAVEFORM)
+   * - Hoàn toàn không phụ thuộc CDN bên ngoài
+   * - Độ phân giải Retina siêu nét qua HTML5 Canvas
+   * - Lên xuống động 60fps theo ngữ điệu, âm tiết, nguyên âm và từ vựng tiếng Nga đang phát
+   * - Thanh tiến độ mượt mà quét qua từng câu, hỗ trợ tua và phát lại khi nhấn vào sóng âm
+   */
+  /**
+   * BỘ TẠO SÓNG ÂM REALTIME CAO CẤP (RUSI 60–100 BARS INTERACTIVE WAVEFORM ENGINE)
+   * - Hiển thị 60–100 thanh sóng âm thanh theo chiều ngang (tự động điều chỉnh theo chiều rộng)
+   * - Mỗi thanh có chiều cao khác nhau theo dữ liệu giải mã âm thanh hoặc mô phỏng âm vị tiếng Nga nhất quán
+   * - Đầu thanh bo tròn hoàn hảo (rounded bars) với khoảng cách nhỏ đồng đều
+   * - Sóng đã phát: màu xanh dương #4598FF
+   * - Sóng chưa phát: màu xám #626B79
+   * - Màu xanh di chuyển chính xác theo tiến độ phát thực tế
+   * - Hỗ trợ tua đến vị trí bất kỳ bằng nhấp chuột hoặc kéo cảm ứng
+   * - Khi phát hết audio, toàn bộ waveform chuyển sang màu đã phát (#4598FF)
+   */
+  const audioPeaksCache = new Map();
 
-  const ensureWaveSurfer = () => {
-    if (typeof window !== "undefined" && window.WaveSurfer) {
-      return Promise.resolve(window.WaveSurfer);
+  const extractAudioPeaks = async (url, count) => {
+    if (!url) return null;
+    const key = `${url}:${count}`;
+    if (audioPeaksCache.has(key)) return audioPeaksCache.get(key);
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return null;
+      const actx = new AudioCtx();
+      const resp = await fetch(url);
+      if (!resp.ok) return null;
+      const buf = await resp.arrayBuffer();
+      const audioBuf = await actx.decodeAudioData(buf);
+      const data = audioBuf.getChannelData(0);
+      const blockSize = Math.floor(data.length / count);
+      const peaks = new Float32Array(count);
+      let maxPeak = 0.0001;
+
+      for (let i = 0; i < count; i++) {
+        let sum = 0;
+        const start = i * blockSize;
+        const end = Math.min(data.length, start + blockSize);
+        for (let j = start; j < end; j++) {
+          sum += Math.abs(data[j]);
+        }
+        const amp = sum / (end - start);
+        peaks[i] = amp;
+        if (amp > maxPeak) maxPeak = amp;
+      }
+      for (let i = 0; i < count; i++) {
+        peaks[i] = Math.max(0.14, Math.min(0.96, (peaks[i] / maxPeak) * 0.95));
+      }
+      try { actx.close(); } catch (_) {}
+      audioPeaksCache.set(key, peaks);
+      return peaks;
+    } catch (_) {
+      return null;
     }
-    if (window._waveSurferPromise) return window._waveSurferPromise;
-    window._waveSurferPromise = new Promise((resolve) => {
-      const script = document.createElement("script");
-      script.src = "https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.min.js";
-      script.async = true;
-      script.onload = () => resolve(window.WaveSurfer);
-      script.onerror = () => {
-        console.warn("[WaveSurfer] Không thể nạp thư viện WaveSurfer.");
-        resolve(null);
-      };
-      document.head.appendChild(script);
-    });
-    return window._waveSurferPromise;
   };
 
-  const generateSpeechPeaks = (text, count = 75) => {
-    const str = text || "default";
-    let seed = 0;
-    for (let i = 0; i < str.length; i++) {
-      seed = (seed * 31 + str.charCodeAt(i)) & 0xffffff;
+  const generateConsistentWaveform = (text, count) => {
+    const clean = (text || "").trim();
+    const profile = new Float32Array(count);
+
+    let seed = 2166136261;
+    for (let i = 0; i < clean.length; i++) {
+      seed = (seed ^ clean.charCodeAt(i)) * 16777619;
     }
-    const peaks = [];
+    const prng = (i) => {
+      const x = Math.sin(seed + i * 19.179) * 43758.5453;
+      return x - Math.floor(x);
+    };
+
+    const RUSSIAN_VOWELS = new Set(["а", "е", "ё", "и", "о", "у", "ы", "э", "ю", "я"]);
+    const len = clean.length;
+
     for (let i = 0; i < count; i++) {
-      const cadence = Math.sin((i / count) * Math.PI);
-      const syllable = Math.sin(i * 0.45 + (seed % 10)) * 0.45 + Math.cos(i * 0.85 + (seed % 7)) * 0.35;
-      const val = Math.min(1.0, Math.max(0.12, Math.abs(syllable) * cadence + 0.15));
-      peaks.push(Number(val.toFixed(2)));
+      const norm = i / (count - 1);
+      const phraseEnvelope = Math.sin(Math.pow(norm, 0.88) * Math.PI);
+
+      let energy = 0.44;
+      if (len > 0) {
+        const charIdx = Math.min(len - 1, Math.floor(norm * len));
+        const ch = clean[charIdx].toLowerCase();
+        if (ch === " " || ch === "," || ch === "-" || ch === "—") {
+          energy = 0.16;
+        } else if (ch === "." || ch === "!" || ch === "?") {
+          energy = 0.10;
+        } else if (RUSSIAN_VOWELS.has(ch)) {
+          energy = 0.84;
+        } else {
+          energy = 0.48;
+        }
+      }
+
+      const syllableRhythm = Math.sin(norm * Math.PI * 14.0) * 0.13;
+      const microGrain = (prng(i) - 0.5) * 0.28;
+
+      const val = Math.max(0.12, Math.min(0.96, (energy + syllableRhythm + microGrain) * (0.34 + phraseEnvelope * 0.66)));
+      profile[i] = val;
     }
-    return [peaks];
+
+    const smoothed = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      const p = profile[Math.max(0, i - 1)];
+      const c = profile[i];
+      const n = profile[Math.min(count - 1, i + 1)];
+      smoothed[i] = p * 0.22 + c * 0.56 + n * 0.22;
+    }
+    return smoothed;
+  };
+
+  const createRealtimeWaveform = (wrapEl, options = {}) => {
+    if (!wrapEl) return null;
+    wrapEl.innerHTML = "";
+
+    const canvas = document.createElement("canvas");
+    canvas.className = "lis-dict-realtime-canvas";
+    wrapEl.appendChild(canvas);
+    const ctx = canvas.getContext("2d");
+
+    let isPlaying = false;
+    let isCompleted = false;
+    let animId = null;
+    let durationSec = 3.5;
+    let startTime = 0;
+    let spokenText = "";
+    let audioUrl = null;
+    let activeCharIndex = -1;
+    let activeWordLength = 0;
+    let currentProgress = 0;
+    let targetProgress = 0;
+    let width = 0;
+    let height = 0;
+    let hoverX = -1;
+
+    let barCount = 75;
+    let profile = new Float32Array(barCount);
+
+    const COLOR_PLAYED = "#4598FF";
+    const COLOR_UNPLAYED = "#626B79";
+
+    const computeBarCount = (w) => {
+      return Math.max(60, Math.min(100, Math.floor(w / 7.2)));
+    };
+
+    const updateProfile = async () => {
+      if (audioUrl) {
+        const realPeaks = await extractAudioPeaks(audioUrl, barCount);
+        if (realPeaks && realPeaks.length === barCount) {
+          profile = realPeaks;
+          return;
+        }
+      }
+      profile = generateConsistentWaveform(spokenText, barCount);
+    };
+
+    const resize = () => {
+      const rect = wrapEl.getBoundingClientRect();
+      width = Math.max(120, Math.floor(rect.width || wrapEl.clientWidth || 400));
+      height = Math.max(48, Math.floor(rect.height || wrapEl.clientHeight || 68));
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = width + "px";
+      canvas.style.height = height + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      barCount = computeBarCount(width);
+      updateProfile();
+    };
+
+    resize();
+    let resizeObserver = null;
+    if (typeof ResizeObserver !== "undefined") {
+      resizeObserver = new ResizeObserver(() => resize());
+      resizeObserver.observe(wrapEl);
+    }
+
+    const handleSeek = (clientX) => {
+      const rect = wrapEl.getBoundingClientRect();
+      if (!rect.width) return;
+      const clickX = clientX - rect.left;
+      const pct = Math.max(0, Math.min(1, clickX / rect.width));
+      targetProgress = pct;
+      currentProgress = pct;
+      isCompleted = (pct >= 0.995);
+      startTime = Date.now() - (pct * durationSec * 1000);
+      if (typeof options.onSeek === "function") {
+        options.onSeek(pct);
+      }
+    };
+
+    wrapEl.onclick = (e) => {
+      handleSeek(e.clientX);
+    };
+
+    let isSeeking = false;
+    wrapEl.onpointerdown = (e) => {
+      isSeeking = true;
+      handleSeek(e.clientX);
+      try { wrapEl.setPointerCapture(e.pointerId); } catch (_) {}
+    };
+
+    wrapEl.onpointermove = (e) => {
+      const rect = wrapEl.getBoundingClientRect();
+      hoverX = e.clientX - rect.left;
+      if (isSeeking) {
+        handleSeek(e.clientX);
+      }
+    };
+
+    const endSeek = (e) => {
+      if (isSeeking) {
+        isSeeking = false;
+        try { wrapEl.releasePointerCapture(e.pointerId); } catch (_) {}
+      }
+    };
+    wrapEl.onpointerup = endSeek;
+    wrapEl.onpointercancel = endSeek;
+    wrapEl.onmouseleave = () => {
+      hoverX = -1;
+    };
+
+    const draw = () => {
+      if (!ctx || width <= 0 || height <= 0) {
+        animId = requestAnimationFrame(draw);
+        return;
+      }
+      ctx.clearRect(0, 0, width, height);
+
+      const centerY = height / 2;
+      const maxH = Math.max(26, Math.min(48, height * 0.74));
+      const minH = 4;
+
+      if (isPlaying && durationSec > 0 && !isCompleted) {
+        const elapsed = (Date.now() - startTime) / 1000;
+        const timeProgress = Math.min(1.0, elapsed / durationSec);
+        if (targetProgress > 0) {
+          targetProgress = Math.max(targetProgress, timeProgress);
+        } else {
+          targetProgress = timeProgress;
+        }
+        currentProgress += (targetProgress - currentProgress) * 0.16;
+        if (currentProgress >= 0.995 && timeProgress >= 1.0) {
+          currentProgress = 1.0;
+          isCompleted = true;
+          isPlaying = false;
+        }
+      }
+
+      const step = width / barCount;
+      const gap = Math.max(1.1, Math.min(2.0, step * 0.28));
+      const barWidth = Math.max(1.8, step - gap);
+      const radius = barWidth / 2;
+
+      for (let i = 0; i < barCount; i++) {
+        const barNorm = (i + 0.5) / barCount;
+        const isPassed = isCompleted || currentProgress >= 1.0 || barNorm <= currentProgress;
+
+        ctx.fillStyle = isPassed ? COLOR_PLAYED : COLOR_UNPLAYED;
+
+        const val = profile[i] !== undefined ? profile[i] : 0.35;
+        const barH = Math.max(minH, minH + val * (maxH - minH));
+        const x = i * step + gap / 2;
+        const y = centerY - barH / 2;
+
+        ctx.beginPath();
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(x, y, barWidth, barH, radius);
+        } else {
+          ctx.rect(x, y, barWidth, barH);
+        }
+        ctx.fill();
+      }
+
+      // Con trỏ tiến độ
+      if (isPlaying && currentProgress > 0 && currentProgress < 1.0) {
+        const headX = currentProgress * width;
+        const headH = Math.min(height - 8, 38);
+        const headY = centerY - headH / 2;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.fillStyle = "#ffffff";
+        ctx.shadowColor = "rgba(69, 152, 255, 0.75)";
+        ctx.shadowBlur = 6;
+        if (typeof ctx.roundRect === "function") {
+          ctx.roundRect(headX - 1, headY, 2, headH, 1);
+        } else {
+          ctx.rect(headX - 1, headY, 2, headH);
+        }
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Đường chỉ dẫn khi rê chuột
+      if (hoverX >= 0 && hoverX <= width) {
+        ctx.save();
+        ctx.strokeStyle = "rgba(69, 152, 255, 0.35)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(hoverX, centerY - 18);
+        ctx.lineTo(hoverX, centerY + 18);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      animId = requestAnimationFrame(draw);
+    };
+
+    animId = requestAnimationFrame(draw);
+
+    return {
+      start: (text, estDuration = 3.5, soundUrl = null) => {
+        isPlaying = true;
+        isCompleted = false;
+        spokenText = text || "";
+        audioUrl = soundUrl || null;
+        durationSec = Math.max(1.5, estDuration);
+        startTime = Date.now();
+        currentProgress = 0;
+        targetProgress = 0;
+        activeCharIndex = 0;
+        activeWordLength = 0;
+        updateProfile();
+      },
+      updateBoundary: (charIndex, charLength = 0) => {
+        activeCharIndex = charIndex;
+        activeWordLength = charLength;
+        if (spokenText && spokenText.length > 0) {
+          targetProgress = Math.min(0.98, charIndex / spokenText.length);
+        }
+      },
+      setProgress: (pct) => {
+        currentProgress = Math.max(0, Math.min(1, pct));
+        targetProgress = currentProgress;
+        isCompleted = (currentProgress >= 0.995);
+        startTime = Date.now() - (currentProgress * durationSec * 1000);
+      },
+      seek: (pct) => {
+        currentProgress = Math.max(0, Math.min(1, pct));
+        targetProgress = currentProgress;
+        isCompleted = (currentProgress >= 0.995);
+        startTime = Date.now() - (currentProgress * durationSec * 1000);
+      },
+      resume: () => {
+        if (currentProgress >= 0.995) {
+          currentProgress = 0;
+          targetProgress = 0;
+          isCompleted = false;
+        }
+        startTime = Date.now() - (currentProgress * durationSec * 1000);
+        isPlaying = true;
+        isCompleted = false;
+      },
+      pause: () => {
+        isPlaying = false;
+      },
+      complete: () => {
+        isPlaying = false;
+        currentProgress = 1.0;
+        targetProgress = 1.0;
+        isCompleted = true;
+      },
+      stop: (keepComplete = false) => {
+        isPlaying = false;
+        if (!keepComplete && !isCompleted) {
+          currentProgress = 0;
+          targetProgress = 0;
+        }
+        activeCharIndex = -1;
+      },
+      destroy: () => {
+        isPlaying = false;
+        if (animId) cancelAnimationFrame(animId);
+        if (resizeObserver) resizeObserver.disconnect();
+        wrapEl.innerHTML = "";
+      }
+    };
   };
 
   const icon = (name, size) => window.RusiIcons ? RusiIcons.get(name, { size }) : "";
@@ -3587,7 +3983,7 @@ function initListeningPage() {
 
       return `
         <!-- GIAO DIỆN THẺ TỐI GIẢN CHUẨN MỚI .dau-card-compact (Đồng bộ từ vựng, dùng 100% SVG RusiIcons) -->
-        <article class="dau-card dau-card-compact listening-topic-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-listen-id="${esc(l.id)}" tabindex="0">
+        <article class="dau-card dau-card-compact listening-topic-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-listen-id="${esc(l.id)}">
           <div class="dau-card-header">
             <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
               ${iconSvg}
@@ -3613,12 +4009,18 @@ function initListeningPage() {
 
           <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
             <div class="topic-footer-actions">
-              <button type="button" class="btn-listen-action topic-text-btn" data-listen-id="${esc(l.id)}" title="${actionLabel}">
-                ${currentMode === "dictation" ? icon("edit-3", 14) : icon("headphones", 14)} ${actionLabel}
-              </button>
-              <button type="button" class="topic-circle-btn" data-listen-id="${esc(l.id)}" title="${actionLabel}" aria-label="${actionLabel}">
-                ${isPro && !isUnlocked ? (icon("lock-pro", 16) || icon("lock", 16)) : icon("arrow-right", 16)}
-              </button>
+              ${isPro && !isUnlocked ? `
+                <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
+                  ${icon("lock-pro", 16) || icon("lock", 16)}
+                </span>
+              ` : `
+                <button type="button" class="btn-listen-action topic-text-btn" data-listen-id="${esc(l.id)}" title="${actionLabel}">
+                  ${currentMode === "dictation" ? icon("edit-3", 14) : icon("headphones", 14)} ${actionLabel}
+                </button>
+                <button type="button" class="topic-circle-btn" data-listen-id="${esc(l.id)}" title="${actionLabel}" aria-label="${actionLabel}">
+                  ${icon("arrow-right", 16)}
+                </button>
+              `}
             </div>
           </div>
         </article>
@@ -4839,57 +5241,48 @@ function initListeningPage() {
 
     const lines = Array.isArray(lesson.lines) ? lesson.lines : [];
 
-    let currentQIdx = 0;
     const userAnswers = {};      // qIdx -> selected option index
-    const checkedQuestions = {}; // qIdx -> boolean (đã chấm đáp án chưa)
     let isPlaying = false;
     let currentSpeed = 1.0;
     let currentLineIdx = -1;
     let playTimeout = null;
+    let animFrameId = null;
     let showTranscript = false;
-    let isFinished = false;
+    let isSubmitted = false;
+    let compWaveform = null;
 
-    // Helper kiểm tra câu đã trả lời / đúng / sai
-    const isAnswered = (idx) => userAnswers[idx] !== undefined;
-    const isChecked = (idx) => !!checkedQuestions[idx];
-    const isCorrect = (idx) => isChecked(idx) && userAnswers[idx] === questions[idx].a;
-
-    let compWaveSurfer = null;
-    let compWaveProgressTimer = null;
-
-    const initCompWaveSurfer = async () => {
-      const wrap = host.querySelector("#compWaveformWrap");
-      if (!wrap) return;
-      await ensureWaveSurfer();
-      if (!window.WaveSurfer) return;
-      if (compWaveSurfer) {
-        try { compWaveSurfer.destroy(); } catch (_) {}
-        compWaveSurfer = null;
-      }
-      const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-      try {
-        compWaveSurfer = window.WaveSurfer.create({
-          container: wrap,
-          waveColor: isDark ? "rgba(125, 211, 252, 0.32)" : "rgba(23, 87, 166, 0.28)",
-          progressColor: isDark ? "#38bdf8" : "#1757a6",
-          cursorColor: isDark ? "#7dd3fc" : "#0284c7",
-          cursorWidth: 2,
-          barWidth: 3,
-          barGap: 3,
-          barRadius: 3,
-          height: 62,
-          normalize: true
-        });
-
-        const activeLine = currentLineIdx >= 0 ? lines[currentLineIdx] : lines[0];
-        const lineText = (activeLine && activeLine.ru) || lesson.title || "Русский язык";
-        const durSec = Math.max(2.2, (lineText.length * 88) / (currentSpeed * 1000));
-        const peaks = generateSpeechPeaks(lineText);
-        await compWaveSurfer.load("", peaks, durSec);
-      } catch (e) {
-        console.warn("[WaveSurfer] Lỗi khởi tạo WaveSurfer comprehension:", e);
-      }
+    // Tính toán thời lượng từng dòng và toàn bài hội thoại
+    const calcLineDurSec = (text, spd) => {
+      if (!text) return 1.5;
+      return Math.max(1.8, (text.length * 115 + (text.split(/[.,?!—;:]/).length - 1) * 260) / (spd * 1000));
     };
+
+    const PAUSE_GAP_SEC = 0.55;
+    let timeline = [];
+    let totalDurationSec = 3.0;
+    let currentTimeSec = 0;
+    let playbackStartTimestamp = 0;
+    let playbackBaseTimeSec = 0;
+
+    const recomputeTimeline = () => {
+      timeline = [];
+      let acc = 0;
+      lines.forEach((ln, idx) => {
+        const t = ln ? (ln.ru || "") : "";
+        const dur = calcLineDurSec(t, currentSpeed);
+        timeline.push({
+          idx,
+          start: acc,
+          dur,
+          end: acc + dur,
+          text: t,
+          line: ln
+        });
+        acc += dur + PAUSE_GAP_SEC;
+      });
+      totalDurationSec = Math.max(3.0, acc);
+    };
+    recomputeTimeline();
 
     const updatePlaybackUI = () => {
       const playerCard = host.querySelector("#compPlayerCard");
@@ -4899,6 +5292,7 @@ function initListeningPage() {
       if (playBtn) {
         playBtn.innerHTML = isPlaying ? icon("pause-control", 24) : icon("play-control", 24);
         playBtn.title = isPlaying ? "Tạm dừng" : "Phát bài nghe";
+        playBtn.setAttribute("aria-label", isPlaying ? "Tạm dừng" : "Phát bài nghe");
       }
 
       host.querySelectorAll(".lis-comp-dialogue-line").forEach(lineEl => {
@@ -4907,125 +5301,256 @@ function initListeningPage() {
       });
     };
 
-    const pauseAudio = () => {
-      isPlaying = false;
-      clearInterval(compWaveProgressTimer);
+    const stopSpeechAndTimers = () => {
       if (playTimeout) {
         clearTimeout(playTimeout);
         playTimeout = null;
       }
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
       if (typeof window !== "undefined" && window.speechSynthesis) {
         try { window.speechSynthesis.cancel(); } catch (_) {}
       }
+    };
+
+    const pauseAudio = () => {
+      if (!isPlaying) return;
+      const elapsed = (Date.now() - playbackStartTimestamp) / 1000;
+      currentTimeSec = Math.min(totalDurationSec, playbackBaseTimeSec + elapsed);
+      isPlaying = false;
+      stopSpeechAndTimers();
+      if (compWaveform) compWaveform.pause();
       updatePlaybackUI();
     };
 
     const stopAudio = () => {
       isPlaying = false;
+      currentTimeSec = 0;
       currentLineIdx = -1;
-      clearInterval(compWaveProgressTimer);
-      if (playTimeout) {
-        clearTimeout(playTimeout);
-        playTimeout = null;
-      }
-      if (typeof window !== "undefined" && window.speechSynthesis) {
-        try { window.speechSynthesis.cancel(); } catch (_) {}
-      }
-      if (compWaveSurfer) {
-        try { compWaveSurfer.setTime(0); } catch (_) {}
-      }
+      stopSpeechAndTimers();
+      if (compWaveform) compWaveform.stop();
       updatePlaybackUI();
     };
 
-    const speakLineSeq = (idx) => {
-      if (!isPlaying || idx >= lines.length) {
-        stopAudio();
+    const playFromTime = (targetSec) => {
+      stopSpeechAndTimers();
+      recomputeTimeline();
+
+      let sec = Math.max(0, targetSec);
+      if (sec >= totalDurationSec - 0.1) {
+        currentTimeSec = totalDurationSec;
+        isPlaying = false;
+        currentLineIdx = -1;
+        if (compWaveform) compWaveform.complete();
+        updatePlaybackUI();
         return;
       }
-      currentLineIdx = idx;
-      updatePlaybackUI();
 
-      const line = lines[idx];
-      const textToSpeak = line ? (line.ru || "") : "";
-      if (!textToSpeak) {
-        speakLineSeq(idx + 1);
-        return;
+      currentTimeSec = sec;
+      isPlaying = true;
+      playbackStartTimestamp = Date.now();
+      playbackBaseTimeSec = sec;
+
+      if (compWaveform) {
+        const allRuText = lines.map(l => l.ru || "").join(" ");
+        compWaveform.start(allRuText, totalDurationSec);
+        compWaveform.seek(currentTimeSec / totalDurationSec);
       }
 
-      const durSec = Math.max(2.2, (textToSpeak.length * 88) / (currentSpeed * 1000));
-      if (compWaveSurfer) {
-        try {
-          const peaks = generateSpeechPeaks(textToSpeak);
-          compWaveSurfer.load("", peaks, durSec);
-        } catch (_) {}
+      // Tìm câu thoại tương ứng với thời điểm hiện tại
+      let foundSeg = null;
+      let inGap = false;
+      for (let i = 0; i < timeline.length; i++) {
+        const seg = timeline[i];
+        if (currentTimeSec >= seg.start && currentTimeSec <= seg.end) {
+          foundSeg = seg;
+          break;
+        }
+        if (currentTimeSec > seg.end && (i === timeline.length - 1 || currentTimeSec < timeline[i + 1].start)) {
+          foundSeg = seg;
+          inGap = true;
+          break;
+        }
       }
-      clearInterval(compWaveProgressTimer);
-      const startTime = Date.now();
-      compWaveProgressTimer = setInterval(() => {
-        if (!isPlaying || !compWaveSurfer) {
-          clearInterval(compWaveProgressTimer);
+
+      if (!foundSeg && timeline.length > 0) {
+        foundSeg = timeline[0];
+        currentTimeSec = 0;
+        playbackBaseTimeSec = 0;
+        playbackStartTimestamp = Date.now();
+      }
+
+      const startProgressTicker = () => {
+        if (animFrameId) cancelAnimationFrame(animFrameId);
+        const tick = () => {
+          if (!isPlaying) return;
+          const elapsed = (Date.now() - playbackStartTimestamp) / 1000;
+          const cur = Math.min(totalDurationSec, playbackBaseTimeSec + elapsed);
+          currentTimeSec = cur;
+          if (compWaveform) compWaveform.setProgress(cur / totalDurationSec);
+
+          for (let i = 0; i < timeline.length; i++) {
+            if (cur >= timeline[i].start && cur <= timeline[i].end + PAUSE_GAP_SEC) {
+              if (currentLineIdx !== timeline[i].idx) {
+                currentLineIdx = timeline[i].idx;
+                updatePlaybackUI();
+              }
+              break;
+            }
+          }
+
+          if (cur >= totalDurationSec) {
+            isPlaying = false;
+            currentLineIdx = -1;
+            if (compWaveform) compWaveform.complete();
+            updatePlaybackUI();
+            return;
+          }
+          animFrameId = requestAnimationFrame(tick);
+        };
+        animFrameId = requestAnimationFrame(tick);
+      };
+
+      startProgressTicker();
+
+      const playSegmentFrom = (segIndex, charOffset = 0) => {
+        if (!isPlaying || segIndex >= timeline.length) {
+          isPlaying = false;
+          currentLineIdx = -1;
+          if (compWaveform) compWaveform.complete();
+          updatePlaybackUI();
           return;
         }
-        const elapsed = (Date.now() - startTime) / 1000;
-        try {
-          compWaveSurfer.setTime(Math.min(durSec, elapsed));
-        } catch (_) {}
-        if (elapsed >= durSec) {
-          clearInterval(compWaveProgressTimer);
-        }
-      }, 50);
 
-      if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
-        try { window.speechSynthesis.cancel(); } catch (_) {}
-        const u = new SpeechSynthesisUtterance(textToSpeak);
-        u.lang = "ru-RU";
-        u.rate = currentSpeed;
-        if (typeof pickVoice === "function") {
-          const v = pickVoice("ru-RU");
-          if (v) u.voice = v;
+        const seg = timeline[segIndex];
+        currentLineIdx = seg.idx;
+        updatePlaybackUI();
+
+        const fullText = seg.text || "";
+        let textToSpeak = fullText;
+        if (charOffset > 0 && charOffset < fullText.length) {
+          textToSpeak = fullText.slice(charOffset).trim();
         }
-        u.onend = () => {
-          if (isPlaying) {
-            playTimeout = setTimeout(() => {
-              if (isPlaying) {
-                speakLineSeq(idx + 1);
-              }
-            }, 550);
+
+        if (!textToSpeak) {
+          playTimeout = setTimeout(() => {
+            if (isPlaying) playSegmentFrom(segIndex + 1, 0);
+          }, PAUSE_GAP_SEC * 1000);
+          return;
+        }
+
+        if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
+          try { window.speechSynthesis.cancel(); } catch (_) {}
+          const u = new SpeechSynthesisUtterance(textToSpeak);
+          u.lang = "ru-RU";
+          u.rate = currentSpeed;
+          if (typeof pickVoice === "function") {
+            const v = pickVoice("ru-RU");
+            if (v) u.voice = v;
           }
-        };
-        u.onerror = () => {
-          if (isPlaying) {
-            playTimeout = setTimeout(() => {
-              if (isPlaying) speakLineSeq(idx + 1);
-            }, 600);
+          u.onend = () => {
+            if (isPlaying) {
+              playTimeout = setTimeout(() => {
+                if (isPlaying) playSegmentFrom(segIndex + 1, 0);
+              }, PAUSE_GAP_SEC * 1000);
+            }
+          };
+          u.onerror = () => {
+            if (isPlaying) {
+              playTimeout = setTimeout(() => {
+                if (isPlaying) playSegmentFrom(segIndex + 1, 0);
+              }, PAUSE_GAP_SEC * 1000);
+            }
+          };
+          window.speechSynthesis.speak(u);
+        } else {
+          const fallbackDur = Math.max(1200, (textToSpeak.length * 85) / currentSpeed);
+          playTimeout = setTimeout(() => {
+            if (isPlaying) playSegmentFrom(segIndex + 1, 0);
+          }, fallbackDur + PAUSE_GAP_SEC * 1000);
+        }
+      };
+
+      if (foundSeg) {
+        if (inGap) {
+          const waitMs = Math.max(50, ((foundSeg.end + PAUSE_GAP_SEC) - currentTimeSec) * 1000);
+          playTimeout = setTimeout(() => {
+            if (isPlaying) playSegmentFrom(foundSeg.idx + 1, 0);
+          }, waitMs);
+        } else {
+          const segPassed = Math.max(0, currentTimeSec - foundSeg.start);
+          const frac = Math.min(1.0, segPassed / foundSeg.dur);
+          let charOffset = Math.floor(frac * (foundSeg.text.length || 0));
+          if (charOffset > 0) {
+            const spaceIdx = foundSeg.text.indexOf(" ", charOffset);
+            if (spaceIdx !== -1 && spaceIdx < foundSeg.text.length - 2) {
+              charOffset = spaceIdx + 1;
+            }
           }
-        };
-        window.speechSynthesis.speak(u);
-      } else {
-        const dur = Math.max(1600, (textToSpeak.length * 82) / currentSpeed);
-        playTimeout = setTimeout(() => {
-          if (isPlaying) {
-            speakLineSeq(idx + 1);
-          }
-        }, dur + 400);
+          playSegmentFrom(foundSeg.idx, charOffset);
+        }
+      }
+      updatePlaybackUI();
+    };
+
+    const initCompWaveform = () => {
+      const wrap = host.querySelector("#compWaveformWrap");
+      if (!wrap) return;
+      if (compWaveform) {
+        try { compWaveform.destroy(); } catch (_) {}
+        compWaveform = null;
+      }
+      compWaveform = createRealtimeWaveform(wrap, {
+        onSeek: (pct) => {
+          const targetSec = pct * totalDurationSec;
+          playFromTime(targetSec);
+        }
+      });
+      if (compWaveform) {
+        const allRuText = lines.map(l => l.ru || "").join(" ");
+        compWaveform.start(allRuText, totalDurationSec);
+        compWaveform.pause();
       }
     };
 
-    // Lấy danh sách các bài luyện trong cùng cấp độ để hiển thị ở Sidebar
-    const allLessons = getListeningLessons().filter(l => l.level === (lesson.level || "A1"));
-
+    // Helper cập nhật thanh tiến độ câu hỏi và sidebar
     const updateSidebarProgress = () => {
-      const doneCount = allLessons.filter(l => Progress.doneList("listenDone").includes(l.id + "_comp") || Progress.doneList("listenDone").includes(l.id + "_check")).length;
-      const textNode = host.querySelector(".lis-dict-sidebar-progress-text strong");
-      if (textNode) textNode.textContent = `${doneCount}/${allLessons.length} bài đã xong`;
-      const fillNode = host.querySelector(".lis-dict-progress-fill");
-      if (fillNode) fillNode.style.width = `${Math.round((doneCount / allLessons.length) * 100)}%`;
-      const currentItem = host.querySelector(`.lis-dict-sentence-item[data-lesson-id="${lesson.id}"]`);
-      if (currentItem) {
-        currentItem.classList.add("is-done");
-        const statusIcon = currentItem.querySelector(".lis-dict-sentence-status");
-        if (statusIcon) statusIcon.innerHTML = icon("check-circle-correct", 17);
+      const answeredCount = Object.keys(userAnswers).length;
+      const correctCount = isSubmitted 
+        ? questions.filter((q, i) => userAnswers[i] === q.a).length 
+        : 0;
+      const total = questions.length || 1;
+      const pct = isSubmitted 
+        ? Math.round((correctCount / total) * 100)
+        : Math.round((answeredCount / total) * 100);
+
+      const textNode = host.querySelector("#compSidebarDoneText");
+      if (textNode) {
+        textNode.textContent = isSubmitted 
+          ? `${correctCount}/${questions.length} câu đúng`
+          : `${answeredCount}/${questions.length} câu đã làm`;
       }
+      const fillNode = host.querySelector("#compSidebarDoneFill");
+      if (fillNode) fillNode.style.width = `${pct}%`;
+
+      questions.forEach((q, i) => {
+        const itemEl = host.querySelector(`.lis-dict-sentence-item[data-q-idx="${i}"]`);
+        if (itemEl) {
+          const isAns = userAnswers[i] !== undefined;
+          const isCorr = isSubmitted && (userAnswers[i] === q.a);
+          itemEl.classList.toggle("is-done", isAns);
+          itemEl.classList.toggle("is-correct-item", isSubmitted && isCorr);
+          itemEl.classList.toggle("is-wrong-item", isSubmitted && isAns && !isCorr);
+          const statusIcon = itemEl.querySelector(".lis-dict-sentence-status");
+          if (statusIcon) {
+            statusIcon.innerHTML = isSubmitted 
+              ? (isCorr ? icon("check-circle-correct", 17) : icon("alert-triangle", 17))
+              : (isAns ? icon("check", 16) : icon("arrow-right", 16));
+          }
+        }
+      });
     };
 
     const renderQuizQuestion = () => {
@@ -5033,43 +5558,61 @@ function initListeningPage() {
       if (!quizCard) return;
 
       const answeredCount = Object.keys(userAnswers).length;
-      const checkedCount = Object.keys(checkedQuestions).length;
-      const correctCount = Object.keys(checkedQuestions).filter(i => isCorrect(Number(i))).length;
-      const isAllChecked = checkedCount === questions.length;
+      const correctCount = isSubmitted 
+        ? questions.filter((q, i) => userAnswers[i] === q.a).length 
+        : 0;
+      const pct = questions.length > 0 ? Math.round((correctCount / questions.length) * 100) : 0;
+      const isPass = pct >= 70;
+      const allLessonsInLevel = (typeof getListeningLessons === "function" ? getListeningLessons() : []).filter(l => l.level === (lesson.level || "A1"));
+      const curIdx = allLessonsInLevel.findIndex(l => l.id === lesson.id);
+      const nextLesson = (curIdx >= 0 && curIdx < allLessonsInLevel.length - 1) ? allLessonsInLevel[curIdx + 1] : null;
 
-      // 1. Màn hình tổng kết điểm khi đã hoàn thành bài nghe
-      if (isFinished || (isAllChecked && checkedQuestions[currentQIdx])) {
-        const pct = Math.round((correctCount / questions.length) * 100);
-        const isPass = pct >= 70;
-        const curIdx = allLessons.findIndex(l => l.id === lesson.id);
-        const nextLesson = (curIdx >= 0 && curIdx < allLessons.length - 1) ? allLessons[curIdx + 1] : null;
+      let html = "";
 
-        quizCard.innerHTML = `
-          <div class="lis-comp-result-box" style="text-align:center;padding:12px 6px">
-            <div style="font-size:2.8rem;margin-bottom:10px">${isPass ? "🎉" : "💪"}</div>
-            <h3 style="font-size:1.35rem;font-weight:800;color:var(--text);margin:0 0 8px">
-              ${isPass ? "Xuất sắc! Bạn đã hoàn thành bài nghe hiểu" : "Cố lên! Bạn hãy luyện nghe lại để đạt điểm tối đa"}
-            </h3>
-            <p style="color:var(--muted);font-size:0.92rem;margin:0 0 20px">
-              Kết quả: <b style="color:var(--text)">${correctCount}/${questions.length} câu đúng</b> (${pct}%)
-            </p>
-
-            <!-- Nút xem lại từng câu hỏi -->
-            <div style="display:flex;gap:8px;justify-content:center;margin-bottom:24px;flex-wrap:wrap">
-              ${questions.map((_, i) => `
-                <button type="button" class="lis-comp-step-btn ${isCorrect(i) ? "is-correct" : "is-wrong"}" data-recap-q="${i}">
-                  <span>Câu ${i + 1}</span> ${isCorrect(i) ? icon("check", 12) : icon("x", 12)}
-                </button>
-              `).join("")}
+      // 1. THANH TIẾN ĐỘ LÀM BÀI TRẮC NGHIỆM TỔNG THỂ (CHO CẢ PHẦN ĐÃ LÀM VÀ KHI HOÀN THÀNH)
+      const currentAnsweredPct = questions.length > 0 ? Math.round((answeredCount / questions.length) * 100) : 0;
+      html += `
+        <div class="lis-comp-quiz-progress-bar-card">
+          <div class="lis-comp-quiz-progress-head">
+            <div class="lis-comp-quiz-progress-title">
+              <span class="lis-comp-quiz-progress-badge">${isSubmitted ? "Kết quả bài làm" : "Tiến độ làm bài"}</span>
+              <span class="lis-comp-quiz-progress-count" id="compProgressCountText">
+                ${isSubmitted ? `Đạt <strong>${correctCount}/${questions.length}</strong> câu đúng` : `Đã làm: <strong>${answeredCount}/${questions.length}</strong> câu`}
+              </span>
             </div>
+            <span class="lis-comp-quiz-progress-pct" id="compProgressPctText">
+              ${isSubmitted ? `${pct}%` : `${currentAnsweredPct}%`}
+            </span>
+          </div>
+          <div class="lis-comp-quiz-progress-track">
+            <div class="lis-comp-quiz-progress-fill ${isSubmitted ? (isPass ? 'is-pass' : 'is-fail') : ''}" 
+                 id="compProgressFillBar" 
+                 style="width: ${isSubmitted ? pct : currentAnsweredPct}%">
+            </div>
+          </div>
+        </div>
+      `;
 
-            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+      // 2. KHI ĐÃ NỘP BÀI: BANNER TỔNG KẾT KẾT QUẢ ĐẦY ĐỦ
+      if (isSubmitted) {
+        html += `
+          <div class="lis-comp-result-box ${isPass ? 'is-pass' : 'is-fail'}">
+            <div class="lis-comp-result-icon">${isPass ? (window.RusiIcons ? RusiIcons.get("trophy-reward", { size: 36 }) : "🎉") : (window.RusiIcons ? RusiIcons.get("target", { size: 36 }) : "💪")}</div>
+            <div class="lis-comp-result-info">
+              <h3 class="lis-comp-result-title">
+                ${isPass ? "Xuất sắc! Bạn đã vượt qua bài nghe hiểu" : "Cố lên! Hãy xem lại giải thích chi tiết bên dưới để ôn tập"}
+              </h3>
+              <p class="lis-comp-result-sub">
+                Kết quả: <strong>${correctCount}/${questions.length} câu đúng</strong> (${pct}%) · ${isPass ? "Đã ghi nhận hoàn thành bài học" : "Chưa đạt 70%, hãy thử lại"}
+              </p>
+            </div>
+            <div class="lis-comp-result-actions">
               <button type="button" class="btn btn-outline" id="btnCompRetry">
                 ${icon("rotate-ccw", 16)} Làm lại bài này
               </button>
               ${nextLesson ? `
                 <button type="button" class="btn btn-primary" id="btnCompGoNextLesson">
-                  Sang bài tiếp theo: ${esc(nextLesson.title)} ${icon("arrow-right", 16)}
+                  Bài tiếp theo: ${esc(nextLesson.title)} ${icon("arrow-right", 16)}
                 </button>
               ` : `
                 <button type="button" class="btn btn-primary" id="btnCompDoneBack">
@@ -5079,23 +5622,171 @@ function initListeningPage() {
             </div>
           </div>
         `;
+      }
 
-        quizCard.querySelectorAll("[data-recap-q]").forEach(btn => {
+      // 3. HIỂN THỊ TẤT CẢ CÁC CÂU HỎI TRẮC NGHIỆM
+      html += `<div class="lis-comp-questions-container">`;
+      questions.forEach((q, qi) => {
+        const selectedOpt = userAnswers[qi];
+        const isAns = selectedOpt !== undefined;
+        const isCorr = isSubmitted && (selectedOpt === q.a);
+
+        html += `
+          <div class="lis-comp-question-block ${isSubmitted ? (isCorr ? 'is-correct-block' : 'is-wrong-block') : ''}" id="compQBlock_${qi}" data-q-idx="${qi}">
+            <div class="lis-comp-q-header">
+              <span class="lis-comp-q-badge">CÂU ${qi + 1} / ${questions.length}</span>
+              <span class="lis-comp-q-status ${isSubmitted ? (isCorr ? 'is-correct' : 'is-wrong') : (isAns ? 'is-answered' : '')}" id="compQStatus_${qi}">
+                ${isSubmitted 
+                  ? (isCorr ? "✓ Đúng" : `✕ Chưa đúng (Đáp án: ${["A","B","C","D"][q.a] || (q.a + 1)})`) 
+                  : (isAns ? "Đã chọn đáp án" : "Chưa trả lời")}
+              </span>
+            </div>
+
+            <h3 class="lis-comp-question-title">${esc(q.q)}</h3>
+
+            <div class="lis-comp-options-list">
+              ${q.options.map((opt, optIdx) => {
+                const isSelected = selectedOpt === optIdx;
+                const isRightOption = optIdx === q.a;
+                let optCls = "";
+                if (isSubmitted) {
+                  if (isRightOption) optCls = "is-correct";
+                  else if (isSelected) optCls = "is-wrong";
+                } else if (isSelected) {
+                  optCls = "is-selected";
+                }
+
+                return `
+                  <button type="button" 
+                          class="lis-comp-option-btn ${optCls}" 
+                          data-q-idx="${qi}" 
+                          data-opt-idx="${optIdx}" 
+                          ${isSubmitted ? "disabled" : ""}>
+                    <span class="lis-comp-option-letter">${["A", "B", "C", "D"][optIdx] || (optIdx + 1)}</span>
+                    <span class="lis-comp-option-text">${esc(opt)}</span>
+                    <span class="lis-comp-option-check">
+                      ${isSubmitted && isRightOption ? icon("check-circle-correct", 18) : isSubmitted && isSelected ? icon("alert-triangle", 18) : ""}
+                    </span>
+                  </button>
+                `;
+              }).join("")}
+            </div>
+
+            <!-- GIẢI THÍCH ĐÁP ÁN (HIỆN KHI ĐÃ NỘP BÀI) -->
+            ${isSubmitted ? `
+              <div class="lis-comp-explanation ${isCorr ? 'is-pass' : 'is-fail'}">
+                <strong>${isCorr ? "✓ Giải thích: " : `✕ Đáp án đúng là [${["A","B","C","D"][q.a] || (q.a + 1)}] ${esc(q.options[q.a])}: `}</strong>
+                ${esc(q.exp || (isCorr ? "Bạn đã nắm bắt rất chuẩn thông tin từ audio." : "Căn cứ vào nội dung thông tin được phát trong bài nghe."))}
+              </div>
+            ` : ""}
+          </div>
+        `;
+      });
+      html += `</div>`;
+
+      // 4. THANH NỘP BÀI Ở DƯỚI CÙNG (SUBMIT BAR)
+      if (!isSubmitted) {
+        html += `
+          <div class="lis-comp-submit-bar">
+            <div class="lis-comp-submit-info">
+              <span>Đã hoàn thành <strong id="compBottomCountText">${answeredCount}</strong>/${questions.length} câu hỏi</span>
+            </div>
+            <button type="button" class="btn btn-primary btn-lg lis-comp-submit-btn" id="btnCompSubmitAll" ${answeredCount === 0 ? "disabled" : ""}>
+              ${icon("send", 17) || icon("check", 17)} Nộp bài
+            </button>
+          </div>
+        `;
+      }
+
+      quizCard.innerHTML = html;
+
+      // GẮN SỰ KIỆN CHO CÁC PHÍM CHỌN ĐÁP ÁN
+      if (!isSubmitted) {
+        quizCard.querySelectorAll(".lis-comp-option-btn:not(:disabled)").forEach(btn => {
           btn.onclick = () => {
-            isFinished = false;
-            currentQIdx = Number(btn.dataset.recapQ);
-            renderQuizQuestion();
+            const qi = Number(btn.dataset.qIdx);
+            const optIdx = Number(btn.dataset.optIdx);
+
+            userAnswers[qi] = optIdx;
+
+            // Highlight trong nhóm câu hỏi này
+            const block = quizCard.querySelector(`#compQBlock_${qi}`);
+            if (block) {
+              block.querySelectorAll(".lis-comp-option-btn").forEach(b => {
+                b.classList.toggle("is-selected", Number(b.dataset.optIdx) === optIdx);
+              });
+              const statusEl = block.querySelector(`#compQStatus_${qi}`);
+              if (statusEl) {
+                statusEl.className = "lis-comp-q-status is-answered";
+                statusEl.textContent = "Đã chọn đáp án";
+              }
+            }
+
+            // Cập nhật real-time thanh tiến độ làm bài
+            const newCount = Object.keys(userAnswers).length;
+            const newPct = questions.length > 0 ? Math.round((newCount / questions.length) * 100) : 0;
+            
+            const countText = quizCard.querySelector("#compProgressCountText");
+            if (countText) countText.innerHTML = `Đã làm: <strong>${newCount}/${questions.length}</strong> câu`;
+            
+            const pctText = quizCard.querySelector("#compProgressPctText");
+            if (pctText) pctText.textContent = `${newPct}%`;
+
+            const fillBar = quizCard.querySelector("#compProgressFillBar");
+            if (fillBar) fillBar.style.width = `${newPct}%`;
+
+            const bottomCountText = quizCard.querySelector("#compBottomCountText");
+            if (bottomCountText) bottomCountText.textContent = `${newCount}`;
+
+            const submitBtn = quizCard.querySelector("#btnCompSubmitAll");
+            if (submitBtn) submitBtn.disabled = (newCount === 0);
+
+            updateSidebarProgress();
           };
         });
 
+        // NÚT NỘP BÀI
+        const submitBtn = quizCard.querySelector("#btnCompSubmitAll");
+        if (submitBtn) {
+          submitBtn.onclick = () => {
+            const count = Object.keys(userAnswers).length;
+            if (count < questions.length) {
+              const remain = questions.length - count;
+              if (!confirm(`Bạn còn ${remain} câu chưa trả lời. Bạn có chắc chắn muốn nộp bài không?`)) {
+                return;
+              }
+            }
+
+            isSubmitted = true;
+            const cCount = questions.filter((q, i) => userAnswers[i] === q.a).length;
+            const p = Math.round((cCount / questions.length) * 100);
+
+            if (p >= 70) {
+              const passKey = lesson.id + "_comp";
+              if (!Progress.doneList("listenDone").includes(passKey)) {
+                Progress.markDone("listenDone", passKey);
+                Progress.addXp(15);
+                toast("Chúc mừng! Đã hoàn thành bài nghe hiểu (+15 XP) 🎉");
+              }
+            } else {
+              toast(`Bạn đạt ${cCount}/${questions.length} câu. Hãy xem giải thích và luyện tập thêm nhé!`);
+            }
+
+            updateSidebarProgress();
+            renderQuizQuestion();
+            quizCard.scrollIntoView({ behavior: "smooth", block: "start" });
+          };
+        }
+      } else {
+        // CÁC NÚT SAU KHI NỘP BÀI
         const retryBtn = quizCard.querySelector("#btnCompRetry");
         if (retryBtn) {
           retryBtn.onclick = () => {
             for (const k in userAnswers) delete userAnswers[k];
-            for (const k in checkedQuestions) delete checkedQuestions[k];
-            currentQIdx = 0;
-            isFinished = false;
+            isSubmitted = false;
+            updateSidebarProgress();
             renderQuizQuestion();
+            quizCard.scrollIntoView({ behavior: "smooth", block: "start" });
           };
         }
 
@@ -5103,9 +5794,9 @@ function initListeningPage() {
         if (nextLesBtn && nextLesson) {
           nextLesBtn.onclick = () => {
             stopAudio();
-            if (compWaveSurfer) {
-              try { compWaveSurfer.destroy(); } catch (_) {}
-              compWaveSurfer = null;
+            if (compWaveform) {
+              try { compWaveform.destroy(); } catch (_) {}
+              compWaveform = null;
             }
             openComprehensionWorkspace(nextLesson);
           };
@@ -5115,229 +5806,20 @@ function initListeningPage() {
         if (doneBack) {
           doneBack.onclick = () => {
             stopAudio();
-            if (compWaveSurfer) {
-              try { compWaveSurfer.destroy(); } catch (_) {}
-              compWaveSurfer = null;
+            if (compWaveform) {
+              try { compWaveform.destroy(); } catch (_) {}
+              compWaveform = null;
             }
             document.body.classList.remove("in-workspace");
-            renderHub();
+            renderListeningCards();
           };
         }
-        return;
-      }
-
-      // 2. Màn hình câu hỏi trắc nghiệm thông thường
-      const q = questions[currentQIdx] || questions[0];
-      const checked = isChecked(currentQIdx);
-      const isRight = isCorrect(currentQIdx);
-      const selectedOpt = userAnswers[currentQIdx];
-
-      quizCard.innerHTML = `
-        <!-- Question Stepper Nav Bar (Thanh bước nhảy câu hỏi trực quan) -->
-        <div class="lis-comp-q-stepper-wrap">
-          <div class="lis-comp-stepper-left">
-            <span class="lis-comp-stepper-label">Câu hỏi:</span>
-            <div class="lis-comp-stepper-list">
-              ${questions.map((_, i) => {
-                const active = i === currentQIdx;
-                const isChk = isChecked(i);
-                const isCorr = isCorrect(i);
-                const isAns = isAnswered(i);
-                let stCls = "";
-                if (isChk) stCls = isCorr ? "is-correct" : "is-wrong";
-                else if (isAns) stCls = "is-answered";
-                if (active) stCls += " is-active";
-                return `
-                  <button type="button" class="lis-comp-step-btn ${stCls}" data-step-q="${i}" title="Câu ${i + 1}: ${isChk ? (isCorr ? "Đúng ✓" : "Chưa đúng ✕") : isAns ? "Đã chọn" : "Chưa làm"}">
-                    <span class="lis-comp-step-num">${i + 1}</span>
-                    ${isChk ? (isCorr ? icon("check", 12) : icon("x", 12)) : ""}
-                  </button>
-                `;
-              }).join("")}
-            </div>
-          </div>
-          <div class="lis-comp-stepper-progress">
-            <span>${answeredCount}/${questions.length} đã làm</span>
-          </div>
-        </div>
-
-        <!-- Tiêu đề câu hỏi -->
-        <div class="lis-comp-quiz-header">
-          <span class="lis-comp-q-badge">CÂU ${currentQIdx + 1} / ${questions.length}</span>
-          <span class="lis-comp-q-status ${checked ? (isRight ? "is-correct" : "is-wrong") : ""}">
-            ${checked ? (isRight ? "✓ Đã chấm: Chính xác" : "✕ Đã chấm: Chưa đúng") : selectedOpt !== undefined ? "Đã chọn đáp án" : "Chưa trả lời"}
-          </span>
-        </div>
-
-        <h3 class="lis-comp-question-title">${esc(q.q)}</h3>
-
-        <!-- Danh sách đáp án trắc nghiệm -->
-        <div class="lis-comp-options-list">
-          ${q.options.map((opt, optIdx) => {
-            const isSelected = selectedOpt === optIdx;
-            const isRightOption = optIdx === q.a;
-            let optCls = "";
-            if (checked) {
-              if (isRightOption) optCls = "is-correct";
-              else if (isSelected) optCls = "is-wrong";
-            } else if (isSelected) {
-              optCls = "is-selected";
-            }
-            return `
-              <button type="button" class="lis-comp-option-btn ${optCls}" data-opt-idx="${optIdx}" ${checked ? "disabled" : ""}>
-                <span class="lis-comp-option-letter">${["A", "B", "C", "D"][optIdx] || (optIdx + 1)}</span>
-                <span class="lis-comp-option-text">${esc(opt)}</span>
-                <span class="lis-comp-option-check">
-                  ${checked && isRightOption ? icon("check-circle-correct", 18) : checked && isSelected ? icon("alert-triangle", 18) : ""}
-                </span>
-              </button>
-            `;
-          }).join("")}
-        </div>
-
-        <!-- Giải thích đáp án khi đã chấm -->
-        ${checked ? `
-          <div class="lis-comp-explanation ${isRight ? "is-pass" : "is-fail"}">
-            <strong>${isRight ? "✓ Xuất sắc! " : "✕ Chú ý: "}</strong>
-            ${esc(q.exp || (isRight ? "Bạn đã nắm bắt rất chuẩn thông tin từ audio." : `Đáp án đúng là: ${q.options[q.a]}.`))}
-          </div>
-        ` : ""}
-
-        <!-- Thanh thao tác câu hỏi -->
-        <div class="lis-comp-actions-bar">
-          <button type="button" class="btn btn-outline btn-sm lis-comp-btn-nav" id="btnCompPrevQ" ${currentQIdx === 0 ? "disabled" : ""}>
-            ${icon("arrow-left", 16)} Câu trước
-          </button>
-
-          <div class="lis-comp-action-center">
-            ${!checked ? `
-              <button type="button" class="btn btn-primary" id="btnCompCheckQ" ${selectedOpt === undefined ? "disabled" : ""}>
-                ${icon("check-circle-correct", 17)} Chấm đáp án
-              </button>
-            ` : (currentQIdx < questions.length - 1) ? `
-              <button type="button" class="btn btn-primary" id="btnCompNextQ">
-                Câu tiếp theo ${icon("arrow-right", 16)}
-              </button>
-            ` : `
-              <button type="button" class="btn btn-primary" id="btnCompFinish">
-                ${icon("trophy-reward", 17)} Xem tổng kết điểm
-              </button>
-            `}
-          </div>
-
-          ${currentQIdx < questions.length - 1 && !checked ? `
-            <button type="button" class="btn btn-outline btn-sm lis-comp-btn-nav" id="btnCompNextQDirect">
-              Bỏ qua ${icon("arrow-right", 16)}
-            </button>
-          ` : `<span></span>`}
-        </div>
-      `;
-
-      // 1. Chuyển câu qua thanh stepper
-      quizCard.querySelectorAll("[data-step-q]").forEach(btn => {
-        btn.onclick = () => {
-          const idx = Number(btn.dataset.stepQ);
-          if (!isNaN(idx) && idx >= 0 && idx < questions.length) {
-            currentQIdx = idx;
-            renderQuizQuestion();
-          }
-        };
-      });
-
-      // 2. Chọn đáp án in-place (không gián đoạn audio!)
-      quizCard.querySelectorAll(".lis-comp-option-btn:not(:disabled)").forEach(btn => {
-        btn.onclick = () => {
-          const optIdx = Number(btn.dataset.optIdx);
-          userAnswers[currentQIdx] = optIdx;
-
-          quizCard.querySelectorAll(".lis-comp-option-btn").forEach(b => {
-            const isSel = Number(b.dataset.optIdx) === optIdx;
-            b.classList.toggle("is-selected", isSel);
-          });
-
-          const chkBtn = quizCard.querySelector("#btnCompCheckQ");
-          if (chkBtn) chkBtn.disabled = false;
-
-          const stepBtn = quizCard.querySelector(`.lis-comp-step-btn[data-step-q="${currentQIdx}"]`);
-          if (stepBtn && !stepBtn.classList.contains("is-correct") && !stepBtn.classList.contains("is-wrong")) {
-            stepBtn.classList.add("is-answered");
-          }
-
-          const statusText = quizCard.querySelector(".lis-comp-q-status");
-          if (statusText) statusText.textContent = "Đã chọn đáp án (chưa bấm chấm)";
-        };
-      });
-
-      // 3. Chấm đáp án
-      const checkBtn = quizCard.querySelector("#btnCompCheckQ");
-      if (checkBtn) {
-        checkBtn.onclick = () => {
-          if (userAnswers[currentQIdx] !== undefined) {
-            checkedQuestions[currentQIdx] = true;
-            if (isCorrect(currentQIdx)) {
-              toast("Chính xác! Bạn làm rất tốt.");
-            } else {
-              toast("Chưa chính xác, hãy xem giải thích nhé.");
-            }
-
-            if (Object.keys(checkedQuestions).length === questions.length) {
-              const passKey = lesson.id + "_comp";
-              if (!Progress.doneList("listenDone").includes(passKey)) {
-                Progress.markDone("listenDone", passKey);
-                Progress.addXp(15);
-                toast("Chúc mừng! Đã hoàn thành bài nghe hiểu (+15 XP) 🎉");
-              }
-              updateSidebarProgress();
-            }
-
-            renderQuizQuestion();
-          }
-        };
-      }
-
-      // 4. Nút câu trước / sau
-      const prevBtn = quizCard.querySelector("#btnCompPrevQ");
-      if (prevBtn) {
-        prevBtn.onclick = () => {
-          if (currentQIdx > 0) {
-            currentQIdx--;
-            renderQuizQuestion();
-          }
-        };
-      }
-
-      const nextBtn = quizCard.querySelector("#btnCompNextQ");
-      if (nextBtn) {
-        nextBtn.onclick = () => {
-          if (currentQIdx < questions.length - 1) {
-            currentQIdx++;
-            renderQuizQuestion();
-          }
-        };
-      }
-
-      const nextDirect = quizCard.querySelector("#btnCompNextQDirect");
-      if (nextDirect) {
-        nextDirect.onclick = () => {
-          if (currentQIdx < questions.length - 1) {
-            currentQIdx++;
-            renderQuizQuestion();
-          }
-        };
-      }
-
-      const finishBtn = quizCard.querySelector("#btnCompFinish");
-      if (finishBtn) {
-        finishBtn.onclick = () => {
-          isFinished = true;
-          renderQuizQuestion();
-        };
       }
     };
 
     const renderWorkspace = () => {
-      const completedCount = allLessons.filter(l => Progress.doneList("listenDone").includes(l.id + "_comp") || Progress.doneList("listenDone").includes(l.id + "_check")).length;
-      const pctTopicDone = Math.round((completedCount / allLessons.length) * 100);
+      const answeredCount = Object.keys(userAnswers).length;
+      const pctDone = questions.length > 0 ? Math.round((answeredCount / questions.length) * 100) : 0;
 
       host.innerHTML = `
         <div class="lis-dict-workspace-shell lis-comp-workspace-shell">
@@ -5352,17 +5834,17 @@ function initListeningPage() {
             </div>
             <button type="button" class="lis-dict-topbar-menu-btn" id="btnCompToggleSidebar" aria-label="Danh sách bài luyện" title="Xem danh sách bài luyện">
               ${icon("list", 20)}
-              <span class="lis-dict-menu-badge">${allLessons.length}</span>
+              <span class="lis-dict-menu-badge">${questions.length}</span>
             </button>
           </div>
 
           <!-- BỐ CỤC LƯỚI 3/7: 3 PHẦN DANH SÁCH BÀI LUYỆN BÊN TRÁI, 7 PHẦN LÀM BÀI BÊN PHẢI -->
           <div class="lis-dict-workspace-grid">
-            <!-- CỘT TRÁI (3 PHẦN): DANH SÁCH CÁC BÀI LUYỆN TRONG CHỦ ĐỀ / CẤP ĐỘ -->
+            <!-- CỘT TRÁI (3 PHẦN): DANH SÁCH CÂU HỎI TRONG BÀI LUYỆN NÀY -->
             <aside class="lis-dict-sidebar-panel" id="compSidebarPanel">
               <div class="lis-dict-sidebar-header">
                 <div>
-                  <span class="lis-dict-sidebar-eyebrow">CHỦ ĐỀ · CẤP ĐỘ ${esc(lesson.level || "A1")}</span>
+                  <span class="lis-dict-sidebar-eyebrow">CHỦ ĐỀ · ${esc(lesson.title)}</span>
                   <h3 class="lis-dict-sidebar-title">Danh sách bài luyện</h3>
                 </div>
                 <button type="button" class="lis-dict-sidebar-close-btn" id="btnCompCloseSidebar" aria-label="Đóng danh sách">
@@ -5372,29 +5854,27 @@ function initListeningPage() {
 
               <div class="lis-dict-sidebar-progress-box">
                 <div class="lis-dict-sidebar-progress-text">
-                  <span>Tiến độ cấp độ</span>
-                  <strong>${completedCount}/${allLessons.length} bài đã xong</strong>
+                  <span>Tiến độ bài luyện</span>
+                  <strong id="compSidebarDoneText">${answeredCount}/${questions.length} câu đã làm</strong>
                 </div>
                 <div class="lis-dict-progress-track">
-                  <div class="lis-dict-progress-fill" style="width: ${pctTopicDone}%"></div>
+                  <div class="lis-dict-progress-fill" id="compSidebarDoneFill" style="width: ${pctDone}%"></div>
                 </div>
               </div>
 
               <div class="lis-dict-sentence-list">
-                ${allLessons.map((item, i) => {
-                  const active = item.id === lesson.id;
-                  const isDone = Progress.doneList("listenDone").includes(item.id + "_comp") || Progress.doneList("listenDone").includes(item.id + "_check");
+                ${questions.map((q, i) => {
+                  const isAns = userAnswers[i] !== undefined;
                   const num = String(i + 1).padStart(2, "0");
-                  const qCount = (item.questions && item.questions.length) || (item.lines && item.lines.length) || 4;
                   return `
-                    <button type="button" class="lis-dict-sentence-item ${active ? "is-active" : ""} ${isDone ? "is-done" : ""}" data-lesson-id="${esc(item.id)}">
+                    <button type="button" class="lis-dict-sentence-item ${isAns ? "is-done" : ""}" data-q-idx="${i}" title="Câu ${i + 1}: ${esc(q.q)}">
                       <span class="lis-dict-sentence-num">${num}</span>
                       <div class="lis-dict-sentence-info">
-                        <strong class="lis-dict-sentence-label">${esc(item.title)}</strong>
-                        <small class="lis-dict-sentence-snippet">${isDone ? "Đã hoàn thành ✓" : `${qCount} câu hỏi trắc nghiệm`}</small>
+                        <strong class="lis-dict-sentence-label">Câu hỏi ${i + 1}</strong>
+                        <small class="lis-dict-sentence-snippet">${esc(q.q)}</small>
                       </div>
                       <span class="lis-dict-sentence-status">
-                        ${isDone ? icon("check-circle-correct", 17) : active ? icon("headphones", 16) : icon("arrow-right", 16)}
+                        ${isAns ? icon("check", 16) : icon("arrow-right", 16)}
                       </span>
                     </button>
                   `;
@@ -5406,9 +5886,7 @@ function initListeningPage() {
             <main class="lis-dict-main-panel">
               <!-- 1. KHUNG PHÁT ÂM THANH (AUDIO PLAYER) -->
               <section class="lis-dict-player-card ${isPlaying ? "is-playing" : ""}" id="compPlayerCard">
-                <div class="lis-dict-waveform-wrap" id="compWaveformWrap" aria-label="Giao diện sóng âm phát âm thanh">
-                  ${!window.WaveSurfer ? WAVE_BARS.map(h => `<div class="lis-dict-wave-bar" style="height:${h}%"></div>`).join("") : ""}
-                </div>
+                <div class="lis-dict-waveform-wrap" id="compWaveformWrap" aria-label="Giao diện sóng âm phát âm thanh"></div>
 
                 <div class="lis-dict-player-controls">
                   <!-- Cụm trái: Phát lại từ đầu -->
@@ -5418,16 +5896,18 @@ function initListeningPage() {
                     </button>
                   </div>
 
-                  <!-- Cụm giữa: Tua lùi, Play/Pause, Tua tới -->
+                  <!-- Cụm giữa: Tua lùi 5s, Play/Pause, Tua tới 5s -->
                   <div class="lis-dict-ctrl-center">
-                    <button type="button" class="lis-dict-btn-skip" id="btnCompSkipBack" title="Câu trước">
-                      ${icon("chevron-left", 20)}
+                    <button type="button" class="lis-dict-btn-skip lis-dict-btn-seek" id="btnCompSkipBack" title="Lùi 5 giây" aria-label="Lùi 5 giây">
+                      ${icon("rotate-ccw", 16) || icon("chevron-left", 18)}
+                      <span class="lis-dict-seek-tag">-5s</span>
                     </button>
-                    <button type="button" class="lis-dict-btn-play" id="btnCompPlay" title="${isPlaying ? "Tạm dừng" : "Phát bài nghe"}">
+                    <button type="button" class="lis-dict-btn-play" id="btnCompPlay" title="${isPlaying ? "Tạm dừng" : "Phát bài nghe"}" aria-label="${isPlaying ? "Tạm dừng" : "Phát bài nghe"}">
                       ${isPlaying ? icon("pause-control", 24) : icon("play-control", 24)}
                     </button>
-                    <button type="button" class="lis-dict-btn-skip" id="btnCompSkipFwd" title="Câu tiếp theo">
-                      ${icon("chevron-right", 20)}
+                    <button type="button" class="lis-dict-btn-skip lis-dict-btn-seek" id="btnCompSkipFwd" title="Tiến 5 giây" aria-label="Tiến 5 giây">
+                      <span class="lis-dict-seek-tag">+5s</span>
+                      ${icon("arrow-right", 16) || icon("chevron-right", 18)}
                     </button>
                   </div>
 
@@ -5468,7 +5948,7 @@ function initListeningPage() {
       `;
 
       bindWorkspaceEvents();
-      initCompWaveSurfer();
+      initCompWaveform();
       renderQuizQuestion();
     };
 
@@ -5478,13 +5958,12 @@ function initListeningPage() {
       if (backBtn) {
         backBtn.onclick = () => {
           stopAudio();
-          clearInterval(compWaveProgressTimer);
-          if (compWaveSurfer) {
-            try { compWaveSurfer.destroy(); } catch (_) {}
-            compWaveSurfer = null;
+          if (compWaveform) {
+            try { compWaveform.destroy(); } catch (_) {}
+            compWaveform = null;
           }
           document.body.classList.remove("in-workspace");
-          renderHub();
+          renderListeningCards();
         };
       }
 
@@ -5508,20 +5987,17 @@ function initListeningPage() {
       if (closeSidebarBtn) closeSidebarBtn.onclick = closeMobileDrawer;
       if (scrim) scrim.onclick = closeMobileDrawer;
 
-      // 3. Chuyển bài luyện trong sidebar
-      host.querySelectorAll(".lis-dict-sentence-item[data-lesson-id]").forEach(item => {
+      // 3. Cuộn đến câu hỏi tương ứng khi bấm vào danh sách ở sidebar
+      host.querySelectorAll(".lis-dict-sentence-item[data-q-idx]").forEach(item => {
         item.onclick = () => {
-          const lesId = item.dataset.lessonId;
-          const target = allLessons.find(l => l.id === lesId);
-          if (target && target.id !== lesson.id) {
-            stopAudio();
-            clearInterval(compWaveProgressTimer);
-            if (compWaveSurfer) {
-              try { compWaveSurfer.destroy(); } catch (_) {}
-              compWaveSurfer = null;
-            }
+          const qi = Number(item.dataset.qIdx);
+          const targetBlock = host.querySelector(`#compQBlock_${qi}`);
+          if (targetBlock) {
             closeMobileDrawer();
-            openComprehensionWorkspace(target);
+            targetBlock.scrollIntoView({ behavior: "smooth", block: "center" });
+            targetBlock.classList.remove("highlight-pulse");
+            void targetBlock.offsetWidth;
+            targetBlock.classList.add("highlight-pulse");
           }
         };
       });
@@ -5533,8 +6009,11 @@ function initListeningPage() {
           if (isPlaying) {
             pauseAudio();
           } else {
-            isPlaying = true;
-            speakLineSeq(currentLineIdx >= 0 ? currentLineIdx : 0);
+            if (currentTimeSec >= totalDurationSec - 0.2) {
+              playFromTime(0);
+            } else {
+              playFromTime(currentTimeSec);
+            }
           }
         };
       }
@@ -5542,29 +6021,27 @@ function initListeningPage() {
       const replayBtn = host.querySelector("#btnCompReplay");
       if (replayBtn) {
         replayBtn.onclick = () => {
-          stopAudio();
-          isPlaying = true;
-          speakLineSeq(0);
+          playFromTime(0);
         };
       }
 
+      // Tua lùi 5 giây
       const skipBackBtn = host.querySelector("#btnCompSkipBack");
       if (skipBackBtn) {
         skipBackBtn.onclick = () => {
-          const target = currentLineIdx > 0 ? currentLineIdx - 1 : 0;
-          stopAudio();
-          isPlaying = true;
-          speakLineSeq(target);
+          const cur = isPlaying ? (playbackBaseTimeSec + (Date.now() - playbackStartTimestamp) / 1000) : currentTimeSec;
+          const targetSec = Math.max(0, cur - 5);
+          playFromTime(targetSec);
         };
       }
 
+      // Tua tới 5 giây
       const skipFwdBtn = host.querySelector("#btnCompSkipFwd");
       if (skipFwdBtn) {
         skipFwdBtn.onclick = () => {
-          const target = currentLineIdx < lines.length - 1 ? currentLineIdx + 1 : 0;
-          stopAudio();
-          isPlaying = true;
-          speakLineSeq(target);
+          const cur = isPlaying ? (playbackBaseTimeSec + (Date.now() - playbackStartTimestamp) / 1000) : currentTimeSec;
+          const targetSec = Math.min(totalDurationSec, cur + 5);
+          playFromTime(targetSec);
         };
       }
 
@@ -5577,6 +6054,10 @@ function initListeningPage() {
           const span = host.querySelector("#compSpeedText");
           if (span) span.textContent = `${currentSpeed}x`;
           toast(`Tốc độ phát: ${currentSpeed}x`);
+          recomputeTimeline();
+          if (isPlaying) {
+            playFromTime(currentTimeSec);
+          }
         };
       }
 
@@ -5591,14 +6072,12 @@ function initListeningPage() {
         };
       }
 
-      // Click vào 1 dòng trong hội thoại để phát riêng câu đó
+      // Click vào 1 dòng trong hội thoại để phát từ đầu câu đó
       host.querySelectorAll(".lis-comp-dialogue-line").forEach(lineEl => {
         lineEl.onclick = () => {
           const lineIdx = Number(lineEl.dataset.lineIdx);
-          if (!isNaN(lineIdx) && lineIdx >= 0 && lineIdx < lines.length) {
-            stopAudio();
-            isPlaying = true;
-            speakLineSeq(lineIdx);
+          if (!isNaN(lineIdx) && timeline[lineIdx]) {
+            playFromTime(timeline[lineIdx].start);
           }
         };
       });
@@ -5613,7 +6092,25 @@ function initListeningPage() {
     document.body.classList.add("in-workspace");
     window.scrollTo({ top: 0, behavior: "smooth" });
 
-    // Thu thập danh sách câu luyện trong bài
+    // Lấy danh sách các bài luyện trong cùng cấp độ để hiển thị ở Sidebar (Req 11)
+    let allLessons = (typeof getListeningLessons === "function" ? getListeningLessons() : []).filter(l => l.level === (lesson.level || "A1"));
+    if (!allLessons.length && lesson) {
+      allLessons = [lesson];
+    } else if (lesson && !allLessons.some(l => l.id === lesson.id)) {
+      allLessons.unshift(lesson);
+    }
+
+    const isLessonDone = (item) => {
+      if (!item || !item.id) return false;
+      const list = Progress.doneList("listenDone") || [];
+      if (list.includes(item.id) || list.includes(item.id + "_dict") || list.includes(item.id + "_dict_done")) return true;
+      const sList = (Array.isArray(item.dictation) && item.dictation.length > 0)
+        ? item.dictation
+        : (Array.isArray(item.lines) && item.lines.length > 0 ? item.lines : [1]);
+      return sList.length > 0 && sList.every((_, idx) => list.includes(`${item.id}_dict_${idx}`));
+    };
+
+    // Thu thập danh sách câu luyện trong bài hiện tại
     const rawSentences = (Array.isArray(lesson.dictation) && lesson.dictation.length > 0)
       ? lesson.dictation
       : (Array.isArray(lesson.lines) && lesson.lines.length > 0 ? lesson.lines.map(l => l.ru) : ["Вот, пожалуйста."]);
@@ -5632,8 +6129,12 @@ function initListeningPage() {
     let currentSentenceIdx = 0;
     let currentBlankPct = 50;
     let showAnswer = false;
+    let hideInstantCheck = false; // Ẩn kết quả tức thì tới khi bấm Enter (Req 4)
     let isPlaying = false;
     let isLooping = false;
+    let loopCountTarget = 3; // Số lần phát lại (Req 2)
+    let loopCurrentCount = 0;
+    let loopDelaySec = 2; // Thời gian nghỉ giữa các lần (Req 2)
     let speed = 1.0;
     let loopTimeout = null;
     let progressTimer = null;
@@ -5644,40 +6145,21 @@ function initListeningPage() {
       return Progress.doneList("listenDone").includes(key);
     };
 
-    let dictWaveSurfer = null;
+    let dictWaveform = null;
 
-    const initDictWaveSurfer = async () => {
+    const initDictWaveform = () => {
       const wrap = host.querySelector("#dictWaveformWrap");
       if (!wrap) return;
-      await ensureWaveSurfer();
-      if (!window.WaveSurfer) return;
-      if (dictWaveSurfer) {
-        try { dictWaveSurfer.destroy(); } catch (_) {}
-        dictWaveSurfer = null;
+      if (dictWaveform) {
+        try { dictWaveform.destroy(); } catch (_) {}
+        dictWaveform = null;
       }
-      const isDark = document.documentElement.getAttribute("data-theme") === "dark";
-      try {
-        dictWaveSurfer = window.WaveSurfer.create({
-          container: wrap,
-          waveColor: isDark ? "rgba(125, 211, 252, 0.32)" : "rgba(23, 87, 166, 0.28)",
-          progressColor: isDark ? "#38bdf8" : "#1757a6",
-          cursorColor: isDark ? "#7dd3fc" : "#0284c7",
-          cursorWidth: 2,
-          barWidth: 3,
-          barGap: 3,
-          barRadius: 3,
-          height: 62,
-          normalize: true
-        });
-
-        const s = sentences[currentSentenceIdx];
-        const sentenceText = (s && s.ru) || lesson.title || "Русский язык";
-        const estSec = Math.max(2.2, (sentenceText.length * 95) / (speed * 1000));
-        const peaks = generateSpeechPeaks(sentenceText);
-        await dictWaveSurfer.load("", peaks, estSec);
-      } catch (e) {
-        console.warn("[WaveSurfer] Lỗi khởi tạo WaveSurfer dictation:", e);
-      }
+      dictWaveform = createRealtimeWaveform(wrap, {
+        onSeek: (pct) => {
+          stopAudio();
+          playCurrentAudio();
+        }
+      });
     };
 
     const stopAudio = () => {
@@ -5685,16 +6167,22 @@ function initListeningPage() {
         window.speechSynthesis.cancel();
       }
       clearTimeout(loopTimeout);
-      clearInterval(progressTimer);
       isPlaying = false;
       const playerCard = host.querySelector("#dictPlayerCard");
       if (playerCard) playerCard.classList.remove("is-playing");
       const playBtn = host.querySelector("#btnDictPlay");
       if (playBtn) playBtn.innerHTML = icon("play-control", 24);
-      const prog = host.querySelector("#dictWaveProgress");
-      if (prog) prog.style.width = "0%";
-      if (dictWaveSurfer) {
-        try { dictWaveSurfer.setTime(0); } catch (_) {}
+      if (dictWaveform) {
+        try { dictWaveform.stop(); } catch (_) {}
+      }
+    };
+
+    const updateLoopBtnState = () => {
+      const loopBtn = host.querySelector("#btnDictLoop");
+      if (loopBtn) {
+        loopBtn.classList.toggle("is-active", isLooping);
+        const countLabel = loopCountTarget === Infinity ? "∞" : `${loopCountTarget}x`;
+        loopBtn.innerHTML = `${icon("repeat", 16)} <span>${isLooping ? `Lặp (${countLabel})` : "Tự lặp"}</span>`;
       }
     };
 
@@ -5709,29 +6197,34 @@ function initListeningPage() {
       const playBtn = host.querySelector("#btnDictPlay");
       if (playBtn) playBtn.innerHTML = icon("pause-control", 24);
 
-      const prog = host.querySelector("#dictWaveProgress");
-      const estDurationSec = Math.max(2.2, (s.ru.length * 95) / (speed * 1000));
+      const estDurationSec = Math.max(2.2, (s.ru.length * 115 + (s.ru.split(/[.,?!—;:]/).length - 1) * 260) / (speed * 1000));
       const estDurationMs = estDurationSec * 1000;
-      if (dictWaveSurfer) {
-        try {
-          dictWaveSurfer.setTime(0);
-        } catch (_) {}
+      const soundUrl = (s && (s.audio_url || s.audio)) || (lesson && (lesson.audio_url || lesson.audio)) || null;
+      if (dictWaveform) {
+        dictWaveform.start(s.ru, estDurationSec, soundUrl);
       }
-      const startTime = Date.now();
 
-      progressTimer = setInterval(() => {
-        const elapsed = (Date.now() - startTime) / 1000;
-        const pct = Math.min(100, (elapsed / estDurationSec) * 100);
-        if (prog) prog.style.width = `${pct}%`;
-        if (dictWaveSurfer) {
-          try {
-            dictWaveSurfer.setTime(Math.min(estDurationSec, elapsed));
-          } catch (_) {}
+      const onPlaybackDone = () => {
+        if (dictWaveform) dictWaveform.complete();
+        isPlaying = false;
+        const pCard = host.querySelector("#dictPlayerCard");
+        if (pCard) pCard.classList.remove("is-playing");
+        const pBtn = host.querySelector("#btnDictPlay");
+        if (pBtn) pBtn.innerHTML = icon("play-control", 24);
+
+        if (isLooping) {
+          loopCurrentCount++;
+          if (loopCountTarget !== Infinity && loopCurrentCount >= loopCountTarget) {
+            isLooping = false;
+            updateLoopBtnState();
+            toast("Đã hoàn thành số lần tự lặp");
+          } else {
+            loopTimeout = setTimeout(() => {
+              if (isLooping) playCurrentAudio();
+            }, loopDelaySec * 1000);
+          }
         }
-        if (elapsed >= estDurationSec) {
-          clearInterval(progressTimer);
-        }
-      }, 50);
+      };
 
       if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
         const u = new SpeechSynthesisUtterance(s.ru);
@@ -5741,28 +6234,16 @@ function initListeningPage() {
           const v = pickVoice("ru-RU");
           if (v) u.voice = v;
         }
-        u.onend = () => {
-          stopAudio();
-          if (isLooping) {
-            loopTimeout = setTimeout(playCurrentAudio, 1200);
+        u.onboundary = (e) => {
+          if (dictWaveform && e.charIndex !== undefined) {
+            dictWaveform.updateBoundary(e.charIndex, e.charLength || 0);
           }
         };
-        u.onerror = () => {
-          setTimeout(() => {
-            stopAudio();
-            if (isLooping) {
-              loopTimeout = setTimeout(playCurrentAudio, 1200);
-            }
-          }, estDurationMs);
-        };
+        u.onend = onPlaybackDone;
+        u.onerror = onPlaybackDone;
         window.speechSynthesis.speak(u);
       } else {
-        setTimeout(() => {
-          stopAudio();
-          if (isLooping) {
-            loopTimeout = setTimeout(playCurrentAudio, 1200);
-          }
-        }, estDurationMs);
+        setTimeout(onPlaybackDone, estDurationMs);
       }
     };
 
@@ -5789,10 +6270,35 @@ function initListeningPage() {
       return new Set(sorted.slice(0, count));
     };
 
+    // Gợi ý 1 từ (Req 5 & phím Tab)
+    const hintOneWord = () => {
+      const flow = host.querySelector("#dictSentenceFlow");
+      if (!flow) return;
+      const inputs = Array.from(flow.querySelectorAll(".lis-dict-word-input:not(.is-correct)"));
+      if (inputs.length === 0) {
+        toast("Tất cả các từ trong câu đã được điền chính xác!");
+        return;
+      }
+      const targetInput = inputs[0];
+      const expected = targetInput.dataset.expected || "";
+      targetInput.value = expected;
+      targetInput.classList.add("is-correct");
+      targetInput.classList.remove("is-wrong");
+      targetInput.readOnly = true;
+      toast(`Gợi ý: «${expected}»`);
+
+      const remaining = Array.from(flow.querySelectorAll(".lis-dict-word-input:not(.is-correct)"));
+      if (remaining.length === 0) {
+        handleSentenceFinished();
+      } else {
+        remaining[0].focus();
+      }
+    };
+
     const renderWorkspace = () => {
       const s = sentences[currentSentenceIdx];
-      const doneCount = sentences.filter((_, i) => isSentenceDone(i)).length;
-      const pctDone = Math.round((doneCount / sentences.length) * 100);
+      const completedLessonsCount = allLessons.filter(isLessonDone).length;
+      const pctTopicDone = allLessons.length > 0 ? Math.round((completedLessonsCount / allLessons.length) * 100) : 0;
       const isCurrentDone = isSentenceDone(currentSentenceIdx);
       const isUnlocked = isCurrentDone || !!unlockedVocab[currentSentenceIdx];
 
@@ -5804,23 +6310,23 @@ function initListeningPage() {
               ${icon("arrow-left", 20)}
             </button>
             <div class="lis-dict-topbar-heading">
-              <span class="lis-dict-topbar-subtitle">Nghe chép chính tả · ${lesson.level}</span>
+              <span class="lis-dict-topbar-subtitle">Nghe chép chính tả · ${esc(lesson.level || "A1")}</span>
               <h1 class="lis-dict-topbar-title">${esc(lesson.title)}</h1>
             </div>
-            <button type="button" class="lis-dict-topbar-menu-btn" id="btnDictToggleSidebar" aria-label="Danh sách câu" title="Xem danh sách câu">
+            <button type="button" class="lis-dict-topbar-menu-btn" id="btnDictToggleSidebar" aria-label="Danh sách bài luyện" title="Xem danh sách bài luyện">
               ${icon("list", 20)}
-              <span class="lis-dict-menu-badge">${sentences.length}</span>
+              <span class="lis-dict-menu-badge">${allLessons.length}</span>
             </button>
           </div>
 
-          <!-- Bố cục 3/7: 3 phần bên trái danh sách câu, 7 phần bên phải làm bài -->
+          <!-- Bố cục 3/7: 3 phần bên trái danh sách bài luyện, 7 phần bên phải làm bài -->
           <div class="lis-dict-workspace-grid">
-            <!-- CỘT TRÁI (3 PHẦN): DANH SÁCH CÁC CÂU LUYỆN TRONG BÀI -->
+            <!-- CỘT TRÁI (3 PHẦN): DANH SÁCH BÀI LUYỆN TRONG CHỦ ĐỀ / CẤP ĐỘ (Req 11, không có lis-dict-sentence-snippet - Req 1) -->
             <aside class="lis-dict-sidebar-panel" id="dictSidebarPanel">
               <div class="lis-dict-sidebar-header">
                 <div>
-                  <span class="lis-dict-sidebar-eyebrow">CHỦ ĐỀ</span>
-                  <h3 class="lis-dict-sidebar-title">${esc(lesson.title)}</h3>
+                  <span class="lis-dict-sidebar-eyebrow">CHỦ ĐỀ · CẤP ĐỘ ${esc(lesson.level || "A1")}</span>
+                  <h3 class="lis-dict-sidebar-title">Danh sách bài luyện</h3>
                 </div>
                 <button type="button" class="lis-dict-sidebar-close-btn" id="btnDictCloseSidebar" aria-label="Đóng danh sách">
                   ${icon("x", 18)}
@@ -5829,28 +6335,27 @@ function initListeningPage() {
 
               <div class="lis-dict-sidebar-progress-box">
                 <div class="lis-dict-sidebar-progress-text">
-                  <span>Tiến độ bài</span>
-                  <strong>${doneCount}/${sentences.length} câu</strong>
+                  <span>Tiến độ cấp độ</span>
+                  <strong>${completedLessonsCount}/${allLessons.length} bài đã xong</strong>
                 </div>
                 <div class="lis-dict-progress-track">
-                  <div class="lis-dict-progress-fill" style="width: ${pctDone}%"></div>
+                  <div class="lis-dict-progress-fill" style="width: ${pctTopicDone}%"></div>
                 </div>
               </div>
 
               <div class="lis-dict-sentence-list">
-                ${sentences.map((st, i) => {
-                  const active = i === currentSentenceIdx;
-                  const done = isSentenceDone(i);
+                ${allLessons.map((item, i) => {
+                  const active = item.id === lesson.id;
+                  const isDone = isLessonDone(item);
                   const num = String(i + 1).padStart(2, "0");
                   return `
-                    <button type="button" class="lis-dict-sentence-item ${active ? "is-active" : ""} ${done ? "is-done" : ""}" data-sent-idx="${i}">
+                    <button type="button" class="lis-dict-sentence-item ${active ? "is-active" : ""} ${isDone ? "is-done" : ""}" data-lesson-id="${esc(item.id)}" title="${esc(item.title)}">
                       <span class="lis-dict-sentence-num">${num}</span>
                       <div class="lis-dict-sentence-info">
-                        <strong class="lis-dict-sentence-label">Câu ${i + 1}</strong>
-                        <small class="lis-dict-sentence-snippet">${done ? "Đã hoàn thành" : "Nghe &amp; chép chính tả"}</small>
+                        <strong class="lis-dict-sentence-label">${esc(item.title)}</strong>
                       </div>
                       <span class="lis-dict-sentence-status">
-                        ${done ? icon("check-circle-correct", 17) : active ? icon("edit-3", 16) : icon("arrow-right", 16)}
+                        ${isDone ? icon("check-circle-correct", 17) : active ? icon("headphones", 16) : icon("arrow-right", 16)}
                       </span>
                     </button>
                   `;
@@ -5862,12 +6367,7 @@ function initListeningPage() {
             <main class="lis-dict-main-panel">
               <!-- 2. Khung phát âm thanh (Audio Player) -->
               <section class="lis-dict-player-card" id="dictPlayerCard">
-                <div class="lis-dict-waveform-wrap" id="dictWaveformWrap" aria-label="Giao diện sóng âm phát âm thanh">
-                  ${!window.WaveSurfer ? `
-                    <div class="lis-dict-wave-progress" id="dictWaveProgress"></div>
-                    ${WAVE_BARS.map(h => `<div class="lis-dict-wave-bar" style="height:${h}%"></div>`).join("")}
-                  ` : ""}
-                </div>
+                <div class="lis-dict-waveform-wrap" id="dictWaveformWrap" aria-label="Giao diện sóng âm phát âm thanh"></div>
 
                 <div class="lis-dict-player-controls">
                   <!-- Cụm trái: Phát lại 1 -->
@@ -5877,75 +6377,145 @@ function initListeningPage() {
                     </button>
                   </div>
 
-                  <!-- Cụm giữa: Tua lùi, Play/Pause, Tua tới -->
+                  <!-- Cụm giữa: Câu trước (<), Play/Pause, Câu tiếp theo (>) (Req 12) -->
                   <div class="lis-dict-ctrl-center">
-                    <button type="button" class="lis-dict-btn-skip" id="btnDictSkipBack" title="Tua lùi lại 5s">
+                    <button type="button" class="lis-dict-btn-skip" id="btnDictPrevSentence" title="Câu trước" ${currentSentenceIdx === 0 ? "disabled" : ""}>
                       ${icon("chevron-left", 20)}
                     </button>
                     <button type="button" class="lis-dict-btn-play" id="btnDictPlay" title="Phát / Dừng âm thanh">
                       ${icon("play-control", 24)}
                     </button>
-                    <button type="button" class="lis-dict-btn-skip" id="btnDictSkipFwd" title="Tua tiến tới">
+                    <button type="button" class="lis-dict-btn-skip" id="btnDictNextSentence" title="Câu tiếp theo" ${currentSentenceIdx === sentences.length - 1 ? "disabled" : ""}>
                       ${icon("chevron-right", 20)}
                     </button>
                   </div>
 
-                  <!-- Cụm phải: Tốc độ phát (1x) & Tự lặp -->
+                  <!-- Cụm phải: Tốc độ phát (Slider đẹp tinh tế) & Tự lặp (Cửa sổ phong cách Pomodoro cao cấp) -->
                   <div class="lis-dict-ctrl-right">
-                    <button type="button" class="lis-dict-btn-speed" id="btnDictSpeed" title="Thay đổi tốc độ phát">
-                      <span id="dictSpeedText">${speed}x</span>
-                    </button>
-                    <button type="button" class="lis-dict-btn-loop ${isLooping ? "is-active" : ""}" id="btnDictLoop" title="Chế độ tự lặp lại câu">
-                      ${icon("repeat", 16)} <span>Tự lặp</span>
-                    </button>
+                    <div class="lis-dict-speed-wrapper">
+                      <button type="button" class="lis-dict-btn-speed" id="btnDictSpeed" title="Thay đổi tốc độ phát">
+                        <span id="dictSpeedText">${speed.toFixed(1)}x</span>
+                      </button>
+                      <div class="lis-dict-popover lis-dict-speed-popover hidden" id="dictSpeedPopover">
+                        <div class="lis-dict-popover-header">
+                          <div class="pomo-pop-title-wrap">
+                            <span class="pomo-pop-title-dot" style="background:var(--primary)"></span>
+                            <span class="lis-dict-popover-title">Tốc độ phát âm</span>
+                          </div>
+                          <span class="lis-dict-slider-badge" id="dictSpeedBadge">${speed.toFixed(1)}x</span>
+                        </div>
+                        
+                        <div class="lis-dict-slider-wrap">
+                          <input type="range" min="0.7" max="1.4" step="0.1" value="${speed.toFixed(1)}" class="pomo-range" id="dictSpeedSlider" aria-label="Tốc độ phát âm">
+                          <div class="lis-dict-slider-ticks">
+                            <span>0.7x (Chậm)</span>
+                            <span>1.0x (Chuẩn)</span>
+                            <span>1.4x (Nhanh)</span>
+                          </div>
+                        </div>
+
+                        <div class="lis-dict-presets-row">
+                          <button type="button" class="lis-dict-preset-btn ${Math.abs(speed - 0.8) < 0.01 ? "is-active" : ""}" data-speed="0.8">0.8x</button>
+                          <button type="button" class="lis-dict-preset-btn ${Math.abs(speed - 1.0) < 0.01 ? "is-active" : ""}" data-speed="1.0">1.0x</button>
+                          <button type="button" class="lis-dict-preset-btn ${Math.abs(speed - 1.2) < 0.01 ? "is-active" : ""}" data-speed="1.2">1.2x</button>
+                          <button type="button" class="lis-dict-preset-btn ${Math.abs(speed - 1.4) < 0.01 ? "is-active" : ""}" data-speed="1.4">1.4x</button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="lis-dict-loop-wrapper">
+                      <button type="button" class="lis-dict-btn-loop ${isLooping ? "is-active" : ""}" id="btnDictLoop" title="Cài đặt tự lặp">
+                        ${icon("repeat", 16)} <span>${isLooping ? `Lặp (${loopCountTarget === Infinity ? "∞" : `${loopCountTarget}x`})` : "Tự lặp"}</span>
+                      </button>
+                      <div class="lis-dict-popover lis-dict-loop-popover hidden" id="dictLoopPopover">
+                        <div class="lis-dict-popover-header">
+                          <div class="pomo-pop-title-wrap">
+                            <span class="pomo-pop-title-dot" style="background:#10b981"></span>
+                            <span class="lis-dict-popover-title">Cài đặt tự lặp</span>
+                          </div>
+                          <button type="button" class="pomo-pop-icon-btn" id="btnCloseLoopPopover" title="Đóng" aria-label="Đóng">
+                            ${icon("x", 14)}
+                          </button>
+                        </div>
+
+                        <!-- Quick Presets -->
+                        <div class="lis-dict-presets-row" id="loopPresetsRow">
+                          <button type="button" class="lis-dict-preset-btn ${loopCountTarget === 2 && loopDelaySec === 2 ? "is-active" : ""}" data-count="2" data-delay="2">2 lần · 2s</button>
+                          <button type="button" class="lis-dict-preset-btn ${loopCountTarget === 3 && loopDelaySec === 2 ? "is-active" : ""}" data-count="3" data-delay="2">3 lần · 2s</button>
+                          <button type="button" class="lis-dict-preset-btn ${loopCountTarget === 5 && loopDelaySec === 3 ? "is-active" : ""}" data-count="5" data-delay="3">5 lần · 3s</button>
+                        </div>
+
+                        <!-- Section 1: Số lần phát lại -->
+                        <div class="lis-dict-slider-section">
+                          <div class="lis-dict-slider-header">
+                            <span class="lis-dict-popover-label">Số lần phát lại</span>
+                            <span class="lis-dict-slider-val" id="dictLoopCountBadge">${loopCountTarget === Infinity ? "Vô hạn" : `${loopCountTarget} lần`}</span>
+                          </div>
+                          <input type="range" min="1" max="10" step="1" value="${loopCountTarget === Infinity ? 10 : loopCountTarget}" class="pomo-range" id="dictLoopCountSlider">
+                          <div class="lis-dict-slider-ticks">
+                            <span>1 lần</span>
+                            <span>5 lần</span>
+                            <span>Vô hạn</span>
+                          </div>
+                        </div>
+
+                        <!-- Section 2: Thời gian nghỉ -->
+                        <div class="lis-dict-slider-section">
+                          <div class="lis-dict-slider-header">
+                            <span class="lis-dict-popover-label">Thời gian nghỉ</span>
+                            <span class="lis-dict-slider-val" id="dictLoopDelayBadge">${loopDelaySec} giây</span>
+                          </div>
+                          <input type="range" min="1" max="6" step="1" value="${loopDelaySec}" class="pomo-range" id="dictLoopDelaySlider">
+                          <div class="lis-dict-slider-ticks">
+                            <span>1s</span>
+                            <span>3s</span>
+                            <span>6s</span>
+                          </div>
+                        </div>
+
+                        <div class="lis-dict-popover-actions">
+                          <button type="button" class="lis-dict-popover-btn-secondary" id="btnDictLoopOff">Tắt lặp</button>
+                          <button type="button" class="lis-dict-popover-btn-primary" id="btnDictLoopApply">Áp dụng</button>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </section>
 
-              <!-- 3. Thanh công cụ chỉnh tốc độ và hiển thị -->
+              <!-- 3. Thanh công cụ (Hiển thị 1 dòng trên mobile với các nút icon) -->
               <div class="lis-dict-toolbar-card">
                 <div class="lis-dict-percent-group" role="group" aria-label="Mức độ ẩn từ gợi ý">
-                  <span class="lis-dict-percent-label">Độ khó:</span>
                   <button type="button" class="lis-dict-pct-btn ${currentBlankPct === 30 ? "is-active" : ""}" data-pct="30" title="Chỉ ẩn 30% từ (Dễ)">30%</button>
                   <button type="button" class="lis-dict-pct-btn ${currentBlankPct === 50 ? "is-active" : ""}" data-pct="50" title="Ẩn 50% từ (Vừa)">50%</button>
                   <button type="button" class="lis-dict-pct-btn ${currentBlankPct === 100 ? "is-active" : ""}" data-pct="100" title="Ẩn toàn bộ 100% từ (Thử thách)">100%</button>
                 </div>
 
                 <div class="lis-dict-toolbar-right">
-                  <button type="button" class="lis-dict-btn-toggle-answer ${showAnswer ? "is-showing" : ""}" id="btnToggleAnswer">
-                    ${icon(showAnswer ? "eye-off" : "eye", 16)}
-                    <span>${showAnswer ? "Ẩn kết quả" : "Hiện kết quả"}</span>
+                  <button type="button" class="lis-dict-tool-btn" id="btnDictHint" title="Gợi ý 1 từ (phím Tab)">
+                    ${icon("eye", 15)} <span>Gợi ý từ (Tab)</span>
                   </button>
-                  <button type="button" class="lis-dict-tool-icon-btn" id="btnDictDetail" title="Xem phân tích chi tiết câu">
-                    ${icon("file-text", 18)}
+                  <button type="button" class="lis-dict-tool-btn ${hideInstantCheck ? "is-active" : ""}" id="btnToggleHideResult" title="Ẩn kết quả tới khi nhấn Enter">
+                    ${icon("eye-off", 15)} <span>${hideInstantCheck ? "Đang ẩn kết quả" : "Ẩn kết quả"}</span>
                   </button>
-                  <button type="button" class="lis-dict-tool-icon-btn" id="btnDictBookmark" title="Lưu câu vào sổ tay yêu thích">
-                    ${icon("bookmark", 18)}
-                  </button>
-                  <button type="button" class="lis-dict-tool-icon-btn" id="btnDictAsk" title="Hỏi trợ lý AI Rusika về câu này">
-                    ${icon("message-circle", 18)}
+                  <button type="button" class="lis-dict-tool-btn ${showAnswer ? "is-active" : ""}" id="btnToggleAnswer" title="Hiện đáp án chuẩn">
+                    ${icon(showAnswer ? "eye-off" : "check", 15)} <span>${showAnswer ? "Ẩn đáp án" : "Hiện đáp án"}</span>
                   </button>
                 </div>
               </div>
 
-              <!-- 4. Khu vực làm bài chính (Chép chính tả) -->
+              <!-- 4. Khu vực làm bài chính (Chép chính tả - Req 6: bỏ lis-dict-input-note) -->
               <section class="lis-dict-practice-card" id="dictPracticeCard">
                 <div class="lis-dict-sentence-flow" id="dictSentenceFlow"></div>
 
-                <div class="lis-dict-input-note">
-                  <span class="lis-dict-note-bulb">💡</span> Tắt bộ gõ tiếng Việt để tự chuyển ô khi điền đúng
-                </div>
-
-                <!-- Khung hiển thị đáp án khi bấm nút Hiện kết quả -->
-                <div class="lis-dict-answer-box ${showAnswer ? "" : "hidden"}" id="dictAnswerBox">
-                  <div class="lis-dict-answer-header">
-                    <span class="lis-dict-answer-tag">${icon("check", 14)} Đáp án chuẩn</span>
-                    <button type="button" class="btn-icon dict-vocab-btn-action" id="btnDictSpeakAnswer" title="Nghe câu này">
-                      ${icon("volume-high", 16)}
-                    </button>
-                  </div>
-                  <div class="lis-dict-answer-ru ru">${esc(s.ru)}</div>
-                  ${s.vi ? `<div class="lis-dict-answer-vi">${esc(s.vi)}</div>` : ""}
+                <!-- Dòng hiển thị đáp án trực tiếp tại đây, không thêm thẻ box mới (Req 7) -->
+                <div class="lis-dict-inline-result ${showAnswer ? "" : "hidden"}" id="dictInlineResult">
+                  <span class="lis-dict-inline-badge">${icon("check", 14)} Đáp án:</span>
+                  <span class="lis-dict-inline-ru ru">${esc(s.ru)}</span>
+                  ${s.vi ? `<span class="lis-dict-inline-vi">— ${esc(s.vi)}</span>` : ""}
+                  <button type="button" class="btn-icon lis-dict-inline-speak" id="btnDictSpeakInlineAnswer" title="Nghe câu đáp án">
+                    ${icon("volume-high", 15)}
+                  </button>
                 </div>
 
                 <!-- Banner chúc mừng khi hoàn thành câu -->
@@ -5953,23 +6523,11 @@ function initListeningPage() {
                   ${icon("check-circle-correct", 20)}
                   <span>Xuất sắc! Bạn đã chép chính xác câu này (+10 XP)</span>
                 </div>
-
-                <!-- Điều hướng câu trước / câu sau -->
-                <div class="lis-dict-nav-footer">
-                  <button type="button" class="btn btn-outline btn-sm" id="btnDictPrevSentence" ${currentSentenceIdx === 0 ? "disabled" : ""}>
-                    ${icon("chevron-left", 16)} Câu trước
-                  </button>
-                  <span class="lis-dict-nav-counter">Câu ${currentSentenceIdx + 1} / ${sentences.length}</span>
-                  <button type="button" class="btn btn-primary btn-sm" id="btnDictNextSentence" ${currentSentenceIdx === sentences.length - 1 ? "disabled" : ""}>
-                    Câu tiếp theo ${icon("chevron-right", 16)}
-                  </button>
-                </div>
               </section>
 
-              <!-- 5. Khung phụ dưới là (Từ vựng nên học) -->
+              <!-- 5. Khung phụ dưới: Từ vựng nên học -->
               <section class="lis-dict-vocab-box ${isUnlocked ? "is-unlocked" : "is-locked"}" id="dictVocabBox">
                 ${!isUnlocked ? `
-                  <!-- Trạng thái KHÓA -->
                   <div class="lis-dict-lock-badge">
                     <span class="lis-dict-lock-icon">${icon("lock", 26)}</span>
                     <div class="lis-dict-lock-copy">
@@ -5981,7 +6539,6 @@ function initListeningPage() {
                     ${icon("eye", 14)} <span>Xem sớm</span>
                   </button>
                 ` : `
-                  <!-- Trạng thái ĐÃ MỞ KHÓA -->
                   <div class="lis-dict-vocab-header">
                     <div class="lis-dict-vocab-header-left">
                       <span class="lis-dict-vocab-sparkle">${icon("sparkles-clean", 20)}</span>
@@ -6022,10 +6579,9 @@ function initListeningPage() {
         </div>
       `;
 
-      // Render các ô cloze input cho câu hiện tại
       renderClozeSentence();
       bindWorkspaceEvents();
-      initDictWaveSurfer();
+      initDictWaveform();
     };
 
     const renderClozeSentence = () => {
@@ -6044,10 +6600,11 @@ function initListeningPage() {
         if (!blankSet.has(i)) {
           return `<span class="lis-dict-static-word">${esc(token.text)}</span>`;
         }
-        // Từ bị ẩn cần điền
+        // Từ bị ẩn cần điền (Req 3: dấu chấm có gạch dưới)
         const cleanWord = token.text.replace(/[.,!?;:«»""'']/g, "");
-        const dots = ".".repeat(Math.min(7, Math.max(3, cleanWord.length)));
-        const width = Math.max(52, cleanWord.length * 15 + 20);
+        const dotCount = Math.min(6, Math.max(3, cleanWord.length));
+        const dots = "· ".repeat(dotCount).trim();
+        const width = Math.max(56, cleanWord.length * 15 + 24);
         const val = isDone ? cleanWord : "";
         const correctCls = isDone ? "is-correct" : "";
         const readonlyAttr = isDone ? "readonly" : "";
@@ -6057,7 +6614,7 @@ function initListeningPage() {
             class="lis-dict-word-input ${correctCls}"
             data-expected="${esc(cleanWord)}"
             style="width: ${width}px;"
-            placeholder="[ ${dots} ]"
+            placeholder="${dots}"
             value="${esc(val)}"
             autocomplete="off"
             autocorrect="off"
@@ -6068,32 +6625,66 @@ function initListeningPage() {
         `;
       }).join("");
 
-      // Gắn sự kiện gõ phím & tự chuyển ô khi điền đúng
       const inputs = Array.from(flow.querySelectorAll(".lis-dict-word-input"));
       const norm = (str) => (str || "").trim().toLowerCase().replace(/[.,!?;:«»""'']/g, "").replace(/ё/g, "е");
 
+      // Hàm kiểm tra khi bấm Enter (hoặc khi ở chế độ hideInstantCheck)
+      const checkAllInputsOnEnter = (currentInput) => {
+        let hasWrong = false;
+        inputs.forEach(inp => {
+          if (inp.classList.contains("is-correct")) return;
+          const exp = inp.dataset.expected || "";
+          if (norm(inp.value) === norm(exp) && norm(inp.value).length > 0) {
+            inp.classList.add("is-correct");
+            inp.classList.remove("is-wrong");
+            inp.readOnly = true;
+            inp.value = exp;
+          } else if (inp.value.trim().length > 0) {
+            inp.classList.add("is-wrong");
+            hasWrong = true;
+          }
+        });
+
+        const nextIncomplete = inputs.find(inp => !inp.classList.contains("is-correct"));
+        if (!nextIncomplete) {
+          handleSentenceFinished();
+        } else {
+          nextIncomplete.focus();
+          if (hasWrong) {
+            toast("Có từ chưa đúng, hãy nghe kỹ lại nhé!");
+          }
+        }
+      };
+
       inputs.forEach((input, idx) => {
         input.oninput = () => {
-          const expected = input.dataset.expected || "";
-          if (norm(input.value) === norm(expected) && norm(input.value).length > 0) {
-            input.classList.add("is-correct");
-            input.classList.remove("is-wrong");
-            input.readOnly = true;
-            input.value = expected; // Chuẩn hóa hoa thường chuẩn xác
+          input.classList.remove("is-wrong");
+          if (!hideInstantCheck) {
+            const expected = input.dataset.expected || "";
+            if (norm(input.value) === norm(expected) && norm(input.value).length > 0) {
+              input.classList.add("is-correct");
+              input.classList.remove("is-wrong");
+              input.readOnly = true;
+              input.value = expected;
 
-            // Tìm ô input chưa hoàn thành kế tiếp để tự động focus
-            const nextInput = inputs.find(inp => !inp.classList.contains("is-correct"));
-            if (nextInput) {
-              nextInput.focus();
-            } else {
-              // Hoàn thành câu!
-              handleSentenceFinished();
+              const nextInput = inputs.find(inp => !inp.classList.contains("is-correct"));
+              if (nextInput) {
+                nextInput.focus();
+              } else {
+                handleSentenceFinished();
+              }
             }
           }
         };
 
         input.onkeydown = (e) => {
-          if (e.key === " " || e.key === "Tab" || e.key === "Enter") {
+          if (e.key === "Tab") {
+            e.preventDefault();
+            hintOneWord();
+          } else if (e.key === "Enter") {
+            e.preventDefault();
+            checkAllInputsOnEnter(input);
+          } else if (e.key === " ") {
             e.preventDefault();
             const currIdx = inputs.indexOf(input);
             if (currIdx < inputs.length - 1) inputs[currIdx + 1].focus();
@@ -6106,7 +6697,6 @@ function initListeningPage() {
         };
       });
 
-      // Focus vào ô input đầu tiên chưa điền
       const firstEmpty = inputs.find(inp => !inp.classList.contains("is-correct"));
       if (firstEmpty) {
         setTimeout(() => firstEmpty.focus(), 80);
@@ -6120,19 +6710,24 @@ function initListeningPage() {
         Progress.addXp(10);
         toast("Xuất sắc! Đã hoàn thành câu (+10 XP) 🎉");
       }
+      const allSentencesDone = sentences.every((_, i) => isSentenceDone(i) || i === currentSentenceIdx);
+      if (allSentencesDone) {
+        Progress.markDone("listenDone", `${lesson.id}_dict`);
+        Progress.markDone("listenDone", `${lesson.id}_dict_done`);
+      }
       if (typeof playQuizletSound === "function") {
         playQuizletSound("correct");
       }
 
-      // Mở khóa từ vựng
       unlockedVocab[currentSentenceIdx] = true;
 
-      // Cập nhật giao diện
       const celeb = host.querySelector("#dictCelebration");
       if (celeb) celeb.classList.remove("hidden");
 
       renderWorkspace();
     };
+
+    let closeAllPopoversHandler = null;
 
     const bindWorkspaceEvents = () => {
       // 1. Quay lại Hub
@@ -6140,9 +6735,12 @@ function initListeningPage() {
       if (backBtn) {
         backBtn.onclick = () => {
           stopAudio();
-          if (dictWaveSurfer) {
-            try { dictWaveSurfer.destroy(); } catch (_) {}
-            dictWaveSurfer = null;
+          if (dictWaveform) {
+            try { dictWaveform.destroy(); } catch (_) {}
+            dictWaveform = null;
+          }
+          if (closeAllPopoversHandler) {
+            document.removeEventListener("click", closeAllPopoversHandler);
           }
           document.body.classList.remove("in-workspace");
           renderHub();
@@ -6169,42 +6767,182 @@ function initListeningPage() {
         };
       }
 
-      const skipBackBtn = host.querySelector("#btnDictSkipBack");
-      if (skipBackBtn) {
-        skipBackBtn.onclick = () => {
-          playCurrentAudio();
-          toast("Phát lại câu từ đầu");
+      // Điều hướng câu trước / câu sau ở cụm giữa (Req 12)
+      const prevSentenceBtn = host.querySelector("#btnDictPrevSentence");
+      if (prevSentenceBtn) {
+        prevSentenceBtn.onclick = () => {
+          if (currentSentenceIdx > 0) {
+            stopAudio();
+            currentSentenceIdx--;
+            showAnswer = false;
+            renderWorkspace();
+          }
         };
       }
 
-      const skipFwdBtn = host.querySelector("#btnDictSkipFwd");
-      if (skipFwdBtn) {
-        skipFwdBtn.onclick = () => {
-          stopAudio();
+      const nextSentenceBtn = host.querySelector("#btnDictNextSentence");
+      if (nextSentenceBtn) {
+        nextSentenceBtn.onclick = () => {
+          if (currentSentenceIdx < sentences.length - 1) {
+            stopAudio();
+            currentSentenceIdx++;
+            showAnswer = false;
+            renderWorkspace();
+          }
         };
       }
 
+      // Cửa sổ tốc độ phát (Slider từ trái sang phải đẹp tinh tế)
       const speedBtn = host.querySelector("#btnDictSpeed");
-      if (speedBtn) {
-        speedBtn.onclick = () => {
-          const speeds = [0.75, 0.85, 1.0, 1.25];
-          const curIdx = speeds.indexOf(speed);
-          speed = speeds[(curIdx + 1) % speeds.length];
-          const text = host.querySelector("#dictSpeedText");
-          if (text) text.textContent = `${speed}x`;
-          toast(`Tốc độ phát: ${speed}x`);
-          if (isPlaying) playCurrentAudio();
+      const speedPopover = host.querySelector("#dictSpeedPopover");
+      const loopPopover = host.querySelector("#dictLoopPopover");
+
+      if (speedBtn && speedPopover) {
+        speedBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (loopPopover) loopPopover.classList.add("hidden");
+          speedPopover.classList.toggle("hidden");
         };
+
+        const speedSlider = speedPopover.querySelector("#dictSpeedSlider");
+        const speedBadge = speedPopover.querySelector("#dictSpeedBadge");
+        const speedText = host.querySelector("#dictSpeedText");
+
+        const updateSpeedDisplay = (val) => {
+          speed = Math.round(val * 10) / 10;
+          if (speedSlider) speedSlider.value = speed.toFixed(1);
+          if (speedBadge) speedBadge.textContent = `${speed.toFixed(1)}x`;
+          if (speedText) speedText.textContent = `${speed.toFixed(1)}x`;
+          speedPopover.querySelectorAll(".lis-dict-preset-btn").forEach(btn => {
+            btn.classList.toggle("is-active", Math.abs(parseFloat(btn.dataset.speed) - speed) < 0.01);
+          });
+        };
+
+        if (speedSlider) {
+          speedSlider.oninput = (e) => {
+            e.stopPropagation();
+            updateSpeedDisplay(parseFloat(speedSlider.value));
+          };
+          speedSlider.onchange = (e) => {
+            e.stopPropagation();
+            toast(`Tốc độ phát: ${speed.toFixed(1)}x`);
+            if (isPlaying) playCurrentAudio();
+          };
+        }
+
+        speedPopover.querySelectorAll(".lis-dict-preset-btn").forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            updateSpeedDisplay(parseFloat(btn.dataset.speed));
+            toast(`Tốc độ phát: ${speed.toFixed(1)}x`);
+            if (isPlaying) playCurrentAudio();
+          };
+        });
       }
 
+      // Cửa sổ tự lặp (Chuẩn Pomodoro đẹp tinh tế)
       const loopBtn = host.querySelector("#btnDictLoop");
-      if (loopBtn) {
-        loopBtn.onclick = () => {
-          isLooping = !isLooping;
-          loopBtn.classList.toggle("is-active", isLooping);
-          toast(isLooping ? "Đã bật chế độ tự lặp" : "Đã tắt chế độ tự lặp");
+      if (loopBtn && loopPopover) {
+        loopBtn.onclick = (e) => {
+          e.stopPropagation();
+          if (speedPopover) speedPopover.classList.add("hidden");
+          loopPopover.classList.toggle("hidden");
         };
+
+        const closeLoopBtn = loopPopover.querySelector("#btnCloseLoopPopover");
+        if (closeLoopBtn) {
+          closeLoopBtn.onclick = (e) => {
+            e.stopPropagation();
+            loopPopover.classList.add("hidden");
+          };
+        }
+
+        const loopCountSlider = loopPopover.querySelector("#dictLoopCountSlider");
+        const loopDelaySlider = loopPopover.querySelector("#dictLoopDelaySlider");
+        const loopCountBadge = loopPopover.querySelector("#dictLoopCountBadge");
+        const loopDelayBadge = loopPopover.querySelector("#dictLoopDelayBadge");
+
+        let tempCount = loopCountTarget;
+        let tempDelay = loopDelaySec;
+
+        const syncLoopPresetHighlights = () => {
+          loopPopover.querySelectorAll(".lis-dict-preset-btn").forEach(btn => {
+            const c = parseInt(btn.dataset.count, 10);
+            const d = parseInt(btn.dataset.delay, 10);
+            btn.classList.toggle("is-active", tempCount === c && tempDelay === d);
+          });
+        };
+
+        if (loopCountSlider) {
+          loopCountSlider.oninput = (e) => {
+            e.stopPropagation();
+            const val = parseInt(loopCountSlider.value, 10);
+            tempCount = val >= 10 ? Infinity : val;
+            if (loopCountBadge) loopCountBadge.textContent = tempCount === Infinity ? "Vô hạn" : `${tempCount} lần`;
+            syncLoopPresetHighlights();
+          };
+        }
+
+        if (loopDelaySlider) {
+          loopDelaySlider.oninput = (e) => {
+            e.stopPropagation();
+            tempDelay = parseInt(loopDelaySlider.value, 10);
+            if (loopDelayBadge) loopDelayBadge.textContent = `${tempDelay} giây`;
+            syncLoopPresetHighlights();
+          };
+        }
+
+        loopPopover.querySelectorAll(".lis-dict-preset-btn").forEach(btn => {
+          btn.onclick = (e) => {
+            e.stopPropagation();
+            tempCount = parseInt(btn.dataset.count, 10);
+            tempDelay = parseInt(btn.dataset.delay, 10);
+            if (loopCountSlider) loopCountSlider.value = tempCount;
+            if (loopDelaySlider) loopDelaySlider.value = tempDelay;
+            if (loopCountBadge) loopCountBadge.textContent = `${tempCount} lần`;
+            if (loopDelayBadge) loopDelayBadge.textContent = `${tempDelay} giây`;
+            syncLoopPresetHighlights();
+          };
+        });
+
+        const applyLoopBtn = loopPopover.querySelector("#btnDictLoopApply");
+        if (applyLoopBtn) {
+          applyLoopBtn.onclick = (e) => {
+            e.stopPropagation();
+            loopCountTarget = tempCount;
+            loopDelaySec = tempDelay;
+            isLooping = true;
+            loopCurrentCount = 0;
+            updateLoopBtnState();
+            loopPopover.classList.add("hidden");
+            const countTxt = loopCountTarget === Infinity ? "Vô hạn" : `${loopCountTarget} lần`;
+            toast(`Đã bật tự lặp: ${countTxt}, nghỉ ${loopDelaySec}s`);
+            if (!isPlaying) playCurrentAudio();
+          };
+        }
+
+        const offLoopBtn = loopPopover.querySelector("#btnDictLoopOff");
+        if (offLoopBtn) {
+          offLoopBtn.onclick = (e) => {
+            e.stopPropagation();
+            isLooping = false;
+            clearTimeout(loopTimeout);
+            updateLoopBtnState();
+            loopPopover.classList.add("hidden");
+            toast("Đã tắt chế độ tự lặp");
+          };
+        }
       }
+
+      // Đóng popover khi nhấn ra ngoài
+      if (closeAllPopoversHandler) {
+        document.removeEventListener("click", closeAllPopoversHandler);
+      }
+      closeAllPopoversHandler = () => {
+        if (speedPopover) speedPopover.classList.add("hidden");
+        if (loopPopover) loopPopover.classList.add("hidden");
+      };
+      document.addEventListener("click", closeAllPopoversHandler);
 
       // 3. Mức độ gợi ý %
       host.querySelectorAll(".lis-dict-pct-btn").forEach((b) => {
@@ -6216,67 +6954,50 @@ function initListeningPage() {
         };
       });
 
-      // 4. Ẩn / Hiện kết quả
+      // 4. Gợi ý 1 từ (Req 5)
+      const hintBtn = host.querySelector("#btnDictHint");
+      if (hintBtn) {
+        hintBtn.onclick = () => {
+          hintOneWord();
+        };
+      }
+
+      // 5. Ẩn kết quả tới khi bấm Enter (Req 4)
+      const toggleHideBtn = host.querySelector("#btnToggleHideResult");
+      if (toggleHideBtn) {
+        toggleHideBtn.onclick = () => {
+          hideInstantCheck = !hideInstantCheck;
+          toggleHideBtn.classList.toggle("is-active", hideInstantCheck);
+          const lbl = toggleHideBtn.querySelector("span");
+          if (lbl) lbl.textContent = hideInstantCheck ? "Đang ẩn kết quả" : "Ẩn kết quả";
+          toast(hideInstantCheck ? "Đang bật ẩn kết quả: Gõ xong nhấn Enter để kiểm tra" : "Đã tắt ẩn kết quả: Tự động chuyển khi điền đúng");
+        };
+      }
+
+      // 6. Hiện / Ẩn đáp án trên dòng (Req 7)
       const toggleAnsBtn = host.querySelector("#btnToggleAnswer");
       if (toggleAnsBtn) {
         toggleAnsBtn.onclick = () => {
           showAnswer = !showAnswer;
-          const ansBox = host.querySelector("#dictAnswerBox");
-          if (ansBox) ansBox.classList.toggle("hidden", !showAnswer);
-          toggleAnsBtn.classList.toggle("is-showing", showAnswer);
+          const inlineRes = host.querySelector("#dictInlineResult");
+          if (inlineRes) inlineRes.classList.toggle("hidden", !showAnswer);
+          toggleAnsBtn.classList.toggle("is-active", showAnswer);
           toggleAnsBtn.innerHTML = `
-            ${icon(showAnswer ? "eye-off" : "eye", 16)}
-            <span>${showAnswer ? "Ẩn kết quả" : "Hiện kết quả"}</span>
+            ${icon(showAnswer ? "eye-off" : "check", 15)}
+            <span>${showAnswer ? "Ẩn đáp án" : "Hiện đáp án"}</span>
           `;
         };
       }
 
-      const speakAnsBtn = host.querySelector("#btnDictSpeakAnswer");
-      if (speakAnsBtn) {
-        speakAnsBtn.onclick = () => {
+      const speakInlineBtn = host.querySelector("#btnDictSpeakInlineAnswer");
+      if (speakInlineBtn) {
+        speakInlineBtn.onclick = () => {
           speak(sentences[currentSentenceIdx].ru, "ru-RU", speed);
         };
       }
 
-      // Icon chi tiết, lưu, hỏi bài
-      const detailBtn = host.querySelector("#btnDictDetail");
-      if (detailBtn) {
-        detailBtn.onclick = () => {
-          const s = sentences[currentSentenceIdx];
-          alert(`📖 CHI TIẾT CÂU LUYỆN:\n\n• Tiếng Nga: ${s.ru}\n• Dịch nghĩa: ${s.vi || "Chưa có"}\n• Cấp độ: ${lesson.level}\n• Chủ đề: ${lesson.title}`);
-        };
-      }
 
-      const bookmarkBtn = host.querySelector("#btnDictBookmark");
-      if (bookmarkBtn) {
-        let saved = (typeof STORE !== "undefined") ? STORE.get("saved_dict_sentences", []) : [];
-        const isSaved = saved.includes(sentences[currentSentenceIdx].ru);
-        bookmarkBtn.classList.toggle("is-saved", isSaved);
-
-        bookmarkBtn.onclick = () => {
-          saved = (typeof STORE !== "undefined") ? STORE.get("saved_dict_sentences", []) : [];
-          const ru = sentences[currentSentenceIdx].ru;
-          if (saved.includes(ru)) {
-            saved = saved.filter(x => x !== ru);
-            bookmarkBtn.classList.remove("is-saved");
-            toast("Đã bỏ lưu câu này!");
-          } else {
-            saved.push(ru);
-            bookmarkBtn.classList.add("is-saved");
-            toast("Đã lưu câu vào sổ tay yêu thích!");
-          }
-          if (typeof STORE !== "undefined") STORE.set("saved_dict_sentences", saved);
-        };
-      }
-
-      const askBtn = host.querySelector("#btnDictAsk");
-      if (askBtn) {
-        askBtn.onclick = () => {
-          toast("Trợ lý Rusika: Hãy lắng nghe kỹ âm đuôi và các giới từ kết nối trong câu nhé!");
-        };
-      }
-
-      // 5. Mở khóa sớm từ vựng
+      // 8. Mở khóa sớm từ vựng
       const unlockEarlyBtn = host.querySelector("#btnUnlockVocabEarly");
       if (unlockEarlyBtn) {
         unlockEarlyBtn.onclick = () => {
@@ -6309,44 +7030,23 @@ function initListeningPage() {
         };
       });
 
-      // 6. Chuyển câu qua danh sách Sidebar
+      // 9. Chuyển bài qua danh sách Sidebar (Req 11)
       host.querySelectorAll(".lis-dict-sentence-item").forEach((b) => {
         b.onclick = () => {
-          const idx = parseInt(b.dataset.sentIdx, 10);
-          if (idx !== currentSentenceIdx) {
+          const lessonId = b.dataset.lessonId;
+          if (lessonId && lessonId !== lesson.id) {
             stopAudio();
-            currentSentenceIdx = idx;
-            showAnswer = false;
-            renderWorkspace();
-            closeMobileDrawer();
+            if (closeAllPopoversHandler) {
+              document.removeEventListener("click", closeAllPopoversHandler);
+            }
+            const targetLesson = allLessons.find(l => l.id === lessonId);
+            if (targetLesson) {
+              closeMobileDrawer();
+              openDictationWorkspace(targetLesson);
+            }
           }
         };
       });
-
-      // Điều hướng câu trước / sau
-      const prevBtn = host.querySelector("#btnDictPrevSentence");
-      if (prevBtn) {
-        prevBtn.onclick = () => {
-          if (currentSentenceIdx > 0) {
-            stopAudio();
-            currentSentenceIdx--;
-            showAnswer = false;
-            renderWorkspace();
-          }
-        };
-      }
-
-      const nextBtn = host.querySelector("#btnDictNextSentence");
-      if (nextBtn) {
-        nextBtn.onclick = () => {
-          if (currentSentenceIdx < sentences.length - 1) {
-            stopAudio();
-            currentSentenceIdx++;
-            showAnswer = false;
-            renderWorkspace();
-          }
-        };
-      }
 
       // Mobile Drawer Sidebar
       const toggleSidebarBtn = host.querySelector("#btnDictToggleSidebar");
@@ -6488,7 +7188,7 @@ function initSpeakingPage() {
         const russianCategory = `ГОВОРЕНИЕ · ${s.level}`;
 
         return `
-          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-speak-id="${s.id}">
+          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-speak-id="${s.id}">
             <div class="dau-card-header">
               <div class="dau-card-icon" style="background:rgba(234,88,12,0.08);color:#ea580c">
                 ${window.RusiIcons ? RusiIcons.get(s.icon || "mic-speaking", { size: 24 }) : ""}
@@ -6502,9 +7202,7 @@ function initSpeakingPage() {
                     </span>
                   ` : isPro ? `
                     <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
-                  ` : `
-                    <span class="topic-status topic-status-level" style="flex-shrink:0">${s.level}</span>
-                  `}
+                  ` : ""}
                 </div>
                 <div class="dau-card-subinfo">
                   <span>${s.level}</span>
@@ -6516,12 +7214,18 @@ function initSpeakingPage() {
 
             <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
               <div class="topic-footer-actions">
-                <button type="button" class="btn-speak-action topic-text-btn" data-speak-id="${s.id}" title="Luyện nói ngay">
-                  ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 14 }) : ""} Luyện nói ngay
-                </button>
-                <button type="button" class="topic-circle-btn btn-speak-circle" data-speak-id="${s.id}" title="Luyện nói ngay" aria-label="Luyện nói ngay">
-                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
-                </button>
+                ${isPro && !isUnlocked ? `
+                  <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
+                    ${window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : ""}
+                  </span>
+                ` : `
+                  <button type="button" class="btn-speak-action topic-text-btn" data-speak-id="${s.id}" title="Luyện nói ngay">
+                    ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 14 }) : ""} Luyện nói ngay
+                  </button>
+                  <button type="button" class="topic-circle-btn btn-speak-circle" data-speak-id="${s.id}" title="Luyện nói ngay" aria-label="Luyện nói ngay">
+                    ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : ""}
+                  </button>
+                `}
               </div>
             </div>
           </article>
@@ -7364,7 +8068,7 @@ function initWritingPageLegacy() {
         const russianCategory = `ПИСЬМО · ${t.level}`;
 
         return `
-          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-write-id="${t.id}">
+          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-write-id="${t.id}">
             <div class="dau-card-header">
               <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
                 ${window.RusiIcons ? RusiIcons.get(t.icon || "pen-tool", { size: 24 }) : ""}
@@ -7378,9 +8082,7 @@ function initWritingPageLegacy() {
                     </span>
                   ` : isPro ? `
                     <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
-                  ` : `
-                    <span class="topic-status topic-status-level" style="flex-shrink:0">${t.level}</span>
-                  `}
+                  ` : ""}
                 </div>
                 <div class="dau-card-subinfo">
                   <span>${t.level}</span>
@@ -7392,12 +8094,18 @@ function initWritingPageLegacy() {
 
             <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
               <div class="topic-footer-actions">
-                <button type="button" class="btn-write-action topic-text-btn" data-write-id="${t.id}" title="Bắt đầu viết">
-                  ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 14 }) : ""} Bắt đầu viết
-                </button>
-                <button type="button" class="topic-circle-btn btn-write-circle" data-write-id="${t.id}" title="Bắt đầu viết" aria-label="Bắt đầu viết">
-                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : "") : (window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "")}
-                </button>
+                ${isPro && !isUnlocked ? `
+                  <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
+                    ${window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : ""}
+                  </span>
+                ` : `
+                  <button type="button" class="btn-write-action topic-text-btn" data-write-id="${t.id}" title="Bắt đầu viết">
+                    ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 14 }) : ""} Bắt đầu viết
+                  </button>
+                  <button type="button" class="topic-circle-btn btn-write-circle" data-write-id="${t.id}" title="Bắt đầu viết" aria-label="Bắt đầu viết">
+                    ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : ""}
+                  </button>
+                `}
               </div>
             </div>
           </article>
@@ -8006,7 +8714,7 @@ function initWritingPage() {
 
       return `
         <!-- GIAO DIỆN THẺ TỐI GIẢN CHUẨN MỚI .dau-card-compact (Đồng bộ từ vựng, dùng 100% SVG RusiIcons) -->
-        <article class="dau-card dau-card-compact writing-topic-card ${isAllDone ? 'topic-completed' : ''} ${pro ? 'topic-pro' : ''}" data-topic="${esc(topic.key)}" tabindex="0">
+        <article class="dau-card dau-card-compact writing-topic-card ${isAllDone ? 'topic-completed' : ''} ${pro ? 'topic-pro' : ''} ${pro && !isUnlocked ? 'topic-locked' : ''}" data-topic="${esc(topic.key)}" tabindex="0">
           <div class="dau-card-header">
             <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
               ${iconSvg}
@@ -8036,12 +8744,18 @@ function initWritingPage() {
 
           <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
             <div class="topic-footer-actions">
-              <button type="button" class="btn-write-action topic-text-btn" data-topic="${esc(topic.key)}" title="${actionLabel}">
-                ${icon("pen-tool", 14)} ${actionLabel}
-              </button>
-              <button type="button" class="topic-circle-btn" data-topic="${esc(topic.key)}" title="${actionLabel}" aria-label="${actionLabel}">
-                ${pro && !isUnlocked ? (icon("lock-pro", 16) || icon("lock", 16)) : icon("arrow-right", 16)}
-              </button>
+              ${pro && !isUnlocked ? `
+                <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
+                  ${icon("lock-pro", 16) || icon("lock", 16)}
+                </span>
+              ` : `
+                <button type="button" class="btn-write-action topic-text-btn" data-topic="${esc(topic.key)}" title="${actionLabel}">
+                  ${icon("pen-tool", 14)} ${actionLabel}
+                </button>
+                <button type="button" class="topic-circle-btn" data-topic="${esc(topic.key)}" title="${actionLabel}" aria-label="${actionLabel}">
+                  ${icon("arrow-right", 16)}
+                </button>
+              `}
             </div>
           </div>
         </article>
@@ -8207,7 +8921,7 @@ function initWritingPage() {
 
                 <div class="writing-prompt-box">
                   <div class="writing-prompt-copy">
-                    <span class="writing-section-label">ĐỀ BÀI MIÊU TẢ TRANH</span>
+                    <span class="writing-section-label">Đề bài</span>
                     <p class="ru">${esc(t.prompt || "")}</p>
                     ${t.vi ? `<p>${esc(t.vi)}</p>` : ""}
                   </div>
@@ -8215,8 +8929,7 @@ function initWritingPage() {
                 <!-- DẠNG LUYỆN DỊCH: BỎ ẢNH, HIỂN THỊ ĐOẠN VĂN TIẾNG NGA CẦN DỊCH -->
                 <div class="writing-translation-card">
                   <div class="writing-translation-head">
-                    <span class="writing-section-label">${icon("book-open-blog", 16)} ĐỀ BÀI (ĐOẠN VĂN TIẾNG NGA CẦN DỊCH)</span>
-                    <span class="writing-badge-lang">RU → VI</span>
+                    <span class="writing-section-label">${icon("book-open-blog", 16)} Đề bài</span>
                   </div>
                   <div class="writing-translation-passage ru">${esc(t.prompt || "")}</div>
                   ${t.vi ? `<div class="writing-translation-hint">${icon("help-circle", 15)} <span><strong>Gợi ý ngữ cảnh:</strong> ${esc(t.vi)}</span></div>` : ""}
@@ -8256,9 +8969,14 @@ function initWritingPage() {
 
               <div class="writing-primary-actions">
                 <button type="button" class="btn btn-primary btn-submit">
-                  ${icon("bot-rusika", 17)} Chấm điểm bài viết
+                  ${icon("bot-rusika", 17)} Nhận xét
                 </button>
-                <button type="button" class="btn btn-outline btn-model">${icon("eye", 17)} Xem bài mẫu</button>
+                <button type="button" class="btn btn-outline btn-model">${icon("eye", 17)} Bài mẫu</button>
+                ${words.length ? `
+                  <button type="button" class="btn btn-outline btn-writing-vocab" id="btnWritingVocabToggle" title="Xem từ vựng gợi ý">
+                    ${icon("archive-jar", 17)} Từ vựng (${words.length})
+                  </button>
+                ` : ""}
               </div>
 
               <div class="ai-score-box hidden"></div>
@@ -8268,15 +8986,20 @@ function initWritingPage() {
               </div>
 
               ${words.length ? `
-                <section class="writing-vocab-section">
-                  <button type="button" class="writing-vocab-toggle open" id="writingVocabToggle" aria-expanded="true">
-                    <span>
-                      <span class="writing-vocab-icon">${icon("archive-jar", 20)}</span>
-                      <span><strong>Từ vựng gợi ý &amp; Lọ từ vựng</strong><small>${words.length} từ vựng bài tập này</small></span>
-                    </span>
-                    <span class="writing-vocab-chevron">${icon("chevron-down", 18)}</span>
-                  </button>
-                  <div class="dau-vocab-list-wrap" id="writingVocabList" style="padding: 0 14px 14px; margin-top: 0;">
+                <div class="writing-vocab-popover-card hidden" id="writingVocabDropdownBox">
+                  <div class="writing-vocab-pop-header">
+                    <div class="pomo-pop-title-wrap">
+                      <span class="pomo-pop-title-dot" style="background:var(--primary)"></span>
+                      <span class="writing-vocab-pop-title">Từ vựng gợi ý &amp; Lọ từ vựng</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                      <span class="writing-vocab-count-badge">${words.length} từ</span>
+                      <button type="button" class="pomo-pop-icon-btn" id="btnCloseWritingVocab" title="Đóng danh sách" aria-label="Đóng danh sách">
+                        ${icon("x", 14)}
+                      </button>
+                    </div>
+                  </div>
+                  <div class="dau-vocab-list-wrap" id="writingVocabList" style="margin-top: 0;">
                     ${words.map((word, idx) => {
                       const wordRu = typeof word === "object" && word !== null ? (word.ru || word.word || "") : String(word);
                       const wordVi = getWordVi(word);
@@ -8304,7 +9027,7 @@ function initWritingPage() {
                       `;
                     }).join("")}
                   </div>
-                </section>
+                </div>
               ` : ""}
             </section>
           </div>
@@ -8376,19 +9099,23 @@ function initWritingPage() {
       };
       updateCount();
 
-      const vocabToggle = panel.querySelector("#writingVocabToggle");
-      const vocabList = panel.querySelector("#writingVocabList");
-      const revealVocab = () => {
-        if (!vocabList || !vocabToggle) return;
-        vocabList.classList.remove("hidden");
-        vocabToggle.classList.add("open");
-        vocabToggle.setAttribute("aria-expanded", "true");
-      };
-      if (vocabToggle && vocabList) {
-        vocabToggle.onclick = () => {
-          const isClosed = vocabList.classList.toggle("hidden");
-          vocabToggle.classList.toggle("open", !isClosed);
-          vocabToggle.setAttribute("aria-expanded", isClosed ? "false" : "true");
+      const vocabBtn = panel.querySelector("#btnWritingVocabToggle");
+      const vocabBox = panel.querySelector("#writingVocabDropdownBox");
+      const btnCloseVocab = panel.querySelector("#btnCloseWritingVocab");
+
+      if (vocabBtn && vocabBox) {
+        vocabBtn.onclick = () => {
+          const isHidden = vocabBox.classList.toggle("hidden");
+          vocabBtn.classList.toggle("active", !isHidden);
+          if (!isHidden) {
+            vocabBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        };
+      }
+      if (btnCloseVocab && vocabBox) {
+        btnCloseVocab.onclick = () => {
+          vocabBox.classList.add("hidden");
+          if (vocabBtn) vocabBtn.classList.remove("active");
         };
       }
       panel.querySelectorAll(".writing-vocab-speak").forEach((button) => {
@@ -8499,6 +9226,7 @@ function initMockTestPage() {
 
   let currentTest = bank[0] || null;
   let activePartId = null; // null = thi full toan bo de; hoac "gram", "reading", "listening"
+  let examMode = "exam"; // "exam" (Luyện thi) | "practice" (Luyện tập)
   let answers = {};
   let flagged = {};
   let timeLeft = 0;
@@ -8541,7 +9269,11 @@ function initMockTestPage() {
     }
 
     const totalQ = test.parts ? test.parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0) : 34;
+    let currentModalMode = "exam"; // "exam" (Luyện thi) | "practice" (Luyện tập)
+    const allPartIds = (test.parts || []).map(p => p.id);
+    let selectedPartIds = new Set(allPartIds); // Mặc định chọn tất cả các Part (Full Test)
 
+    // Khởi tạo HTML 1 lần duy nhất để không bị tải lại hoặc giật lag khi click
     modal.innerHTML = `
       <div class="trki-modal-card">
         <button type="button" class="trki-modal-close" id="btnCloseSubtestModal" title="Đóng cửa sổ" aria-label="Đóng cửa sổ">
@@ -8549,57 +9281,150 @@ function initMockTestPage() {
         </button>
 
         <div class="trki-modal-header">
-          <div class="trki-modal-badges">
-            <span class="topic-status topic-status-level">${test.level}</span>
-            <span class="trki-modal-badge-info">5 Phân Môn Chuẩn Quốc Tế</span>
-          </div>
           <h3 class="trki-modal-title">${esc(test.title)}</h3>
-          <div class="trki-modal-desc">Chọn hình thức làm bài phù hợp với mục tiêu ôn luyện của bạn:</div>
         </div>
 
-        <!-- HERO OPTION: THI TOÀN DIỆN (FULL SIMULATION) -->
-        <div class="trki-modal-full-hero">
-          <div class="trki-modal-full-left">
-            <div class="trki-modal-full-tag">
-              <span class="trki-modal-full-tag-dot"></span>
-              <span>MÔ PHỎNG THI THẬT</span>
-            </div>
-            <div class="trki-modal-full-title">Thi Toàn Diện (Full Exam)</div>
-            <div class="trki-modal-full-desc">Làm trọn bộ tất cả các phần (${totalQ} câu · ${test.durationMin || 45} phút) có tính giờ và giám sát theo quy chuẩn khảo thí.</div>
-          </div>
-          <button type="button" class="btn btn-primary btn-sm btn-modal-start-full">
-            Bắt đầu thi Full →
+        <!-- 2 HÌNH THỨC: LUYỆN THI VÀ LUYỆN TẬP -->
+        <div class="trki-modal-tabs" role="tablist">
+          <button type="button" class="trki-modal-tab active" data-mode="exam" role="tab" aria-selected="true">
+            ${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 16 }) : ""} Luyện thi
+          </button>
+          <button type="button" class="trki-modal-tab" data-mode="practice" role="tab" aria-selected="false">
+            ${window.RusiIcons ? RusiIcons.get("target", { size: 16 }) : ""} Luyện tập
           </button>
         </div>
 
-        <!-- MODULAR SUBTESTS LIST -->
-        <div class="trki-modal-parts-heading">Hoặc chọn từng phân môn để luyện tập tập trung:</div>
-        <div class="trki-modal-parts-list">
-          ${(test.parts || []).map((p, pIdx) => {
+        <!-- LỰA CHỌN PHẦN THI / LUYỆN TẬP (HỖ TRỢ CHỌN NHIỀU PART BẤT KỲ) -->
+        <div class="trki-choice-list">
+          <!-- 1. FULL TEST / CHỌN TẤT CẢ CÁC 5 PART -->
+          <div class="trki-choice-item selected" id="btnChoiceAllParts" data-part-id="all">
+            <div class="trki-choice-checkbox">
+              ${window.RusiIcons ? RusiIcons.get("check", { size: 12, strokeWidth: 2.5 }) : "<span>✓</span>"}
+            </div>
+            <div class="trki-choice-content">
+              <div class="trki-choice-row">
+                <span class="trki-choice-title" id="trkiAllPartsTitle">Full Test</span>
+                <span class="trki-choice-meta-pill">${test.durationMin || 45}p · ${totalQ} câu</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. CÁC PHÂN MÔN (THEO PART) -->
+          ${(test.parts || []).map((p) => {
             const pDur = p.durationMin || (p.id === 'gram' ? 25 : p.id === 'reading' ? 15 : p.id === 'writing' ? 25 : p.id === 'speaking' ? 15 : 10);
-            const pIcon = p.id === 'reading' ? 'book-open' : p.id === 'listening' ? 'headphones' : p.id === 'writing' ? 'pen-tool' : p.id === 'speaking' ? 'mic-speaking' : 'award-badge';
             const pCount = p.questions ? p.questions.length : p.writing_tasks ? p.writing_tasks.length : p.speaking_tasks ? p.speaking_tasks.length : 1;
             const pLabel = p.writing_tasks ? `${pCount} bài viết` : p.speaking_tasks ? `${pCount} tình huống` : `${pCount} câu`;
             return `
-              <div class="trki-part-item" data-part-id="${p.id}">
-                <div class="trki-part-info">
-                  <div class="trki-part-icon trki-part-icon--${p.id || 'general'}">
-                    ${window.RusiIcons ? RusiIcons.get(pIcon, { size: 18 }) : ""}
-                  </div>
-                  <div class="trki-part-text">
-                    <div class="trki-part-name">${esc(p.name)}</div>
-                    <div class="trki-part-meta">${esc(p.vi)} · <b>${pLabel}</b> (${pDur} phút)</div>
+              <div class="trki-choice-item selected" data-part-id="${p.id}">
+                <div class="trki-choice-checkbox">
+                  ${window.RusiIcons ? RusiIcons.get("check", { size: 12, strokeWidth: 2.5 }) : "<span>✓</span>"}
+                </div>
+                <div class="trki-choice-content">
+                  <div class="trki-choice-row">
+                    <span class="trki-choice-title">${esc(p.name)}</span>
+                    <span class="trki-choice-meta-pill">${pDur}p · ${pLabel}</span>
                   </div>
                 </div>
-                <button type="button" class="btn btn-modal-start-part" data-part-id="${p.id}">
-                  Luyện phần này →
-                </button>
               </div>
             `;
           }).join("")}
         </div>
+
+        <!-- NÚT BẮT ĐẦU VỚI SỐ LƯỢNG PART ĐÃ CHỌN -->
+        <div class="trki-modal-actions">
+          <button type="button" class="trki-modal-btn-start" id="btnStartTrkiAction">
+            Bắt đầu (${selectedPartIds.size} Part) →
+          </button>
+        </div>
       </div>
     `;
+
+    // Cập nhật giao diện in-place (không render lại DOM để tránh giật lag)
+    const updateModalState = () => {
+      const isAllSelected = allPartIds.length > 0 && selectedPartIds.size === allPartIds.length;
+      const selectedCount = selectedPartIds.size;
+
+      const choiceAll = modal.querySelector("#btnChoiceAllParts");
+      if (choiceAll) {
+        choiceAll.classList.toggle("selected", isAllSelected);
+      }
+
+      modal.querySelectorAll(".trki-choice-item[data-part-id]:not(#btnChoiceAllParts)").forEach(item => {
+        const pId = item.dataset.partId;
+        item.classList.toggle("selected", selectedPartIds.has(pId));
+      });
+
+      const allPartsTitle = modal.querySelector("#trkiAllPartsTitle");
+      if (allPartsTitle) {
+        allPartsTitle.textContent = (currentModalMode === "exam") ? "Full Test" : "Chọn tất cả các 5 Part";
+      }
+
+      modal.querySelectorAll(".trki-modal-tab").forEach(tab => {
+        const active = tab.dataset.mode === currentModalMode;
+        tab.classList.toggle("active", active);
+        tab.setAttribute("aria-selected", active ? "true" : "false");
+      });
+
+      const btnStart = modal.querySelector("#btnStartTrkiAction");
+      if (btnStart) {
+        btnStart.disabled = (selectedCount === 0);
+        btnStart.textContent = (selectedCount === 0)
+          ? "Bắt đầu (Chọn ít nhất 1 Part) →"
+          : `Bắt đầu (${selectedCount} Part) →`;
+      }
+    };
+
+    const btnClose = modal.querySelector("#btnCloseSubtestModal");
+    if (btnClose) btnClose.onclick = () => closeModal();
+
+    // Chuyển tab Luyện thi / Luyện tập
+    modal.querySelectorAll(".trki-modal-tab").forEach(tab => {
+      tab.onclick = () => {
+        const mode = tab.dataset.mode;
+        if (mode !== currentModalMode) {
+          currentModalMode = mode;
+          updateModalState();
+        }
+      };
+    });
+
+    // Chọn / Bỏ chọn tất cả các Part
+    const choiceAll = modal.querySelector("#btnChoiceAllParts");
+    if (choiceAll) {
+      choiceAll.onclick = () => {
+        if (selectedPartIds.size === allPartIds.length) {
+          selectedPartIds.clear();
+        } else {
+          selectedPartIds = new Set(allPartIds);
+        }
+        updateModalState();
+      };
+    }
+
+    // Chọn / Bỏ chọn từng Part riêng lẻ
+    modal.querySelectorAll(".trki-choice-item[data-part-id]:not(#btnChoiceAllParts)").forEach(item => {
+      item.onclick = () => {
+        const pId = item.dataset.partId;
+        if (selectedPartIds.has(pId)) {
+          selectedPartIds.delete(pId);
+        } else {
+          selectedPartIds.add(pId);
+        }
+        updateModalState();
+      };
+    });
+
+    // Nút bắt đầu hành động
+    const btnStart = modal.querySelector("#btnStartTrkiAction");
+    if (btnStart) {
+      btnStart.onclick = () => {
+        if (selectedPartIds.size === 0) return;
+        closeModal();
+        const selectedList = Array.from(selectedPartIds);
+        const partParam = (selectedList.length === allPartIds.length) ? null : selectedList;
+        startTest(test, partParam, currentModalMode);
+      };
+    }
 
     const onKeyDown = (e) => {
       if (e.key === "Escape") closeModal();
@@ -8616,34 +9441,6 @@ function initMockTestPage() {
     modal.onclick = (e) => {
       if (e.target === modal) closeModal();
     };
-    const btnClose = modal.querySelector("#btnCloseSubtestModal");
-    if (btnClose) btnClose.onclick = closeModal;
-
-    const btnStartFull = modal.querySelector(".btn-modal-start-full");
-    if (btnStartFull) {
-      btnStartFull.onclick = () => {
-        closeModal();
-        startTest(test, null);
-      };
-    }
-
-    modal.querySelectorAll(".btn-modal-start-part").forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const pId = btn.dataset.partId;
-        closeModal();
-        startTest(test, pId);
-      };
-    });
-
-    modal.querySelectorAll(".trki-part-item").forEach(item => {
-      item.onclick = () => {
-        const pId = item.dataset.partId;
-        if (!pId) return;
-        closeModal();
-        startTest(test, pId);
-      };
-    });
   };
 
   const renderTrkiCards = () => {
@@ -8683,10 +9480,10 @@ function initMockTestPage() {
 
     if (filtered.length === 0) {
       gridHost.innerHTML = `
-        <div class="topic-empty-state" style="grid-column:1/-1;text-align:center;padding:48px 24px;background:rgba(255,255,255,0.04);border:1px dashed rgba(255,255,255,0.18);border-radius:20px;color:#fff">
-          <div style="margin-bottom:12px;color:#8dbcef">${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 48 }) : ""}</div>
-          <h3 style="margin:0 0 8px;color:#fff;font-size:1.2rem">Chưa có đề thi cho cấp độ này</h3>
-          <p style="color:#8094a9;font-size:0.9rem;margin:0">Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
+        <div class="writing-empty-state trki-empty-state topic-empty-state">
+          <span class="writing-empty-icon trki-empty-icon">${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 34 }) : ""}</span>
+          <h3>Chưa có đề thi cho cấp độ này</h3>
+          <p>Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
         </div>
       `;
     } else {
@@ -8698,9 +9495,9 @@ function initMockTestPage() {
         const durMin = Math.round((t.durationSeconds || (t.durationMin ? t.durationMin * 60 : 2700)) / 60);
 
         return `
-          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''}" data-trki-id="${t.id}" style="cursor:pointer">
+          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-trki-id="${t.id}" tabindex="0">
             <div class="dau-card-header">
-              <div class="dau-card-icon" style="background:rgba(197,34,51,0.08);color:var(--russia-red)">
+              <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
                 ${window.RusiIcons ? RusiIcons.get(t.icon || "award-badge", { size: 24 }) : ""}
               </div>
               <div class="dau-card-header-main">
@@ -8708,59 +9505,47 @@ function initMockTestPage() {
                   const cleanTitle = (t.title || "").replace(/\s*\([^)]*\)/g, "").trim();
                   return `
                     <div class="dau-card-title-row">
-                      <h3 class="dau-card-ru">${esc(cleanTitle)}</h3>
+                      <h3 class="dau-card-ru" title="${esc(cleanTitle)}">${esc(cleanTitle)}</h3>
                       ${isDone ? `
                         <span class="topic-status topic-status-completed" style="flex-shrink:0">
                           ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
                         </span>
                       ` : isPro ? `
                         <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
-                      ` : `
-                        <span class="topic-status topic-status-level" style="flex-shrink:0">${t.level}</span>
-                      `}
+                      ` : ""}
                     </div>
                     <div class="dau-card-subinfo">
-                      <span class="dau-card-count">${qCount} câu hỏi</span>
+                      <span>${t.level}</span>
                       <span class="dau-card-sep">•</span>
-                      <span>${durMin} phút</span>
+                      <span class="dau-card-count">${qCount} câu hỏi · ${durMin} phút</span>
                     </div>
                   `;
                 })()}
               </div>
             </div>
 
-            <div class="dau-card-footer topic-footer trki-card-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
+            <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
               <div class="topic-footer-actions">
-                <button type="button" class="btn-trki-parts topic-text-btn" data-trki-id="${t.id}" title="Chọn từng phần để luyện tập">
-                  ${window.RusiIcons ? RusiIcons.get("flashcards-layers", { size: 14 }) : ""} Chọn phần ▾
-                </button>
-                <button type="button" class="btn-trki-full topic-text-btn topic-text-btn-primary" data-trki-id="${t.id}" title="Vào thi toàn diện cả 5 phần">
-                  ${isPro && !isUnlocked ? (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 13 }) : "") : ""} Vào thi Full →
-                </button>
+                ${isPro && !isUnlocked ? `
+                  <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
+                    ${window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : ""}
+                  </span>
+                ` : `
+                  <button type="button" class="btn-trki-action topic-text-btn" data-trki-id="${t.id}" title="Vào thi ngay">
+                    ${window.RusiIcons ? RusiIcons.get(t.icon || "award-badge", { size: 14 }) : ""} Vào thi ngay
+                  </button>
+                  <button type="button" class="topic-circle-btn btn-trki-circle" data-trki-id="${t.id}" title="Vào thi ngay" aria-label="Vào thi ngay">
+                    ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : ""}
+                  </button>
+                `}
               </div>
             </div>
           </article>
         `;
       }).join("");
 
-      // Action: Click "Vào thi Full"
-      gridHost.querySelectorAll(".btn-trki-full").forEach(btn => {
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          const id = btn.dataset.trkiId;
-          const test = bank.find(x => x.id === id);
-          if (!test) return;
-          const isPro = test.is_pro_only || test.level === "B1" || test.level === "B2";
-          if (isPro && !Monetization.isPro()) {
-            Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
-            return;
-          }
-          startTest(test, null);
-        };
-      });
-
-      // Action: Click "Chọn phần luyện ▾"
-      gridHost.querySelectorAll(".btn-trki-parts").forEach(btn => {
+      // Action: Click "Vào thi ngay" or circle button opens Subtest Picker Modal
+      gridHost.querySelectorAll(".btn-trki-action, .btn-trki-circle").forEach(btn => {
         btn.onclick = (e) => {
           e.stopPropagation();
           const id = btn.dataset.trkiId;
@@ -8881,9 +9666,23 @@ function initMockTestPage() {
     renderTrkiCards();
   };
 
-  const startTest = (test = null, partId = null) => {
+  const getExamPartList = () => {
+    if (!activePartId || activePartId === "full") return null;
+    if (Array.isArray(activePartId)) return activePartId;
+    if (typeof activePartId === "string") return activePartId.split(",");
+    return null;
+  };
+
+  const getExamStorageKey = () => {
+    const list = getExamPartList();
+    const pKey = list ? list.join("-") : "full";
+    return "trki_exam_" + currentTest.id + "_" + pKey + "_" + examMode;
+  };
+
+  const startTest = (test = null, partId = null, mode = "exam") => {
     if (test) currentTest = test;
     activePartId = partId;
+    examMode = mode || "exam";
 
     document.body.classList.add("in-workspace");
     started = true;
@@ -8892,16 +9691,22 @@ function initMockTestPage() {
     const modal = document.getElementById("trkiSubtestModal");
     if (modal) modal.remove();
 
-    const storageKey = "trki_exam_" + currentTest.id + "_" + (activePartId || "full");
+    const selectedPartList = getExamPartList();
+    const isSubset = Boolean(selectedPartList && selectedPartList.length > 0 && selectedPartList.length < (currentTest.parts || []).length);
+    const storageKey = getExamStorageKey();
+
     try {
       sessionStorage.setItem("trki_active_exam_id", currentTest.id);
-      sessionStorage.setItem("trki_active_part_id", activePartId || "full");
+      sessionStorage.setItem("trki_active_part_id", isSubset ? selectedPartList.join(",") : "full");
+      sessionStorage.setItem("trki_exam_mode", examMode);
     } catch(e) {}
 
     // Xác định các phần sẽ làm
-    const activeParts = activePartId ? (currentTest.parts || []).filter(p => p.id === activePartId) : (currentTest.parts || []);
-    const examDurationMin = activePartId
-      ? (activeParts[0] && activeParts[0].durationMin ? activeParts[0].durationMin : 20)
+    const activeParts = isSubset
+      ? (currentTest.parts || []).filter(p => selectedPartList.includes(p.id))
+      : (currentTest.parts || []);
+    const examDurationMin = isSubset
+      ? activeParts.reduce((acc, p) => acc + (p.durationMin || 15), 0)
       : (currentTest.durationMin || 45);
 
     // Đồng hồ Timestamp chống reload
@@ -8934,34 +9739,42 @@ function initMockTestPage() {
 
     renderTestRoom();
 
-    visibilityHandler = () => {
-      if (!started) return;
-      if (document.hidden) {
-        tabSwitches++;
-        showAntiCheatAlert();
-      }
-    };
-    document.addEventListener("visibilitychange", visibilityHandler);
+    if (visibilityHandler) {
+      document.removeEventListener("visibilitychange", visibilityHandler);
+      visibilityHandler = null;
+    }
+    if (examMode === "exam") {
+      visibilityHandler = () => {
+        if (!started) return;
+        if (document.hidden) {
+          tabSwitches++;
+          showAntiCheatAlert();
+        }
+      };
+      document.addEventListener("visibilitychange", visibilityHandler);
+    }
 
     if (timer) clearInterval(timer);
-    timer = setInterval(() => {
-      const remainingMs = storedEndTime - Date.now();
-      timeLeft = Math.max(0, Math.floor(remainingMs / 1000));
-      const t = el("#timerVal");
-      if (t) {
-        t.textContent = fmt(timeLeft);
-        t.classList.toggle("warn", timeLeft < 300);
-      }
-      const tSidebar = el("#timerValSidebar");
-      if (tSidebar) {
-        tSidebar.textContent = fmt(timeLeft);
-      }
-      if (timeLeft <= 0) {
-        clearInterval(timer);
-        toast("Hết thời gian làm bài! Đang nộp bài...");
-        submit();
-      }
-    }, 1000);
+    if (examMode === "exam") {
+      timer = setInterval(() => {
+        const remainingMs = storedEndTime - Date.now();
+        timeLeft = Math.max(0, Math.floor(remainingMs / 1000));
+        const t = el("#timerVal");
+        if (t) {
+          t.textContent = fmt(timeLeft);
+          t.classList.toggle("warn", timeLeft < 300);
+        }
+        const tSidebar = el("#timerValSidebar");
+        if (tSidebar) {
+          tSidebar.textContent = fmt(timeLeft);
+        }
+        if (timeLeft <= 0) {
+          clearInterval(timer);
+          toast("Hết thời gian làm bài! Đang nộp bài...");
+          submit();
+        }
+      }, 1000);
+    }
   };
 
   const showAntiCheatAlert = () => {
@@ -9004,16 +9817,69 @@ function initMockTestPage() {
       return;
     }
 
-    const activeParts = activePartId
-      ? currentTest.parts.filter(p => p.id === activePartId)
+    const isPractice = (examMode === "practice");
+    const selectedPartList = getExamPartList();
+    const isSubset = Boolean(selectedPartList && selectedPartList.length > 0 && selectedPartList.length < (currentTest.parts || []).length);
+
+    const activeParts = isSubset
+      ? currentTest.parts.filter(p => selectedPartList.includes(p.id))
       : currentTest.parts;
 
     const totalQuestions = activeParts.reduce((acc, p) => acc + ((p && p.questions) ? p.questions.length : 0), 0);
     const totalAnswered = Object.keys(answers).length;
 
-    const roomTitle = activePartId
-      ? `${esc(currentTest.title)} · ${esc(activeParts[0] ? activeParts[0].vi : "")}`
-      : `${esc(currentTest.title)} (Thi Toàn Diện)`;
+    const roomTitle = isSubset
+      ? `${esc(currentTest.title)} · ${esc(activeParts.map(p => p.name || p.vi).join(", "))} ${isPractice ? "(Luyện Tập)" : ""}`
+      : `${esc(currentTest.title)} ${isPractice ? "(Luyện Tập)" : "(Full Test)"}`;
+
+    const renderQuestionBlock = (q, qi, part) => {
+      const id = part.id + "_" + qi;
+      const isFlag = !!flagged[id];
+      const userAns = answers[id];
+      const hasAnswered = (userAns !== undefined);
+      const isCorrect = hasAnswered && (userAns === q.a);
+
+      return `
+        <div class="quiz-q" id="qBox_${id}">
+          <div class="quiz-q-header">
+            <span class="quiz-q-num">Câu ${qi + 1} / ${part.questions.length}</span>
+            <button type="button" class="btn-flag-q ${isFlag ? 'is-flagged' : ''}" data-id="${id}">
+              ${window.RusiIcons ? RusiIcons.get("flag", { size: 13 }) : ""} <span>${isFlag ? "Đã đặt cờ" : "Đặt cờ"}</span>
+            </button>
+          </div>
+          <p class="q-text"><span class="ru">${esc(q.q)}</span></p>
+          <div class="options">
+            ${q.options.map((opt, oi) => {
+              let optClass = "option ru";
+              if (isPractice && hasAnswered) {
+                if (oi === q.a) optClass += " correct";
+                else if (oi === userAns && !isCorrect) optClass += " wrong";
+              } else if (userAns === oi) {
+                optClass += " selected";
+              }
+              return `
+                <button type="button" class="${optClass}" data-id="${id}" data-oi="${oi}">
+                  ${esc(opt)}
+                </button>
+              `;
+            }).join("")}
+          </div>
+          ${isPractice && hasAnswered ? `
+            <div class="trki-practice-feedback ${isCorrect ? 'is-correct' : 'is-wrong'}" id="feedback_${id}">
+              <div class="feedback-badge-row">
+                <span class="feedback-badge ${isCorrect ? 'badge-correct' : 'badge-wrong'}">
+                  ${isCorrect ? '✓ Đúng' : '✕ Sai'}
+                </span>
+                ${!isCorrect ? `<span class="feedback-correct-answer">Đáp án đúng: <b class="ru" style="color:var(--green)">${esc(q.options[q.a])}</b></span>` : ''}
+              </div>
+              <div class="feedback-ex">
+                <b>Giải thích:</b> ${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    };
 
     let html = `
       <!-- STICKY TOP BACK BAR WITH TIMER -->
@@ -9023,12 +9889,19 @@ function initMockTestPage() {
         </button>
         <div class="dau-workspace-info">
           <span class="dau-workspace-title">${roomTitle}</span>
+          ${isPractice ? `<span class="topic-status topic-status-level" style="margin-left:8px;font-size:10px">Luyện tập</span>` : ''}
         </div>
         <div class="dau-workspace-controls" style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0">
-          <div class="dau-exam-timer" style="font-weight:700;font-size:1.05rem;color:var(--secondary);display:inline-flex;align-items:center;gap:4px">
-            ${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 16 }) : ""} <span id="timerVal">${fmt(timeLeft)}</span>
-          </div>
-          <button class="btn btn-primary btn-sm dau-top-btn" id="btnSubmitTop" style="background:var(--secondary);border-color:var(--secondary)" title="Nộp bài thi">${window.RusiIcons ? RusiIcons.get("check-circle", { size: 15 }) : ""} <span class="btn-text">Nộp bài thi</span></button>
+          ${isPractice ? `
+            <div class="dau-exam-timer" style="font-weight:700;font-size:0.92rem;color:var(--primary);display:inline-flex;align-items:center;gap:5px">
+              ${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 15 }) : ""} <span>Luyện tập tự do</span>
+            </div>
+          ` : `
+            <div class="dau-exam-timer" style="font-weight:700;font-size:1.05rem;color:var(--secondary);display:inline-flex;align-items:center;gap:4px">
+              ${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 16 }) : ""} <span id="timerVal">${fmt(timeLeft)}</span>
+            </div>
+          `}
+          <button class="btn btn-primary btn-sm dau-top-btn" id="btnSubmitTop" style="background:var(--secondary);border-color:var(--secondary)" title="${isPractice ? 'Hoàn thành bài luyện' : 'Nộp bài thi'}">${window.RusiIcons ? RusiIcons.get("check-circle", { size: 15 }) : ""} <span class="btn-text">${isPractice ? 'Hoàn thành' : 'Nộp bài thi'}</span></button>
         </div>
       </div>
 
@@ -9066,30 +9939,7 @@ function initMockTestPage() {
               </div>
             </div>
             <div class="cbt-pane-questions">
-        `;
-        part.questions.forEach((q, qi) => {
-          const id = part.id + "_" + qi;
-          const isFlag = !!flagged[id];
-          html += `
-            <div class="quiz-q" id="qBox_${id}">
-              <div class="quiz-q-header">
-                <span class="quiz-q-num">Câu ${qi + 1} / ${part.questions.length}</span>
-                <button type="button" class="btn-flag-q ${isFlag ? 'is-flagged' : ''}" data-id="${id}">
-                  ${window.RusiIcons ? RusiIcons.get("flag", { size: 13 }) : ""} <span>${isFlag ? "Đã đặt cờ" : "Đặt cờ"}</span>
-                </button>
-              </div>
-              <p class="q-text"><span class="ru">${esc(q.q)}</span></p>
-              <div class="options">
-                ${q.options.map((opt, oi) => `
-                  <button type="button" class="option ru ${answers[id] === oi ? "selected" : ""}" data-id="${id}" data-oi="${oi}">
-                    ${esc(opt)}
-                  </button>
-                `).join("")}
-              </div>
-            </div>
-          `;
-        });
-        html += `
+              ${part.questions.map((q, qi) => renderQuestionBlock(q, qi, part)).join("")}
             </div>
           </div>
         `;
@@ -9115,30 +9965,7 @@ function initMockTestPage() {
               </div>
             </div>
             <div class="cbt-pane-questions">
-        `;
-        part.questions.forEach((q, qi) => {
-          const id = part.id + "_" + qi;
-          const isFlag = !!flagged[id];
-          html += `
-            <div class="quiz-q" id="qBox_${id}">
-              <div class="quiz-q-header">
-                <span class="quiz-q-num">Câu ${qi + 1} / ${part.questions.length}</span>
-                <button type="button" class="btn-flag-q ${isFlag ? 'is-flagged' : ''}" data-id="${id}">
-                  ${window.RusiIcons ? RusiIcons.get("flag", { size: 13 }) : ""} <span>${isFlag ? "Đã đặt cờ" : "Đặt cờ"}</span>
-                </button>
-              </div>
-              <p class="q-text"><span class="ru">${esc(q.q)}</span></p>
-              <div class="options">
-                ${q.options.map((opt, oi) => `
-                  <button type="button" class="option ru ${answers[id] === oi ? "selected" : ""}" data-id="${id}" data-oi="${oi}">
-                    ${esc(opt)}
-                  </button>
-                `).join("")}
-              </div>
-            </div>
-          `;
-        });
-        html += `
+              ${part.questions.map((q, qi) => renderQuestionBlock(q, qi, part)).join("")}
             </div>
           </div>
         `;
@@ -9205,28 +10032,7 @@ function initMockTestPage() {
         html += `</div>`;
       } else if (Array.isArray(part.questions)) {
         // STANDARD (GRAMMAR & VOCABULARY)
-        part.questions.forEach((q, qi) => {
-          const id = part.id + "_" + qi;
-          const isFlag = !!flagged[id];
-          html += `
-            <div class="quiz-q" id="qBox_${id}">
-              <div class="quiz-q-header">
-                <span class="quiz-q-num">Câu ${qi + 1} / ${part.questions.length}</span>
-                <button type="button" class="btn-flag-q ${isFlag ? 'is-flagged' : ''}" data-id="${id}">
-                  ${window.RusiIcons ? RusiIcons.get("flag", { size: 13 }) : ""} <span>${isFlag ? "Đã đặt cờ" : "Đặt cờ"}</span>
-                </button>
-              </div>
-              <p class="q-text"><span class="ru">${esc(q.q)}</span></p>
-              <div class="options">
-                ${q.options.map((opt, oi) => `
-                  <button type="button" class="option ru ${answers[id] === oi ? "selected" : ""}" data-id="${id}" data-oi="${oi}">
-                    ${esc(opt)}
-                  </button>
-                `).join("")}
-              </div>
-            </div>
-          `;
-        });
+        html += part.questions.map((q, qi) => renderQuestionBlock(q, qi, part)).join("");
       }
 
       html += `</div>`;
@@ -9236,26 +10042,41 @@ function initMockTestPage() {
         </div>
 
         <div class="mock-sidebar">
-          <div class="sidebar-timer">
-            <div>Thời gian còn lại</div>
-            <div class="time-display" id="timerValSidebar">${fmt(timeLeft)}</div>
-          </div>
+          ${isPractice ? `
+            <div class="sidebar-timer" style="background:rgba(23,87,166,0.06);border-color:rgba(23,87,166,0.18)">
+              <div style="color:var(--primary);font-size:0.78rem;font-weight:700">CHẾ ĐỘ LUYỆN TẬP</div>
+              <div class="time-display" style="font-size:1.05rem;color:var(--primary)">Xem giải thích ngay</div>
+            </div>
+          ` : `
+            <div class="sidebar-timer">
+              <div>Thời gian còn lại</div>
+              <div class="time-display" id="timerValSidebar">${fmt(timeLeft)}</div>
+            </div>
 
-          <div style="background:var(--primary-soft);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:0.82rem;display:flex;justify-content:space-between">
-            <span>${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 16 }) : ""} Chuyển tab:</span>
-            <b id="antiCheatCount">${tabSwitches}/3</b>
-          </div>
+            <div style="background:var(--primary-soft);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:0.82rem;display:flex;justify-content:space-between">
+              <span>${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 16 }) : ""} Chuyển tab:</span>
+              <b id="antiCheatCount">${tabSwitches}/3</b>
+            </div>
+          `}
 
           <div class="question-palette-head">
             <span>BẢNG CÂU HỎI</span>
             <span style="color:var(--primary);font-size:0.8rem" id="answeredCount">${totalAnswered}/${totalQuestions}</span>
           </div>
 
-          <div class="palette-legend">
-            <span><span class="dot dot-done"></span> Đã làm</span>
-            <span><span class="dot dot-flagged"></span> Đặt cờ</span>
-            <span><span class="dot dot-undone"></span> Chưa làm</span>
-          </div>
+          ${isPractice ? `
+            <div class="palette-legend">
+              <span><span class="dot" style="background:#16a34a"></span> Đúng</span>
+              <span><span class="dot" style="background:#dc2626"></span> Sai</span>
+              <span><span class="dot dot-undone"></span> Chưa làm</span>
+            </div>
+          ` : `
+            <div class="palette-legend">
+              <span><span class="dot dot-done"></span> Đã làm</span>
+              <span><span class="dot dot-flagged"></span> Đặt cờ</span>
+              <span><span class="dot dot-undone"></span> Chưa làm</span>
+            </div>
+          `}
 
           <div class="question-palette-grid">
     `;
@@ -9266,9 +10087,16 @@ function initMockTestPage() {
         part.questions.forEach((q, qi) => {
           pNum++;
           const id = part.id + "_" + qi;
-          const isDone = answers[id] !== undefined;
+          const userAns = answers[id];
+          const isDone = userAns !== undefined;
           const isFlag = !!flagged[id];
-          html += `<button type="button" class="palette-btn ${isDone ? "done" : ""} ${isFlag ? "flagged" : ""}" id="pBtn_${id}" data-jump="${id}" title="Câu ${pNum}${isFlag ? ' (Đã đặt cờ)' : ''}">${pNum}</button>`;
+          let extraClass = "";
+          if (isPractice && isDone) {
+            extraClass = (userAns === q.a) ? "done-correct" : "done-wrong";
+          } else if (isDone) {
+            extraClass = "done";
+          }
+          html += `<button type="button" class="palette-btn ${extraClass} ${isFlag ? "flagged" : ""}" id="pBtn_${id}" data-jump="${id}" title="Câu ${pNum}${isFlag ? ' (Đã đặt cờ)' : ''}">${pNum}</button>`;
         });
       } else if (part.writing_tasks) {
         part.writing_tasks.forEach((wt, wti) => {
@@ -9289,7 +10117,7 @@ function initMockTestPage() {
           </div>
 
           <button class="btn btn-primary btn-lg" id="submitTest" style="width:100%;margin-top:20px;background:var(--secondary);border-color:var(--secondary)">
-            Nộp bài thi
+            ${isPractice ? "Hoàn thành luyện tập" : "Nộp bài thi"}
           </button>
         </div>
       </div>
@@ -9301,11 +10129,15 @@ function initMockTestPage() {
     }
 
     el("#btnExitTest").onclick = () => {
-      if (confirm("Bạn có chắc chắn muốn rời khỏi phòng thi? Kết quả hiện tại sẽ không được lưu.")) {
-        const storageKey = "trki_exam_" + currentTest.id + "_" + (activePartId || "full");
+      const exitMsg = isPractice
+        ? "Bạn có chắc chắn muốn kết thúc bài luyện tập?"
+        : "Bạn có chắc chắn muốn rời khỏi phòng thi? Kết quả hiện tại sẽ không được lưu.";
+      if (confirm(exitMsg)) {
+        const storageKey = getExamStorageKey();
         try {
           sessionStorage.removeItem("trki_active_exam_id");
           sessionStorage.removeItem("trki_active_part_id");
+          sessionStorage.removeItem("trki_exam_mode");
           if (currentTest && currentTest.id) {
             sessionStorage.removeItem(storageKey + "_endTime");
             sessionStorage.removeItem(storageKey + "_answers");
@@ -9357,7 +10189,7 @@ function initMockTestPage() {
         e.stopPropagation();
         const id = btn.dataset.id;
         flagged[id] = !flagged[id];
-        const storageKey = "trki_exam_" + currentTest.id + "_" + (activePartId || "full");
+        const storageKey = getExamStorageKey();
         try {
           sessionStorage.setItem(storageKey + "_flagged", JSON.stringify(flagged));
         } catch(e) {}
@@ -9377,17 +10209,65 @@ function initMockTestPage() {
     host.querySelectorAll(".option").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.dataset.id;
-        const group = host.querySelectorAll(`.option[data-id="${id}"]`);
-        group.forEach((g) => g.classList.remove("selected"));
-        btn.classList.add("selected");
-        answers[id] = +btn.dataset.oi;
-        const storageKey = "trki_exam_" + currentTest.id + "_" + (activePartId || "full");
+        const oi = +btn.dataset.oi;
+        answers[id] = oi;
+        const storageKey = getExamStorageKey();
         try {
           sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers));
         } catch(e) {}
 
-        const pBtn = el(`#pBtn_${id}`);
-        if (pBtn) pBtn.classList.add("done");
+        const group = host.querySelectorAll(`.option[data-id="${id}"]`);
+
+        if (examMode === "practice") {
+          const [pId, qIdxStr] = id.split("_");
+          const qIdx = parseInt(qIdxStr, 10);
+          const targetPart = (currentTest.parts || []).find(p => p.id === pId);
+          const q = (targetPart && targetPart.questions) ? targetPart.questions[qIdx] : null;
+
+          if (q) {
+            const isCorrect = (oi === q.a);
+            group.forEach(g => {
+              g.classList.remove("selected", "correct", "wrong");
+              const gOi = +g.dataset.oi;
+              if (gOi === q.a) {
+                g.classList.add("correct");
+              } else if (gOi === oi && !isCorrect) {
+                g.classList.add("wrong");
+              }
+            });
+
+            let fb = host.querySelector(`#feedback_${id}`);
+            if (!fb) {
+              fb = document.createElement("div");
+              fb.id = `feedback_${id}`;
+              const qBox = el(`#qBox_${id}`);
+              if (qBox) qBox.appendChild(fb);
+            }
+            fb.className = `trki-practice-feedback ${isCorrect ? 'is-correct' : 'is-wrong'}`;
+            fb.innerHTML = `
+              <div class="feedback-badge-row">
+                <span class="feedback-badge ${isCorrect ? 'badge-correct' : 'badge-wrong'}">
+                  ${isCorrect ? '✓ Đúng' : '✕ Sai'}
+                </span>
+                ${!isCorrect ? `<span class="feedback-correct-answer">Đáp án đúng: <b class="ru" style="color:var(--green)">${esc(q.options[q.a])}</b></span>` : ''}
+              </div>
+              <div class="feedback-ex">
+                <b>Giải thích:</b> ${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}
+              </div>
+            `;
+
+            const pBtn = el(`#pBtn_${id}`);
+            if (pBtn) {
+              pBtn.classList.remove("done", "done-correct", "done-wrong");
+              pBtn.classList.add(isCorrect ? "done-correct" : "done-wrong");
+            }
+          }
+        } else {
+          group.forEach((g) => g.classList.remove("selected"));
+          btn.classList.add("selected");
+          const pBtn = el(`#pBtn_${id}`);
+          if (pBtn) pBtn.classList.add("done");
+        }
 
         const ansCount = Object.keys(answers).length;
         const countDisplay = el("#answeredCount");
@@ -9456,7 +10336,7 @@ function initMockTestPage() {
     started = false;
     clearInterval(timer);
 
-    const storageKey = "trki_exam_" + currentTest.id + "_" + (activePartId || "full");
+    const storageKey = getExamStorageKey();
     try {
       sessionStorage.removeItem("trki_active_exam_id");
       sessionStorage.removeItem("trki_active_part_id");
@@ -9471,8 +10351,10 @@ function initMockTestPage() {
       visibilityHandler = null;
     }
 
-    const activeParts = activePartId
-      ? currentTest.parts.filter(p => p.id === activePartId)
+    const selectedPartList = getExamPartList();
+    const isSubset = Boolean(selectedPartList && selectedPartList.length > 0 && selectedPartList.length < (currentTest.parts || []).length);
+    const activeParts = isSubset
+      ? currentTest.parts.filter(p => selectedPartList.includes(p.id))
       : currentTest.parts;
 
     const detail = [];
@@ -9505,7 +10387,7 @@ function initMockTestPage() {
     // Check TRKI Official Passing Standards
     const allSubtestsPassed = detail.every(d => d.pct >= requiredPassPct);
     const failedParts = detail.filter(d => d.pct < requiredPassPct);
-    const singleRetakeEligible = !activePartId && failedParts.length === 1 && failedParts[0].pct >= 60;
+    const singleRetakeEligible = !isSubset && failedParts.length === 1 && failedParts[0].pct >= 60;
 
     let examStatus = "fail";
     let statusBadgeText = `НЕ СДАНО (CHƯA ĐẠT · Chuẩn ≥ ${requiredPassPct}%)`;
@@ -9513,14 +10395,14 @@ function initMockTestPage() {
 
     if (allSubtestsPassed) {
       examStatus = "pass";
-      statusBadgeText = activePartId
-        ? `СДАНО · ĐẠT YÊU CẦU ${activeParts[0].vi}`
+      statusBadgeText = isSubset
+        ? (activeParts.length === 1 ? `СДАНО · ĐẠT YÊU CẦU ${activeParts[0].vi}` : `СДАНО · ĐẠT YÊU CẦU (${activeParts.length} PHẦN)`)
         : `СДАНО · ĐẠT CHỨNG CHỈ ТРКИ ${currentTest.level}`;
-      statusDesc = activePartId
-        ? `Chúc mừng! Bạn đã hoàn thành tốt phân môn này với tỷ lệ đạt ${pct}%. Bạn có thể tiếp tục luyện các phần khác hoặc thi toàn diện!`
+      statusDesc = isSubset
+        ? `Chúc mừng! Bạn đã hoàn thành tốt các phân môn đã chọn với tỷ lệ đạt ${pct}%. Bạn có thể tiếp tục luyện các phần khác hoặc thi toàn diện!`
         : `Chúc mừng! Bạn đã vượt qua tất cả các phân môn khảo thí với điểm số ≥ 66% theo chuẩn quốc gia Liên bang Nga.`;
-      Progress.addXp(activePartId ? 15 : 30);
-      if (!activePartId) {
+      Progress.addXp(isSubset ? 15 : 30);
+      if (!isSubset) {
         Progress.markDone("trkiDone", currentTest.id);
       }
     } else if (singleRetakeEligible) {
@@ -9529,7 +10411,8 @@ function initMockTestPage() {
       statusDesc = `Theo quy chế TRKI chính thức, bạn đạt chuẩn ${detail.length - 1}/${detail.length} phân môn và phân môn "${failedParts[0].part.vi}" đạt ${failedParts[0].pct}% (ngưỡng 60%-65%). Bạn đủ điều kiện bảo lưu và chỉ phải thi lại riêng phân môn này!`;
     }
 
-    const bestKey = "bestTest_" + currentTest.id + (activePartId ? "_" + activePartId : "");
+    const pKeyStr = isSubset ? selectedPartList.join("-") : "full";
+    const bestKey = "bestTest_" + currentTest.id + "_" + pKeyStr;
     const best = Math.max(pct, STORE.get(bestKey, 0));
     STORE.set(bestKey, best);
     STORE.set("bestTest", Math.max(pct, STORE.get("bestTest", 0)));
@@ -9553,10 +10436,10 @@ function initMockTestPage() {
             ${window.RusiIcons ? RusiIcons.get("award-badge", { size: 32 }) : ""}
           </div>
           <h2 class="trki-cert-title">
-            ${activePartId ? `KẾT QUẢ ÔN LUYỆN: ${esc(activeParts[0].vi)}` : `KẾT QUẢ KHẢO THÍ CHỨNG CHỈ TIẾNG NGA QUỐC TẾ ТРКИ`}
+            ${isSubset ? `KẾT QUẢ ÔN LUYỆN: ${esc(activeParts.map(p => p.vi).join(" · "))}` : `KẾT QUẢ KHẢO THÍ CHỨNG CHỈ TIẾNG NGA QUỐC TẾ ТРКИ`}
           </h2>
           <div class="trki-cert-subtitle">
-            ${activePartId ? `${esc(currentTest.title)} · TRÌNH ĐỘ ${esc(currentTest.level)}` : `ГОСУДАРСТВЕННЫЙ СЕРТИФИКАЦИОННЫЙ ОТЧЁТ · TRÌNH ĐỘ ${esc(currentTest.level)}`}
+            ${isSubset ? `${esc(currentTest.title)} · TRÌNH ĐỘ ${esc(currentTest.level)}` : `ГОСУДАРСТВЕННЫЙ СЕРТИФИКАЦИОННЫЙ ОТЧЁТ · TRÌNH ĐỘ ${esc(currentTest.level)}`}
           </div>
 
           <div class="trki-cert-score-main">${correct}/${total} CÂU ĐÚNG · ${pct}%</div>
@@ -9594,7 +10477,7 @@ function initMockTestPage() {
             </div>
           `).join("")}
 
-          ${activePartId ? `
+          ${isSubset ? `
             <div class="trki-subtest-result-card" style="border-style:dashed;background:rgba(23,87,166,0.04);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px">
               <div style="font-weight:700;color:var(--russia-navy);margin-bottom:6px">Luyện các phần khác của đề này</div>
               <p style="font-size:0.82rem;color:var(--muted);margin:0 0 10px">Bạn có thể chọn làm tiếp các phần còn lại để hoàn thành toàn diện.</p>
@@ -9634,7 +10517,7 @@ function initMockTestPage() {
         <div id="reviewHost"></div>
 
         <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap">
-          <button class="btn btn-primary" id="retryTest">${activePartId ? "Làm lại phần này" : "Làm lại đề này"}</button>
+          <button class="btn btn-primary" id="retryTest">${isSubset ? (activeParts.length === 1 ? "Làm lại phần này" : "Làm lại các phần này") : "Làm lại đề này"}</button>
           <button class="btn btn-outline" id="btnBackToHub">Quay lại danh sách đề thi</button>
           <button class="btn btn-outline" onclick="window.scrollTo({top:0,behavior:'smooth'})">Lên đầu trang ↑</button>
         </div>
@@ -9688,8 +10571,8 @@ function initMockTestPage() {
     }
 
     el("#btnReviewBack").onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); window.scrollTo({ top: 0, behavior: "smooth" }); };
-    el("#btnRetryTop").onclick = () => startTest(currentTest, activePartId);
-    el("#retryTest").onclick = () => startTest(currentTest, activePartId);
+    el("#btnRetryTop").onclick = () => startTest(currentTest, activePartId, examMode);
+    el("#retryTest").onclick = () => startTest(currentTest, activePartId, examMode);
     el("#btnBackToHub").onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); };
     if (window.RusiIcons && typeof RusiIcons.render === "function") {
       RusiIcons.render(host);
@@ -9701,13 +10584,17 @@ function initMockTestPage() {
     try {
       const activeId = sessionStorage.getItem("trki_active_exam_id");
       const activePart = sessionStorage.getItem("trki_active_part_id");
+      const activeMode = sessionStorage.getItem("trki_exam_mode") || "exam";
       if (activeId) {
         const found = bank.find(t => t.id === activeId);
-        const partParam = activePart === "full" ? null : activePart;
-        const storageKey = "trki_exam_" + activeId + "_" + (partParam || "full");
+        const partParam = (!activePart || activePart === "full")
+          ? null
+          : (activePart.includes(",") ? activePart.split(",") : [activePart]);
+        const pKeyStr = partParam ? partParam.join("-") : "full";
+        const storageKey = "trki_exam_" + activeId + "_" + pKeyStr + "_" + activeMode;
         const storedEndTime = parseInt(sessionStorage.getItem(storageKey + "_endTime") || "0", 10);
-        if (found && storedEndTime > Date.now()) {
-          startTest(found, partParam);
+        if (found && (activeMode === "practice" || storedEndTime > Date.now())) {
+          startTest(found, partParam, activeMode);
           return true;
         }
       }

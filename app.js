@@ -518,9 +518,7 @@ const MascotRusika = {
           <form class="rusika-chat-footer" id="rusikaChatForm">
             <input type="text" id="rusikaChatInput" placeholder="Nhập câu hỏi bằng tiếng Việt hoặc tiếng Nga..." autocomplete="off" />
             <button type="submit" id="btnSendRusikaChat" aria-label="Gửi tin nhắn">
-              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-              </svg>
+              ${window.RusiIcons ? RusiIcons.get("send", { size: 18 }) : `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>`}
             </button>
           </form>
         </div>

@@ -187,8 +187,8 @@ const WordDetail = (() => {
     const ant = chipList(extra.ant, "wd-chip-ant");
     if (!syn && !ant) return "";
     return `
-      ${syn ? `<div class="wd-rel-group"><span class="wd-rel-label">🟢 Đồng nghĩa</span><div class="wd-chips">${syn}</div></div>` : ""}
-      ${ant ? `<div class="wd-rel-group"><span class="wd-rel-label">🔴 Trái nghĩa</span><div class="wd-chips">${ant}</div></div>` : ""}`;
+      ${syn ? `<div class="wd-rel-group"><span class="wd-rel-label" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 13 }) : "🟢"} Đồng nghĩa</span><div class="wd-chips">${syn}</div></div>` : ""}
+      ${ant ? `<div class="wd-rel-group"><span class="wd-rel-label" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("x-circle", { size: 13 }) : "🔴"} Trái nghĩa</span><div class="wd-chips">${ant}</div></div>` : ""}`;
   }
 
   function famHTML(extra, word) {
@@ -293,7 +293,7 @@ const WordDetail = (() => {
     return `
       <div class="wd-section ${open ? "open" : ""}" data-sec="${id}">
         <button class="wd-sec-head" type="button">
-          <span class="wd-sec-title"><span class="wd-sec-icon">${icon}</span>${esc(title)}${badge ? `<span class="wd-badge">${badge}</span>` : ""}</span>
+          <span class="wd-sec-title"><span class="wd-sec-icon">${(window.RusiIcons && ({meaning:"book-open",wiktionary:"globe",gov:"puzzle",ex:"message-square",rel:"refresh-cw",fam:"layers",forms:"table",srs:"zap-xp"})[id]) ? RusiIcons.get(({meaning:"book-open",wiktionary:"globe",gov:"puzzle",ex:"message-square",rel:"refresh-cw",fam:"layers",forms:"table",srs:"zap-xp"})[id], {size:16}) : icon}</span>${esc(title)}${badge ? `<span class="wd-badge">${badge}</span>` : ""}</span>
           <span class="wd-sec-arrow">▾</span>
         </button>
         <div class="wd-sec-body"><div class="wd-sec-inner">${innerHTML}</div></div>
@@ -364,8 +364,8 @@ const WordDetail = (() => {
     if (!customJars.length) {
       customJars = [{
         id: "custom-jar-default",
-        name: "Lọ từ vựng của tôi 🇷🇺",
-        icon: "🫙",
+        name: "Lọ yêu thích",
+        icon: "archive-jar",
         desc: "Các từ vựng đã tra cứu trong từ điển",
         words: [],
         level: "custom",
@@ -516,7 +516,7 @@ const WordDetail = (() => {
     return `
       <div class="wd-wikt-container">
         <div class="wd-wikt-header">
-          <span class="wd-wikt-badge">🌐 ru.wiktionary.org · Realtime</span>
+          <span class="wd-wikt-badge" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("globe", { size: 12 }) : "🌐"} ru.wiktionary.org · Realtime</span>
           ${audioBtn}
         </div>
         ${defsHtml}
@@ -557,8 +557,8 @@ const WordDetail = (() => {
         ${pron}
         ${firstMeaning ? `<p class="wd-hero-vi">${esc(firstMeaning)}</p>` : ""}
         <div class="wd-hero-actions">
-          <button class="wd-speak-btn" id="wdSpeak" title="Nghe phát âm">🔊</button>
-          <button class="wd-speak-btn slow" id="wdSlow" title="Nghe chậm">🐢</button>
+          <button class="wd-speak-btn" id="wdSpeak" title="Nghe phát âm">${window.RusiIcons ? RusiIcons.get("volume-2", { size: 20 }) : "🔊"}</button>
+          <button class="wd-speak-btn slow" id="wdSlow" title="Nghe chậm">${window.RusiIcons ? RusiIcons.get("snail", { size: 20 }) : "🐢"}</button>
         </div>
       </div>`;
 
@@ -579,7 +579,7 @@ const WordDetail = (() => {
 
     body.innerHTML = `
       <div class="dict-modal-float">
-        <button class="dict-modal-close" id="wdClose" aria-label="Đóng">×</button>
+        <button class="dict-modal-close" id="wdClose" aria-label="Đóng">${window.RusiIcons ? RusiIcons.get("x", { size: 18 }) : "×"}</button>
       </div>
       ${head}
       <div class="wd-content">${secs}</div>`;

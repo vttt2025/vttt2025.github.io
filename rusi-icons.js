@@ -558,6 +558,238 @@
       name: "Trò Chuyện & Hỏi Bài (Message Circle)",
       category: "utilities",
       paths: '<path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8 3.8z"/>'
+    },
+
+    // --- MỞ RỘNG LUCIDE CHUẨN: CHỦ ĐỀ TỪ VỰNG, HỆ THỐNG & ĐIỀU KHIỂN ---
+    "home": {
+      name: "Trang Chủ / Ngôi Nhà (Home)",
+      category: "general",
+      paths: '<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'
+    },
+    "user": {
+      name: "Học Viên / Cá Nhân (User)",
+      category: "general",
+      paths: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'
+    },
+    "user-check": {
+      name: "Học Viên Đã Xác Thực (User Check)",
+      category: "general",
+      paths: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/>'
+    },
+    "user-plus": {
+      name: "Đăng Ký / Thêm Học Viên (User Plus)",
+      category: "general",
+      paths: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/>'
+    },
+    "user-minus": {
+      name: "Xóa Học Viên (User Minus)",
+      category: "general",
+      paths: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="22" x2="16" y1="11" y2="11"/>'
+    },
+    "paw": {
+      name: "Động Vật & Thú Cưng (Paw Print)",
+      category: "general",
+      paths: '<circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/>'
+    },
+    "book-open": {
+      name: "Mở Sách / Đọc Hiểu (Book Open)",
+      category: "general",
+      paths: '<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'
+    },
+    "shopping-bag": {
+      name: "Túi Mua Hàng (Shopping Bag)",
+      category: "shop_payment",
+      paths: '<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>'
+    },
+    "clock": {
+      name: "Đồng Hồ Thời Gian (Clock)",
+      category: "general",
+      paths: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'
+    },
+    "list-tasks": {
+      name: "Danh Sách Nhiệm Vụ (List Tasks / Checks)",
+      category: "general",
+      paths: '<line x1="10" x2="21" y1="6" y2="6"/><line x1="10" x2="21" y1="12" y2="12"/><line x1="10" x2="21" y1="18" y2="18"/><polyline points="3 6 4 7 6 5"/><polyline points="3 12 4 13 6 11"/><polyline points="3 18 4 19 6 17"/>'
+    },
+    "x-circle": {
+      name: "Dấu Tròn Hủy / Chưa Đạt (X Circle)",
+      category: "utilities",
+      paths: '<circle cx="12" cy="12" r="10"/><line x1="15" x2="9" y1="9" y2="15"/><line x1="9" x2="15" y1="9" y2="15"/>'
+    },
+    "check-circle": {
+      name: "Dấu Tròn Hoàn Thành (Check Circle)",
+      category: "utilities",
+      paths: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>'
+    },
+    "check-check": {
+      name: "Dấu Tích Kép / Đã Xem (Check Check)",
+      category: "utilities",
+      paths: '<path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/>'
+    },
+    "volume-2": {
+      name: "Âm Lượng Lớn (Volume 2)",
+      category: "media",
+      paths: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>'
+    },
+    "volume-1": {
+      name: "Âm Lượng Vừa (Volume 1)",
+      category: "media",
+      paths: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>'
+    },
+    "volume-x": {
+      name: "Tắt Tiếng (Volume X)",
+      category: "media",
+      paths: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>'
+    },
+    "lightbulb": {
+      name: "Bóng Đèn / Mẹo Học (Lightbulb)",
+      category: "utilities",
+      paths: '<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>'
+    },
+    "send": {
+      name: "Gửi / Nộp Bài (Send)",
+      category: "utilities",
+      paths: '<line x1="22" x2="11" y1="2" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>'
+    },
+    "bell": {
+      name: "Thông Báo (Bell)",
+      category: "utilities",
+      paths: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'
+    },
+    "bell-off": {
+      name: "Tắt Thông Báo (Bell Off)",
+      category: "utilities",
+      paths: '<path d="M8.7 3A6 6 0 0 1 18 8a21.3 21.3 0 0 0 .6 5"/><path d="M17 17H3s3-2 3-9a4.67 4.67 0 0 1 .3-1.7"/><path d="m2 2 20 20"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>'
+    },
+    "globe": {
+      name: "Toàn Cầu (Globe)",
+      category: "utilities",
+      paths: '<circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>'
+    },
+    "shield-check": {
+      name: "Khiên An Toàn / Xác Thực (Shield Check)",
+      category: "utilities",
+      paths: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/>'
+    },
+    "music": {
+      name: "Âm Nhạc (Music)",
+      category: "media",
+      paths: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>'
+    },
+    "video": {
+      name: "Video / Phim (Video)",
+      category: "media",
+      paths: '<polygon points="23 7 16 12 23 17 23 7"/><rect width="15" height="14" x="1" y="5" rx="2" ry="2"/>'
+    },
+    "tag": {
+      name: "Thẻ Nhãn (Tag)",
+      category: "utilities",
+      paths: '<path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/>'
+    },
+    "tags": {
+      name: "Nhiều Nhãn (Tags)",
+      category: "utilities",
+      paths: '<path d="m15 5 6.3 6.3a2.4 2.4 0 0 1 0 3.4L17 19"/><path d="M9.586 2 2 9.586V19a2 2 0 0 0 2 2h9.414L22 14.414V5a2 2 0 0 0-2-2h-9.414Z"/><circle cx="7" cy="7" r="1"/>'
+    },
+    "folder-open": {
+      name: "Thư Mục Mở (Folder Open)",
+      category: "utilities",
+      paths: '<path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/>'
+    },
+    "code": {
+      name: "Mã Nguồn / Lập Trình (Code)",
+      category: "utilities",
+      paths: '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>'
+    },
+    "key": {
+      name: "Khóa Bảo Mật / API Key (Key)",
+      category: "utilities",
+      paths: '<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>'
+    },
+    "printer": {
+      name: "In Ấn (Printer)",
+      category: "utilities",
+      paths: '<polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/>'
+    },
+    "eye-off": {
+      name: "Ẩn / Che Mật Khẩu (Eye Off)",
+      category: "utilities",
+      paths: '<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>'
+    },
+    "chevron-up": {
+      name: "Mũi Tên Thu Gọn (Chevron Up)",
+      category: "utilities",
+      paths: '<polyline points="18 15 12 9 6 15"/>'
+    },
+    "arrow-up": {
+      name: "Mũi Tên Lên (Arrow Up)",
+      category: "utilities",
+      paths: '<line x1="12" x2="12" y1="19" y2="5"/><polyline points="5 12 12 5 19 12"/>'
+    },
+    "arrow-down": {
+      name: "Mũi Tên Xuống (Arrow Down)",
+      category: "utilities",
+      paths: '<line x1="12" x2="12" y1="5" y2="19"/><polyline points="19 12 12 19 5 12"/>'
+    },
+    "play": {
+      name: "Phát (Play)",
+      category: "media",
+      paths: '<polygon points="5 3 19 12 5 21 5 3"/>'
+    },
+    "pause": {
+      name: "Tạm Dừng (Pause)",
+      category: "media",
+      paths: '<rect width="4" height="16" x="6" y="4"/><rect width="4" height="16" x="14" y="4"/>'
+    },
+    "sliders": {
+      name: "Thanh Trượt / Tùy Chỉnh (Sliders)",
+      category: "utilities",
+      paths: '<line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="1" x2="7" y1="14" y2="14"/><line x1="9" x2="15" y1="8" y2="8"/><line x1="17" x2="23" y1="16" y2="16"/>'
+    },
+    "more-horizontal": {
+      name: "Thao Tác Thêm Ngang (More Horizontal)",
+      category: "utilities",
+      paths: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>'
+    },
+    "more-vertical": {
+      name: "Thao Tác Thêm Dọc (More Vertical)",
+      category: "utilities",
+      paths: '<circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>'
+    },
+    "alert-circle": {
+      name: "Cảnh Báo Tròn (Alert Circle)",
+      category: "utilities",
+      paths: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>'
+    },
+    "check-square": {
+      name: "Ô Tích Đã Chọn (Check Square)",
+      category: "utilities",
+      paths: '<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>'
+    },
+    "square": {
+      name: "Ô Vuông Rỗng (Square)",
+      category: "utilities",
+      paths: '<rect width="18" height="18" x="3" y="3" rx="2"/>'
+    },
+    "compass": {
+      name: "La Bàn Định Hướng (Compass)",
+      category: "utilities",
+      paths: '<circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>'
+    },
+    "trash": {
+      name: "Thùng Rác (Trash)",
+      category: "utilities",
+      paths: '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>'
+    },
+    "wifi": {
+      name: "Kết Nối Mạng (Wifi)",
+      category: "utilities",
+      paths: '<path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" x2="12.01" y1="20" y2="20"/>'
+    },
+    "wifi-off": {
+      name: "Mất Mạng (Wifi Off)",
+      category: "utilities",
+      paths: '<line x1="1" x2="23" y1="1" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" x2="12.01" y1="20" y2="20"/>'
     }
   };
 
@@ -689,7 +921,55 @@
     "shirt": "shirt", "clothing": "shirt", "clothes": "shirt", "quan-ao": "shirt", "giat": "shirt", "👕": "shirt", "🧺": "shirt",
     "snowflake": "snowflake", "snow": "snowflake", "winter": "snowflake", "tuyet": "snowflake", "mua-dong": "snowflake", "❄️": "snowflake", "❄": "snowflake",
     "alert-triangle": "alert-triangle", "warning": "alert-triangle", "canh-bao": "alert-triangle", "⚠️": "alert-triangle", "⚠": "alert-triangle", "door": "inbox", "🚪": "inbox",
-    "🍬": "shopping-bag-shop", "🌿": "sparkles-clean", "🪆": "award-badge"
+    "🍬": "shopping-bag-shop", "🌿": "sparkles-clean", "🪆": "award-badge",
+
+    // --- MỞ RỘNG LUCIDE CHUẨN & TỪ KHÓA TỰ ĐỘNG HIỂU ---
+    "home": "home", "house": "home", "nha": "home", "trang-chu": "home", "can-ho": "home", "phong-o": "home", "🏠": "home", "🏡": "home",
+    "user": "user", "member": "user", "profile": "user", "avatar": "user", "nguoi": "user", "ca-nhan": "user", "tai-khoan": "user", "hoc-vien": "user", "sinh-vien": "user", "👤": "user",
+    "user-check": "user-check", "verified-user": "user-check", "da-xac-thuc": "user-check",
+    "user-plus": "user-plus", "add-user": "user-plus", "dang-ky-user": "user-plus", "them-ban": "user-plus",
+    "user-minus": "user-minus", "remove-user": "user-minus", "xoa-user": "user-minus",
+    "paw": "paw", "paw-print": "paw", "pet": "paw", "animal": "paw", "dong-vat": "paw", "thu-cung": "paw", "thu": "paw", "cho": "paw", "🐾": "paw", "🐶": "paw", "🐕": "paw",
+    "book-open": "book-open", "book": "book-open", "reading": "book-open", "doc-hieu": "book-open", "bai-doc": "book-open", "sach": "book-open", "giao-trinh": "book-open", "📖": "book-open",
+    "shopping-bag": "shopping-bag", "tui-hang": "shopping-bag", "gio-hang-shop": "shopping-bag", "🛍️": "shopping-bag", "🛍": "shopping-bag",
+    "clock": "clock", "clock-time": "clock", "dong-ho": "clock", "thoi-gian": "clock", "gio": "clock", "phut": "clock", "alarm": "clock", "hen-gio": "clock", "⏰": "clock", "🕰️": "clock", "🕰": "clock",
+    "list-tasks": "list-tasks", "list-checks": "list-tasks", "tasks": "list-tasks", "checklist": "list-tasks", "checks": "list-tasks", "cong-viec": "list-tasks", "nhiem-vu": "list-tasks", "muc-tieu-ngay": "list-tasks", "☑️": "list-tasks", "☑": "list-tasks",
+    "x-circle": "x-circle", "cancel-circle": "x-circle", "sai-circle": "x-circle", "that-bai": "x-circle", "chua-dung": "x-circle", "chua-dat": "x-circle", "lỗi": "x-circle", "error": "x-circle", "🚫": "x-circle",
+    "check-circle": "check-circle", "done-circle": "check-circle", "hoan-thanh": "check-circle",
+    "check-check": "check-check", "double-check": "check-check", "da-xem": "check-check", "da-gui": "check-check", "seen": "check-check",
+    "volume-2": "volume-2", "volume-high": "volume-2", "loa-lon": "volume-2", "am-thanh-lon": "volume-2",
+    "volume-1": "volume-1", "loa-vua": "volume-1", "loa-nho": "volume-1",
+    "volume-x": "volume-x", "mute": "volume-x", "tat-am": "volume-x", "tat-tieng": "volume-x", "im-lang": "volume-x", "🔇": "volume-x",
+    "lightbulb": "lightbulb", "bulb": "lightbulb", "idea": "lightbulb", "tip": "lightbulb", "meo": "lightbulb", "goi-y": "lightbulb", "sang-kien": "lightbulb", "luu-y-hoc": "lightbulb", "💡": "lightbulb",
+    "send": "send", "gui": "send", "nop-bai": "send", "chuyen": "send", "telegram": "send", "nhan-tin": "send", "phat-tin": "send", "submit": "send", "📤": "send", "✈": "send",
+    "bell": "bell", "notification": "bell", "notify": "bell", "chuong": "bell", "thong-bao": "bell", "nhac-nho": "bell", "nhac-hoc": "bell", "🔔": "bell",
+    "bell-off": "bell-off", "tat-chuong": "bell-off", "tat-thong-bao": "bell-off", "🔕": "bell-off",
+    "globe": "globe", "earth": "globe", "world": "globe", "toan-cau": "globe", "the-gioi": "globe", "dia-cau": "globe", "quoc-te": "globe", "nga-viet": "globe", "🌐": "globe", "🌍": "globe", "🌎": "globe",
+    "shield-check": "shield-check", "safe": "shield-check", "verified": "shield-check", "an-toan": "shield-check", "chinh-hang": "shield-check", "xac-thuc": "shield-check", "bao-hiem": "shield-check", "uy-tin": "shield-check", "chuan-nga": "shield-check",
+    "music": "music", "song": "music", "bai-hat": "music", "nhac": "music", "am-nhac": "music", "audio-track": "music", "giai-dieu": "music", "nhac-nga": "music", "🎵": "music", "🎶": "music",
+    "video": "video", "clip": "video", "phim": "video", "movie": "video", "truyen-hinh": "video", "goc-nhin": "video", "📹": "video", "🎥": "video", "🎞️": "video",
+    "tag": "tag", "label": "tag", "the": "tag", "nhan": "tag", "phan-loai": "tag", "chu-de": "tag", "the-loai": "tag", "🏷️": "tag", "🏷": "tag",
+    "tags": "tags", "labels": "tags", "nhieu-nhan": "tags",
+    "folder-open": "folder-open", "thu-muc-mo": "folder-open", "tai-lieu-mo": "folder-open", "bo-tai-lieu": "folder-open",
+    "code": "code", "lap-trinh": "code", "source": "code", "dev": "code", "ma-nguon": "code", "</>": "code", "💻": "code",
+    "key": "key", "khoa-mat-ma": "key", "chia-khoa": "key", "mat-khau": "key", "token": "key", "api-key": "key", "quyen-truy-cap": "key", "🔑": "key",
+    "printer": "printer", "in": "printer", "in-an": "printer", "print": "printer", "xuat-ban": "printer", "tai-lieu-in": "printer", "in-de": "printer", "🖨️": "printer", "🖨": "printer",
+    "eye-off": "eye-off", "an": "eye-off", "che": "eye-off", "hide": "eye-off", "private": "eye-off", "mat-khau-an": "eye-off", "giau": "eye-off", "🙈": "eye-off",
+    "chevron-up": "chevron-up", "up": "chevron-up", "len": "chevron-up", "thu-gon": "chevron-up", "^": "chevron-up", "⌃": "chevron-up",
+    "arrow-up": "arrow-up", "arrowup": "arrow-up", "mui-ten-len": "arrow-up", "len-dau-trang": "arrow-up", "↑": "arrow-up",
+    "arrow-down": "arrow-down", "arrowdown": "arrow-down", "mui-ten-xuong": "arrow-down", "cuon-xuong": "arrow-down", "↓": "arrow-down",
+    "play": "play", "bat-dau-nghe": "play",
+    "pause": "pause", "tam-dung-nghe": "pause",
+    "sliders": "sliders", "slider": "sliders", "tuy-chinh": "sliders", "dieu-chinh": "sliders", "bo-loc-nang-cao": "sliders", "cau-hinh-tham-so": "sliders", "🎚️": "sliders",
+    "more-horizontal": "more-horizontal", "kebab": "more-horizontal", "dots": "more-horizontal", "more": "more-horizontal", "them-thao-tac": "more-horizontal", "···": "more-horizontal", "…": "more-horizontal",
+    "more-vertical": "more-vertical", "kebab-v": "more-vertical", "dots-v": "more-vertical", "⋮": "more-vertical",
+    "alert-circle": "alert-circle", "canh-bao-tron": "alert-circle", "chu-y": "alert-circle", "luu-y": "alert-circle",
+    "check-square": "check-square", "o-chon": "check-square", "tich-o": "check-square", "checkbox": "check-square",
+    "square": "square", "o-trong": "square", "hop-vuong": "square",
+    "compass": "compass", "la-ban": "compass", "dinh-huong": "compass", "kham-pha": "compass", "dan-duong": "compass", "🧭": "compass",
+    "trash": "trash", "thung-rac": "trash",
+    "wifi": "wifi", "mang": "wifi", "ket-noi": "wifi", "online": "wifi", "song-wifi": "wifi", "📶": "wifi",
+    "wifi-off": "wifi-off", "mat-mang": "wifi-off", "offline": "wifi-off", "ngat-ket-noi": "wifi-off"
   };
 
   /* ==========================================================================
@@ -700,17 +980,174 @@
     aliases: ALIAS_MAP,
 
     /**
-     * Chuẩn hoá tên icon từ alias, emoji hoặc id trực tiếp
+     * Chuẩn hoá và tự động nhận diện tên icon (Tự động hiểu):
+     * 1. Tra cứu trực tiếp ALIAS_MAP hoặc RUSI_ICONS
+     * 2. Chuẩn hóa tiền tố (lucide-, rusi-icon-, rusi-, icon-, fa-, bi-)
+     * 3. Chuẩn hóa cú pháp camelCase / snake_case sang kebab-case
+     * 4. Bộ phân tích ngữ nghĩa (Semantic Keyword Matcher) cho chủ đề mới, lọ mới, v.v.
      */
     resolveId: function (name) {
       if (!name) return "sparkles-clean";
-      var clean = String(name).trim().toLowerCase();
+      var raw = String(name).trim();
+      if (!raw) return "sparkles-clean";
+
+      // 1. Tra cứu nguyên gốc
+      if (ALIAS_MAP[raw]) return ALIAS_MAP[raw];
+      if (RUSI_ICONS[raw]) return raw;
+
+      // 2. Chuyển camelCase sang kebab-case & chữ thường
+      var clean = raw
+        .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+        .toLowerCase()
+        .trim();
+
+      // Bỏ tiền tố thư viện thường gặp
+      clean = clean.replace(/^(rusi-icon-|rusi-|lucide-|icon-|fa-|bi-|ri-)/, '');
+
       if (ALIAS_MAP[clean]) return ALIAS_MAP[clean];
       if (RUSI_ICONS[clean]) return clean;
-      var noDash = clean.replace(/[\s_-]+/g, '');
+
+      // 3. Chuẩn hóa dấu gạch ngang / khoảng trắng / gạch dưới
+      var kebab = clean.replace(/[\s_.]+/g, '-').replace(/-+/g, '-');
+      if (ALIAS_MAP[kebab]) return ALIAS_MAP[kebab];
+      if (RUSI_ICONS[kebab]) return kebab;
+
+      var noPunct = kebab.replace(/-/g, '');
       for (var k in ALIAS_MAP) {
-        if (k.replace(/[\s_-]+/g, '') === noDash) return ALIAS_MAP[k];
+        if (k.replace(/[\s_-]+/g, '') === noPunct) return ALIAS_MAP[k];
       }
+      for (var id in RUSI_ICONS) {
+        if (id.replace(/[\s_-]+/g, '') === noPunct) return id;
+      }
+
+      // 4. BỘ NHẬN DIỆN TỰ ĐỘNG THÔNG MINH (KHI TẠO MỚI TỰ ĐỘNG HIỂU CHỦ ĐỀ)
+      var t = kebab;
+
+      // Thời gian / Đồng hồ / Hẹn giờ
+      if (/time|clock|hour|minute|timer|watch|alarm|dong-ho|thoi-gian|phut|gio|hen-gio/.test(t)) {
+        return "clock";
+      }
+      // Âm thanh / Luyện nghe / Tai nghe
+      if (/audio|sound|listen|headphone|nghe|am-thanh|tai-nghe|speaker/.test(t)) {
+        return "headphones";
+      }
+      // Giọng nói / Phát âm / Luyện nói / Mic
+      if (/speak|voice|mic|talk|shadowing|phat-am|noi|khau-ngu|thoai/.test(t)) {
+        return "mic-speaking";
+      }
+      // Viết / Bút / Đoạn văn / Soạn thảo
+      if (/write|pen|pencil|pismo|viet|bai-viet|doan-van|tap-viet|soan/.test(t)) {
+        return "pen-tool";
+      }
+      // Thi cử / Chứng chỉ / TRKI / Bằng cấp
+      if (/exam|test|trki|torfl|degree|chung-chi|thi|luyen-thi|thi-thu|bang|de-thi/.test(t)) {
+        return "graduation-cap";
+      }
+      // Sách / Bài đọc / Đọc hiểu / Cẩm nang / Ngữ pháp
+      if (/book|read|reading|story|sach|doc|doc-hieu|bai-doc|ngu-phap|truyen|giao-trinh/.test(t)) {
+        return "book-open";
+      }
+      // Lọ từ vựng / Kho từ
+      if (/archive|jar|vocab|tuvung|lo-tu|kho-tu|tu-vung/.test(t)) {
+        return "archive-jar";
+      }
+      // Cửa hàng / Giỏ hàng / Mua sắm
+      if (/shop|store|cart|buy|market|sale|mua|ban|cua-hang|sieu-thi|gio-hang|hang-hoa/.test(t)) {
+        return "shopping-bag";
+      }
+      // Nhà / Nơi ở / Gia đình / Phòng
+      if (/home|house|room|living|nha|phong|ktx|can-ho|gia-dinh|cu-tru/.test(t)) {
+        return "home";
+      }
+      // Người dùng / Cá nhân / Sinh viên / Học viên
+      if (/user|person|people|student|account|profile|hoc-vien|nguoi|sinh-vien|ca-nhan|tai-khoan|avatar/.test(t)) {
+        return "user";
+      }
+      // Thú cưng / Động vật
+      if (/pet|animal|paw|dog|cat|dong-vat|thu-cung|meo|cho/.test(t)) {
+        return "paw";
+      }
+      // Ẩm thực / Ăn uống / Nhà hàng / Món ăn
+      if (/food|eat|drink|cook|meal|restaurant|an|uong|am-thuc|nha-hang|mon-an|bep/.test(t)) {
+        return "utensils";
+      }
+      // Du lịch / Máy bay / Sân bay
+      if (/travel|flight|plane|airplane|bay|may-bay|du-lich|san-bay/.test(t)) {
+        return "plane";
+      }
+      // Giao thông / Xe cộ / Tàu điện / Xe buýt
+      if (/transport|train|metro|subway|bus|car|tau|xe|giao-thong/.test(t)) {
+        return "train";
+      }
+      // Y tế / Thuốc / Bệnh viện / Sức khỏe
+      if (/med|pill|health|hospital|doctor|y-te|thuoc|benh|suc-khoe|bac-si/.test(t)) {
+        return "pill";
+      }
+      // Mùa đông / Tuyết / Lạnh
+      if (/snow|winter|cold|tuyet|mua-dong|lanh/.test(t)) {
+        return "snowflake";
+      }
+      // Mặt trời / Mùa hè / Nắng
+      if (/sun|sunny|hot|summer|nang|mua-he/.test(t)) {
+        return "sun";
+      }
+      // Sao / Yêu thích / Đánh giá
+      if (/star|fav|rate|sao|yeu-thich|danh-gia/.test(t)) {
+        return "star";
+      }
+      // Hoàn thành / Đúng / Đạt
+      if (/check|done|success|correct|pass|dung|dat|hoan-thanh|thanh-cong/.test(t)) {
+        return "check-circle-correct";
+      }
+      // Đóng / Hủy / Lỗi / Sai
+      if (/cancel|close|error|wrong|fail|dong|huy|sai|that-bai|loi/.test(t)) {
+        return "x";
+      }
+      // Xóa / Thùng rác
+      if (/delete|trash|remove|xoa|thung-rac|huy-bo/.test(t)) {
+        return "trash-2";
+      }
+      // Sửa / Chỉnh sửa
+      if (/edit|modify|chinh-sua|sua|cap-nhat/.test(t)) {
+        return "edit-3";
+      }
+      // Cài đặt / Cấu hình / Thiết lập
+      if (/setting|config|gear|cai-dat|thiet-lap|cau-hinh/.test(t)) {
+        return "settings-gear";
+      }
+      // Tìm kiếm / Tra cứu
+      if (/search|find|lookup|tim|tra-cuu|tim-kiem/.test(t)) {
+        return "search-icon";
+      }
+      // Tin nhắn / Chat / Trò chuyện
+      if (/chat|message|hoi-dap|tin-nhan|tro-chuyen/.test(t)) {
+        return "message-circle";
+      }
+      // Thông báo / Chuông
+      if (/bell|notify|notification|thong-bao|chuong|nhac-nho/.test(t)) {
+        return "bell";
+      }
+      // Khóa / Bảo mật
+      if (/lock|secure|security|khoa|bao-mat/.test(t)) {
+        return "lock-pro";
+      }
+      // Cúp / Phần thưởng / Huy hiệu
+      if (/trophy|cup|rank|medal|award|giai-thuong|xep-hang|huy-hieu/.test(t)) {
+        return "trophy-reward";
+      }
+      // Streak / Lửa
+      if (/flame|fire|streak|chuoi|chay/.test(t)) {
+        return "flame-streak";
+      }
+      // XP / Điểm
+      if (/zap|bolt|energy|xp|kinh-nghiem|diem/.test(t)) {
+        return "zap-xp";
+      }
+      // VIP / Pro / Vương miện
+      if (/crown|vip|pro|vuong-mien|hoang-gia/.test(t)) {
+        return "crown-vip";
+      }
+
       return "sparkles-clean";
     },
 
@@ -834,6 +1271,22 @@
     },
 
     /**
+     * Kiểm tra icon có tồn tại hoặc nhận diện được không
+     */
+    has: function (name) {
+      if (!name) return false;
+      var id = this.resolveId(name);
+      return Boolean(RUSI_ICONS[id]);
+    },
+
+    /**
+     * Danh sách toàn bộ icon ID chính thức trong hệ thống
+     */
+    list: function () {
+      return Object.keys(RUSI_ICONS);
+    },
+
+    /**
      * Đăng ký bổ sung icon động nếu cần
      */
     register: function (id, paths, aliases) {
@@ -850,6 +1303,46 @@
       }
     }
   };
+
+  // Đăng ký Web Component Native Custom Element <rusi-icon> (tự động hiểu khi chèn HTML mới)
+  if (typeof customElements !== 'undefined' && !customElements.get('rusi-icon')) {
+    try {
+      class RusiIconElement extends HTMLElement {
+        static get observedAttributes() {
+          return ['name', 'data-icon', 'size', 'stroke', 'color', 'class'];
+        }
+        connectedCallback() {
+          this.render();
+        }
+        attributeChangedCallback() {
+          this.render();
+        }
+        render() {
+          var name = this.getAttribute('name') || this.getAttribute('data-icon') || 'sparkles-clean';
+          var size = parseInt(this.getAttribute('size') || this.getAttribute('data-size'), 10) || 24;
+          var stroke = parseFloat(this.getAttribute('stroke') || this.getAttribute('data-stroke')) || 2;
+          var color = this.getAttribute('color') || this.getAttribute('data-color') || 'currentColor';
+          var extraClass = this.getAttribute('class') || '';
+          this.innerHTML = RusiIcons.get(name, {
+            size: size,
+            strokeWidth: stroke,
+            color: color,
+            className: extraClass
+          });
+        }
+      }
+      customElements.define('rusi-icon', RusiIconElement);
+    } catch (e) {
+      // Bỏ qua nếu môi trường không hỗ trợ custom elements
+    }
+  }
+
+  // Khởi tạo global shortcut helper tiện dụng
+  if (typeof window !== 'undefined') {
+    window.rusiIcon = function (name, opts) {
+      return RusiIcons.get(name, opts);
+    };
+  }
 
   // Tự động kích hoạt khi DOM sẵn sàng và kích hoạt Observer
   if (typeof document !== 'undefined') {
