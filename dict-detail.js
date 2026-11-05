@@ -351,15 +351,24 @@ const WordDetail = (() => {
   }
 
   function addToJar(entry) {
+    if (!entry || !entry.ru) return;
+    let viText = (entry.vi || "").trim();
+    if (viText.includes("\n")) {
+      viText = viText.split("\n").map(l => l.trim()).filter(Boolean).slice(0, 3).join("; ");
+    }
+    const payload = {
+      ru: entry.ru,
+      stress: entry.ru,
+      vi: viText,
+      note: entry.pron || entry.pos || entry.gram || "",
+      ex: entry.ex ? entry.ex.split("\n")[0] : ""
+    };
     if (typeof window.openAddToJarModal === "function") {
-      window.openAddToJarModal({
-        ru: entry.ru,
-        vi: (entry.vi || "").split("\n")[0] || "",
-        note: entry.pron || entry.pos || "",
-        ex: entry.ex || ""
-      });
+      window.openAddToJarModal(payload);
       return;
     }
+
+
     let customJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
     if (!customJars.length) {
       customJars = [{
@@ -379,12 +388,7 @@ const WordDetail = (() => {
       return;
     }
     targetJar.words = targetJar.words || [];
-    targetJar.words.push({
-      ru: entry.ru,
-      meaning: (entry.vi || "").split("\n")[0] || "",
-      trans: entry.pron || "",
-      ex: entry.ex || ""
-    });
+    targetJar.words.push(payload);
     if (typeof STORE !== "undefined") {
       STORE.set("custom_jars", customJars);
     }
@@ -392,9 +396,14 @@ const WordDetail = (() => {
   }
 
   function bindSrs(root, entry) {
-    if (!window.SRS) return;
     const addJar = root.querySelector("#wdAddJar");
     if (addJar) addJar.addEventListener("click", () => addToJar(entry));
+    const study = root.querySelector("#wdStudy");
+    if (study) study.addEventListener("click", () => {
+      window.location.href = "vocabulary.html#algorithm";
+    });
+
+    if (!window.SRS) return;
     const add = root.querySelector("#wdAdd");
     if (add) add.addEventListener("click", () => {
       const r = SRS.addToQueue(entry.ru);
@@ -424,10 +433,6 @@ const WordDetail = (() => {
       SRS.unmarkMastered(SRS.cardId(canonical));
       toast("Đã bỏ Mastered");
       rerender();
-    });
-    const study = root.querySelector("#wdStudy");
-    if (study) study.addEventListener("click", () => {
-      window.location.href = "vocabulary.html#algorithm";
     });
   }
 
