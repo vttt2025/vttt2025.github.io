@@ -6035,7 +6035,7 @@ function initListeningPage() {
               ${icon("arrow-left", 20)}
             </button>
             <div class="lis-dict-topbar-heading">
-              <h1 class="lis-dict-topbar-title">Nghe hiểu - ${esc(lesson.title)}</h1>
+              <h1 class="lis-dict-topbar-title"><span class="lis-dict-title-prefix">Nghe hiểu - </span><span class="lis-dict-title-topic">${esc(lesson.title)}</span></h1>
             </div>
             <button type="button" class="lis-dict-topbar-menu-btn" id="btnCompToggleSidebar" aria-label="Danh sách bài luyện" title="Xem danh sách bài luyện">
               ${icon("list", 20)}
@@ -6514,8 +6514,7 @@ function initListeningPage() {
               ${icon("arrow-left", 20)}
             </button>
             <div class="lis-dict-topbar-heading">
-              <span class="lis-dict-topbar-subtitle">Nghe chép chính tả · ${esc(lesson.level || "A1")}</span>
-              <h1 class="lis-dict-topbar-title">${esc(lesson.title)}</h1>
+              <h1 class="lis-dict-topbar-title"><span class="lis-dict-title-prefix">Nghe chép chính tả - </span><span class="lis-dict-title-topic">${esc(lesson.title)}</span></h1>
             </div>
             <button type="button" class="lis-dict-topbar-menu-btn" id="btnDictToggleSidebar" aria-label="Danh sách bài luyện" title="Xem danh sách bài luyện">
               ${icon("list", 20)}
@@ -6528,10 +6527,7 @@ function initListeningPage() {
             <!-- CỘT TRÁI (3 PHẦN): DANH SÁCH BÀI LUYỆN TRONG CHỦ ĐỀ / CẤP ĐỘ (Req 11, không có lis-dict-sentence-snippet - Req 1) -->
             <aside class="lis-dict-sidebar-panel" id="dictSidebarPanel">
               <div class="lis-dict-sidebar-header">
-                <div>
-                  <span class="lis-dict-sidebar-eyebrow">CHỦ ĐỀ · CẤP ĐỘ ${esc(lesson.level || "A1")}</span>
-                  <h3 class="lis-dict-sidebar-title">Danh sách bài luyện</h3>
-                </div>
+                <h3 class="lis-dict-sidebar-title">Danh sách bài luyện</h3>
                 <button type="button" class="lis-dict-sidebar-close-btn" id="btnDictCloseSidebar" aria-label="Đóng danh sách">
                   ${icon("x", 18)}
                 </button>
@@ -6687,95 +6683,98 @@ function initListeningPage() {
                 </div>
               </section>
 
-              <!-- 3. Thanh công cụ (Hiển thị 1 dòng trên mobile với các nút icon) -->
-              <div class="lis-dict-toolbar-card">
-                <div class="lis-dict-percent-group" role="group" aria-label="Mức độ ẩn từ gợi ý">
-                  <button type="button" class="lis-dict-pct-btn ${currentBlankPct === 30 ? "is-active" : ""}" data-pct="30" title="Chỉ ẩn 30% từ (Dễ)">30%</button>
-                  <button type="button" class="lis-dict-pct-btn ${currentBlankPct === 50 ? "is-active" : ""}" data-pct="50" title="Ẩn 50% từ (Vừa)">50%</button>
-                  <button type="button" class="lis-dict-pct-btn ${currentBlankPct === 100 ? "is-active" : ""}" data-pct="100" title="Ẩn toàn bộ 100% từ (Thử thách)">100%</button>
-                </div>
-
-                <div class="lis-dict-toolbar-right">
-                  <button type="button" class="lis-dict-tool-btn" id="btnDictHint" title="Gợi ý 1 từ (phím Tab)">
-                    ${icon("eye", 15)} <span>Gợi ý từ (Tab)</span>
-                  </button>
-                  <button type="button" class="lis-dict-tool-btn ${hideInstantCheck ? "is-active" : ""}" id="btnToggleHideResult" title="Ẩn kết quả tới khi nhấn Enter">
-                    ${icon("eye-off", 15)} <span>${hideInstantCheck ? "Đang ẩn kết quả" : "Ẩn kết quả"}</span>
-                  </button>
-                  <button type="button" class="lis-dict-tool-btn ${showAnswer ? "is-active" : ""}" id="btnToggleAnswer" title="Hiện đáp án chuẩn">
-                    ${icon(showAnswer ? "eye-off" : "check", 15)} <span>${showAnswer ? "Ẩn đáp án" : "Hiện đáp án"}</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- 4. Khu vực làm bài chính (Chép chính tả - Req 6: bỏ lis-dict-input-note) -->
+              <!-- 3. Thẻ làm bài chính thống nhất (Gộp Toolbar + Practice + Vocab vào 1 thẻ) -->
               <section class="lis-dict-practice-card" id="dictPracticeCard">
-                <div class="lis-dict-sentence-flow" id="dictSentenceFlow"></div>
-
-                <!-- Dòng hiển thị đáp án trực tiếp tại đây, không thêm thẻ box mới (Req 7) -->
-                <div class="lis-dict-inline-result ${showAnswer ? "" : "hidden"}" id="dictInlineResult">
-                  <span class="lis-dict-inline-badge">${icon("check", 14)} Đáp án:</span>
-                  <span class="lis-dict-inline-ru ru">${esc(s.ru)}</span>
-                  ${s.vi ? `<span class="lis-dict-inline-vi">— ${esc(s.vi)}</span>` : ""}
-                  <button type="button" class="btn-icon lis-dict-inline-speak" id="btnDictSpeakInlineAnswer" title="Nghe câu đáp án">
-                    ${icon("volume-high", 15)}
-                  </button>
-                </div>
-
-                <!-- Banner chúc mừng khi hoàn thành câu -->
-                <div class="lis-dict-celebration ${isCurrentDone ? "" : "hidden"}" id="dictCelebration">
-                  ${icon("check-circle-correct", 20)}
-                  <span>Xuất sắc! Bạn đã chép chính xác câu này (+10 XP)</span>
-                </div>
-              </section>
-
-              <!-- 5. Khung phụ dưới: Từ vựng nên học -->
-              <section class="lis-dict-vocab-box ${isUnlocked ? "is-unlocked" : "is-locked"}" id="dictVocabBox">
-                ${!isUnlocked ? `
-                  <div class="lis-dict-lock-badge">
-                    <span class="lis-dict-lock-icon">${icon("lock", 26)}</span>
-                    <div class="lis-dict-lock-copy">
-                      <strong>Chép xong câu để xem ${s.vocab.length} từ nên học</strong>
-                      <p>Từ vựng nằm ngay trong câu, hiện sớm sẽ lộ đáp án.</p>
-                    </div>
+                <!-- 3a. Thanh công cụ (Hiển thị 1 dòng trên mobile với các nút icon) -->
+                <div class="lis-dict-toolbar-card">
+                  <div class="lis-dict-percent-group" role="group" aria-label="Mức độ ẩn từ gợi ý">
+                    <button type="button" class="lis-dict-pct-btn ${currentBlankPct === 30 ? "is-active" : ""}" data-pct="30" title="Chỉ ẩn 30% từ (Dễ)">30%</button>
+                    <button type="button" class="lis-dict-pct-btn ${currentBlankPct === 50 ? "is-active" : ""}" data-pct="50" title="Ẩn 50% từ (Vừa)">50%</button>
+                    <button type="button" class="lis-dict-pct-btn ${currentBlankPct === 70 ? "is-active" : ""}" data-pct="70" title="Ẩn 70% từ (Thử thách)">70%</button>
                   </div>
-                  <button type="button" class="btn btn-outline btn-sm" id="btnUnlockVocabEarly" title="Mở khóa xem từ vựng ngay">
-                    ${icon("eye", 14)} <span>Xem sớm</span>
-                  </button>
-                ` : `
-                  <div class="lis-dict-vocab-header">
-                    <div class="lis-dict-vocab-header-left">
-                      <span class="lis-dict-vocab-sparkle">${icon("sparkles-clean", 20)}</span>
-                      <div>
-                        <strong>Từ vựng nên học trong câu</strong>
-                        <small>Nhấp icon lọ để lưu trực tiếp vào Lọ từ vựng cá nhân</small>
+
+                  <div class="lis-dict-toolbar-right">
+                    <button type="button" class="lis-dict-tool-btn" id="btnDictHint" title="Gợi ý 1 từ (phím Tab)">
+                      ${icon("eye", 15)} <span>Gợi ý từ (Tab)</span>
+                    </button>
+                    <button type="button" class="lis-dict-tool-btn ${hideInstantCheck ? "is-active" : ""}" id="btnToggleHideResult" title="Ẩn kết quả tới khi nhấn Enter">
+                      ${icon("eye-off", 15)} <span>${hideInstantCheck ? "Đang ẩn kết quả" : "Ẩn kết quả"}</span>
+                    </button>
+                    <button type="button" class="lis-dict-tool-btn ${showAnswer ? "is-active" : ""}" id="btnToggleAnswer" title="Hiện đáp án chuẩn">
+                      ${icon(showAnswer ? "eye-off" : "check", 15)} <span>${showAnswer ? "Ẩn đáp án" : "Hiện đáp án"}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 3b. Khu vực chép chính tả -->
+                <div class="lis-dict-practice-body">
+                  <div class="lis-dict-sentence-flow" id="dictSentenceFlow"></div>
+
+                  <!-- Dòng hiển thị đáp án trực tiếp tại đây, không thêm thẻ box mới (Req 7) -->
+                  <div class="lis-dict-inline-result ${showAnswer ? "" : "hidden"}" id="dictInlineResult">
+                    <span class="lis-dict-inline-badge">${icon("check", 14)} Đáp án:</span>
+                    <span class="lis-dict-inline-ru ru">${esc(s.ru)}</span>
+                    ${s.vi ? `<span class="lis-dict-inline-vi">— ${esc(s.vi)}</span>` : ""}
+                    <button type="button" class="btn-icon lis-dict-inline-speak" id="btnDictSpeakInlineAnswer" title="Nghe câu đáp án">
+                      ${icon("volume-high", 15)}
+                    </button>
+                  </div>
+
+                  <!-- Banner chúc mừng khi hoàn thành câu -->
+                  <div class="lis-dict-celebration ${isCurrentDone ? "" : "hidden"}" id="dictCelebration">
+                    ${icon("check-circle-correct", 20)}
+                    <span>Xuất sắc! Bạn đã chép chính xác câu này (+10 XP)</span>
+                  </div>
+                </div>
+
+                <!-- 3c. Khung phụ dưới: Từ vựng nên học tích hợp -->
+                <div class="lis-dict-vocab-box ${isUnlocked ? "is-unlocked" : "is-locked"}" id="dictVocabBox">
+                  ${!isUnlocked ? `
+                    <div class="lis-dict-lock-badge">
+                      <span class="lis-dict-lock-icon">${icon("lock", 26)}</span>
+                      <div class="lis-dict-lock-copy">
+                        <strong>Chép xong câu để xem ${s.vocab.length} từ nên học</strong>
+                        <p>Từ vựng nằm ngay trong câu, hiện sớm sẽ lộ đáp án.</p>
                       </div>
                     </div>
-                    <span class="lis-dict-vocab-count-pill">${s.vocab.length} từ</span>
-                  </div>
+                    <button type="button" class="btn btn-outline btn-sm" id="btnUnlockVocabEarly" title="Mở khóa xem từ vựng ngay">
+                      ${icon("eye", 14)} <span>Xem sớm</span>
+                    </button>
+                  ` : `
+                    <div class="lis-dict-vocab-header">
+                      <div class="lis-dict-vocab-header-left">
+                        <span class="lis-dict-vocab-sparkle">${icon("sparkles-clean", 20)}</span>
+                        <div>
+                          <strong>Từ vựng nên học trong câu</strong>
+                          <small>Nhấp icon lọ để lưu trực tiếp vào Lọ từ vựng cá nhân</small>
+                        </div>
+                      </div>
+                      <span class="lis-dict-vocab-count-pill">${s.vocab.length} từ</span>
+                    </div>
 
-                  <div class="lis-dict-vocab-list">
-                    ${s.vocab.map(v => `
-                      <div class="lis-dict-vocab-item">
-                        <div class="lis-dict-vocab-item-main">
-                          <div class="lis-dict-vocab-ru-line">
-                            <strong class="lis-dict-vocab-ru ru">${esc(v.stress || v.ru)}</strong>
-                            ${v.pos ? `<span class="lis-dict-vocab-pos">${esc(v.pos)}</span>` : ""}
+                    <div class="lis-dict-vocab-list">
+                      ${s.vocab.map(v => `
+                        <div class="lis-dict-vocab-item">
+                          <div class="lis-dict-vocab-item-main">
+                            <div class="lis-dict-vocab-ru-line">
+                              <strong class="lis-dict-vocab-ru ru">${esc(v.stress || v.ru)}</strong>
+                              ${v.pos ? `<span class="lis-dict-vocab-pos">${esc(v.pos)}</span>` : ""}
+                            </div>
+                            <p class="lis-dict-vocab-vi">${esc(v.vi)}</p>
                           </div>
-                          <p class="lis-dict-vocab-vi">${esc(v.vi)}</p>
+                          <div class="lis-dict-vocab-actions">
+                            <button type="button" class="lis-dict-vocab-btn-action dict-vocab-speak" data-word="${esc(v.ru)}" title="Nghe phát âm từ này">
+                              ${icon("volume-high", 18)}
+                            </button>
+                            <button type="button" class="lis-dict-vocab-btn-action dict-vocab-addjar" data-ru="${esc(v.ru)}" data-vi="${esc(v.vi)}" data-stress="${esc(v.stress || v.ru)}" data-pos="${esc(v.pos || "")}" title="Thêm vào Lọ từ vựng của bạn">
+                              ${icon("archive-jar", 18)}
+                            </button>
+                          </div>
                         </div>
-                        <div class="lis-dict-vocab-actions">
-                          <button type="button" class="lis-dict-vocab-btn-action dict-vocab-speak" data-word="${esc(v.ru)}" title="Nghe phát âm từ này">
-                            ${icon("volume-high", 18)}
-                          </button>
-                          <button type="button" class="lis-dict-vocab-btn-action dict-vocab-addjar" data-ru="${esc(v.ru)}" data-vi="${esc(v.vi)}" data-stress="${esc(v.stress || v.ru)}" data-pos="${esc(v.pos || "")}" title="Thêm vào Lọ từ vựng của bạn">
-                            ${icon("archive-jar", 18)}
-                          </button>
-                        </div>
-                      </div>
-                    `).join("")}
-                  </div>
-                `}
+                      `).join("")}
+                    </div>
+                  `}
+                </div>
               </section>
             </main>
           </div>

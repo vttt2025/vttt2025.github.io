@@ -25320,6 +25320,14 @@ body.has-bottom-bar .rusika-floating-widget {
   text-overflow: ellipsis;
 }
 
+.lis-dict-title-prefix {
+  display: inline;
+}
+
+.lis-dict-title-topic {
+  display: inline;
+}
+
 .lis-dict-topbar-menu-btn {
   display: none;
   width: 44px;
@@ -26063,13 +26071,65 @@ body.has-bottom-bar .rusika-floating-widget {
   background: #fef3c7;
 }
 
-/* 4. Khu vực làm bài chính (Chép chính tả) */
+/* 4. Khu vực làm bài chính (Chép chính tả - Gộp chung Toolbar + Practice + Vocab) */
 .lis-dict-practice-card {
-  padding: 28px;
+  padding: 0;
   border-radius: 20px;
   background: var(--surface);
   border: 1.5px solid var(--border);
   box-shadow: 0 4px 20px rgba(16, 42, 76, 0.05);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.lis-dict-practice-card .lis-dict-toolbar-card {
+  border-radius: 0;
+  border: none;
+  border-bottom: 1.5px solid var(--border);
+  box-shadow: none;
+  background: rgba(23, 87, 166, 0.02);
+  padding: 12px 24px;
+}
+
+[data-theme="dark"] .lis-dict-practice-card .lis-dict-toolbar-card {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.lis-dict-practice-body {
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+}
+
+.lis-dict-practice-card .lis-dict-vocab-box {
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+}
+
+.lis-dict-practice-card .lis-dict-vocab-box.is-locked {
+  border-top: 1.5px dashed var(--border);
+  padding: 18px 24px;
+  background: rgba(238, 244, 251, 0.5);
+}
+
+[data-theme="dark"] .lis-dict-practice-card .lis-dict-vocab-box.is-locked {
+  background: rgba(255, 255, 255, 0.02);
+  border-top-color: rgba(255, 255, 255, 0.1);
+}
+
+.lis-dict-practice-card .lis-dict-vocab-box.is-unlocked {
+  border-top: 1.5px solid rgba(23, 87, 166, 0.18);
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(23, 87, 166, 0.025), var(--primary-soft));
+}
+
+[data-theme="dark"] .lis-dict-practice-card .lis-dict-vocab-box.is-unlocked {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(23, 87, 166, 0.12));
+  border-top-color: rgba(255, 255, 255, 0.1);
 }
 
 .lis-dict-sentence-flow {
@@ -26490,7 +26550,7 @@ body.has-bottom-bar .rusika-floating-widget {
 
 .lis-dict-sidebar-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 16px;
@@ -26506,7 +26566,7 @@ body.has-bottom-bar .rusika-floating-widget {
 }
 
 .lis-dict-sidebar-title {
-  margin: 3px 0 0;
+  margin: 0;
   font-size: 1rem;
   font-weight: 800;
   color: var(--text);
@@ -26681,6 +26741,9 @@ body.has-bottom-bar .rusika-floating-widget {
     margin-bottom: 14px;
     padding: 8px 12px;
   }
+  .lis-dict-title-prefix {
+    display: none !important;
+  }
   .lis-dict-topbar-menu-btn {
     display: inline-flex;
   }
@@ -26688,6 +26751,20 @@ body.has-bottom-bar .rusika-floating-widget {
     display: block;
   }
   .lis-dict-practice-card {
+    padding: 0;
+    border-radius: 16px;
+  }
+  .lis-dict-practice-card .lis-dict-toolbar-card {
+    padding: 8px 10px !important;
+  }
+  .lis-dict-practice-body {
+    padding: 18px 14px;
+    gap: 14px;
+  }
+  .lis-dict-practice-card .lis-dict-vocab-box.is-locked {
+    padding: 14px;
+  }
+  .lis-dict-practice-card .lis-dict-vocab-box.is-unlocked {
     padding: 18px 14px;
   }
   .lis-dict-sentence-flow {
