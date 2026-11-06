@@ -6570,10 +6570,10 @@ function initListeningPage() {
                 <div class="lis-dict-waveform-wrap" id="dictWaveformWrap" aria-label="Giao diện sóng âm phát âm thanh"></div>
 
                 <div class="lis-dict-player-controls">
-                  <!-- Cụm trái: Phát lại 1 -->
+                  <!-- Cụm trái: Phát lại -->
                   <div class="lis-dict-ctrl-left">
                     <button type="button" class="lis-dict-btn-replay" id="btnDictReplay" title="Phát lại từ đầu câu này">
-                      ${icon("rotate-ccw", 16)} <span>Phát lại 1</span>
+                      ${icon("rotate-ccw", 16)} <span>Phát lại</span>
                     </button>
                   </div>
 
@@ -6694,14 +6694,8 @@ function initListeningPage() {
                   </div>
 
                   <div class="lis-dict-toolbar-right">
-                    <button type="button" class="lis-dict-tool-btn" id="btnDictHint" title="Gợi ý 1 từ (phím Tab)">
-                      ${icon("eye", 15)} <span>Gợi ý từ (Tab)</span>
-                    </button>
-                    <button type="button" class="lis-dict-tool-btn ${hideInstantCheck ? "is-active" : ""}" id="btnToggleHideResult" title="Ẩn kết quả tới khi nhấn Enter">
-                      ${icon("eye-off", 15)} <span>${hideInstantCheck ? "Đang ẩn kết quả" : "Ẩn kết quả"}</span>
-                    </button>
-                    <button type="button" class="lis-dict-tool-btn ${showAnswer ? "is-active" : ""}" id="btnToggleAnswer" title="Hiện đáp án chuẩn">
-                      ${icon(showAnswer ? "eye-off" : "check", 15)} <span>${showAnswer ? "Ẩn đáp án" : "Hiện đáp án"}</span>
+                    <button type="button" class="lis-dict-tool-btn is-icon-only ${hideInstantCheck ? "is-active" : ""}" id="btnToggleHideResult" title="${hideInstantCheck ? "Đang ẩn kết quả (nhấn Enter để kiểm tra)" : "Ẩn kết quả tới khi nhấn Enter"}" aria-label="Ẩn kết quả">
+                      ${icon("eye-off", 16)}
                     </button>
                   </div>
                 </div>
@@ -6719,27 +6713,18 @@ function initListeningPage() {
                       ${icon("volume-high", 15)}
                     </button>
                   </div>
-
-                  <!-- Banner chúc mừng khi hoàn thành câu -->
-                  <div class="lis-dict-celebration ${isCurrentDone ? "" : "hidden"}" id="dictCelebration">
-                    ${icon("check-circle-correct", 20)}
-                    <span>Xuất sắc! Bạn đã chép chính xác câu này (+10 XP)</span>
-                  </div>
                 </div>
 
                 <!-- 3c. Khung phụ dưới: Từ vựng nên học tích hợp -->
                 <div class="lis-dict-vocab-box ${isUnlocked ? "is-unlocked" : "is-locked"}" id="dictVocabBox">
                   ${!isUnlocked ? `
                     <div class="lis-dict-lock-badge">
-                      <span class="lis-dict-lock-icon">${icon("lock", 26)}</span>
+                      <span class="lis-dict-lock-icon">${icon("lock", 20)}</span>
                       <div class="lis-dict-lock-copy">
                         <strong>Chép xong câu để xem ${s.vocab.length} từ nên học</strong>
                         <p>Từ vựng nằm ngay trong câu, hiện sớm sẽ lộ đáp án.</p>
                       </div>
                     </div>
-                    <button type="button" class="btn btn-outline btn-sm" id="btnUnlockVocabEarly" title="Mở khóa xem từ vựng ngay">
-                      ${icon("eye", 14)} <span>Xem sớm</span>
-                    </button>
                   ` : `
                     <div class="lis-dict-vocab-header">
                       <div class="lis-dict-vocab-header-left">
@@ -7158,38 +7143,14 @@ function initListeningPage() {
         };
       });
 
-      // 4. Gợi ý 1 từ (Req 5)
-      const hintBtn = host.querySelector("#btnDictHint");
-      if (hintBtn) {
-        hintBtn.onclick = () => {
-          hintOneWord();
-        };
-      }
-
       // 5. Ẩn kết quả tới khi bấm Enter (Req 4)
       const toggleHideBtn = host.querySelector("#btnToggleHideResult");
       if (toggleHideBtn) {
         toggleHideBtn.onclick = () => {
           hideInstantCheck = !hideInstantCheck;
           toggleHideBtn.classList.toggle("is-active", hideInstantCheck);
-          const lbl = toggleHideBtn.querySelector("span");
-          if (lbl) lbl.textContent = hideInstantCheck ? "Đang ẩn kết quả" : "Ẩn kết quả";
+          toggleHideBtn.title = hideInstantCheck ? "Đang ẩn kết quả (nhấn Enter để kiểm tra)" : "Ẩn kết quả tới khi nhấn Enter";
           toast(hideInstantCheck ? "Đang bật ẩn kết quả: Gõ xong nhấn Enter để kiểm tra" : "Đã tắt ẩn kết quả: Tự động chuyển khi điền đúng");
-        };
-      }
-
-      // 6. Hiện / Ẩn đáp án trên dòng (Req 7)
-      const toggleAnsBtn = host.querySelector("#btnToggleAnswer");
-      if (toggleAnsBtn) {
-        toggleAnsBtn.onclick = () => {
-          showAnswer = !showAnswer;
-          const inlineRes = host.querySelector("#dictInlineResult");
-          if (inlineRes) inlineRes.classList.toggle("hidden", !showAnswer);
-          toggleAnsBtn.classList.toggle("is-active", showAnswer);
-          toggleAnsBtn.innerHTML = `
-            ${icon(showAnswer ? "eye-off" : "check", 15)}
-            <span>${showAnswer ? "Ẩn đáp án" : "Hiện đáp án"}</span>
-          `;
         };
       }
 
