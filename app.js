@@ -1983,9 +1983,10 @@ function renderUserArea() {
 function getSynchronizedVocabStats() {
   let stats = { newCount: 0, reviewing: 0, learning: 0, mastered: 0 };
   let dueCount = 0;
+  let st = null;
   if (typeof SRS !== "undefined" && SRS.getState) {
     try {
-      const st = SRS.getState();
+      st = SRS.getState();
       stats = SRS.getStats(st);
       dueCount = SRS.getDueCards(st, 9999).length;
     } catch (e) {
@@ -1997,18 +1998,42 @@ function getSynchronizedVocabStats() {
   const srsMastered = (stats && stats.mastered) || 0;
   const totalMastered = Math.max(masteredWords.length, srsMastered);
 
-  // Đếm tổng số từ vựng trong tất cả các lọ hệ thống
-  let totalWordsInJars = 0;
-  const cachedJars = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("jars:system") : null;
-  if (Array.isArray(cachedJars) && cachedJars.length > 0) {
-    cachedJars.forEach(j => { totalWordsInJars += (j.words || []).length; });
-  } else if (typeof window.DATA !== "undefined" && Array.isArray(window.DATA.vocabJars)) {
-    window.DATA.vocabJars.forEach(j => { totalWordsInJars += (j.words || []).length; });
+  // Đếm từ mới trong phạm vi học tập thực tế của người dùng:
+  // Thẻ isNew trong deck SRS + các từ người dùng đã lưu vào Lọ cá nhân / Lọ yêu thích
+  const masteredSet = new Set(masteredWords.map(w => (w || "").toLowerCase().trim()));
+  if (st && st.cards) {
+    Object.values(st.cards).forEach(c => {
+      if (c.mastered && c.ru) masteredSet.add(c.ru.toLowerCase().trim());
+    });
   }
-  if (totalWordsInJars === 0) totalWordsInJars = 500;
 
-  const totalLearnedOrReview = (stats.learning || 0) + (stats.reviewing || 0);
-  const calculatedNew = Math.max(0, totalWordsInJars - totalMastered - totalLearnedOrReview);
+  const newWordsSet = new Set();
+  if (st && st.cards) {
+    Object.values(st.cards).forEach(c => {
+      if ((c.isNew || c.repetitions === 0) && !c.mastered && c.ru) {
+        const k = c.ru.toLowerCase().trim();
+        if (!masteredSet.has(k)) newWordsSet.add(k);
+      }
+    });
+  }
+
+  const customJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
+  (customJars || []).forEach(j => {
+    (j.words || []).forEach(w => {
+      if (!w || !w.ru) return;
+      const k = w.ru.toLowerCase().trim();
+      if (!masteredSet.has(k) && !newWordsSet.has(k)) {
+        newWordsSet.add(k);
+      }
+    });
+  });
+
+  let calculatedNew = newWordsSet.size;
+  // Nếu người dùng mới tinh (chưa lưu từ nào vào Lọ cá nhân và chưa bắt đầu thẻ SRS), hiển thị 10 từ khởi đầu
+  if (calculatedNew === 0 && totalMastered === 0 && dueCount === 0) {
+    calculatedNew = 10;
+  }
+
   const streak = (typeof STORE !== "undefined") ? STORE.get("streak", 0) : 0;
 
   return {

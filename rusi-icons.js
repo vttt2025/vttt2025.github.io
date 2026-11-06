@@ -681,6 +681,11 @@
       category: "media",
       paths: '<polygon points="23 7 16 12 23 17 23 7"/><rect width="15" height="14" x="1" y="5" rx="2" ry="2"/>'
     },
+    "youtube": {
+      name: "YouTube",
+      category: "media",
+      paths: '<path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><polygon points="10 15 15 12 10 9 10 15"/>'
+    },
     "tag": {
       name: "Thẻ Nhãn (Tag)",
       category: "utilities",
@@ -948,6 +953,7 @@
     "shield-check": "shield-check", "safe": "shield-check", "verified": "shield-check", "an-toan": "shield-check", "chinh-hang": "shield-check", "xac-thuc": "shield-check", "bao-hiem": "shield-check", "uy-tin": "shield-check", "chuan-nga": "shield-check",
     "music": "music", "song": "music", "bai-hat": "music", "nhac": "music", "am-nhac": "music", "audio-track": "music", "giai-dieu": "music", "nhac-nga": "music", "🎵": "music", "🎶": "music",
     "video": "video", "clip": "video", "phim": "video", "movie": "video", "truyen-hinh": "video", "goc-nhin": "video", "📹": "video", "🎥": "video", "🎞️": "video",
+    "youtube": "youtube", "yt": "youtube",
     "tag": "tag", "label": "tag", "the": "tag", "nhan": "tag", "phan-loai": "tag", "chu-de": "tag", "the-loai": "tag", "🏷️": "tag", "🏷": "tag",
     "tags": "tags", "labels": "tags", "nhieu-nhan": "tags",
     "folder-open": "folder-open", "thu-muc-mo": "folder-open", "tai-lieu-mo": "folder-open", "bo-tai-lieu": "folder-open",

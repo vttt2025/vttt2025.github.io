@@ -2649,41 +2649,8 @@ function initVocabPage() {
     }
 
     const renderModalContent = () => {
-      // 1. Gom tất cả từ vựng trong hệ thống
-      const allWordsMap = new Map();
-      const systemJars = (cloudJars && cloudJars.length) ? cloudJars : ((window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("jars:system") : []) || [];
-      systemJars.forEach(jar => {
-        (jar.words || []).forEach(w => {
-          if (!w || !w.ru) return;
-          const k = w.ru.toLowerCase().trim();
-          if (!allWordsMap.has(k)) {
-            allWordsMap.set(k, { ...w, jarTitle: jar.title || jar.name || "" });
-          }
-        });
-      });
-
-      const customJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
-      (customJars || []).forEach(jar => {
-        (jar.words || []).forEach(w => {
-          if (!w || !w.ru) return;
-          const k = w.ru.toLowerCase().trim();
-          if (!allWordsMap.has(k)) {
-            allWordsMap.set(k, { ...w, jarTitle: jar.name || "Lọ cá nhân" });
-          }
-        });
-      });
-
-      if (typeof SRS_WORDS !== "undefined" && Array.isArray(SRS_WORDS)) {
-        SRS_WORDS.forEach(w => {
-          if (!w || !w.ru) return;
-          const k = w.ru.toLowerCase().trim();
-          if (!allWordsMap.has(k)) {
-            allWordsMap.set(k, { ...w, jarTitle: "Kho từ SRS (" + (w.level || "A1") + ")" });
-          }
-        });
-      }
-
-      // 2. Phân loại theo tiến độ
+      // 1. Phân loại theo tiến độ:
+      // Tập hợp các từ đã thuộc (Mastered)
       const masteredListRaw = (typeof STORE !== "undefined") ? STORE.get("vocab_mastered_words", []) : [];
       const masteredSet = new Set(masteredListRaw.map(r => (r || "").toLowerCase().trim()));
 
@@ -2699,6 +2666,7 @@ function initVocabPage() {
         });
       }
 
+      // Tập hợp các từ cần ôn (Due)
       const now = Date.now();
       const dueSet = new Set();
       if (srsState && srsState.cards) {
@@ -2709,25 +2677,85 @@ function initVocabPage() {
         });
       }
 
+      // 2. Gom từ vựng thuộc phạm vi học tập thực tế của người dùng:
+      // (Bao gồm thẻ trong SRS của người dùng và các từ đã lưu vào Lọ cá nhân / Lọ yêu thích)
       const masteredList = [];
       const dueList = [];
       const newList = [];
+      const seenRu = new Set();
 
-      allWordsMap.forEach((word, k) => {
-        if (masteredSet.has(k)) {
-          masteredList.push(word);
-        } else if (dueSet.has(k)) {
-          dueList.push(word);
-        } else {
-          newList.push(word);
-        }
+      // Từ trong SRS cards của người dùng
+      if (srsState && srsState.cards) {
+        Object.values(srsState.cards).forEach(c => {
+          if (!c || !c.ru) return;
+          const k = c.ru.toLowerCase().trim();
+          if (seenRu.has(k)) return;
+          seenRu.add(k);
+
+          const wordItem = {
+            ru: c.ru,
+            stress: c.stress || c.ru,
+            vi: c.vi || "",
+            pos: c.pos || "",
+            level: c.level || "A1",
+            jarTitle: c.jarTitle || "Lộ trình SRS"
+          };
+
+          if (c.mastered || masteredSet.has(k)) {
+            masteredList.push(wordItem);
+          } else if (c.dueDate <= now) {
+            dueList.push(wordItem);
+          } else if (c.isNew || c.repetitions === 0) {
+            newList.push(wordItem);
+          }
+        });
+      }
+
+      // Từ trong Lọ cá nhân / Lọ yêu thích của người dùng (custom_jars)
+      const customJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
+      (customJars || []).forEach(jar => {
+        (jar.words || []).forEach(w => {
+          if (!w || !w.ru) return;
+          const k = w.ru.toLowerCase().trim();
+          if (seenRu.has(k)) return;
+          seenRu.add(k);
+
+          const wordItem = {
+            ru: w.ru,
+            stress: w.stress || w.ru,
+            vi: w.vi || "",
+            pos: w.pos || "",
+            level: w.level || jar.level || "custom",
+            jarTitle: jar.name || "Lọ cá nhân"
+          };
+
+          if (masteredSet.has(k)) {
+            masteredList.push(wordItem);
+          } else if (dueSet.has(k)) {
+            dueList.push(wordItem);
+          } else {
+            newList.push(wordItem);
+          }
+        });
       });
 
+      // Bổ sung các từ người dùng đã đánh dấu thuộc nhưng chưa có trong danh sách trên
       masteredSet.forEach(ruKey => {
-        if (!allWordsMap.has(ruKey)) {
+        if (!seenRu.has(ruKey)) {
+          seenRu.add(ruKey);
           masteredList.push({ ru: ruKey, vi: "Từ đã thuộc", jarTitle: "Đã lưu" });
         }
       });
+
+      // Nếu người dùng mới tinh (chưa lưu từ nào vào Lọ cá nhân và chưa có thẻ trong deck),
+      // hiển thị danh sách từ mới gợi ý khởi đầu (10 từ A1)
+      if (newList.length === 0 && masteredList.length === 0 && dueList.length === 0) {
+        if (typeof SRS_WORDS !== "undefined" && Array.isArray(SRS_WORDS)) {
+          SRS_WORDS.slice(0, 10).forEach(w => {
+            newList.push({ ...w, jarTitle: "Gợi ý khởi đầu (A1)" });
+          });
+        }
+      }
 
       let activeList = currentTab === "mastered" ? masteredList : currentTab === "due" ? dueList : newList;
       if (searchTxt) {
@@ -3792,51 +3820,141 @@ function initListeningPage() {
   const generateConsistentWaveform = (text, count) => {
     const clean = (text || "").trim();
     const profile = new Float32Array(count);
-
-    let seed = 2166136261;
-    for (let i = 0; i < clean.length; i++) {
-      seed = (seed ^ clean.charCodeAt(i)) * 16777619;
+    if (!clean || count <= 0) {
+      profile.fill(0.18);
+      return profile;
     }
-    const prng = (i) => {
-      const x = Math.sin(seed + i * 19.179) * 43758.5453;
+
+    // Bộ sinh số giả ngẫu nhiên có định hướng (deterministic PRNG) theo hạt giống chuỗi
+    // Đảm bảo cùng một câu tiếng Nga luôn có vân sóng âm thanh thực tế nhất quán 100%
+    const hashSeed = (str) => {
+      let h = 2166136261;
+      for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      return h >>> 0;
+    };
+    const baseSeed = hashSeed(clean);
+    const pseudoRand = (i) => {
+      const s = (baseSeed + i * 374761393) ^ 0x5bf03635;
+      const x = Math.sin(s) * 43758.5453;
       return x - Math.floor(x);
     };
 
-    const RUSSIAN_VOWELS = new Set(["а", "е", "ё", "и", "о", "у", "ы", "э", "ю", "я"]);
-    const len = clean.length;
-
-    for (let i = 0; i < count; i++) {
-      const norm = i / (count - 1);
-      const phraseEnvelope = Math.sin(Math.pow(norm, 0.88) * Math.PI);
-
-      let energy = 0.44;
-      if (len > 0) {
-        const charIdx = Math.min(len - 1, Math.floor(norm * len));
-        const ch = clean[charIdx].toLowerCase();
-        if (ch === " " || ch === "," || ch === "-" || ch === "—") {
-          energy = 0.16;
-        } else if (ch === "." || ch === "!" || ch === "?") {
-          energy = 0.10;
-        } else if (RUSSIAN_VOWELS.has(ch)) {
-          energy = 0.84;
-        } else {
-          energy = 0.48;
-        }
-      }
-
-      const syllableRhythm = Math.sin(norm * Math.PI * 14.0) * 0.13;
-      const microGrain = (prng(i) - 0.5) * 0.28;
-
-      const val = Math.max(0.12, Math.min(0.96, (energy + syllableRhythm + microGrain) * (0.34 + phraseEnvelope * 0.66)));
-      profile[i] = val;
+    // Tách các từ trong câu thoại
+    const words = clean.split(/\s+/).filter(Boolean);
+    if (words.length === 0) {
+      profile.fill(0.18);
+      return profile;
     }
 
+    const RUSSIAN_VOWELS = new Set(["а", "е", "ё", "и", "о", "у", "ы", "э", "ю", "я"]);
+    const RUSSIAN_SONORANTS = new Set(["р", "л", "м", "н", "й"]);
+
+    // Phân bổ thanh sóng cho từng từ + khoảng dừng hơi thở tự nhiên giữa các từ
+    const pauseBarsPerWord = Math.max(2, Math.min(4, Math.floor(count / (words.length * 5.5))));
+    const totalPauses = (words.length - 1) * pauseBarsPerWord;
+    const availableBarsForWords = Math.max(words.length * 3, count - totalPauses);
+
+    const totalWordLength = words.reduce((acc, w) => acc + Math.max(2, w.length), 0);
+    const wordBarAllocations = words.map((w) => {
+      const share = Math.max(2, w.length) / totalWordLength;
+      return Math.max(3, Math.round(share * availableBarsForWords));
+    });
+
+    // Cân đối lại tổng số bar khớp chính xác với `count`
+    let allocatedTotal = wordBarAllocations.reduce((a, b) => a + b, 0) + totalPauses;
+    while (allocatedTotal > count) {
+      let maxIdx = 0;
+      for (let j = 1; j < wordBarAllocations.length; j++) {
+        if (wordBarAllocations[j] > wordBarAllocations[maxIdx]) maxIdx = j;
+      }
+      if (wordBarAllocations[maxIdx] > 3) {
+        wordBarAllocations[maxIdx]--;
+        allocatedTotal--;
+      } else break;
+    }
+    while (allocatedTotal < count) {
+      let minIdx = 0;
+      for (let j = 1; j < wordBarAllocations.length; j++) {
+        if (wordBarAllocations[j] < wordBarAllocations[minIdx]) minIdx = j;
+      }
+      wordBarAllocations[minIdx]++;
+      allocatedTotal++;
+    }
+
+    // Khởi tạo biên độ âm học tự nhiên cho từng thanh sóng (Acoustic Envelope)
+    let curBar = 0;
+    words.forEach((word, wIdx) => {
+      const wBars = wordBarAllocations[wIdx];
+      const cleanWord = word.replace(/[.,!?;:«»""'']/g, "").toLowerCase();
+      const hasComma = /[,;—\-]/.test(word);
+
+      // Nhận diện nguyên âm & trọng âm giả định trong từ
+      const vowelIndices = [];
+      for (let c = 0; c < cleanWord.length; c++) {
+        if (RUSSIAN_VOWELS.has(cleanWord[c])) vowelIndices.push(c);
+      }
+      const stressIdx = vowelIndices.length > 0 ? vowelIndices[Math.floor(vowelIndices.length / 2)] : 0;
+
+      for (let b = 0; b < wBars && curBar < count; b++) {
+        const normInWord = b / Math.max(1, wBars - 1);
+        const charPos = Math.min(cleanWord.length - 1, Math.floor(normInWord * cleanWord.length));
+        const ch = cleanWord[charPos] || "";
+
+        // Năng lượng ngữ âm theo âm tiết tiếng Nga
+        let baseEnergy = 0.35;
+        if (RUSSIAN_VOWELS.has(ch)) {
+          const isStressed = charPos === stressIdx;
+          baseEnergy = isStressed ? 0.90 : 0.74;
+        } else if (RUSSIAN_SONORANTS.has(ch)) {
+          baseEnergy = 0.52;
+        } else {
+          baseEnergy = 0.36;
+        }
+
+        // Vòm âm thanh tự nhiên của từ (syllabic envelope)
+        const wordEnvelope = Math.sin(normInWord * Math.PI);
+        const syllableHarmonic = Math.sin(normInWord * Math.PI * Math.max(1, vowelIndices.length)) * 0.14;
+
+        // Vi dao động tự nhiên của dây thanh âm người thật (organic micro-texture)
+        const microJitter = (pseudoRand(curBar) - 0.5) * 0.16;
+
+        // Ngữ điệu tổng thể câu nói (Intonation declination)
+        const globalNorm = curBar / Math.max(1, count - 1);
+        const globalEnvelope = 0.68 + 0.32 * Math.sin(Math.pow(globalNorm, 0.75) * Math.PI);
+
+        let amp = (baseEnergy * 0.72 + wordEnvelope * 0.28 + syllableHarmonic + microJitter) * globalEnvelope;
+        amp = Math.max(0.12, Math.min(0.96, amp));
+
+        profile[curBar] = amp;
+        curBar++;
+      }
+
+      // Khoảng nghỉ tự nhiên giữa 2 từ (Pause valley)
+      if (wIdx < words.length - 1) {
+        const pauseLen = hasComma ? pauseBarsPerWord + 2 : pauseBarsPerWord;
+        for (let p = 0; p < pauseLen && curBar < count; p++) {
+          const pauseJitter = pseudoRand(curBar) * 0.05;
+          profile[curBar] = 0.09 + pauseJitter;
+          curBar++;
+        }
+      }
+    });
+
+    while (curBar < count) {
+      profile[curBar] = 0.09 + pseudoRand(curBar) * 0.04;
+      curBar++;
+    }
+
+    // Làm mượt nhẹ 1 lượt để thanh sóng chuyển tiếp êm ái như phòng thu chuyên nghiệp
     const smoothed = new Float32Array(count);
     for (let i = 0; i < count; i++) {
-      const p = profile[Math.max(0, i - 1)];
-      const c = profile[i];
-      const n = profile[Math.min(count - 1, i + 1)];
-      smoothed[i] = p * 0.22 + c * 0.56 + n * 0.22;
+      const prev = profile[Math.max(0, i - 1)];
+      const cur = profile[i];
+      const next = profile[Math.min(count - 1, i + 1)];
+      smoothed[i] = prev * 0.18 + cur * 0.64 + next * 0.18;
     }
     return smoothed;
   };
@@ -3850,29 +3968,45 @@ function initListeningPage() {
     wrapEl.appendChild(canvas);
     const ctx = canvas.getContext("2d");
 
+    // Live Time Badge
+    const timeBadge = document.createElement("span");
+    timeBadge.className = "lis-dict-wave-time-badge";
+    timeBadge.textContent = "0:00 / 0:00";
+    wrapEl.appendChild(timeBadge);
+
+    const formatTime = (sec) => {
+      const s = Math.max(0, Math.floor(sec || 0));
+      const m = Math.floor(s / 60);
+      const r = s % 60;
+      return m + ":" + (r < 10 ? "0" : "") + r;
+    };
+
+    const estimateDuration = (txt) => {
+      if (!txt) return 3.0;
+      const wCount = txt.trim().split(/\s+/).length;
+      const cCount = txt.length;
+      return Math.max(1.2, Math.min(25, (cCount * 95 + wCount * 110 + 200) / 1000));
+    };
+
     let isPlaying = false;
     let isCompleted = false;
     let animId = null;
-    let durationSec = 3.5;
+    let durationSec = 3.0;
     let startTime = 0;
     let spokenText = "";
     let audioUrl = null;
     let activeCharIndex = -1;
-    let activeWordLength = 0;
     let currentProgress = 0;
     let targetProgress = 0;
     let width = 0;
     let height = 0;
     let hoverX = -1;
 
-    let barCount = 75;
+    let barCount = 95;
     let profile = new Float32Array(barCount);
 
-    const COLOR_PLAYED = "#4598FF";
-    const COLOR_UNPLAYED = "#626B79";
-
     const computeBarCount = (w) => {
-      return Math.max(60, Math.min(100, Math.floor(w / 7.2)));
+      return Math.max(65, Math.min(180, Math.floor(w / 4.4)));
     };
 
     const updateProfile = async () => {
@@ -3886,10 +4020,15 @@ function initListeningPage() {
       profile = generateConsistentWaveform(spokenText, barCount);
     };
 
+    const updateTimeDisplay = () => {
+      const curSec = currentProgress * durationSec;
+      timeBadge.textContent = `${formatTime(curSec)} / ${formatTime(durationSec)}`;
+    };
+
     const resize = () => {
       const rect = wrapEl.getBoundingClientRect();
       width = Math.max(120, Math.floor(rect.width || wrapEl.clientWidth || 400));
-      height = Math.max(48, Math.floor(rect.height || wrapEl.clientHeight || 68));
+      height = Math.max(48, Math.floor(rect.height || wrapEl.clientHeight || 74));
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
@@ -3899,6 +4038,7 @@ function initListeningPage() {
 
       barCount = computeBarCount(width);
       updateProfile();
+      updateTimeDisplay();
     };
 
     resize();
@@ -3917,6 +4057,7 @@ function initListeningPage() {
       currentProgress = pct;
       isCompleted = (pct >= 0.995);
       startTime = Date.now() - (pct * durationSec * 1000);
+      updateTimeDisplay();
       if (typeof options.onSeek === "function") {
         options.onSeek(pct);
       }
@@ -3961,40 +4102,64 @@ function initListeningPage() {
       ctx.clearRect(0, 0, width, height);
 
       const centerY = height / 2;
-      const maxH = Math.max(26, Math.min(48, height * 0.74));
+      const maxH = Math.max(26, Math.min(48, height * 0.72));
       const minH = 4;
 
+      const isDark = document.documentElement.getAttribute("data-theme") === "dark" || (typeof State !== "undefined" && State.theme === "dark");
+      const colorPlayed = isDark ? "#60a5fa" : "#1757a6";
+      const colorActive = isDark ? "#93c5fd" : "#2563eb";
+      const colorUnplayed = isDark ? "rgba(255, 255, 255, 0.18)" : "rgba(100, 116, 139, 0.30)";
+
+      const now = Date.now();
+
       if (isPlaying && durationSec > 0 && !isCompleted) {
-        const elapsed = (Date.now() - startTime) / 1000;
+        const elapsed = (now - startTime) / 1000;
         const timeProgress = Math.min(1.0, elapsed / durationSec);
         if (targetProgress > 0) {
           targetProgress = Math.max(targetProgress, timeProgress);
         } else {
           targetProgress = timeProgress;
         }
-        currentProgress += (targetProgress - currentProgress) * 0.16;
+        currentProgress += (targetProgress - currentProgress) * 0.22;
         if (currentProgress >= 0.995 && timeProgress >= 1.0) {
           currentProgress = 1.0;
           isCompleted = true;
           isPlaying = false;
         }
+        updateTimeDisplay();
       }
 
-      const step = width / barCount;
-      const gap = Math.max(1.1, Math.min(2.0, step * 0.28));
-      const barWidth = Math.max(1.8, step - gap);
-      const radius = barWidth / 2;
+      // Trục tâm sóng âm thanh (Center Acoustic Baseline)
+      ctx.save();
+      ctx.strokeStyle = isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(23, 87, 166, 0.06)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, centerY);
+      ctx.lineTo(width, centerY);
+      ctx.stroke();
+      ctx.restore();
 
+      const step = width / barCount;
+      const gap = Math.max(1.2, Math.min(1.9, step * 0.38));
+      const barWidth = Math.max(1.8, step - gap);
+      const radius = Math.min(barWidth / 2, 2);
+
+      // Vẽ toàn bộ các thanh sóng với biên độ ổn định, chân thực (không bị co giãn méo mó)
       for (let i = 0; i < barCount; i++) {
         const barNorm = (i + 0.5) / barCount;
         const isPassed = isCompleted || currentProgress >= 1.0 || barNorm <= currentProgress;
+        const dist = Math.abs(barNorm - currentProgress);
 
-        ctx.fillStyle = isPassed ? COLOR_PLAYED : COLOR_UNPLAYED;
-
-        const val = profile[i] !== undefined ? profile[i] : 0.35;
+        const val = profile[i] !== undefined ? profile[i] : 0.22;
         const barH = Math.max(minH, minH + val * (maxH - minH));
         const x = i * step + gap / 2;
         const y = centerY - barH / 2;
+
+        if (dist < 0.018 && isPlaying && !isCompleted) {
+          ctx.fillStyle = colorActive;
+        } else {
+          ctx.fillStyle = isPassed ? colorPlayed : colorUnplayed;
+        }
 
         ctx.beginPath();
         if (typeof ctx.roundRect === "function") {
@@ -4005,36 +4170,62 @@ function initListeningPage() {
         ctx.fill();
       }
 
-      // Con trỏ tiến độ
+      // Con trỏ quét sóng siêu mượt (Studio Glowing Playhead)
       if (isPlaying && currentProgress > 0 && currentProgress < 1.0) {
         const headX = currentProgress * width;
-        const headH = Math.min(height - 8, 38);
+        const headH = Math.min(height - 10, maxH + 6);
         const headY = centerY - headH / 2;
 
         ctx.save();
         ctx.beginPath();
         ctx.fillStyle = "#ffffff";
-        ctx.shadowColor = "rgba(69, 152, 255, 0.75)";
+        ctx.shadowColor = isDark ? "rgba(147, 197, 253, 0.85)" : "rgba(37, 99, 235, 0.75)";
         ctx.shadowBlur = 6;
         if (typeof ctx.roundRect === "function") {
-          ctx.roundRect(headX - 1, headY, 2, headH, 1);
+          ctx.roundRect(headX - 1.1, headY, 2.2, headH, 1.1);
         } else {
-          ctx.rect(headX - 1, headY, 2, headH);
+          ctx.rect(headX - 1.1, headY, 2.2, headH);
         }
         ctx.fill();
         ctx.restore();
       }
 
-      // Đường chỉ dẫn khi rê chuột
+      // Đường dẫn & tooltip hiển thị thời gian khi rê chuột (Hover scrub)
       if (hoverX >= 0 && hoverX <= width) {
+        const hoverPct = Math.max(0, Math.min(1, hoverX / width));
+        const hoverSec = hoverPct * durationSec;
+        const hoverTimeStr = formatTime(hoverSec);
+
         ctx.save();
-        ctx.strokeStyle = "rgba(69, 152, 255, 0.35)";
+        ctx.strokeStyle = isDark ? "rgba(147, 197, 253, 0.45)" : "rgba(23, 87, 166, 0.35)";
         ctx.lineWidth = 1;
         ctx.setLineDash([2, 2]);
         ctx.beginPath();
-        ctx.moveTo(hoverX, centerY - 18);
-        ctx.lineTo(hoverX, centerY + 18);
+        ctx.moveTo(hoverX, centerY - 20);
+        ctx.lineTo(hoverX, centerY + 20);
         ctx.stroke();
+
+        // Tooltip thời gian bay theo con trỏ
+        ctx.setLineDash([]);
+        ctx.font = "600 10px Inter, sans-serif";
+        const textW = ctx.measureText(hoverTimeStr).width;
+        const tipW = textW + 10;
+        const tipH = 16;
+        const tipX = Math.max(4, Math.min(width - tipW - 4, hoverX - tipW / 2));
+        const tipY = 4;
+
+        ctx.fillStyle = isDark ? "rgba(15, 23, 42, 0.9)" : "rgba(15, 31, 56, 0.88)";
+        if (typeof ctx.roundRect === "function") {
+          ctx.beginPath();
+          ctx.roundRect(tipX, tipY, tipW, tipH, 4);
+          ctx.fill();
+        } else {
+          ctx.fillRect(tipX, tipY, tipW, tipH);
+        }
+
+        ctx.fillStyle = "#ffffff";
+        ctx.textBaseline = "middle";
+        ctx.fillText(hoverTimeStr, tipX + 5, tipY + tipH / 2);
         ctx.restore();
       }
 
@@ -4044,24 +4235,34 @@ function initListeningPage() {
     animId = requestAnimationFrame(draw);
 
     return {
-      start: (text, estDuration = 3.5, soundUrl = null) => {
+      setSpokenText: (text, soundUrl = null) => {
+        spokenText = text || "";
+        audioUrl = soundUrl || null;
+        durationSec = estimateDuration(spokenText);
+        currentProgress = 0;
+        targetProgress = 0;
+        isCompleted = false;
+        updateProfile();
+        updateTimeDisplay();
+      },
+      start: (text, estDuration = 3.0, soundUrl = null) => {
         isPlaying = true;
         isCompleted = false;
         spokenText = text || "";
         audioUrl = soundUrl || null;
-        durationSec = Math.max(1.5, estDuration);
+        durationSec = Math.max(0.9, estDuration || estimateDuration(spokenText));
         startTime = Date.now();
         currentProgress = 0;
         targetProgress = 0;
         activeCharIndex = 0;
-        activeWordLength = 0;
         updateProfile();
+        updateTimeDisplay();
       },
       updateBoundary: (charIndex, charLength = 0) => {
         activeCharIndex = charIndex;
-        activeWordLength = charLength;
         if (spokenText && spokenText.length > 0) {
-          targetProgress = Math.min(0.98, charIndex / spokenText.length);
+          const ratio = Math.max(0, Math.min(0.98, charIndex / spokenText.length));
+          targetProgress = Math.max(targetProgress, ratio);
         }
       },
       setProgress: (pct) => {
@@ -4069,12 +4270,14 @@ function initListeningPage() {
         targetProgress = currentProgress;
         isCompleted = (currentProgress >= 0.995);
         startTime = Date.now() - (currentProgress * durationSec * 1000);
+        updateTimeDisplay();
       },
       seek: (pct) => {
         currentProgress = Math.max(0, Math.min(1, pct));
         targetProgress = currentProgress;
         isCompleted = (currentProgress >= 0.995);
         startTime = Date.now() - (currentProgress * durationSec * 1000);
+        updateTimeDisplay();
       },
       resume: () => {
         if (currentProgress >= 0.995) {
@@ -4085,6 +4288,7 @@ function initListeningPage() {
         startTime = Date.now() - (currentProgress * durationSec * 1000);
         isPlaying = true;
         isCompleted = false;
+        updateTimeDisplay();
       },
       pause: () => {
         isPlaying = false;
@@ -4094,6 +4298,7 @@ function initListeningPage() {
         currentProgress = 1.0;
         targetProgress = 1.0;
         isCompleted = true;
+        updateTimeDisplay();
       },
       stop: (keepComplete = false) => {
         isPlaying = false;
@@ -4102,6 +4307,7 @@ function initListeningPage() {
           targetProgress = 0;
         }
         activeCharIndex = -1;
+        updateTimeDisplay();
       },
       destroy: () => {
         isPlaying = false;
@@ -4369,7 +4575,7 @@ function initListeningPage() {
           <i data-rusi-icon="arrow-left" data-size="18"></i>
         </button>
         <div class="dau-workspace-info">
-          <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(lesson.icon || "headphones", { size: 22 }) : ""} Part ${lesson.partNumber || 1} · ${esc(lesson.title)}</span>
+          <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(lesson.icon || "headphones", { size: 22 }) : ""} ${esc(lesson.title)}</span>
         </div>
         <div class="dau-workspace-controls" style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
           <div class="speed-pills">
@@ -6342,7 +6548,11 @@ function initListeningPage() {
     let speed = 1.0;
     let loopTimeout = null;
     let progressTimer = null;
+    let autoAdvanceTimeout = null;
     let unlockedVocab = {};
+    let isRePracticing = false;
+    let showCompletedReview = false;
+    let rePracticeDone = new Set();
 
     const isSentenceDone = (idx) => {
       const key = `${lesson.id}_dict_${idx}`;
@@ -6364,6 +6574,11 @@ function initListeningPage() {
           playCurrentAudio();
         }
       });
+      const s = sentences[currentSentenceIdx];
+      if (dictWaveform && s && s.ru) {
+        const soundUrl = (s.audio_url || s.audio) || null;
+        dictWaveform.setSpokenText(s.ru, soundUrl);
+      }
     };
 
     const stopAudio = () => {
@@ -6401,9 +6616,10 @@ function initListeningPage() {
       const playBtn = host.querySelector("#btnDictPlay");
       if (playBtn) playBtn.innerHTML = icon("pause-control", 24);
 
-      const estDurationSec = Math.max(2.2, (s.ru.length * 115 + (s.ru.split(/[.,?!—;:]/).length - 1) * 260) / (speed * 1000));
-      const estDurationMs = estDurationSec * 1000;
-      const soundUrl = (s && (s.audio_url || s.audio)) || (lesson && (lesson.audio_url || lesson.audio)) || null;
+      const wordCount = s.ru.trim().split(/\s+/).length;
+      const charCount = s.ru.length;
+      const estDurationSec = Math.max(0.9, Math.min(25, (charCount * 95 + wordCount * 110 + 200) / (speed * 1000)));
+      const soundUrl = (s && (s.audio_url || s.audio)) || null;
       if (dictWaveform) {
         dictWaveform.start(s.ru, estDurationSec, soundUrl);
       }
@@ -6439,7 +6655,7 @@ function initListeningPage() {
           if (v) u.voice = v;
         }
         u.onboundary = (e) => {
-          if (dictWaveform && e.charIndex !== undefined) {
+          if (dictWaveform && e.charIndex !== undefined && s.ru.length > 0) {
             dictWaveform.updateBoundary(e.charIndex, e.charLength || 0);
           }
         };
@@ -6503,8 +6719,12 @@ function initListeningPage() {
       const s = sentences[currentSentenceIdx];
       const completedLessonsCount = allLessons.filter(isLessonDone).length;
       const pctTopicDone = allLessons.length > 0 ? Math.round((completedLessonsCount / allLessons.length) * 100) : 0;
-      const isCurrentDone = isSentenceDone(currentSentenceIdx);
-      const isUnlocked = isCurrentDone || !!unlockedVocab[currentSentenceIdx];
+      const isLessonCompleted = isLessonDone(lesson);
+      const isCurrentSentenceDone = isRePracticing ? rePracticeDone.has(currentSentenceIdx) : isSentenceDone(currentSentenceIdx);
+      const isUnlocked = isCurrentSentenceDone || (!isRePracticing && isSentenceDone(currentSentenceIdx)) || !!unlockedVocab[currentSentenceIdx];
+      const allReDone = isRePracticing && sentences.length > 0 && sentences.every((_, i) => rePracticeDone.has(i));
+      const isBannerVisible = isLessonCompleted && !isRePracticing && !showCompletedReview;
+      const showPracticeCard = !isLessonCompleted || isRePracticing || showCompletedReview;
 
       host.innerHTML = `
         <div class="lis-dict-workspace-shell">
@@ -6683,7 +6903,57 @@ function initListeningPage() {
                 </div>
               </section>
 
-              <!-- 3. Thẻ làm bài chính thống nhất (Gộp Toolbar + Practice + Vocab vào 1 thẻ) -->
+              <!-- 2.5 Banner nhắc bài đã hoàn thành -->
+              ${isBannerVisible ? `
+                <div class="lis-dict-completed-banner is-completed-card">
+                  <div class="lis-dict-completed-banner-left">
+                    <span class="lis-dict-completed-banner-icon">
+                      ${icon("check-circle-correct", 24)}
+                    </span>
+                    <div class="lis-dict-completed-banner-text">
+                      <div class="lis-dict-completed-banner-title">
+                        Bài luyện tập này đã hoàn thành!
+                      </div>
+                      <div class="lis-dict-completed-banner-sub">
+                        Bạn đã nghe chép chính xác tất cả các câu trong bài. Bạn có muốn luyện tập thêm để nâng cao phản xạ không?
+                      </div>
+                    </div>
+                  </div>
+                  <div class="lis-dict-completed-banner-actions">
+                    <button type="button" class="btn-dict-repractice btn-dict-repractice-hero" id="btnDictRePractice" title="Bắt đầu luyện tập lại bài này">
+                      ${icon("rotate-ccw", 16)} <span>Luyện lại bài này</span>
+                    </button>
+                    <button type="button" class="btn-dict-repractice-exit" id="btnDictViewCompleted" title="Xem lại đáp án đã hoàn thành">
+                      ${icon("eye", 15)} <span>Xem đáp án</span>
+                    </button>
+                  </div>
+                </div>
+              ` : ""}
+
+              ${showCompletedReview ? `
+                <div class="lis-dict-completed-banner is-review-mode">
+                  <div class="lis-dict-completed-banner-left">
+                    <span class="lis-dict-completed-banner-icon">
+                      ${icon("eye", 18)}
+                    </span>
+                    <div class="lis-dict-completed-banner-text">
+                      <div class="lis-dict-completed-banner-title">Đang xem đáp án đã hoàn thành</div>
+                      <div class="lis-dict-completed-banner-sub">Các ô điền hiển thị kết quả chính xác để bạn đối chiếu.</div>
+                    </div>
+                  </div>
+                  <div class="lis-dict-completed-banner-actions">
+                    <button type="button" class="btn-dict-repractice" id="btnDictRePractice" title="Bắt đầu luyện tập lại">
+                      ${icon("rotate-ccw", 15)} <span>Luyện lại bài này</span>
+                    </button>
+                    <button type="button" class="btn-dict-repractice-exit" id="btnDictCloseReview" title="Đóng xem đáp án">
+                      ${icon("x", 15)} <span>Đóng</span>
+                    </button>
+                  </div>
+                </div>
+              ` : ""}
+
+              <!-- 3. Thẻ làm bài chính thống nhất (chỉ hiển thị khi đang luyện tập hoặc xem đáp án) -->
+              ${showPracticeCard ? `
               <section class="lis-dict-practice-card" id="dictPracticeCard">
                 <!-- 3a. Thanh công cụ (Hiển thị 1 dòng trên mobile với các nút icon) -->
                 <div class="lis-dict-toolbar-card">
@@ -6761,13 +7031,16 @@ function initListeningPage() {
                   `}
                 </div>
               </section>
+              ` : ""}
             </main>
           </div>
           <div class="lis-dict-sidebar-scrim" id="dictSidebarScrim"></div>
         </div>
       `;
 
-      renderClozeSentence();
+      if (showPracticeCard) {
+        renderClozeSentence();
+      }
       bindWorkspaceEvents();
       initDictWaveform();
     };
@@ -6779,39 +7052,75 @@ function initListeningPage() {
       const s = sentences[currentSentenceIdx];
       const tokens = tokenizeSentence(s.ru);
       const blankSet = getBlankSet(tokens, currentBlankPct);
-      const isDone = isSentenceDone(currentSentenceIdx);
+      const isDone = isRePracticing ? rePracticeDone.has(currentSentenceIdx) : isSentenceDone(currentSentenceIdx);
 
-      flow.innerHTML = tokens.map((token, i) => {
-        if (!token.isWord) {
-          return `<span class="lis-dict-punct">${esc(token.text)}</span>`;
-        }
-        if (!blankSet.has(i)) {
-          return `<span class="lis-dict-static-word">${esc(token.text)}</span>`;
-        }
-        // Từ bị ẩn cần điền (Req 3: dấu chấm có gạch dưới)
-        const cleanWord = token.text.replace(/[.,!?;:«»""'']/g, "");
-        const dotCount = Math.min(6, Math.max(3, cleanWord.length));
-        const dots = "· ".repeat(dotCount).trim();
-        const width = Math.max(56, cleanWord.length * 15 + 24);
-        const val = isDone ? cleanWord : "";
-        const correctCls = isDone ? "is-correct" : "";
-        const readonlyAttr = isDone ? "readonly" : "";
+      if (isDone) {
+        flow.classList.add("is-completed");
+      } else {
+        flow.classList.remove("is-completed");
+      }
 
-        return `
-          <input type="text"
-            class="lis-dict-word-input ${correctCls}"
-            data-expected="${esc(cleanWord)}"
-            style="width: ${width}px;"
-            placeholder="${dots}"
-            value="${esc(val)}"
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
-            spellcheck="false"
-            ${readonlyAttr}
-          />
-        `;
-      }).join("");
+      const units = [];
+      let i = 0;
+      while (i < tokens.length) {
+        const token = tokens[i];
+
+        // 1. Dấu mở (prefix) như «, (, [
+        let prefixHtml = "";
+        if (!token.isWord && /^[«(\["]+$/.test(token.text)) {
+          prefixHtml = `<span class="lis-dict-punct lis-dict-punct-prefix">${esc(token.text)}</span>`;
+          i++;
+          if (i >= tokens.length) {
+            units.push(`<span class="lis-dict-token-unit">${prefixHtml}</span>`);
+            break;
+          }
+        }
+
+        const curr = tokens[i];
+        let mainHtml = "";
+
+        if (!curr.isWord) {
+          mainHtml = `<span class="lis-dict-punct">${esc(curr.text)}</span>`;
+        } else if (!blankSet.has(i)) {
+          mainHtml = `<span class="lis-dict-static-word ru">${esc(curr.text)}</span>`;
+        } else {
+          const cleanWord = curr.text.replace(/[.,!?;:«»""'']/g, "");
+          const dotCount = Math.min(5, Math.max(2, Math.round(cleanWord.length * 0.7)));
+          const dots = "·".repeat(dotCount);
+          const width = Math.max(54, cleanWord.length * 14 + 26);
+          const val = isDone ? cleanWord : "";
+          const correctCls = isDone ? "is-correct" : "";
+          const readonlyAttr = isDone ? "readonly" : "";
+
+          mainHtml = `
+            <input type="text"
+              class="lis-dict-word-input ru ${correctCls}"
+              data-expected="${esc(cleanWord)}"
+              style="width: ${width}px;"
+              placeholder="${dots}"
+              value="${esc(val)}"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+              aria-label="Từ cần điền (${cleanWord.length} ký tự)"
+              ${readonlyAttr}
+            />
+          `;
+        }
+
+        // 2. Dấu đóng (suffix) như .,!?;:»)]... bám sát từ trước đó, không bị tách dòng
+        let suffixHtml = "";
+        while (i + 1 < tokens.length && !tokens[i + 1].isWord && /^[.,!?;:»\)'"]+$/.test(tokens[i + 1].text)) {
+          suffixHtml += `<span class="lis-dict-punct lis-dict-punct-suffix">${esc(tokens[i + 1].text)}</span>`;
+          i++;
+        }
+
+        units.push(`<span class="lis-dict-token-unit">${prefixHtml}${mainHtml}${suffixHtml}</span>`);
+        i++;
+      }
+
+      flow.innerHTML = units.join("");
 
       const inputs = Array.from(flow.querySelectorAll(".lis-dict-word-input"));
       const norm = (str) => (str || "").trim().toLowerCase().replace(/[.,!?;:«»""'']/g, "").replace(/ё/g, "е");
@@ -6892,27 +7201,72 @@ function initListeningPage() {
     };
 
     const handleSentenceFinished = () => {
-      const key = `${lesson.id}_dict_${currentSentenceIdx}`;
-      if (!Progress.doneList("listenDone").includes(key)) {
-        Progress.markDone("listenDone", key);
-        Progress.addXp(10);
-        toast("Xuất sắc! Đã hoàn thành câu (+10 XP) 🎉");
-      }
-      const allSentencesDone = sentences.every((_, i) => isSentenceDone(i) || i === currentSentenceIdx);
-      if (allSentencesDone) {
-        Progress.markDone("listenDone", `${lesson.id}_dict`);
-        Progress.markDone("listenDone", `${lesson.id}_dict_done`);
-      }
+      // 1. Phản hồi âm thanh
       if (typeof playQuizletSound === "function") {
         playQuizletSound("correct");
       }
-
       unlockedVocab[currentSentenceIdx] = true;
 
-      const celeb = host.querySelector("#dictCelebration");
-      if (celeb) celeb.classList.remove("hidden");
+      // 2. Ghi nhận hoàn thành câu
+      if (isRePracticing) {
+        rePracticeDone.add(currentSentenceIdx);
+      } else {
+        const key = `${lesson.id}_dict_${currentSentenceIdx}`;
+        if (!Progress.doneList("listenDone").includes(key)) {
+          Progress.markDone("listenDone", key);
+          Progress.addXp(10);
+        }
+      }
 
-      renderWorkspace();
+      // 3. Khóa các ô điền của câu hiện tại sang trạng thái is-correct
+      const flow = host.querySelector("#dictSentenceFlow");
+      if (flow) {
+        flow.classList.add("is-completed");
+        flow.querySelectorAll(".lis-dict-word-input").forEach(inp => {
+          inp.classList.add("is-correct");
+          inp.classList.remove("is-wrong");
+          inp.readOnly = true;
+        });
+      }
+
+      // 4. Tự động chuyển sang câu tiếp theo đến hết
+      const hasNext = currentSentenceIdx < sentences.length - 1;
+
+      clearTimeout(autoAdvanceTimeout);
+      if (hasNext) {
+        toast(`Chính xác! Đang chuyển sang câu ${currentSentenceIdx + 2}/${sentences.length}... 🚀`);
+        autoAdvanceTimeout = setTimeout(() => {
+          stopAudio();
+          currentSentenceIdx++;
+          showAnswer = false;
+          renderWorkspace();
+          setTimeout(() => {
+            playCurrentAudio();
+          }, 300);
+        }, 850);
+      } else {
+        if (isRePracticing) {
+          toast("Xuất sắc! Bạn đã hoàn thành toàn bộ bài luyện lại! 🌟");
+          autoAdvanceTimeout = setTimeout(() => {
+            stopAudio();
+            isRePracticing = false;
+            showCompletedReview = false;
+            rePracticeDone.clear();
+            currentSentenceIdx = 0;
+            renderWorkspace();
+          }, 1100);
+        } else {
+          Progress.markDone("listenDone", `${lesson.id}_dict`);
+          Progress.markDone("listenDone", `${lesson.id}_dict_done`);
+          Progress.addXp(20);
+          toast("Xuất sắc! Bạn đã hoàn thành toàn bộ bài nghe chép chính tả! 🎉 (+20 XP)");
+          autoAdvanceTimeout = setTimeout(() => {
+            stopAudio();
+            currentSentenceIdx = 0;
+            renderWorkspace();
+          }, 1100);
+        }
+      }
     };
 
     let closeAllPopoversHandler = null;
@@ -6923,6 +7277,7 @@ function initListeningPage() {
       if (backBtn) {
         backBtn.onclick = (e) => {
           if (e) e.preventDefault();
+          clearTimeout(autoAdvanceTimeout);
           stopAudio();
           if (dictWaveform) {
             try { dictWaveform.destroy(); } catch (_) {}
@@ -6934,6 +7289,43 @@ function initListeningPage() {
           document.body.classList.remove("in-workspace");
           renderHub();
           window.scrollTo({ top: 0, behavior: "smooth" });
+        };
+      }
+
+      // Xử lý Luyện lại bài đã hoàn thành
+      const btnRePractice = host.querySelector("#btnDictRePractice");
+      if (btnRePractice) {
+        btnRePractice.onclick = () => {
+          clearTimeout(autoAdvanceTimeout);
+          isRePracticing = true;
+          showCompletedReview = false;
+          rePracticeDone.clear();
+          currentSentenceIdx = 0;
+          showAnswer = false;
+          toast("Bắt đầu luyện tập lại bài học! 🎧");
+          renderWorkspace();
+          setTimeout(() => {
+            playCurrentAudio();
+          }, 350);
+        };
+      }
+
+      const btnViewCompleted = host.querySelector("#btnDictViewCompleted");
+      if (btnViewCompleted) {
+        btnViewCompleted.onclick = () => {
+          clearTimeout(autoAdvanceTimeout);
+          showCompletedReview = true;
+          isRePracticing = false;
+          renderWorkspace();
+        };
+      }
+
+      const btnCloseReview = host.querySelector("#btnDictCloseReview");
+      if (btnCloseReview) {
+        btnCloseReview.onclick = () => {
+          clearTimeout(autoAdvanceTimeout);
+          showCompletedReview = false;
+          renderWorkspace();
         };
       }
 
@@ -6960,6 +7352,7 @@ function initListeningPage() {
       const prevSentenceBtn = host.querySelector("#btnDictPrevSentence");
       if (prevSentenceBtn) {
         prevSentenceBtn.onclick = () => {
+          clearTimeout(autoAdvanceTimeout);
           if (currentSentenceIdx > 0) {
             stopAudio();
             currentSentenceIdx--;
@@ -6972,6 +7365,7 @@ function initListeningPage() {
       const nextSentenceBtn = host.querySelector("#btnDictNextSentence");
       if (nextSentenceBtn) {
         nextSentenceBtn.onclick = () => {
+          clearTimeout(autoAdvanceTimeout);
           if (currentSentenceIdx < sentences.length - 1) {
             stopAudio();
             currentSentenceIdx++;
@@ -7201,6 +7595,7 @@ function initListeningPage() {
         b.onclick = () => {
           const lessonId = b.dataset.lessonId;
           if (lessonId && lessonId !== lesson.id) {
+            clearTimeout(autoAdvanceTimeout);
             stopAudio();
             if (closeAllPopoversHandler) {
               document.removeEventListener("click", closeAllPopoversHandler);
@@ -7265,9 +7660,13 @@ function initListeningPage() {
 function initSpeakingPage() {
   const host = el("#speakHost");
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const icon = (name, size = 18) => (window.RusiIcons ? RusiIcons.get(name, { size }) : "");
 
   if (!SR && el("#srWarn")) {
     el("#srWarn").classList.remove("hidden");
+    if (window.RusiIcons && typeof RusiIcons.replace === "function") {
+      RusiIcons.replace(el("#srWarn"));
+    }
   }
 
   let currentLevel = "A1";
@@ -7343,7 +7742,7 @@ function initSpeakingPage() {
     if (filtered.length === 0) {
       gridHost.innerHTML = `
         <div class="writing-empty-state speaking-empty-state">
-          <span class="writing-empty-icon speaking-empty-icon">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 34 }) : ""}</span>
+          <span class="writing-empty-icon speaking-empty-icon">${icon("mic-speaking", 34)}</span>
           <h3>Chưa có bài nói cho cấp độ này</h3>
           <p>Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
         </div>
@@ -7360,14 +7759,14 @@ function initSpeakingPage() {
           <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-speak-id="${s.id}">
             <div class="dau-card-header">
               <div class="dau-card-icon" style="background:rgba(234,88,12,0.08);color:#ea580c">
-                ${window.RusiIcons ? RusiIcons.get(s.icon || "mic-speaking", { size: 24 }) : ""}
+                ${icon(s.icon || "mic-speaking", 24)}
               </div>
               <div class="dau-card-header-main">
                 <div class="dau-card-title-row">
                   <h3 class="dau-card-ru">${esc(s.title)}</h3>
                   ${isDone ? `
                     <span class="topic-status topic-status-completed" style="flex-shrink:0">
-                      ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
+                      ${icon("check", 12)} Hoàn thành
                     </span>
                   ` : isPro ? `
                     <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
@@ -7385,11 +7784,11 @@ function initSpeakingPage() {
               <div class="topic-footer-actions">
                 ${isPro && !isUnlocked ? `
                   <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
-                    ${window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : ""}
+                    ${icon("lock-pro", 16)}
                   </span>
                 ` : `
                   <button type="button" class="btn-speak-action topic-text-btn" data-speak-id="${s.id}" title="Luyện nói ngay">
-                    Luyện nói ngay ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : ""}
+                    Luyện nói ngay ${icon("arrow-right", 14)}
                   </button>
                 `}
               </div>
@@ -7528,7 +7927,7 @@ const openSpeakingWorkspace = (set) => {
     let isRecording = false;
     let isPlaying = false;
     let isTranslationVisible = true;
-    let isVideoVisible = true;
+    let isVideoVisible = false;
     let autoAdvance = false;
     let isSidebarHidden = false;
     let recognitionInstance = null;
@@ -7555,38 +7954,26 @@ const openSpeakingWorkspace = (set) => {
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
         <button type="button" class="dau-back-btn" id="btnBackSpList" title="Quay lại danh sách bài nói" aria-label="Quay lại">
-          ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
+          ${icon("arrow-left", 18)}
         </button>
 
         <div class="dau-workspace-info">
           <span class="dau-workspace-title">
-            ${window.RusiIcons ? RusiIcons.get(set.icon || "mic-speaking", { size: 20 }) : ""} ${esc(set.title)}
+            ${esc(set.title)}
           </span>
-          <span class="dau-badge">${set.level || "A1"}</span>
-        </div>
-
-        <!-- Sentence progress pill in header -->
-        <div class="sp-sent-badge" style="margin: 0 8px;">
-          <span id="spHeadIndex">Câu 01 / ${String(items.length).padStart(2, "0")}</span>
         </div>
 
         <!-- Quick Top Actions -->
         <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
-          <button type="button" class="sp-icon-btn is-active" id="btnToggleVideoTop" title="Ẩn/Hiện Video bài học (V)" aria-label="Video bài học">
-            ${window.RusiIcons ? RusiIcons.get("video", { size: 16 }) : "🎬"}
-          </button>
           <button type="button" class="sp-icon-btn is-active" id="btnToggleTransTop" title="Ẩn/Hiện bản dịch (T)" aria-label="Ẩn/Hiện bản dịch">
-            ${window.RusiIcons ? RusiIcons.get("eye", { size: 16 }) : "👁"}
+            ${icon("eye", 16)}
           </button>
           <button type="button" class="sp-icon-btn" id="btnToggleAutoAdv" title="Tự động chuyển câu khi đạt điểm cao" aria-label="Tự chuyển câu">
-            ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 15 }) : "⚡"}
+            ${icon("zap-xp", 15)}
           </button>
           <button type="button" class="sp-icon-btn" id="btnToggleSidebar" title="Đóng/mở danh sách bài học" aria-label="Danh sách câu">
-            ${window.RusiIcons ? RusiIcons.get("list-tasks", { size: 16 }) : "📋"}
+            ${icon("list-tasks", 16)}
           </button>
-          <div class="dau-workspace-meta" style="font-size:0.82rem;color:var(--muted);margin-left:6px;">
-            ${attemptsToday}/2 lượt ${Monetization.isPro() ? '<b style="color:var(--green)">(PRO)</b>' : ""}
-          </div>
         </div>
       </div>
 
@@ -7596,85 +7983,28 @@ const openSpeakingWorkspace = (set) => {
         <!-- SÂN KHẤU LUYỆN NÓI CHÍNH (MAIN STAGE) -->
         <main class="sp-ws-main">
           
-          <!-- KHUNG VIDEO BÀI HỌC YOUTUBE -->
+          <!-- KHUNG VIDEO BÀI HỌC YOUTUBE (KHUNG NGUYÊN VẸN, KHÔNG CONTROL/EXTENSION, CHỈ CÓ ICON YOUTUBE Ở GIỮA) -->
           <section class="sp-video-card" id="spVideoCard">
-            <div class="sp-video-header">
-              <div class="sp-video-title">
-                ${window.RusiIcons ? RusiIcons.get("video", { size: 16 }) : "🎬"}
-                <span>Video bài học</span>
-                <span class="sp-video-badge">YouTube HD</span>
-              </div>
-              <div class="sp-video-actions">
-                <button type="button" class="sp-icon-btn sp-icon-btn-sm" id="btnCollapseVideo" title="Thu gọn/Mở rộng video (V)" aria-label="Thu gọn video">
-                  ${window.RusiIcons ? RusiIcons.get("chevron-up", { size: 16 }) : "▲"}
+            <div class="sp-video-body" id="spVideoBody">
+              <iframe id="spYoutubePlayer" src="${ytVideoUrl}" title="Video bài học tiếng Nga" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+              <div class="sp-video-cover" id="spVideoCover" style="background-image: linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.6)), url('https://img.youtube.com/vi/${ytId}/hqdefault.jpg');">
+                <button type="button" class="sp-yt-center-play" id="btnPlayCenterYt" title="Phát video bài học YouTube" aria-label="Phát video bài học YouTube">
+                  <svg class="sp-yt-center-svg" viewBox="0 0 68 48" width="68" height="48" fill="none">
+                    <path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55C3.97 2.33 2.27 4.81 1.48 7.74.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="#FF0000"/>
+                    <path d="M45 24L27 14v20l18-10z" fill="#FFFFFF"/>
+                  </svg>
                 </button>
               </div>
             </div>
-            <div class="sp-video-body" id="spVideoBody">
-              <iframe id="spYoutubePlayer" src="${ytVideoUrl}" title="Video bài học tiếng Nga" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-            </div>
           </section>
 
-          <article class="sp-hero-card">
-            
-            <!-- Stage Top Meta -->
-            <div class="sp-stage-header">
-              <span class="sp-sent-badge" id="spSentStageBadge">
-                ${window.RusiIcons ? RusiIcons.get("waveform-audio", { size: 14 }) : ""} Câu 01 / ${String(items.length).padStart(2, "0")}
-              </span>
-              <div class="sp-stage-actions">
-                <span id="spPrevBestBadge" style="font-size:0.78rem;font-weight:700;color:var(--muted);display:none;"></span>
-              </div>
-            </div>
-
-            <!-- Câu tiếng Nga & Bản dịch tiếng Việt -->
-            <div class="sp-sentence-stage">
-              <div class="sp-ru-sentence" id="spTargetRu"></div>
-              <div class="sp-vi-translation" id="spTargetVi" title="Nhấn phím T để ẩn/hiện dịch"></div>
-            </div>
-
-            <!-- Khung sóng âm & trạng thái phát âm -->
-            <div class="sp-visualizer-box" id="spVisualizerBox">
-              <div class="sp-visualizer-bars">
-                <div class="sp-v-bar"></div><div class="sp-v-bar"></div><div class="sp-v-bar"></div>
-                <div class="sp-v-bar"></div><div class="sp-v-bar"></div><div class="sp-v-bar"></div>
-                <div class="sp-v-bar"></div><div class="sp-v-bar"></div><div class="sp-v-bar"></div>
-              </div>
-              <div class="sp-visualizer-hint" id="spVisualizerHint">
-                Bấm phím <b>Space</b> để nghe mẫu, hoặc bấm <b>R</b> / nút <b>Micro</b> để luyện nói
-              </div>
-            </div>
-
-            <!-- Khung AI Chấm Điểm & Phân Tích Âm Vị (AI Feedback) -->
-            <div class="sp-ai-feedback" id="spAiFeedback" style="display:none;">
-              <div class="sp-feedback-top">
-                <div class="sp-score-badge-main" id="spScoreBadgeMain">
-                  <span id="spScoreVal">0%</span>
-                  <span id="spScoreLabel">--</span>
-                </div>
-                <div class="sp-feedback-actions">
-                  <button type="button" class="sp-icon-btn" id="btnFeedbackRetry" title="Luyện nói lại câu này (R)">
-                    ${window.RusiIcons ? RusiIcons.get("rotate-ccw", { size: 15 }) : "🔁"}
-                  </button>
-                  <button type="button" class="sp-icon-btn" id="btnFeedbackNext" title="Sang câu tiếp theo (→)">
-                    ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 15 }) : "➔"}
-                  </button>
-                </div>
-              </div>
-
-              <!-- Từ vựng phân tích đúng / cần sửa -->
-              <div class="sp-feedback-words" id="spFeedbackWords"></div>
-
-              <!-- Nội dung AI nghe được -->
-              <div class="sp-ai-transcript" id="spAiTranscript"></div>
-            </div>
-
-            <!-- BẢNG ĐIỀU KHIỂN TỐI GIẢN BẰNG ICON (ERGONOMIC ICON CONTROLS DOCK) -->
-            <div class="sp-controls-dock">
-              
+          <!-- THẺ LUYỆN NÓI TÍCH HỢP: ĐIỀU KHIỂN Ở TRÊN + CÂU PHỤ ĐỀ Ở DƯỚI -->
+          <article class="sp-hero-card" id="spHeroCard">
+            <!-- BẢNG ĐIỀU KHIỂN TỐI GIẢN (1 DÒNG Ở TRÊN) -->
+            <div class="sp-controls-dock" id="spControlsDock">
               <!-- Nút câu trước -->
               <button type="button" class="sp-ctrl-btn" id="btnPrevSent" title="Câu trước (←)" aria-label="Câu trước">
-                ${window.RusiIcons ? RusiIcons.get("chevron-left", { size: 20 }) : "◀"}
+                ${icon("chevron-left", 18)}
               </button>
 
               <!-- Nút tốc độ phát âm (0.8x, 1.0x, 1.2x) -->
@@ -7684,25 +8014,50 @@ const openSpeakingWorkspace = (set) => {
 
               <!-- Nút Nghe mẫu phát âm chuẩn (Play / Pause) -->
               <button type="button" class="sp-ctrl-play" id="btnPlayModel" title="Nghe phát âm chuẩn (Space)" aria-label="Nghe mẫu">
-                <span id="spPlayIcon">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 22 }) : "🔊"}</span>
+                <span id="spPlayIcon">${icon("volume-high", 20)}</span>
               </button>
 
               <!-- NÚT MICRO LUYỆN NÓI TRUNG TÂM (HERO BUTTON) -->
               <button type="button" class="sp-ctrl-mic" id="btnRecordMic" title="Bắt đầu luyện nói (Phím R)" aria-label="Thu âm giọng nói">
-                ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 26 }) : "🎤"}
+                ${icon("mic-speaking", 22)}
               </button>
 
               <!-- Nút Tự động lặp lại (Loop) -->
               <button type="button" class="sp-ctrl-btn" id="btnLoopToggle" title="Tự động lặp lại (L)" aria-label="Lặp lại">
-                ${window.RusiIcons ? RusiIcons.get("rotate-ccw", { size: 18 }) : "🔁"}
+                ${icon("rotate-ccw", 16)}
                 <span class="sp-loop-pill" id="spLoopPill" style="display:none;">3x</span>
               </button>
 
               <!-- Nút câu sau -->
               <button type="button" class="sp-ctrl-btn" id="btnNextSent" title="Câu tiếp theo (→)" aria-label="Câu sau">
-                ${window.RusiIcons ? RusiIcons.get("chevron-right", { size: 20 }) : "▶"}
+                ${icon("chevron-right", 18)}
               </button>
+            </div>
 
+            <!-- Câu tiếng Nga (Phụ đề video - Clickable) & Bản dịch tiếng Việt (Căn giữa, nhỏ gọn, hiện đại) -->
+            <div class="sp-sentence-stage">
+              <div class="sp-ru-sentence" id="spTargetRu" title="Nhấp vào câu để video tự động phát đến đoạn này"></div>
+              <div class="sp-vi-translation" id="spTargetVi" title="Nhấn phím T để ẩn/hiện dịch"></div>
+            </div>
+
+            <!-- Thanh kết quả thu âm: Trái: Nội dung mình nói được | Phải: Điểm số -->
+            <div class="sp-speech-result-bar" id="spSpeechResultBar" style="display:none;">
+              <div class="sp-result-left">
+                <div class="sp-result-user-lead">
+                  <span class="sp-result-mic-icon">${icon("mic-speaking", 15)}</span>
+                  <span>Bạn đã nói:</span>
+                </div>
+                <div class="sp-user-transcript-text" id="spUserTranscriptText">«...»</div>
+              </div>
+              <div class="sp-result-right">
+                <div class="sp-result-score-wrap" id="spResultScoreWrap">
+                  <div class="sp-result-score-val" id="spResultScoreVal">--</div>
+                  <div class="sp-result-score-lbl" id="spResultScoreLbl">Điểm phát âm</div>
+                </div>
+                <button type="button" class="sp-result-retry-btn" id="btnFeedbackRetry" title="Luyện nói lại câu này (R)" aria-label="Luyện lại">
+                  ${icon("rotate-ccw", 15)}
+                </button>
+              </div>
             </div>
 
           </article>
@@ -7740,6 +8095,73 @@ const openSpeakingWorkspace = (set) => {
 
       </div>
     `;
+
+    // Helper: Tìm thời gian phát (giây) của câu trong clip
+    const getItemSec = (idx) => {
+      const it = items[idx];
+      if (!it) return 0;
+      if (typeof it.startSec === "number") return it.startSec;
+      if (typeof it.start === "number") return it.start;
+      if (typeof it.sec === "number") return it.sec;
+      if (typeof it.time === "number") return it.time;
+      if (typeof it.time === "string" && it.time.includes(":")) {
+        const p = it.time.split(":").map(Number);
+        if (p.length === 2) return p[0] * 60 + p[1];
+        if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2];
+      }
+      const baseStart = Number(set.start_sec || (set.video && set.video.startSec)) || 15;
+      const baseEnd = Number(set.end_sec || (set.video && set.video.endSec)) || (baseStart + items.length * 12);
+      const step = items.length > 1 ? (baseEnd - baseStart) / items.length : 12;
+      return Math.round(baseStart + idx * step);
+    };
+
+    // Tự động nhảy video đến thời điểm của câu
+    const seekVideoToSentence = (idx) => {
+      handlePlayVideo();
+      const sec = getItemSec(idx);
+      const ytPlayer = el("#spYoutubePlayer");
+      if (ytPlayer && ytPlayer.contentWindow) {
+        try {
+          ytPlayer.contentWindow.postMessage(JSON.stringify({
+            event: "command",
+            func: "seekTo",
+            args: [sec, true]
+          }), "*");
+          ytPlayer.contentWindow.postMessage(JSON.stringify({
+            event: "command",
+            func: "playVideo",
+            args: ""
+          }), "*");
+        } catch (_) {}
+      }
+    };
+
+    // Đánh dấu từ đúng (xanh) và từ sai (đỏ) trực tiếp trên câu tiếng Nga
+    const renderMappedSentence = (targetRu, heardRu = null) => {
+      const ruBox = el("#spTargetRu");
+      if (!ruBox) return;
+      if (!heardRu || !heardRu.trim()) {
+        ruBox.textContent = targetRu || "";
+        return;
+      }
+
+      const norm = s => s.toLowerCase().replace(/[.,!?;:«»"'—–-]/g, "").trim();
+      const tokens = (targetRu || "").split(/(\s+)/);
+      const heardWords = norm(heardRu).split(/\s+/).filter(Boolean);
+
+      const html = tokens.map(tok => {
+        if (!tok.trim()) return tok;
+        const cTok = norm(tok);
+        if (!cTok) return esc(tok);
+
+        const isMatch = heardWords.some(hw => hw === cTok || (typeof similarity === "function" && similarity(hw, cTok) >= 75));
+        const cls = isMatch ? "sp-word-correct" : "sp-word-wrong";
+        const tip = isMatch ? "Phát âm chuẩn xác" : "Cần phát âm rõ ràng hơn";
+        return `<span class="sp-target-word ${cls}" title="${tip}">${esc(tok)}</span>`;
+      }).join("");
+
+      ruBox.innerHTML = html;
+    };
 
     // Cập nhật thống kê header và thanh tiến độ
     const updateStatsUI = () => {
@@ -7779,6 +8201,7 @@ const openSpeakingWorkspace = (set) => {
         btn.onclick = () => {
           const idx = parseInt(btn.dataset.idx, 10);
           loadSentence(idx);
+          seekVideoToSentence(idx);
           playCurrentSentence();
           // Đóng drawer trên mobile nếu đang mở
           const side = el("#spSidebarPanel");
@@ -7797,13 +8220,11 @@ const openSpeakingWorkspace = (set) => {
         try { window.speechSynthesis.cancel(); } catch (e) {}
       }
       isPlaying = false;
-      const viz = el("#spVisualizerBox");
-      if (viz) viz.classList.remove("is-playing");
       const btnPlay = el("#btnPlayModel");
       if (btnPlay) {
         btnPlay.classList.remove("is-playing");
         const ic = el("#spPlayIcon");
-        if (ic) ic.innerHTML = window.RusiIcons ? RusiIcons.get("volume-high", { size: 22 }) : "🔊";
+        if (ic) ic.innerHTML = icon("volume-high", 20);
       }
     };
 
@@ -7814,8 +8235,6 @@ const openSpeakingWorkspace = (set) => {
 
       if (isPlaying && !isAutoLoop) {
         stopAudio();
-        const hint = el("#spVisualizerHint");
-        if (hint) hint.innerHTML = "Đã tạm dừng phát âm. Bấm phím <b>Space</b> để tiếp tục nghe.";
         return;
       }
 
@@ -7828,16 +8247,12 @@ const openSpeakingWorkspace = (set) => {
       }
 
       isPlaying = true;
-      const viz = el("#spVisualizerBox");
-      if (viz) viz.classList.add("is-playing");
       const btnPlay = el("#btnPlayModel");
       if (btnPlay) {
         btnPlay.classList.add("is-playing");
         const ic = el("#spPlayIcon");
-        if (ic) ic.innerHTML = window.RusiIcons ? RusiIcons.get("pause", { size: 22 }) : "⏸";
+        if (ic) ic.innerHTML = icon("pause", 20);
       }
-      const hint = el("#spVisualizerHint");
-      if (hint) hint.innerHTML = "<b style='color:var(--primary)'>Đang phát âm chuẩn bản xứ...</b> Hãy lắng nghe ngữ điệu và trọng âm.";
 
       const text = (it.ru || it.text || "").trim();
       const u = new SpeechSynthesisUtterance(text);
@@ -7862,10 +8277,8 @@ const openSpeakingWorkspace = (set) => {
           const pill = el("#spLoopPill");
           if (pill) pill.textContent = `${loopMode}x`;
           stopAudio();
-          if (hint) hint.innerHTML = "Đã hoàn thành vòng lặp. Bấm phím <b>R</b> để luyện nói câu này!";
         } else {
           stopAudio();
-          if (hint) hint.innerHTML = "Đã nghe xong. Bấm phím <b>R</b> hoặc nút <b>Micro</b> để luyện nói!";
         }
       };
 
@@ -7883,19 +8296,8 @@ const openSpeakingWorkspace = (set) => {
       currentSentenceIdx = idx;
       const it = items[idx];
 
-      const idxStr = String(idx + 1).padStart(2, "0");
-      const totalStr = String(items.length).padStart(2, "0");
-
-      const headIdx = el("#spHeadIndex");
-      if (headIdx) headIdx.textContent = `Câu ${idxStr} / ${totalStr}`;
-
-      const stageBadge = el("#spSentStageBadge");
-      if (stageBadge) {
-        stageBadge.innerHTML = `${window.RusiIcons ? RusiIcons.get("waveform-audio", { size: 14 }) : ""} Câu ${idxStr} / ${totalStr}`;
-      }
-
-      const ruBox = el("#spTargetRu");
-      if (ruBox) ruBox.textContent = it.ru || it.text || "";
+      // Đặt lại câu tiếng Nga ở trạng thái chữ bình thường
+      renderMappedSentence(it.ru || it.text || "", null);
 
       const viBox = el("#spTargetVi");
       if (viBox) {
@@ -7903,22 +8305,25 @@ const openSpeakingWorkspace = (set) => {
         viBox.classList.toggle("is-blurred", !isTranslationVisible);
       }
 
-      // Ẩn bảng đánh giá AI khi chuyển câu mới (hoặc hiển thị điểm cũ nếu có)
-      const fbBox = el("#spAiFeedback");
+      // Hiển thị điểm đã lưu của câu (nếu có)
+      const resBar = el("#spSpeechResultBar");
       const prevScore = STORE.get("speak_" + set.id + "_" + idx, null);
-      const prevBadge = el("#spPrevBestBadge");
-      if (prevBadge) {
+
+      if (resBar) {
         if (prevScore !== null) {
-          prevBadge.style.display = "inline-flex";
-          prevBadge.textContent = `Điểm cao nhất: ${prevScore}%`;
+          resBar.style.display = "flex";
+          const scVal = el("#spResultScoreVal");
+          const scLbl = el("#spResultScoreLbl");
+          const scWrap = el("#spResultScoreWrap");
+          const trEl = el("#spUserTranscriptText");
+          if (scVal) scVal.textContent = `${prevScore}%`;
+          if (scLbl) scLbl.textContent = prevScore >= 80 ? "Xuất sắc! 🌟" : prevScore >= 60 ? "Khá tốt! 👍" : "Thử lại nhé 💪";
+          if (scWrap) scWrap.className = "sp-result-score-wrap " + (prevScore >= 80 ? "is-excellent" : prevScore >= 60 ? "is-good" : "is-retry");
+          if (trEl) trEl.innerHTML = `<span style="color:var(--muted);font-style:italic;">Điểm lưu từ lần luyện trước</span>`;
         } else {
-          prevBadge.style.display = "none";
+          resBar.style.display = "none";
         }
       }
-      if (fbBox) fbBox.style.display = "none";
-
-      const hint = el("#spVisualizerHint");
-      if (hint) hint.innerHTML = "Bấm phím <b>Space</b> để nghe mẫu, hoặc bấm <b>R</b> / nút <b>Micro</b> để luyện nói";
 
       // Cập nhật active trong danh sách playlist
       document.querySelectorAll(".sp-pl-item").forEach((btn, i) => {
@@ -7953,89 +8358,81 @@ const openSpeakingWorkspace = (set) => {
 
       const btnMic = el("#btnRecordMic");
       if (btnMic) btnMic.classList.add("is-recording");
-      const viz = el("#spVisualizerBox");
-      if (viz) viz.classList.add("is-recording");
-
-      const hint = el("#spVisualizerHint");
-      if (hint) hint.innerHTML = "<b style='color:#ef4444'>Đang nghe...</b> Hãy đọc to và rõ ràng câu trên!";
 
       const it = items[currentSentenceIdx];
       const targetText = (it.ru || it.text || "").trim();
 
+      const resBar = el("#spSpeechResultBar");
+      const userTrEl = el("#spUserTranscriptText");
+      const scoreValEl = el("#spResultScoreVal");
+      const scoreLblEl = el("#spResultScoreLbl");
+      const scoreWrapEl = el("#spResultScoreWrap");
+
+      if (resBar) resBar.style.display = "flex";
+      if (userTrEl) userTrEl.innerHTML = `<span style="color:var(--muted);font-style:italic;">Đang lắng nghe giọng của bạn...</span>`;
+      if (scoreValEl) scoreValEl.textContent = "...";
+      if (scoreLblEl) scoreLblEl.textContent = "Đang nhận diện";
+
       recognitionInstance = new SR();
       recognitionInstance.lang = "ru-RU";
-      recognitionInstance.interimResults = false;
+      recognitionInstance.interimResults = true;
       recognitionInstance.maxAlternatives = 3;
 
       recognitionInstance.onresult = (ev) => {
-        const heard = ev.results[0][0].transcript;
-        const sim = similarity(heard, targetText);
+        let interimTranscript = "";
+        let finalTranscript = "";
 
-        // Lưu kết quả
-        STORE.set("speak_" + set.id + "_" + currentSentenceIdx, Math.max(sim, STORE.get("speak_" + set.id + "_" + currentSentenceIdx, 0)));
-        STORE.set(todayKey, STORE.get(todayKey, 0) + 1);
-
-        const key = "speakDone_" + set.id + "_" + currentSentenceIdx;
-        const bestBefore = STORE.get("speak_" + set.id + "_" + currentSentenceIdx, 0);
-        if (sim >= 70 && sim >= bestBefore && !Progress.doneList("speakDone").includes(key)) {
-          Progress.markDone("speakDone", key);
-          Progress.addXp(15);
-        }
-
-        // Phân tích từ ngữ đúng / sai
-        const norm = s => s.toLowerCase().replace(/[.,!?;:«»"'—]/g, "").trim();
-        const targetWords = targetText.split(/\s+/).filter(Boolean);
-        const heardWords = norm(heard).split(/\s+/).filter(Boolean);
-
-        const wordChipsHtml = targetWords.map(tw => {
-          const ctw = norm(tw);
-          const isMatch = heardWords.some(hw => hw === ctw || (typeof similarity === "function" && similarity(hw, ctw) >= 75));
-          return `
-            <span class="sp-word-chip ${isMatch ? "is-match" : "is-miss"}" title="${isMatch ? "Phát âm chuẩn" : "Cần phát âm rõ hơn"}">
-              ${isMatch ? "✓" : "!"} ${esc(tw)}
-            </span>
-          `;
-        }).join("");
-
-        // Hiển thị AI feedback
-        const fbBox = el("#spAiFeedback");
-        if (fbBox) {
-          fbBox.style.display = "flex";
-          const scVal = el("#spScoreVal");
-          const scLbl = el("#spScoreLabel");
-          const scBadge = el("#spScoreBadgeMain");
-          if (scVal) scVal.textContent = `${sim}%`;
-          if (scBadge && scLbl) {
-            scBadge.className = "sp-score-badge-main " + (sim >= 80 ? "is-excellent" : sim >= 60 ? "is-good" : "is-retry");
-            scLbl.textContent = sim >= 80 ? "Xuất sắc! 🌟" : sim >= 60 ? "Khá tốt! 👍" : "Cần thử lại! 💪";
-          }
-          const wordsHost = el("#spFeedbackWords");
-          if (wordsHost) wordsHost.innerHTML = wordChipsHtml;
-          const trHost = el("#spAiTranscript");
-          if (trHost) {
-            trHost.innerHTML = `${window.RusiIcons ? RusiIcons.get("bot-rusika", { size: 16 }) : "🤖"} AI nghe được: <b>«${esc(heard)}»</b>`;
+        for (let i = ev.resultIndex; i < ev.results.length; ++i) {
+          if (ev.results[i].isFinal) {
+            finalTranscript += ev.results[i][0].transcript;
+          } else {
+            interimTranscript += ev.results[i][0].transcript;
           }
         }
 
-        if (hint) {
-          hint.innerHTML = sim >= 80
-            ? "<b style='color:var(--green)'>Phát âm rất chuẩn!</b> Hãy chuyển sang câu tiếp theo."
-            : "Đã ghi nhận! Bạn có thể nghe lại mẫu rồi bấm nút <b>Micro</b> để thử lại.";
-        }
+        const heard = (finalTranscript || interimTranscript).trim();
+        if (!heard) return;
 
-        renderPlaylist();
+        if (userTrEl) userTrEl.textContent = `«${heard}»`;
 
-        // Tự động chuyển câu nếu bật chế độ Auto-Advance và đạt điểm tốt
-        if (autoAdvance && sim >= 80 && currentSentenceIdx < items.length - 1) {
-          setTimeout(() => {
-            loadSentence(currentSentenceIdx + 1);
-            playCurrentSentence();
-          }, 1500);
+        // Map trực tiếp vào câu tiếng Nga (từ đúng xanh, từ sai đỏ)
+        renderMappedSentence(targetText, heard);
+
+        if (finalTranscript) {
+          const sim = similarity(finalTranscript, targetText);
+
+          // Lưu kết quả
+          STORE.set("speak_" + set.id + "_" + currentSentenceIdx, Math.max(sim, STORE.get("speak_" + set.id + "_" + currentSentenceIdx, 0)));
+          STORE.set(todayKey, STORE.get(todayKey, 0) + 1);
+
+          const key = "speakDone_" + set.id + "_" + currentSentenceIdx;
+          const bestBefore = STORE.get("speak_" + set.id + "_" + currentSentenceIdx, 0);
+          if (sim >= 70 && sim >= bestBefore && !Progress.doneList("speakDone").includes(key)) {
+            Progress.markDone("speakDone", key);
+            Progress.addXp(15);
+          }
+
+          if (scoreValEl) scoreValEl.textContent = `${sim}%`;
+          if (scoreLblEl) {
+            scoreLblEl.textContent = sim >= 80 ? "Xuất sắc! 🌟" : sim >= 60 ? "Khá tốt! 👍" : "Thử lại nhé 💪";
+          }
+          if (scoreWrapEl) {
+            scoreWrapEl.className = "sp-result-score-wrap " + (sim >= 80 ? "is-excellent" : sim >= 60 ? "is-good" : "is-retry");
+          }
+
+          renderPlaylist();
+
+          // Tự động chuyển câu nếu bật chế độ Auto-Advance và đạt điểm tốt
+          if (autoAdvance && sim >= 80 && currentSentenceIdx < items.length - 1) {
+            setTimeout(() => {
+              loadSentence(currentSentenceIdx + 1);
+              playCurrentSentence();
+            }, 1500);
+          }
         }
       };
 
       recognitionInstance.onerror = () => {
-        if (hint) hint.textContent = "Không nghe rõ âm thanh — hãy nói to hơn trong không gian yên tĩnh nhé.";
         stopRecording();
       };
 
@@ -8054,8 +8451,6 @@ const openSpeakingWorkspace = (set) => {
       isRecording = false;
       const btnMic = el("#btnRecordMic");
       if (btnMic) btnMic.classList.remove("is-recording");
-      const viz = el("#spVisualizerBox");
-      if (viz) viz.classList.remove("is-recording");
       if (recognitionInstance) {
         try { recognitionInstance.stop(); } catch (e) {}
       }
@@ -8106,9 +8501,7 @@ const openSpeakingWorkspace = (set) => {
       const topBtn = el("#btnToggleTransTop");
       if (topBtn) {
         topBtn.classList.toggle("is-active", isTranslationVisible);
-        topBtn.innerHTML = window.RusiIcons
-          ? RusiIcons.get(isTranslationVisible ? "eye" : "eye-off", { size: 16 })
-          : (isTranslationVisible ? "👁" : "🙈");
+        topBtn.innerHTML = icon(isTranslationVisible ? "eye" : "eye-off", 16);
       }
     };
 
@@ -8142,18 +8535,20 @@ const openSpeakingWorkspace = (set) => {
       if (btn) btn.classList.toggle("is-active", !isSidebarHidden);
     };
 
-    // Bật/tắt xem video bài học YouTube
-    const toggleVideo = () => {
-      isVideoVisible = !isVideoVisible;
-      const vCard = el("#spVideoCard");
-      const topBtn = el("#btnToggleVideoTop");
-      const colBtn = el("#btnCollapseVideo");
-      if (vCard) vCard.classList.toggle("is-collapsed", !isVideoVisible);
-      if (topBtn) topBtn.classList.toggle("is-active", isVideoVisible);
-      if (colBtn) {
-        colBtn.innerHTML = window.RusiIcons
-          ? RusiIcons.get(isVideoVisible ? "chevron-up" : "chevron-down", { size: 16 })
-          : (isVideoVisible ? "▲" : "▼");
+    // Xử lý phát video khi bấm vào cover hoặc icon YouTube ở giữa màn hình
+    const handlePlayVideo = () => {
+      const vCover = el("#spVideoCover");
+      if (vCover) vCover.classList.add("is-playing");
+      const ytPlayer = el("#spYoutubePlayer");
+      if (ytPlayer) {
+        let src = ytPlayer.getAttribute("src") || "";
+        if (!src.includes("autoplay=1")) {
+          src += (src.includes("?") ? "&" : "?") + "autoplay=1";
+          ytPlayer.setAttribute("src", src);
+        }
+        try {
+          ytPlayer.contentWindow.postMessage(JSON.stringify({ event: "command", func: "playVideo", args: "" }), "*");
+        } catch (_) {}
       }
     };
 
@@ -8187,7 +8582,7 @@ const openSpeakingWorkspace = (set) => {
         toggleTranslation();
       } else if (e.key === "v" || e.key === "V") {
         e.preventDefault();
-        toggleVideo();
+        handlePlayVideo();
       }
     };
 
@@ -8205,8 +8600,11 @@ const openSpeakingWorkspace = (set) => {
     };
 
     // Đăng ký các nút điều khiển
-    el("#btnToggleVideoTop").onclick = toggleVideo;
-    el("#btnCollapseVideo").onclick = toggleVideo;
+    if (el("#btnPlayCenterYt")) el("#btnPlayCenterYt").onclick = handlePlayVideo;
+    const vCoverEl = el("#spVideoCover");
+    if (vCoverEl) {
+      vCoverEl.onclick = () => handlePlayVideo();
+    }
     el("#btnPlayModel").onclick = () => playCurrentSentence();
     el("#btnRecordMic").onclick = startRecording;
     el("#btnSpeedToggle").onclick = toggleSpeed;
@@ -8232,13 +8630,13 @@ const openSpeakingWorkspace = (set) => {
     };
 
     // Feedback action buttons
-    el("#btnFeedbackRetry").onclick = startRecording;
-    el("#btnFeedbackNext").onclick = () => {
-      if (currentSentenceIdx < items.length - 1) {
-        loadSentence(currentSentenceIdx + 1);
-        playCurrentSentence();
-      }
-    };
+    if (el("#btnFeedbackRetry")) el("#btnFeedbackRetry").onclick = startRecording;
+
+    // Nhấp vào câu tiếng Nga để video tự động phát đến câu đó
+    const ruSentenceEl = el("#spTargetRu");
+    if (ruSentenceEl) {
+      ruSentenceEl.onclick = () => seekVideoToSentence(currentSentenceIdx);
+    }
 
     // Mobile drawer backdrop click
     const sideScrim = el("#spSidebarScrim");
