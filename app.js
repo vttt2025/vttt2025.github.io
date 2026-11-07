@@ -2324,3 +2324,182 @@ document.addEventListener("dblclick", (e) => {
     }
   }
 });
+
+// =====================================================================
+// RUSI TRKI — BỘ BIÊN DỊCH MARKDOWN (.MD) TOÀN HỆ THỐNG
+// Hỗ trợ Blog, Bài học chủ đề từ vựng và CMS Live Preview
+// =====================================================================
+const RusiMarkdown = {
+  render(text) {
+    if (!text || typeof text !== "string") return "";
+
+    let src = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+    // Code blocks ```lang ... ```
+    const codeBlocks = [];
+    src = src.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      const idx = codeBlocks.length;
+      codeBlocks.push(`<pre class="rusi-code-block"><code class="language-${lang || 'plaintext'}">${this.escapeHtml(code.trim())}</code></pre>`);
+      return `@@CODEBLOCK_${idx}@@`;
+    });
+
+    const lines = src.split("\n");
+    const out = [];
+    let inList = false;
+    let listType = "";
+    let inTable = false;
+    let tableRows = [];
+
+    const flushList = () => {
+      if (inList) {
+        out.push(listType === "ol" ? "</ol>" : "</ul>");
+        inList = false;
+        listType = "";
+      }
+    };
+
+    const flushTable = () => {
+      if (inTable) {
+        if (tableRows.length > 0) {
+          let tblHtml = '<div class="topic-vocab-table-wrapper" style="overflow-x:auto;margin:16px 0"><table class="topic-vocab-table rusi-md-table">';
+          tableRows.forEach((row, rIdx) => {
+            if (rIdx === 0) {
+              tblHtml += '<thead><tr>' + row.map(c => `<th>${this.formatInline(c.trim())}</th>`).join('') + '</tr></thead><tbody>';
+            } else {
+              tblHtml += '<tr>' + row.map(c => `<td>${this.formatInline(c.trim())}</td>`).join('') + '</tr>';
+            }
+          });
+          tblHtml += '</tbody></table></div>';
+          out.push(tblHtml);
+        }
+        inTable = false;
+        tableRows = [];
+      }
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+
+      if (!trimmed) {
+        flushList();
+        flushTable();
+        continue;
+      }
+
+      // Table row: | col1 | col2 |
+      if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
+        flushList();
+        // Separator row: |---|---|
+        if (/^\|(\s*[-:]+[-| :]*)\|$/.test(trimmed)) {
+          continue;
+        }
+        const cells = trimmed.slice(1, -1).split("|");
+        inTable = true;
+        tableRows.push(cells);
+        continue;
+      } else {
+        flushTable();
+      }
+
+      // Horizontal rule: --- or ***
+      if (/^(\*{3,}|-{3,}|_{3,})$/.test(trimmed)) {
+        flushList();
+        out.push('<hr class="rusi-md-divider" />');
+        continue;
+      }
+
+      // Headers: #, ##, ###, ####
+      const hMatch = trimmed.match(/^(#{1,4})\s+(.+)$/);
+      if (hMatch) {
+        flushList();
+        const level = hMatch[1].length;
+        const tag = "h" + level;
+        out.push(`<${tag} class="rusi-md-${tag}">${this.formatInline(hMatch[2])}</${tag}>`);
+        continue;
+      }
+
+      // Blockquotes & Alerts: > text or > [!NOTE] or > [!TIP]
+      if (trimmed.startsWith(">")) {
+        flushList();
+        let quoteContent = trimmed.replace(/^>\s?/, "");
+        if (quoteContent.startsWith("[!NOTE]") || quoteContent.startsWith("[!TIP]") || quoteContent.startsWith("[!IMPORTANT]")) {
+          const isTip = quoteContent.includes("TIP");
+          quoteContent = quoteContent.replace(/^\[!(NOTE|TIP|IMPORTANT)\]\s*/i, "");
+          out.push(`
+            <div class="rusi-md-callout ${isTip ? 'rusi-md-callout-tip' : 'rusi-md-callout-note'}">
+              <span class="rusi-md-callout-icon">${isTip ? '💡' : '📌'}</span>
+              <div class="rusi-md-callout-text">${this.formatInline(quoteContent)}</div>
+            </div>
+          `);
+        } else {
+          out.push(`<blockquote class="rusi-md-quote">${this.formatInline(quoteContent)}</blockquote>`);
+        }
+        continue;
+      }
+
+      // Ordered list: 1. 2. 3.
+      const olMatch = trimmed.match(/^(\d+)\.\s+(.+)$/);
+      if (olMatch) {
+        if (!inList || listType !== "ol") {
+          flushList();
+          inList = true;
+          listType = "ol";
+          out.push('<ol class="rusi-md-ol">');
+        }
+        out.push(`<li>${this.formatInline(olMatch[2])}</li>`);
+        continue;
+      }
+
+      // Unordered list: - * •
+      if (trimmed.startsWith("- ") || trimmed.startsWith("* ") || trimmed.startsWith("• ")) {
+        if (!inList || listType !== "ul") {
+          flushList();
+          inList = true;
+          listType = "ul";
+          out.push('<ul class="rusi-md-ul">');
+        }
+        out.push(`<li>${this.formatInline(trimmed.slice(2))}</li>`);
+        continue;
+      }
+
+      // Normal paragraph
+      flushList();
+      out.push(`<p class="rusi-md-p">${this.formatInline(trimmed)}</p>`);
+    }
+
+    flushList();
+    flushTable();
+
+    let html = out.join("\n");
+    html = html.replace(/@@CODEBLOCK_(\d+)@@/g, (match, idx) => codeBlocks[Number(idx)] || "");
+    return html;
+  },
+
+  formatInline(str) {
+    if (!str) return "";
+    return str
+      // Images: ![alt](url)
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="rusi-md-img" loading="lazy" />')
+      // Links: [text](url)
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="rusi-md-link">$1</a>')
+      // Bold: **text** or __text__
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/__(.*?)__/g, '<strong>$1</strong>')
+      // Italic: *text* or _text_
+      .replace(/\*([^\*]+)\*/g, '<em>$1</em>')
+      .replace(/_([^_]+)_/g, '<em>$1</em>')
+      // Strikethrough: ~~text~~
+      .replace(/~~(.*?)~~/g, '<del>$1</del>')
+      // Inline code: `code`
+      .replace(/`([^`]+)`/g, '<code class="rusi-md-inline-code">$1</code>')
+      // Russian quotes: «text»
+      .replace(/«(.*?)»/g, '<span class="rusi-quote-highlight">«$1»</span>');
+  },
+
+  escapeHtml(str) {
+    if (!str) return "";
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+};
+window.RusiMarkdown = RusiMarkdown;

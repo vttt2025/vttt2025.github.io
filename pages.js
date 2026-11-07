@@ -2158,7 +2158,7 @@ function initVocabPage() {
 
   const getVocabJars = () => {
     const customJars = STORE.get("custom_jars", []);
-    const baseJars = (cloudJars && cloudJars.length) ? cloudJars : [];
+    const baseJars = (cloudJars && cloudJars.length) ? cloudJars : ((typeof VOCAB_JARS !== "undefined" && Array.isArray(VOCAB_JARS)) ? VOCAB_JARS : []);
     // Loại bỏ toàn bộ lọ từ cá nhân khỏi danh sách bài học theo cấp độ (A1, A2...)
     const systemJars = baseJars.filter(j => j.is_system !== false && !String(j.id).startsWith("custom-"));
     const jars = systemJars.map(j => ({
@@ -3044,13 +3044,61 @@ function initVocabPage() {
   };
 
 const showTopicArticle = (jarId) => {
+    // 1. Kiểm tra bản nháp xem trước thời gian thực từ CMS (sessionStorage / localStorage)
+    let previewDraft = null;
+    try {
+      const rawPreview = sessionStorage.getItem("rusi_live_preview_draft") || localStorage.getItem("rusi_live_preview_draft");
+      if (rawPreview) {
+        const parsed = JSON.parse(rawPreview);
+        if (parsed && (parsed.slug === "TOPIC_ARTICLES" || parsed.slug === "VOCAB_JARS")) {
+          if (!jarId || parsed.docId === jarId || (parsed.doc && (parsed.doc.id === jarId || parsed.doc.code === jarId))) {
+            previewDraft = parsed.doc;
+          }
+        }
+      }
+    } catch (_) {}
+
     const allJars = getVocabJars();
-    const item = allJars.find(j => j.id === jarId || j.code === jarId || (j.raw && (j.raw.code === jarId || j.raw.id === jarId)));
+    let item = allJars.find(j => j.id === jarId || j.code === jarId || (j.raw && (j.raw.code === jarId || j.raw.id === jarId)));
+
+    // Fallback: nếu chưa có trong allJars, kiểm tra previewDraft hoặc admin store
+    if (!item && previewDraft) {
+      item = {
+        id: previewDraft.id || previewDraft.code || jarId,
+        code: previewDraft.code || previewDraft.id || jarId,
+        name: previewDraft.title || previewDraft.name || "Bài học chủ đề",
+        title: previewDraft.title || previewDraft.name || "Bài học chủ đề",
+        level: previewDraft.level || "A1",
+        desc: previewDraft.desc || previewDraft.intro || "",
+        words: Array.isArray(previewDraft.words) ? previewDraft.words : (Array.isArray(previewDraft.vocabTable) ? previewDraft.vocabTable : []),
+        article: previewDraft.article || previewDraft,
+        is_preview: true
+      };
+    } else if (!item) {
+      try {
+        const ad = JSON.parse(localStorage.getItem("trki_admin_data") || "{}");
+        const list = (ad.TOPIC_ARTICLES || []).concat(ad.VOCAB_JARS || []);
+        const found = list.find(x => (x.id || x.code) === jarId);
+        if (found) {
+          item = {
+            id: found.id || found.code || jarId,
+            code: found.code || found.id || jarId,
+            name: found.title || found.name || "Bài học chủ đề",
+            title: found.title || found.name || "Bài học chủ đề",
+            level: found.level || "A1",
+            desc: found.desc || found.intro || "",
+            words: Array.isArray(found.words) ? found.words : (Array.isArray(found.vocabTable) ? found.vocabTable : []),
+            article: found.article || found
+          };
+        }
+      } catch (_) {}
+    }
+
     if (!item) return;
     const jar = item.raw || item;
 
-    // Kiểm tra quyền truy cập PRO
-    if (item.is_pro_only && !Monetization.isPro()) {
+    // Kiểm tra quyền truy cập PRO (bỏ qua khi đang xem trước CMS)
+    if (!jar.is_preview && item.is_pro_only && !Monetization.isPro()) {
       Monetization.showProGateModal(
         "Nội dung dành cho PRO",
         "Nâng cấp lên gói PRO để mở khóa toàn bộ bài học chủ đề chuyên sâu, tài liệu PDF và kho từ vựng nâng cao."
@@ -3069,7 +3117,9 @@ const showTopicArticle = (jarId) => {
 
     // Lấy nội dung bài học chuyên sâu
     const articlesMap = (typeof TOPIC_ARTICLES !== "undefined") ? TOPIC_ARTICLES : {};
-    const customArticle = jar.article || (jar.code && articlesMap[jar.code]) || (item.code && articlesMap[item.code]) || articlesMap[jar.id] || null;
+    const customArticle = (previewDraft && (previewDraft.id === jarId || previewDraft.code === jarId || previewDraft.article))
+      ? (previewDraft.article || previewDraft)
+      : (jar.article || (jar.code && articlesMap[jar.code]) || (item.code && articlesMap[item.code]) || articlesMap[jar.id] || null);
 
     const words = jar.words || [];
     const levelBadgeClass = jar.level === "A2" ? "dau-badge-a2" : jar.level === "B1" ? "dau-badge-b1" : jar.level === "B2" ? "dau-badge-b2" : "dau-badge-a1";
@@ -3271,6 +3321,16 @@ const showTopicArticle = (jarId) => {
         </div>
 
         <!-- HERO HEADER -->
+        ${(previewDraft || jar.is_preview) ? `
+          <div class="topic-preview-badge-row" style="margin-bottom:20px">
+            <span style="font-size:1.2rem">👁️</span>
+            <div>
+              <strong>Chế độ Xem Trước Thời Gian Thực (Live Preview Studio)</strong>
+              <div style="font-size:0.8rem;opacity:0.9;font-weight:400">Đang hiển thị bản nháp bài học chủ đề từ CMS RUSI TRKI. Nhấn "Lưu &amp; Đồng bộ Cloud" trong CMS để cập nhật vĩnh viễn lên Supabase.</div>
+            </div>
+          </div>
+        ` : ""}
+
         <header class="topic-article-hero">
           <span class="topic-article-eyebrow">
             ${window.RusiIcons ? RusiIcons.get("book-open", { size: 14 }) : ""} BÀI HỌC CHỦ ĐỀ · ${jar.level} (${levelLabel})
@@ -3290,12 +3350,24 @@ const showTopicArticle = (jarId) => {
             <span class="sec-badge">I</span> Bối cảnh &amp; Tình huống giao tiếp thực tế
           </h2>
           <div style="font-size:0.95rem;line-height:1.7;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px 22px">
-            ${customArticle && customArticle.intro ? esc(customArticle.intro) : `
+            ${customArticle && customArticle.intro ? (window.RusiMarkdown ? RusiMarkdown.render(customArticle.intro) : esc(customArticle.intro)) : `
               Chủ đề <strong>«${esc(jar.name)}»</strong> đóng vai trò vô cùng thiết yếu trong đời sống và giao tiếp tiếng Nga trình độ ${jar.level}. 
               Nắm vững hệ thống từ vựng và cấu trúc diễn đạt của chủ đề này giúp bạn tự tin xử lý mọi tình huống thực tế khi du học, công tác hoặc thi chứng chỉ TRKI.
             `}
           </div>
         </section>
+
+        ${(customArticle && (customArticle.content_markdown || customArticle.content)) ? `
+          <!-- PHẦN: NỘI DUNG BÀI GIẢNG / BÀI ĐỌC CHUYÊN SÂU MARKDOWN (.MD) -->
+          <section class="topic-article-section topic-article-markdown-body">
+            <h2 class="topic-article-sec-title" style="margin-bottom:18px">
+              <span class="sec-badge">✦</span> Nội dung bài học chuyên đề (.md)
+            </h2>
+            <div class="rusi-md-rendered">
+              ${window.RusiMarkdown ? RusiMarkdown.render(customArticle.content_markdown || customArticle.content) : `<p>${esc(customArticle.content_markdown || customArticle.content)}</p>`}
+            </div>
+          </section>
+        ` : ""}
 
         ${actionChainsHtml}
 
@@ -3708,7 +3780,23 @@ const showTopicArticle = (jarId) => {
     }
   });
 
-  renderVocabHub();
+  // Hỗ trợ mở trực tiếp Lọ từ vựng hoặc Bài học chủ đề từ URL / Live Preview Studio CMS
+  const urlParams = new URLSearchParams(window.location.search);
+  const targetTopic = urlParams.get("topic") || urlParams.get("article");
+  const targetJar = urlParams.get("jar");
+  const targetMode = urlParams.get("mode");
+
+  if (targetTopic) {
+    if (targetMode === "jar") {
+      showJarDetail(targetTopic);
+    } else {
+      showTopicArticle(targetTopic);
+    }
+  } else if (targetJar) {
+    showJarDetail(targetJar);
+  } else {
+    renderVocabHub();
+  }
 }
 
 
@@ -11380,8 +11468,8 @@ function initBlogPage() {
           Tác giả: <b>${esc(post.author || "RUSI Editorial")}</b> · Ngày: ${esc(post.date || "")}
         </div>
         ${post.cover ? `<img src="${esc(post.cover)}" style="width:100%;max-height:360px;object-fit:cover;border-radius:14px;margin-bottom:20px" alt="" />` : ""}
-        <div style="line-height:1.85;font-size:1.05rem;color:var(--text);white-space:pre-line">
-          ${esc(post.content || post.excerpt)}
+        <div class="rusi-md-rendered" style="line-height:1.85;font-size:1.05rem;color:var(--text)">
+          ${window.RusiMarkdown && typeof window.RusiMarkdown.render === "function" ? window.RusiMarkdown.render(post.content || post.excerpt) : `<p style="white-space:pre-line">${esc(post.content || post.excerpt)}</p>`}
         </div>
         <div style="background:var(--primary-soft);border-radius:10px;padding:16px;margin-top:24px;text-align:center">
           <h4>Chuẩn bị hành trang chứng chỉ tiếng Nga cùng RUSI</h4>

@@ -52,6 +52,9 @@
   <script>
     function renderMarkdownContent(text) {
       if (!text) return "";
+      if (window.RusiMarkdown && typeof window.RusiMarkdown.render === "function") {
+        return `<div class="rusi-md-rendered">${window.RusiMarkdown.render(text)}</div>`;
+      }
       const lines = text.split("\n");
       let html = "";
       let inList = false;
@@ -115,11 +118,33 @@
 
       const params = new URLSearchParams(window.location.search);
       const slug = params.get("slug") || params.get("id");
+      const isPreview = params.get("preview") === "1";
 
+      // 1. Kiểm tra bản nháp xem trước thời gian thực từ CMS (sessionStorage / localStorage)
+      let previewDoc = null;
+      try {
+        const rawPreview = sessionStorage.getItem("rusi_live_preview_draft") || localStorage.getItem("rusi_live_preview_draft");
+        if (rawPreview) {
+          const parsed = JSON.parse(rawPreview);
+          if (parsed && parsed.slug === "BLOG_POSTS" && (parsed.docId === slug || !slug || isPreview)) {
+            previewDoc = parsed.doc;
+          }
+        }
+      } catch (_) {}
+
+      if (!previewDoc) {
+        try {
+          const ad = JSON.parse(localStorage.getItem("trki_admin_data") || "{}");
+          const adminBlog = ad.BLOG_POSTS || [];
+          const found = adminBlog.find(p => p.slug === slug || p.id === slug);
+          if (found) previewDoc = found;
+        } catch (_) {}
+      }
+
+      // 2. Lấy dữ liệu từ bộ nhớ đệm hoặc Supabase
       const cached = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("blog:all") : null;
       let posts = (cached && cached.length) ? cached : [];
 
-      // Try fetching from Supabase if available
       if (window.RusiSupabase && typeof window.RusiSupabase.blog?.getAll === "function") {
         try {
           const remote = await window.RusiSupabase.blog.getAll();
@@ -127,7 +152,12 @@
         } catch (_) {}
       }
 
-      const post = posts.find(p => p.slug === slug || p.id === slug || String(posts.indexOf(p)) === slug) || posts[0];
+      // 3. Fallback Graceful Degradation: Sử dụng BLOG_POSTS cục bộ nếu offline hoặc Supabase rỗng
+      if ((!posts || !posts.length) && typeof window.BLOG_POSTS !== "undefined" && Array.isArray(window.BLOG_POSTS)) {
+        posts = window.BLOG_POSTS.slice();
+      }
+
+      const post = previewDoc || posts.find(p => p.slug === slug || p.id === slug || String(posts.indexOf(p)) === slug) || posts[0];
 
       if (!post) {
         host.innerHTML = `
@@ -140,9 +170,9 @@
         return;
       }
 
-      document.title = post.title + " — RUSI TRKI";
+      document.title = (previewDoc ? "[XEM TRƯỚC] " : "") + post.title + " — RUSI TRKI";
 
-      const relatedPosts = posts.filter(p => p !== post).slice(0, 2);
+      const relatedPosts = posts.filter(p => p !== post && (p.slug !== post.slug)).slice(0, 2);
 
       host.innerHTML = `
         <div class="bpost-nav-bar">
@@ -153,6 +183,16 @@
             ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : ""} <span class="btn-text">Chia sẻ bài viết</span>
           </button>
         </div>
+
+        ${previewDoc ? `
+          <div class="topic-preview-badge-row" style="margin-bottom:20px">
+            <span style="font-size:1.2rem">👁️</span>
+            <div>
+              <strong>Chế độ Xem Trước Thời Gian Thực (Live Preview Studio)</strong>
+              <div style="font-size:0.8rem;opacity:0.9;font-weight:400">Đang hiển thị bản nháp Markdown từ CMS RUSI TRKI. Nhấn "Lưu &amp; Đồng bộ Cloud" trong CMS để cập nhật vĩnh viễn lên Supabase.</div>
+            </div>
+          </div>
+        ` : ""}
 
         <article class="bpost-article">
           <div class="bpost-header">

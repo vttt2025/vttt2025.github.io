@@ -201,16 +201,45 @@
         const raw = window.TOPIC_ARTICLES || {};
         return Object.keys(raw).map((k) => ({
           id: k,
+          title: raw[k].title || raw[k].name || ("Bài học: " + k),
+          level: raw[k].level || "A1",
           intro: raw[k].intro || "",
+          content: raw[k].content || raw[k].content_markdown || "",
+          content_markdown: raw[k].content || raw[k].content_markdown || "",
           audioUrl: raw[k].audioUrl || "",
           dialogues: Array.isArray(raw[k].dialogues) ? raw[k].dialogues : [],
           grammar: raw[k].grammar || { title: "", rule: "", examples: [] },
+          grammarNotes: Array.isArray(raw[k].grammarNotes) ? raw[k].grammarNotes : [],
           vocabTable: Array.isArray(raw[k].vocabTable) ? raw[k].vocabTable : []
         }));
       },
       createDefault: () => ({
-        id: "chu_de_moi",
+        id: "chu_de_moi_" + Date.now().toString().slice(-4),
+        title: "Bài học chủ đề mới",
+        level: "A1",
         intro: "Giới thiệu bối cảnh thực tế đời sống sinh viên và giao tiếp tại Nga...",
+        content: `# Bài học: Giao tiếp & Đời sống thực tế tại Nga
+
+## I. Bối cảnh & Tình huống giao tiếp
+Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống giao tiếp thường nhật khi sinh sống và du học tại Liên bang Nga.
+
+> [!NOTE]
+> Hãy chú ý trọng âm của từ vựng tiếng Nga. Trọng âm chuẩn xác giúp người bản xứ hiểu ngay ý bạn muốn diễn đạt.
+
+## II. Hội thoại mẫu điển hình
+- **Анна**: Привет! Как твои дела? *(Chào bạn! Bạn khỏe không?)*
+- **Максим**: Всё отлично, спасибо! А у тебя? *(Mọi thứ đều tuyệt, cảm ơn bạn! Còn bạn thì sao?)*
+
+## III. Bảng từ vựng cốt lõi
+| Từ tiếng Nga | Loại từ | Nghĩa tiếng Việt | Câu ví dụ |
+| --- | --- | --- | --- |
+| **студе́нт** | сущ. м. | sinh viên nam | Он русский студент. |
+| **кни́га** | сущ. ж. | quyển sách | Я читаю интересную книгу. |
+| **изуча́ть** | глаг. | học tập, nghiên cứu | Мы изучаем русский язык в университете. |
+
+> [!TIP]
+> Sử dụng các cụm từ trong ngoặc kép «...» để ghi nhớ các cụm thành ngữ hoặc quán ngữ phổ biến!
+`,
         audioUrl: "",
         dialogues: [
           { speaker: "Анна", role: "Sinh viên", ru: "Привет! Как дела?", vi: "Chào bạn! Bạn khỏe không?" }
@@ -227,8 +256,24 @@
         ]
       }),
       fields: [
-        { key: "id", label: "Mã chủ đề (khớp với ID Lọ từ vựng)", type: "text", required: true, help: "Ví dụ: nghe_nghiep, do_an_uong..." },
-        { key: "intro", label: "Đoạn văn bối cảnh giới thiệu", type: "textarea", rows: 4, required: true },
+        { key: "id", label: "Mã chủ đề (khớp với ID Lọ từ vựng)", type: "text", required: true, help: "Ví dụ: bo_phan_co_the, jar_auchan, jar_chemodan..." },
+        { key: "title", label: "Tiêu đề bài học chủ đề", type: "text", required: true },
+        {
+          key: "level",
+          label: "Trình độ TRKI",
+          type: "select",
+          options: [
+            { v: "A1", l: "A1 (Sơ cấp)" },
+            { v: "A2", l: "A2 (Cơ bản)" },
+            { v: "B1", l: "B1 (Trung cấp 1)" },
+            { v: "B2", l: "B2 (Trung cấp 2)" },
+            { v: "C1", l: "C1 (Cao cấp)" },
+            { v: "C2", l: "C2 (Thành thạo)" }
+          ],
+          defaultValue: "A1"
+        },
+        { key: "intro", label: "Đoạn văn bối cảnh giới thiệu tóm tắt", type: "textarea", rows: 3 },
+        { key: "content", label: "Nội dung bài học chuyên sâu (.md Markdown)", type: "markdown", required: true, help: "Hỗ trợ tiêu đề (#, ##), danh sách, bảng biểu, trích dẫn (>), code block và callout (> [!TIP])." },
         { key: "audioUrl", label: "URL File âm thanh (tùy chọn)", type: "text" }
       ]
     },
@@ -626,20 +671,49 @@ BLOG_POSTS: {
         slug: "bai-viet-moi-" + Date.now().toString().slice(-4),
         title: "Bài viết cẩm nang mới",
         tag: "Lộ trình",
-        date: "Tháng 10, 2026",
+        categoryName: "CẨM NANG DU HỌC NGA",
+        date: "Tháng " + (new Date().getMonth() + 1) + ", " + new Date().getFullYear(),
         icon: "flag",
-        excerpt: "Tóm tắt ngắn gọn nội dung bài viết về đời sống và du học Nga.",
-        content: "Nội dung bài viết chi tiết được viết tại đây...",
+        author: "Ban Biên Tập RUSI TRKI",
+        readTime: "5 phút đọc",
+        cover: "assets/red-square.jpg",
+        excerpt: "Tóm tắt ngắn gọn nội dung bài viết về kinh nghiệm học tập và đời sống tại Nga.",
+        content: `# Tiêu đề bài viết cẩm nang du học
+
+## 1. Giới thiệu tổng quan
+Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý báu để tiếp cận nền giáo dục đại học hàng đầu thế giới.
+
+> [!NOTE]
+> Sinh viên quốc tế được hưởng nhiều chính sách ưu đãi về thị thực và ký túc xá khi trúng tuyển học bổng chính phủ.
+
+## 2. Các bước chuẩn bị then chốt
+- **Hồ sơ học tập**: Bảng điểm dịch công chứng và hợp pháp hóa lãnh sự.
+- **Chứng chỉ ngoại ngữ**: Chuẩn bị thi chứng chỉ quốc tế «ТРКИ».
+- **Hành lý & Đời sống**: Chuẩn bị trang phục mùa đông và đồ dùng sinh hoạt.
+
+| Hạng mục | Thời gian chuẩn bị | Lưu ý quan trọng |
+| --- | --- | --- |
+| Dịch thuật công chứng | 2 - 3 tuần | Cần dịch sang tiếng Nga |
+| Khám sức khỏe & HIV | 1 tuần | Có giá trị trong 3 tháng |
+| Vé máy bay & Ký túc xá | 1 tháng trước bay | Liên hệ trước với phòng Dekanat |
+
+> [!TIP]
+> Hãy chủ động kết nối với hội sinh viên Việt Nam tại trường bạn sắp theo học để được hỗ trợ đón sân bay và làm thủ tục nhập học nhanh chóng.
+`,
         published: true
       }),
       fields: [
         { key: "slug", label: "Slug URL bài viết", type: "text", required: true, help: "Ví dụ: kinh-nghiem-xin-hoc-bong-nga" },
         { key: "title", label: "Tiêu đề bài viết", type: "text", required: true },
         { key: "tag", label: "Chuyên mục (Lộ trình / KTX / Học bổng / Đời sống)", type: "text" },
+        { key: "categoryName", label: "Tên hiển thị chuyên mục", type: "text", defaultValue: "CẨM NANG DU HỌC NGA" },
         { key: "date", label: "Thời gian đăng (ví dụ: Tháng 10, 2026)", type: "text" },
-        { key: "icon", label: "Mã Icon Lucide", type: "text", defaultValue: "flag" },
-        { key: "excerpt", label: "Tóm tắt bài viết hiển thị ngoài danh sách", type: "textarea" },
-        { key: "content", label: "Nội dung bài viết chi tiết (Hỗ trợ HTML/Markdown)", type: "textarea", required: true }
+        { key: "readTime", label: "Thời gian đọc (ví dụ: 5 phút đọc)", type: "text", defaultValue: "5 phút đọc" },
+        { key: "author", label: "Tác giả bài viết", type: "text", defaultValue: "Ban Biên Tập RUSI TRKI" },
+        { key: "cover", label: "URL Ảnh bìa (Cover Image)", type: "text", defaultValue: "assets/red-square.jpg" },
+        { key: "icon", label: "Mã Icon Lucide", type: "text", defaultValue: "book-open-blog" },
+        { key: "excerpt", label: "Tóm tắt bài viết hiển thị ngoài danh sách", type: "textarea", rows: 3 },
+        { key: "content", label: "Nội dung bài viết chi tiết (.md Markdown)", type: "markdown", required: true, help: "Hỗ trợ tiêu đề (#, ##), danh sách, bảng biểu, trích dẫn (>), code block và callout (> [!TIP])." }
       ]
     },
 
@@ -1443,6 +1517,72 @@ BLOG_POSTS: {
             ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
           </div>
         `;
+      } else if (f.type === "markdown") {
+        const renderedMd = (window.RusiMarkdown && typeof window.RusiMarkdown.render === "function")
+          ? window.RusiMarkdown.render(val)
+          : `<p>${esc(val)}</p>`;
+        formFieldsHtml += `
+          <div class="p-form-group">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <label class="p-label" style="margin:0">${esc(f.label)} ${f.required ? '<span class="p-label-req">*</span>' : ""}</label>
+              <div style="font-size:12px;color:var(--p-text-muted)">Định dạng: <strong>Markdown (.md)</strong></div>
+            </div>
+            <div class="p-md-editor-wrap" data-md-field="${escAttr(f.key)}">
+              <!-- Toolbar -->
+              <div class="p-md-toolbar">
+                <div class="p-md-actions">
+                  <button type="button" class="p-md-btn" data-action="bold" title="In đậm (**text**)"><b>B</b></button>
+                  <button type="button" class="p-md-btn" data-action="italic" title="In nghiêng (*text*)"><i>I</i></button>
+                  <span class="p-md-sep"></span>
+                  <button type="button" class="p-md-btn" data-action="h2" title="Tiêu đề H2 (## Tiêu đề)">H2</button>
+                  <button type="button" class="p-md-btn" data-action="h3" title="Tiêu đề H3 (### Tiêu đề)">H3</button>
+                  <span class="p-md-sep"></span>
+                  <button type="button" class="p-md-btn" data-action="ru-quote" title="Ngoặc kép tiếng Nga («cụm từ»)">« »</button>
+                  <button type="button" class="p-md-btn" data-action="tip" title="Hộp ghi chú mẹo (> [!TIP])">💡 Mẹo</button>
+                  <button type="button" class="p-md-btn" data-action="quote" title="Trích dẫn (> trích dẫn)">💬 Trích dẫn</button>
+                  <span class="p-md-sep"></span>
+                  <button type="button" class="p-md-btn" data-action="ul" title="Danh sách gạch đầu dòng (- mục)">• List</button>
+                  <button type="button" class="p-md-btn" data-action="ol" title="Danh sách đánh số (1. mục)">1. Num</button>
+                  <button type="button" class="p-md-btn" data-action="table" title="Chèn bảng Markdown">⊞ Bảng</button>
+                  <button type="button" class="p-md-btn" data-action="code" title="Khối mã nguồn (Code block)">Code</button>
+                  <button type="button" class="p-md-btn" data-action="link" title="Chèn liên kết [text](url)">🔗 Link</button>
+                  <button type="button" class="p-md-btn" data-action="img" title="Chèn ảnh ![alt](url)">🖼️ Ảnh</button>
+                </div>
+                <div class="p-md-modes">
+                  <button type="button" class="p-md-mode-btn" data-mode="edit">✍️ Soạn thảo</button>
+                  <button type="button" class="p-md-mode-btn active" data-mode="split">◫ Chia đôi</button>
+                  <button type="button" class="p-md-mode-btn" data-mode="preview">👁️ Xem trước</button>
+                </div>
+              </div>
+              <!-- Panes -->
+              <div class="p-md-panes split-mode">
+                <div class="p-md-editor-pane">
+                  <textarea class="p-md-textarea live-draft-field live-markdown-input" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}" placeholder="Soạn thảo nội dung bài viết bằng cú pháp Markdown...">${esc(val)}</textarea>
+                </div>
+                <div class="p-md-preview-pane">
+                  <div class="p-md-preview-header">
+                    <span>Bản xem trước thời gian thực</span>
+                    <span class="p-pill p-pill-info">RusiMarkdown Renderer</span>
+                  </div>
+                  <div class="rusi-md-rendered p-md-preview-body">
+                    ${renderedMd}
+                  </div>
+                </div>
+              </div>
+              <!-- Status bar -->
+              <div class="p-md-statusbar">
+                <div class="p-md-counters">
+                  <span>Ký tự: <b class="md-char-count">${String(val).length}</b></span>
+                  <span>Từ: <b class="md-word-count">${String(val).trim() ? String(val).trim().split(/\s+/).length : 0}</b></span>
+                </div>
+                <div style="font-size:11px;color:var(--p-text-muted)">
+                  Cú pháp: <code>## Tiêu đề</code> · <code>| Cột | Bảng |</code> · <code>> [!TIP]</code> · <code>«Nga»</code>
+                </div>
+              </div>
+            </div>
+            ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
+          </div>
+        `;
       } else {
         const isIdDisabled = !State.isCreating && (f.key === "id" || f.key === "slug");
         formFieldsHtml += `
@@ -1527,9 +1667,10 @@ BLOG_POSTS: {
           <div class="payload-doc-card">
             <div class="payload-doc-card-title">Hành động</div>
             <div style="display:flex;flex-direction:column;gap:8px">
-              <button class="p-btn p-btn-primary" type="button" onclick="window.saveDocument()">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Lưu & Đồng bộ Cloud (Supabase)</button>
-              <button class="p-btn p-btn-secondary" type="button" onclick="window.openLivePreview()">${window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : ""} Live Preview Studio</button>
-              <a class="p-btn p-btn-ghost" href="#collection/${slug}">Huỷ & Quay lại</a>
+              <button class="p-btn p-btn-primary" type="button" onclick="window.saveDocument()">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Lưu &amp; Đồng bộ Cloud (Supabase)</button>
+              <button class="p-btn p-btn-secondary" type="button" onclick="window.openLivePreview()">${window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : ""} Live Preview Studio (Khung nổi)</button>
+              <button class="p-btn p-btn-secondary" type="button" onclick="window.openPreviewInNewTab()">${window.RusiIcons ? RusiIcons.get("external-link", { size: 14 }) : ""} Xem trước trên Web (Tab mới)</button>
+              <a class="p-btn p-btn-ghost" href="#collection/${slug}">Huỷ &amp; Quay lại</a>
             </div>
           </div>
 
@@ -1576,6 +1717,78 @@ BLOG_POSTS: {
         }
       };
     }
+
+    // Bind Markdown editors with live preview & formatting toolbar
+    document.querySelectorAll(".p-md-editor-wrap").forEach((wrap) => {
+      const fieldKey = wrap.dataset.mdField;
+      const textarea = wrap.querySelector(".live-markdown-input");
+      const previewBody = wrap.querySelector(".p-md-preview-body");
+      const charCount = wrap.querySelector(".md-char-count");
+      const wordCount = wrap.querySelector(".md-word-count");
+      const panes = wrap.querySelector(".p-md-panes");
+
+      const updatePreview = () => {
+        if (!textarea) return;
+        const text = textarea.value;
+        State.currentDraft[fieldKey] = text;
+        if (charCount) charCount.textContent = text.length;
+        if (wordCount) wordCount.textContent = text.trim() ? text.trim().split(/\s+/).length : 0;
+        if (previewBody && window.RusiMarkdown && typeof window.RusiMarkdown.render === "function") {
+          previewBody.innerHTML = window.RusiMarkdown.render(text);
+        }
+      };
+
+      if (textarea) {
+        textarea.addEventListener("input", updatePreview);
+      }
+
+      // Mode switch buttons
+      wrap.querySelectorAll(".p-md-mode-btn").forEach((btn) => {
+        btn.onclick = () => {
+          wrap.querySelectorAll(".p-md-mode-btn").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          const mode = btn.dataset.mode;
+          panes.classList.remove("split-mode", "edit-only", "preview-only");
+          if (mode === "edit") panes.classList.add("edit-only");
+          else if (mode === "preview") panes.classList.add("preview-only");
+          else panes.classList.add("split-mode");
+        };
+      });
+
+      // Insert markdown syntax helper
+      const insertSnippet = (prefix, suffix, defaultTxt) => {
+        if (!textarea) return;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const val = textarea.value;
+        const selected = val.substring(start, end) || defaultTxt;
+        const replacement = prefix + selected + suffix;
+        textarea.value = val.substring(0, start) + replacement + val.substring(end);
+        const newCursor = start + prefix.length + selected.length;
+        textarea.setSelectionRange(newCursor, newCursor);
+        textarea.focus();
+        updatePreview();
+      };
+
+      wrap.querySelectorAll(".p-md-btn[data-action]").forEach((btn) => {
+        btn.onclick = () => {
+          const act = btn.dataset.action;
+          if (act === "bold") insertSnippet("**", "**", "in đậm");
+          else if (act === "italic") insertSnippet("*", "*", "in nghiêng");
+          else if (act === "h2") insertSnippet("\n## ", "\n", "Tiêu đề phần");
+          else if (act === "h3") insertSnippet("\n### ", "\n", "Tiêu đề mục con");
+          else if (act === "ru-quote") insertSnippet("«", "»", "cụm từ tiếng Nga");
+          else if (act === "tip") insertSnippet("\n> [!TIP]\n> ", "\n", "Ghi nhớ mẹo học tiếng Nga tại đây");
+          else if (act === "quote") insertSnippet("\n> ", "\n", "Đoạn trích dẫn");
+          else if (act === "ul") insertSnippet("\n- ", "\n", "Mục danh sách");
+          else if (act === "ol") insertSnippet("\n1. ", "\n", "Bước thực hiện");
+          else if (act === "table") insertSnippet("\n| Cột 1 | Cột 2 | Cột 3 |\n| --- | --- | --- |\n| Dòng 1 | Nội dung A | Ví dụ |\n| Dòng 2 | Nội dung B | Ví dụ |\n", "", "");
+          else if (act === "code") insertSnippet("\n```\n", "\n```\n", "console.log('RUSI TRKI');");
+          else if (act === "link") insertSnippet("[", "](https://rusitrki.com)", "Tiêu đề liên kết");
+          else if (act === "img") insertSnippet("![", "](assets/red-square.jpg)", "Mô tả hình ảnh");
+        };
+      });
+    });
   }
 
   window.switchEditorTab = function (tab) {
@@ -2628,6 +2841,7 @@ BLOG_POSTS: {
           color_code: doc.color || "#0039A6",
           is_system: true,
           words: Array.isArray(doc.words) ? doc.words : [],
+          article: doc.article || null,
           updated_at: new Date().toISOString()
         }),
         fromRow: (row) => ({
@@ -2638,8 +2852,60 @@ BLOG_POSTS: {
           desc: row.description || "",
           icon: row.icon || "archive-jar",
           color: row.color_code || "#0039A6",
-          words: Array.isArray(row.words) ? row.words : []
+          words: Array.isArray(row.words) ? row.words : [],
+          article: row.article || null
         })
+      },
+
+      TOPIC_ARTICLES: {
+        table: "vocab_jars",
+        conflict: "code",
+        deleteCol: "code",
+        label: "Bài học chủ đề (Article)",
+        idKey: (doc) => doc.id,
+        toRow: (doc) => {
+          const artObj = {
+            id: doc.id,
+            title: doc.title || "",
+            intro: doc.intro || "",
+            content: doc.content || doc.content_markdown || "",
+            content_markdown: doc.content || doc.content_markdown || "",
+            audioUrl: doc.audioUrl || "",
+            dialogues: Array.isArray(doc.dialogues) ? doc.dialogues : [],
+            grammar: doc.grammar || {},
+            grammarNotes: Array.isArray(doc.grammarNotes) ? doc.grammarNotes : [],
+            vocabTable: Array.isArray(doc.vocabTable) ? doc.vocabTable : [],
+            actionChains: Array.isArray(doc.actionChains) ? doc.actionChains : [],
+            culturalTip: doc.culturalTip || ""
+          };
+          return {
+            code: String(doc.id).trim(),
+            jar_name: doc.title || ("Bài học: " + doc.id),
+            level: doc.level || "A1",
+            description: doc.intro ? doc.intro.slice(0, 160) : "Bài học chủ đề tiếng Nga",
+            is_system: true,
+            article: artObj,
+            updated_at: new Date().toISOString()
+          };
+        },
+        fromRow: (row) => {
+          const art = row.article || {};
+          return {
+            id: row.code || row.id,
+            title: art.title || row.jar_name || "",
+            level: row.level || "A1",
+            intro: art.intro || "",
+            content: art.content || art.content_markdown || "",
+            content_markdown: art.content || art.content_markdown || "",
+            audioUrl: art.audioUrl || "",
+            dialogues: Array.isArray(art.dialogues) ? art.dialogues : [],
+            grammar: art.grammar || { title: "", rule: "", examples: [] },
+            grammarNotes: Array.isArray(art.grammarNotes) ? art.grammarNotes : [],
+            vocabTable: Array.isArray(art.vocabTable) ? art.vocabTable : [],
+            actionChains: Array.isArray(art.actionChains) ? art.actionChains : [],
+            culturalTip: art.culturalTip || ""
+          };
+        }
       },
 
       LISTENING_LESSONS: {
@@ -3324,6 +3590,18 @@ BLOG_POSTS: {
         saveAdminStore(store);
         syncDataToWeb();
       }
+
+      // Lưu trữ bản nháp xem trước thời gian thực vào sessionStorage và localStorage
+      try {
+        const previewPayload = {
+          slug: State.currentSlug,
+          docId: idKey,
+          doc: State.currentDraft,
+          timestamp: Date.now()
+        };
+        sessionStorage.setItem("rusi_live_preview_draft", JSON.stringify(previewPayload));
+        localStorage.setItem("rusi_live_preview_draft", JSON.stringify(previewPayload));
+      } catch (_) {}
     }
 
     let targetUrl = "mock-test.html";
@@ -3331,11 +3609,13 @@ BLOG_POSTS: {
       const base = COLLECTIONS[State.currentSlug].webUrl;
       const docId = State.currentDraft ? (State.currentDraft.id || State.currentDraft.slug) : State.currentDocId;
 
-      if (State.currentSlug === "TRKI_BANK" && docId) targetUrl = `mock-test.html?test=${encodeURIComponent(docId)}`;
-      else if (State.currentSlug === "VOCAB_JARS" && docId) targetUrl = `vocabulary.html?jar=${encodeURIComponent(docId)}`;
-      else if (State.currentSlug === "LISTENING_LESSONS" && docId) targetUrl = `listening.html?lesson=${encodeURIComponent(docId)}`;
-      else if (State.currentSlug === "SPEAKING_SETS" && docId) targetUrl = `speaking.html?set=${encodeURIComponent(docId)}`;
-      else if (State.currentSlug === "WRITING_TASKS" && docId) targetUrl = `writing.html?task=${encodeURIComponent(docId)}`;
+      if (State.currentSlug === "TRKI_BANK" && docId) targetUrl = `mock-test.html?test=${encodeURIComponent(docId)}&preview=1`;
+      else if (State.currentSlug === "VOCAB_JARS" && docId) targetUrl = `vocabulary.html?topic=${encodeURIComponent(docId)}&mode=article&preview=1`;
+      else if (State.currentSlug === "TOPIC_ARTICLES" && docId) targetUrl = `vocabulary.html?topic=${encodeURIComponent(docId)}&mode=article&preview=1`;
+      else if (State.currentSlug === "BLOG_POSTS" && docId) targetUrl = `blog-post.html?slug=${encodeURIComponent(docId)}&preview=1`;
+      else if (State.currentSlug === "LISTENING_LESSONS" && docId) targetUrl = `listening.html?lesson=${encodeURIComponent(docId)}&preview=1`;
+      else if (State.currentSlug === "SPEAKING_SETS" && docId) targetUrl = `speaking.html?set=${encodeURIComponent(docId)}&preview=1`;
+      else if (State.currentSlug === "WRITING_TASKS" && docId) targetUrl = `writing.html?task=${encodeURIComponent(docId)}&preview=1`;
       else targetUrl = base;
     }
 
@@ -3355,6 +3635,37 @@ BLOG_POSTS: {
 
     backdrop.onclick = closeLivePreview;
   }
+
+  window.openPreviewInNewTab = function () {
+    const docId = State.currentDraft ? (State.currentDraft.id || State.currentDraft.slug) : State.currentDocId;
+    let targetUrl = "index.html";
+    if (State.currentSlug && COLLECTIONS[State.currentSlug]) {
+      const base = COLLECTIONS[State.currentSlug].webUrl;
+      if (State.currentSlug === "TRKI_BANK" && docId) targetUrl = `mock-test.html?test=${encodeURIComponent(docId)}&preview=1`;
+      else if (State.currentSlug === "VOCAB_JARS" && docId) targetUrl = `vocabulary.html?topic=${encodeURIComponent(docId)}&mode=article&preview=1`;
+      else if (State.currentSlug === "TOPIC_ARTICLES" && docId) targetUrl = `vocabulary.html?topic=${encodeURIComponent(docId)}&mode=article&preview=1`;
+      else if (State.currentSlug === "BLOG_POSTS" && docId) targetUrl = `blog-post.html?slug=${encodeURIComponent(docId)}&preview=1`;
+      else if (State.currentSlug === "LISTENING_LESSONS" && docId) targetUrl = `listening.html?lesson=${encodeURIComponent(docId)}&preview=1`;
+      else if (State.currentSlug === "SPEAKING_SETS" && docId) targetUrl = `speaking.html?set=${encodeURIComponent(docId)}&preview=1`;
+      else if (State.currentSlug === "WRITING_TASKS" && docId) targetUrl = `writing.html?task=${encodeURIComponent(docId)}&preview=1`;
+      else targetUrl = base;
+    }
+
+    if (State.currentDraft && State.currentSlug) {
+      try {
+        const idKey = State.currentDraft.id || State.currentDraft.slug || State.currentDraft.title;
+        const previewPayload = {
+          slug: State.currentSlug,
+          docId: idKey,
+          doc: State.currentDraft,
+          timestamp: Date.now()
+        };
+        sessionStorage.setItem("rusi_live_preview_draft", JSON.stringify(previewPayload));
+        localStorage.setItem("rusi_live_preview_draft", JSON.stringify(previewPayload));
+      } catch (_) {}
+    }
+    window.open(targetUrl, "_blank");
+  };
 
   function closeLivePreview() {
     const drawer = document.getElementById("previewDrawer");

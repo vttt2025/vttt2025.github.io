@@ -198,16 +198,18 @@
           <span style="font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:6px"><i data-rusi-icon="eye" data-size="16"></i> Live Preview Studio</span>
           <select class="payload-filter-select" id="previewPageSelector" style="font-size:12px;padding:4px 8px">
             <option value="mock-test.html">Đề thi TRKI (mock-test.html)</option>
-            <option value="vocabulary.html">Lọ từ vựng (vocabulary.html)</option>
+            <option value="vocabulary.html">Lọ từ vựng &amp; Bài chủ đề (vocabulary.html)</option>
             <option value="listening.html">Luyện nghe (listening.html)</option>
             <option value="speaking.html">Luyện nói (speaking.html)</option>
             <option value="writing.html">Luyện viết (writing.html)</option>
             <option value="shop.html">Shop hàng Nga (shop.html)</option>
             <option value="blog.html">Cẩm nang Blog (blog.html)</option>
+            <option value="blog-post.html">Chi tiết bài viết (blog-post.html)</option>
             <option value="index.html">Trang chủ (index.html)</option>
           </select>
         </div>
         <div style="display:flex;align-items:center;gap:6px">
+          <button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenNewTabPreview" type="button" onclick="window.openPreviewInNewTab()" title="Mở trang xem trước trên tab trình duyệt mới"><i data-rusi-icon="external-link" data-size="14"></i> Mở tab mới</button>
           <button class="p-btn p-btn-secondary p-btn-sm" id="btnRefreshPreview" type="button" title="Làm mới khung xem thử"><i data-rusi-icon="refresh-cw" data-size="14"></i> Tải lại</button>
           <button class="p-btn-icon" id="btnClosePreview" type="button" title="Đóng xem trước"><i data-rusi-icon="x" data-size="14"></i></button>
         </div>
