@@ -2240,6 +2240,16 @@ function bootApp() {
     localStorage.removeItem("rusi_local_data");
   } catch (_) {}
   try { warmBrowserCache(); } catch (e) { console.warn("[Boot] warmBrowserCache:", e); }
+  try {
+    if (typeof MascotRusika !== "undefined" && typeof MascotRusika.renderFloatingWidget === "function") {
+      const p = document.body ? document.body.dataset.page : "";
+      if (p && p !== "admin" && p !== "login" && p !== "signup") {
+        MascotRusika.renderFloatingWidget();
+      }
+    }
+  } catch (e) {
+    console.error("[Boot] MascotRusika:", e);
+  }
 
   triggerPageInit();
 }

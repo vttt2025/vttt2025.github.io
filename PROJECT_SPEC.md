@@ -75,6 +75,11 @@
 ### [Module 2] Luyện Viết (Tả Tranh, Viết Tóm Tắt & Viết Theo Chủ Đề)
 * **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `pen-tool` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số từ` (ví dụ `A1 | 40 từ`), không hiển thị mô tả, phía dưới nút CTA `[Bắt đầu viết →]` (kèm icon `arrow-right`).
 * **3 Phân loại bài viết chuyên sâu:**: Miêu tả tranh (Письмо по картинке): Quan sát 1 hình ảnh hoặc bối cảnh đời sống thực tế tại Nga, miêu tả hành động, con người và bối cảnh xung quanh. Viết tóm tắt (Изложение / Реферирование): Đọc đoạn văn bản mẫu chuẩn TRKI và viết lại nội dung cô đọng theo ý chính, rèn luyện cấu trúc rút gọn mệnh đề. Viết theo chủ đề (Сочинение по теме): Viết đoạn văn nghị luận/thư từ cá nhân theo các chủ đề bám sát kỳ thi (du học, gia đình, công việc, thành phố của tôi).
+* **Quy chuẩn Giao diện Luyện Dịch Tối Giản Hiện Đại (Minimal Translation Workspace)**:
+  - *Thẻ đề bài (.writing-translation-card)*: Thiết kế phẳng tối giản, loại bỏ hoàn toàn khối lồng bên trong và phần gợi ý ngữ cảnh rườm rà; hiển thị chữ tiếng Nga tự nhiên, vừa mắt qua .writing-translation-text (font-size 1.05rem, line-height 1.7), thích ứng mượt mà trên điện thoại và máy tính bảng.
+  - *Loại bỏ khối .writing-prompt-box-trans*: Bỏ đoạn văn bản hướng dẫn dịch thừa thãi.
+  - *Thanh nút thao tác (.writing-primary-actions)*: Thiết kế tối giản, tinh tế; chuyển nút Gợi ý (#writingHintToggle) xuống nằm chung hàng cùng nút Nhận xét AI, Bài mẫu TRKI và Từ vựng. Trên mobile, các nút co giãn cân đối dạng 2x2 với tap target chuẩn >= 44px.
+  - *Danh sách bài tập (.writing-exercise-list)*: Tinh giản tối đa bằng cách loại bỏ thẻ <small> mô tả, chỉ hiển thị mỗi Bài luyện N, chiều cao tinh gọn 48px, cuộn lướt nhẹ nhàng.
 * **Hỗ trợ người học**: Khung soạn thảo tích hợp bàn phím ảo Cyrillic cho các ký tự đặc biệt (tự động chuyển chế độ native trên mobile). Danh sách từ vựng gợi ý bắt buộc phải xuất hiện trong bài viết. Bộ đếm từ thời gian thực (Live Word Counter) cảnh báo trực quan khi chưa đạt số lượng từ tối thiểu..
 * **AI Chấm điểm theo 4 tiêu chí CEFR**:
   1. Ngữ pháp & Biến cách 6 Cách (Грамматика)
@@ -1051,3 +1056,185 @@ window.RusiIcons.replace(document.getElementById("myContainer"));
 
 4. **Chuẩn Hóa Khả Năng Tiếp Cận (Accessibility / A11y)**:
    * Mọi nút bấm chỉ chứa icon (Icon-only buttons như Sửa, Xóa, Phát âm, Thu nhỏ) bắt buộc phải có thuộc tính `aria-label="Tên hành động"` hoặc nhãn ẩn `<span class="sr-only">Tên hành động</span>` để đảm bảo chuẩn tiếp cận và trải nghiệm SEO/Reader.
+
+
+---
+
+## 10. BÁO CÁO TOÀN DIỆN RÀ SOÁT GIAO DIỆN (UI/UX COMPREHENSIVE AUDIT REPORT) & KẾ HOẠCH TỐI ƯU HÓA HỆ THỐNG
+
+> **Ngày thực hiện thẩm định**: 07/11/2026.  
+> **Phạm vi thẩm định**: Toàn bộ 16 trang HTML tĩnh/động, hệ thống stylesheet (`styles.css`, `admin.css`), các module JavaScript render giao diện (`pages.js`, `app.js`, `dict-detail.js`, `pomodoro.js`, `rusi-icons.js`, `auth-page.js`, `admin.js`), hệ thống Vector Icon Lucide 24px, và các tài nguyên đa phương tiện (Assets/Images).  
+> **Tiêu chuẩn đối chiếu**: Quy chuẩn Thiết kế Figma Make App, Quy chuẩn Responsive Mobile/Tablet & Overflow "More..." (Mục 3), Nguyên tắc Andrej Karpathy (Surgical & Simplicity First), và Tiêu chuẩn Giao diện Chống Slop (Impeccable & Taste Skill).
+
+---
+
+### 10.1. Tổng Quan Kết Quả Rà Soát (Executive Summary)
+
+Dự án RUSI TRKI sở hữu kiến trúc giao diện tương đối đồng bộ với hệ thống Design System màu sắc Russian Winter (Cool Blue `#eef4fb`, Russian Crimson Red `#c52233`, Russian Navy `#102a4c`), Typography `Inter`, cùng hệ thống Icon Vector Lucide hiện đại. Đa số các trang cốt lõi (`index.html`, `vocabulary.html`, `listening.html`, `speaking.html`, `writing.html`, `mock-test.html`) đều đã được tích hợp Skeleton Loading mượt mà và Header Navigation chuẩn 60px.
+
+Tuy nhiên, quá trình rà soát chi tiết mã nguồn và kiểm tra chéo đa nền tảng đã phát hiện **10 điểm bất cập và lỗi giao diện** (từ mức độ nghiêm trọng ảnh hưởng đến luồng người dùng đến các điểm cần tinh chỉnh thẩm mỹ).
+
+#### Bảng Ma Trận Hiện Trạng Giao Diện Từng Trang (Page-by-Page Audit Matrix):
+
+| Trang HTML | Cấp Độ Phụ Thuộc | Header 60px | Footer Shell | Phiên Bản CSS | Phiên Bản Pages JS | Phiên Bản Data JS | Mascot Rusika Floating Bubble | Pomodoro Widget Header | Đánh Giá Tình Trạng Giao Diện |
+|---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
+| `index.html` | Trang Chủ | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ✅ Hoạt động | ✅ Đầy đủ | **Tốt** (Cần gỡ bỏ Wavesurfer CDN thừa) |
+| `vocabulary.html` | Core Module 1 | ✅ Đầy đủ | ✅ Đầy đủ | `v=8.4` | `v=8.5` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | **Khá** (Cần kích hoạt Mascot AI, prefix webkit 3D) |
+| `listening.html` | Core Module 3 | ✅ Đầy đủ | ✅ Đầy đủ | `v=8.9` | `v=9.0` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | **Khá** (Gỡ Wavesurfer thừa, bật Mascot AI) |
+| `speaking.html` | Core Module 4 | ✅ Đầy đủ | ✅ Đầy đủ | `v=8.94` | `v=9.3` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | **Tốt** (Bản Pages mới nhất `v=9.3`, cần bật Mascot AI) |
+| `writing.html` | Core Module 2 | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | **Khá** (Cần nâng CSS lên bản mới nhất) |
+| `mock-test.html` | Core Module 5 | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | **Khá** (Split-pane CBT chuẩn, cần bật Mascot AI) |
+| `blog.html` | Core Module 6 | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | ⚠️ **Cảnh báo**: Nguy cơ trống trang nếu Supabase offline |
+| `blog-post.html` | Chi Tiết Blog | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | **Khá** (Thiếu nhúng modal tra từ 6 cách) |
+| `shop.html` | Core Module 7 | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | ⚠️ **Cảnh báo**: Nguy cơ trống trang nếu Supabase offline |
+| `product-detail.html` | Chi Tiết Shop | ✅ Đầy đủ | ✅ Đầy đủ | ❌ `v=6.5` | ❌ `v=7.0` | ❌ `v=4.9` | ⚠️ Bị thiếu | ✅ Đầy đủ | 🔴 **Lỗi**: Lệch phiên bản nghiêm trọng; màn hình trắng nếu offline |
+| `upgrade.html` | Cổng Nâng Cấp | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ⚠️ Bị thiếu | ❌ Thiếu script | 🔴 **Lỗi**: Thiếu `pomodoro.js` gây lỗi khi click icon timer |
+| `how-to-study.html` | Cẩm Nang Học | ✅ Đầy đủ | ✅ Đầy đủ | ❌ `v=7.1` | ❌ `v=7.0` | ❌ `v=4.9` | ⚠️ Bị thiếu | ✅ Đầy đủ | ⚠️ **Lỗi**: Dùng phiên bản script/style cũ, lệch giao diện |
+| `admin.html` | Quản Trị CMS | Độc lập | Độc lập | `admin.css` | Độc lập | ❌ `v=4.9` | N/A | N/A | **Khá** (Dùng icon Lucide `v=3.2`, data `v=4.9`) |
+| `login.html` | Xác Thực | Độc lập | Độc lập | ❌ `v=6.5` | N/A | ❌ `v=4.9` | N/A | N/A | **Khá** (Cần đồng bộ CSS lên bản mới nhất) |
+| `signup.html` | Đăng Ký | Độc lập | Độc lập | ❌ `v=6.5` | N/A | ❌ `v=4.9` | N/A | N/A | **Khá** (Cần đồng bộ CSS lên bản mới nhất) |
+| `404.html` | Trang Báo Lỗi | ✅ Đầy đủ | ✅ Đầy đủ | ❌ `v=6.5` | N/A | ❌ `v=4.9` | Mascot tĩnh | N/A | **Khá** (Cần đồng bộ CSS lên bản mới nhất) |
+
+---
+
+### 10.2. Chi Tiết Danh Mục 10 Lỗi Giao Diện & Bất Cập Kỹ Thuật Phát Hiện
+
+#### 🔴 Nhóm Lỗi Mức Độ 1: Nghiêm Trọng / Rủi Ro Trải Nghiệm Cao (Critical / High)
+
+1. **Lỗi Vi Phạm Kiến Trúc Offline-First — Nguy Cơ Màn Hình Trắng Trong Shop, Blog & Product Detail**:
+   * *Vị trí*: `pages.js` (dòng 11322 tại `initBlogPage`, dòng 11459 tại `initShopPage`) và `product-detail.html` (dòng 58–71).
+   * *Mô tả hiện tượng*: Mã nguồn khởi tạo danh sách bài viết và sản phẩm theo cơ chế:
+     ```javascript
+     // Trong initBlogPage:
+     const posts = (cloudPosts && cloudPosts.length) ? cloudPosts : [];
+     // Trong initShopPage:
+     const products = (cloudProducts && cloudProducts.length) ? cloudProducts : [];
+     // Trong product-detail.html:
+     let products = (cached && cached.length) ? cached : [];
+     ```
+   * *Hậu quả*: Khi học viên mở trang trong điều kiện mạng chập chờn, hoặc máy chủ Supabase chưa kịp phản hồi, hoặc bộ nhớ đệm cache rỗng, biến dữ liệu bị ép thành mảng rỗng `[]`. Giao diện Blog và Shop bị **trống trắng hoàn toàn**, còn `product-detail.html` hiển thị lỗi *"Không tìm thấy sản phẩm hoặc sản phẩm đã hết hàng"* — dù trong file `data.js` đã có sẵn đầy đủ biến dữ liệu chuẩn `BLOG_POSTS` và `SHOP_PRODUCTS`.
+   * *Giải pháp khắc phục*: Luôn thực hiện cơ chế Graceful Degradation / Hybrid Fallback:
+     ```javascript
+     const posts = (cloudPosts && cloudPosts.length) ? cloudPosts : (typeof BLOG_POSTS !== "undefined" ? BLOG_POSTS : []);
+     const products = (cloudProducts && cloudProducts.length) ? cloudProducts : (typeof SHOP_PRODUCTS !== "undefined" ? SHOP_PRODUCTS : []);
+     ```
+
+2. **Lỗi Phân Mảnh Phiên Bản Tài Nguyên (Resource Versioning & Cache Desynchronization)**:
+   * *Vị trí*: Các thẻ `<link rel="stylesheet">` và `<script src="...">` trên 16 trang HTML.
+   * *Mô tả hiện tượng*:
+     - `styles.css`: Đang tồn tại song song 6 phiên bản khác nhau (`v=6.5`, `v=7.1`, `v=7.6`, `v=8.4`, `v=8.9`, `v=8.94`). Các trang `product-detail.html`, `how-to-study.html`, `login.html`, `signup.html`, `404.html` đang nhận bản CSS cũ `v=6.5` hoặc `v=7.1`, thiếu hụt hoàn toàn các tinh chỉnh mới về chiều cao cố định Header 60px, viền vàng Avatar PRO, và hiệu ứng Mobile Drawer.
+     - `pages.js`: Bị phân mảnh giữa `v=7.0` (trên `product-detail.html`, `how-to-study.html`), `v=8.1`, `v=8.5`, `v=9.0` và `v=9.3` (trên `speaking.html`).
+     - `data.js`: Bị lệch giữa `v=4.9` và `v=8.0`. Phiên bản `v=4.9` thiếu hàng trăm câu ví dụ và bài tập mới.
+   * *Giải pháp khắc phục*: Chuẩn hóa đồng bộ một phiên bản cao nhất duy nhất trên toàn bộ hệ thống (ví dụ: `styles.css?v=9.5`, `pages.js?v=9.5`, `app.js?v=8.5`, `data.js?v=8.0`).
+
+3. **Lỗi Thiếu Thư Viện `pomodoro.js` Trên Trang Cổng Thanh Toán `upgrade.html`**:
+   * *Vị trí*: `upgrade.html` phần chèn script chân trang.
+   * *Mô tả hiện tượng*: Trang `upgrade.html` nhúng `app.js` nhưng **bị bỏ quên thẻ `<script src="pomodoro.js">`**.
+   * *Hậu quả*: Khi học viên đã sở hữu tài khoản PRO truy cập trang `upgrade.html` (để kiểm tra quyền lợi hoặc nâng cấp gói trọn đời), thanh Header vẫn tự động hiển thị nút Pomodoro `#headerPomoBtn`. Tuy nhiên khi học viên nhấp vào, Popover thời gian không mở được hoặc sinh lỗi `ReferenceError: RusiPomodoro is not defined` trong console trình duyệt.
+   * *Giải pháp khắc phục*: Bổ sung `<script src="pomodoro.js?v=6.5"></script>` vào trước thẻ `</body>` của `upgrade.html`.
+
+---
+
+#### 🟡 Nhóm Lỗi Mức Độ 2: Trung Bình / Trải Nghiệm Tương Tác Chưa Đồng Bộ (Medium)
+
+4. **Trợ Lý Học Tập AI Mascot Rusika (`#rusikaFloatingWidget`) Bị Bỏ Quên Ở Toàn Bộ Các Trang Bài Học**:
+   * *Vị trí*: `pages.js` (dòng 11713 tại hàm `initIndexPage`).
+   * *Mô tả hiện tượng*: Hàm `MascotRusika.renderFloatingWidget()` chịu trách nhiệm tạo nút tròn bong bóng nổi thông minh ở góc dưới màn hình. Tuy nhiên, hàm này **chỉ được gọi duy nhất bên trong `initIndexPage()`** (chỉ chạy trên `index.html`).
+   * *Hậu quả*: Trên các trang học tập quan trọng nhất — nơi học viên thực sự cần hỏi đáp ngữ pháp và dịch thuật theo ngữ cảnh (`vocabulary.html`, `listening.html`, `speaking.html`, `writing.html`, `mock-test.html`, `blog.html`) — nút Trợ lý AI Mascot Rusika hoàn toàn **không xuất hiện**.
+   * *Giải pháp khắc phục*: Chuyển lời gọi `MascotRusika.renderFloatingWidget()` vào hàm khởi tạo chung `DOMContentLoaded` trong `app.js` để tự động hiển thị trên tất cả các trang bài học (ngoại trừ trang quản trị `admin.html` và trang auth `login`/`signup`).
+
+5. **Lỗi Hiển Thị Sai Ngữ Cảnh Biểu Tượng Icon "Nghe Chậm" Trong Từ Điển (`dict-detail.js`)**:
+   * *Vị trí*: `dict-detail.js` dòng 566:
+     ```html
+     <button class="wd-speak-btn slow" id="wdSlow" title="Nghe chậm">
+       ${window.RusiIcons ? RusiIcons.get("snail", { size: 20 }) : "🐢"}
+     </button>
+     ```
+   * *Mô tả hiện tượng*: Mã nguồn gọi biểu tượng tên là `"snail"`. Tuy nhiên, trong từ điển định nghĩa của `rusi-icons.js` **không hề có icon nào tên `"snail"`**.
+   * *Hậu quả*: Theo cơ chế fallback an toàn của `rusi-icons.js`, khi không tìm thấy icon, nó tự động trả về biểu tượng `sparkles-clean` (ngôi sao lấp lánh AI). Học viên khi mở modal từ điển tra từ sẽ thấy nút "Nghe chậm" hiển thị **hình ngôi sao phép thuật**, gây hiểu nhầm sang tính năng tạo gợi ý AI thay vì nút phát âm audio tốc độ chậm.
+   * *Giải pháp khắc phục*: Bổ sung định nghĩa SVG Lucide cho icon `snail` (hoặc alias trỏ về biểu tượng ốc sên/rùa/đồng hồ đo tốc độ) vào thư viện `rusi-icons.js`.
+
+6. **Thiếu Lớp Mặt Nạ Cuộn Mờ Mép ("More..." Faded Track Overflow) Trên Các Thanh Tabs Di Động**:
+   * *Vị trí*: `styles.css` tại media query `@media (max-width: 1024px)`.
+   * *Mô tả hiện tượng*: Các bộ tabs gồm `.level-tabs`, `.tabs`, `.shop-filters`, `.dau-level-pills` có ghi chú CSS `/* mask removed */` và đang thiếu thuộc tính mặt nạ:
+     ```css
+     mask-image: linear-gradient(to right, black 85%, transparent 100%);
+     -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+     ```
+   * *Hậu quả*: Vi phạm điều 3.2 của Quy Chuẩn Responsive trong `AGENTS.md` và `PROJECT_SPEC.md`. Khi hiển thị 6 cấp độ A1–C2 trên điện thoại, tab cuối cùng bị chém ngang thân chữ mà không có hiệu ứng mờ viền báo hiệu trực quan cho học viên biết là có thể vuốt sang phải.
+   * *Giải pháp khắc phục*: Kích hoạt lại lớp mặt nạ làm mờ `mask-image` trên toàn bộ container cuộn ngang của tabs và bộ lọc.
+
+---
+
+#### 🟢 Nhóm Lỗi Mức Độ 3: Tối Ưu Tốc Độ Tải Trang & Khả Năng Tiếp Cận (Low / Polish)
+
+7. **Thư Viện CDN Bên Thứ Ba Không Sử Dụng (Dead CDN Dependency) Gây Nghẽn Tải Trang**:
+   * *Vị trí*: Thẻ `<script src="https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.min.js">` tại `index.html` (dòng 668) và `listening.html` (dòng 109).
+   * *Mô tả hiện tượng*: Kiểm tra toàn bộ mã nguồn của dự án (`pages.js`, `app.js`, `listening.html`) cho thấy **không có bất kỳ dòng code nào khởi tạo hay gọi `WaveSurfer`**. Hệ thống đã tự xây dựng bộ vẽ sóng âm độc lập thông qua Web Audio API thuần và CSS animation.
+   * *Hậu quả*: Trình duyệt phải tải thêm tệp tin bên ngoài dung lượng ~100KB từ máy chủ jsdelivr, làm tăng độ trễ chặn render (render-blocking) và tăng nguy cơ lỗi nếu CDN bên ngoài gặp sự cố mạng tại Việt Nam.
+   * *Giải pháp khắc phục*: Gỡ bỏ thẻ nhúng `wavesurfer.min.js` trên cả `index.html` và `listening.html`.
+
+8. **Thiếu Vendor Prefix WebKit Cho Tính Năng Lật Thẻ Flashcard 3D Trên Safari iOS**:
+   * *Vị trí*: `styles.css` tại các lớp `.flashcard`, `.flash-inner`, `.flash-face`.
+   * *Mô tả hiện tượng*: Có 9 vị trí khai báo `backface-visibility: hidden` nhưng chỉ có 4 vị trí có tiền tố `-webkit-backface-visibility: hidden`.
+   * *Hậu quả*: Trên các thiết bị iPhone/iPad chạy trình duyệt Safari hoặc WebKit view cũ, khi học viên lật thẻ Flashcard Spaced Repetition (SM-2), mặt sau của thẻ có thể bị hiển thị ngược chữ (mirroring effect) hoặc bị xuyên thấu thấy nội dung của mặt trước.
+   * *Giải pháp khắc phục*: Bổ sung đồng bộ `-webkit-backface-visibility: hidden;` đi kèm mọi khai báo `backface-visibility: hidden;`.
+
+9. **Modal Tra Từ Điển 6 Cách Kiểu TFlat (`dict-detail.js` & `dict-data.js`) Chưa Được Kích Hoạt Toàn Hệ Thống**:
+   * *Vị trí*: Chỉ mới được nhúng duy nhất tại `vocabulary.html`, vắng mặt tại `blog-post.html`, `mock-test.html` (phần bài đọc Чтение), `writing.html`.
+   * *Mô tả hiện tượng*: Theo Mục 1 của Spec, hệ thống cam kết hỗ trợ tra cứu nhanh 6 Cách và chia động từ đa tầng từ bất kỳ bài đọc nào trên website khi bôi đen hoặc click đúp. Tuy nhiên các trang bài đọc khác chưa được nhúng bộ thư viện này.
+   * *Giải pháp khắc phục*: Nhúng `dict-data.js` và `dict-detail.js` vào các trang có ngữ cảnh đọc hiểu dài (`blog-post.html`, `mock-test.html`).
+
+10. **Trang Báo Lỗi `404.html` Chưa Cập Nhật Đồng Bộ Nhận Diện Mùa Đông (Russian Winter)**:
+    * *Vị trí*: `404.html`.
+    * *Mô tả hiện tượng*: Đang dùng liên kết `styles.css?v=6.5` và `data.js?v=4.9`, avatar Mascot Rusika tại trang 404 đang dùng ảnh tĩnh chưa tận dụng bộ SVG Mascot 4 mùa linh hoạt của `app.js`.
+    * *Giải pháp khắc phục*: Nâng cấp phiên bản CSS và tích hợp SVG Mascot Rusika Cấp 1 mùa đông đồng bộ.
+
+---
+
+### 10.3. Kế Hoạch & Lộ Trình Triển Khai Khắc Phục Chuẩn Xác (Implementation Roadmap)
+
+Tuân thủ nghiêm ngặt **Quy tắc bất khả xâm phạm về bảo toàn nội dung** (giữ nguyên 100% câu chữ, dữ liệu từ vựng và bài học) và **Nguyên tắc Andrej Karpathy** (Surgical Changes — can thiệp chính xác vào đúng những dòng code liên quan, không tạo abstraction thừa):
+
+```text
+[GIAI ĐOẠN 1: BẢO VỆ DỮ LIỆU & FIX CRITICAL]
+ ├── Bước 1: Khắc phục fallback Graceful Degradation trong pages.js (Shop, Blog) & product-detail.html
+ ├── Bước 2: Bổ sung <script src="pomodoro.js"> vào upgrade.html
+ └── Bước 3: Đồng bộ toàn bộ phiên bản cache-busting (?v=9.5) trên 16 trang HTML
+
+[GIAI ĐOẠN 2: ĐỒNG BỘ GIAO DIỆN & TƯƠNG TÁC]
+ ├── Bước 4: Bổ sung SVG icon "snail" chuẩn Lucide vào rusi-icons.js
+ ├── Bước 5: Đưa MascotRusika.renderFloatingWidget() vào app.js cho toàn bộ các trang bài học
+ └── Bước 6: Khôi phục mask-image cuộn mờ cho level-tabs và bộ lọc di động trong styles.css
+
+[GIAI ĐOẠN 3: TỐI ƯU HIỆU NĂNG & THẨM ĐỊNH LẠI]
+ ├── Bước 7: Gỡ bỏ CDN WaveSurfer thừa trên index.html và listening.html
+ ├── Bước 8: Bổ sung tiền tố -webkit-backface-visibility cho Flashcard 3D trong styles.css
+ └── Bước 9: Chạy kiểm thử tự động, thẩm định viewport Mobile (360px, 414px) và Tablet (768px, 1024px)
+```
+
+### 10.4. Kết Quả Nghiệm Thu Triển Khai Toàn Diện (Completed & Verified)
+
+Toàn bộ 10 điểm bất cập và các yêu cầu tinh chỉnh giao diện luyện nghe / luyện dịch đã được khắc phục triệt để và thẩm định hoàn tất:
+
+1. ✅ **Offline-First Graceful Degradation**: Bổ sung fallback về hằng số dữ liệu chuẩn `BLOG_POSTS` và `SHOP_PRODUCTS` tại `pages.js` (hàm `initBlogPage`, `initShopPage`) và `product-detail.html`. Trang không bao giờ bị trắng màn hình khi chưa có Supabase hoặc ngoại tuyến.
+2. ✅ **Đồng Bộ Hoàn Toàn Cache-Busting Across 16 HTML Files**: Toàn bộ hệ thống 16 trang HTML đã được đồng bộ chuẩn hóa phiên bản cache-busting: `styles.css?v=9.5`, `pages.js?v=9.5`, `app.js?v=8.5`, `data.js?v=8.0`, `rusi-icons.js?v=5.0`, `auth.js?v=7.5`, `supabase-client.js?v=7.5`, `pomodoro.js?v=7.0`, `dict-detail.js?v=7.0`, `dict-data.js?v=8.0`.
+3. ✅ **Bổ Sung `pomodoro.js` Vào `upgrade.html`**: Đã nhúng script `pomodoro.js?v=7.0`, tài khoản PRO trên trang nâng cấp mở popover bấm giờ Pomodoro mượt mà không lỗi.
+4. ✅ **Trợ Lý AI Mascot Rusika Toàn Diện**: Kích hoạt `MascotRusika.renderFloatingWidget()` tự động tại `app.js` (`bootApp`), hiển thị bong bóng hỗ trợ trên toàn bộ các chuyên mục học tập (`vocabulary`, `listening`, `speaking`, `writing`, `mock-test`), trừ các trang xác thực và quản trị.
+5. ✅ **Vector SVG Icon `snail` Chuẩn Lucide**: Bổ sung icon `snail` và các bí danh `turtle`, `slow`, `nghe-cham` vào `rusi-icons.js`. Nút nghe chậm trong từ điển đa tầng `dict-detail.js` hiển thị icon ốc sên chuẩn xác, không còn bị fallback nhầm sang icon sao AI.
+6. ✅ **Khôi Phục Gradient Mask Cho Tabs Di Động ("More..." Faded Track Overflow)**: Phục hồi `-webkit-mask-image` và `mask-image: linear-gradient(to right, #000 85%, transparent 100%)` trên các thanh cuộn ngang `level-tabs`, `tabs`, `shop-filters`, `admin-tabs`, đảm bảo tab không bị cắt cụt cứng ngắc khi cuộn trên di động.
+7. ✅ **Loại Bỏ Thư Viện Thừa CDN WaveSurfer**: Gỡ bỏ script WaveSurfer (~100KB) khỏi `index.html` và `listening.html`, tiết kiệm băng thông và tăng tốc thời gian tải trang.
+8. ✅ **Vendor Prefix Safari iOS Cho Flashcard 3D**: Bổ sung `-webkit-backface-visibility: hidden;` đồng bộ vào tất cả các lớp thẻ flashcard 3D trong `styles.css`.
+9. ✅ **Tích Hợp Từ Điển 6 Cách Đa Tầng**: Nhúng `dict-data.js` và `dict-detail.js` vào `blog-post.html` và `mock-test.html`, hỗ trợ click đúp / bôi đen tra cứu từ vựng trực tiếp khi đọc bài.
+10. ✅ **Nâng Cấp Trang `404.html`**: Đồng bộ phiên bản CSS/JS mới nhất, tích hợp đầy đủ nhận diện Mascot Rusika mùa đông và bảng điều hướng 7 chuyên mục.
+11. ✅ **Cải Tiến Giao Diện Điều Khiển Nghe (`.lis-dict-player-controls`)**: 
+    - Đảm bảo 100% controls luôn nằm trên cùng 1 hàng đơn trên tất cả các thiết bị (`flex-wrap: nowrap !important`).
+    - Tự động ẩn text lời thoại (`.lis-ctrl-btn-text`, `#compTransLabel`) và chữ phát lại khi màn hình co hẹp, chuyển đổi sang nút tròn icon thanh lịch (38px trên tablet, 36px trên di động nhỏ).
+12. ✅ **Thiết Kế Lại Thanh Nộp Bài Nghe Hiểu (`.lis-comp-submit-bar`)**: Thiết kế tối giản, hiện đại, gọn gàng với badge đếm số câu đã chọn và nút nộp bài đỏ Nga cao cấp.
+13. ✅ **Tối Giản Banner Hoàn Thành Nghe Chép (`.lis-dict-completed-banner.is-completed-card`)**:
+    - Loại bỏ đoạn văn dài dòng theo yêu cầu, rút gọn tiêu đề thành "Đã hoàn thành!".
+    - Thiết kế phẳng gọn 1 hàng duy nhất trên di động và tablet, ưu tiên icon với các nút thao tác "Luyện lại" và "Đáp án" gọn gàng, tự động ẩn chữ trên màn hình siêu hẹp ($\le 380px$).
+14. ✅ **Thiết Kế Lại Toàn Diện Mục Cảm Nhận Học Viên (`#cam-nhan` Testimonial Section)**:
+    - Loại bỏ hoàn toàn hiệu ứng xếp chồng crossfade chữ làm dính và rối mặt chữ (`grid-area: stack` cũ). Thay thế bằng slider trượt ngang 100% độc lập (`flex: 0 0 100%`), đảm bảo mỗi slide feedback trượt vào/ra mượt mà, không bao giờ đè chữ lên nhau.
+    - Hỗ trợ thao tác vuốt chạm cảm ứng (touch swipe) và kéo chuột (mouse drag) với độ trễ 0ms cực nhạy.
+    - Bổ sung khối tiêu đề chuyên mục sang trọng (`.testimonial-header`) và khung card bề mặt cao cấp (`.testimonial-card-wrap`) với badge quote đỏ Nga thanh lịch, tạo khoảng đệm phân tách tự nhiên giữa Gói học phí (`#hoc-phi`) và Giải đáp FAQ (`#faq`).

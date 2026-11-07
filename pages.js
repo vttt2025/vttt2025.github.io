@@ -6099,10 +6099,11 @@ function initListeningPage() {
         html += `
           <div class="lis-comp-submit-bar">
             <div class="lis-comp-submit-info">
-              <span>Đã hoàn thành <strong id="compBottomCountText">${answeredCount}</strong>/${questions.length} câu hỏi</span>
+              <span class="lis-comp-submit-badge">${icon("check-circle-correct", 16)}</span>
+              <span>Đã hoàn thành <strong id="compBottomCountText">${answeredCount}</strong>/${questions.length} câu</span>
             </div>
-            <button type="button" class="btn btn-primary btn-lg lis-comp-submit-btn" id="btnCompSubmitAll" ${answeredCount === 0 ? "disabled" : ""}>
-              ${icon("send", 17) || icon("check", 17)} Nộp bài
+            <button type="button" class="btn btn-primary lis-comp-submit-btn" id="btnCompSubmitAll" ${answeredCount === 0 ? "disabled" : ""}>
+              ${icon("send", 16) || icon("check", 16)} <span>Nộp bài</span>
             </button>
           </div>
         `;
@@ -6301,8 +6302,8 @@ function initListeningPage() {
                 <div class="lis-dict-player-controls">
                   <!-- Cụm trái: Phát lại từ đầu -->
                   <div class="lis-dict-ctrl-left">
-                    <button type="button" class="lis-dict-btn-replay" id="btnCompReplay" title="Phát lại toàn bộ bài nghe từ đầu">
-                      ${icon("rotate-ccw", 16)} <span>Phát lại</span>
+                    <button type="button" class="lis-dict-btn-replay" id="btnCompReplay" title="Phát lại toàn bộ bài nghe từ đầu" aria-label="Phát lại">
+                      ${icon("rotate-ccw", 16)} <span class="lis-ctrl-btn-text">Phát lại</span>
                     </button>
                   </div>
 
@@ -6324,8 +6325,8 @@ function initListeningPage() {
                     <button type="button" class="lis-dict-btn-speed" id="btnCompSpeed" title="Thay đổi tốc độ phát">
                       <span id="compSpeedText">${currentSpeed}x</span>
                     </button>
-                    <button type="button" class="lis-dict-btn-speed" id="btnCompToggleTranscript" title="Xem hoặc ẩn lời thoại đoạn nghe">
-                      ${icon("languages", 16)} <span id="compTransLabel">${showTranscript ? "Ẩn lời thoại" : "Lời thoại"}</span>
+                    <button type="button" class="lis-dict-btn-speed lis-dict-btn-transcript" id="btnCompToggleTranscript" title="Xem hoặc ẩn lời thoại đoạn nghe" aria-label="Lời thoại">
+                      ${icon("languages", 16)} <span class="lis-ctrl-btn-text" id="compTransLabel">${showTranscript ? "Ẩn lời thoại" : "Lời thoại"}</span>
                     </button>
                   </div>
                 </div>
@@ -6792,8 +6793,8 @@ function initListeningPage() {
                 <div class="lis-dict-player-controls">
                   <!-- Cụm trái: Phát lại -->
                   <div class="lis-dict-ctrl-left">
-                    <button type="button" class="lis-dict-btn-replay" id="btnDictReplay" title="Phát lại từ đầu câu này">
-                      ${icon("rotate-ccw", 16)} <span>Phát lại</span>
+                    <button type="button" class="lis-dict-btn-replay" id="btnDictReplay" title="Phát lại từ đầu câu này" aria-label="Phát lại">
+                      ${icon("rotate-ccw", 16)} <span class="lis-ctrl-btn-text">Phát lại</span>
                     </button>
                   </div>
 
@@ -6908,23 +6909,20 @@ function initListeningPage() {
                 <div class="lis-dict-completed-banner is-completed-card">
                   <div class="lis-dict-completed-banner-left">
                     <span class="lis-dict-completed-banner-icon">
-                      ${icon("check-circle-correct", 24)}
+                      ${icon("check-circle-correct", 20)}
                     </span>
                     <div class="lis-dict-completed-banner-text">
                       <div class="lis-dict-completed-banner-title">
-                        Bài luyện tập này đã hoàn thành!
-                      </div>
-                      <div class="lis-dict-completed-banner-sub">
-                        Bạn đã nghe chép chính xác tất cả các câu trong bài. Bạn có muốn luyện tập thêm để nâng cao phản xạ không?
+                        Đã hoàn thành!
                       </div>
                     </div>
                   </div>
                   <div class="lis-dict-completed-banner-actions">
-                    <button type="button" class="btn-dict-repractice btn-dict-repractice-hero" id="btnDictRePractice" title="Bắt đầu luyện tập lại bài này">
-                      ${icon("rotate-ccw", 16)} <span>Luyện lại bài này</span>
+                    <button type="button" class="btn-dict-repractice btn-dict-repractice-hero" id="btnDictRePractice" title="Bắt đầu luyện tập lại bài này" aria-label="Luyện lại">
+                      ${icon("rotate-ccw", 15)} <span class="lis-banner-btn-text">Luyện lại</span>
                     </button>
-                    <button type="button" class="btn-dict-repractice-exit" id="btnDictViewCompleted" title="Xem lại đáp án đã hoàn thành">
-                      ${icon("eye", 15)} <span>Xem đáp án</span>
+                    <button type="button" class="btn-dict-repractice-exit" id="btnDictViewCompleted" title="Xem lại đáp án đã hoàn thành" aria-label="Xem đáp án">
+                      ${icon("eye", 15)} <span class="lis-banner-btn-text">Đáp án</span>
                     </button>
                   </div>
                 </div>
@@ -9588,11 +9586,10 @@ function initWritingPage() {
                   return `
                     <button type="button" class="writing-exercise-item ${active ? "active" : ""}" data-task-id="${esc(task.id)}">
                       <span class="writing-exercise-index">${String(index + 1).padStart(2, "0")}</span>
-                      <span>
-                        <strong>Luyện ${index + 1}</strong>
-                        <small>${esc(task.title)}</small>
+                      <span class="writing-exercise-title">
+                        <strong>Bài luyện ${index + 1}</strong>
                       </span>
-                      <span class="writing-exercise-status">${done ? icon("check-circle-correct", 17) : icon("arrow-right", 16)}</span>
+                      <span class="writing-exercise-status">${done ? icon("check-circle-correct", 16) : icon("arrow-right", 15)}</span>
                     </button>
                   `;
                 }).join("")}
@@ -9612,29 +9609,16 @@ function initWritingPage() {
                     <p class="ru">${esc(t.prompt || "")}</p>
                     ${t.vi ? `<p>${esc(t.vi)}</p>` : ""}
                   </div>
+                </div>
               ` : `
-                <!-- DẠNG LUYỆN DỊCH: BỎ ẢNH, HIỂN THỊ ĐOẠN VĂN TIẾNG NGA CẦN DỊCH -->
+                <!-- DẠNG LUYỆN DỊCH: THIẾT KẾ TỐI GIẢN HIỆN ĐẠI, KHÔNG LỒNG KHỐI BÊN TRONG -->
                 <div class="writing-translation-card">
                   <div class="writing-translation-head">
-                    <span class="writing-section-label">${icon("book-open-blog", 16)} Đề bài</span>
+                    <span class="writing-section-label">${icon("book-open-blog", 15)} Đề bài</span>
                   </div>
-                  <div class="writing-translation-passage ru">${esc(t.prompt || "")}</div>
-                  ${t.vi ? `<div class="writing-translation-hint">${icon("help-circle", 15)} <span><strong>Gợi ý ngữ cảnh:</strong> ${esc(t.vi)}</span></div>` : ""}
+                  <p class="writing-translation-text ru">${esc(t.prompt || "")}</p>
                 </div>
-
-                <div class="writing-prompt-box writing-prompt-box-trans">
-                  <div class="writing-prompt-copy">
-                    <span class="writing-section-label">HƯỚNG DẪN DỊCH</span>
-                    <p>Hãy dịch chính xác đoạn văn tiếng Nga phía trên sang tiếng Việt tự nhiên và trôi chảy.</p>
-                  </div>
               `}
-                ${tips.length ? `
-                  <button type="button" class="writing-hint-button" id="writingHintToggle" aria-expanded="false" aria-controls="writingHints" title="Hiển thị câu hỏi gợi ý">
-                    ${icon("help-circle", 22)}
-                    <span>Gợi ý</span>
-                  </button>
-                ` : ""}
-              </div>
               ${tips.length ? `
                 <div class="writing-hints hidden" id="writingHints">
                   <div>${icon("sparkles-clean", 18)} <strong>Câu hỏi và ý gợi mở</strong></div>
@@ -9661,6 +9645,11 @@ function initWritingPage() {
                 <button type="button" class="btn btn-outline btn-model" title="Bài mẫu TRKI" aria-label="Bài mẫu TRKI">
                   ${icon("eye", 18)} <span class="writing-btn-text">Bài mẫu</span>
                 </button>
+                ${tips.length ? `
+                  <button type="button" class="btn btn-outline btn-writing-hint" id="writingHintToggle" aria-expanded="false" aria-controls="writingHints" title="Hiển thị câu hỏi gợi ý" aria-label="Gợi ý">
+                    ${icon("help-circle", 18)} <span class="writing-btn-text">Gợi ý</span>
+                  </button>
+                ` : ""}
                 ${words.length ? `
                   <button type="button" class="btn btn-outline btn-writing-vocab" id="btnWritingVocabToggle" title="Xem từ vựng gợi ý (${words.length})" aria-label="Từ vựng gợi ý">
                     ${icon("archive-jar", 18)} <span class="writing-btn-text">Từ vựng (${words.length})</span>
@@ -11319,7 +11308,7 @@ function initBlogPage() {
   loadCloudPosts();
 
   const renderBlog = () => {
-    const posts = (cloudPosts && cloudPosts.length) ? cloudPosts : [];
+    const posts = (cloudPosts && cloudPosts.length) ? cloudPosts : (typeof BLOG_POSTS !== "undefined" ? BLOG_POSTS : []);
     const filtered = selectedCategory === "all" ? posts : posts.filter((p) => p.category === selectedCategory);
 
     host.innerHTML = `
@@ -11456,7 +11445,7 @@ function initShopPage() {
   };
 
   const renderShop = () => {
-    const products = (cloudProducts && cloudProducts.length) ? cloudProducts : [];
+    const products = (cloudProducts && cloudProducts.length) ? cloudProducts : (typeof SHOP_PRODUCTS !== "undefined" ? SHOP_PRODUCTS : []);
     const filtered = currentCat === "all" ? products : products.filter((p) => p.category === currentCat);
 
     host.innerHTML = `
@@ -11892,8 +11881,12 @@ function initIndexPage() {
         .join("");
     }
 
-    const showSlide = (idx) => {
+    const showSlide = (idx, animate = true) => {
       currentIndex = (idx + feedbacks.length) % feedbacks.length;
+      if (track) {
+        track.style.transition = animate ? "transform 0.45s cubic-bezier(0.16, 1, 0.3, 1)" : "none";
+        track.style.transform = `translateX(-${currentIndex * 100}%)`;
+      }
       track.querySelectorAll(".testimonial-slide").forEach((s, i) => {
         s.classList.toggle("active", i === currentIndex);
       });
@@ -11968,7 +11961,8 @@ function initIndexPage() {
         hasMoved = true;
       }
       if (track) {
-        track.style.transform = `translateX(${diffX * 0.38}px)`;
+        track.style.transition = "none";
+        track.style.transform = `translateX(calc(-${currentIndex * 100}% + ${diffX}px))`;
       }
     };
 
@@ -11976,12 +11970,10 @@ function initIndexPage() {
       if (!isDragging) return;
       isDragging = false;
       if (track) {
-        track.style.transition = "transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)";
-        track.style.transform = "translateX(0)";
         track.style.cursor = "grab";
       }
       const diffX = currentX - startX;
-      const SWIPE_THRESHOLD = 40;
+      const SWIPE_THRESHOLD = 45;
       if (hasMoved && Math.abs(diffX) >= SWIPE_THRESHOLD) {
         if (diffX < 0) {
           // Kéo sang trái -> Slide tiếp theo
@@ -11990,6 +11982,8 @@ function initIndexPage() {
           // Kéo sang phải -> Slide trước đó
           prevSlide();
         }
+      } else {
+        showSlide(currentIndex, true);
       }
       startTimer();
     };

@@ -641,6 +641,11 @@
       category: "media",
       paths: '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" x2="16" y1="9" y2="15"/><line x1="16" x2="22" y1="9" y2="15"/>'
     },
+    "snail": {
+      name: "Nghe chậm (Snail)",
+      category: "media",
+      paths: '<path d="M2 13a6 6 0 1 0 12 0 4 4 0 1 0-8 0 2 2 0 0 0 4 0"/><circle cx="10" cy="13" r="8"/><path d="M2 21h12c4.4 0 8-3.6 8-8a4 4 0 0 0-4-4h-2"/><path d="m18 5-2 4"/><path d="m20 7-1.5 2"/>'
+    },
     "lightbulb": {
       name: "Bóng Đèn / Mẹo Học (Lightbulb)",
       category: "utilities",
@@ -945,6 +950,7 @@
     "volume-2": "volume-2", "volume-high": "volume-2", "loa-lon": "volume-2", "am-thanh-lon": "volume-2",
     "volume-1": "volume-1", "loa-vua": "volume-1", "loa-nho": "volume-1",
     "volume-x": "volume-x", "mute": "volume-x", "tat-am": "volume-x", "tat-tieng": "volume-x", "im-lang": "volume-x", "🔇": "volume-x",
+    "snail": "snail", "turtle": "snail", "slow": "snail", "nghe-cham": "snail", "🐌": "snail", "🐢": "snail",
     "lightbulb": "lightbulb", "bulb": "lightbulb", "idea": "lightbulb", "tip": "lightbulb", "meo": "lightbulb", "goi-y": "lightbulb", "sang-kien": "lightbulb", "luu-y-hoc": "lightbulb", "💡": "lightbulb",
     "send": "send", "gui": "send", "nop-bai": "send", "chuyen": "send", "telegram": "send", "nhan-tin": "send", "phat-tin": "send", "submit": "send", "📤": "send", "✈": "send",
     "bell": "bell", "notification": "bell", "notify": "bell", "chuong": "bell", "thong-bao": "bell", "nhac-nho": "bell", "nhac-hoc": "bell", "🔔": "bell",
