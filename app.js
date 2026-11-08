@@ -2051,9 +2051,66 @@ window.getSynchronizedVocabStats = getSynchronizedVocabStats;
 function renderIndexProgressIfLoggedIn(user) {
   const host = document.getElementById("indexUserProgressHost");
   if (!host) return;
-  // Theo chuẩn mới: Loại bỏ thẻ tiến độ ở index.html khi đăng nhập để giữ giao diện trang chủ tinh gọn
-  host.style.display = "none";
-  host.innerHTML = "";
+  if (!user) {
+    host.style.display = "none";
+    host.innerHTML = "";
+    return;
+  }
+
+  const stats = getSynchronizedVocabStats();
+  const xp = (typeof STORE !== "undefined") ? STORE.get("xp", 0) : 0;
+  const levelInfo = (typeof MascotRusika !== "undefined" && MascotRusika.getLevelInfo)
+    ? MascotRusika.getLevelInfo(xp)
+    : { level: 1, shortTitle: "Mèo con", nextXp: 100, percent: 0 };
+  const icon = (name, size = 18) => window.RusiIcons ? RusiIcons.get(name, { size }) : "";
+  const xpTarget = levelInfo.nextXp ? `${xp} / ${levelInfo.nextXp} XP` : `${xp} XP`;
+
+  host.style.display = "";
+  host.innerHTML = `
+    <div class="index-progress-dashboard">
+      <div class="index-progress-head">
+        <div>
+          <h2>Tiến độ học tập</h2>
+          <p>Ôn tập với Spaced Repetition (SM-2)</p>
+        </div>
+        <a class="index-progress-cta" href="vocabulary.html">
+          <span>Ôn tập ngay</span>
+          ${icon("arrow-right", 16)}
+        </a>
+      </div>
+
+      <div class="index-progress-overview">
+        <div class="index-progress-primary">
+          <span class="index-progress-icon">${icon("check-circle-correct", 20)}</span>
+          <strong>${stats.mastered}</strong>
+          <span>Đã thuộc</span>
+        </div>
+
+        <div class="index-progress-stat">
+          <strong>${stats.dueCount}</strong>
+          <span>Cần ôn</span>
+        </div>
+        <div class="index-progress-stat">
+          <strong>${stats.newCount}</strong>
+          <span>Từ mới</span>
+        </div>
+        <div class="index-progress-stat">
+          <strong>${stats.streak}</strong>
+          <span>Streak (ngày)</span>
+        </div>
+
+        <div class="index-progress-level">
+          <div class="index-progress-level-head">
+            <span>Cấp ${levelInfo.level} · ${esc(levelInfo.shortTitle)}</span>
+            <strong>${xpTarget}</strong>
+          </div>
+          <div class="index-progress-level-track" role="progressbar" aria-label="Tiến độ cấp độ" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${levelInfo.percent}">
+            <span style="width:${levelInfo.percent}%"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 // Lắng nghe sự kiện đồng bộ tiến độ thời gian thực
