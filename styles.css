@@ -29392,6 +29392,235 @@ body.has-bottom-bar .rusika-floating-widget {
   }
 }
 
+/* Speaking workspace: scoped redesign for the selected practice card only */
+#spHeroCard {
+  gap: 20px;
+  padding: 24px;
+  overflow: visible;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+  border-radius: 16px;
+  box-shadow: none;
+  transition: border-color 180ms ease, background-color 180ms ease;
+}
+
+#spHeroCard::before {
+  content: none;
+}
+
+#spHeroCard:hover {
+  border-color: color-mix(in srgb, var(--text) 16%, transparent);
+}
+
+#spHeroCard .sp-controls-dock {
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 6px;
+  border: 0;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--text) 5%, var(--surface));
+}
+
+#spHeroCard .sp-ctrl-btn,
+#spHeroCard .sp-ctrl-play,
+#spHeroCard .sp-ctrl-mic {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  box-shadow: none;
+}
+
+#spHeroCard .sp-ctrl-btn {
+  background: transparent;
+  color: var(--muted);
+}
+
+#spHeroCard .sp-ctrl-btn:hover {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  color: var(--text);
+  box-shadow: none;
+  transform: none;
+}
+
+#spHeroCard .sp-ctrl-play {
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  color: var(--primary);
+}
+
+#spHeroCard .sp-ctrl-play:hover,
+#spHeroCard .sp-ctrl-play.is-playing {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: none;
+  transform: none;
+}
+
+#spHeroCard .sp-ctrl-mic {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  background: #d9364b;
+}
+
+#spHeroCard .sp-ctrl-mic:hover {
+  background: #c92f43;
+  box-shadow: none;
+  transform: none;
+}
+
+#spHeroCard .sp-ctrl-btn:active,
+#spHeroCard .sp-ctrl-play:active,
+#spHeroCard .sp-ctrl-mic:active {
+  transform: scale(0.94);
+}
+
+#spHeroCard .sp-ctrl-btn:focus-visible,
+#spHeroCard .sp-ctrl-play:focus-visible,
+#spHeroCard .sp-ctrl-mic:focus-visible,
+#spHeroCard .sp-result-retry-btn:focus-visible,
+#spHeroCard .sp-ru-sentence:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 28%, transparent);
+  outline-offset: 3px;
+}
+
+#spHeroCard .sp-speed-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+#spHeroCard .sp-sentence-stage {
+  min-height: 112px;
+  max-width: 760px;
+  padding: 8px 12px 12px;
+}
+
+#spHeroCard .sp-ru-sentence {
+  margin-bottom: 10px;
+  color: var(--text);
+  font-size: clamp(1.25rem, 2vw, 1.625rem);
+  font-weight: 700;
+  line-height: 1.5;
+  letter-spacing: -0.02em;
+}
+
+#spHeroCard .sp-ru-sentence:hover {
+  color: var(--text);
+}
+
+#spHeroCard .sp-vi-translation {
+  max-width: 65ch;
+  color: var(--muted);
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+
+#spHeroCard .sp-speech-result-bar {
+  gap: 20px;
+  padding: 16px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary) 7%, var(--surface));
+  box-shadow: none;
+}
+
+#spHeroCard .sp-result-user-lead,
+#spHeroCard .sp-result-score-lbl {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+#spHeroCard .sp-result-retry-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border: 0;
+  background: color-mix(in srgb, var(--text) 7%, var(--surface));
+}
+
+[data-theme="dark"] #spHeroCard {
+  background: #151d2a;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+}
+
+[data-theme="dark"] #spHeroCard:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+[data-theme="dark"] #spHeroCard .sp-controls-dock {
+  background: rgba(255, 255, 255, 0.055);
+}
+
+[data-theme="dark"] #spHeroCard .sp-ctrl-btn {
+  background: transparent;
+  border: 0;
+}
+
+@media (max-width: 900px) {
+  #spHeroCard {
+    gap: 16px;
+    padding: 18px 16px;
+    border-radius: 14px;
+  }
+
+  #spHeroCard .sp-controls-dock {
+    gap: 6px;
+    padding: 5px;
+  }
+
+  #spHeroCard .sp-ctrl-btn,
+  #spHeroCard .sp-ctrl-play {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  #spHeroCard .sp-ctrl-mic {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+  }
+
+  #spHeroCard .sp-sentence-stage {
+    min-height: 104px;
+    padding: 6px 4px 10px;
+  }
+
+  #spHeroCard .sp-speech-result-bar {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  #spHeroCard .sp-controls-dock {
+    display: grid;
+    grid-template-columns: repeat(3, 48px);
+    justify-content: center;
+  }
+
+  #spHeroCard #btnLoopToggle {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  #spHeroCard #btnRecordMic {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  #spHeroCard #btnNextSent {
+    grid-column: 3;
+    grid-row: 2;
+  }
+}
+
 
 /* =====================================================================
  * RUSI TRKI — HỆ THỐNG ĐỊNH DẠNG MARKDOWN (.MD) TOÀN HỆ THỐNG
