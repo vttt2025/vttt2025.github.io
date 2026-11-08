@@ -29621,6 +29621,232 @@ body.has-bottom-bar .rusika-floating-widget {
   }
 }
 
+/* Speaking workspace: refined surfaces scoped to the selected instance */
+#spWsGrid {
+  --sp-line: color-mix(in srgb, var(--text) 10%, transparent);
+  --sp-line-strong: color-mix(in srgb, var(--text) 16%, transparent);
+  --sp-subtle: color-mix(in srgb, var(--text) 4%, var(--surface));
+  gap: 20px;
+  margin: 14px auto 20px;
+}
+
+#spWsGrid .sp-ws-main {
+  gap: 14px;
+}
+
+#spWsGrid .sp-video-card {
+  border: 1px solid var(--sp-line);
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+#spWsGrid .sp-video-body {
+  border-radius: inherit;
+}
+
+#spWsGrid .sp-yt-center-play {
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.28));
+}
+
+#spWsGrid .sp-yt-center-play:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.35));
+}
+
+#spWsGrid #spHeroCard {
+  border-color: var(--sp-line);
+}
+
+#spWsGrid #spHeroCard:hover {
+  border-color: var(--sp-line-strong);
+}
+
+#spWsGrid .sp-ws-sidebar {
+  max-height: calc(100vh - 112px);
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--sp-line);
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+#spWsGrid .sp-sb-header {
+  padding: 18px 18px 14px;
+  background: var(--surface);
+  border: 0;
+}
+
+#spWsGrid .sp-sb-stats {
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+#spWsGrid .sp-sb-stat {
+  gap: 3px;
+}
+
+#spWsGrid .sp-sb-stat-val {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+#spWsGrid .sp-sb-stat-lbl {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1.25;
+  text-transform: none;
+}
+
+#spWsGrid .sp-sb-progress-bar {
+  height: 4px;
+  background: var(--sp-subtle);
+}
+
+#spWsGrid .sp-playlist-list {
+  gap: 3px;
+  padding: 6px 8px 10px;
+  scrollbar-color: color-mix(in srgb, var(--text) 18%, transparent) transparent;
+  scrollbar-width: thin;
+}
+
+#spWsGrid .sp-playlist-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+#spWsGrid .sp-playlist-list::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--text) 18%, transparent);
+  border-radius: 999px;
+}
+
+#spWsGrid .sp-pl-item {
+  min-height: 52px;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
+  gap: 9px;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 10px;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+#spWsGrid .sp-pl-item:hover {
+  background: var(--sp-subtle);
+}
+
+#spWsGrid .sp-pl-item.is-active {
+  background: color-mix(in srgb, var(--primary) 9%, var(--surface));
+  border: 0;
+}
+
+#spWsGrid .sp-pl-item:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 28%, transparent);
+  outline-offset: -2px;
+}
+
+#spWsGrid .sp-pl-idx {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+#spWsGrid .sp-pl-item.is-active .sp-pl-idx {
+  color: var(--primary);
+}
+
+#spWsGrid .sp-pl-ru {
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+#spWsGrid .sp-pl-vi {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 0.74rem;
+  line-height: 1.3;
+}
+
+#spWsGrid .sp-pl-score {
+  min-width: 30px;
+  padding: 2px 5px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+#spWsGrid .sp-pl-score.is-done {
+  background: color-mix(in srgb, var(--green) 10%, var(--surface));
+}
+
+#spWsGrid .sp-sidebar-scrim {
+  background: rgba(15, 23, 42, 0.42);
+  backdrop-filter: none;
+}
+
+[data-theme="dark"] #spWsGrid {
+  --sp-line: rgba(255, 255, 255, 0.1);
+  --sp-line-strong: rgba(255, 255, 255, 0.16);
+  --sp-subtle: rgba(255, 255, 255, 0.055);
+}
+
+[data-theme="dark"] #spWsGrid .sp-video-card,
+[data-theme="dark"] #spWsGrid .sp-ws-sidebar {
+  border-color: var(--sp-line);
+  box-shadow: none;
+}
+
+[data-theme="dark"] #spWsGrid .sp-sb-header {
+  background: #151d2a;
+}
+
+[data-theme="dark"] #spWsGrid .sp-pl-item.is-active {
+  background: color-mix(in srgb, var(--primary) 18%, #151d2a);
+}
+
+@media (max-width: 900px) {
+  #spWsGrid {
+    margin: 12px auto 16px;
+  }
+
+  #spWsGrid .sp-video-card {
+    margin-bottom: 12px;
+    border-radius: 14px;
+  }
+
+  #spWsGrid .sp-ws-sidebar {
+    border-radius: 16px 0 0 16px;
+    box-shadow: -12px 0 36px rgba(15, 23, 42, 0.18);
+  }
+}
+
+@media (max-width: 480px) {
+  #spWsGrid {
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  #spWsGrid .sp-video-card {
+    border-radius: 12px;
+  }
+
+  #spWsGrid .sp-ws-sidebar {
+    width: min(92vw, 360px);
+  }
+
+  #spWsGrid .sp-pl-item {
+    min-height: 56px;
+    padding-block: 10px;
+  }
+}
+
 
 /* =====================================================================
  * RUSI TRKI — HỆ THỐNG ĐỊNH DẠNG MARKDOWN (.MD) TOÀN HỆ THỐNG
