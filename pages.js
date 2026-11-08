@@ -4055,6 +4055,7 @@ function initListeningPage() {
     canvas.className = "lis-dict-realtime-canvas";
     wrapEl.appendChild(canvas);
     const ctx = canvas.getContext("2d");
+    const isSelectedCompWaveform = wrapEl.id === "compWaveformWrap";
 
     // Live Time Badge
     const timeBadge = document.createElement("span");
@@ -4094,6 +4095,9 @@ function initListeningPage() {
     let profile = new Float32Array(barCount);
 
     const computeBarCount = (w) => {
+      if (isSelectedCompWaveform) {
+        return Math.max(48, Math.min(120, Math.floor(w / 6.2)));
+      }
       return Math.max(65, Math.min(180, Math.floor(w / 4.4)));
     };
 
@@ -4190,13 +4194,21 @@ function initListeningPage() {
       ctx.clearRect(0, 0, width, height);
 
       const centerY = height / 2;
-      const maxH = Math.max(26, Math.min(48, height * 0.72));
-      const minH = 4;
+      const maxH = isSelectedCompWaveform
+        ? Math.max(22, Math.min(40, height * 0.6))
+        : Math.max(26, Math.min(48, height * 0.72));
+      const minH = isSelectedCompWaveform ? 3 : 4;
 
       const isDark = document.documentElement.getAttribute("data-theme") === "dark" || (typeof State !== "undefined" && State.theme === "dark");
-      const colorPlayed = isDark ? "#60a5fa" : "#1757a6";
-      const colorActive = isDark ? "#93c5fd" : "#2563eb";
-      const colorUnplayed = isDark ? "rgba(255, 255, 255, 0.18)" : "rgba(100, 116, 139, 0.30)";
+      const colorPlayed = isSelectedCompWaveform
+        ? (isDark ? "#7cb7ff" : "#2468b4")
+        : (isDark ? "#60a5fa" : "#1757a6");
+      const colorActive = isSelectedCompWaveform
+        ? (isDark ? "#b7d7ff" : "#174f91")
+        : (isDark ? "#93c5fd" : "#2563eb");
+      const colorUnplayed = isSelectedCompWaveform
+        ? (isDark ? "rgba(226, 232, 240, 0.22)" : "rgba(100, 116, 139, 0.24)")
+        : (isDark ? "rgba(255, 255, 255, 0.18)" : "rgba(100, 116, 139, 0.30)");
 
       const now = Date.now();
 
@@ -4217,20 +4229,24 @@ function initListeningPage() {
         updateTimeDisplay();
       }
 
-      // Trục tâm sóng âm thanh (Center Acoustic Baseline)
-      ctx.save();
-      ctx.strokeStyle = isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(23, 87, 166, 0.06)";
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(0, centerY);
-      ctx.lineTo(width, centerY);
-      ctx.stroke();
-      ctx.restore();
+      if (!isSelectedCompWaveform) {
+        // Trục tâm sóng âm thanh (Center Acoustic Baseline)
+        ctx.save();
+        ctx.strokeStyle = isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(23, 87, 166, 0.06)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, centerY);
+        ctx.lineTo(width, centerY);
+        ctx.stroke();
+        ctx.restore();
+      }
 
       const step = width / barCount;
-      const gap = Math.max(1.2, Math.min(1.9, step * 0.38));
+      const gap = isSelectedCompWaveform
+        ? Math.max(2, Math.min(3.2, step * 0.48))
+        : Math.max(1.2, Math.min(1.9, step * 0.38));
       const barWidth = Math.max(1.8, step - gap);
-      const radius = Math.min(barWidth / 2, 2);
+      const radius = Math.min(barWidth / 2, isSelectedCompWaveform ? 3 : 2);
 
       // Vẽ toàn bộ các thanh sóng với biên độ ổn định, chân thực (không bị co giãn méo mó)
       for (let i = 0; i < barCount; i++) {
@@ -4266,9 +4282,11 @@ function initListeningPage() {
 
         ctx.save();
         ctx.beginPath();
-        ctx.fillStyle = "#ffffff";
-        ctx.shadowColor = isDark ? "rgba(147, 197, 253, 0.85)" : "rgba(37, 99, 235, 0.75)";
-        ctx.shadowBlur = 6;
+        ctx.fillStyle = isSelectedCompWaveform ? colorActive : "#ffffff";
+        ctx.shadowColor = isSelectedCompWaveform
+          ? "transparent"
+          : (isDark ? "rgba(147, 197, 253, 0.85)" : "rgba(37, 99, 235, 0.75)");
+        ctx.shadowBlur = isSelectedCompWaveform ? 0 : 6;
         if (typeof ctx.roundRect === "function") {
           ctx.roundRect(headX - 1.1, headY, 2.2, headH, 1.1);
         } else {
@@ -4285,9 +4303,11 @@ function initListeningPage() {
         const hoverTimeStr = formatTime(hoverSec);
 
         ctx.save();
-        ctx.strokeStyle = isDark ? "rgba(147, 197, 253, 0.45)" : "rgba(23, 87, 166, 0.35)";
+        ctx.strokeStyle = isSelectedCompWaveform
+          ? (isDark ? "rgba(183, 215, 255, 0.52)" : "rgba(23, 79, 145, 0.42)")
+          : (isDark ? "rgba(147, 197, 253, 0.45)" : "rgba(23, 87, 166, 0.35)");
         ctx.lineWidth = 1;
-        ctx.setLineDash([2, 2]);
+        ctx.setLineDash(isSelectedCompWaveform ? [] : [2, 2]);
         ctx.beginPath();
         ctx.moveTo(hoverX, centerY - 20);
         ctx.lineTo(hoverX, centerY + 20);
