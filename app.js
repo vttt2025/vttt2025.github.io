@@ -2051,6 +2051,7 @@ window.getSynchronizedVocabStats = getSynchronizedVocabStats;
 function renderIndexProgressIfLoggedIn(user) {
   const host = document.getElementById("indexUserProgressHost");
   if (!host) return;
+  document.body.classList.toggle("index-personalized", Boolean(user));
   if (!user) {
     host.style.display = "none";
     host.innerHTML = "";
@@ -2064,42 +2065,113 @@ function renderIndexProgressIfLoggedIn(user) {
     : { level: 1, shortTitle: "Mèo con", nextXp: 100, percent: 0 };
   const icon = (name, size = 18) => window.RusiIcons ? RusiIcons.get(name, { size }) : "";
   const xpTarget = levelInfo.nextXp ? `${xp} / ${levelInfo.nextXp} XP` : `${xp} XP`;
+  const doneCount = (key) => {
+    const value = (typeof Progress !== "undefined" && Progress.doneList) ? Progress.doneList(key) : [];
+    return Array.isArray(value) ? value.length : 0;
+  };
+  const learning = {
+    listening: doneCount("listenDone"),
+    speaking: doneCount("speakDone"),
+    writing: doneCount("writeDone"),
+    trki: doneCount("trkiDone")
+  };
+  const bestTest = (typeof STORE !== "undefined") ? STORE.get("bestTest", null) : null;
+
+  const skills = [
+    {
+      icon: "archive-jar",
+      title: "Từ vựng",
+      count: `${stats.mastered} từ đã thuộc`,
+      note: stats.dueCount > 0
+        ? `${stats.dueCount} từ đã đến hạn ôn tập`
+        : `${stats.newCount} từ mới sẵn sàng để học`,
+      href: "vocabulary.html",
+      action: "Học từ vựng",
+      attention: stats.dueCount > 0
+    },
+    {
+      icon: "headphones",
+      title: "Luyện nghe",
+      count: `${learning.listening} hoạt động đã hoàn thành`,
+      note: learning.listening > 0 ? "Tiếp tục luyện nghe hiểu và chép chính tả" : "Chưa bắt đầu luyện nghe",
+      href: "listening.html",
+      action: "Luyện nghe",
+      attention: learning.listening === 0
+    },
+    {
+      icon: "mic-speaking",
+      title: "Luyện nói",
+      count: `${learning.speaking} lượt luyện đạt yêu cầu`,
+      note: learning.speaking > 0 ? "Tiếp tục luyện phát âm và phản xạ" : "Chưa bắt đầu luyện nói",
+      href: "speaking.html",
+      action: "Luyện nói",
+      attention: learning.speaking === 0
+    },
+    {
+      icon: "pen-tool",
+      title: "Luyện viết",
+      count: `${learning.writing} bài đã hoàn thành`,
+      note: learning.writing > 0 ? "Tiếp tục bài viết theo cấp độ hiện tại" : "Chưa bắt đầu luyện viết",
+      href: "writing.html",
+      action: "Luyện viết",
+      attention: learning.writing === 0
+    },
+    {
+      icon: "graduation-cap",
+      title: "Thi TRKI",
+      count: `${learning.trki} đề đã hoàn thành`,
+      note: bestTest === null ? "Chưa có kết quả thi thử" : `Điểm tốt nhất: ${bestTest}%`,
+      href: "mock-test.html",
+      action: "Luyện thi",
+      attention: learning.trki === 0
+    }
+  ];
+
+  let focus = {
+    title: "Tiếp tục duy trì nhịp học",
+    desc: "Chọn một kỹ năng bên dưới để tiếp tục lộ trình cá nhân.",
+    href: "vocabulary.html",
+    action: "Tiếp tục học"
+  };
+  if (stats.dueCount > 0) {
+    focus = {
+      title: "Ưu tiên ôn lại từ vựng",
+      desc: `${stats.dueCount} từ đã đến hạn ôn tập theo lịch Spaced Repetition.`,
+      href: "vocabulary.html",
+      action: "Ôn từ đến hạn"
+    };
+  } else {
+    const unstarted = skills.find((item) => item.attention);
+    if (unstarted) {
+      focus = {
+        title: `Bổ sung kỹ năng ${unstarted.title.toLowerCase()}`,
+        desc: unstarted.note,
+        href: unstarted.href,
+        action: unstarted.action
+      };
+    }
+  }
 
   host.style.display = "";
   host.innerHTML = `
     <div class="index-progress-dashboard">
       <div class="index-progress-head">
         <div>
-          <h2>Tiến độ học tập</h2>
-          <p>Ôn tập với Spaced Repetition (SM-2)</p>
+          <h1>Tiến độ học tập</h1>
+          <p>Theo dõi toàn bộ quá trình học và biết nội dung cần ưu tiên tiếp theo.</p>
         </div>
-        <a class="index-progress-cta" href="vocabulary.html">
-          <span>Ôn tập ngay</span>
-          ${icon("arrow-right", 16)}
-        </a>
       </div>
 
-      <div class="index-progress-overview">
-        <div class="index-progress-primary">
-          <span class="index-progress-icon">${icon("check-circle-correct", 20)}</span>
-          <strong>${stats.mastered}</strong>
-          <span>Đã thuộc</span>
+      <div class="index-progress-summary">
+        <div class="index-summary-item">
+          <span>${icon("zap-xp", 18)}</span>
+          <div><strong>${xp}</strong><small>XP tích lũy</small></div>
         </div>
-
-        <div class="index-progress-stat">
-          <strong>${stats.dueCount}</strong>
-          <span>Cần ôn</span>
+        <div class="index-summary-item">
+          <span>${icon("flame-streak", 18)}</span>
+          <div><strong>${stats.streak}</strong><small>Ngày streak</small></div>
         </div>
-        <div class="index-progress-stat">
-          <strong>${stats.newCount}</strong>
-          <span>Từ mới</span>
-        </div>
-        <div class="index-progress-stat">
-          <strong>${stats.streak}</strong>
-          <span>Streak (ngày)</span>
-        </div>
-
-        <div class="index-progress-level">
+        <div class="index-summary-level">
           <div class="index-progress-level-head">
             <span>Cấp ${levelInfo.level} · ${esc(levelInfo.shortTitle)}</span>
             <strong>${xpTarget}</strong>
@@ -2108,6 +2180,40 @@ function renderIndexProgressIfLoggedIn(user) {
             <span style="width:${levelInfo.percent}%"></span>
           </div>
         </div>
+      </div>
+
+      <div class="index-progress-focus">
+        <span class="index-focus-icon">${icon("target", 20)}</span>
+        <div>
+          <strong>${focus.title}</strong>
+          <p>${focus.desc}</p>
+        </div>
+        <a href="${focus.href}">
+          <span>${focus.action}</span>
+          ${icon("arrow-right", 16)}
+        </a>
+      </div>
+
+      <div class="index-progress-section-head">
+        <h2>Tiến độ theo kỹ năng</h2>
+        <p>Các kết quả được cập nhật tự động sau mỗi hoạt động học.</p>
+      </div>
+
+      <div class="index-skill-list">
+        ${skills.map((skill) => `
+          <div class="index-skill-row ${skill.attention ? "needs-attention" : ""}">
+            <span class="index-skill-icon">${icon(skill.icon, 21)}</span>
+            <div class="index-skill-main">
+              <h3>${skill.title}</h3>
+              <strong>${skill.count}</strong>
+            </div>
+            <p>${skill.note}</p>
+            <a href="${skill.href}">
+              <span>${skill.action}</span>
+              ${icon("arrow-right", 15)}
+            </a>
+          </div>
+        `).join("")}
       </div>
     </div>
   `;

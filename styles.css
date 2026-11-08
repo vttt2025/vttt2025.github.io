@@ -30122,156 +30122,120 @@ body.has-bottom-bar .rusika-floating-widget {
   }
 }
 
-/* Index: authenticated learning progress dashboard */
+/* Index: authenticated personal learning dashboard */
+body.index-personalized {
+  background: #f3f6fa;
+}
+
+body.index-personalized main {
+  min-height: calc(100vh - var(--header-height));
+  padding: 40px 0 64px;
+}
+
+body.index-personalized main > section:not(#indexUserProgressHost),
+body.index-personalized #app-footer,
+body.index-personalized .rusika-floating-widget {
+  display: none !important;
+}
+
 #indexUserProgressHost {
-  width: min(calc(100% - 48px), 1200px) !important;
-  margin: 28px auto 0 !important;
+  width: min(calc(100% - 48px), 1120px) !important;
+  margin: 0 auto !important;
   padding: 0 !important;
   background: transparent !important;
   border: 0 !important;
 }
 
 #indexUserProgressHost .index-progress-dashboard {
-  padding: 24px;
-  background: var(--surface);
-  border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
-  border-radius: 16px;
-}
-
-#indexUserProgressHost .index-progress-head {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 24px;
-  margin-bottom: 22px;
 }
 
-#indexUserProgressHost .index-progress-head h2 {
+#indexUserProgressHost .index-progress-head h1 {
   margin: 0;
   color: var(--text);
-  font-size: clamp(1.35rem, 2vw, 1.7rem);
-  font-weight: 750;
-  line-height: 1.25;
-  letter-spacing: -0.03em;
-}
-
-#indexUserProgressHost .index-progress-head p {
-  margin: 5px 0 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.5;
-}
-
-#indexUserProgressHost .index-progress-cta {
-  min-height: 44px;
-  padding: 0 17px;
-  border-radius: 10px;
-  background: var(--primary);
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  flex-shrink: 0;
-  font-size: 0.88rem;
-  font-weight: 700;
-  transition: background-color 160ms ease, transform 160ms ease;
-}
-
-#indexUserProgressHost .index-progress-cta:hover {
-  background: var(--primary-dark);
-}
-
-#indexUserProgressHost .index-progress-cta:active {
-  transform: scale(0.98);
-}
-
-#indexUserProgressHost .index-progress-cta:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--primary) 30%, transparent);
-  outline-offset: 3px;
-}
-
-#indexUserProgressHost .index-progress-overview {
-  display: grid;
-  grid-template-columns: 1.2fr repeat(3, minmax(100px, 0.72fr)) 1.7fr;
-  align-items: stretch;
-  gap: 8px;
-}
-
-#indexUserProgressHost .index-progress-primary,
-#indexUserProgressHost .index-progress-stat,
-#indexUserProgressHost .index-progress-level {
-  min-width: 0;
-  padding: 16px;
-  background: color-mix(in srgb, var(--text) 4%, var(--surface));
-  border-radius: 12px;
-}
-
-#indexUserProgressHost .index-progress-primary {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-content: center;
-  column-gap: 10px;
-}
-
-#indexUserProgressHost .index-progress-icon {
-  width: 36px;
-  height: 36px;
-  grid-row: 1 / 3;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  align-self: center;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--green) 12%, var(--surface));
-  color: var(--green);
-}
-
-#indexUserProgressHost .index-progress-primary strong,
-#indexUserProgressHost .index-progress-stat strong {
-  color: var(--text);
-  font-size: 1.45rem;
-  font-weight: 750;
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  font-weight: 760;
   line-height: 1.15;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
+}
+
+#indexUserProgressHost .index-progress-head p,
+#indexUserProgressHost .index-progress-section-head p {
+  max-width: 66ch;
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+
+#indexUserProgressHost .index-progress-summary {
+  display: grid;
+  grid-template-columns: 180px 180px minmax(280px, 1fr);
+  gap: 10px;
+}
+
+#indexUserProgressHost .index-summary-item,
+#indexUserProgressHost .index-summary-level {
+  min-height: 82px;
+  padding: 17px 18px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
+  border-radius: 14px;
+}
+
+#indexUserProgressHost .index-summary-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#indexUserProgressHost .index-summary-item > span {
+  color: var(--primary);
+  display: inline-flex;
+}
+
+#indexUserProgressHost .index-summary-item div {
+  display: flex;
+  flex-direction: column;
+}
+
+#indexUserProgressHost .index-summary-item strong {
+  color: var(--text);
+  font-size: 1.35rem;
+  font-weight: 750;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
 
-#indexUserProgressHost .index-progress-primary > span:last-child,
-#indexUserProgressHost .index-progress-stat span {
+#indexUserProgressHost .index-summary-item small {
+  margin-top: 3px;
   color: var(--muted);
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 550;
-  line-height: 1.35;
 }
 
-#indexUserProgressHost .index-progress-stat {
+#indexUserProgressHost .index-summary-level {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 3px;
-}
-
-#indexUserProgressHost .index-progress-level {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 11px;
+  gap: 12px;
 }
 
 #indexUserProgressHost .index-progress-level-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   color: var(--text);
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 650;
 }
 
 #indexUserProgressHost .index-progress-level-head strong {
   color: var(--muted);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   font-weight: 600;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
@@ -30293,91 +30257,259 @@ body.has-bottom-bar .rusika-floating-widget {
   transition: width 300ms ease;
 }
 
-[data-theme="dark"] #indexUserProgressHost .index-progress-dashboard {
+#indexUserProgressHost .index-progress-focus {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
+  border-radius: 14px;
+}
+
+#indexUserProgressHost .index-focus-icon {
+  color: var(--primary);
+  display: inline-flex;
+}
+
+#indexUserProgressHost .index-progress-focus strong {
+  color: var(--text);
+  font-size: 0.96rem;
+  font-weight: 700;
+}
+
+#indexUserProgressHost .index-progress-focus p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+#indexUserProgressHost .index-progress-focus > a,
+#indexUserProgressHost .index-skill-row > a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+#indexUserProgressHost .index-progress-focus > a {
+  padding: 0 16px;
+  background: var(--surface);
+  border-radius: 10px;
+}
+
+#indexUserProgressHost .index-progress-focus > a:hover,
+#indexUserProgressHost .index-skill-row > a:hover {
+  color: var(--primary-dark);
+}
+
+#indexUserProgressHost .index-progress-focus > a:focus-visible,
+#indexUserProgressHost .index-skill-row > a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--primary) 28%, transparent);
+  outline-offset: 2px;
+}
+
+#indexUserProgressHost .index-progress-section-head {
+  margin-top: 8px;
+}
+
+#indexUserProgressHost .index-progress-section-head h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.28rem;
+  font-weight: 720;
+  line-height: 1.3;
+  letter-spacing: -0.025em;
+}
+
+#indexUserProgressHost .index-skill-list {
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--text) 9%, transparent);
+  border-radius: 16px;
+}
+
+#indexUserProgressHost .index-skill-row {
+  min-height: 82px;
+  display: grid;
+  grid-template-columns: 34px minmax(170px, 0.9fr) minmax(240px, 1.25fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 11px;
+  transition: background-color 160ms ease;
+}
+
+#indexUserProgressHost .index-skill-row:hover {
+  background: color-mix(in srgb, var(--text) 4%, transparent);
+}
+
+#indexUserProgressHost .index-skill-icon {
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#indexUserProgressHost .index-skill-main h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+#indexUserProgressHost .index-skill-main strong {
+  display: block;
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 550;
+  line-height: 1.4;
+  font-variant-numeric: tabular-nums;
+}
+
+#indexUserProgressHost .index-skill-row > p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+#indexUserProgressHost .index-skill-row.needs-attention > p {
+  color: #9a5b08;
+}
+
+[data-theme="dark"] body.index-personalized {
+  background: #0b1220;
+}
+
+[data-theme="dark"] #indexUserProgressHost .index-summary-item,
+[data-theme="dark"] #indexUserProgressHost .index-summary-level,
+[data-theme="dark"] #indexUserProgressHost .index-skill-list {
   background: #151d2a;
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-[data-theme="dark"] #indexUserProgressHost .index-progress-head h2,
-[data-theme="dark"] #indexUserProgressHost .index-progress-primary strong,
-[data-theme="dark"] #indexUserProgressHost .index-progress-stat strong,
-[data-theme="dark"] #indexUserProgressHost .index-progress-level-head {
+[data-theme="dark"] #indexUserProgressHost .index-progress-head h1,
+[data-theme="dark"] #indexUserProgressHost .index-summary-item strong,
+[data-theme="dark"] #indexUserProgressHost .index-progress-level-head,
+[data-theme="dark"] #indexUserProgressHost .index-progress-focus strong,
+[data-theme="dark"] #indexUserProgressHost .index-progress-section-head h2,
+[data-theme="dark"] #indexUserProgressHost .index-skill-main h3 {
   color: #f1f5f9;
 }
 
 [data-theme="dark"] #indexUserProgressHost .index-progress-head p,
-[data-theme="dark"] #indexUserProgressHost .index-progress-primary > span:last-child,
-[data-theme="dark"] #indexUserProgressHost .index-progress-stat span,
-[data-theme="dark"] #indexUserProgressHost .index-progress-level-head strong {
+[data-theme="dark"] #indexUserProgressHost .index-progress-section-head p,
+[data-theme="dark"] #indexUserProgressHost .index-summary-item small,
+[data-theme="dark"] #indexUserProgressHost .index-progress-level-head strong,
+[data-theme="dark"] #indexUserProgressHost .index-progress-focus p,
+[data-theme="dark"] #indexUserProgressHost .index-skill-main strong,
+[data-theme="dark"] #indexUserProgressHost .index-skill-row > p {
   color: #94a3b8;
 }
 
-[data-theme="dark"] #indexUserProgressHost .index-progress-primary,
-[data-theme="dark"] #indexUserProgressHost .index-progress-stat,
-[data-theme="dark"] #indexUserProgressHost .index-progress-level {
-  background: rgba(255, 255, 255, 0.055);
+[data-theme="dark"] #indexUserProgressHost .index-progress-focus {
+  background: rgba(96, 165, 250, 0.12);
 }
 
-@media (max-width: 1024px) {
-  #indexUserProgressHost {
-    width: min(calc(100% - 32px), 1200px) !important;
-    margin-top: 20px !important;
-  }
+[data-theme="dark"] #indexUserProgressHost .index-progress-focus > a {
+  background: rgba(255, 255, 255, 0.08);
+  color: #7cb7ff;
+}
 
-  #indexUserProgressHost .index-progress-overview {
-    grid-template-columns: 1.2fr repeat(3, 1fr);
-  }
+[data-theme="dark"] #indexUserProgressHost .index-skill-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
 
-  #indexUserProgressHost .index-progress-level {
-    grid-column: 1 / -1;
-  }
+[data-theme="dark"] #indexUserProgressHost .index-skill-row.needs-attention > p {
+  color: #fbbf24;
 }
 
 @media (max-width: 768px) {
+  body.index-personalized main {
+    padding: 24px 0 40px;
+  }
+
   #indexUserProgressHost {
     width: calc(100% - 32px) !important;
-    margin-top: 16px !important;
   }
 
   #indexUserProgressHost .index-progress-dashboard {
-    padding: 18px 16px;
-    border-radius: 14px;
+    gap: 20px;
   }
 
-  #indexUserProgressHost .index-progress-head {
-    flex-direction: column;
-    gap: 16px;
-    margin-bottom: 18px;
+  #indexUserProgressHost .index-progress-summary {
+    grid-template-columns: 1fr;
   }
 
-  #indexUserProgressHost .index-progress-cta {
+  #indexUserProgressHost .index-summary-item,
+  #indexUserProgressHost .index-summary-level {
+    min-height: 68px;
+    padding: 14px 16px;
+  }
+
+  #indexUserProgressHost .index-progress-focus {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  #indexUserProgressHost .index-focus-icon {
+    display: none;
+  }
+
+  #indexUserProgressHost .index-progress-focus > a {
     width: 100%;
   }
 
-  #indexUserProgressHost .index-progress-overview {
-    display: flex;
-    flex-direction: column;
+  #indexUserProgressHost .index-skill-list {
+    padding: 6px;
+    border-radius: 14px;
   }
 
-  #indexUserProgressHost .index-progress-primary,
-  #indexUserProgressHost .index-progress-stat,
-  #indexUserProgressHost .index-progress-level {
-    min-height: 58px;
-    padding: 13px 14px;
+  #indexUserProgressHost .index-skill-row {
+    grid-template-columns: 30px minmax(0, 1fr);
+    gap: 8px 12px;
+    padding: 14px 10px;
   }
 
-  #indexUserProgressHost .index-progress-stat {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+  #indexUserProgressHost .index-skill-row > p,
+  #indexUserProgressHost .index-skill-row > a {
+    grid-column: 2;
   }
 
-  #indexUserProgressHost .index-progress-stat strong {
-    order: 2;
-    font-size: 1.15rem;
+  #indexUserProgressHost .index-skill-row > a {
+    width: fit-content;
   }
 }
 
+@media (max-width: 480px) {
+  #indexUserProgressHost {
+    width: calc(100% - 24px) !important;
+  }
+
+  #indexUserProgressHost .index-progress-head h1 {
+    font-size: 1.8rem;
+  }
+
+  #indexUserProgressHost .index-progress-level-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  #indexUserProgressHost .index-skill-row > a {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
 
 /* =====================================================================
  * RUSI TRKI — HỆ THỐNG ĐỊNH DẠNG MARKDOWN (.MD) TOÀN HỆ THỐNG
