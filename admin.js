@@ -315,6 +315,18 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         { key: "id", label: "Mã bài học (ID)", type: "text", required: true, help: "Ví dụ: accusative, genitive, verb_aspect..." },
         { key: "title", label: "Tiêu đề tiếng Nga", type: "text", required: true },
         { key: "vi", label: "Ý nghĩa & diễn giải tiếng Việt", type: "text", required: true },
+        {
+          key: "level",
+          label: "Trình độ CEFR",
+          type: "select",
+          options: [
+            { v: "A1", l: "A1 (Sơ cấp)" },
+            { v: "A2", l: "A2 (Cơ bản)" },
+            { v: "B1", l: "B1 (Trung cấp 1)" },
+            { v: "B2", l: "B2 (Trung cấp 2)" }
+          ],
+          defaultValue: "A1"
+        },
         { key: "topic", label: "Chủ đề liên quan", type: "text" }
       ]
     },
@@ -419,6 +431,8 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           defaultValue: "A1"
         },
         { key: "categoryName", label: "Tên nhóm giao tiếp", type: "text", defaultValue: "Giao tiếp hàng ngày" },
+        { key: "youtubeId", label: "YouTube Video ID (bài Shadowing video)", type: "text", placeholder: "Ví dụ: 5KOKztPa1yI" },
+        { key: "transcriptSource", label: "Nguồn Transcript / Phụ đề", type: "text", placeholder: "Ví dụ: YouTube Russian Verified Captions" },
         { key: "phonemeTarget", label: "Mục tiêu âm vị / Trọng âm cần chú ý", type: "text" },
         { key: "icon", label: "Mã Icon Lucide", type: "text", defaultValue: "mic-speaking" },
         {
@@ -517,7 +531,18 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         { key: "scene", label: "Mã Icon Cảnh Phim", type: "text", defaultValue: "film" },
         { key: "ru", label: "Tiêu đề tiếng Nga", type: "text", required: true },
         { key: "vi", label: "Tiêu đề tiếng Việt", type: "text", required: true },
-        { key: "story", label: "Cốt truyện / Bối cảnh", type: "textarea" }
+        { key: "story", label: "Cốt truyện / Bối cảnh", type: "textarea" },
+        { key: "video_url", label: "URL Video (YouTube / MP4 / Cloudflare Stream)", type: "text" },
+        {
+          key: "is_pro_only",
+          label: "Quyền truy cập",
+          type: "select",
+          options: [
+            { v: "false", l: "Miễn phí (Free)" },
+            { v: "true", l: "Khóa VIP (Chỉ dành cho PRO)" }
+          ],
+          defaultValue: "false"
+        }
       ]
     },
 
@@ -834,6 +859,51 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     return Array.from(map.values());
   }
 
+  function getDeletedList(slug) {
+    const col = COLLECTIONS[slug];
+    if (!col) return [];
+    const original = col.source() || [];
+    const store = loadAdminStore();
+    const admin = store[slug] || [];
+    const deletedList = (store.__deleted && store.__deleted[slug]) || [];
+    if (!Array.isArray(deletedList) || deletedList.length === 0) return [];
+    const deletedSet = new Set(deletedList);
+
+    const map = new Map();
+    original.forEach((it) => {
+      const key = it.id || it.slug || it.title;
+      if (key && deletedSet.has(key)) {
+        map.set(key, { ...it, __source: "deleted_original" });
+      }
+    });
+    admin.forEach((it) => {
+      const clone = { ...it };
+      delete clone.__admin;
+      const key = clone.id || clone.slug || clone.title;
+      if (key && deletedSet.has(key)) {
+        map.set(key, { ...clone, __source: "deleted_admin" });
+      }
+    });
+    deletedList.forEach((key) => {
+      if (!map.has(key)) {
+        map.set(key, { id: key, title: `Tài liệu đã xóa (${key})`, __source: "deleted" });
+      }
+    });
+
+    return Array.from(map.values());
+  }
+
+  function slugify(text) {
+    return String(text || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 45);
+  }
+
   function syncDataToWeb() {
     if (window.RusiSupabase && typeof window.RusiSupabase.clearCache === "function") {
       window.RusiSupabase.clearCache();
@@ -1051,10 +1121,15 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
     if (State.currentRoute === "list") {
       primaryBtn = `<a class="p-btn p-btn-primary p-btn-sm" href="#collection/${State.currentSlug}/create">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Tạo mới</a>`;
-      secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncWeb" type="button">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} Đẩy về Web</button>`;
+      secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncWeb" type="button" title="Đồng bộ vào runtime web">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} Đẩy về Web</button>`;
+      if (SupabaseSyncEngine && SupabaseSyncEngine.hasMapping(State.currentSlug)) {
+        secondaryBtn += `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncCloudSingle" type="button" title="Đẩy toàn bộ collection này lên Supabase">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Lưu Cloud</button>`;
+      }
     } else if (State.currentRoute === "editor") {
-      primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSaveDoc" type="button">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Lưu thay đổi</button>`;
-      secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenPreviewDrawer" type="button">${window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : ""} Live Preview</button>`;
+      const mapping = SupabaseSyncEngine && SupabaseSyncEngine.MAPPINGS[State.currentSlug];
+      const tablePill = mapping ? `<span class="p-pill p-pill-success" style="font-size:11px;padding:3px 8px;display:inline-flex;align-items:center;gap:4px" title="Bảng đích trên Supabase">${window.RusiIcons ? RusiIcons.get("database-tests", { size: 12 }) : ""} ${mapping.table}</span>` : "";
+      primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSaveDoc" type="button">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Lưu &amp; Đồng bộ Cloud</button>`;
+      secondaryBtn = `${tablePill}<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenPreviewDrawer" type="button">${window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : ""} Live Preview</button>`;
     } else {
       primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSyncWeb" type="button">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} Đẩy về Web</button>`;
       secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenSupabaseModal" type="button">${window.RusiIcons ? RusiIcons.get("database-tests", { size: 14 }) : ""} Supabase</button>`;
@@ -1064,6 +1139,11 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       <div class="payload-kebab-menu" id="topbarKebab">
         <button class="p-btn-icon" id="btnKebabToggle" type="button" aria-label="Thao tác khác" title="Thêm thao tác">···</button>
         <div class="payload-kebab-dropdown" id="kebabDropdown">
+          ${State.currentSlug && SupabaseSyncEngine && SupabaseSyncEngine.hasMapping(State.currentSlug) ? `
+            <button class="payload-kebab-item" id="kebabPushSingleBtn" type="button">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Đẩy ${State.currentSlug} lên Cloud</button>
+            <button class="payload-kebab-item" id="kebabPullSingleBtn" type="button">${window.RusiIcons ? RusiIcons.get("cloud-download", { size: 14 }) : ""} Kéo ${State.currentSlug} từ Cloud</button>
+            <div class="payload-kebab-divider"></div>
+          ` : ""}
           <a class="payload-kebab-item" href="index.html" target="_blank">${window.RusiIcons ? RusiIcons.get("external-link", { size: 14 }) : ""} Mở Web học viên</a>
           <button class="payload-kebab-item" id="kebabSbBtn" type="button">${window.RusiIcons ? RusiIcons.get("settings-gear", { size: 14 }) : ""} Cấu hình Supabase</button>
           <button class="payload-kebab-item" id="kebabExportBtn" type="button">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Export JSON / data.js</button>
@@ -1088,6 +1168,15 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       syncDataToWeb();
       toast("Đã cập nhật và đột biến dữ liệu runtime thành công trên toàn bộ website!");
     };
+
+    const btnSyncCloud = document.getElementById("btnSyncCloudSingle");
+    if (btnSyncCloud) btnSyncCloud.onclick = () => window.syncSingleCollection(State.currentSlug);
+
+    const kebabPush = document.getElementById("kebabPushSingleBtn");
+    if (kebabPush) kebabPush.onclick = () => window.syncSingleCollection(State.currentSlug);
+
+    const kebabPull = document.getElementById("kebabPullSingleBtn");
+    if (kebabPull) kebabPull.onclick = () => window.pullSingleCollection(State.currentSlug);
 
     const btnSbModal = document.getElementById("btnOpenSupabaseModal");
     if (btnSbModal) btnSbModal.onclick = openSupabaseModal;
@@ -1222,7 +1311,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       return;
     }
 
-    const allItems = getMergedList(slug);
+    const isTrashMode = State.filterSource === "trash";
+    const allItems = isTrashMode ? getDeletedList(slug) : getMergedList(slug);
 
     let filtered = allItems.filter((item) => {
       const q = State.searchQuery.toLowerCase();
@@ -1246,8 +1336,10 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       if (State.filterPro === "pro" && String(item.is_pro_only) !== "true") return false;
       if (State.filterPro === "free" && String(item.is_pro_only) === "true") return false;
 
-      if (State.filterSource === "admin" && item.__source !== "admin") return false;
-      if (State.filterSource === "original" && item.__source !== "original") return false;
+      if (!isTrashMode) {
+        if (State.filterSource === "admin" && item.__source !== "admin") return false;
+        if (State.filterSource === "original" && item.__source !== "original") return false;
+      }
 
       return true;
     });
@@ -1263,8 +1355,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       rowsHtml = `
         <tr>
           <td colspan="7" style="text-align:center;padding:48px 20px;color:var(--p-text-muted)">
-            <div style="margin-bottom:8px;color:var(--p-text-muted)">${window.RusiIcons ? RusiIcons.get("search-icon", { size: 36 }) : ""}</div>
-            <div>Không tìm thấy tài liệu nào phù hợp với bộ lọc hiện tại.</div>
+            <div style="margin-bottom:8px;color:var(--p-text-muted)">${window.RusiIcons ? RusiIcons.get(isTrashMode ? "trash-2" : "search-icon", { size: 36 }) : ""}</div>
+            <div>${isTrashMode ? "Thùng rác trống. Không có tài liệu nào bị xóa." : "Không tìm thấy tài liệu nào phù hợp với bộ lọc hiện tại."}</div>
             <button class="p-btn p-btn-secondary p-btn-sm" style="margin-top:12px" onclick="window.clearFilters()">Xóa bộ lọc</button>
           </td>
         </tr>
@@ -1277,7 +1369,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         const subText = it.desc || it.vi || (it.parts ? `${it.parts.length} phần thi` : "");
         const levelBadge = it.level ? `<span class="p-pill p-pill-info">${esc(it.level)}</span>` : "";
         const proBadge = String(it.is_pro_only) === "true" || it.is_pro ? `<span class="p-pill p-pill-warning">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO</span>` : `<span class="p-pill p-pill-neutral">Free</span>`;
-        const sourceBadge = it.__source === "admin" ? `<span class="p-pill p-pill-violet">Admin sửa</span>` : `<span class="p-pill p-pill-neutral">Bản gốc</span>`;
+        const sourceBadge = isTrashMode
+          ? `<span class="p-pill p-pill-danger">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 11 }) : ""} Đã xóa</span>`
+          : (it.__source === "admin" ? `<span class="p-pill p-pill-violet">Admin sửa</span>` : `<span class="p-pill p-pill-neutral">Bản gốc</span>`);
 
         rowsHtml += `
           <tr>
@@ -1294,9 +1388,14 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
             <td>${sourceBadge}</td>
             <td>
               <div class="payload-row-actions">
-                <a class="p-btn p-btn-ghost p-btn-sm" href="#collection/${slug}/edit/${encodeURIComponent(idKey)}" title="Chỉnh sửa">${window.RusiIcons ? RusiIcons.get("edit-3", { size: 14 }) : "Sửa"}</a>
-                <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.cloneDocument('${escAttr(slug)}', '${escAttr(idKey)}')" title="Nhân bản">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : "Copy"}</button>
-                <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.deleteDocument('${escAttr(slug)}', '${escAttr(idKey)}')" title="Xóa" style="color:var(--p-danger)">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : "Xóa"}</button>
+                ${isTrashMode ? `
+                  <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.restoreDocument('${escAttr(slug)}', '${escAttr(idKey)}')" title="Khôi phục tài liệu này">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) : ""} Khôi phục</button>
+                  <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.permanentDeleteDocument('${escAttr(slug)}', '${escAttr(idKey)}')" title="Xóa vĩnh viễn" style="color:var(--p-danger)">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : "Xóa hẳn"}</button>
+                ` : `
+                  <a class="p-btn p-btn-ghost p-btn-sm" href="#collection/${slug}/edit/${encodeURIComponent(idKey)}" title="Chỉnh sửa">${window.RusiIcons ? RusiIcons.get("edit-3", { size: 14 }) : "Sửa"}</a>
+                  <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.cloneDocument('${escAttr(slug)}', '${escAttr(idKey)}')" title="Nhân bản">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : "Copy"}</button>
+                  <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.deleteDocument('${escAttr(slug)}', '${escAttr(idKey)}')" title="Xóa" style="color:var(--p-danger)">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : "Xóa"}</button>
+                `}
               </div>
             </td>
           </tr>
@@ -1310,6 +1409,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           <span style="font-size:24px;display:inline-flex;align-items:center">${window.RusiIcons ? RusiIcons.get(col.icon, { size: 28 }) : col.icon}</span>
           <h1 class="payload-list-title">${esc(col.label)}</h1>
           <span class="p-pill p-pill-neutral">${allItems.length}</span>
+          ${isTrashMode ? '<span class="p-pill p-pill-danger" style="margin-left:6px">Thùng rác</span>' : ''}
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <a class="p-btn p-btn-primary" href="#collection/${slug}/create">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm mới</a>
@@ -1339,9 +1439,10 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           </select>
 
           <select class="payload-filter-select" id="filterSource">
-            <option value="all" ${State.filterSource === "all" ? "selected" : ""}>Tất cả nguồn</option>
+            <option value="all" ${State.filterSource === "all" ? "selected" : ""}>Tất cả nguồn đang dùng</option>
             <option value="original" ${State.filterSource === "original" ? "selected" : ""}>Bản gốc data.js</option>
             <option value="admin" ${State.filterSource === "admin" ? "selected" : ""}>Admin đã sửa</option>
+            <option value="trash" ${State.filterSource === "trash" ? "selected" : ""}>🗑️ Thùng rác (Đã xóa)</option>
           </select>
         </div>
       </div>
@@ -1349,9 +1450,14 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       <div class="payload-bulk-bar" id="bulkBar">
         <div style="font-weight:600;font-size:13px" id="bulkCountText">Đã chọn 0 mục</div>
         <div style="display:flex;gap:8px">
-          <button class="p-btn p-btn-danger p-btn-sm" id="btnBulkDelete" type="button">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""} Xoá mục đã chọn</button>
-          <button class="p-btn p-btn-secondary p-btn-sm" id="btnBulkMakePro" type="button">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""} Đặt thành PRO</button>
-          <button class="p-btn p-btn-secondary p-btn-sm" id="btnBulkMakeFree" type="button">${window.RusiIcons ? RusiIcons.get("award-badge", { size: 14 }) : ""} Đặt thành Miễn phí</button>
+          ${isTrashMode ? `
+            <button class="p-btn p-btn-primary p-btn-sm" id="btnBulkRestore" type="button" onclick="window.bulkRestore('${escAttr(slug)}')">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) : ""} Khôi phục đã chọn</button>
+            <button class="p-btn p-btn-danger p-btn-sm" id="btnBulkPermanentDelete" type="button" onclick="window.bulkPermanentDelete('${escAttr(slug)}')">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""} Xóa vĩnh viễn đã chọn</button>
+          ` : `
+            <button class="p-btn p-btn-danger p-btn-sm" id="btnBulkDelete" type="button">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""} Xoá mục đã chọn</button>
+            <button class="p-btn p-btn-secondary p-btn-sm" id="btnBulkMakePro" type="button">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""} Đặt thành PRO</button>
+            <button class="p-btn p-btn-secondary p-btn-sm" id="btnBulkMakeFree" type="button">${window.RusiIcons ? RusiIcons.get("award-badge", { size: 14 }) : ""} Đặt thành Miễn phí</button>
+          `}
         </div>
       </div>
 
@@ -1668,6 +1774,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
             <div class="payload-doc-card-title">Hành động</div>
             <div style="display:flex;flex-direction:column;gap:8px">
               <button class="p-btn p-btn-primary" type="button" onclick="window.saveDocument()">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Lưu &amp; Đồng bộ Cloud (Supabase)</button>
+              ${!State.isCreating ? `
+                <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.resetDocumentToDefault()" title="Khôi phục lại dữ liệu ban đầu từ data.js">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) : ""} Khôi phục dữ liệu gốc</button>
+              ` : ""}
               <button class="p-btn p-btn-secondary" type="button" onclick="window.openLivePreview()">${window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : ""} Live Preview Studio (Khung nổi)</button>
               <button class="p-btn p-btn-secondary" type="button" onclick="window.openPreviewInNewTab()">${window.RusiIcons ? RusiIcons.get("external-link", { size: 14 }) : ""} Xem trước trên Web (Tab mới)</button>
               <a class="p-btn p-btn-ghost" href="#collection/${slug}">Huỷ &amp; Quay lại</a>
@@ -1705,6 +1814,26 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         State.currentDraft[key] = e.target.value.split("\n").map((s) => s.trim()).filter(Boolean);
       };
     });
+
+    // Auto-generate Slug/ID thông minh khi tạo mới
+    if (State.isCreating) {
+      const titleInp = document.querySelector('.live-draft-field[data-key="title"]') || document.querySelector('.live-draft-field[data-key="name"]');
+      const idInp = document.querySelector('.live-draft-field[data-key="id"]') || document.querySelector('.live-draft-field[data-key="slug"]');
+      if (titleInp && idInp) {
+        let manualChanged = false;
+        idInp.addEventListener("input", () => { manualChanged = true; });
+        titleInp.addEventListener("input", (e) => {
+          if (!manualChanged) {
+            const prefix = slug === "TRKI_BANK" ? "trki_" : slug === "VOCAB_JARS" ? "jar_" : (slug.toLowerCase() + "_");
+            const generated = prefix + slugify(e.target.value);
+            if (generated.length > prefix.length) {
+              idInp.value = generated;
+              State.currentDraft[idInp.getAttribute("data-key")] = generated;
+            }
+          }
+        });
+      }
+    }
 
     const jsonArea = document.getElementById("jsonEditorArea");
     if (jsonArea) {
@@ -1885,7 +2014,10 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
               </div>
               <input type="text" class="p-input" placeholder="Giải thích ngữ pháp..." value="${escAttr(q.ex || "")}" oninput="window.updateTrkiQuestion(${pIdx}, ${qIdx}, 'ex', this.value)" />
             </div>
-            <button class="p-btn-icon" type="button" onclick="window.removeTrkiQuestion(${pIdx}, ${qIdx})" title="Xóa câu hỏi">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <button class="p-btn-icon" type="button" onclick="window.cloneTrkiQuestion(${pIdx}, ${qIdx})" title="Nhân bản câu hỏi này">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : "Copy"}</button>
+              <button class="p-btn-icon" type="button" onclick="window.removeTrkiQuestion(${pIdx}, ${qIdx})" title="Xóa câu hỏi">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
+            </div>
           </div>
         `;
       });
@@ -1958,6 +2090,16 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     if (!State.currentDraft || !State.currentDraft.parts || !State.currentDraft.parts[pIdx]) return;
     State.currentDraft.parts[pIdx].questions.splice(qIdx, 1);
     refreshStructureTab();
+  };
+
+  window.cloneTrkiQuestion = function (pIdx, qIdx) {
+    if (!State.currentDraft || !State.currentDraft.parts || !State.currentDraft.parts[pIdx]) return;
+    const q = State.currentDraft.parts[pIdx].questions[qIdx];
+    if (!q) return;
+    const clone = JSON.parse(JSON.stringify(q));
+    State.currentDraft.parts[pIdx].questions.splice(qIdx + 1, 0, clone);
+    refreshStructureTab();
+    toast("Đã nhân bản câu hỏi thành công!");
   };
 
   window.updateTrkiQuestion = function (pIdx, qIdx, field, val) {
@@ -2054,19 +2196,70 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
     return `
       <div class="payload-array-container">
-        <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
           <div>
             <span style="font-weight:700;font-size:15px">Danh sách từ vựng chuyên sâu (${words.length} từ)</span>
             <div style="font-size:12px;color:var(--p-text-muted);margin-top:2px">Hỗ trợ đầy đủ trọng âm, từ loại, cụm kết hợp (collocation), từ đồng nghĩa, trái nghĩa và ví dụ song ngữ theo Spec Module 1.</div>
           </div>
-          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addVocabWord()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm từ mới</button>
+          <div style="display:flex;gap:8px">
+            <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.toggleVocabBulkImport()">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : "⚡"} Nhập nhanh nhiều từ</button>
+            <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addVocabWord()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm từ mới</button>
+          </div>
         </div>
+
+        <div id="vocabBulkImportBox" class="p-bulk-import-box" style="display:none">
+          <div style="font-weight:600;font-size:12.5px;margin-bottom:6px">Dán danh sách từ (Mỗi dòng một từ theo cú pháp: <code>từ_Nga | nghĩa_Việt | từ_loại | ví_dụ</code>):</div>
+          <textarea id="vocabBulkImportText" class="p-bulk-import-textarea" rows="4" placeholder="яблоко | quả táo | сущ. | Я люблю яблоки&#10;молоко | sữa | сущ. | пить молоко&#10;читать | đọc sách | гл. | читать книгу"></textarea>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.applyVocabBulkImport()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Nạp các từ này vào lọ</button>
+            <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.toggleVocabBulkImport()">Đóng</button>
+          </div>
+        </div>
+
         <div class="payload-array-items">
-          ${rowsHtml || '<div style="text-align:center;padding:24px;color:var(--p-text-muted)">Chưa có từ nào trong lọ. Bấm "Thêm từ mới" để tạo.</div>'}
+          ${rowsHtml || '<div style="text-align:center;padding:24px;color:var(--p-text-muted)">Chưa có từ nào trong lọ. Bấm "Thêm từ mới" hoặc "Nhập nhanh nhiều từ" để tạo.</div>'}
         </div>
       </div>
     `;
   }
+
+  window.toggleVocabBulkImport = function () {
+    const box = document.getElementById("vocabBulkImportBox");
+    if (!box) return;
+    box.style.display = box.style.display === "none" ? "block" : "none";
+    if (box.style.display === "block") {
+      const txt = document.getElementById("vocabBulkImportText");
+      if (txt) txt.focus();
+    }
+  };
+
+  window.applyVocabBulkImport = function () {
+    const txt = document.getElementById("vocabBulkImportText");
+    if (!txt || !txt.value.trim() || !State.currentDraft) return;
+    const lines = txt.value.trim().split("\n");
+    State.currentDraft.words = State.currentDraft.words || [];
+    let count = 0;
+    lines.forEach((line) => {
+      const parts = line.split("|").map((s) => s.trim());
+      if (parts[0]) {
+        State.currentDraft.words.push({
+          ru: parts[0] || "",
+          vi: parts[1] || "",
+          pos: parts[2] || "сущ.",
+          gender: "",
+          collocation: "",
+          synonyms: [],
+          antonyms: [],
+          ex: parts[3] || "",
+          note: "",
+          sub_topic: ""
+        });
+        count++;
+      }
+    });
+    toast(`Đã nạp nhanh ${count} từ vựng vào lọ thành công!`);
+    refreshStructureTab();
+  };
 
   window.addVocabWord = function () {
     if (!State.currentDraft) return;
@@ -2668,24 +2861,43 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
   // --- Speaking Sets Builder ---
   function renderSpeakingBuilder(items) {
     let itemsHtml = "";
-    items.forEach((it, idx) => {
+    (items || []).forEach((it, idx) => {
+      const startVal = it.startSec !== undefined ? it.startSec : (it.start !== undefined ? it.start : "");
+      const endVal = it.endSec !== undefined ? it.endSec : (it.end !== undefined ? it.end : "");
+      const whoVal = it.who || "";
       itemsHtml += `
-        <div class="payload-array-row" style="margin-bottom:8px">
+        <div class="payload-array-row" style="margin-bottom:10px;padding:10px;background:var(--p-surface-subtle, rgba(0,0,0,0.02));border-radius:8px;">
           <span class="payload-array-row-num">#${idx + 1}</span>
-          <div class="payload-array-row-fields">
-            <input type="text" class="p-input" placeholder="Câu tiếng Nga (trọng âm)..." value="${escAttr(it.ru || "")}" oninput="window.updateSpeakingItem(${idx}, 'ru', this.value)" style="margin-bottom:6px" />
-            <input type="text" class="p-input" placeholder="Dịch tiếng Việt..." value="${escAttr(it.vi || "")}" oninput="window.updateSpeakingItem(${idx}, 'vi', this.value)" />
+          <div class="payload-array-row-fields" style="width:100%">
+            <div style="display:flex;gap:8px;margin-bottom:6px">
+              <input type="text" class="p-input" style="flex:2" placeholder="Câu tiếng Nga (lời thoại gốc / có trọng âm)..." value="${escAttr(it.ru || it.text_ru || it.text || "")}" oninput="window.updateSpeakingItem(${idx}, 'ru', this.value)" />
+              <input type="text" class="p-input" style="flex:1;max-width:140px" placeholder="Người nói (ví dụ: Ася, Вася...)" value="${escAttr(whoVal)}" oninput="window.updateSpeakingItem(${idx}, 'who', this.value)" />
+            </div>
+            <input type="text" class="p-input" placeholder="Dịch tiếng Việt..." value="${escAttr(it.vi || it.translation_vi || it.translation || "")}" oninput="window.updateSpeakingItem(${idx}, 'vi', this.value)" style="margin-bottom:6px" />
+            <div style="display:flex;align-items:center;gap:14px;font-size:0.8rem;color:var(--p-text-muted)">
+              <label style="display:inline-flex;align-items:center;gap:4px">
+                <span>Bắt đầu (giây):</span>
+                <input type="number" step="0.1" class="p-input" style="width:90px;padding:3px 6px" value="${startVal}" oninput="window.updateSpeakingItem(${idx}, 'start', parseFloat(this.value)||0); window.updateSpeakingItem(${idx}, 'startSec', parseFloat(this.value)||0)" />
+              </label>
+              <label style="display:inline-flex;align-items:center;gap:4px">
+                <span>Kết thúc (giây):</span>
+                <input type="number" step="0.1" class="p-input" style="width:90px;padding:3px 6px" value="${endVal}" oninput="window.updateSpeakingItem(${idx}, 'end', parseFloat(this.value)||0); window.updateSpeakingItem(${idx}, 'endSec', parseFloat(this.value)||0)" />
+              </label>
+            </div>
           </div>
-          <button class="p-btn-icon" type="button" onclick="window.removeSpeakingItem(${idx})">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
+          <button class="p-btn-icon" type="button" onclick="window.removeSpeakingItem(${idx})" title="Xoá câu">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""}</button>
         </div>
       `;
     });
 
     return `
       <div class="payload-array-container">
-        <div class="payload-array-header">
-          <span style="font-weight:700">Các câu luyện nói (${items.length} câu)</span>
-          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addSpeakingItem()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu mới</button>
+        <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+          <span style="font-weight:700">Các câu luyện nói (${(items || []).length} câu)</span>
+          <div style="display:flex;gap:8px">
+            <button class="p-btn p-btn-soft p-btn-sm" type="button" onclick="window.importSpeakingTranscriptModal()">${window.RusiIcons ? RusiIcons.get("upload", { size: 14 }) : ""} Nhập SRT / VTT / JSON</button>
+            <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addSpeakingItem()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu mới</button>
+          </div>
         </div>
         <div class="payload-array-items">
           ${itemsHtml || '<div style="text-align:center;padding:20px;color:var(--p-text-muted)">Chưa có câu nào.</div>'}
@@ -2697,7 +2909,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
   window.addSpeakingItem = function () {
     if (!State.currentDraft) return;
     State.currentDraft.items = State.currentDraft.items || [];
-    State.currentDraft.items.push({ ru: "", vi: "" });
+    State.currentDraft.items.push({ ru: "", vi: "", start: 0, end: 5 });
     refreshStructureTab();
   };
 
@@ -2710,6 +2922,89 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
   window.updateSpeakingItem = function (idx, field, val) {
     if (!State.currentDraft || !State.currentDraft.items || !State.currentDraft.items[idx]) return;
     State.currentDraft.items[idx][field] = val;
+    if (field === "ru") State.currentDraft.items[idx].text_ru = val;
+    if (field === "vi") State.currentDraft.items[idx].translation_vi = val;
+  };
+
+  window.importSpeakingTranscriptModal = function () {
+    const raw = prompt("Dán nội dung phụ đề (JSON mảng câu, SRT, hoặc VTT) vào đây:");
+    if (!raw || !raw.trim()) return;
+
+    try {
+      // Thử parse JSON trước
+      const trimmed = raw.trim();
+      if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+        const parsed = JSON.parse(trimmed);
+        const list = Array.isArray(parsed) ? parsed : (parsed.items || parsed.sentences || []);
+        if (list.length) {
+          State.currentDraft.items = list.map((it, idx) => ({
+            id: idx + 1,
+            order: idx + 1,
+            ru: it.ru || it.text_ru || it.text || "",
+            vi: it.vi || it.translation_vi || it.translation || "",
+            start: typeof it.start === "number" ? it.start : (typeof it.startSec === "number" ? it.startSec : 0),
+            end: typeof it.end === "number" ? it.end : (typeof it.endSec === "number" ? it.endSec : 0),
+            startSec: typeof it.startSec === "number" ? it.startSec : (typeof it.start === "number" ? it.start : 0),
+            endSec: typeof it.endSec === "number" ? it.endSec : (typeof it.end === "number" ? it.end : 0),
+            who: it.who || ""
+          }));
+          refreshStructureTab();
+          toast(`Đã nhập thành công ${State.currentDraft.items.length} câu từ JSON!`);
+          return;
+        }
+      }
+
+      // Thử parse SRT / VTT
+      const srtBlocks = raw.replace(/\r\n/g, "\n").split(/\n\s*\n/);
+      const parsedItems = [];
+      const timeRegex = /(?:(\d{2}):)?(\d{2}):(\d{2})[,.](\d{3})\s*-->\s*(?:(\d{2}):)?(\d{2}):(\d{2})[,.](\d{3})/;
+
+      for (const block of srtBlocks) {
+        const lines = block.split("\n").map(l => l.trim()).filter(Boolean);
+        if (lines.length < 2) continue;
+        const timeLineIdx = lines.findIndex(l => timeRegex.test(l));
+        if (timeLineIdx === -1) continue;
+
+        const m = lines[timeLineIdx].match(timeRegex);
+        if (!m) continue;
+
+        const startH = m[1] ? parseInt(m[1], 10) : 0;
+        const startM = parseInt(m[2], 10);
+        const startS = parseInt(m[3], 10);
+        const startMs = parseInt(m[4], 10);
+        const startTotal = Math.round((startH * 3600 + startM * 60 + startS + startMs / 1000) * 100) / 100;
+
+        const endH = m[5] ? parseInt(m[5], 10) : 0;
+        const endM = parseInt(m[6], 10);
+        const endS = parseInt(m[7], 10);
+        const endMs = parseInt(m[8], 10);
+        const endTotal = Math.round((endH * 3600 + endM * 60 + endS + endMs / 1000) * 100) / 100;
+
+        const textLines = lines.slice(timeLineIdx + 1).join(" ");
+        if (textLines) {
+          parsedItems.push({
+            id: parsedItems.length + 1,
+            order: parsedItems.length + 1,
+            ru: textLines,
+            vi: "",
+            start: startTotal,
+            end: endTotal,
+            startSec: startTotal,
+            endSec: endTotal
+          });
+        }
+      }
+
+      if (parsedItems.length > 0) {
+        State.currentDraft.items = parsedItems;
+        refreshStructureTab();
+        toast(`Đã nhập thành công ${parsedItems.length} câu từ phụ đề SRT/VTT!`);
+      } else {
+        alert("Không nhận diện được định dạng phụ đề. Vui lòng kiểm tra lại cấu trúc SRT/VTT hoặc JSON.");
+      }
+    } catch (err) {
+      alert("Lỗi khi xử lý dữ liệu nhập: " + err.message);
+    }
   };
 
   // --- Packages Features Builder ---
@@ -2836,11 +3131,14 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           code: String(doc.id).trim(),
           jar_name: doc.name || doc.title || "Lọ từ vựng",
           level: doc.level || "A1",
+          level_name: doc.levelName || ("Sơ cấp " + (doc.level || "A1")),
           description: doc.desc || "",
           icon: doc.icon || "archive-jar",
           color_code: doc.color || "#0039A6",
           is_system: true,
+          is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
           words: Array.isArray(doc.words) ? doc.words : [],
+          word_count: Array.isArray(doc.words) ? doc.words.length : 0,
           article: doc.article || null,
           updated_at: new Date().toISOString()
         }),
@@ -2848,10 +3146,11 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           id: row.code || row.id,
           name: row.jar_name || "Lọ từ vựng",
           level: row.level || "A1",
-          levelName: row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1",
+          levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
           desc: row.description || "",
           icon: row.icon || "archive-jar",
           color: row.color_code || "#0039A6",
+          is_pro_only: Boolean(row.is_pro_only),
           words: Array.isArray(row.words) ? row.words : [],
           article: row.article || null
         })
@@ -2960,32 +3259,56 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         deleteCol: "code",
         label: "Bài luyện nói",
         idKey: (doc) => doc.id,
-        toRow: (doc) => ({
-          code: String(doc.id).trim(),
-          title: doc.title || "Bài luyện nói",
-          level: doc.level || "A1",
-          level_name: doc.levelName || "Sơ cấp A1",
-          category: doc.category || "greeting",
-          category_name: doc.categoryName || "Chào hỏi",
-          phoneme_target: doc.phonemeTarget || "",
-          icon: doc.icon || "mic-speaking",
-          is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
-          sentence_ru: (doc.items && doc.items[0] && doc.items[0].ru) || "",
-          raw_data: { items: Array.isArray(doc.items) ? doc.items : [] },
-          updated_at: new Date().toISOString()
-        }),
-        fromRow: (row) => ({
-          id: row.code || row.id,
-          title: row.title || "",
-          level: row.level || "A1",
-          levelName: row.level_name || "Sơ cấp A1",
-          category: row.category || "greeting",
-          categoryName: row.category_name || "Chào hỏi",
-          phonemeTarget: row.phoneme_target || "",
-          icon: row.icon || "mic-speaking",
-          is_pro_only: Boolean(row.is_pro_only),
-          items: (row.raw_data && Array.isArray(row.raw_data.items)) ? row.raw_data.items : (row.sentence_ru ? [{ ru: row.sentence_ru, vi: "" }] : [])
-        })
+        toRow: (doc) => {
+          const raw = doc.raw_data || {};
+          const ytId = doc.youtubeId || raw.youtube_video_id || "";
+          const itemsArr = Array.isArray(doc.items) ? doc.items : [];
+          return {
+            code: String(doc.id).trim(),
+            title: doc.title || "Bài luyện nói",
+            level: doc.level || "A1",
+            level_name: doc.levelName || (doc.level === "A2" ? "Cơ bản A2" : doc.level === "B1" ? "Trung cấp B1" : doc.level === "B2" ? "Nâng cao B2" : "Sơ cấp A1"),
+            category: doc.category || (ytId ? "shadowing_youtube" : "greeting"),
+            category_name: doc.categoryName || (ytId ? "Shadowing qua phim hoạt hình" : "Chào hỏi"),
+            phoneme_target: doc.phonemeTarget || "",
+            icon: doc.icon || (ytId ? "youtube" : "mic-speaking"),
+            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
+            sentence_ru: (itemsArr[0] && (itemsArr[0].ru || itemsArr[0].text_ru)) || "",
+            video_sample_url: ytId ? `https://www.youtube-nocookie.com/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1` : (doc.video_url || null),
+            items: itemsArr,
+            raw_data: {
+              ...raw,
+              source_type: ytId ? "youtube" : (raw.source_type || undefined),
+              youtube_video_id: ytId || raw.youtube_video_id || undefined,
+              youtube_url: ytId ? `https://www.youtube.com/watch?v=${ytId}` : raw.youtube_url,
+              transcript_source: doc.transcriptSource || raw.transcript_source || undefined,
+              transcript_verified: raw.transcript_verified !== undefined ? raw.transcript_verified : Boolean(ytId),
+              items: itemsArr,
+              sentences: itemsArr
+            },
+            updated_at: new Date().toISOString()
+          };
+        },
+        fromRow: (row) => {
+          const raw = row.raw_data || {};
+          const ytId = raw.youtube_video_id || raw.youtubeId || (row.video_sample_url && row.video_sample_url.includes("youtube") ? (row.video_sample_url.match(/(?:embed\/|v=|watch\?v=)([a-zA-Z0-9_-]{11})/)||[])[1] : "");
+          return {
+            id: row.code || row.id,
+            title: row.title || "",
+            level: row.level || "A1",
+            levelName: row.level_name || (row.level === "A2" ? "Cơ bản A2" : row.level === "B1" ? "Trung cấp B1" : row.level === "B2" ? "Nâng cao B2" : "Sơ cấp A1"),
+            category: row.category || "greeting",
+            categoryName: row.category_name || "Chào hỏi",
+            phonemeTarget: row.phoneme_target || "",
+            icon: row.icon || (ytId ? "youtube" : "mic-speaking"),
+            is_pro_only: Boolean(row.is_pro_only),
+            youtubeId: ytId || "",
+            video_url: raw.youtube_url || row.video_sample_url || "",
+            transcriptSource: raw.transcript_source || "",
+            raw_data: raw,
+            items: (raw && Array.isArray(raw.items)) ? raw.items : (Array.isArray(row.items) ? row.items : (row.sentence_ru ? [{ ru: row.sentence_ru, vi: "" }] : []))
+          };
+        }
       },
 
       WRITING_TASKS: {
@@ -3146,19 +3469,84 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           id: String(doc.id).trim(),
           title: doc.title || "Bài học ngữ pháp",
           vi: doc.vi || "",
+          level: doc.level || "A1",
           topic: doc.topic || "cases",
           rules: Array.isArray(doc.rules) ? doc.rules : [],
           table_data: doc.table || null,
-          questions: Array.isArray(doc.quickQuiz) ? doc.quickQuiz : []
+          questions: Array.isArray(doc.quickQuiz) ? doc.quickQuiz : [],
+          updated_at: new Date().toISOString()
         }),
         fromRow: (row) => ({
           id: row.id,
           title: row.title || "",
           vi: row.vi || "",
+          level: row.level || "A1",
           topic: row.topic || "cases",
           rules: Array.isArray(row.rules) ? row.rules : [],
           table: row.table_data || null,
           quickQuiz: Array.isArray(row.questions) ? row.questions : []
+        })
+      },
+
+      VOCAB_LESSONS: {
+        table: "vocab_lessons",
+        conflict: "id",
+        deleteCol: "id",
+        label: "Video «Хочу в Россию»",
+        idKey: (doc) => doc.id,
+        toRow: (doc) => ({
+          id: String(doc.id).trim(),
+          type: doc.type || "series",
+          level: doc.level || "A1",
+          ep: Number(doc.ep) || 1,
+          ru: doc.ru || "",
+          vi: doc.vi || "",
+          scene: doc.scene || "film",
+          story: doc.story || "",
+          words: Array.isArray(doc.words) ? doc.words : [],
+          video_url: doc.video_url || doc.videoUrl || "",
+          is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
+          updated_at: new Date().toISOString()
+        }),
+        fromRow: (row) => ({
+          id: row.id,
+          type: row.type || "series",
+          level: row.level || "A1",
+          ep: Number(row.ep) || 1,
+          ru: row.ru || "",
+          vi: row.vi || "",
+          scene: row.scene || "film",
+          story: row.story || "",
+          words: Array.isArray(row.words) ? row.words : [],
+          video_url: row.video_url || "",
+          is_pro_only: Boolean(row.is_pro_only)
+        })
+      },
+
+      USERS: {
+        table: "profiles",
+        conflict: "id",
+        deleteCol: "id",
+        label: "Học viên & Quản trị",
+        idKey: (doc) => doc.id,
+        toRow: (doc) => ({
+          id: String(doc.id).trim(),
+          email: doc.email || "",
+          full_name: doc.full_name || doc.name || "",
+          role: doc.role || "student",
+          is_pro: Boolean(doc.is_pro === true || doc.is_pro === "true"),
+          streak_count: Number(doc.streak || doc.streak_count) || 0,
+          xp_points: Number(doc.xp || doc.xp_points) || 0,
+          updated_at: new Date().toISOString()
+        }),
+        fromRow: (row) => ({
+          id: row.id,
+          email: row.email || "",
+          full_name: row.full_name || "",
+          role: row.role || "student",
+          is_pro: Boolean(row.is_pro),
+          streak: Number(row.streak_count) || 0,
+          xp: Number(row.xp_points) || 0
         })
       },
 
@@ -3171,6 +3559,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         toRow: (doc) => ({
           id: String(doc.id).trim(),
           user_id: doc.userId || null,
+          customer_email: doc.userEmail || doc.customer_email || "",
           package_id: doc.packageId || "",
           amount: Number(doc.amount) || 0,
           payment_method: String(doc.paymentMethod || "VIETQR").toUpperCase(),
@@ -3179,7 +3568,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         fromRow: (row) => ({
           id: row.id,
           userId: row.user_id || "",
-          userEmail: "",
+          userEmail: row.customer_email || "",
           packageId: row.package_id || "",
           packageName: row.package_id || "",
           amount: Number(row.amount) || 0,
@@ -3399,10 +3788,28 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     }
 
     const data = State.currentDraft;
-    const idKey = data.id || data.slug || data.title;
+
+    // Form validation: Kiểm tra các trường bắt buộc
+    for (const f of col.fields) {
+      if (f.required) {
+        const val = data[f.key];
+        if (val === undefined || val === null || String(val).trim() === "") {
+          toast(`Vui lòng nhập trường bắt buộc: "${f.label}"`);
+          const inp = document.querySelector(`[data-key="${f.key}"]`);
+          if (inp) {
+            inp.focus();
+            inp.style.borderColor = "var(--p-danger)";
+            setTimeout(() => { if (inp) inp.style.borderColor = ""; }, 3000);
+          }
+          return;
+        }
+      }
+    }
+
+    let idKey = data.id || data.slug || data.title;
     if (!idKey) {
-      toast("Lỗi: Mã ID / Slug là bắt buộc.");
-      return;
+      idKey = slug.toLowerCase() + "_" + Date.now().toString().slice(-6);
+      data.id = idKey;
     }
 
     const store = loadAdminStore();
@@ -3411,7 +3818,12 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     if (State.isCreating) {
       const exists = getMergedList(slug).some((it) => (it.id || it.slug || it.title) === idKey);
       if (exists) {
-        toast(`Mã "${idKey}" đã tồn tại. Vui lòng chọn mã khác.`);
+        toast(`Mã ID "${idKey}" đã tồn tại. Vui lòng chọn mã khác.`);
+        const inp = document.querySelector(`[data-key="id"]`);
+        if (inp) {
+          inp.focus();
+          inp.style.borderColor = "var(--p-danger)";
+        }
         return;
       }
       store[slug].push({ ...data, __admin: true });
@@ -3453,7 +3865,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
   };
 
   window.deleteDocument = async function (slug, idKey) {
-    if (!confirm(`Bạn có chắc chắn muốn xoá tài liệu "${idKey}" khỏi ${slug}?`)) return;
+    if (!confirm(`Bạn có chắc chắn muốn chuyển tài liệu "${idKey}" vào Thùng rác? (Có thể khôi phục bất cứ lúc nào)`)) return;
 
     const store = loadAdminStore();
     store.__deleted = store.__deleted || {};
@@ -3476,15 +3888,15 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       try {
         const delRes = await SupabaseSyncEngine.deleteDoc(slug, idKey);
         if (delRes.ok) {
-          toast(`Đã xoá tài liệu "${idKey}" (cục bộ & bảng ${delRes.table} Cloud).`);
+          toast(`Đã chuyển vào Thùng rác (và xoá trên Cloud bảng ${delRes.table}).`);
         } else {
-          toast(`Đã xoá cục bộ. Supabase: ${delRes.message}`);
+          toast(`Đã chuyển vào Thùng rác. Supabase: ${delRes.message}`);
         }
       } catch (e) {
-        toast(`Đã xoá cục bộ. Lỗi Supabase: ${e.message}`);
+        toast(`Đã chuyển vào Thùng rác. Lỗi Supabase: ${e.message}`);
       }
     } else {
-      toast(`Đã xoá tài liệu "${idKey}".`);
+      toast(`Đã chuyển tài liệu "${idKey}" vào Thùng rác.`);
     }
 
     if (State.currentRoute === "editor") {
@@ -3492,6 +3904,113 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     } else {
       renderCollectionView(document.getElementById("payloadViewContainer"), slug);
     }
+  };
+
+  window.restoreDocument = function (slug, idKey) {
+    const store = loadAdminStore();
+    if (store.__deleted && Array.isArray(store.__deleted[slug])) {
+      store.__deleted[slug] = store.__deleted[slug].filter((id) => id !== idKey);
+      saveAdminStore(store);
+      syncDataToWeb();
+      renderSidebarLists();
+      toast(`Đã khôi phục tài liệu "${idKey}" thành công!`);
+      renderCollectionView(document.getElementById("payloadViewContainer"), slug);
+    }
+  };
+
+  window.permanentDeleteDocument = async function (slug, idKey) {
+    if (!confirm(`CẢNH BÁO: Bạn có chắc chắn muốn XÓA VĨNH VIỄN tài liệu "${idKey}"? Hành động này sẽ loại bỏ hoàn toàn khỏi bộ nhớ.`)) return;
+
+    const store = loadAdminStore();
+    if (Array.isArray(store[slug])) {
+      store[slug] = store[slug].filter((it) => (it.id || it.slug || it.title) !== idKey);
+    }
+    store.__deleted = store.__deleted || {};
+    store.__deleted[slug] = store.__deleted[slug] || [];
+    if (!store.__deleted[slug].includes(idKey)) {
+      store.__deleted[slug].push(idKey);
+    }
+
+    saveAdminStore(store);
+    syncDataToWeb();
+    renderSidebarLists();
+
+    if (SupabaseSyncEngine && SupabaseSyncEngine.hasMapping(slug)) {
+      try {
+        await SupabaseSyncEngine.deleteDoc(slug, idKey);
+      } catch (_) {}
+    }
+
+    toast(`Đã xóa vĩnh viễn tài liệu "${idKey}".`);
+    renderCollectionView(document.getElementById("payloadViewContainer"), slug);
+  };
+
+  window.bulkRestore = function (slug) {
+    if (State.selectedRows.size === 0) return;
+    const store = loadAdminStore();
+    if (store.__deleted && Array.isArray(store.__deleted[slug])) {
+      store.__deleted[slug] = store.__deleted[slug].filter((id) => !State.selectedRows.has(id));
+      saveAdminStore(store);
+      syncDataToWeb();
+      renderSidebarLists();
+      State.selectedRows.clear();
+      toast("Đã khôi phục thành công các mục được chọn!");
+      renderCollectionView(document.getElementById("payloadViewContainer"), slug);
+    }
+  };
+
+  window.bulkPermanentDelete = function (slug) {
+    if (State.selectedRows.size === 0) return;
+    if (!confirm(`CẢNH BÁO: Bạn có chắc chắn muốn XÓA VĨNH VIỄN ${State.selectedRows.size} mục đã chọn?`)) return;
+
+    const store = loadAdminStore();
+    State.selectedRows.forEach((id) => {
+      if (Array.isArray(store[slug])) {
+        store[slug] = store[slug].filter((it) => (it.id || it.slug || it.title) !== id);
+      }
+      store.__deleted = store.__deleted || {};
+      store.__deleted[slug] = store.__deleted[slug] || [];
+      if (!store.__deleted[slug].includes(id)) store.__deleted[slug].push(id);
+    });
+
+    saveAdminStore(store);
+    syncDataToWeb();
+    renderSidebarLists();
+    State.selectedRows.clear();
+    toast("Đã xóa vĩnh viễn các mục được chọn.");
+    renderCollectionView(document.getElementById("payloadViewContainer"), slug);
+  };
+
+  window.resetDocumentToDefault = function () {
+    const slug = State.currentSlug;
+    const docId = State.currentDocId;
+    const col = COLLECTIONS[slug];
+    if (!col || !docId) return;
+
+    const originalList = col.source() || [];
+    const original = originalList.find((it) => (it.id || it.slug || it.title) === docId);
+    if (!original) {
+      toast("Tài liệu này được tạo mới bởi admin, không có bản gốc trong data.js.");
+      return;
+    }
+
+    if (!confirm(`Bạn có chắc chắn muốn khôi phục tài liệu "${docId}" về nội dung ban đầu từ data.js? Toàn bộ sửa đổi của quản trị viên sẽ bị hủy bỏ.`)) return;
+
+    const store = loadAdminStore();
+    if (Array.isArray(store[slug])) {
+      store[slug] = store[slug].filter((it) => (it.id || it.slug || it.title) !== docId);
+    }
+    if (store.__deleted && Array.isArray(store.__deleted[slug])) {
+      store.__deleted[slug] = store.__deleted[slug].filter((k) => k !== docId);
+    }
+
+    saveAdminStore(store);
+    syncDataToWeb();
+    renderSidebarLists();
+
+    State.currentDraft = JSON.parse(JSON.stringify(stripSource(original)));
+    toast(`Đã khôi phục tài liệu "${docId}" về dữ liệu gốc mặc định!`);
+    renderDocumentEditor(document.getElementById("payloadViewContainer"), slug);
   };
 
   window.cloneDocument = function (slug, idKey) {
@@ -4153,6 +4672,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         if (window.SUPABASE_CONFIG) {
           window.SUPABASE_CONFIG.anonKey = val;
           localStorage.setItem("trki_sb_anon_key", val);
+          localStorage.setItem("rusi_supabase_anon_key", val);
         }
         if (window.RusiSupabase && window.RusiSupabase.resetClient) {
           window.RusiSupabase.resetClient();
@@ -4262,10 +4782,122 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
   // 17. AUTH & GATE LOGIC
   // =========================================================================
 
+  const DEFAULT_ADMIN_EMAILS = [
+    "admin@rusitrki.com",
+    "academic@rusitrki.com",
+    "tuadenzettt@gmail.com"
+  ];
+
+  function isUserAdmin(user) {
+    if (!user) return false;
+    const role = String(user.role || "").toLowerCase().trim();
+    if (role === "academic_admin" || role === "super_admin") return true;
+
+    const email = String(user.email || "").toLowerCase().trim();
+    if (email && DEFAULT_ADMIN_EMAILS.includes(email)) return true;
+
+    try {
+      const extra = JSON.parse(localStorage.getItem("rusi_admin_emails") || "[]");
+      if (Array.isArray(extra) && extra.map((e) => String(e).toLowerCase().trim()).includes(email)) {
+        return true;
+      }
+    } catch (_) {}
+
+    return false;
+  }
+
+  function showLoginAlert(message, type = "error") {
+    const el = document.getElementById("loginGateAlert");
+    if (!el) return;
+    el.className = `payload-gate-alert alert-${type}`;
+    el.innerHTML = message;
+    el.style.display = "block";
+  }
+
+  function hideLoginAlert() {
+    const el = document.getElementById("loginGateAlert");
+    if (el) el.style.display = "none";
+  }
+
+  async function handleEmailLogin() {
+    const emailInput = document.getElementById("adminEmailInput");
+    const passInput = document.getElementById("adminPasswordInput");
+    const submitBtn = document.getElementById("btnAdminEmailLogin");
+    if (!emailInput || !passInput) return;
+
+    const email = emailInput.value.trim();
+    const password = passInput.value;
+
+    if (!email) {
+      showLoginAlert("Vui lòng nhập địa chỉ email quản trị viên.", "error");
+      emailInput.focus();
+      return;
+    }
+    if (!password) {
+      showLoginAlert("Vui lòng nhập mật khẩu tài khoản.", "error");
+      passInput.focus();
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = "Đang xác thực...";
+    }
+    showLoginAlert("Đang kết nối tới Supabase Auth...", "info");
+
+    try {
+      if (!window.Auth || typeof window.Auth.signInWithEmail !== "function") {
+        throw new Error("Lớp xác thực Auth chưa sẵn sàng.");
+      }
+
+      const res = await window.Auth.signInWithEmail(email, password);
+      if (res && res.error) {
+        showLoginAlert(res.error.message || "Email hoặc mật khẩu không chính xác.", "error");
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = (window.RusiIcons ? RusiIcons.get("key", { size: 16 }) : "") + " Đăng nhập Studio";
+        }
+      } else if (res && res.user) {
+        showLoginAlert("Đăng nhập thành công! Đang tải dữ liệu quản trị...", "success");
+        setTimeout(() => {
+          applyAuthState(true);
+        }, 200);
+      } else {
+        showLoginAlert("Không nhận được phản hồi từ hệ thống xác thực.", "error");
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = (window.RusiIcons ? RusiIcons.get("key", { size: 16 }) : "") + " Đăng nhập Studio";
+        }
+      }
+    } catch (err) {
+      showLoginAlert("Lỗi đăng nhập: " + (err.message || err), "error");
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = (window.RusiIcons ? RusiIcons.get("key", { size: 16 }) : "") + " Đăng nhập Studio";
+      }
+    }
+  }
+
   function applyAuthState(isAuthed) {
     const loginGate = document.getElementById("loginGate");
     const deniedGate = document.getElementById("deniedGate");
     const appEl = document.getElementById("payloadApp");
+
+    const isDevMode = localStorage.getItem(DEV_MODE_KEY) === "true";
+
+    if (isDevMode) {
+      if (loginGate) loginGate.style.display = "none";
+      if (deniedGate) deniedGate.style.display = "none";
+      if (appEl) appEl.style.display = "flex";
+
+      const nameEl = document.getElementById("sidebarUserName");
+      const avatarEl = document.getElementById("sidebarAvatar");
+      const roleEl = document.getElementById("sidebarUserRole");
+      if (nameEl) nameEl.textContent = "Quản trị viên (Dev Mode)";
+      if (avatarEl) avatarEl.textContent = "D";
+      if (roleEl) roleEl.textContent = "Super Admin (Local)";
+      return;
+    }
 
     if (!isAuthed || !window.Auth || !window.Auth.user) {
       if (loginGate) loginGate.style.display = "flex";
@@ -4274,9 +4906,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       return;
     }
 
-    const email = String(window.Auth.user.email || "").toLowerCase().trim();
-    const role = String(window.Auth.user.role || "student");
-    const isAdmin = role === "academic_admin" || role === "super_admin";
+    const user = window.Auth.user;
+    const email = String(user.email || "").toLowerCase().trim();
+    const isAdmin = isUserAdmin(user);
 
     if (isAdmin) {
       if (loginGate) loginGate.style.display = "none";
@@ -4285,21 +4917,32 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
       const nameEl = document.getElementById("sidebarUserName");
       const avatarEl = document.getElementById("sidebarAvatar");
-      if (nameEl) nameEl.textContent = window.Auth.user.displayName || email;
-      if (avatarEl) avatarEl.textContent = (window.Auth.user.displayName || email)[0].toUpperCase();
+      const roleEl = document.getElementById("sidebarUserRole");
+      if (nameEl) nameEl.textContent = user.displayName || user.name || email;
+      if (avatarEl) avatarEl.textContent = (user.displayName || user.name || email)[0].toUpperCase();
+      if (roleEl) {
+        roleEl.textContent = (user.role === "super_admin" || DEFAULT_ADMIN_EMAILS.includes(email))
+          ? "Super Admin"
+          : "Academic Admin";
+      }
     } else {
       if (loginGate) loginGate.style.display = "none";
       if (deniedGate) deniedGate.style.display = "flex";
       if (appEl) appEl.style.display = "none";
 
       const deniedInfo = document.getElementById("deniedInfo");
-      if (deniedInfo) deniedInfo.textContent = `Tài khoản hiện tại: ${email}`;
-    }
-  }
+      if (deniedInfo) deniedInfo.textContent = `Tài khoản: ${email}`;
 
-  function enableDevMode() {
-    localStorage.removeItem(DEV_MODE_KEY);
-    toast("Chế độ bỏ qua đăng nhập đã bị vô hiệu hóa. Hãy dùng tài khoản Supabase có quyền quản trị.");
+      const deniedRole = document.getElementById("deniedRole");
+      if (deniedRole) {
+        deniedRole.innerHTML = `Vai trò hiện tại: <span class="p-pill p-pill-neutral">${esc(user.role || "student")}</span>`;
+      }
+
+      const sqlSnippet = document.getElementById("sqlRoleSnippet");
+      if (sqlSnippet) {
+        sqlSnippet.textContent = `UPDATE profiles SET role = 'super_admin' WHERE email = '${email}';`;
+      }
+    }
   }
 
   // =========================================================================
@@ -4345,33 +4988,110 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     const impInput = document.getElementById("importFileInput");
     if (impInput) impInput.addEventListener("change", onImportFile);
 
-    const loginBtn = document.getElementById("adminLoginBtn");
-    if (loginBtn) loginBtn.onclick = () => window.Auth && window.Auth.signInWithGoogle();
+    // Form Đăng nhập Email
+    const loginForm = document.getElementById("adminEmailLoginForm");
+    if (loginForm) {
+      loginForm.onsubmit = (e) => {
+        e.preventDefault();
+        handleEmailLogin();
+      };
+    }
+    const btnEmailLogin = document.getElementById("btnAdminEmailLogin");
+    if (btnEmailLogin) btnEmailLogin.onclick = handleEmailLogin;
 
+    // Toggle ẩn/hiện mật khẩu
+    const togglePassBtn = document.getElementById("btnTogglePassword");
+    const passInput = document.getElementById("adminPasswordInput");
+    if (togglePassBtn && passInput) {
+      togglePassBtn.onclick = () => {
+        const isPass = passInput.type === "password";
+        passInput.type = isPass ? "text" : "password";
+        togglePassBtn.innerHTML = window.RusiIcons
+          ? RusiIcons.get(isPass ? "eye-off" : "eye", { size: 16 })
+          : (isPass ? "🔒" : "👁️");
+      };
+    }
+
+    // Đăng nhập Google
+    const googleLoginBtn = document.getElementById("adminLoginBtn");
+    if (googleLoginBtn) {
+      googleLoginBtn.onclick = () => window.Auth && window.Auth.signInWithGoogle();
+    }
+
+    // Đổi tài khoản ở Denied Gate
     const switchBtn = document.getElementById("btnSwitchAccount");
-    if (switchBtn) switchBtn.onclick = () => window.Auth && window.Auth.signInWithGoogle();
+    if (switchBtn) {
+      switchBtn.onclick = async () => {
+        if (window.Auth && window.Auth.signOut) await window.Auth.signOut();
+        applyAuthState(false);
+      };
+    }
 
+    // Nút Kiểm tra lại Auth ở Denied Gate
+    const recheckBtn = document.getElementById("btnRecheckAuth");
+    if (recheckBtn) {
+      recheckBtn.onclick = async () => {
+        recheckBtn.disabled = true;
+        recheckBtn.innerHTML = (window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) : "") + " Đang kiểm tra...";
+        try {
+          if (window.Auth && window.Auth.refreshProfile) {
+            await window.Auth.refreshProfile();
+          }
+          applyAuthState(!!(window.Auth && window.Auth.user));
+          toast("Đã làm mới thông tin xác thực.");
+        } finally {
+          recheckBtn.disabled = false;
+          recheckBtn.innerHTML = (window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 16 }) : "") + " Đã cấp quyền, kiểm tra lại ngay";
+        }
+      };
+    }
+
+    // Nút Copy câu lệnh SQL ở Denied Gate
+    const copySqlBtn = document.getElementById("btnCopySqlRole");
+    if (copySqlBtn) {
+      copySqlBtn.onclick = () => {
+        const snippet = document.getElementById("sqlRoleSnippet");
+        if (snippet) {
+          navigator.clipboard.writeText(snippet.textContent.trim()).then(() => {
+            toast("Đã sao chép câu lệnh SQL cấp quyền!");
+          }).catch(() => {
+            toast("Không thể tự sao chép, vui lòng bôi đen và nhấn Ctrl+C.");
+          });
+        }
+      };
+    }
+
+    // Nút Dev Mode Bypass (cục bộ)
+    const onDevBypass = () => {
+      localStorage.setItem(DEV_MODE_KEY, "true");
+      toast("Đã kích hoạt chế độ Quản trị Cục bộ (Local Dev)!");
+      applyAuthState(true);
+    };
     const dev1 = document.getElementById("btnDevBypass");
-    if (dev1) dev1.style.display = "none";
-
+    if (dev1) dev1.onclick = onDevBypass;
     const dev2 = document.getElementById("btnDevBypass2");
-    if (dev2) dev2.style.display = "none";
+    if (dev2) dev2.onclick = onDevBypass;
 
+    // Supabase Cloud Buttons
     const pushSb = document.getElementById("btnPushAllToSb");
     if (pushSb) pushSb.onclick = () => window.syncAllToSupabase();
 
     const pullSb = document.getElementById("btnPullAllFromSb");
     if (pullSb) pullSb.onclick = () => window.pullAllFromSupabase();
 
+    // Sign Out
     const signoutBtn = document.getElementById("btnSignOut");
     if (signoutBtn) {
-      signoutBtn.onclick = () => {
+      signoutBtn.onclick = async () => {
+        if (!confirm("Bạn có chắc chắn muốn đăng xuất khỏi Payload Studio?")) return;
         localStorage.removeItem(DEV_MODE_KEY);
-        if (window.Auth && window.Auth.signOut) window.Auth.signOut();
+        if (window.Auth && window.Auth.signOut) await window.Auth.signOut();
         applyAuthState(false);
+        toast("Đã đăng xuất tài khoản.");
       };
     }
 
+    // Auth readiness listener
     if (window.Auth && window.Auth.isReady) {
       window.Auth.isReady().then(() => {
         applyAuthState(!!window.Auth.user);

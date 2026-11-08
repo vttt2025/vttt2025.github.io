@@ -1565,3 +1565,111 @@ svg.rusi-icon {
     border-top: 1px solid var(--p-border, #e2e8f0);
   }
 }
+
+
+/* ==========================================================================
+   ENHANCED CMS AUTH GATE & STUDIO INTERFACES
+   ========================================================================== */
+.payload-gate-alert {
+  padding: 10px 14px;
+  border-radius: var(--p-radius);
+  font-size: 13px;
+  line-height: 1.4;
+  margin-bottom: 16px;
+  text-align: left;
+  border: 1px solid transparent;
+}
+.payload-gate-alert.alert-error {
+  background: var(--p-danger-soft);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.payload-gate-alert.alert-success {
+  background: var(--p-success-soft);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.3);
+}
+.payload-gate-alert.alert-info {
+  background: var(--p-primary-soft);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.payload-password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.payload-password-wrapper .p-input {
+  padding-right: 40px;
+}
+.payload-password-toggle {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  color: var(--p-text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--p-transition);
+}
+.payload-password-toggle:hover {
+  color: var(--p-text);
+  background: var(--p-surface-hover);
+}
+
+.payload-gate-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 18px 0;
+  color: var(--p-text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+.payload-gate-divider::before,
+.payload-gate-divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid var(--p-border);
+}
+.payload-gate-divider span {
+  padding: 0 10px;
+}
+
+/* Modal Bulk Import & Trash View */
+.p-bulk-import-box {
+  background: var(--p-surface-elevated);
+  border: 1px dashed var(--p-border);
+  border-radius: var(--p-radius-lg);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.p-bulk-import-textarea {
+  width: 100%;
+  font-family: var(--p-font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  background: var(--p-bg);
+  color: var(--p-text);
+  border: 1px solid var(--p-border);
+  border-radius: var(--p-radius);
+  padding: 10px;
+  resize: vertical;
+}
+
+.p-pill-danger {
+  background: var(--p-danger-soft);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.p-pill-amber {
+  background: var(--p-warning-soft);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}

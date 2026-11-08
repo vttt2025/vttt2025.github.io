@@ -108,8 +108,28 @@
     ]
   }
   </script>
+
+  <!-- Chặn triệt để nhấp nháy FOUC khi tải lại trang cho học viên đã đăng nhập -->
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem("trki_auth_user");
+        if (raw && raw !== "null" && raw !== "undefined") {
+          var u = JSON.parse(raw);
+          if (u && (u.uid || u.id || u.email)) {
+            document.documentElement.classList.add("index-personalized");
+          }
+        }
+      } catch (_) {}
+    })();
+  </script>
 </head>
 <body data-page="index">
+  <script>
+    if (document.documentElement.classList.contains("index-personalized")) {
+      document.body.classList.add("index-personalized");
+    }
+  </script>
   <div class="site-shell">
     
     <div id="app-header"></div>

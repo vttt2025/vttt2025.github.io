@@ -668,17 +668,28 @@
             if (res.error || !res.data) return null;
             return res.data.map(function (row) {
               var raw = row.raw_data || {};
+              var itemsList = raw.items || row.items || (row.sentence_ru ? [{ ru: row.sentence_ru, vi: "" }] : []);
+              var ytId = raw.youtube_video_id || raw.youtubeId || (row.video_sample_url && row.video_sample_url.includes("youtube") ? (row.video_sample_url.match(/(?:embed\/|v=|watch\?v=)([a-zA-Z0-9_-]{11})/)||[])[1] : "");
               return {
                 id: row.code || row.id,
+                code: row.code || row.id,
                 title: row.title,
                 level: row.level || "A1",
                 levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
                 category: row.category || "greeting",
                 categoryName: row.category_name || "Chào hỏi",
                 phonemeTarget: row.phoneme_target || "",
-                icon: row.icon || "mic-speaking",
+                icon: row.icon || (ytId ? "youtube" : "mic-speaking"),
                 is_pro_only: Boolean(row.is_pro_only),
-                items: raw.items || (row.sentence_ru ? [{ ru: row.sentence_ru, vi: "" }] : [])
+                is_vip: Boolean(row.is_vip || row.is_pro_only),
+                items: itemsList,
+                sentences: raw.sentences || itemsList,
+                youtube_id: ytId,
+                youtubeId: ytId,
+                video_url: ytId ? ("https://www.youtube.com/embed/" + ytId + "?enablejsapi=1&rel=0&modestbranding=1&playsinline=1") : (raw.youtube_url || row.video_sample_url || ""),
+                start_sec: raw.start_sec || 0,
+                end_sec: raw.end_sec || 0,
+                raw_data: raw
               };
             });
           } catch (e) {
@@ -952,6 +963,33 @@
           return { ok: false, message: error.message, error: error };
         }
       }
+    },
+
+    /* =========================================================================
+     * 11B. TRUY XUẤT DỮ LIỆU PHÂN HỆ ĐỒNG BỘ (fetchModuleData)
+     * ========================================================================= */
+    fetchModuleData: async function (moduleKey) {
+      if (!moduleKey) return null;
+      var k = String(moduleKey).toLowerCase().trim();
+      if (k === "speaking" || k === "speaking_sets" || k === "speaking_lessons") {
+        return await RusiSupabase.speaking.getAll();
+      }
+      if (k === "listening" || k === "listening_lessons") {
+        return await RusiSupabase.listening.getAll();
+      }
+      if (k === "writing" || k === "writing_tasks" || k === "writing_topics") {
+        return await RusiSupabase.writing.getAll();
+      }
+      if (k === "trki" || k === "tests" || k === "trki_bank") {
+        return await RusiSupabase.trki.getAll();
+      }
+      if (k === "vocab" || k === "vocabularies" || k === "vocab_jars") {
+        return await RusiSupabase.vocabularies.getAll();
+      }
+      if (k === "grammar" || k === "grammar_lessons") {
+        return await RusiSupabase.grammar.getAll();
+      }
+      return null;
     },
 
     /* =========================================================================

@@ -7787,6 +7787,22 @@ function initSpeakingPage() {
     return [];
   };
 
+  const checkUrlSet = () => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetId = urlParams.get("set");
+      if (targetId) {
+        const all = getSpeakingSets();
+        const found = all.find(s => s.id === targetId || s.code === targetId);
+        if (found) {
+          openSpeakingWorkspace(found);
+          return true;
+        }
+      }
+    } catch (_) {}
+    return false;
+  };
+
   const loadCloudSpeaking = async () => {
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
       try {
@@ -7795,7 +7811,9 @@ function initSpeakingPage() {
           cloudSpeaking = remote;
           console.log(`[Supabase] Đã tải ${remote.length} bài nói từ Database!`);
           if (!document.body.classList.contains("in-workspace")) {
-            renderSpeakingCards();
+            if (!checkUrlSet()) {
+              renderSpeakingCards();
+            }
           }
         }
       } catch (err) {
@@ -8018,13 +8036,35 @@ const openSpeakingWorkspace = (set) => {
     document.body.classList.add("in-workspace");
     const todayKey = "speak_today_" + new Date().toDateString();
     const attemptsToday = STORE.get(todayKey, 0);
-    const items = set.items || [];
+    const items = set.items || set.sentences || [];
 
-    // YouTube clip giáo dục tiếng Nga chuẩn TRKI
-    const ytId = set.youtube_id || set.youtubeId || (set.video && set.video.youtubeId) || "e6lFvAQp0LE";
-    const startQ = (set.start_sec || (set.video && set.video.startSec)) ? `&start=${set.start_sec || set.video.startSec}` : "";
-    const endQ = (set.end_sec || (set.video && set.video.endSec)) ? `&end=${set.end_sec || set.video.endSec}` : "";
-    const ytVideoUrl = set.video_url || `https://www.youtube-nocookie.com/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1${startQ}${endQ}`;
+    // Phân tích YouTube video nếu bài học là dạng YouTube Shadowing
+    const parseYoutubeId = (obj) => {
+      if (!obj) return "";
+      if (typeof obj === "string") {
+        const m = obj.match(/(?:embed\/|v=|vi\/|youtu\.be\/|watch\?v=)([a-zA-Z0-9_-]{11})/);
+        return m ? m[1] : (obj.length === 11 ? obj : "");
+      }
+      if (obj.youtube_id) return obj.youtube_id;
+      if (obj.youtubeId) return obj.youtubeId;
+      if (obj.raw_data && (obj.raw_data.youtube_video_id || obj.raw_data.youtubeId)) {
+        return obj.raw_data.youtube_video_id || obj.raw_data.youtubeId;
+      }
+      if (obj.video && obj.video.youtubeId) return obj.video.youtubeId;
+      const anyUrl = obj.video_url || obj.video_sample_url || (obj.raw_data && obj.raw_data.youtube_url) || "";
+      const m = anyUrl.match(/(?:embed\/|v=|vi\/|youtu\.be\/|watch\?v=)([a-zA-Z0-9_-]{11})/);
+      return m ? m[1] : "";
+    };
+
+    const ytId = parseYoutubeId(set);
+    const hasVideo = Boolean(ytId);
+    let ytVideoUrl = "";
+    if (hasVideo) {
+      const startQ = (set.start_sec || (set.video && set.video.startSec)) ? `&start=${set.start_sec || set.video.startSec}` : "";
+      const endQ = (set.end_sec || (set.video && set.video.endSec)) ? `&end=${set.end_sec || set.video.endSec}` : "";
+      const originQ = (typeof window !== "undefined" && window.location.origin) ? `&origin=${encodeURIComponent(window.location.origin)}` : "";
+      ytVideoUrl = `https://www.youtube.com/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1${startQ}${endQ}${originQ}`;
+    }
 
     let currentSentenceIdx = 0;
     let currentSpeed = 1.0;
@@ -8038,7 +8078,7 @@ const openSpeakingWorkspace = (set) => {
     let isSidebarHidden = false;
     let recognitionInstance = null;
 
-    // Helper: Tính điểm hoàn thành và trung bình
+    // Helper: Tính điểm hoàn thành và trung bình (Completion-Only)
     const getStats = () => {
       let done = 0;
       let totalScore = 0;
@@ -8053,8 +8093,26 @@ const openSpeakingWorkspace = (set) => {
       });
       const avg = scoredCount > 0 ? Math.round(totalScore / scoredCount) : 0;
       const pct = items.length > 0 ? Math.round((done / items.length) * 100) : 0;
-      return { done, avg, pct, xp: done * 15 };
+      const compKey = "speak_completed_" + set.id;
+      const isCompleted = Boolean(STORE.get(compKey, false));
+      return { done, avg, pct, scoredCount, isCompleted, xp: isCompleted ? 10 : 0 };
     };
+
+    const checkLessonCompletion = () => {
+      const stats = getStats();
+      if (stats.scoredCount >= items.length && items.length > 0 && stats.avg >= 70) {
+        const compKey = "speak_completed_" + set.id;
+        if (!STORE.get(compKey, false)) {
+          STORE.set(compKey, true);
+          if (typeof Progress !== "undefined" && typeof Progress.addXp === "function") {
+            Progress.markDone("speakDone", set.id);
+            Progress.addXp(10);
+            toast(`🎉 Chúc mừng! Bạn đã hoàn thành toàn bộ bài Shadowing với điểm TB ${stats.avg}%! Nhận +10 XP`);
+          }
+        }
+      }
+    };
+    window.checkLessonCompletion = checkLessonCompletion;
 
     host.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
@@ -8084,25 +8142,19 @@ const openSpeakingWorkspace = (set) => {
       </div>
 
       <!-- WORKSPACE CONTAINER (KHÔNG GIAN LUYỆN NÓI MỞ RỘNG) -->
-      <div class="sp-ws-grid" id="spWsGrid">
+      <div class="sp-ws-grid ${!hasVideo ? "sp-ws-no-video" : ""}" id="spWsGrid">
         
         <!-- SÂN KHẤU LUYỆN NÓI CHÍNH (MAIN STAGE) -->
         <main class="sp-ws-main">
           
-          <!-- KHUNG VIDEO BÀI HỌC YOUTUBE (KHUNG NGUYÊN VẸN, KHÔNG CONTROL/EXTENSION, CHỈ CÓ ICON YOUTUBE Ở GIỮA) -->
-          <section class="sp-video-card" id="spVideoCard">
-            <div class="sp-video-body" id="spVideoBody">
-              <iframe id="spYoutubePlayer" src="${ytVideoUrl}" title="Video bài học tiếng Nga" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-              <div class="sp-video-cover" id="spVideoCover" style="background-image: linear-gradient(rgba(15, 23, 42, 0.45), rgba(15, 23, 42, 0.6)), url('https://img.youtube.com/vi/${ytId}/hqdefault.jpg');">
-                <button type="button" class="sp-yt-center-play" id="btnPlayCenterYt" title="Phát video bài học YouTube" aria-label="Phát video bài học YouTube">
-                  <svg class="sp-yt-center-svg" viewBox="0 0 68 48" width="68" height="48" fill="none">
-                    <path d="M66.52 7.74c-.78-2.93-2.49-5.41-5.42-6.19C55.79.13 34 0 34 0S12.21.13 6.9 1.55C3.97 2.33 2.27 4.81 1.48 7.74.06 13.05 0 24 0 24s.06 10.95 1.48 16.26c.78 2.93 2.49 5.41 5.42 6.19C12.21 47.87 34 48 34 48s21.79-.13 27.1-1.55c2.93-.78 4.64-3.26 5.42-6.19C67.94 34.95 68 24 68 24s-.06-10.95-1.48-16.26z" fill="#FF0000"/>
-                    <path d="M45 24L27 14v20l18-10z" fill="#FFFFFF"/>
-                  </svg>
-                </button>
+          ${hasVideo ? `
+            <!-- KHUNG VIDEO BÀI HỌC YOUTUBE (TỶ LỆ 16:9 CHUẨN, RÕ NÉT, TƯƠNG TÁC TRỰC TIẾP) -->
+            <section class="sp-video-card" id="spVideoCard">
+              <div class="sp-video-body" id="spVideoBody">
+                <iframe id="spYoutubePlayer" src="${ytVideoUrl}" title="${esc(set.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:0;display:block;"></iframe>
               </div>
-            </div>
-          </section>
+            </section>
+          ` : ""}
 
           <!-- THẺ LUYỆN NÓI TÍCH HỢP: ĐIỀU KHIỂN Ở TRÊN + CÂU PHỤ ĐỀ Ở DƯỚI -->
           <article class="sp-hero-card" id="spHeroCard">
@@ -8146,23 +8198,26 @@ const openSpeakingWorkspace = (set) => {
               <div class="sp-vi-translation" id="spTargetVi" title="Nhấn phím T để ẩn/hiện dịch"></div>
             </div>
 
-            <!-- Thanh kết quả thu âm: Trái: Nội dung mình nói được | Phải: Điểm số -->
+            <!-- THANH KẾT QUẢ THU ÂM TỐI GIẢN & HIỆN ĐẠI -->
             <div class="sp-speech-result-bar" id="spSpeechResultBar" style="display:none;">
               <div class="sp-result-left">
-                <div class="sp-result-user-lead">
-                  <span class="sp-result-mic-icon">${icon("mic-speaking", 15)}</span>
-                  <span>Bạn đã nói:</span>
+                <div class="sp-result-meta">
+                  <span class="sp-result-dot" id="spResultDot"></span>
+                  <span class="sp-result-caption" id="spResultStatusLbl">Giọng của bạn</span>
                 </div>
-                <div class="sp-user-transcript-text" id="spUserTranscriptText">«...»</div>
+                <div class="sp-user-transcript-text" id="spUserTranscriptText">Đang lắng nghe... Hãy nói câu tiếng Nga</div>
               </div>
               <div class="sp-result-right">
-                <div class="sp-result-score-wrap" id="spResultScoreWrap">
-                  <div class="sp-result-score-val" id="spResultScoreVal">--</div>
-                  <div class="sp-result-score-lbl" id="spResultScoreLbl">Điểm phát âm</div>
+                <div class="sp-score-pill" id="spResultScoreWrap">
+                  <span class="sp-score-num" id="spResultScoreVal">--</span>
+                  <span class="sp-score-sep" id="spScoreSep">•</span>
+                  <span class="sp-score-tag" id="spResultScoreLbl">Chờ đánh giá</span>
                 </div>
-                <button type="button" class="sp-result-retry-btn" id="btnFeedbackRetry" title="Luyện nói lại câu này (R)" aria-label="Luyện lại">
-                  ${icon("rotate-ccw", 15)}
+                <button type="button" class="sp-result-retry-btn" id="btnFeedbackRetry" title="Nói lại câu này (Phím R)" aria-label="Nói lại">
+                  ${icon("rotate-ccw", 14)}
+                  <span>Nói lại</span>
                 </button>
+                <div class="score-ring" id="spScoreRing" style="display:none;" title="Độ chính xác">--</div>
               </div>
             </div>
 
@@ -8215,14 +8270,48 @@ const openSpeakingWorkspace = (set) => {
         if (p.length === 2) return p[0] * 60 + p[1];
         if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2];
       }
-      const baseStart = Number(set.start_sec || (set.video && set.video.startSec)) || 15;
-      const baseEnd = Number(set.end_sec || (set.video && set.video.endSec)) || (baseStart + items.length * 12);
-      const step = items.length > 1 ? (baseEnd - baseStart) / items.length : 12;
-      return Math.round(baseStart + idx * step);
+      const baseStart = Number(set.start_sec || (set.video && set.video.startSec)) || 0;
+      return Math.round(baseStart + idx * 8);
+    };
+
+    const getItemEndSec = (idx) => {
+      const it = items[idx];
+      if (!it) return getItemSec(idx) + 5;
+      if (typeof it.endSec === "number") return it.endSec;
+      if (typeof it.end === "number") return it.end;
+      if (typeof it.duration === "number") return getItemSec(idx) + it.duration;
+      return getItemSec(idx) + 6;
+    };
+
+    let segmentTimer = null;
+
+    const stopVideoSegment = () => {
+      if (segmentTimer) {
+        clearTimeout(segmentTimer);
+        segmentTimer = null;
+      }
+      const ytPlayer = el("#spYoutubePlayer");
+      if (ytPlayer && ytPlayer.contentWindow) {
+        try {
+          ytPlayer.contentWindow.postMessage(JSON.stringify({
+            event: "command",
+            func: "pauseVideo",
+            args: ""
+          }), "*");
+        } catch (_) {}
+      }
+      isPlaying = false;
+      const btnPlay = el("#btnPlayModel");
+      if (btnPlay) {
+        btnPlay.classList.remove("is-playing");
+        const ic = el("#spPlayIcon");
+        if (ic) ic.innerHTML = icon("volume-high", 20);
+      }
     };
 
     // Tự động nhảy video đến thời điểm của câu
     const seekVideoToSentence = (idx) => {
+      if (!hasVideo) return;
       handlePlayVideo();
       const sec = getItemSec(idx);
       const ytPlayer = el("#spYoutubePlayer");
@@ -8242,32 +8331,105 @@ const openSpeakingWorkspace = (set) => {
       }
     };
 
+    // Thuật toán so khớp chuỗi từ Word Error Rate (WER) tiếng Nga chuẩn
+    const computeWordErrorRate = (targetRu, heardRu) => {
+      const cleanToken = (s) => (s || "").toLowerCase().replace(/[\u0301]/g, "").replace(/ё/g, "е").replace(/[.,!?;:«»"'—–\-_()]/g, "").trim();
+      const refWords = (targetRu || "").split(/\s+/).map(cleanToken).filter(Boolean);
+      const hypWords = (heardRu || "").split(/\s+/).map(cleanToken).filter(Boolean);
+      const n = refWords.length;
+      const m = hypWords.length;
+
+      if (n === 0) {
+        return { wer: m === 0 ? 0 : 1, accuracy: m === 0 ? 100 : 0, alignments: [], refWords, hypWords };
+      }
+
+      const dp = Array.from({ length: n + 1 }, () => new Array(m + 1).fill(0));
+      for (let i = 0; i <= n; i++) dp[i][0] = i;
+      for (let j = 0; j <= m; j++) dp[0][j] = j;
+
+      for (let i = 1; i <= n; i++) {
+        for (let j = 1; j <= m; j++) {
+          const cost = refWords[i - 1] === hypWords[j - 1] ? 0 : 1;
+          dp[i][j] = Math.min(
+            dp[i - 1][j - 1] + cost,
+            dp[i - 1][j] + 1,
+            dp[i][j - 1] + 1
+          );
+        }
+      }
+
+      const totalEdits = dp[n][m];
+      const wer = Math.round((totalEdits / n) * 1000) / 1000;
+      const accuracy = Math.max(0, Math.min(100, Math.round((1 - totalEdits / n) * 100)));
+
+      // Backtracking để xác định từng từ đúng, sai, thiếu, thừa
+      let i = n, j = m;
+      const alignments = [];
+      while (i > 0 || j > 0) {
+        if (i > 0 && j > 0 && refWords[i - 1] === hypWords[j - 1]) {
+          alignments.unshift({ word: refWords[i - 1], status: "correct" });
+          i--; j--;
+        } else if (i > 0 && j > 0 && dp[i][j] === dp[i - 1][j - 1] + 1) {
+          alignments.unshift({ word: refWords[i - 1], heard: hypWords[j - 1], status: "wrong" });
+          i--; j--;
+        } else if (i > 0 && dp[i][j] === dp[i - 1][j] + 1) {
+          alignments.unshift({ word: refWords[i - 1], status: "missing" });
+          i--;
+        } else {
+          alignments.unshift({ word: hypWords[j - 1], status: "extra" });
+          j--;
+        }
+      }
+
+      return { wer, accuracy, alignments, refWords, hypWords };
+    };
+    window.computeWordErrorRate = computeWordErrorRate;
+
     // Đánh dấu từ đúng (xanh) và từ sai (đỏ) trực tiếp trên câu tiếng Nga
     const renderMappedSentence = (targetRu, heardRu = null) => {
       const ruBox = el("#spTargetRu");
-      if (!ruBox) return;
+      if (!ruBox) return null;
       if (!heardRu || !heardRu.trim()) {
         ruBox.textContent = targetRu || "";
-        return;
+        return null;
       }
 
-      const norm = s => s.toLowerCase().replace(/[.,!?;:«»"'—–-]/g, "").trim();
+      const res = computeWordErrorRate(targetRu, heardRu);
+      const cleanToken = (s) => (s || "").toLowerCase().replace(/[\u0301]/g, "").replace(/ё/g, "е").replace(/[.,!?;:«»"'—–\-_()]/g, "").trim();
       const tokens = (targetRu || "").split(/(\s+)/);
-      const heardWords = norm(heardRu).split(/\s+/).filter(Boolean);
 
+      let alignIdx = 0;
       const html = tokens.map(tok => {
         if (!tok.trim()) return tok;
-        const cTok = norm(tok);
+        const cTok = cleanToken(tok);
         if (!cTok) return esc(tok);
 
-        const isMatch = heardWords.some(hw => hw === cTok || (typeof similarity === "function" && similarity(hw, cTok) >= 75));
-        const cls = isMatch ? "sp-word-correct" : "sp-word-wrong";
-        const tip = isMatch ? "Phát âm chuẩn xác" : "Cần phát âm rõ ràng hơn";
-        return `<span class="sp-target-word ${cls}" title="${tip}">${esc(tok)}</span>`;
+        let matched = null;
+        for (let k = alignIdx; k < res.alignments.length; k++) {
+          if (res.alignments[k].word === cTok) {
+            matched = res.alignments[k];
+            alignIdx = k + 1;
+            break;
+          }
+        }
+        if (!matched) {
+          matched = res.alignments.find(a => a.word === cTok);
+        }
+
+        if (!matched || matched.status === "correct") {
+          return `<span class="sp-target-word sp-word-correct" title="Phát âm chuẩn xác">${esc(tok)}</span>`;
+        } else if (matched.status === "missing") {
+          return `<span class="sp-target-word sp-word-wrong" style="opacity:0.75;text-decoration:underline dashed;" title="Chưa nhận diện được từ này">${esc(tok)}</span>`;
+        } else {
+          const tip = matched.heard ? `Nhận diện: «${matched.heard}»` : "Cần phát âm rõ ràng hơn";
+          return `<span class="sp-target-word sp-word-wrong" title="${esc(tip)}">${esc(tok)}</span>`;
+        }
       }).join("");
 
       ruBox.innerHTML = html;
+      return res;
     };
+    window.renderMappedSentence = renderMappedSentence;
 
     // Cập nhật thống kê header và thanh tiến độ
     const updateStatsUI = () => {
@@ -8293,8 +8455,8 @@ const openSpeakingWorkspace = (set) => {
           <button type="button" class="sp-pl-item ${isActive ? "is-active" : ""}" data-idx="${idx}" id="spPlayItem_${idx}">
             <span class="sp-pl-idx">${numStr}</span>
             <div style="min-width:0;flex:1;">
-              <div class="sp-pl-ru">${esc(it.ru || it.text || "")}</div>
-              <div class="sp-pl-vi">${esc(it.vi || it.translation || "")}</div>
+              <div class="sp-pl-ru">${esc(it.ru || it.text_ru || it.text || "")}</div>
+              <div class="sp-pl-vi">${esc(it.vi || it.translation_vi || it.translation || "")}</div>
             </div>
             <span class="sp-pl-score ${isDone ? "is-done" : ""}">
               ${sc !== null ? `${sc}%` : "--"}
@@ -8322,6 +8484,7 @@ const openSpeakingWorkspace = (set) => {
 
     // Dừng toàn bộ âm thanh
     const stopAudio = () => {
+      stopVideoSegment();
       if (typeof window !== "undefined" && window.speechSynthesis) {
         try { window.speechSynthesis.cancel(); } catch (e) {}
       }
@@ -8334,23 +8497,19 @@ const openSpeakingWorkspace = (set) => {
       }
     };
 
-    // Phát âm câu tiếng Nga chuẩn
+    // Phát âm câu tiếng Nga chuẩn: Hỗ trợ cả YouTube Video Shadowing và Speech Synthesis
     const playCurrentSentence = (isAutoLoop = false) => {
       const it = items[currentSentenceIdx];
       if (!it) return;
 
       if (isPlaying && !isAutoLoop) {
+        stopVideoSegment();
         stopAudio();
         return;
       }
 
       stopAudio();
       stopRecording();
-
-      if (typeof window === "undefined" || !("speechSynthesis" in window) || !window.speechSynthesis) {
-        toast("Trình duyệt không hỗ trợ phát âm — hãy dùng Google Chrome hoặc Microsoft Edge.");
-        return;
-      }
 
       isPlaying = true;
       const btnPlay = el("#btnPlayModel");
@@ -8360,40 +8519,105 @@ const openSpeakingWorkspace = (set) => {
         if (ic) ic.innerHTML = icon("pause", 20);
       }
 
-      const text = (it.ru || it.text || "").trim();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = "ru-RU";
-      u.rate = currentSpeed;
-      if (typeof pickVoice === "function") {
-        const v = pickVoice("ru-RU");
-        if (v) u.voice = v;
-      }
+      if (hasVideo) {
+        // 1. Phân hệ YouTube: Phát đoạn theo start - end
+        const start = getItemSec(currentSentenceIdx);
+        const end = getItemEndSec(currentSentenceIdx);
+        const durationSec = Math.max(0.6, end - start) / currentSpeed;
 
-      const onSpeechFinish = () => {
-        if (!isPlaying) return;
-        if (loopRemaining > 1) {
-          loopRemaining--;
-          const pill = el("#spLoopPill");
-          if (pill) pill.textContent = `${loopRemaining}x`;
-          setTimeout(() => {
-            if (isPlaying) playCurrentSentence(true);
-          }, 450);
-        } else if (loopRemaining === 1) {
-          loopRemaining = 0;
-          const pill = el("#spLoopPill");
-          if (pill) pill.textContent = `${loopMode}x`;
+        handlePlayVideo();
+
+        const ytPlayer = el("#spYoutubePlayer");
+        if (ytPlayer && ytPlayer.contentWindow) {
+          try {
+            ytPlayer.contentWindow.postMessage(JSON.stringify({
+              event: "command",
+              func: "setPlaybackRate",
+              args: [currentSpeed]
+            }), "*");
+            ytPlayer.contentWindow.postMessage(JSON.stringify({
+              event: "command",
+              func: "seekTo",
+              args: [start, true]
+            }), "*");
+            ytPlayer.contentWindow.postMessage(JSON.stringify({
+              event: "command",
+              func: "playVideo",
+              args: ""
+            }), "*");
+          } catch (_) {}
+        }
+
+        if (segmentTimer) clearTimeout(segmentTimer);
+        segmentTimer = setTimeout(() => {
+          if (!isPlaying) return;
+          if (loopRemaining > 1) {
+            loopRemaining--;
+            const pill = el("#spLoopPill");
+            if (pill) pill.textContent = `${loopRemaining}x`;
+            stopVideoSegment();
+            setTimeout(() => {
+              playCurrentSentence(true);
+            }, 450);
+          } else if (loopRemaining === 1) {
+            loopRemaining = 0;
+            const pill = el("#spLoopPill");
+            if (pill) pill.textContent = loopMode > 0 ? `${loopMode}x` : "";
+            stopVideoSegment();
+          } else {
+            stopVideoSegment();
+          }
+        }, Math.round(durationSec * 1000));
+
+      } else {
+        // 2. Phân hệ bài nói thông thường: Phát âm giọng đọc tiếng Nga chuẩn qua Web SpeechSynthesis
+        const textToSpeak = (it.ru || it.text_ru || it.text || "").trim();
+        if (!textToSpeak) {
           stopAudio();
+          return;
+        }
+
+        if (typeof window !== "undefined" && "speechSynthesis" in window) {
+          try { window.speechSynthesis.cancel(); } catch (_) {}
+          const u = new SpeechSynthesisUtterance(textToSpeak);
+          u.lang = "ru-RU";
+          u.rate = currentSpeed;
+
+          // Ưu tiên giọng tiếng Nga chuẩn nếu có trong hệ điều hành
+          const voices = window.speechSynthesis.getVoices();
+          const ruVoice = voices.find(v => v.lang && (v.lang === "ru-RU" || v.lang.startsWith("ru")));
+          if (ruVoice) u.voice = ruVoice;
+
+          u.onend = () => {
+            if (!isPlaying) return;
+            if (loopRemaining > 1) {
+              loopRemaining--;
+              const pill = el("#spLoopPill");
+              if (pill) pill.textContent = `${loopRemaining}x`;
+              stopAudio();
+              setTimeout(() => {
+                playCurrentSentence(true);
+              }, 600);
+            } else if (loopRemaining === 1) {
+              loopRemaining = 0;
+              const pill = el("#spLoopPill");
+              if (pill) pill.textContent = loopMode > 0 ? `${loopMode}x` : "";
+              stopAudio();
+            } else {
+              stopAudio();
+            }
+          };
+
+          u.onerror = () => {
+            stopAudio();
+          };
+
+          window.speechSynthesis.speak(u);
         } else {
+          toast("Trình duyệt không hỗ trợ phát âm — hãy dùng Google Chrome hoặc Microsoft Edge.");
           stopAudio();
         }
-      };
-
-      u.onend = onSpeechFinish;
-      u.onerror = () => {
-        stopAudio();
-      };
-
-      window.speechSynthesis.speak(u);
+      }
     };
 
     // Nạp câu hiện hành vào sân khấu
@@ -8403,11 +8627,11 @@ const openSpeakingWorkspace = (set) => {
       const it = items[idx];
 
       // Đặt lại câu tiếng Nga ở trạng thái chữ bình thường
-      renderMappedSentence(it.ru || it.text || "", null);
+      renderMappedSentence(it.ru || it.text_ru || it.text || "", null);
 
       const viBox = el("#spTargetVi");
       if (viBox) {
-        viBox.textContent = it.vi || it.translation || "";
+        viBox.textContent = it.vi || it.translation_vi || it.translation || "";
         viBox.classList.toggle("is-blurred", !isTranslationVisible);
       }
 
@@ -8421,11 +8645,21 @@ const openSpeakingWorkspace = (set) => {
           const scVal = el("#spResultScoreVal");
           const scLbl = el("#spResultScoreLbl");
           const scWrap = el("#spResultScoreWrap");
+          const ringEl = el("#spScoreRing");
           const trEl = el("#spUserTranscriptText");
+          const statusLbl = el("#spResultStatusLbl");
+          const dotEl = el("#spResultDot");
+
           if (scVal) scVal.textContent = `${prevScore}%`;
-          if (scLbl) scLbl.textContent = prevScore >= 80 ? "Xuất sắc! 🌟" : prevScore >= 60 ? "Khá tốt! 👍" : "Thử lại nhé 💪";
-          if (scWrap) scWrap.className = "sp-result-score-wrap " + (prevScore >= 80 ? "is-excellent" : prevScore >= 60 ? "is-good" : "is-retry");
-          if (trEl) trEl.innerHTML = `<span style="color:var(--muted);font-style:italic;">Điểm lưu từ lần luyện trước</span>`;
+          if (scLbl) scLbl.textContent = prevScore >= 80 ? "Xuất sắc" : prevScore >= 60 ? "Khá tốt" : "Thử lại";
+          if (statusLbl) statusLbl.textContent = "Điểm đã lưu";
+          if (ringEl) {
+            ringEl.textContent = `${prevScore}%`;
+            ringEl.className = "score-ring " + (prevScore >= 80 ? "" : prevScore >= 60 ? "mid" : "low");
+          }
+          if (scWrap) scWrap.className = "sp-score-pill " + (prevScore >= 80 ? "is-excellent" : prevScore >= 60 ? "is-good" : "is-retry");
+          if (dotEl) dotEl.className = "sp-result-dot " + (prevScore >= 80 ? "is-excellent" : prevScore >= 60 ? "is-good" : "is-retry");
+          if (trEl) trEl.innerHTML = `<span style="color:var(--muted);font-style:italic;">Kết quả từ lần luyện trước</span>`;
         } else {
           resBar.style.display = "none";
         }
@@ -8440,6 +8674,17 @@ const openSpeakingWorkspace = (set) => {
     };
 
     // Thu âm Speech Recognition và AI chấm điểm
+    let silenceTimer = null;
+    let accumulatedTranscript = "";
+    let lastHeardText = "";
+
+    const clearSilenceTimer = () => {
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        silenceTimer = null;
+      }
+    };
+
     const startRecording = () => {
       if (!Monetization.isPro()) {
         const used = STORE.get(todayKey, 0);
@@ -8459,91 +8704,101 @@ const openSpeakingWorkspace = (set) => {
         return;
       }
 
+      stopVideoSegment();
       stopAudio();
+      clearSilenceTimer();
       isRecording = true;
+      accumulatedTranscript = "";
+      lastHeardText = "";
 
       const btnMic = el("#btnRecordMic");
       if (btnMic) btnMic.classList.add("is-recording");
 
       const it = items[currentSentenceIdx];
-      const targetText = (it.ru || it.text || "").trim();
+      const targetText = (it.ru || it.text_ru || it.text || "").trim();
 
       const resBar = el("#spSpeechResultBar");
       const userTrEl = el("#spUserTranscriptText");
       const scoreValEl = el("#spResultScoreVal");
       const scoreLblEl = el("#spResultScoreLbl");
       const scoreWrapEl = el("#spResultScoreWrap");
+      const ringEl = el("#spScoreRing");
+      const statusLbl = el("#spResultStatusLbl");
+      const dotEl = el("#spResultDot");
 
       if (resBar) resBar.style.display = "flex";
-      if (userTrEl) userTrEl.innerHTML = `<span style="color:var(--muted);font-style:italic;">Đang lắng nghe giọng của bạn...</span>`;
+      if (userTrEl) userTrEl.innerHTML = `<span style="color:var(--muted);font-style:italic;">Đang lắng nghe... Hãy nói câu tiếng Nga</span>`;
+      if (statusLbl) statusLbl.textContent = "Đang ghi âm...";
       if (scoreValEl) scoreValEl.textContent = "...";
       if (scoreLblEl) scoreLblEl.textContent = "Đang nhận diện";
+      if (ringEl) ringEl.textContent = "...";
+      if (dotEl) dotEl.className = "sp-result-dot is-listening";
+      if (scoreWrapEl) scoreWrapEl.className = "sp-score-pill is-pending";
 
       recognitionInstance = new SR();
       recognitionInstance.lang = "ru-RU";
+      recognitionInstance.continuous = true;
       recognitionInstance.interimResults = true;
       recognitionInstance.maxAlternatives = 3;
 
-      recognitionInstance.onresult = (ev) => {
-        let interimTranscript = "";
-        let finalTranscript = "";
-
-        for (let i = ev.resultIndex; i < ev.results.length; ++i) {
-          if (ev.results[i].isFinal) {
-            finalTranscript += ev.results[i][0].transcript;
-          } else {
-            interimTranscript += ev.results[i][0].transcript;
+      const resetSilenceTimer = () => {
+        clearSilenceTimer();
+        // Cho người học ngắt nghỉ tự nhiên 2.5 giây giữa các từ mà không bị ngắt
+        silenceTimer = setTimeout(() => {
+          if (isRecording) {
+            stopRecording();
           }
-        }
-
-        const heard = (finalTranscript || interimTranscript).trim();
-        if (!heard) return;
-
-        if (userTrEl) userTrEl.textContent = `«${heard}»`;
-
-        // Map trực tiếp vào câu tiếng Nga (từ đúng xanh, từ sai đỏ)
-        renderMappedSentence(targetText, heard);
-
-        if (finalTranscript) {
-          const sim = similarity(finalTranscript, targetText);
-
-          // Lưu kết quả
-          STORE.set("speak_" + set.id + "_" + currentSentenceIdx, Math.max(sim, STORE.get("speak_" + set.id + "_" + currentSentenceIdx, 0)));
-          STORE.set(todayKey, STORE.get(todayKey, 0) + 1);
-
-          const key = "speakDone_" + set.id + "_" + currentSentenceIdx;
-          const bestBefore = STORE.get("speak_" + set.id + "_" + currentSentenceIdx, 0);
-          if (sim >= 70 && sim >= bestBefore && !Progress.doneList("speakDone").includes(key)) {
-            Progress.markDone("speakDone", key);
-            Progress.addXp(15);
-          }
-
-          if (scoreValEl) scoreValEl.textContent = `${sim}%`;
-          if (scoreLblEl) {
-            scoreLblEl.textContent = sim >= 80 ? "Xuất sắc! 🌟" : sim >= 60 ? "Khá tốt! 👍" : "Thử lại nhé 💪";
-          }
-          if (scoreWrapEl) {
-            scoreWrapEl.className = "sp-result-score-wrap " + (sim >= 80 ? "is-excellent" : sim >= 60 ? "is-good" : "is-retry");
-          }
-
-          renderPlaylist();
-
-          // Tự động chuyển câu nếu bật chế độ Auto-Advance và đạt điểm tốt
-          if (autoAdvance && sim >= 80 && currentSentenceIdx < items.length - 1) {
-            setTimeout(() => {
-              loadSentence(currentSentenceIdx + 1);
-              playCurrentSentence();
-            }, 1500);
-          }
-        }
+        }, 2500);
       };
 
-      recognitionInstance.onerror = () => {
+      recognitionInstance.onresult = (ev) => {
+        let interimChunk = "";
+        for (let i = ev.resultIndex; i < ev.results.length; ++i) {
+          if (ev.results[i].isFinal) {
+            accumulatedTranscript += ev.results[i][0].transcript + " ";
+          } else {
+            interimChunk += ev.results[i][0].transcript;
+          }
+        }
+
+        const heard = (accumulatedTranscript + interimChunk).trim();
+        if (!heard) return;
+
+        lastHeardText = heard;
+        if (userTrEl) userTrEl.textContent = heard;
+
+        // Map trực tiếp vào câu tiếng Nga (từ đúng xanh, từ sai đỏ theo WER)
+        const werResult = renderMappedSentence(targetText, heard);
+        const sim = werResult ? werResult.accuracy : 0;
+
+        if (scoreValEl) scoreValEl.textContent = `${sim}%`;
+        if (ringEl) {
+          ringEl.textContent = `${sim}%`;
+          ringEl.className = "score-ring " + (sim >= 80 ? "" : sim >= 60 ? "mid" : "low");
+        }
+        if (scoreLblEl) {
+          scoreLblEl.textContent = sim >= 80 ? "Xuất sắc" : sim >= 60 ? "Khá tốt" : "Thử lại";
+        }
+        if (scoreWrapEl) {
+          scoreWrapEl.className = "sp-score-pill " + (sim >= 80 ? "is-excellent" : sim >= 60 ? "is-good" : "is-retry");
+        }
+        if (dotEl) {
+          dotEl.className = "sp-result-dot " + (sim >= 80 ? "is-excellent" : sim >= 60 ? "is-good" : "is-retry");
+        }
+
+        // Đã nói được từ -> kích hoạt hẹn giờ yên lặng
+        resetSilenceTimer();
+      };
+
+      recognitionInstance.onerror = (e) => {
+        if (e && e.error === "no-speech") return; // Bỏ qua nếu đang suy nghĩ ngắt câu
         stopRecording();
       };
 
       recognitionInstance.onend = () => {
-        stopRecording();
+        if (isRecording) {
+          stopRecording();
+        }
       };
 
       try {
@@ -8554,17 +8809,54 @@ const openSpeakingWorkspace = (set) => {
     };
 
     const stopRecording = () => {
+      clearSilenceTimer();
+      if (!isRecording && !recognitionInstance) return;
       isRecording = false;
+
       const btnMic = el("#btnRecordMic");
       if (btnMic) btnMic.classList.remove("is-recording");
+
       if (recognitionInstance) {
         try { recognitionInstance.stop(); } catch (e) {}
+        recognitionInstance = null;
+      }
+
+      const statusLbl = el("#spResultStatusLbl");
+      const dotEl = el("#spResultDot");
+
+      if (lastHeardText) {
+        const it = items[currentSentenceIdx];
+        const targetText = (it.ru || it.text_ru || it.text || "").trim();
+        const werResult = computeWordErrorRate(targetText, lastHeardText);
+        const sim = werResult ? werResult.accuracy : 0;
+
+        STORE.set("speak_" + set.id + "_" + currentSentenceIdx, Math.max(sim, STORE.get("speak_" + set.id + "_" + currentSentenceIdx, 0)));
+        STORE.set(todayKey, STORE.get(todayKey, 0) + 1);
+
+        if (statusLbl) statusLbl.textContent = "Đã đánh giá xong";
+        if (dotEl) {
+          dotEl.className = "sp-result-dot " + (sim >= 80 ? "is-excellent" : sim >= 60 ? "is-good" : "is-retry");
+        }
+
+        renderPlaylist();
+        checkLessonCompletion();
+
+        // Tự động chuyển câu nếu bật chế độ Auto-Advance và đạt điểm tốt
+        if (autoAdvance && sim >= 80 && currentSentenceIdx < items.length - 1) {
+          setTimeout(() => {
+            loadSentence(currentSentenceIdx + 1);
+            playCurrentSentence();
+          }, 1500);
+        }
+      } else {
+        if (statusLbl) statusLbl.textContent = "Chưa nhận diện được âm thanh";
+        if (dotEl) dotEl.className = "sp-result-dot";
       }
     };
 
     // Điều chỉnh tốc độ phát âm
     const toggleSpeed = () => {
-      const speeds = [0.8, 1.0, 1.2];
+      const speeds = [0.75, 1.0, 1.25];
       const nextIdx = (speeds.indexOf(currentSpeed) + 1) % speeds.length;
       currentSpeed = speeds[nextIdx];
       const b = el("#spSpeedBadge");
@@ -8574,16 +8866,10 @@ const openSpeakingWorkspace = (set) => {
 
     // Điều chỉnh chế độ lặp lại
     const toggleLoop = () => {
-      if (loopMode === 0) {
-        loopMode = 3;
-        loopRemaining = 3;
-      } else if (loopMode === 3) {
-        loopMode = 5;
-        loopRemaining = 5;
-      } else {
-        loopMode = 0;
-        loopRemaining = 0;
-      }
+      const loops = [0, 1, 2, 3];
+      const nextIdx = (loops.indexOf(loopMode) + 1) % loops.length;
+      loopMode = loops[nextIdx];
+      loopRemaining = loopMode;
 
       const pill = el("#spLoopPill");
       const btn = el("#btnLoopToggle");
@@ -8641,17 +8927,10 @@ const openSpeakingWorkspace = (set) => {
       if (btn) btn.classList.toggle("is-active", !isSidebarHidden);
     };
 
-    // Xử lý phát video khi bấm vào cover hoặc icon YouTube ở giữa màn hình
+    // Xử lý phát video qua YouTube IFrame API
     const handlePlayVideo = () => {
-      const vCover = el("#spVideoCover");
-      if (vCover) vCover.classList.add("is-playing");
       const ytPlayer = el("#spYoutubePlayer");
-      if (ytPlayer) {
-        let src = ytPlayer.getAttribute("src") || "";
-        if (!src.includes("autoplay=1")) {
-          src += (src.includes("?") ? "&" : "?") + "autoplay=1";
-          ytPlayer.setAttribute("src", src);
-        }
+      if (ytPlayer && ytPlayer.contentWindow) {
         try {
           ytPlayer.contentWindow.postMessage(JSON.stringify({ event: "command", func: "playVideo", args: "" }), "*");
         } catch (_) {}
@@ -8738,10 +9017,15 @@ const openSpeakingWorkspace = (set) => {
     // Feedback action buttons
     if (el("#btnFeedbackRetry")) el("#btnFeedbackRetry").onclick = startRecording;
 
-    // Nhấp vào câu tiếng Nga để video tự động phát đến câu đó
+    // Nhấp vào câu tiếng Nga để phát âm mẫu hoặc nhảy video đến đoạn đó
     const ruSentenceEl = el("#spTargetRu");
     if (ruSentenceEl) {
-      ruSentenceEl.onclick = () => seekVideoToSentence(currentSentenceIdx);
+      ruSentenceEl.onclick = () => {
+        if (hasVideo) {
+          seekVideoToSentence(currentSentenceIdx);
+        }
+        playCurrentSentence();
+      };
     }
 
     // Mobile drawer backdrop click
@@ -8765,6 +9049,7 @@ const openSpeakingWorkspace = (set) => {
   };
 
   renderHub();
+  checkUrlSet();
 }
 
 

@@ -1917,6 +1917,20 @@ function renderUserArea() {
   }
 
   // Gắn sự kiện cho các Card trong Dropdown
+  const cardProgress = host.querySelector('a[href*="#progress"]');
+  if (cardProgress) {
+    cardProgress.addEventListener("click", (e) => {
+      const dd = host.querySelector("#userDropdown");
+      if (dd) dd.classList.remove("open");
+      const progEl = document.getElementById("indexUserProgressHost");
+      if (progEl && progEl.style.display !== "none") {
+        e.preventDefault();
+        progEl.scrollIntoView({ behavior: "smooth", block: "start" });
+        try { history.pushState(null, "", "#progress"); } catch (_) {}
+      }
+    });
+  }
+
   const cardUpgrade = host.querySelector("#btnUserMenuUpgrade");
   if (cardUpgrade) {
     cardUpgrade.addEventListener("click", () => {
@@ -2052,14 +2066,27 @@ function renderIndexProgressIfLoggedIn(user) {
   const host = document.getElementById("indexUserProgressHost");
   if (!host) return;
   document.body.classList.toggle("index-personalized", Boolean(user));
+  document.documentElement.classList.toggle("index-personalized", Boolean(user));
   if (!user) {
+    delete host.dataset.renderedKey;
     host.style.display = "none";
     host.innerHTML = "";
     return;
   }
 
+  const rawName = user.displayName || user.name || (user.email ? user.email.split("@")[0] : "");
+  const userName = rawName ? rawName.trim() : "Học viên";
   const stats = getSynchronizedVocabStats();
   const xp = (typeof STORE !== "undefined") ? STORE.get("xp", 0) : 0;
+
+  // Tránh re-render trùng lặp gây nhấp nháy/giật màn hình khi tải lại trang
+  const currentKey = `${user.uid || user.id || user.email}_${stats.streak}_${xp}_${stats.mastered}_${stats.dueCount}_${stats.newCount}`;
+  if (host.dataset.renderedKey === currentKey && host.firstElementChild) {
+    host.style.display = "";
+    return;
+  }
+  host.dataset.renderedKey = currentKey;
+
   const levelInfo = (typeof MascotRusika !== "undefined" && MascotRusika.getLevelInfo)
     ? MascotRusika.getLevelInfo(xp)
     : { level: 1, shortTitle: "Mèo con", nextXp: 100, percent: 0 };
@@ -2152,71 +2179,128 @@ function renderIndexProgressIfLoggedIn(user) {
     }
   }
 
+  const levelPercent = Math.min(100, Math.max(0, Number(levelInfo.percent) || 0));
+
   host.style.display = "";
   host.innerHTML = `
-    <div class="index-progress-dashboard">
+    <div class="index-progress-wrapper" id="progress">
       <div class="index-progress-head">
-        <div>
-          <h1>Tiến độ học tập</h1>
-          <p>Theo dõi toàn bộ quá trình học và biết nội dung cần ưu tiên tiếp theo.</p>
-        </div>
-      </div>
-
-      <div class="index-progress-summary">
-        <div class="index-summary-item">
-          <span>${icon("zap-xp", 18)}</span>
-          <div><strong>${xp}</strong><small>XP tích lũy</small></div>
-        </div>
-        <div class="index-summary-item">
-          <span>${icon("flame-streak", 18)}</span>
-          <div><strong>${stats.streak}</strong><small>Ngày streak</small></div>
-        </div>
-        <div class="index-summary-level">
-          <div class="index-progress-level-head">
-            <span>Cấp ${levelInfo.level} · ${esc(levelInfo.shortTitle)}</span>
-            <strong>${xpTarget}</strong>
+        <div class="index-progress-head-left">
+          <div class="index-progress-badge">
+            <span class="index-progress-pulse-dot" aria-hidden="true"></span>
+            <span>Tiến độ học tập</span>
           </div>
-          <div class="index-progress-level-track" role="progressbar" aria-label="Tiến độ cấp độ" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${levelInfo.percent}">
-            <span style="width:${levelInfo.percent}%"></span>
+          <h2 class="index-progress-title">Chào mừng trở lại, ${esc(userName)}!</h2>
+          <p class="index-progress-desc">Theo dõi toàn bộ quá trình học và biết nội dung cần ưu tiên tiếp theo.</p>
+        </div>
+
+        <div class="index-progress-level-box">
+          <div class="index-level-meta">
+            <span class="index-level-chip">
+              ${icon("crown-vip", 14)}
+              <span>Cấp ${levelInfo.level} · ${esc(levelInfo.shortTitle)}</span>
+            </span>
+            <strong class="index-level-xp-val">${xpTarget}</strong>
+          </div>
+          <div class="index-level-track" role="progressbar" aria-label="Tiến độ cấp độ" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${levelPercent}">
+            <span class="index-level-fill" style="width:${levelPercent}%"></span>
           </div>
         </div>
       </div>
 
-      <div class="index-progress-focus">
-        <span class="index-focus-icon">${icon("target", 20)}</span>
-        <div>
-          <strong>${focus.title}</strong>
-          <p>${focus.desc}</p>
+      <div class="index-progress-metrics">
+        <div class="index-metric-card stat-streak">
+          <div class="index-metric-icon">${icon("flame-streak", 20)}</div>
+          <div class="index-metric-info">
+            <span class="index-metric-num">${stats.streak} <small>ngày</small></span>
+            <span class="index-metric-label">Chuỗi streak</span>
+          </div>
         </div>
-        <a href="${focus.href}">
+
+        <div class="index-metric-card stat-xp">
+          <div class="index-metric-icon">${icon("zap-xp", 20)}</div>
+          <div class="index-metric-info">
+            <span class="index-metric-num">${Number(xp).toLocaleString("vi-VN")} <small>XP</small></span>
+            <span class="index-metric-label">XP tích lũy</span>
+          </div>
+        </div>
+
+        <div class="index-metric-card stat-mastered">
+          <div class="index-metric-icon">${icon("check-circle-correct", 20)}</div>
+          <div class="index-metric-info">
+            <span class="index-metric-num">${stats.mastered} <small>từ</small></span>
+            <span class="index-metric-label">Từ đã thuộc</span>
+          </div>
+        </div>
+
+        <div class="index-metric-card stat-due">
+          <div class="index-metric-icon">${icon("archive-jar", 20)}</div>
+          <div class="index-metric-info">
+            <span class="index-metric-num">${stats.dueCount > 0 ? stats.dueCount : stats.newCount} <small>từ</small></span>
+            <span class="index-metric-label">${stats.dueCount > 0 ? "Cần ôn tập" : "Từ mới sẵn sàng"}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="index-progress-focus-card ${stats.dueCount > 0 ? "is-due" : ""}">
+        <div class="index-focus-lead">
+          <div class="index-focus-icon-box">
+            ${icon("target", 22)}
+          </div>
+          <div class="index-focus-text">
+            <div class="index-focus-tag">
+              ${icon("sparkles-clean", 13)}
+              <span>Ưu tiên hôm nay</span>
+            </div>
+            <strong class="index-focus-title">${focus.title}</strong>
+            <p class="index-focus-desc">${focus.desc}</p>
+          </div>
+        </div>
+        <a class="index-focus-cta-btn" href="${focus.href}">
           <span>${focus.action}</span>
           ${icon("arrow-right", 16)}
         </a>
       </div>
 
-      <div class="index-progress-section-head">
-        <h2>Tiến độ theo kỹ năng</h2>
-        <p>Các kết quả được cập nhật tự động sau mỗi hoạt động học.</p>
-      </div>
+      <div class="index-skills-section">
+        <div class="index-skills-head">
+          <h3 class="index-skills-heading">Tiến độ theo kỹ năng</h3>
+          <p class="index-skills-caption">Các kết quả được cập nhật tự động sau mỗi hoạt động học.</p>
+        </div>
 
-      <div class="index-skill-list">
-        ${skills.map((skill) => `
-          <div class="index-skill-row ${skill.attention ? "needs-attention" : ""}">
-            <span class="index-skill-icon">${icon(skill.icon, 21)}</span>
-            <div class="index-skill-main">
-              <h3>${skill.title}</h3>
-              <strong>${skill.count}</strong>
-            </div>
-            <p>${skill.note}</p>
-            <a href="${skill.href}">
-              <span>${skill.action}</span>
-              ${icon("arrow-right", 15)}
+        <div class="index-skills-grid">
+          ${skills.map((skill) => `
+            <a class="index-skill-card ${skill.attention ? "needs-attention" : ""}" href="${skill.href}">
+              <div class="index-skill-card-top">
+                <span class="index-skill-icon-bubble">${icon(skill.icon, 20)}</span>
+                ${skill.attention
+                  ? `<span class="index-skill-status-badge status-attention">Cần chú ý</span>`
+                  : `<span class="index-skill-status-badge status-active">Đang duy trì</span>`
+                }
+              </div>
+              <div class="index-skill-card-body">
+                <h4 class="index-skill-title">${skill.title}</h4>
+                <div class="index-skill-count">${skill.count}</div>
+                <p class="index-skill-note">${skill.note}</p>
+              </div>
+              <div class="index-skill-card-footer">
+                <span class="index-skill-action-text">${skill.action}</span>
+                <span class="index-skill-arrow-icon">${icon("arrow-right", 14)}</span>
+              </div>
             </a>
-          </div>
-        `).join("")}
+          `).join("")}
+        </div>
       </div>
     </div>
   `;
+
+  if (window.location.hash === "#progress") {
+    setTimeout(() => {
+      try {
+        host.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch (_) {}
+    }, 150);
+  }
 }
 
 // Lắng nghe sự kiện đồng bộ tiến độ thời gian thực
@@ -2396,9 +2480,8 @@ function bootApp() {
   try { applySeason("winter"); } catch (e) { console.error("[Boot] applySeason:", e); }
   try { Progress.checkStreakStatus(); } catch (e) { console.error("[Boot] checkStreakStatus:", e); }
   try { bindAuthToHeader(); } catch (e) { console.error("[Boot] bindAuthToHeader:", e); }
-  // Xóa bỏ hoàn toàn dữ liệu lưu trữ local cũ, chuyển sang 100% Supabase Cloud + Browser Cache
+  // Dọn dẹp dữ liệu lưu trữ tạm thời cũ của client nếu có, giữ nguyên trki_admin_data cho CMS Admin
   try {
-    localStorage.removeItem("trki_admin_data");
     localStorage.removeItem("trki_local_data");
     localStorage.removeItem("rusi_local_data");
   } catch (_) {}

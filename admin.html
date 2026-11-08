@@ -20,22 +20,60 @@
   <div id="loginGate" class="payload-gate-screen" style="display:none">
     <div class="payload-gate-card">
       <div class="payload-gate-logo">P</div>
-      <h2 style="margin:0 0 8px 0;font-size:20px;font-weight:700">RUSI TRKI — Payload Studio</h2>
-      <p style="color:var(--p-text-muted);margin:0 0 24px 0;font-size:13.5px">Hệ thống quản trị nội dung mã nguồn mở. Vui lòng xác thực tài khoản quản trị.</p>
-      
-      <div style="display:flex;flex-direction:column;gap:12px">
-        <button class="p-btn p-btn-primary" id="adminLoginBtn" type="button" style="width:100%;padding:10px 16px;font-size:14px">
-          <svg style="width:18px;height:18px;margin-right:6px" viewBox="0 0 48 48" aria-hidden="true">
+      <h2 style="margin:0 0 6px 0;font-size:22px;font-weight:700">RUSI TRKI — Payload Studio</h2>
+      <p style="color:var(--p-text-muted);margin:0 0 20px 0;font-size:13.5px">Hệ thống quản trị nội dung mã nguồn mở. Đăng nhập tài khoản quản trị.</p>
+
+      <div id="loginGateAlert" class="payload-gate-alert" style="display:none" role="alert"></div>
+
+      <!-- Form Email & Password -->
+      <form id="adminEmailLoginForm" class="payload-login-form" onsubmit="return false;">
+        <div class="p-form-group" style="text-align:left;margin-bottom:12px">
+          <label class="p-label" for="adminEmailInput" style="font-size:12.5px;margin-bottom:6px">Email quản trị viên:</label>
+          <input type="email" class="p-input" id="adminEmailInput" placeholder="admin@rusitrki.com" required autocomplete="username" />
+        </div>
+
+        <div class="p-form-group" style="text-align:left;margin-bottom:16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label class="p-label" for="adminPasswordInput" style="font-size:12.5px;margin:0">Mật khẩu:</label>
+            <span style="font-size:11px;color:var(--p-text-dim)">Supabase Auth</span>
+          </div>
+          <div class="payload-password-wrapper">
+            <input type="password" class="p-input" id="adminPasswordInput" placeholder="Nhập mật khẩu" required autocomplete="current-password" />
+            <button type="button" class="payload-password-toggle" id="btnTogglePassword" aria-label="Hiện mật khẩu" title="Hiện/ẩn mật khẩu">
+              <i data-rusi-icon="eye" data-size="16"></i>
+            </button>
+          </div>
+        </div>
+
+        <button class="p-btn p-btn-primary" id="btnAdminEmailLogin" type="submit" style="width:100%;padding:10px 16px;font-size:14px;font-weight:600">
+          <i data-rusi-icon="key" data-size="16"></i> Đăng nhập Studio
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="payload-gate-divider">
+        <span>HOẶC</span>
+      </div>
+
+      <!-- Quick OAuth & Dev bypass -->
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="p-btn p-btn-secondary" id="adminLoginBtn" type="button" style="width:100%;padding:9px 16px;font-size:13.5px">
+          <svg style="width:18px;height:18px;margin-right:8px" viewBox="0 0 48 48" aria-hidden="true">
             <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8a12 12 0 1 1 7.9-21l5.7-5.7A20 20 0 1 0 44 24c0-1.2-.1-2.4-.4-3.5z"/>
             <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7A20 20 0 0 0 6.3 14.7z"/>
             <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2A12 12 0 0 1 12.7 28l-6.6 5.1A20 20 0 0 0 24 44z"/>
             <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.6l6.2 5.2C41 36.7 44 31 44 24c0-1.2-.1-2.4-.4-3.5z"/>
           </svg>
-          Đăng nhập bằng Google
+          Đăng nhập bằng tài khoản Google
         </button>
-        <button class="p-btn p-btn-secondary" id="btnDevBypass" type="button" style="width:100%">
-          <i data-rusi-icon="zap-xp" data-size="16"></i> Mở Chế độ Dev Mode (Cục bộ offline)
+
+        <button class="p-btn p-btn-ghost p-btn-sm" id="btnDevBypass" type="button" style="color:var(--p-text-muted);font-size:12px;margin-top:6px" title="Dành cho môi trường phát triển offline cục bộ">
+          <i data-rusi-icon="zap-xp" data-size="14"></i> Chế độ Cục bộ (Local Dev Preview)
         </button>
+      </div>
+
+      <div style="margin-top:20px;font-size:11.5px;color:var(--p-text-dim);line-height:1.4">
+        Yêu cầu tài khoản có vai trò <code>academic_admin</code> hoặc <code>super_admin</code>.
       </div>
     </div>
   </div>
@@ -44,14 +82,39 @@
        GATE 2: DENIED GATE (Email không thuộc danh sách Admin)
        ======================================================================== -->
   <div id="deniedGate" class="payload-gate-screen" style="display:none">
-    <div class="payload-gate-card">
-      <div class="payload-gate-logo" style="background:#ef4444"><i data-rusi-icon="x" data-size="28" style="color:#fff"></i></div>
-      <h2 style="margin:0 0 8px 0;font-size:20px;font-weight:700">Từ chối truy cập</h2>
-      <p id="deniedInfo" style="color:var(--p-text);font-weight:600;margin-bottom:6px"></p>
-      <p style="color:var(--p-text-muted);margin:0 0 24px 0;font-size:13px">Tài khoản này chưa được cấp vai trò quản trị trong hồ sơ Supabase.</p>
+    <div class="payload-gate-card" style="max-width:500px">
+      <div class="payload-gate-logo" style="background:#ef4444"><i data-rusi-icon="shield-anti-cheat" data-size="28" style="color:#fff"></i></div>
+      <h2 style="margin:0 0 8px 0;font-size:20px;font-weight:700">Quyền truy cập bị từ chối</h2>
+      <p id="deniedInfo" style="color:var(--p-text);font-weight:600;margin-bottom:4px;word-break:break-all"></p>
+      <p id="deniedRole" style="font-size:12px;color:var(--p-text-muted);margin:0 0 16px 0">Vai trò hiện tại: <span class="p-pill p-pill-neutral">student</span></p>
+      <p style="color:var(--p-text-muted);margin:0 0 18px 0;font-size:13px;line-height:1.5">
+        Tài khoản của bạn đã được xác thực thành công trên Supabase Auth nhưng chưa được gán vai trò quản trị (<code>academic_admin</code> hoặc <code>super_admin</code>).
+      </p>
+
+      <!-- Hộp hướng dẫn cấp quyền nhanh cho chủ sở hữu / Dev -->
+      <div style="background:var(--p-surface-elevated);border:1px solid var(--p-border);border-radius:var(--p-radius);padding:14px;text-align:left;margin-bottom:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:12px;font-weight:600;color:var(--p-text)">Hướng dẫn cấp quyền Quản trị:</span>
+          <button class="p-btn p-btn-secondary p-btn-sm" id="btnCopySqlRole" type="button" style="font-size:11px;padding:3px 8px" title="Sao chép câu lệnh SQL">
+            <i data-rusi-icon="copy-clipboard" data-size="12"></i> Copy SQL
+          </button>
+        </div>
+        <pre id="sqlRoleSnippet" style="background:var(--p-bg);padding:8px 10px;border-radius:4px;font-family:var(--p-font-mono);font-size:11px;overflow-x:auto;margin:0 0 8px 0;color:var(--p-primary)">UPDATE profiles SET role = 'super_admin' WHERE email = 'YOUR_EMAIL';</pre>
+        <div style="font-size:11px;color:var(--p-text-muted)">
+          Dán vào <a href="https://supabase.com/dashboard/project/nrhtdwjihnlaxrbitmcf/sql/new" target="_blank" style="color:var(--p-primary);text-decoration:underline">Supabase SQL Editor ↗</a> rồi bấm Run.
+        </div>
+      </div>
+
       <div style="display:flex;flex-direction:column;gap:10px">
-        <button class="p-btn p-btn-primary" id="btnSwitchAccount" type="button"><i data-rusi-icon="refresh-cw" data-size="16"></i> Đổi tài khoản Gmail khác</button>
-        <button class="p-btn p-btn-secondary" id="btnDevBypass2" type="button"><i data-rusi-icon="zap-xp" data-size="16"></i> Mở bằng Dev Mode (Cục bộ)</button>
+        <button class="p-btn p-btn-primary" id="btnRecheckAuth" type="button">
+          <i data-rusi-icon="refresh-cw" data-size="16"></i> Đã cấp quyền, kiểm tra lại ngay
+        </button>
+        <button class="p-btn p-btn-secondary" id="btnSwitchAccount" type="button">
+          <i data-rusi-icon="log-out" data-size="16"></i> Đăng xuất &amp; Đổi tài khoản khác
+        </button>
+        <button class="p-btn p-btn-ghost p-btn-sm" id="btnDevBypass2" type="button" style="color:var(--p-text-muted);font-size:12px">
+          <i data-rusi-icon="zap-xp" data-size="14"></i> Mở bằng Chế độ Cục bộ (Local Dev)
+        </button>
       </div>
     </div>
   </div>
@@ -282,11 +345,11 @@
   <!-- SCRIPTS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="supabase-client.js?v=7.5"></script>
+  <script src="supabase-client.js?v=7.6"></script>
 <script src="rusi-icons.js?v=5.0"></script>
-  <script src="data.js?v=8.0"></script>
+  <script src="data.js?v=8.1"></script>
   <script src="auth.js?v=7.5"></script>
   <script src="app.js?v=8.5"></script>
-  <script src="admin.js?v=3.2"></script>
+  <script src="admin.js?v=3.3"></script>
 </body>
 </html>
