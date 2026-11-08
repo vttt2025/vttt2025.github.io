@@ -1,0 +1,10 @@
+{
+  "description": "Practice practical Russian speaking with Vietnamese translations, audio playback, and adjustable speed to build confidence in everyday conversations.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
