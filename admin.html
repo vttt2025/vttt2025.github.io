@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi" data-theme="dark" data-theme="light" data-season="winter">
+<html lang="vi" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css?v=3.2" />
+  <link rel="stylesheet" href="admin.css?v=3.9" />
   <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
 </head>
 <body class="payload-body" data-page="admin">
@@ -153,6 +153,17 @@
             <span class="payload-nav-badge" id="badgeCountStudy">8</span>
           </div>
           <ul class="payload-nav-list" id="navListStudy">
+            <!-- Render dynamically -->
+          </ul>
+        </div>
+
+        <!-- Group: Bài Nộp & Khảo Thí -->
+        <div class="payload-nav-group">
+          <div class="payload-nav-heading">
+            <span>Bài Nộp & Khảo Thí</span>
+            <span class="payload-nav-badge" id="badgeCountSubmissions">4</span>
+          </div>
+          <ul class="payload-nav-list" id="navListSubmissions">
             <!-- Render dynamically -->
           </ul>
         </div>
@@ -307,15 +318,23 @@
 
       <div class="p-form-group">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <label class="p-label" style="margin:0">Supabase Anon Key (Public Key):</label>
+          <label class="p-label" style="margin:0;font-weight:700;color:var(--p-primary)">Supabase Service Role Key (Bypass RLS — Khuyên dùng):</label>
           <a href="https://supabase.com/dashboard/project/nrhtdwjihnlaxrbitmcf/settings/api" target="_blank" style="font-size:12px;color:var(--p-primary);text-decoration:none">Lấy key trên Dashboard ↗</a>
         </div>
-        <textarea class="p-textarea" id="sbAnonKeyInput" rows="3" placeholder="Dán khoá anon key vào đây (eyJhbGciOi...)" style="font-family:var(--p-font-mono);font-size:12px"></textarea>
+        <textarea class="p-textarea" id="sbServiceKeyInput" rows="2" placeholder="Dán service_role key vào đây (eyJhbGciOi...) để có toàn quyền Thêm/Sửa/Xóa dữ liệu đám mây" style="font-family:var(--p-font-mono);font-size:12px"></textarea>
+        <div style="font-size:11.5px;color:var(--p-text-muted);margin-top:4px">Khoá bí mật quản trị cho phép Admin CMS đẩy dữ liệu trực tiếp lên tất cả các bảng mà không bị chặn bởi RLS.</div>
+      </div>
+
+      <div class="p-form-group">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <label class="p-label" style="margin:0">Supabase Anon Key (Public Key):</label>
+        </div>
+        <textarea class="p-textarea" id="sbAnonKeyInput" rows="2" placeholder="Dán khoá anon key vào đây (eyJhbGciOi...)" style="font-family:var(--p-font-mono);font-size:12px"></textarea>
       </div>
 
       <div style="display:flex;gap:10px;margin-bottom:20px">
         <button class="p-btn p-btn-primary p-btn-sm" id="btnSaveSbKey" type="button"><i data-rusi-icon="save" data-size="16"></i> Lưu khoá & Kết nối</button>
-        <button class="p-btn p-btn-secondary p-btn-sm" id="btnTestSbConn" type="button"><i data-rusi-icon="refresh-cw" data-size="16"></i> Kiểm tra kết nối</button>
+        <button class="p-btn p-btn-secondary p-btn-sm" id="btnTestSbConn" type="button"><i data-rusi-icon="refresh-cw" data-size="16"></i> Kiểm tra quyền ghi đám mây</button>
       </div>
 
       <div style="border-top:1px dashed var(--p-border);padding-top:16px;margin-bottom:20px">
@@ -327,10 +346,11 @@
       </div>
 
       <div style="border-top:1px dashed var(--p-border);padding-top:16px">
-        <div style="font-weight:600;font-size:13px;margin-bottom:6px">Cơ sở dữ liệu PostgreSQL & Bảng:</div>
-        <p style="font-size:12.5px;color:var(--p-text-muted);margin:0 0 12px 0">Để tạo đầy đủ các bảng dữ liệu cho Payload CMS và Supabase, hãy chạy tệp <code>supabase-schema.sql</code>.</p>
-        <div style="display:flex;gap:8px">
-          <a href="https://supabase.com/dashboard/project/nrhtdwjihnlaxrbitmcf/sql/new" target="_blank" class="p-btn p-btn-secondary p-btn-sm">Mở Supabase SQL Editor ↗</a>
+        <div style="font-weight:600;font-size:13px;margin-bottom:6px">Khắc phục lỗi phân quyền khi dùng Anon Key (401 / 42501):</div>
+        <p style="font-size:12.5px;color:var(--p-text-muted);margin:0 0 12px 0">Nếu dùng Anon Key mà gặp thông báo <i>"permission denied"</i> hoặc <i>"violates row-level security policy"</i>, hãy sao chép SQL bên dưới và dán vào Supabase SQL Editor để mở quyền ghi:</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="p-btn p-btn-secondary p-btn-sm" id="btnCopyFixSql" type="button"><i data-rusi-icon="copy" data-size="14"></i> Sao chép SQL Cấp Quyền Đọc Ghi (1-Click)</button>
+          <a href="https://supabase.com/dashboard/project/nrhtdwjihnlaxrbitmcf/sql/new" target="_blank" class="p-btn p-btn-ghost p-btn-sm">Mở Supabase SQL Editor ↗</a>
         </div>
       </div>
     </div>
@@ -347,9 +367,9 @@
   <script src="supabase-config.js"></script>
   <script src="supabase-client.js?v=7.6"></script>
 <script src="rusi-icons.js?v=5.0"></script>
-  <script src="data.js?v=8.1"></script>
+  <script src="data.js?v=8.3"></script>
   <script src="auth.js?v=7.5"></script>
   <script src="app.js?v=8.5"></script>
-  <script src="admin.js?v=3.3"></script>
+  <script src="admin.js?v=4.0"></script>
 </body>
 </html>

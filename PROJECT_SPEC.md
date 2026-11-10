@@ -25,6 +25,15 @@
 
 ```
 
+* **Trang Chủ Thích Ứng Cá Nhân Hóa (Adaptive Homepage & Learning Cockpit — `index.html`)**:
+  * **Trạng thái Khách vãng lai (Guest View)**: Giới thiệu phương pháp học, Hero Banner ấn tượng, lưới 7 chuyên mục, thanh tìm kiếm thông minh, cảm nhận học viên và giải đáp thắc mắc (FAQ).
+  * **Trạng thái Học viên đã đăng nhập (Personalized Learning Cockpit — `body.index-personalized`)**: Hàm `renderIndexProgressIfLoggedIn(user)` trong `app.js` tự động kích hoạt Bảng điều khiển tiến độ học tập toàn diện (`.index-progress-dashboard`) thay thế nội dung tiếp thị tĩnh:
+    - *Header & Chỉ số tổng quan*: Tổng điểm kinh nghiệm XP, chuỗi ngày học Streak (icon `flame-streak`), Cấp độ Mascot (Cấp 1 Mèo con, Cấp 2...) kèm thanh tiến độ XP lên cấp kế tiếp.
+    - *Khối hành động ưu tiên động (Dynamic Focus Action Card — `.index-progress-focus`)*: Tự động phân tích trạng thái học để đề xuất nội dung cần làm: Nếu có từ vựng đến hạn SRS (`stats.dueCount > 0`), hệ thống ưu tiên nhắc *"Ưu tiên ôn lại từ vựng — N từ đã đến hạn ôn tập"* dẫn thẳng đến `vocabulary.html`; nếu có kỹ năng chưa bắt đầu, đề xuất *"Bổ sung kỹ năng [kỹ năng]"*; mặc định duy trì *"Tiếp tục duy trì nhịp học"*.
+    - *Danh mục tiến độ 5 kỹ năng cốt lõi (`.index-skill-list`)*: Thẻ tiến độ từng kỹ năng gồm Từ vựng (số từ đã thuộc / cần ôn), Luyện nghe (`listenDone`), Luyện nói (`speakDone`), Luyện viết (`writeDone`), Thi TRKI (`trkiDone` kèm kết quả % cao nhất `bestTest`), nhãn cảnh báo cần chú ý (`.needs-attention`) và nút hành động nhanh.
+
+---
+
 ### [Module 1] Kho bài học theo các chủ đề gắn với cuộc sống với chuỗi hành động kèm Lọ Từ Vựng & Thuật Toán Spaced Repetition (SM-2) thay qua Flashcard
 * **Giao diện chuẩn Figma (#tu-vung — https://rigor-hall-40167838.figma.site/#tu-vung)**:
   * **Khung chứa Russian Navy Gradient (`.vocabulary-section`)**: Nền gradient chuyển đổi sang trọng từ xanh hải quân Nga (#102a4c đến #08192d) kết hợp vầng sáng tỏa radial xanh dương, bo góc 24px.
@@ -37,6 +46,7 @@
     - Chân thẻ (`.topic-footer`): gồm nút `[Lọ từ vựng]` (icon archive-jar) và nút tròn mũi tên [→] (icon arrow-right, hoặc icon lock nếu là nội dung PRO).
     - **Điều hướng & Tương tác**:
       * Bấm vào thẻ hoặc nút mũi tên [→]: Chuyển sang Trang Bài Học Chủ Đề (Topic Lesson Article View) với bối cảnh, hội thoại mẫu, điểm ngữ pháp, bảng từ vựng, tính năng Xuất sang PDF (window.print()) chuẩn chỉnh và mục mở Lọ từ vựng.(Kỹ thuật PDF Print: Bắt buộc cấu hình CSS @media print ẩn toàn bộ header, floating AI bubble, bottom bar và nút bấm, ép nền trang màu trắng chuẩn A4).
+      * **Trình biên dịch & soạn thảo Markdown cho Bài học chủ đề (`TOPIC_ARTICLES`)**: Toàn bộ nội dung bài học chuyên sâu được viết dưới dạng GitHub Flavored Markdown (.md) với tiêu đề `#` đến `###`, bảng từ vựng responsive, trích dẫn, và khối ghi chú sư phạm (`> [!TIP]`, `> [!NOTE]`, `> [!WARNING]`). Hỗ trợ CMS Live Preview thời gian thực (`preview=1`) và đồng bộ hai chiều với cơ sở dữ liệu Supabase.
       * Bấm vào nút [Lọ từ vựng]: Vào thẳng danh sách các từ vựng trong lọ để xem và học 3D Flashcard Spaced Repetition. 
       
 * **Mô hình "Lọ từ vựng" (Thematic Action Clusters)**:
@@ -45,7 +55,7 @@
   * **Cấu trúc 2 nút thao tác riêng biệt trên thẻ chủ đề**:
     1. Nút `[Lọ từ vựng]`: Gọi icon `archive-jar`, mở ngay giao diện danh sách chi tiết các từ có trong lọ.
     2. Nút tròn `[→]`: Gọi icon `arrow-right`, Chuyển sang Trang Bài Học Chủ Đề.
-  * **Bố cục Danh sách từ (`https://dauenglish.com/vocabulary/test/...`)**:
+  * **Bố cục Danh sách từ trong Lọ (`.dau-vocab-row-card`)**:
     - **Giao diện danh sách từ vựng tinh giản tối đa**: Đã loại bỏ hoàn toàn khối `.dau-vocab-preview-box` và thanh công cụ `.dau-vocab-toolbar`. Khi mở danh sách Lọ từ vựng, hệ thống hiển thị trực quan ngay danh sách các thẻ từ vựng hàng ngang (`.dau-vocab-row-card`).
     - **Hiển thị danh sách thẻ hàng ngang chuẩn (`.dau-vocab-row-card`)**: Bố cục 3 phần trực quan (Trái: Từ tiếng Nga in đậm kèm trọng âm & từ loại; Giữa: Nghĩa tiếng Việt & câu ví dụ song ngữ, cụm động từ, tân ngữ trực tiếp của động từ, đồng nghĩa, trái nghĩa/gần nghĩa, và ghi chú; Phải: Bộ nút hành động phát âm (icon `volume-high`), ✓ đánh dấu đã thuộc, tra cách chia (icon `book-open`), lưu lọ cá nhân (icon `archive-jar`)).
     - **Kích hoạt tức thì**: Khi bấm `[Lọ từ vựng]` trên lọ từ vựng, hệ thống tự động kích hoạt ngay tab danh sách (`initialMode = "list"`) và hiển thị dữ liệu ngay lập tức, không để xảy ra tình trạng trống trắng.
@@ -72,21 +82,34 @@
     - 4 ô chỉ số thống kê từ vựng cốt lõi: Đã thuộc (`mastered`), Cần ôn tập (`dueCards`), Từ mới (`newCount`), Chuỗi ngày (icon `flame-streak`), kèm nút CTA `[Ôn tập ngay →]`.
     - Tương thích mượt mà 3 phiên bản thiết bị: Dàn hàng ngang trên Desktop; 2 hàng co giãn linh hoạt trên Tablet; xếp dọc gọn gàng trên Mobile với tap target chuẩn $\ge 44px$, không phát sinh cuộn ngang.
 
-### [Module 2] Luyện Viết (Tả Tranh, Viết Tóm Tắt & Viết Theo Chủ Đề)
-* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `pen-tool` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số từ` (ví dụ `A1 | 40 từ`), không hiển thị mô tả, phía dưới nút CTA `[Bắt đầu viết →]` (kèm icon `arrow-right`).
-* **3 Phân loại bài viết chuyên sâu:**: Miêu tả tranh (Письмо по картинке): Quan sát 1 hình ảnh hoặc bối cảnh đời sống thực tế tại Nga, miêu tả hành động, con người và bối cảnh xung quanh. Viết tóm tắt (Изложение / Реферирование): Đọc đoạn văn bản mẫu chuẩn TRKI và viết lại nội dung cô đọng theo ý chính, rèn luyện cấu trúc rút gọn mệnh đề. Viết theo chủ đề (Сочинение по теме): Viết đoạn văn nghị luận/thư từ cá nhân theo các chủ đề bám sát kỳ thi (du học, gia đình, công việc, thành phố của tôi).
-* **Quy chuẩn Giao diện Luyện Dịch Tối Giản Hiện Đại (Minimal Translation Workspace)**:
-  - *Thẻ đề bài (.writing-translation-card)*: Thiết kế phẳng tối giản, loại bỏ hoàn toàn khối lồng bên trong và phần gợi ý ngữ cảnh rườm rà; hiển thị chữ tiếng Nga tự nhiên, vừa mắt qua .writing-translation-text (font-size 1.05rem, line-height 1.7), thích ứng mượt mà trên điện thoại và máy tính bảng.
-  - *Loại bỏ khối .writing-prompt-box-trans*: Bỏ đoạn văn bản hướng dẫn dịch thừa thãi.
-  - *Thanh nút thao tác (.writing-primary-actions)*: Thiết kế tối giản, tinh tế; chuyển nút Gợi ý (#writingHintToggle) xuống nằm chung hàng cùng nút Nhận xét AI, Bài mẫu TRKI và Từ vựng. Trên mobile, các nút co giãn cân đối dạng 2x2 với tap target chuẩn >= 44px.
-  - *Danh sách bài tập (.writing-exercise-list)*: Tinh giản tối đa bằng cách loại bỏ thẻ <small> mô tả, chỉ hiển thị mỗi Bài luyện N, chiều cao tinh gọn 48px, cuộn lướt nhẹ nhàng.
-* **Hỗ trợ người học**: Khung soạn thảo tích hợp bàn phím ảo Cyrillic cho các ký tự đặc biệt (tự động chuyển chế độ native trên mobile). Danh sách từ vựng gợi ý bắt buộc phải xuất hiện trong bài viết. Bộ đếm từ thời gian thực (Live Word Counter) cảnh báo trực quan khi chưa đạt số lượng từ tối thiểu..
-* **AI Chấm điểm theo 4 tiêu chí CEFR**:
-  1. Ngữ pháp & Biến cách 6 Cách (Грамматика)
-  2. Vốn từ & Cụm từ liên kết (Лексика)
-  3. Bố cục mạch lạc (Структура)
-  4. Hoàn thành nhiệm vụ đề bài (Содержание)
-* Bảng đối chiếu chi tiết: Hiển thị bảng 3 cột trực quan: `[Câu gốc có lỗi] ➔ [Câu sửa chuẩn chỉnh] ➔ [Giải thích ngữ pháp chuyên sâu]`. Thưởng +20 XP khi hoàn thành bài nộp.
+### [Module 2] Luyện Viết (Tả Tranh & Luyện Dịch Theo Chủ Đề)
+* **Kiến trúc dữ liệu phân cấp 2 tầng (Hierarchical Topic-Exercise Model)**:
+  - **Tầng 1 - Chủ đề (`writing_topics`)**: Phân nhóm bài học theo cấp độ (A1–B2) và 2 chế độ học: **Tả tranh (`picture`)** và **Luyện dịch (`translation`)**.
+  - **Tầng 2 - Bài luyện tập con (`writing_tasks`)**: Mỗi chủ đề chứa nhiều bài luyện tập thực tế (`sort_order` 1, 2, 3...) được quản lý độc lập.
+* **Quy chuẩn 2 Phân hệ chuyên sâu**:
+  1. **Tả tranh (Письмо по картинке - `type = 'picture'`)**:
+     - *1 Ảnh lưu từ Supabase Storage*: Ảnh chụp chất lượng cao lưu trữ tại bucket `writing-images` (ví dụ: bữa sáng gia đình, thư viện đại học, ký túc xá, Quảng trường Đỏ...).
+     - *Đề bài (`prompt`)*: Hướng dẫn quan sát tranh và đặt câu hỏi mở bằng tiếng Nga.
+     - *Bài mẫu chuẩn TRKI (`model_answer`)*: Bài văn miêu tả mẫu đạt điểm tối đa theo đúng cấp độ.
+     - *Gợi ý (`tips`)*: Mảng JSON câu hỏi định hướng, cấu trúc gợi mở, bối cảnh và cảm xúc.
+     - *Danh sách từ vựng từ từ điển*: Liên kết trực tiếp bảng từ điển `vocabularies` qua bảng `writing_task_vocab` (hiển thị trọng âm, nghĩa tiếng Việt, từ loại `pos`, phát âm audio và nút thêm trực tiếp vào Lọ từ vựng cá nhân).
+     - *Prompt AI chấm điểm (`ai_prompt`)*: Rubric và hướng dẫn chi tiết cho AI Rusika thẩm định 4 tiêu chí TRKI.
+  2. **Luyện dịch (Перевод по темам - `type = 'translation'`)**:
+     - *Giao diện Luyện dịch tối giản phẳng (.writing-translation-card)*: Thiết kế thanh lịch, không lồng khối rườm rà; chữ tiếng Việt đề bài rõ ràng, tự nhiên.
+     - *Đề bài (`prompt`)*: Câu hoặc đoạn văn tiếng Việt thực tế cần dịch sang tiếng Nga.
+     - *Bài mẫu (`model_answer`)*: Bản dịch tiếng Nga chuẩn ngữ pháp, thể động từ (СВ/НСВ) và văn phong bản ngữ.
+     - *Gợi ý (`tips`)*: Các điểm ngữ pháp mấu chốt, cấu trúc quản cách, giới từ và thành ngữ.
+     - *Danh sách từ vựng từ từ điển*: Các từ vựng mấu chốt được liên kết từ `vocabularies`.
+     - *Prompt AI chấm điểm (`ai_prompt`)*: Tiêu chí so khớp nghĩa, phát hiện lỗi chia cách và đánh giá độ tự nhiên.
+* **Hỗ trợ người học & AI Chấm điểm**:
+  - Khung soạn thảo tích hợp bàn phím ảo Cyrillic cho các ký tự đặc biệt (tự động chuyển chế độ native trên mobile).
+  - Bộ đếm từ thời gian thực (Live Word Counter) cảnh báo trực quan khi chưa đạt số lượng từ tối thiểu.
+  - **AI Chấm điểm theo 4 tiêu chí CEFR**:
+    1. Ngữ pháp & Biến cách 6 Cách (Грамматика)
+    2. Vốn từ & Cụm từ liên kết (Лексика)
+    3. Bố cục mạch lạc (Структура)
+    4. Hoàn thành nhiệm vụ đề bài (Содержание)
+  - Bảng đối chiếu chi tiết: Hiển thị bảng trực quan: `[Câu gốc có lỗi] ➔ [Câu sửa chuẩn chỉnh] ➔ [Giải thích ngữ pháp chuyên sâu]`. Thưởng +20 XP khi hoàn thành bài nộp và lưu tiến độ vào `writing_submissions`.
 
 ### [Module 3] Luyện Nghe (YouTube Shadowing, Nghe Hiểu & Nghe Chép Chính Tả)
 * **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `headphones` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 8 câu`), không hiển thị mô tả, phía dưới nút CTA `[Vào luyện nghe →]`.
@@ -108,12 +131,65 @@
 * **Nghe chép chính tả (Dictation):** Nghe từng câu ngắn với tốc độ tự nhiên, gõ lại chính xác từng từ bằng bàn phím tiếng Nga. So khớp chuỗi ký tự thời gian thực, bôi đỏ các lỗi chính tả, sai dấu trọng âm hoặc nhầm lẫn phụ âm biến âm. Hiển thị 30/50/70.
 * **Xử lý kỹ thuật Audio**: Bắt buộc yêu cầu tương tác bấm nút Play từ người học trước khi phát âm thanh nhằm tuân thủ chính sách trình duyệt (chống chặn autoplay). Bổ sung thông báo fallback dùng Google Chrome / Safari cho nhận diện giọng nói.
 
-### [Module 4] Luyện Nói (Shadowing, AI Chấm Điểm & Phân Tích Âm Vị)
-* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `mic-speaking` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 8 câu`), không hiển thị mô tả, phía dưới nút CTA `[Luyện nói ngay →]` (kèm icon `arrow-right`).
-* **Phương pháp Shadowing chuyên sâu**: Nghe giọng mẫu bản ngữ, thu âm nhại theo tốc độ, độ nảy trọng âm và ngữ điệu câu (Intonation Contours - ИК 1 đến ИК 5). Biểu đồ sóng âm thời gian thực (Audio Waveform Visualizer) so sánh trực quan giữa giọng mẫu và giọng học viên.
-* **Phân tích âm vị (Phoneme Matching)**: Bóc tách và chỉ điểm trực tiếp các lỗi phát âm đặc thù của người học: Hiện tượng vô thanh hóa / hữu thanh hóa phụ âm (б - п, д - т, в - ф, з - с, г - к, ж - ш). Phân biệt cặp phụ âm cứng (твердые) và phụ âm mềm (мягкие). Biến âm của nguyên âm không nhấn (о phát âm thành а, е/я biến âm thành и).
-
-* Trả về bảng phân tích độ khớp âm vị kèm điểm số chi tiết từng từ trong câu.
+### [Module 4] Luyện Nói (Speaking & YouTube Shadowing Studio)
+* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**:
+  - Nhỏ gọn, icon `mic-speaking` hoặc `youtube` bên trái phía trên (nền cam nhẹ `rgba(234,88,12,0.08)`, màu `#ea580c`).
+  - Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 8 câu` hoặc `A2 | 25 câu`).
+  - Huy hiệu trạng thái: `Hoàn thành` (xanh ngọc kèm icon `check`) khi học viên đã đạt điểm trung bình $\ge 70\%$, hoặc nhãn `PRO` (đỏ cam) cho bài học chuyên sâu.
+  - Chân thẻ: Nút CTA `[Luyện nói ngay →]` (kèm icon `arrow-right`), hoặc biểu tượng khóa `lock-pro` nếu là bài học PRO và học viên chưa kích hoạt. Nhấp thẻ hoặc nút CTA đều mở Không gian Luyện nói Studio (`openSpeakingWorkspace`).
+* **Kho nội dung 2 luồng phong phú (Dual Learning Streams)**:
+  1. *YouTube Animated Cartoon Shadowing (24 bài học video hoạt hình Nga)*: Hệ thống bài học trích xuất từ các series hoạt hình Nga nổi tiếng ("Ася и Вася" - video `5KOKztPa1yI`, series "Цып-Цып" / Tsyp-Tsyp từ `211uvYZet70` đến `T9f5yH5EIN8`) phân cấp từ A1 đến B2. Mỗi bài học gồm 20–30 câu hội thoại với mốc thời gian bắt đầu (`startSec`) và kết thúc (`endSec`) chính xác đến từng giây, nguồn phụ đề tiếng Nga đã kiểm chứng.
+  2. *Bộ câu hội thoại tình huống thực tế (Situational Real-World Dialogues)*: 6 bộ bài tập phản xạ giao tiếp đời sống (Sân bay & Trên chuyến bay, Trường học & Ký túc xá, Gọi món & Ẩm thực Nga, Đi lại & Hỏi đường ở Moskva, Thuyết trình & Ý kiến học thuật, Phỏng vấn & Xin việc).
+* **Không gian Luyện Nói Studio Hiện Đại (`openSpeakingWorkspace` / `.sp-ws-grid`)**:
+  - *Thanh điều hướng đỉnh cố định (Sticky Top Back Bar)*:
+    * Nút quay lại (`#btnBackSpList` kèm icon `arrow-left`): Đóng workspace, dọn dẹp bộ lắng nghe sự kiện, hoàn trả URL qua `window.history.replaceState`, và cuộn mượt về danh sách thẻ.
+    * Tiêu đề bài học và cụm nút thao tác nhanh (Quick Actions): Nút Ẩn/hiện bản dịch tiếng Việt (`T` - `#btnToggleTransTop`), Nút bật/tắt Tự động chuyển câu khi đạt điểm cao $\ge 70\%$ (`#btnToggleAutoAdv`), và Nút đóng/mở thanh Sidebar Drawer (`#btnToggleSidebar`).
+  - *Khung video YouTube tỷ lệ 16:9 tương tác (`#spVideoCard` & `#spYoutubePlayer`)*:
+    * Nhúng Iframe Player chuẩn API (`enablejsapi=1&rel=0&modestbranding=1&playsinline=1`).
+    * Giao thức điều khiển 2 chiều qua `postMessage` (`listening`, `setPlaybackRate`, `seekTo`, `playVideo`, `pauseVideo`).
+    * Cơ chế phát phân đoạn có bù đệm thời gian: `durationSec = ((end - start) / speed) + 0.4s` nhằm triệt tiêu hoàn toàn hiện tượng chém cụt đuôi âm thanh khi video tải trễ hoặc buffering.
+  - *Thẻ luyện câu tích hợp trung tâm (`.sp-hero-card`)*:
+    * **Bảng điều khiển 1 dòng tối giản (`.sp-controls-dock`)**:
+      + Nút Câu trước (`#btnPrevSent` - icon `chevron-left` / Phím tắt `←`).
+      + Nút Chỉnh tốc độ (`#btnSpeedToggle`): Chuyển đổi linh hoạt 3 nấc 0.8x, 1.0x, 1.2x và gửi lệnh trực tiếp vào video player / TTS.
+      + Nút Nghe mẫu phát âm chuẩn (`#btnPlayModel` - icon `volume-high` / Phím tắt `Space`): Tự động phát đúng đoạn video của câu đó, hoặc gọi Web Speech Synthesis phát âm giọng mẫu tiếng Nga (`ru-RU`) nếu là bài thoại không có video.
+      + Nút Micro Hero Button (`#btnRecordMic` - icon `mic-speaking` / Phím tắt `R`): Hiệu ứng vòng tròn nổi bật, đổi màu đỏ rực khi đang thu âm kèm thanh sóng trạng thái.
+      + Nút Tự động lặp lại (`#btnLoopToggle` - icon `rotate-ccw` / Phím tắt `L`): Tắt ➔ Lặp 3 lần (`3x`) ➔ Lặp 5 lần (`5x`).
+      + Nút Câu sau (`#btnNextSent` - icon `chevron-right` / Phím tắt `→`).
+    * **Sân khấu hiển thị câu thông minh (`.sp-sentence-stage`)**:
+      + Câu tiếng Nga tương tác (`#spTargetRu`): Chữ to rõ, có trọng âm. Học viên có thể **nhấp trực tiếp vào câu** để nghe mẫu và video tự động nhảy đúng mốc thời gian. Sau khi thu âm, các từ trong câu được đổi màu trực quan theo kết quả nhận diện.
+      + Bản dịch tiếng Việt (`#spTargetVi`): Hiển thị gọn gàng, hỗ trợ ẩn/hiện tức thì qua phím `T` hoặc nút icon trên thanh header.
+  - *Thanh kết quả thu âm tối giản & hiện đại (`.sp-speech-result-bar`)*:
+    * Chấm trạng thái nhịp thở (`#spResultDot`): Xanh lá (Đang nghe), Xanh ngọc (Xuất sắc $\ge 85\%$), Cam (Khá $70-84\%$), Đỏ (Cần luyện thêm $<70\%$).
+    * Dòng nhận diện giọng nói học viên thời gian thực (`#spUserTranscriptText`).
+    * Huy hiệu điểm số (`#spResultScoreWrap`): Hiển thị điểm số phần trăm (`#spResultScoreVal`) và nhãn đánh giá tương ứng (*Xuất sắc*, *Rất tốt*, *Đạt yêu cầu*, *Cần luyện thêm*).
+    * Nút "Nói lại" (`#btnFeedbackRetry` - icon `rotate-ccw` / Phím `R`).
+  - *Cột phải Playlist & Tiến độ học tập (`.sp-ws-sidebar`)*:
+    * Thống kê trực tiếp: Số câu hoàn thành (`0/N`), Điểm trung bình %, và Điểm kinh nghiệm (`+10 XP`).
+    * Thanh tiến độ cuộn mượt (`#spProgressFill`).
+    * Danh sách toàn bộ các câu trong bài: Đánh số thứ tự 2 chữ số (`01`, `02`...), đánh dấu tích xanh khi câu đạt $\ge 70\%$, hiển thị điểm số từng câu, tự động cuộn đến câu đang kích hoạt (`scrollIntoView`).
+    * Tương thích Mobile Drawer: Trên màn hình $\le 1024px$, Sidebar tự động biến thành ngăn kéo trượt (Drawer) với lớp nền mờ (`.sp-sidebar-scrim`), đóng/mở qua nút `#btnToggleSidebar`.
+* **Thuật toán Đo Độ Lệch Từ (Word Error Rate - WER) & Bóc Tách Lỗi Âm Vị**:
+  - Tích hợp Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`) với ngôn ngữ mục tiêu `ru-RU`, kích hoạt nhận diện tạm thời (`interimResults: true`) và dự phòng tối đa 3 phương án nhận dạng âm học (`maxAlternatives: 3`).
+  - Tự động ngắt thu âm an toàn: Bộ đếm thời gian im lặng 8 giây (`silenceTimer`) tự động dừng thu âm nếu học viên chưa phát âm; bộ đệm 2.5 giây (`stopTimer`) tự động xử lý kết quả khi dứt câu.
+  - **Chuẩn hóa chuỗi âm học tiếng Nga**: Loại bỏ dấu trọng âm kết hợp Unicode (`\u0301`), chuẩn hóa chữ cái `ё` thành `е`, loại bỏ toàn bộ dấu câu ngữ pháp (`.,!?;:«»"'-()`) trước khi so khớp.
+  - **Thuật toán Ma trận Quy hoạch động Levenshtein (Token-level WER)**:
+    * Tính toán ma trận khoảng cách hiệu chỉnh giữa mảng từ chuẩn $R = \{r_1, \dots, r_n\}$ và mảng từ học viên nói $H = \{h_1, \dots, h_m\}$.
+    * Độ chính xác phát âm:
+      $$\text{Accuracy} = \max\left(0, \min\left(100, \operatorname{round}\left(\left(1 - \frac{\text{Tổng lỗi hiệu chỉnh}}{n}\right) \times 100\right)\right)\right)$$
+    * Thuật toán truy vết ngược (Backtracking) xếp loại từng từ vào 4 trạng thái:
+      1. `correct`: Phát âm chuẩn xác $\rightarrow$ Tô màu xanh ngọc (`.sp-word-correct`).
+      2. `wrong`: Phát âm sai lệch hoặc lẫn lộn $\rightarrow$ Tô màu đỏ gạch (`.sp-word-wrong`), đính kèm tooltip hiển thị từ nhận diện được: `Nhận diện: «...»`.
+      3. `missing`: Bị nuốt âm hoặc bỏ quên từ $\rightarrow$ Gạch chân nét đứt mờ kèm tooltip: `Chưa nhận diện được từ này`.
+      4. `extra`: Từ nói thừa ngoài câu mục tiêu.
+* **Hạn Mức Thực Hành, Bản Quyền PRO & Gamification**:
+  - Hạn mức thực hành miễn phí: Cung cấp **30 lượt luyện nói mỗi ngày** cho tài khoản tiêu chuẩn (lưu tại `STORE` qua khóa `speak_today_[Date]`), bảo đảm học viên miễn phí hoàn thành trọn vẹn 1 bài học 25–30 câu mỗi ngày.
+  - Khóa bản quyền PRO: Các bài học độ khó B1, B2 hoặc đánh dấu `is_pro_only: true` được bảo vệ bằng Pro Gate Modal.
+  - Gamification & Thưởng XP: Lưu trữ điểm số cao nhất từng câu vào `STORE`. Khi người học hoàn thành tất cả các câu trong bài với điểm trung bình toàn bài $\ge 70\%$, hệ thống tự động ghi nhận hoàn thành bài (`speakDone`), thưởng ngay **+10 XP** vào tổng điểm học viên và kích hoạt thông báo Toast chúc mừng.
+* **Tích Hợp Quản Trị Payload CMS Studio (`admin.html` / `admin.js`)**:
+  - Phân hệ `SPEAKING_SETS`: Cho phép Academic Admin tạo mới, chỉnh sửa thông tin bài học, cấp độ CEFR, liên kết YouTube ID, mục tiêu âm vị.
+  - **Trình dựng câu Speaking Builder & Modal Nhập Phụ Đề Nhanh (`importSpeakingTranscriptModal`)**: Cho phép dán nhanh toàn bộ danh sách câu từ tệp phụ đề SRT, VTT hoặc mảng JSON thô, tự động bóc tách mốc thời gian bắt đầu/kết thúc và câu dịch.
+  - **Đồng bộ Đám mây Supabase (`speaking_lessons`)**: Hỗ trợ Push/Pull dữ liệu 2 chiều với bảng cơ sở dữ liệu `speaking_lessons`, giải quyết xung đột dựa trên trường mã duy nhất `code`.
 
 ### [Module 5] Luyện Thi TRKI (ТРКИ Exam Simulation & Dual-Track CBT)
 * **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `award-badge` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 34 câu`), không hiển thị mô tả, phía dưới 2 nút CTA: `[Chọn phần luyện ▾]` và `[Vào thi Full →]`.
@@ -203,7 +279,7 @@ Hệ thống nhận diện trạng thái xác thực của người dùng để 
   * Mã giao dịch được sinh duy nhất theo cấu trúc: `RUSI_[MãĐơn]_[UserTag]` (ví dụ: `RUSI_9824_Q9F2`).
   * Mã nội dung chuyển khoản được mã hóa gọn gàng, tương thích tuyệt đối với cú pháp quét quang học của hệ sinh thái Napas247 và các ứng dụng ngân hàng di động tại Việt Nam.
 * **Đồng Hồ Đếm Ngược Phiên Giao Dịch (15:00 Session Timer)**:
-  * Đếm ngược chính xác 15 phút theo timestamp client (`endTime = Date.now() + 15 * 60 * 1000`).
+  * Server tạo `orders.expires_at` theo thời hạn 15 phút; client hiển thị thời gian còn lại từ mốc này. Reload hoặc sửa đồng hồ thiết bị không được gia hạn đơn.
   * Khi hết thời gian 15:00, mã QR tự động làm mờ và hiển thị nút `[Tạo mã thanh toán mới]` nhằm ngăn chặn việc chuyển khoản vào các phiên đã hủy.
 * **Tiện Ích Sao Chép 1-Chạm (One-Tap Copy)**:
   * Trang bị nút sao chép độc lập cho từng trường thông tin: *Số tài khoản*, *Số tiền*, và *Nội dung chuyển khoản*.
@@ -211,14 +287,14 @@ Hệ thống nhận diện trạng thái xác thực của người dùng để 
 * **Cơ Chế Xác Thực & Kích Hoạt Realtime Không Cần Tải Lại Trang**:
   * Khi giao diện thanh toán hiển thị, tiến trình nền tự động polling kiểm tra trạng thái giao dịch qua Webhook / API dịch vụ đối soát ngân hàng (Casso):
     ```javascript
-    // Kiểm tra định kỳ mỗi 3 giây trong suốt phiên 15 phút
+    // Đọc trạng thái đơn của chính chủ; backoff/jitter, dừng khi đơn kết thúc
     const pollPaymentStatus = async (orderId) => { ... };
     ```
   * Ngay khi tài khoản nhận được biến động số dư khớp đúng số tiền và cú pháp:
     1. Modal thanh toán hiển thị màn hình chúc mừng (Success State) với hiệu ứng pháo hoa nhẹ và âm báo nhẹ nhàng.
     2. Trạng thái bản quyền của học viên được cập nhật lập tức trên toàn bộ runtime ứng dụng (`window.AppState.isPro = true`), tự động gỡ bỏ toàn bộ khóa nội dung mà không cần người dùng phải bấm tải lại trang (F5).
 * **Bảo Mật Phân Quyền & Lưu Trữ Per-User State**:
-  * Trạng thái bản quyền được lưu trữ đồng bộ trên Database bảo mật (Supabase User Profile) kết hợp bộ nhớ đệm an toàn `trki_pro_${user.uid}`.
+  * Nguồn quyền hội viên là `profiles.is_pro` và `orders` đã xác nhận phía server qua RPC. `trki_pro_${user.uid}` chỉ là cache hiển thị, không là bằng chứng quyền truy cập; không tin cờ PRO do trình duyệt tự sửa.
   * Tuyệt đối không cho phép dùng chung tài khoản để gian lận bản quyền; mọi thao tác mở khóa nội dung nhạy cảm (như lời giải đề TRKI, gọi API chấm điểm AI) đều phải được thẩm định chữ ký Token hợp lệ từ phía backend trước khi trả kết quả.
 
 ---
@@ -309,7 +385,61 @@ Hệ thống quản trị áp dụng mô hình phân quyền chặt chẽ theo v
 
 ---
 
-### 4.2. Cơ Chế Đồng Bộ Dữ Liệu Thời Gian Thực (Live Propagation Engine):
+### 4.2. Kiến Trúc Payload CMS Studio & Hệ Thống Quản Trị Cốt Lõi (`admin.html` / `admin.js`):
+Trung tâm quản trị nội dung được thiết kế theo chuẩn giao diện Payload CMS v3 hiện đại, tinh giản tối đa thao tác nhập liệu, phân nhóm trực quan và tương thích 100% với schema cơ sở dữ liệu Supabase:
+
+* **Phân Nhóm Điều Hướng Khoa Học (Sidebar Navigation Hierarchy)**:
+  1. **Nhóm Học tập & Đề thi (`group: "study"`)**:
+     * `TRKI_BANK` (Đề thi TRKI chuẩn 5 phân môn): Quản lý ngân hàng đề thi A1–C2 theo chuẩn TRKI quốc tế; tích hợp **Trình dựng 5 Phân môn Tabbed Builder** gồm: Phần 1 Ngữ pháp & Từ vựng, Phần 2 Đọc hiểu (văn bản tiếng Nga/Việt + câu hỏi), Phần 3 Nghe hiểu (file audio bucket `trki-audio` + lời thoại + câu hỏi), Phần 4 Viết (đề bài tự luận + số từ + bài mẫu), Phần 5 Nói (tình huống giao tiếp + thời gian chuẩn bị/nói + gợi ý phản xạ), cùng tab **Bảng đáp án (Answers Key)** tự động trích xuất.
+     * `LISTENING_TOPICS` (Chủ đề Luyện nghe): Quản lý 7 chủ đề đời sống cha (Sân bay, Cửa hàng, KTX, Quán ăn, Giảng đường, Tàu điện ngầm, Phỏng vấn xin việc).
+     * `LISTENING_LESSONS` (Bài nghe & Chép chính tả): Liên kết động với `LISTENING_TOPICS` qua dropdown `topic_id`. Tích hợp **Listening & Dictation Builder** với trình nghe thử audio trực tiếp từ Supabase bucket `listening-audio`, mốc thời gian lời thoại `start_sec`–`end_sec` kèm nút điều chỉnh nhanh $\pm 0.5$ giây, từ vựng trọng tâm từng câu (`words`), và danh sách trắc nghiệm nghe hiểu.
+     * `SPEAKING_SETS` (Luyện nói Shadowing): Bài luyện nói qua Video YouTube, tích hợp trình dựng câu theo mốc thời gian phát, đánh dấu trọng âm, câu dịch và **Modal Nhập Phụ Đề Nhanh (`importSpeakingTranscriptModal`)** hỗ trợ dán phụ đề SRT/VTT/JSON.
+     * `WRITING_TOPICS` (Chủ đề Luyện viết): Danh mục chủ đề cha phân loại theo `type` (**Tả tranh `picture`** vs **Luyện dịch `translation`**) và cấp độ A1–B2.
+     * `WRITING_TASKS` (Bài Luyện viết con): Liên kết động với `WRITING_TOPICS` qua dropdown `topic_id`. Tích hợp **Writing Task Builder** với ảnh trực quan từ Supabase bucket `writing-images`, từ vựng trọng tâm liên kết từ điển, câu hỏi định hướng (`tips`), bài viết mẫu tham khảo (`model_answer`), và **Nút Dán Mẫu Rubric AI TRKI 1-Chạm** (`window.insertStandardTrkiRubric()`) chuẩn 4 tiêu chí chấm điểm.
+     * `WRITING_SUBMISSIONS` (Studio Chấm bài viết): Giao diện chuyên dụng cho Giáo viên chấm bài tự luận học viên, nhập điểm thang 100, đổi trạng thái và chèn nhanh nhận xét sư phạm bằng chip 1-chạm.
+     * `TOPIC_ARTICLES` (Bài học chủ đề & Markdown): Tích hợp **Trình soạn thảo Markdown Notion 3.0** (`#`–`###`, callouts `> [!TIP]`, `> [!NOTE]`, bảng từ vựng 4 cột, live word/read-time counters).
+     * `GRAMMAR_LESSONS` (Ngữ pháp): Hệ thống bài giảng ngữ pháp chia thì, 6 cách và cặp thể động từ.
+     * `VOCAB_JARS` (Lọ từ vựng): Quản lý 18 lọ từ vựng cốt lõi, màu sắc nhận diện và cấp độ.
+     * `VOCABULARIES` (Từ điển & Kho từ vựng): Kho 5.000+ từ vựng tiếng Nga toàn diện có trọng âm Unicode, từ loại, dạng biến cách và nghĩa song ngữ.
+     * `VOCAB_LESSONS` (Hành động đời sống): Bài học ngữ cảnh chuỗi hành động.
+  2. **Nhóm Thương mại & Tăng trưởng (`group: "commerce"`)**:
+     * `PACKAGES` (Gói cước hội viên PRO): Cấu hình các gói `pro_6m`, `pro_1y`, `pro_vip` và quyền lợi.
+     * `SHOP_PRODUCTS` (Sản phẩm & Khóa học Shop): Danh mục hàng Nga nội địa, dịch vụ tư vấn và thông số kỹ thuật.
+     * `ORDERS` (Đơn hàng & Giao dịch): Giám sát mã đơn VietQR, trạng thái thanh toán và kích hoạt gói bản quyền.
+     * `BLOG_POSTS` (Cẩm nang Blog & SEO): Quản trị bài viết Blog, biên tập Markdown và tối ưu SEO metadata.
+  3. **Nhóm Hệ thống & Dữ liệu (`group: "system"`)**:
+     * `JAR_ITEMS` (Từ vựng chi tiết trong lọ): Bảng liên kết nhiều-nhiều giữa Lọ từ vựng và Từ vựng, hỗ trợ dropdown chọn lọ động (`jar_id`).
+     * `TRKI_SUBMISSIONS` (Lịch sử nộp bài TRKI): Nhật ký thi cử, điểm từng phân môn và trạng thái ĐẠT/KHÔNG ĐẠT.
+     * `USERS` (Học viên & Quản trị): Quản lý tài khoản, phân quyền vai trò (Super Admin, Academic Admin, Teacher, Student).
+     * `USER_PROGRESS` & `USER_VOCAB_PROGRESS`: Giám sát tiến độ học tập, XP và thuật toán Spaced Repetition SM-2.
+
+* **Tính Năng Tinh Gọn & Trải Nghiệm Nhập Liệu Vượt Trội**:
+  - **Dropdown Khóa Ngoại Tự Động (Dynamic Foreign Key Resolution)**: Khi chọn `topic_id` ở Luyện viết hay Luyện nghe, quản trị viên không cần copy mã UUID thủ công; hệ thống tự động đổ danh sách Topic cha có kèm nhãn cấp độ và thể loại trực quan (`[Tả tranh | A1] Sinh hoạt thường nhật`).
+  - **Xem Trước Media Ngay Lập Tức (Live Media Previews)**: Tự động hiển thị ảnh thumbnail thu nhỏ đối với `image_url` (từ bucket `writing-images`) và trình nghe thử âm thanh mini đối với `audio_url`.
+  - **Công Cụ Xem Trước Trực Quan (Live Preview Drawer)**: Quản trị viên xem trước giao diện bài học thực tế trên web trước khi lưu qua tham số `preview=1`.
+  - **Bảng Đồng Bộ Đám Mây Supabase (Two-Way PostgreSQL Sync Engine)**: Hỗ trợ Push/Pull 2 chiều với kiểm tra khóa xung đột tự động (`conflict_target: id` hoặc `code`), xử lý độc lập từng bảng tránh hiện tượng ghi đè chéo.
+
+* **Công Cụ Xem Trước Trực Quan (Live Preview Drawer)**:
+  - Cho phép quản trị viên xem trước giao diện thực tế của bài học trước khi lưu hoặc xuất bản qua tham số `preview=1`:
+    * Luyện nghe: `listening.html?lesson=[id]&preview=1`
+    * Luyện nói: `speaking.html?set=[id]&preview=1`
+    * Luyện viết: `writing.html?task=[id]&preview=1`
+    * Bài học chủ đề: `vocabulary.html?article=[id]&preview=1`
+    * Bài viết Blog: `blog-post.html?slug=[slug]&preview=1`
+  - Ngăn kéo preview trượt êm ái trên cùng màn hình admin, hỗ trợ kiểm tra giao diện trên nhiều độ phân giải.
+
+* **Bảng Đồng Bộ Đám Mây Supabase (Supabase Cloud Sync Panel)**:
+  - Tích hợp giao diện Push (Đẩy dữ liệu từ Admin lên Cloud) và Pull (Kéo dữ liệu mới nhất từ Cloud về Local) cho toàn bộ các bảng nghiệp vụ (`speaking_lessons`, `vocab_jars`, `trki_bank`, `blog_posts`...).
+  - Tự động đối chiếu khóa xung đột (`conflict_target: code` hoặc `id`), hiển thị tiến độ và nhật ký đồng bộ chi tiết.
+
+* **REST API & Schema Explorer**:
+  - Giao diện tra cứu nhanh cấu trúc dữ liệu JSON Schema chuẩn của từng Collection, hỗ trợ lập trình viên backend/agent tích hợp API nhanh chóng.
+
+---
+
+### 4.3. Cơ Chế Đồng Bộ Dữ Liệu Thời Gian Thực (Live Propagation Engine):
+
+> Luồng localStorage dưới đây chỉ mô tả phản hồi trong cùng trình duyệt. Thay đổi CMS có thẩm quyền phải được xác thực và lưu trên backend/database theo Mục 7; sau commit mới cập nhật cache hoặc phát thông báo đến người dùng khác.
 
 ```text
 [Admin sửa tại admin.html] ➔ [localStorage: trki_admin_data] ➔ [app.js: mergeAdminData()]
@@ -347,16 +477,16 @@ Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gia
                      Hiển thị dữ liệu mới nhất     Đọc localStorage (STORE)
 ```
 
-* **9 Phân hệ đồng bộ Supabase**:
-  1. `vocab_jars` & `jar_items`: Quản lý Lọ từ vựng hệ thống và các lọ từ vựng cá nhân (`custom_jars`).
-  2. `trki_bank`: Ngân hàng đề thi ТРКИ đa cấp độ từ A1 đến C2.
-  3. `listening_lessons`: Kho bài tập nghe hiểu 4 Part và phụ đề video YouTube.
-  4. `speaking_sets`: Bộ bài tập Shadowing kèm chuỗi âm vị và trọng âm chuẩn.
-  5. `writing_tasks`: Đề bài miêu tả tranh, viết tóm tắt và viết theo chủ đề kèm tiêu chí chấm.
-  6. `vocab_lessons`: Hệ thống bài học ngữ cảnh theo chủ đề sống còn tại Nga.
-  7. `blog_posts`: Cẩm nang du học, bài viết đời sống ký túc xá và kiến thức ngữ pháp.
-  8. `shop_products`: Danh mục sản phẩm Nga nội địa, dịch vụ tư vấn du học và tools tiện ích.
-  9. `packages`: Bảng giá cước hội viên PRO và cấu hình khuyến mãi.
+* **Các Phân hệ Đồng bộ Supabase Cốt Lõi**:
+  1. ocabularies, ocab_jars & jar_items: Quản lý kho từ vựng tiếng Nga toàn diện và 18 Lọ từ vựng hệ thống/cá nhân; tiến độ học SRS theo dõi tại user_vocab_progress theo Mục 7.
+  2. 	rki_tests & private.exam_answer_keys: Danh mục đề thi ТРКИ từ A1 đến C2; cấu trúc câu hỏi, đáp án riêng tư và phiên nộp bài theo Mục 7.
+  3. listening_lessons: Kho bài tập nghe hiểu 4 Part, câu hỏi trắc nghiệm và phụ đề video YouTube.
+  4. speaking_lessons: Bộ bài tập Shadowing kèm chuỗi âm vị và mốc thời gian YouTube.
+  5. writing_tasks: Đề bài miêu tả tranh, viết tóm tắt và viết theo chủ đề kèm tiêu chí chấm rubric.
+  6. 	opic_articles: Hệ thống bài học ngữ cảnh theo chủ đề sống còn tại Nga (soạn thảo Markdown GFM).
+  7. log_posts: Cẩm nang du học, bài viết đời sống ký túc xá và kinh nghiệm học tiếng Nga.
+  8. shop_products: Danh mục sản phẩm Nga nội địa, dịch vụ tư vấn du học và tools tiện ích.
+  9. packages & orders: Bảng giá cước hội viên PRO, cấu hình khuyến mãi và đơn hàng đối soát VietQR.
 
 * **Chuẩn Hóa API Khởi Tạo Trang (Unified Page Bootstrappers)**: Toàn bộ các trang con học viên đều triển khai qua giao thức nạp dữ liệu thống nhất:`initVocabPage()`, `initWritingPage()`, `initListeningPage()`, `initSpeakingPage()`, `initMockTestPage()`, `initBlogPage()`, `initShopPage()`, `initUpgradePage()`. 
   * Quy trình thực thi: 
@@ -372,380 +502,445 @@ Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gia
 ### 6.1. Bảo Mật Khóa API & Vệ Sinh Mã Nguồn (Secret Hygiene):
 * **Nguyên tắc bất khả xâm phạm về khóa**: Tuyệt đối cấm đưa `service_role_key` (khóa có quyền bypass RLS), Private Tokens, webhook secrets ngân hàng hoặc thông tin định danh máy chủ vào Git repository hoặc file JavaScript phía client. Web client chỉ được phép sử dụng duy nhất Supabase Anon / Public Key (`sb_publishable_`...).
 
-* **Bảo vệ toàn vẹn bằng Row Level Security (RLS)**: Toàn bộ 10 bảng dữ liệu trên PostgreSQL bắt buộc kích hoạt cờ `ENABLE ROW LEVEL SECURITY`. Chính sách `SELECT`: Cho phép công khai (anon) đối với các tài nguyên học tập công cộng (A1/A2 cơ bản, blog, shop). Chính sách `INSERT / UPDATE / DELETE`: Chỉ cho phép người dùng thao tác trên chính bản ghi của mình thông qua khóa ngoại user_id = auth.uid() (ví dụ: tạo lọ từ vựng cá nhân, lưu tiến độ học).
+* **Bảo vệ dữ liệu bằng GRANT, quyền cột và Row Level Security (RLS)**: Mọi bảng được expose qua Data API phải bật RLS và cấp quyền tối thiểu. Chỉ công khai nội dung free đã xuất bản; nội dung trả phí kiểm tra entitlement phía server. Quyền thao tác dữ liệu cá nhân kiểm tra chủ sở hữu và các cột được sửa; không cho client tự ghi role, PRO, XP, giá, trạng thái thanh toán hoặc điểm thi. Đáp án và dữ liệu quản trị nhạy cảm nằm trong schema riêng không expose. Ma trận quyền, cấu trúc bảng và hợp đồng RPC thực hiện theo Mục 7.
 
 ### 6.2. Chống Rò Rỉ Đáp Án Đề Thi & Chống Gian Lận (Zero-Answer Leak):
-* **Bảo mật ngân hàng đề thi**: Khi thí sinh đang làm bài, API hoặc RPC truy vấn đề thi (`get_exam_questions`) tuyệt đối không trả về các trường `correct_option`, `explanation_detail` hay bảng điểm đối chiếu. Dữ liệu trả về client chỉ bao gồm: ID câu hỏi, hình ảnh bối cảnh, đoạn âm thanh nghe, văn bản đề bài và danh sách phương án lựa chọn ngẫu nhiên.
+* **Bảo mật ngân hàng đề thi**: Đáp án/lời giải được tách khỏi dữ liệu đề vào `private.exam_answer_keys`, không cấp quyền đọc trực tiếp cho anon/authenticated. API lấy câu hỏi phải kiểm tra quyền, phiên làm bài và version đề; chỉ trả câu hỏi/phương án được giao với ID ổn định. Không chứa answer key trong raw payload, file fallback hoặc metadata. Lời giải chỉ được phát hành theo trạng thái và quyền xem kết quả của phiên.
 
-* **Quy trình chấm thi an toàn qua Serverless RPC**: Client gửi mảng câu trả lời của thí sinh lên Database qua PostgreSQL Function `rpc/submit_exam`. Máy chủ Supabase tự động đối soát đáp án gốc, tính điểm, xác định % đạt theo chuẩn ТРКИ, ghi nhận điểm XP vào bảng profiles và trả kết quả chi tiết kèm lời giải thích sau khi đã đóng phiên làm bài.
+* **Quy trình chấm thi an toàn qua RPC**: Client gửi `attempt_id` và câu trả lời; server xác minh chủ phiên, thời hạn, version và tập câu được giao, khóa attempt, chấm điểm thực tế từng phân môn rồi lưu kết quả và XP duy nhất trong cùng transaction. XP được ghi tại `xp_events` và tổng hợp tại `learner_stats`; retry cùng attempt trả kết quả đã chốt. Ngưỡng đạt và quy tắc thưởng phải được version hóa theo Mục 7; không dùng hàm mẫu gán cố định điểm.
 
 ### 6.3. Giám Sát Phiên Học & Chống Chia Sẻ Tài Khoản (Single Active Session):
-* **Kiểm soát phiên đăng nhập duy nhất**: Bảng `profiles` lưu trữ trường `current_session_id` được cập nhật mỗi khi học viên đăng nhập thành công. Phía client duy trì một subscription realtime lắng nghe thay đổi trên bản ghi cá nhân của chính mình. Nếu phát hiện tài khoản đăng nhập trên một thiết bị hoặc trình duyệt khác (sinh ra `session_id` mới), phiên hiện tại lập tức bị hủy, hiển thị thông báo: "Tài khoản của bạn vừa được đăng nhập trên một thiết bị khác. Vui lòng đăng nhập lại nếu đây không phải thao tác của bạn." Tự động đăng xuất và xóa sạch thông tin token nhạy cảm trong `localStorage`.
+* **Kiểm soát phiên đăng nhập duy nhất**: Đánh giá cấu hình phiên của Supabase Auth đang sử dụng; nếu cần bổ sung, quản lý session đang hoạt động phía server tại `private.active_sessions`. Các API/RPC hoặc policy được bảo vệ kiểm tra session ID từ JWT đã xác minh so với phiên còn hiệu lực; client không được tự ghi session có thẩm quyền. Realtime chỉ giúp giao diện nhận thông báo và đăng xuất nhanh, không thay thế kiểm tra server. Khi bị thay thế phiên, hiển thị: "Tài khoản của bạn vừa được đăng nhập trên một thiết bị khác. Vui lòng đăng nhập lại nếu đây không phải thao tác của bạn." Xóa token/cache riêng theo cơ chế Auth và chính sách ứng dụng.
 
 ---
 
-## 7. DATABASE SCHEMA CHI TIẾT (SUPABASE POSTGRESQL)
+## 7. KIẾN TRÚC CƠ SỞ DỮ LIỆU THỰC TẾ & BẢO MẬT (PRAGMATIC POSTGRESQL SCHEMA) — SUPABASE
 
-```sql
--- Kích hoạt tiện ích mở rộng UUID và tìm kiếm văn bản tiếng Nga/Việt
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+> **Cập nhật kiến trúc: 10/11/2026 — Mô hình Pragmatic 18 Tables (Tối ưu từ bản 51 bảng FK4).**  
+> **Nguyên tắc thiết kế chủ đạo (Karpathy Guidelines)**: *Simplicity First & Pragmatic Engineering*.  
+> Loại bỏ triệt để tình trạng chuẩn hóa quan hệ quá mức (Over-engineering 3NF/4NF) khiến cơ sở dữ liệu phình to 51 bảng và gãy kết nối với Frontend. Thay vào đó, kiến trúc chuẩn hóa tập trung vào **18 bảng cốt lõi**, kết hợp sức mạnh trường `JSONB` của PostgreSQL để lưu trữ dữ liệu phụ thuộc (câu hỏi trắc nghiệm, phân đoạn audio, đáp án lựa chọn), vừa đảm bảo **tốc độ truy vấn dưới 30ms**, vừa khớp 1:1 với mã nguồn `supabase-client.js` và `admin.js`.  
+> **Điểm mấu chốt bắt buộc**: Có **bảng từ vựng chuyên sâu `vocabularies` độc lập** với đầy đủ 16 thuộc tính ngôn ngữ tiếng Nga (trọng âm, từ loại, 6 cách, biến cách, cặp thể, quản cách, cụm từ và câu ví dụ) kết hợp cùng bảng Lọ từ vựng `vocab_jars` và bảng liên kết `jar_items`.
 
--- ============================================================================
--- 1. HỒ SƠ HỌC VIÊN, PHÂN QUYỀN RBAC & GAMIFICATION
--- ============================================================================
-CREATE TYPE user_role AS ENUM ('student', 'teacher', 'academic_admin', 'super_admin');
+---
 
-CREATE TABLE profiles (
-    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-    email TEXT UNIQUE NOT NULL,
-    full_name TEXT,
-    avatar_url TEXT,
-    role user_role DEFAULT 'student',
-    streak_count INT DEFAULT 0,
-    last_study_date DATE,
-    xp_points INT DEFAULT 0,
-    mascot_level INT DEFAULT 1,
-    is_pro BOOLEAN DEFAULT FALSE,
-    pro_expires_at TIMESTAMPTZ,
-    current_session_id TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+### 7.1. Bảng Ma Trận Phân Bổ 18 Bảng Cốt Lõi Theo Phân Hệ
 
--- ============================================================================
--- 2. TỪ ĐIỂN TRA CỨU ĐA TẦNG & QUẢN CÁCH TFLAT
--- ============================================================================
-CREATE TABLE vocabularies (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    word_with_stress TEXT NOT NULL,
-    word_normalized TEXT NOT NULL,
-    transcription TEXT,
-    pos TEXT NOT NULL, -- danh từ, động từ, tính từ...
-    gender CHAR(1),    -- m, f, n (он, она, оно)
-    aspect TEXT,       -- CB / NCB
-    meaning_vi TEXT NOT NULL,
-    cases_table JSONB, -- Bảng 6 Cách chuẩn
-    conjugation_data JSONB, -- Chia thì hiện tại, quá khứ, tương lai
-    structures JSONB,  -- Kết cấu quản cách (Управление: перекусить чем?...)
-    synonyms TEXT[],
-    antonyms TEXT[],
-    family_words TEXT[],
-    audio_url TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-CREATE INDEX idx_vocab_norm ON vocabularies USING gin (word_normalized gin_trgm_ops);
+| Phân hệ | Tên Bảng (`public` / `private`) | Mục đích & Nghiệp vụ cốt lõi | Kiểu Khóa chính | Khóa ngoại & Liên kết |
+|---|---|---|:---:|---|
+| **I. Người dùng & Tiến độ** | `public.profiles` | Thông tin học viên, vai trò (Role), trạng thái bản quyền PRO | `id` (UUID) | FK `auth.users(id)` ON DELETE CASCADE |
+| | `public.user_progress` | Tổng XP, chuỗi ngày Streak, ngày học gần nhất, danh sách đã hoàn thành | `user_id` (UUID) | FK `profiles(id)` ON DELETE CASCADE |
+| | `public.user_vocab_progress` | Tiến độ Spaced Repetition (SM-2) theo từng từ vựng cá nhân | `user_id, vocab_id` | FK `profiles(id)`, FK `vocabularies(id)` |
+| **II. Từ vựng & Lọ từ vựng** | **`public.vocabularies`** | **Kho từ vựng tiếng Nga toàn diện (trọng âm, từ loại, 6 cách, ví dụ)** | `id` (UUID) | Độc lập (từ điển cốt lõi A1–C2) |
+| | `public.vocab_jars` | Danh mục 18 Lọ từ vựng hệ thống & các Lọ cá nhân tự tạo | `id` (UUID) | `owner_id` FK `profiles(id)` (NULL nếu là lọ hệ thống) |
+| | `public.jar_items` | Bảng liên kết nhiều-nhiều giữa Lọ từ vựng và Từ vựng | `jar_id, vocab_id` | FK `vocab_jars(id)`, FK `vocabularies(id)` |
+| **III. Bài học & Kỹ năng** | `public.topic_articles` | Bài học chủ đề chuyên sâu, biên dịch Markdown GFM | `id` (TEXT) | Ánh xạ mã lọ `vocab_jars.code` |
+| | `public.grammar_lessons` | Kho bài học ngữ pháp 6 cách, chia thì, quy tắc & ví dụ | `id` (TEXT) | Độc lập |
+| | `public.listening_topics` | Chủ đề luyện nghe & chép chính tả (Sân bay, mua sắm, KTX, quán ăn, thư viện...) | `id` (UUID) | Độc lập |
+| | `public.listening_lessons` | Bài luyện nghe hiểu & nghe chép chính tả thống nhất (audio Storage, trắc nghiệm, câu timed) | `id` (UUID) | FK `listening_topics(id)` ON DELETE CASCADE |
+| | `public.listening_lesson_vocab` | Bảng liên kết từ vựng nên học từng câu với từ điển cốt lõi `vocabularies` | `id` (UUID) | FK `listening_lessons(id)`, FK `vocabularies(id)` |
+| | `public.speaking_lessons` | Bài luyện nói Shadowing qua Video YouTube (tiêu đề, video ID/URL, danh sách câu theo timestamp start_sec–end_sec, bản dịch) | `id` (UUID) | Độc lập |
+| | `public.writing_topics` | Chủ đề luyện viết (Tả tranh & Luyện dịch theo cấp độ A1–B2) | `id` (UUID) | Độc lập |
+| | `public.writing_tasks` | Bài luyện tập con (ảnh Storage, đề bài, bài mẫu, gợi ý, prompt AI) | `id` (UUID) | FK `writing_topics(id)` ON DELETE CASCADE |
+| | `public.writing_task_vocab` | Bảng liên kết đề bài viết với kho từ điển cốt lõi `vocabularies` | `task_id, vocab_id` | FK `writing_tasks(id)`, FK `vocabularies(id)` |
+| | `public.writing_submissions`| Bài nộp tự luận của học viên & kết quả AI chấm 4 tiêu chí | `id` (UUID) | FK `profiles(id)`, FK `writing_tasks(id)` |
+| **IV. Khảo thí TRKI Bảo mật** | `public.trki_tests` | Đề thi trắc nghiệm A1–C2 (CHỈ chứa câu hỏi, KHÔNG có đáp án) | `id` (TEXT) | Độc lập |
+| | `private.exam_answer_keys` | **Bảng riêng tư giấu đáp án đúng & giải thích (Zero-Leak)** | `exam_id` (TEXT) | FK `trki_tests(id)` ON DELETE CASCADE |
+| | `public.trki_submissions` | Lịch sử nộp bài thi thử, điểm số từng phân môn & kết quả đỗ/trượt | `id` (UUID) | FK `profiles(id)`, FK `trki_tests(id)` |
+| **V. Giao dịch & Thương mại** | `public.packages` | Danh mục gói cước hội viên PRO (`pro_6m`, `pro_1y`, `pro_vip`) | `id` (TEXT) | Độc lập |
+| | `public.orders` | Đơn hàng VietQR, mã giao dịch Casso, trạng thái kích hoạt PRO | `id` (UUID) | FK `profiles(id)`, FK `packages(id)` |
+| | `public.shop_products` | Sản phẩm hàng Nga nội địa, dịch vụ tư vấn du học & công cụ | `id` (TEXT) | Độc lập |
+| **VI. Blog & Cẩm nang** | `public.blog_posts` | Bài viết cẩm nang du học, KTX, đời sống Nga (Markdown GFM) | `id` (TEXT) | Độc lập |
 
--- ============================================================================
--- 3. LỌ TỪ VỰNG CHỦ ĐỀ & THUẬT TOÁN SPACED REPETITION (SM-2)
--- ============================================================================
-CREATE TABLE vocab_jars (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    code TEXT UNIQUE,
-    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE, -- NULL nếu là lọ hệ thống
-    name TEXT NOT NULL,
-    level TEXT NOT NULL, -- A1, A2, B1, B2, C1, C2
-    level_name TEXT,
-    description TEXT,
-    icon_slug TEXT DEFAULT 'archive-jar', -- Chuẩn SVG Lucide, không dùng raw emoji
-    color_code TEXT DEFAULT '#102a4c',
-    is_system BOOLEAN DEFAULT TRUE,
-    words JSONB DEFAULT '[]',
-    raw_data JSONB,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+---
 
-CREATE TABLE jar_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    jar_id UUID REFERENCES vocab_jars(id) ON DELETE CASCADE,
-    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    vocab_id UUID REFERENCES vocabularies(id) ON DELETE CASCADE,
-    box_level INT DEFAULT 1,
-    interval_days INT DEFAULT 1,
-    ease_factor NUMERIC(3,2) DEFAULT 2.50,
-    next_review_at TIMESTAMPTZ DEFAULT NOW(),
-    review_count INT DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-CREATE INDEX idx_jar_items_review ON jar_items(user_id, next_review_at);
+### 7.2. Đặc Tả Chi Tiết 18 Bảng Cốt Lõi
 
--- ============================================================================
--- 4. BÀI HỌC NGỮ PHÁP CHUYÊN ĐỀ
--- ============================================================================
-CREATE TABLE grammar_lessons (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    code TEXT UNIQUE NOT NULL,
-    title TEXT NOT NULL,
-    level TEXT NOT NULL,
-    category TEXT NOT NULL, -- 6 Cách, Động từ chuyển động, Cặp thể...
-    summary TEXT,
-    content_md TEXT NOT NULL,
-    rules JSONB DEFAULT '[]',
-    examples JSONB DEFAULT '[]',
-    exercises JSONB DEFAULT '[]',
-    order_index INT DEFAULT 0,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+#### Phân hệ 1: Người Dùng, Phân Quyền & Tiến Độ Học Tập
 
--- ============================================================================
--- 5. NGÂN HÀNG ĐỀ THI TRKI & KẾT QUẢ THI (ZERO-ANSWER LEAK)
--- ============================================================================
-CREATE TABLE trki_bank (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    code TEXT UNIQUE NOT NULL,
-    title TEXT NOT NULL,
-    level TEXT NOT NULL, -- A1, A2, B1, B2, C1, C2
-    level_name TEXT,
-    duration INT NOT NULL, -- Số phút làm bài
-    passing_score INT DEFAULT 66,
-    is_vip BOOLEAN DEFAULT FALSE,
-    questions JSONB NOT NULL,    -- Chỉ chứa nội dung câu hỏi và lựa chọn
-    answer_keys JSONB NOT NULL,  -- Bị ẩn khỏi quyền anon/authenticated qua RPC
-    raw_data JSONB,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+1. **`public.profiles`**:
+   - `id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE`: Mã định danh học viên khớp với Supabase Auth.
+   - `full_name TEXT`: Họ tên hiển thị.
+   - `avatar_url TEXT`: Đường dẫn ảnh đại diện.
+   - `role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'teacher', 'admin', 'super_admin'))`: Phân quyền quản trị vai trò trực tiếp, không cần tách bảng phụ.
+   - `is_pro BOOLEAN NOT NULL DEFAULT false`: Cờ bản quyền kích hoạt tức thì cho Frontend.
+   - `pro_expires_at TIMESTAMPTZ`: Thời hạn bản quyền PRO (NULL = vô thời hạn/chưa kích hoạt).
+   - `timezone TEXT NOT NULL DEFAULT 'Asia/Ho_Chi_Minh'`: Múi giờ chuẩn IANA dùng tính toán ngày học Streak.
+   - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
-CREATE TABLE trki_submissions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    exam_id UUID REFERENCES trki_bank(id) ON DELETE CASCADE,
-    score NUMERIC(5,2) NOT NULL,
-    is_passed BOOLEAN NOT NULL,
-    user_answers JSONB NOT NULL,
-    detailed_feedback JSONB,
-    xp_awarded INT DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+2. **`public.user_progress`**:
+   - `user_id UUID PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE`.
+   - `xp_total BIGINT NOT NULL DEFAULT 0`: Tổng điểm kinh nghiệm tích lũy toàn thời gian.
+   - `streak_count INT NOT NULL DEFAULT 0`: Số ngày học liên tiếp hiện tại.
+   - `last_study_date DATE`: Ngày học gần nhất (tính theo timezone tài khoản).
+   - `vocab_stats JSONB NOT NULL DEFAULT '{"mastered": 0, "learning": 0, "due": 0}'::jsonb`: Thống kê từ vựng hiển thị nhanh trên trang chủ.
+   - `done_list JSONB NOT NULL DEFAULT '{"vocabDone": [], "listenDone": [], "speakDone": [], "writeDone": [], "trkiDone": []}'::jsonb`: Mảng ID các bài học đã hoàn thành của 5 kỹ năng.
+   - `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
--- ============================================================================
--- 6. PHÂN HỆ LUYỆN NGHE & LUYỆN NÓI SHADOWING
--- ============================================================================
-CREATE TABLE listening_lessons (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    code TEXT UNIQUE,
-    part_type TEXT NOT NULL, -- Part 1, 2, 3, 4 hoặc Youtube Shadowing
-    title TEXT NOT NULL,
-    level TEXT,
-    audio_url TEXT NOT NULL,
-    youtube_video_id TEXT,
-    transcript_ru TEXT NOT NULL,
-    translation_vi TEXT,
-    questions JSONB DEFAULT '[]',
-    is_vip BOOLEAN DEFAULT FALSE,
-    raw_data JSONB,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+3. **`public.user_vocab_progress`**:
+   - `user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE`.
+   - `vocab_id UUID NOT NULL REFERENCES public.vocabularies(id) ON DELETE CASCADE`.
+   - `learning_state SMALLINT NOT NULL DEFAULT 0 CHECK (learning_state BETWEEN 0 AND 3)`: 0: Unseen/New, 1: Learning, 2: Reviewing, 3: Mastered.
+   - `interval_days INT NOT NULL DEFAULT 1`: Khoảng giãn cách ngày ôn tiếp theo theo thuật toán SM-2.
+   - `ease_factor REAL NOT NULL DEFAULT 2.5`: Hệ số độ dễ (Easiness Factor, min 1.3).
+   - `next_review_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`: Mốc thời gian đến hạn ôn tập (được đánh chỉ mục để truy vấn thẻ đến hạn cực nhanh).
+   - `review_count INT NOT NULL DEFAULT 0`: Tổng số lần đã ôn tập.
+   - `last_reviewed_at TIMESTAMPTZ`: Lần ôn tập gần nhất.
+   - `PRIMARY KEY (user_id, vocab_id)`.
 
-CREATE TABLE speaking_sets (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    code TEXT UNIQUE,
-    title TEXT NOT NULL,
-    level TEXT,
-    sentences JSONB NOT NULL, -- Chứa câu, trọng âm, phoneme sequence mẫu
-    is_vip BOOLEAN DEFAULT FALSE,
-    raw_data JSONB,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+---
 
--- ============================================================================
--- 7. PHÂN HỆ LUYỆN VIẾT (TẢ TRANH, TÓM TẮT, THEO CHỦ ĐỀ)
--- ============================================================================
-CREATE TABLE writing_tasks (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    code TEXT UNIQUE,
-    task_type TEXT NOT NULL DEFAULT 'picture_desc', -- picture_desc, summary, essay
-    title TEXT NOT NULL,
-    level TEXT NOT NULL,
-    image_url TEXT,
-    min_words INT DEFAULT 50,
-    suggested_words TEXT[],
-    sample_text TEXT,
-    is_vip BOOLEAN DEFAULT FALSE,
-    raw_data JSONB,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+#### Phân hệ 2: Từ Vựng Tiếng Nga Chuyên Sâu & Lọ Từ Vựng
 
-CREATE TABLE writing_submissions (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    task_id UUID REFERENCES writing_tasks(id) ON DELETE CASCADE,
-    student_text TEXT NOT NULL,
-    word_count INT NOT NULL,
-    ai_score_grammar NUMERIC(3,1),
-    ai_score_vocab NUMERIC(3,1),
-    ai_score_coherence NUMERIC(3,1),
-    ai_score_task NUMERIC(3,1),
-    ai_feedback JSONB,
-    teacher_notes TEXT,
-    xp_awarded INT DEFAULT 0,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+4. **`public.vocabularies` (BẢNG TỪ VỰNG CỐT LÕI — CORE LEXICON)**:
+   > Bảng dữ liệu ngôn ngữ học tiếng Nga chuẩn hóa, phục vụ tra cứu toàn bộ 5.000 từ vựng từ A1 đến C2, Flashcard 3D, từ điển đa tầng 6 cách và bài tập ngữ cảnh.
+   - `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
+   - `word_with_stress TEXT NOT NULL`: Từ tiếng Nga nguyên bản có dấu trọng âm Unicode (ví dụ: `соба́ка`, `перекуси́ть`, `здравствуйте`).
+   - `word_normalized TEXT NOT NULL`: Từ đã chuẩn hóa (bỏ dấu trọng âm, chuyển `ё` $\to$ `е`, viết thường) để đánh chỉ mục tìm kiếm tức thì `ILIKE`.
+   - `pos TEXT NOT NULL`: Từ loại (`noun`, `verb`, `adjective`, `adverb`, `preposition`, `conjunction`, `particle`).
+   - `level TEXT NOT NULL DEFAULT 'A1' CHECK (level IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2'))`: Cấp độ chuẩn khung tham chiếu Châu Âu (CEFR / TRKI).
+   - `gender TEXT CHECK (gender IN ('m', 'f', 'n', 'pl', 'm/f'))`: Giống của danh từ (Đực, Cái, Trung, Luôn số nhiều).
+   - `aspect TEXT CHECK (aspect IN ('imperfective', 'perfective', 'both'))`: Thể động từ (Chưa hoàn thành thể НСВ / Hoàn thành thể СВ).
+   - `meaning_vi TEXT NOT NULL`: Nghĩa tiếng Việt chính xác và phổ biến nhất.
+   - `meaning_ru TEXT`: Giải nghĩa bằng tiếng Nga đơn giản (định nghĩa từ điển học thuật).
+   - `transcription TEXT`: Phiên âm quốc tế IPA hoặc chuyển tự hỗ trợ phát âm.
+   - `examples JSONB NOT NULL DEFAULT '[]'::jsonb`: Mảng các câu ví dụ song ngữ thực tế `[{ "ru": "...", "vi": "..." }]`.
+   - `collocations JSONB NOT NULL DEFAULT '{}'::jsonb`: Cụm động từ đi kèm, cấu trúc quản cách (Управление: ví dụ `перекусить чем?`), và tân ngữ trực tiếp.
+   - `synonyms TEXT[] DEFAULT '{}'`: Mảng từ đồng nghĩa.
+   - `antonyms TEXT[] DEFAULT '{}'`: Mảng từ trái nghĩa.
+   - `audio_url TEXT`: URL tệp âm thanh phát âm bản ngữ chuẩn (nếu có).
+   - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
--- ============================================================================
--- 8. BLOG, SHOP HÀNG NGA, TOOLS & DỊCH VỤ DU HỌC
--- ============================================================================
-CREATE TABLE blog_posts (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    code TEXT UNIQUE,
-    slug TEXT UNIQUE NOT NULL,
-    title TEXT NOT NULL,
-    category TEXT NOT NULL,
-    tag TEXT,
-    date DATE DEFAULT CURRENT_DATE,
-    icon_slug TEXT DEFAULT 'book-open-blog', -- Icon Lucide chuẩn
-    summary TEXT,
-    content_md TEXT NOT NULL,
-    published BOOLEAN DEFAULT TRUE,
-    raw_data JSONB,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+5. **`public.vocab_jars`**:
+   - `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
+   - `code TEXT UNIQUE`: Mã định danh lọ (ví dụ: `nghe_nghiep`, `am_thuc`).
+   - `name TEXT NOT NULL`: Tên hiển thị của lọ từ vựng (ví dụ: "Mua sắm ở Auchan", "Hành lý sân bay").
+   - `owner_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE`: NULL đối với lọ hệ thống; chứa User ID nếu là lọ cá nhân.
+   - `level TEXT NOT NULL DEFAULT 'A1'`: Cấp độ CEFR chủ đạo của lọ.
+   - `icon TEXT NOT NULL DEFAULT 'archive-jar'`: Mã icon Lucide đại diện.
+   - `is_system BOOLEAN NOT NULL DEFAULT true`: `true` = Lọ hệ thống chuẩn hóa; `false` = Lọ cá nhân do học viên PRO tự tạo.
+   - `word_count INT NOT NULL DEFAULT 0`: Số lượng từ có trong lọ.
+   - `is_pro`: cở bản lọ dành cho PRO
+   - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
-CREATE TABLE shop_products (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    code TEXT UNIQUE,
-    name TEXT NOT NULL,
-    category TEXT NOT NULL, -- HangNga, DichVuDuHoc, Tools
-    category_name TEXT,
-    price INT NOT NULL,
-    original_price INT,
-    badge TEXT,
-    image_url TEXT,
-    description TEXT,
-    tools_metadata JSONB, -- Cấu hình riêng cho công cụ chuyển đổi hoặc biểu mẫu
-    raw_data JSONB,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+6. **`public.jar_items`**:
+   - `jar_id UUID NOT NULL REFERENCES public.vocab_jars(id) ON DELETE CASCADE`.
+   - `vocab_id UUID NOT NULL REFERENCES public.vocabularies(id) ON DELETE CASCADE`.
+   - `position INT NOT NULL DEFAULT 0`: Thứ tự sắp xếp từ trong lọ.
+   - `added_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
+   - `PRIMARY KEY (jar_id, vocab_id)`.
 
--- ============================================================================
--- 9. GÓI CƯỚC HỘI VIÊN, ĐƠN HÀNG & VIETQR 2.0
--- ============================================================================
-CREATE TABLE packages (
-    id VARCHAR(50) PRIMARY KEY, -- pro_6m, pro_1y, pro_vip
-    name TEXT NOT NULL,
-    badge TEXT,
-    target TEXT,
-    price INT NOT NULL,
-    original_price INT,
-    duration_days INT,          -- NULL nếu là vĩnh viễn (pro_vip)
-    popular BOOLEAN DEFAULT FALSE,
-    features JSONB NOT NULL,
-    raw_data JSONB,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+---
 
-CREATE TABLE orders (
-    id VARCHAR(50) PRIMARY KEY, -- Format: RUSI_[MãĐơn]_[UserTag]
-    user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
-    package_id VARCHAR(50) REFERENCES packages(id),
-    amount NUMERIC NOT NULL,
-    payment_method VARCHAR(20) DEFAULT 'VIETQR',
-    status VARCHAR(20) DEFAULT 'PENDING', -- PENDING, PAID, CANCELLED, EXPIRED
-    qr_payload TEXT,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    paid_at TIMESTAMPTZ
-);
+#### Phân hệ 3: Các Phân Hệ Bài Học Chuyên Sâu
 
--- ============================================================================
--- 10. ROW LEVEL SECURITY (RLS) POLICIES
--- ============================================================================
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE vocabularies ENABLE ROW LEVEL SECURITY;
-ALTER TABLE vocab_jars ENABLE ROW LEVEL SECURITY;
-ALTER TABLE jar_items ENABLE ROW LEVEL SECURITY;
-ALTER TABLE grammar_lessons ENABLE ROW LEVEL SECURITY;
-ALTER TABLE trki_bank ENABLE ROW LEVEL SECURITY;
-ALTER TABLE trki_submissions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE listening_lessons ENABLE ROW LEVEL SECURITY;
-ALTER TABLE speaking_sets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE writing_tasks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE writing_submissions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE blog_posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE shop_products ENABLE ROW LEVEL SECURITY;
-ALTER TABLE packages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+7. **`public.topic_articles`**:
+   - `id TEXT PRIMARY KEY`: Mã bài học khớp với Lọ từ vựng (ví dụ: `jar_auchan`, `bo_phan_co_the`).
+   - `title TEXT NOT NULL`: Tiêu đề bài học chủ đề.
+   - `level TEXT NOT NULL DEFAULT 'A1'`: Cấp độ TRKI.
+   - `intro TEXT`: Đoạn văn tóm tắt bối cảnh bài đọc.
+   - `content_md TEXT NOT NULL`: Nội dung bài học chuyên sâu định dạng GitHub Flavored Markdown (GFM).
+   - `audio_url TEXT`: URL file thu âm bài đọc hoàn chỉnh.
+   - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
--- Quyền đọc công khai (Public Read) cho kho nội dung bài học tĩnh & shop
-CREATE POLICY "Public read for contents" ON vocabularies FOR SELECT USING (true);
-CREATE POLICY "Public read for jars" ON vocab_jars FOR SELECT USING (is_system = true OR auth.uid() = user_id);
-CREATE POLICY "Public read for grammar" ON grammar_lessons FOR SELECT USING (is_active = true);
-CREATE POLICY "Public read for listening" ON listening_lessons FOR SELECT USING (true);
-CREATE POLICY "Public read for speaking" ON speaking_sets FOR SELECT USING (true);
-CREATE POLICY "Public read for writing" ON writing_tasks FOR SELECT USING (true);
-CREATE POLICY "Public read for blog" ON blog_posts FOR SELECT USING (published = true);
-CREATE POLICY "Public read for shop" ON shop_products FOR SELECT USING (true);
-CREATE POLICY "Public read for packages" ON packages FOR SELECT USING (true);
+8. **`public.grammar_lessons`**:
+   - `id TEXT PRIMARY KEY`: Mã bài ngữ pháp (ví dụ: `gr_case_1_prep`, `gr_motion_verbs`).
+   - `title TEXT NOT NULL`: Tiêu đề bài giảng.
+   - `level TEXT NOT NULL DEFAULT 'A1'`: Cấp độ A1–C2.
+   - `category TEXT NOT NULL`: Nhóm chuyên đề (Cách trong tiếng Nga, Động từ, Cú pháp câu).
+   - `summary TEXT`: Tóm lược kiến thức cốt lõi.
+   - `content_md TEXT NOT NULL`: Nội dung chi tiết bài giảng Markdown.
+   - `rules JSONB NOT NULL DEFAULT '[]'::jsonb`: Danh sách quy tắc và bảng mẫu dạng cấu trúc.
+   - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
--- Bảo mật thông tin người dùng: Chỉ đọc và cập nhật dữ liệu của chính mình
-CREATE POLICY "User read self profile" ON profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "User update self profile" ON profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "User manage self jar_items" ON jar_items FOR ALL USING (auth.uid() = user_id);
-CREATE POLICY "User manage self custom_jars" ON vocab_jars FOR ALL USING (auth.uid() = user_id);
-CREATE POLICY "User read self submissions" ON trki_submissions FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "User read self writing" ON writing_submissions FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "User read self orders" ON orders FOR SELECT USING (auth.uid() = user_id);
+9. **`public.listening_topics` & `public.listening_lessons` & `public.listening_lesson_vocab` (Phân hệ Luyện Nghe & Chép Chính Tả Thống Nhất)**:
+   > **Kiến trúc dữ liệu đồng bộ 100%**: Phân hệ Luyện nghe hiểu và Nghe chép chính tả sử dụng chung 1 bộ dữ liệu bài tập chuẩn hóa (Unified Dataset). Dữ liệu phân cấp gồm nhiều Chủ đề (`listening_topics`), trong mỗi chủ đề có nhiều Bài luyện (`listening_lessons`).
+   - **`public.listening_topics`**:
+     * `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`: Mã định danh chủ đề.
+     * `code TEXT UNIQUE NOT NULL`: Slug định danh (ví dụ: `topic-lis-a1-airport`, `topic-lis-a1-shop`).
+     * `title TEXT NOT NULL`: Tên chủ đề tiếng Nga & tiếng Việt (ví dụ: `Ở sân bay (В аэропорту)`).
+     * `level TEXT NOT NULL DEFAULT 'A1'`: Cấp độ CEFR (A1, A2, B1, B2).
+     * `category TEXT`: Nhóm phân loại icon/bối cảnh (`airport`, `shop`, `dorm`, `cafe`, `campus`, `metro`, `interview`).
+     * `description TEXT`: Đoạn mô tả ngữ cảnh giao tiếp thực tế.
+     * `icon TEXT DEFAULT 'headphones'`: Icon SVG hiển thị đồng bộ từ `RusiIcons`.
+     * `sort_order INT DEFAULT 0`: Thứ tự hiển thị chủ đề.
+     * `is_pro_only BOOLEAN NOT NULL DEFAULT false`: Cờ nội dung PRO.
+   - **`public.listening_lessons`**:
+     * `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`: Mã định danh bài luyện nghe.
+     * `topic_id UUID NOT NULL REFERENCES public.listening_topics(id) ON DELETE CASCADE`: Khóa ngoại liên kết chủ đề cha.
+     * `code TEXT UNIQUE NOT NULL`: Mã bài luyện (ví dụ: `lis-airport`, `lis-shop`).
+     * `title TEXT NOT NULL`: Tiêu đề bài luyện.
+     * `level TEXT NOT NULL DEFAULT 'A1'`: Cấp độ CEFR tương ứng.
+     * `audio_url TEXT`: Đường dẫn tệp âm thanh audio lưu trữ trực tiếp tại Supabase Storage bucket `listening-audio` (`https://nrhtdwjihnlaxrbitmcf.supabase.co/storage/v1/object/public/listening-audio/<filename>.mp3`).
+     * `duration_seconds INT`: Thời lượng audio chuẩn tính bằng giây.
+     * `transcript_ru TEXT`: Toàn bộ lời thoại tiếng Nga kèm tên nhân vật.
+     * `translation_vi TEXT`: Bản dịch tiếng Việt trọn vẹn toàn bài.
+     * `questions JSONB NOT NULL DEFAULT '[]'::jsonb`: Danh sách câu hỏi trắc nghiệm và đáp án dành cho phần nghe hiểu:
+       `[{ "id": "q1", "q": "Chỗ ngồi của Anya là số nào?", "options": ["12Б", "21А", "21Б", "20А"], "a": 1, "explanation": "Nhân viên thông báo: Ваше место — 21А." }]`.
+     * `lines JSONB NOT NULL DEFAULT '[]'::jsonb`: Danh sách từng câu trong đoạn audio tương ứng với thời gian bắt đầu và kết thúc phục vụ nghe chép chính tả & đồng bộ sóng âm waveform:
+       `[{ "id": 1, "start_sec": 0.0, "end_sec": 3.19, "speaker": "Nhân viên", "text_ru": "Ваш паспорт и билет, пожалуйста.", "translation_vi": "Xin hộ chiếu và vé của anh/chị.", "vocab_ids": ["uuid..."] }]`.
+     * `sort_order INT DEFAULT 0`: Thứ tự bài luyện trong chủ đề.
+     * `is_pro_only BOOLEAN NOT NULL DEFAULT false`: Yêu cầu tài khoản PRO.
+     * `raw_data JSONB`: Bản ghi dữ liệu dự phòng tương thích ngược.
+   - **`public.listening_lesson_vocab`**:
+     * `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`: Khóa chính.
+     * `lesson_id UUID NOT NULL REFERENCES public.listening_lessons(id) ON DELETE CASCADE`: Khóa ngoại bài luyện.
+     * `vocab_id UUID NOT NULL REFERENCES public.vocabularies(id) ON DELETE CASCADE`: Khóa ngoại từ điển cốt lõi `vocabularies`.
+     * `line_index INT`: Chỉ số câu thoại trong mảng `lines` (0, 1, 2...) hoặc NULL nếu là từ vựng chung cho cả bài.
+     * `sort_order INT DEFAULT 0`: Thứ tự ưu tiên hiển thị từ vựng trong câu.
+     * Ràng buộc: `UNIQUE (lesson_id, vocab_id, line_index)`.
+   - **Supabase Storage: Bucket `listening-audio`**:
+     * Lưu trữ tệp âm thanh MP3 chất lượng cao cho toàn bộ các bài luyện nghe (`public = true`).
+     * Đường dẫn truy cập: `https://nrhtdwjihnlaxrbitmcf.supabase.co/storage/v1/object/public/listening-audio/<filename>.mp3`.
+     * Chính sách bảo mật: `Public Access Listening Audio` (SELECT công khai cho anon/authenticated), `Allow Upload Listening Audio` (INSERT), `Allow Update Listening Audio` (UPDATE).
 
--- Giới hạn đọc đề thi: Ẩn cột answer_keys khỏi Client khi chưa nộp bài
-CREATE POLICY "Public read questions without keys" ON trki_bank FOR SELECT USING (true);
+10. **`public.speaking_lessons` (Bài Luyện Nói Shadowing Qua Video YouTube)**:
+    - Mô hình: Mỗi bài luyện tương ứng với 1 video YouTube, bao gồm tiêu đề, thông tin video, và danh sách các câu cần luyện tương ứng với video phát từ lúc nào đến lúc nào (`start_sec` -> `end_sec`), kèm bản dịch tiếng Việt và trọng âm.
+    - `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
+    - `code TEXT UNIQUE NOT NULL`: Mã định danh bài học (ví dụ: `YT_SPEAKING_A0sHpmmH1Ng`, `YT_SPEAKING_B1_METRO`).
+    - `title TEXT NOT NULL`: Tiêu đề bài luyện nói Shadowing.
+    - `level TEXT NOT NULL CHECK (level IN ('A1', 'A2', 'B1', 'B2', 'C1', 'C2')) DEFAULT 'A1'`: Trình độ CEFR.
+    - `level_name TEXT`: Tên cấp độ tiếng Việt (Sơ cấp A1, Cơ bản A2, Trung cấp B1, Nâng cao B2).
+    - `category TEXT DEFAULT 'shadowing'`: Nhóm bài học.
+    - `category_name TEXT DEFAULT 'Luyện nói Shadowing qua Video'`.
+    - `youtube_id TEXT NOT NULL`: Mã video YouTube (11 ký tự).
+    - `youtube_url TEXT`: URL xem video (`https://www.youtube.com/watch?v=...`).
+    - `video_sample_url TEXT`: URL nhúng iframe YouTube Player.
+    - `description TEXT`: Đoạn mô tả bài học và mục tiêu luyện nói.
+    - `sentences JSONB NOT NULL DEFAULT '[]'::jsonb`: Danh sách các câu cần luyện phát âm theo video:
+      * Cấu trúc mỗi phần tử câu:
+        ```json
+        {
+          "id": 1,
+          "start_sec": 4.0,
+          "end_sec": 8.5,
+          "speaker": "Рассказчик",
+          "text_ru": "Что это падает с неба? Капля?",
+          "text_stressed": "Что э́то па́дает с не́ба? Ка́пля?",
+          "translation_vi": "Cái gì rơi từ trên trời xuống thế kia? Một giọt nước à?",
+          "start": 4.0,
+          "end": 8.5,
+          "ru": "Что это падает с неба? Капля?",
+          "vi": "Cái gì rơi từ trên trời xuống thế kia? Một giọt nước à?"
+        }
+        ```
+    - `items JSONB`: Mảng câu tương đồng để đảm bảo 100% khả năng tương thích ngược.
+    - `icon TEXT DEFAULT 'youtube'`.
+    - `sort_order INT DEFAULT 0`.
+    - `is_pro_only BOOLEAN DEFAULT false`.
+    - `raw_data JSONB DEFAULT '{}'::jsonb`.
+    - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
+    - **Trigger validation (`private.rusi_validate_speaking()`)**:
+      * Bắt buộc có `youtube_id` hợp lệ.
+      * Bắt buộc `sentences` là một mảng JSONB chứa danh sách câu.
+      * Tự động sinh `youtube_url` và `video_sample_url` nếu chưa có.
+      * Tự động đồng bộ `items` = `sentences`.
+    - **Row Level Security (RLS)**:
+      * Policy `Public Read Speaking Lessons`: SELECT cho phép công khai `anon` và `authenticated`.
+      * Policy `Admin Manage Speaking Lessons`: Toàn quyền ALL cho `authenticated` và `service_role`.
 
--- ============================================================================
--- 11. SERVERLESS RPC FUNCTIONS (CHẤM ĐIỂM BẢO MẬT & GAMIFICATION)
--- ============================================================================
+11. **`public.writing_topics` (Chủ Đề Luyện Viết: Tả Tranh & Luyện Dịch)**:
+    - `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
+    - `code TEXT UNIQUE`: Mã chủ đề định danh (ví dụ: `topic_pic_daily_a1`, `topic_pic_dorm_a2`, `topic_trans_intro_a1`).
+    - `title TEXT NOT NULL`: Tiêu đề chủ đề (ví dụ: "Sinh hoạt thường nhật & Gia đình", "Ký túc xá & Đời sống sinh viên").
+    - `level TEXT NOT NULL DEFAULT 'A1'`: Cấp độ CEFR (`A1`, `A2`, `B1`, `B2`).
+    - `type TEXT NOT NULL DEFAULT 'picture' CHECK (type IN ('picture', 'translation', 'essay'))`: Chế độ luyện viết (`picture` cho Tả tranh, `translation` cho Luyện dịch).
+    - `category TEXT`, `category_name TEXT`: Phân loại nhóm nội dung.
+    - `description TEXT`: Đoạn mô tả mục tiêu học tập.
+    - `icon TEXT`: Mã icon SVG từ hệ thống RusiIcons (ví dụ: `timer-clock`, `building-2`, `plane`, `book-open-blog`).
+    - `image_url TEXT`: Ảnh bìa chủ đề nếu có.
+    - `sort_order INT NOT NULL DEFAULT 0`: Thứ tự ưu tiên hiển thị.
+    - `is_pro_only BOOLEAN NOT NULL DEFAULT false`: Cờ bản quyền nội dung PRO.
+    - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
--- RPC Chấm thi TRKI bảo mật (Zero-Answer Leak)
-CREATE OR REPLACE FUNCTION submit_exam(
-    p_exam_id UUID,
-    p_user_answers JSONB
-)
-RETURNS JSONB
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-    v_exam trki_bank%ROWTYPE;
-    v_total_questions INT;
-    v_correct_count INT := 0;
-    v_score NUMERIC(5,2);
-    v_is_passed BOOLEAN;
-    v_xp INT := 0;
-BEGIN
-    SELECT * INTO v_exam FROM trki_bank WHERE id = p_exam_id;
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'Đề thi không tồn tại.';
-    END IF;
+12. **`public.writing_tasks` (Bài Luyện Tập Con Theo Chủ Đề)**:
+    - `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
+    - `topic_id UUID NOT NULL REFERENCES public.writing_topics(id) ON DELETE CASCADE`: Khóa ngoại liên kết chủ đề cha.
+    - `code TEXT UNIQUE`: Mã bài luyện (ví dụ: `pic_a1_01`, `pic_a1_02`, `trans_a1_01`).
+    - `title TEXT NOT NULL`: Tiêu đề bài luyện (ví dụ: "Bài 1: Bữa sáng của gia đình", "Bài 2: Học tập trong thư viện trường").
+    - `level TEXT NOT NULL DEFAULT 'A1'`: Cấp độ A1–B2.
+    - `task_type TEXT NOT NULL DEFAULT 'picture_desc' CHECK (task_type IN ('picture_desc', 'translation', 'summary', 'topic_essay'))`: Dạng bài tập.
+    - `image_url TEXT`: 1 Ảnh minh họa lưu trữ từ Supabase Storage (`storage.buckets`: `writing-images`).
+    - `prompt TEXT NOT NULL`: Đề bài chi tiết (tiếng Nga cho tả tranh, tiếng Việt cần dịch cho luyện dịch).
+    - `prompt_text TEXT`: Bản ghi phụ đề bài tương thích ngược.
+    - `model_answer TEXT`: Bài văn miêu tả chuẩn hoặc bản dịch tiếng Nga mẫu đạt điểm tối đa TRKI.
+    - `sample_essay TEXT`: Văn bản bài mẫu tham khảo đồng bộ.
+    - `tips JSONB NOT NULL DEFAULT '[]'::jsonb`: Mảng JSON các câu hỏi định hướng, lưu ý ngữ pháp và gợi ý mở bài.
+    - `ai_prompt TEXT`: Prompt hướng dẫn giám khảo AI Rusika chấm điểm theo barem 4 tiêu chí CEFR chuẩn mực.
+    - `min_words INT NOT NULL DEFAULT 25`: Số từ tối thiểu yêu cầu cho bài viết.
+    - `sort_order INT NOT NULL DEFAULT 0`: Thứ tự sắp xếp bài tập trong chủ đề.
+    - `is_pro_only BOOLEAN NOT NULL DEFAULT false`: Yêu cầu gói PRO.
+    - `publication_status TEXT NOT NULL DEFAULT 'published'`.
+    - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
-    -- Tính toán điểm số dựa trên đáp án gốc ẩn trong v_exam.answer_keys
-    -- (Logic đối chiếu đáp án p_user_answers và v_exam.answer_keys)
-    v_score := 75.0; -- Điểm tính toán thực tế
-    v_is_passed := (v_score >= v_exam.passing_score);
-    
-    IF v_is_passed THEN
-        v_xp := 30; -- Thưởng +30 XP theo quy chuẩn Mục 8.12
-    END IF;
+13. **`public.writing_task_vocab` (Bảng Liên Kết Từ Vựng Từ Điển Cho Bài Viết)**:
+    > Bảng liên kết nhiều-nhiều giúp mỗi bài viết kết nối trực tiếp với các mục từ vựng chuẩn hóa trong kho từ điển `vocabularies`.
+    - `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
+    - `task_id UUID NOT NULL REFERENCES public.writing_tasks(id) ON DELETE CASCADE`.
+    - `vocab_id UUID NOT NULL REFERENCES public.vocabularies(id) ON DELETE CASCADE`.
+    - `sort_order INT NOT NULL DEFAULT 0`: Thứ tự hiển thị trong ngăn kéo từ vựng gợi ý.
+    - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
+    - `UNIQUE (task_id, vocab_id)`.
 
-    -- Lưu lịch sử nộp bài
-    INSERT INTO trki_submissions (user_id, exam_id, score, is_passed, user_answers, xp_awarded)
-    VALUES (auth.uid(), p_exam_id, v_score, v_is_passed, p_user_answers, v_xp);
+14. **`public.writing_submissions` (Bài Nộp Tự Luận & Lịch Sử AI Chấm Điểm)**:
+    - `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
+    - `user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE`.
+    - `task_id UUID NOT NULL REFERENCES public.writing_tasks(id) ON DELETE CASCADE`.
+    - `content_ru TEXT NOT NULL`: Nội dung bài làm tiếng Nga của học viên.
+    - `word_count INT NOT NULL`: Số từ học viên đã viết.
+    - `overall_score NUMERIC(5,2)`: Điểm tổng kết thang 100.
+    - `ai_feedback JSONB`: Kết quả phân tích chi tiết từ AI (điểm 4 tiêu chí, câu lỗi, câu sửa, giải thích ngữ pháp).
+    - `submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
-    -- Cộng điểm XP cho học viên
-    IF v_xp > 0 THEN
-        UPDATE profiles 
-        SET xp_points = xp_points + v_xp,
-            last_study_date = CURRENT_DATE
-        WHERE id = auth.uid();
-    END IF;
+15. **Supabase Storage: Bucket `writing-images`**:
+    > Bucket lưu trữ hình ảnh công khai cho phân hệ Tả tranh (`public = true`), cho phép client tải ảnh qua đường dẫn:
+    > `https://nrhtdwjihnlaxrbitmcf.supabase.co/storage/v1/object/public/writing-images/<filename>`.
+    - Phân quyền: Cấp policy `Public Access Writing Images` (SELECT công khai cho anon/authenticated).
 
-    RETURN jsonb_build_object(
-        'score', v_score,
-        'is_passed', v_is_passed,
-        'xp_awarded', v_xp,
-        'passing_score', v_exam.passing_score
-    );
-END;
-$$;
+---
 
-```
+#### Phân hệ 4: Khảo Thí TRKI & Chống Lộ Đáp Án (Zero-Leak)
+
+15. **`public.trki_tests`**:
+    > **Cấu trúc 5 phân môn chính thức theo chuẩn quốc gia Nga ТРКИ**:
+    - `id TEXT PRIMARY KEY`: Mã đề thi UUID hoặc mã định danh (ví dụ: `58742d5e-b98e-41e0-a3cb-4680392ae146`, `trki_a1`).
+    - `code TEXT`: Mã đề thi chuẩn rút gọn (`trki_a1`, `trki_a2`, `trki_b1`, `trki_b2`).
+    - `title TEXT NOT NULL`: Tên đề thi mô phỏng.
+    - `level TEXT NOT NULL DEFAULT 'A1'`: Cấp độ chuẩn ТЭУ (A1) đến ТРКИ-2 (B2).
+    - `duration_min INT NOT NULL DEFAULT 45`: Thời gian làm bài tính bằng phút.
+    - `pass_percent INT NOT NULL DEFAULT 66`: Tỷ lệ phần trăm tối thiểu để ĐẠT (СДАНО).
+    - `part1 JSONB NOT NULL DEFAULT '{}'::jsonb`: Phần 1 - Từ vựng & Ngữ pháp (Лексика и грамматика) gồm danh sách câu hỏi trắc nghiệm, các lựa chọn A, B, C, D và giải thích ngữ pháp.
+    - `part2 JSONB NOT NULL DEFAULT '{}'::jsonb`: Phần 2 - Đọc hiểu (Чтение) gồm đoạn văn bản đọc `text: { ru, vi }` và hệ thống câu hỏi trắc nghiệm kèm giải thích.
+    - `part3 JSONB NOT NULL DEFAULT '{}'::jsonb`: Phần 3 - Nghe hiểu (Аудирование) gồm file âm thanh native Russian lưu trữ tại Supabase Storage bucket `trki-audio`, hệ thống câu hỏi trắc nghiệm và lời thoại hội thoại.
+    - `part4 JSONB NOT NULL DEFAULT '{}'::jsonb`: Phần 4 - Chủ đề viết (Письмо) gồm đề bài viết tự luận, yêu cầu số từ tối thiểu (`minWords`), dịch tiếng Việt và bài văn mẫu chuẩn ngữ pháp.
+    - `part5 JSONB NOT NULL DEFAULT '{}'::jsonb`: Phần 5 - Đề bài tình huống (Говорение) gồm các tình huống giao tiếp đời sống thực tế, bản dịch tiếng Việt và câu nói gợi ý mẫu phản xạ.
+    - `answers JSONB NOT NULL DEFAULT '{}'::jsonb`: Bảng đáp án và hướng dẫn giải cho tất cả các phần trong đề (`part1`, `part2`, `part3`, `part4`, `part5`).
+    - `parts JSONB`: Mảng hợp nhất 5 phần thi `[part1, part2, part3, part4, part5]` được trigger `private.rusi_sync_trki_test()` tự động đồng bộ hóa hai chiều.
+    - `is_pro_only BOOLEAN NOT NULL DEFAULT false`: Khóa đề thi thử B1–B2 cho tài khoản PRO.
+    - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
+
+16. **`private.exam_answer_keys` (BẢNG RIÊNG TƯ — BẢO VỆ ĐÁP ÁN ĐỀ THI)**:
+    > Bảng nằm trong schema `private`, hoàn toàn **không cấp quyền SELECT cho anon/authenticated**. Chỉ có hàm RPC chấm thi `SECURITY DEFINER` hoặc service_role mới được phép đọc.
+    - `exam_id TEXT PRIMARY KEY REFERENCES public.trki_tests(id) ON DELETE CASCADE`.
+    - `keys JSONB NOT NULL`: Bảng mã đáp án đúng `{ "q1": 1, "q2": 0, "q3": 2 }` hoặc `{ "q1": "пошли" }`.
+    - `explanations JSONB NOT NULL DEFAULT '{}'::jsonb`: Lời giải chi tiết sư phạm cho từng câu.
+    - `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
+
+17. **`public.trki_submissions`**:
+    - `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
+    - `user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE`.
+    - `exam_id TEXT NOT NULL REFERENCES public.trki_tests(id) ON DELETE CASCADE`.
+    - `score_percent NUMERIC(5,2) NOT NULL`: Điểm tổng kết toàn bài (%).
+    - `passed BOOLEAN NOT NULL`: `true` nếu tất cả phân môn $\ge 66\%$ (hoặc đạt chuẩn bảo lưu 1 kỹ năng $60-65\%$).
+    - `section_scores JSONB NOT NULL`: Điểm chi tiết từng phân môn `{ "subtest_1": 75.5, "subtest_2": 68.0 }`.
+    - `user_answers JSONB NOT NULL`: Bài làm thực tế của học viên `{ "q1": 1, "q2": 0 }`.
+    - `time_spent_sec INT NOT NULL`: Thời gian hoàn thành bài thi (giây).
+    - `submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
+
+---
+
+#### Phân hệ 5: Kinh Doanh, Đơn Hàng & Hội Viên PRO
+
+18. **`public.packages`**:
+    - `id TEXT PRIMARY KEY CHECK (id IN ('pro_6m', 'pro_1y', 'pro_vip'))`: Mã định danh 3 gói cước chuẩn.
+    - `name TEXT NOT NULL`: Tên gói (Gói 6 Tháng, Gói 1 Năm, Gói Trọn Đời).
+    - `price_vnd BIGINT NOT NULL`: Giá tiền tính bằng Việt Nam Đồng (VND).
+    - `duration_months INT`: Thời lượng gói (6, 12; NULL nếu là trọn đời).
+    - `is_lifetime BOOLEAN NOT NULL DEFAULT false`: Đánh dấu gói Vĩnh viễn.
+    - `badge TEXT`: Nhãn nổi bật (ví dụ: "Phổ Biến Nhất", "VIP Quyền Năng").
+    - `features JSONB NOT NULL DEFAULT '[]'::jsonb`: Mảng các quyền lợi đặc quyền.
+    - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
+
+19. **`public.orders`**:
+    - `id UUID PRIMARY KEY DEFAULT gen_random_uuid()`.
+    - `order_code TEXT UNIQUE NOT NULL`: Mã đơn thanh toán VietQR duy nhất (`RUSI_[MãĐơn]_[UserTag]`).
+    - `user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE`.
+    - `package_id TEXT NOT NULL REFERENCES public.packages(id)`.
+    - `amount BIGINT NOT NULL`: Số tiền thanh toán (VND).
+    - `status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'expired', 'cancelled'))`: Trạng thái đơn.
+    - `payment_method TEXT NOT NULL DEFAULT 'vietqr'`: Phương thức thanh toán.
+    - `casso_trans_id TEXT`: Mã giao dịch đối soát từ webhook Casso / Napas247.
+    - `expires_at TIMESTAMPTZ NOT NULL`: Thời điểm hết hạn phiên giao dịch 15:00.
+    - `paid_at TIMESTAMPTZ`: Thời điểm nhận được tiền.
+    - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
+
+20. **`public.shop_products`**:
+    - `id TEXT PRIMARY KEY`: Mã sản phẩm (ví dụ: `sp_alenka`, `sp_visa_mvd`, `sp_keyboard_tools`).
+    - `code TEXT UNIQUE`: Mã định danh danh mục.
+    - `name TEXT NOT NULL`: Tên sản phẩm hàng Nga hoặc dịch vụ du học.
+    - `category TEXT NOT NULL CHECK (category IN ('food', 'cosmetics', 'souvenir', 'service', 'tools'))`: Phân loại.
+    - `price_vnd BIGINT NOT NULL`: Giá bán niêm yết (VND).
+    - `image_url TEXT`: Ảnh đại diện sản phẩm.
+    - `description TEXT`: Mô tả chi tiết sản phẩm.
+    - `status TEXT NOT NULL DEFAULT 'in_stock' CHECK (status IN ('in_stock', 'out_of_stock', 'pre_order'))`.
+    - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
+
+---
+
+#### Phân hệ 6: Cẩm Nang & Blog Du Học
+
+21. **`public.blog_posts`**:
+    - `id TEXT PRIMARY KEY`: ID định danh bài viết.
+    - `slug TEXT UNIQUE NOT NULL`: Đường dẫn thân thiện chuẩn SEO (ví dụ: `kinh-nghiem-song-ktx-nga-moskva`).
+    - `title TEXT NOT NULL`: Tiêu đề bài viết.
+    - `category TEXT NOT NULL`: Chuyên mục (Du học Nga, Đời sống KTX, Thủ tục Visa, Kinh nghiệm săn học bổng).
+    - `tags TEXT[] DEFAULT '{}'`: Danh sách thẻ tag SEO.
+    - `summary TEXT NOT NULL`: Đoạn trích dẫn tóm tắt xuất hiện trên danh sách thẻ blog.
+    - `content_md TEXT NOT NULL`: Nội dung bài viết định dạng GitHub Flavored Markdown (GFM).
+    - `cover_url TEXT`: Ảnh bìa bài viết tỷ lệ 16:9.
+    - `author TEXT NOT NULL DEFAULT 'Ban Biên Tập RUSI TRKI'`: Tác giả bài viết.
+    - `published_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`: Ngày đăng bài.
+    - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
+
+---
+
+### 7.3. Các Hàm RPC Nghiệp Vụ Bảo Mật Cốt Lõi (Security Definer RPCs)
+
+Mọi thao tác can thiệp vào tài chính, bản quyền PRO, điểm số và đáp án đề thi đều được thực hiện thông qua RPC phía server (`SECURITY DEFINER`), cô lập hoàn toàn logic nhạy cảm khỏi client:
+
+1. **`public.rusi_grade_trki_exam(p_test_id TEXT, p_user_answers JSONB, p_time_spent_sec INT) -> JSONB`**:
+   - **Mục đích**: Chấm thi trắc nghiệm TRKI bảo mật tuyệt đối chống gian lận (Zero-Answer Leak).
+   - **Quy trình xử lý**:
+     * Xác thực `auth.uid()`, kiểm tra sự tồn tại của `trki_tests`.
+     * Đọc đáp án bí mật và lời giải sư phạm từ `private.exam_answer_keys(keys, explanations)`.
+     * So khớp từng câu hỏi với `p_user_answers`, tính điểm phần trăm `score_percent` và trạng thái ĐẠT/KHÔNG ĐẠT (`passed` khi $\ge 66\%$, hỗ trợ quy chế bảo lưu 1 kỹ năng $60-65\%$).
+     * Lưu bài làm vào `public.trki_submissions`.
+     * Thưởng ngay `+30 XP` vào `public.user_progress`, cập nhật mảng `done_list.trkiDone` trong cùng một transaction.
+   - **Trả về**: `{ submission_id, score_percent, passed, correct_count, total_questions, xp_earned, explanations }`.
+
+2. **`public.rusi_submit_srs_review(p_vocab_id UUID, p_rating SMALLINT) -> JSONB`**:
+   - **Mục đích**: Ghi nhận kết quả ôn từ vựng và tự động giãn cách theo thuật toán Spaced Repetition (SM-2).
+   - **Tham số đánh giá (`p_rating`)**: `1`: Again (Ôn lại), `2`: Hard (Khó), `3`: Good (Nhớ tốt), `4`: Easy (Dễ).
+   - **Quy trình xử lý**:
+     * Đọc tiến độ từ `public.user_vocab_progress`. Nếu từ mới, khởi tạo `ease_factor = 2.5`.
+     * Điều chỉnh `interval_days` (ngày), `ease_factor` (min 1.3), và trạng thái `learning_state` (1: Learning, 2: Reviewing, 3: Mastered).
+     * Tính toán mốc thời gian đến hạn kế tiếp: `next_review_at = NOW() + interval_days`.
+     * Cập nhật `user_vocab_progress` (`ON CONFLICT (user_id, vocab_id) DO UPDATE`).
+   - **Trả về**: `{ vocab_id, state, interval_days, next_review_at }`.
+
+3. **`public.rusi_activate_order(p_order_code TEXT, p_casso_ref TEXT) -> JSONB`**:
+   - **Mục đích**: Tự động đối soát và kích hoạt quyền hội viên PRO qua Webhook ngân hàng / Casso.
+   - **Quy trình xử lý**:
+     * Tìm đơn hàng `orders` có mã `order_code` ở trạng thái `pending`.
+     * Đọc thông tin gói từ `packages`, xác định ngày hết hạn `pro_expires_at` (thời hạn 6/12 tháng hoặc `NULL` nếu là gói trọn đời `pro_vip`).
+     * Cập nhật đơn hàng: `status = 'paid'`, lưu `casso_trans_id`, `paid_at = NOW()`.
+     * Nâng cấp hồ sơ học viên: `profiles.is_pro = true`, `profiles.pro_expires_at = v_expires`.
+   - **Trả về**: `{ success: true, user_id, expires_at }`.
+
+---
+
+### 7.4. Phân Quyền Row Level Security (RLS) Chuẩn Xác
+
+1. **Bảng nội dung học tập công khai** (`vocabularies`, `vocab_jars`, `jar_items`, `topic_articles`, `grammar_lessons`, `listening_topics`, `listening_lessons`, `listening_lesson_vocab`, `speaking_lessons`, `writing_topics`, `writing_tasks`, `writing_task_vocab`, `trki_tests`, `packages`, `shop_products`, `blog_posts`):
+   - `SELECT`: Cấp quyền đọc tự do cho `anon` và `authenticated`.
+   - `INSERT, UPDATE, DELETE`: Giới hạn nghiêm ngặt chỉ tài khoản quản trị (`profiles.role IN ('admin', 'super_admin')`).
+2. **Bảng dữ liệu cá nhân học viên** (`profiles`, `user_progress`, `user_vocab_progress`, `writing_submissions`, `trki_submissions`, `orders`):
+   - `SELECT`: `auth.uid() = user_id` (học viên chỉ xem dữ liệu của chính mình) hoặc Admin xem toàn bộ.
+   - `UPDATE`: Học viên chỉ được cập nhật các trường profile cho phép (`full_name`, `avatar_url`), **tuyệt đối không được cập nhật `role`, `is_pro`, `xp_total` trực tiếp từ client**. Mọi điểm số và bản quyền đều qua RPC bảo mật.
+3. **Bảng giấu đáp án đề thi** (`private.exam_answer_keys`):
+   - Nằm trong `private schema`, không expose qua Data API, chặn 100% quyền truy cập trực tiếp từ client.
+
+---
+
 
 ## 8. QUY TẮC CỐT LÕI CHO AI CODING AGENT
 
@@ -758,483 +953,125 @@ $$;
 1. **Bảo tồn nguyên vẹn nội dung người dùng (Content Integrity)**:
    Tuyệt đối không xóa, sửa, tóm tắt hoặc viết lại tiêu đề, mô tả, văn bản người dùng đã đặt trên web trừ khi có yêu cầu rõ ràng từ người dùng.
 
-2. **Tuân thủ quy chuẩn Responsive & "More..."**:
-   Trước khi báo cáo hoàn thành bất kỳ tác vụ giao diện nào, luôn kiểm tra hiển thị trên Mobile ($\le 768px$) và Tablet ($768px - 1024px$), áp dụng quy tắc gom cụm "Khác ▾" (More...) cho các thành phần dài/tràn, tránh cắt xén hiển thị cụt lủn.
+2. **Tuân thủ quy chuẩn Responsive & "More..." (Overflow Protection)**:
+   Trước khi hoàn thành bất kỳ tác vụ giao diện nào, bắt buộc thẩm định trên Mobile ($\le 768px$) và Tablet ($768px - 1024px$). Áp dụng quy tắc gom cụm "Khác ▾" (More...) cho các thành phần vượt quá chiều rộng màn hình, không để chữ bị chém ngang hoặc phát sinh cuộn ngang ngoài ý muốn.
 
-3. **Quy tắc bảo vệ ngôn từ UI — Cấm hiển thị từ "Trụ Cột"**:
+3. **Bảo vệ ngôn từ UI — Cấm hiển thị từ "Trụ Cột"**:
    Khái niệm "7 Trụ cột" chỉ là thuật ngữ cấu trúc tài liệu nội bộ; **tuyệt đối không hiển thị từ "Trụ cột" ra màn hình học viên**. Chỉ gọi tên trực tiếp các module: *Từ Vựng, Luyện Viết, Luyện Nghe, Luyện Nói, Luyện Thi TRKI, Shop, Blog*.
 
-4. **Quy chuẩn Header Navigation (Tổng quan)**:
-   * **Cấu trúc 3 vùng cân đối**:
-     - *Vùng trái*: Logo thương hiệu đặt sát mép lề an toàn (safe margin).
-     - *Vùng giữa*: Hệ thống 7 chuyên mục học tập trung tâm (co cụm linh hoạt theo thiết bị).
-     - *Vùng phải*: Cụm tiện ích học tập (Pomodoro mini), phím tắt PRO và khu vực Auth / Hồ sơ học viên.
-   * **Quy tắc hiển thị Gamification (XP & Streak)**:
-     - *Khi chưa đăng nhập*: Ẩn tuyệt đối chỉ số XP và Streak để giữ thanh điều hướng tối giản, sạch sẽ.
-     - *Khi đã đăng nhập*: XP và Streak được hiển thị trang trọng bên trong Dropdown tài khoản học viên (kèm thanh cấp độ/tiến trình), không phơi bày ra thanh ngoài để tránh gây nhiễu thị giác.
-   * **Phân cấp Responsive trên 3 chuẩn thiết bị**:
-     - **Desktop (> 1024px)**: 
-       + Chiều cao cố định chuẩn: `68px`.
-       + Bố cục thoáng đãng, hiển thị đầy đủ thanh menu ngang gồm 7 chuyên mục.
-       + Cụm bên phải hiển thị đầy đủ nhãn nút (Đăng nhập / Đăng ký hoặc Widget Pomodoro + Nút PRO + Avatar & Tên học viên).
-     - **Tablet (768px - 1024px)**: 
-       + Chiều cao cố định: `64px`.
-       + Thanh tìm kiếm và nút phụ thu gọn thành dạng icon.
-       + *Xử lý 7 chuyên mục*: Hiển thị 4 chuyên mục trọng tâm ngoài thanh ngang, 3 chuyên mục còn lại gom vào dropdown `Khác ▾` (hoặc chuyển sang dạng Mobile Drawer nếu chiều rộng nội dung vượt ngưỡng an toàn).
-     - **Mobile (< 768px & ≤ 480px)**: 
-       + Chiều cao cố định chuẩn: `60px`.
-       + Chuyển đổi toàn bộ menu giữa sang ngăn kéo trượt (`.header-center.nav-open`) điều khiển qua nút Hamburger 44px.
-       + Cụm phải thu gọn tối đa: ẩn nút Đăng ký ngoài thanh chính, rút gọn Pomodoro và PRO, neo Dropdown tài khoản dạng `position: fixed` chống tràn màn hình.
-       *(Toàn bộ thông số animation, touch target, khóa cuộn và z-index tuân thủ nghiêm ngặt theo **Mục 3.3**)*.
+4. **Tuân thủ Quy chuẩn Header Navigation**:
+   Áp dụng nghiêm ngặt cấu trúc 3 vùng cân đối, chiều cao cố định (Desktop 68px, Tablet 64px, Mobile 60px) và menu ngăn kéo trượt `nav-open` theo quy chuẩn tại **Mục 3.3**. XP và Streak chỉ hiển thị trong dropdown tài khoản khi đã đăng nhập.
 
 5. **Theme Russian Winter Cool Blue**:
-   Cố định giao diện Sáng (`data-theme="light"` và `data-season="winter"`), mang phong cách mùa đông nước Nga thanh lịch với bảng màu:
-   - Nền chính (`--bg`): `#eef4fb`
-   - Bề mặt thẻ (`--surface`): `#ffffff`
-   - Màu chữ chính (`--text`): `#0f1f38`
-   - Màu đường viền (`--border`): `#d2e0f0`
+   Cố định giao diện Sáng (`data-theme="light"` và `data-season="winter"`), phong cách mùa đông nước Nga: Nền chính (`#eef4fb`), bề mặt thẻ (`#ffffff`), màu chữ chính (`#0f1f38`), màu đường viền (`#d2e0f0`), điểm nhấn Đỏ Crimson (`#c52233`) và Xanh Cobalt (`#1757a6`).
 
 6. **Quy chuẩn Deploy GitHub Pages & Cache-Busting Tự Động**:
-   * Luôn duy trì file `.nojekyll` ở thư mục gốc để vô hiệu hóa Jekyll build.
-   * **Quy tắc phiên bản động**: Tuyệt đối không gắn cứng query parameter cố định. Mỗi khi AI Agent can thiệp thay đổi nội dung file CSS/JS lõi (`style.css`, `app.js`...), AI Agent **phải tự động tăng số version minor/patch** (ví dụ: từ `?v=3.2` lên `?v=3.2.1` hoặc `?v=3.3`) trên toàn bộ các file HTML gọi đến để kích hoạt Cloudflare CDN và trình duyệt xóa cache lập tức.
+   * Luôn duy trì tệp `.nojekyll` ở thư mục gốc để vô hiệu hóa Jekyll build.
+   * **Quy tắc phiên bản động**: Mỗi khi thay đổi file CSS/JS lõi (`styles.css`, `pages.js`, `app.js`...), phải tự động tăng số version query parameter (ví dụ: `?v=9.5`) trên toàn bộ 16 file HTML gọi đến để kích hoạt Cloudflare và trình duyệt làm mới cache tức thì.
 
 7. **Bảo mật Git & Secret Hygiene**:
    Tuyệt đối không commit API secret key, Service role key, Database connection string hoặc thông tin nhạy cảm vào Git repository.
 
-8. **Quy chuẩn Chân trang (Footer Navigation & Dark Baltic Styling)**:
-   * Đồng bộ 100% tất cả các trang web qua component `<footer class="site-footer">`.
-   * Cố định đúng 7 liên kết chuyên mục cốt lõi trong `.footer-links`: `Từ vựng | Viết | Nghe | Nói | TRKI | Blog | Shop`. Tuyệt đối không chèn thêm các liên kết phụ trợ (`how-to-study.html`, `upgrade.html`) vào danh sách này để duy trì sự thanh thoát, cân xứng với Header.
-   * Phối màu chuẩn Deep Baltic Navy `#081528`: Viền trên `1px solid rgba(255, 255, 255, 0.08)`, chữ mô tả xám sáng `#94a3b8`, liên kết chuyên mục `#cbd5e1` (hover đổi màu `#38bdf8`), chữ bản quyền `#64748b`. Bỏ hẳn màu inline `#8dbcef` gây lỗi chữ logo `TRKI`. Vô hiệu hóa toàn bộ các override gradient màu mè ở các trang chuyên mục, bảo đảm 100% trang web đều có chân trang sang trọng, độ tương phản cao, chuẩn WCAG AAA.
-   * Responsive chuẩn 3 thiết bị:
-     - Desktop (> 1024px): Bố cục 3 cột cân đối (`Logo Brand` | `Đoạn mô tả ngắn gọn` | `7 Liên kết chuyên mục`) và hàng bản quyền dàn ngang full-width ở đáy.
-     - Tablet & Mobile (<= 1024px & <= 480px): Tự động chuyển thành 1 cột duy nhất, căn giữa toàn bộ Brand, mô tả và hàng liên kết; tap target liên kết $\ge 44px$; padding gọn gàng 32px - 40px, tuyệt đối không phát sinh thanh cuộn ngang `overflow-x`.
+8. **Quy chuẩn Chân trang (Footer Navigation)**:
+   Đồng bộ qua component `<footer class="site-footer">` màu Deep Baltic Navy `#081528`. Cố định đúng 7 liên kết chuyên mục cốt lõi (`Từ vựng | Viết | Nghe | Nói | TRKI | Blog | Shop`). Desktop dàn 3 cột cân đối; Tablet/Mobile tự động xếp 1 cột căn giữa với tap target $\ge 44$px.
 
-9. **Quy chuẩn Bộ Lọc & Phân Trang (Default Level A1 & Pagination)**:
-   * Các trang danh sách bài học/đề thi mặc định lọc theo cấp độ `A1` (Sơ cấp) thay vì "Tất cả", giúp người học mới bắt đầu không bị ngợp và tối ưu hóa tốc độ nạp dữ liệu.
-   * Thanh công cụ lọc phải tinh gọn, hỗ trợ phân trang (Pagination) rõ ràng khi số lượng mục lớn.
+9. **Bộ Lọc & Phân Trang (Default Level A1 & Pagination)**:
+   Các trang danh sách bài học/đề thi mặc định lọc theo cấp độ `A1` (Sơ cấp) thay vì "Tất cả", giúp người học mới bắt đầu không bị ngợp và tối ưu tốc độ nạp dữ liệu.
 
-10. **Phong cách Thiết kế Tối giản & Biên tập Tinh Tế (Clean Editorial Style)**:
-    * Tránh lạm dụng emoji trang trí ở tiêu đề mục và nút bấm CTA (ví dụ: dùng *"Bắt đầu luyện nghe →"*, *"Bắt đầu luyện nói →"*, *"Bắt đầu học ngay hôm nay"* thay vì các biểu tượng gây xao nhãng như 🎧, 🎙️, 🚀).
-    * Các nút bấm xác thực (Đăng nhập, Đăng ký) tại Header sử dụng icon SVG tối giản, thanh mảnh.
+10. **Phong cách Thiết kế Tối giản (Clean Editorial Style)**:
+    Tránh lạm dụng emoji trang trí ở tiêu đề mục và nút bấm CTA (dùng *"Bắt đầu luyện nghe →"*, *"Bắt đầu luyện nói →"* thay vì 🎧, 🎙️, 🚀). Nút bấm xác thực tại Header sử dụng icon SVG tối giản, thanh mảnh.
 
-11. **Phân Định Không Gian: Pomodoro Header & Bong Bóng Chat AI Nổi**:
-    * **Pomodoro Mini (Header Top-Right)**:
-      - Tích hợp trọn vẹn trong `.header-actions` trên thanh điều hướng trên cùng.
-      - Popover điều khiển mở thả xuống từ mép dưới header (`position: absolute; top: calc(100% + 8px); right: 0; z-index: 1010;`).
-    * **Trợ lý AI Nổi (`.companion-bubble` - Floating Bottom-Right)**:
-      - Ẩn khối giới thiệu tĩnh trên trang chủ, chuyển thành dạng bong bóng chat nổi tròn thông minh cố định duy nhất ở góc dưới cùng bên phải màn hình:
-        ```css
-        .companion-bubble {
-          position: fixed;
-          bottom: 24px;
-          right: 20px;
-          z-index: 990; /* Luôn thấp hơn Header (1000) và Popover/Drawer (1010) */
-        }
-        ```
-      - *Vùng đệm an toàn trên Mobile*: Cách mép đáy tối thiểu `24px` (hoặc `calc(24px + env(safe-area-inset-bottom))`). Khi trang học tập có thanh Bottom Bar / nút nộp bài cố định sát đáy, AI Bubble tự động dâng cao lên `bottom: 84px;` để chống che khuất nút thao tác chính.
-      - *Cửa sổ Chat mở rộng (`.companion-modal`)*: Desktop kích thước `380px x 560px` neo tại góc phải dưới; Mobile chuyển thành dạng Bottom Sheet hoặc modal che phủ tự động khóa cuộn nền.
-    * **Minh chứng xã hội (Social Proof)**: Tích hợp slider/carousel tự động chạy 5 phản hồi thực tế của học viên kèm avatar, số sao 5★ và lời nhận xét chân thực trên `index.html`.
+11. **Không Gian Tiện Ích Nổi & Pomodoro**:
+    Pomodoro mini neo tại cụm Header top-right. Trợ lý AI Rusika neo dạng bong bóng nổi góc phải đáy màn hình (`bottom: 24px, right: 20px, z-index: 990`; tự động dâng lên `bottom: 84px` trên màn hình có thanh Bottom Bar cố định).
 
-12. **Quy chuẩn Gamification — Cơ chế tính Điểm XP & Chuỗi ngày Streak**:
-    * **Chỉ cộng XP khi hoàn thành (Completion-Only XP)**:
-      - Điểm kinh nghiệm XP là phần thưởng cho sự nỗ lực và hoàn tất trọn vẹn phiên học. Tuyệt đối không cộng XP lắt nhắt ở từng thao tác nhỏ (như vừa lật 1 thẻ flashcard hay vừa bấm 1 nút đánh giá).
-      - Học viên chỉ được cộng XP khi:
-        + Hoàn thành toàn bộ các thẻ trong Lọ từ vựng / phiên Spaced Repetition: Thưởng `+15 XP` và đánh dấu hoàn thành `vocabDone`.
-        + Hoàn thành bài Shadowing với điểm nhận diện giọng nói $\ge 70\%$: Thưởng `+10 XP`.
-        + Hoàn thành bài trắc nghiệm video nghe hiểu với điểm $\ge 60\%$: Thưởng `+20 XP`.
-        + Nộp bài kiểm tra trắc nghiệm / Test: Thưởng `+25 XP`.
-        + Nộp bài thi thử TRKI: Thưởng `+30 XP`.
-        + Hoàn thành bài viết tả tranh: Thưởng `+20 XP`.
-    * **Cơ chế tính Chuỗi ngày học Streak (XP-Gated Streak & Timezone Safeguard)**:
-      - Một ngày chỉ được tính vào Streak khi học viên có phát sinh điểm XP thực sự trong ngày đó. Bỏ hoàn toàn hàm `touchStreak` tự động tăng streak khi boot web.
-      - *Chuẩn hóa múi giờ cục bộ*: Xác định chuỗi ngày học theo ngày địa phương của thiết bị học viên:
-        ```javascript
-        const getLocalDateString = () => {
-          const d = new Date();
-          const year = d.getFullYear();
-          const month = String(d.getMonth() + 1).padStart(2, '0');
-          const day = String(d.getDate()).padStart(2, '0');
-          return `${year}-${month}-${day}`;
-        };
-        ```
-      - *Thuật toán kiểm tra đứt chuỗi (`diffDays`)*:
-        Chuyển đổi cả ngày hiện tại (`todayStr`) và ngày nhận XP gần nhất (`lastXpDayStr`) về mốc 00:00:00 UTC của ngày đó trước khi trừ khoảng cách milli-giây:
-        + `diffDays === 0`: Học tiếp trong cùng một ngày, chuỗi streak giữ nguyên.
-        + `diffDays === 1`: Học liên tiếp vào ngày kế tiếp, khi đạt XP đầu tiên trong ngày thì `streak = streak + 1`.
-        + `diffDays > 1`: Đã bỏ bẫng ít nhất 1 ngày không học $\rightarrow$ Reset `streak = 0` ngay khi tải trang (`Progress.checkStreakStatus()`); khi đạt XP đầu tiên sẽ bắt đầu chuỗi mới `streak = 1`.
-
+12. **Quy Chuẩn Gamification (XP & Streak)**:
+    - **Completion-Only XP**: Chỉ cộng XP khi hoàn thành trọn vẹn phiên học (Flashcard Lọ: `+15 XP`; Shadowing $\ge 70\%$: `+10 XP`; Nghe hiểu $\ge 60\%$: `+20 XP`; Thi TRKI: `+30 XP`; Tả tranh: `+20 XP`).
+    - **Streak theo múi giờ cục bộ**: Một ngày chỉ được tính vào Streak khi có phát sinh XP thực tế. Tính khoảng cách `diffDays` dựa trên mốc ngày 00:00:00 UTC của timezone tài khoản (`diffDays = 1` tăng streak, `diffDays > 1` reset về 0).
 
 ---
 
 ## 9. QUY CHUẨN VECTOR ICON LUCIDE 24px (LUCIDE DESIGN SYSTEM)
 
-Theo tiêu chuẩn thiết kế từ `rusi_trki_lucide_icon_system.html`, toàn bộ hệ thống webapp RUSI TRKI (bao gồm trang chủ, 7 chuyên mục, hệ thống làm bài thi, Payload CMS Studio và các trang con) sử dụng thống nhất bộ **Vector Icon Lucide 24px**, loại bỏ triệt để việc dùng emoji hệ điều hành không đồng nhất trong giao diện đồ họa.
+Toàn bộ hệ thống webapp RUSI TRKI sử dụng thống nhất bộ **Vector Icon Lucide 24px** thông qua thư viện `rusi-icons.js`, loại bỏ hoàn toàn việc dùng emoji hệ điều hành gây phân mảnh hiển thị.
 
-### 9.1. Thông số Kỹ thuật Chuẩn (Vector Specs)
+### 9.1. Thông Số Kỹ Thuật Chuẩn (Vector Specs)
 * **Kích thước khung vẽ (ViewBox)**: `0 0 24 24`
 * **Độ dày nét vẽ (Stroke Width)**: `2px` (chuẩn Lucide) hoặc `1.5px` (cho các nút phụ thanh mảnh).
 * **Màu sắc (Color)**: `stroke: currentColor` — tự động kế thừa màu chữ của phần tử cha hoặc class CSS.
 * **Đổ bóng / Nền (Fill)**: `fill: none`.
 * **Bo góc & đầu nét**: `stroke-linecap="round"` và `stroke-linejoin="round"`.
-* **Class định danh dùng chung**: `.rusi-icon`, `svg.rusi-icon`.
-* **Kích thước chuẩn**:
-  - `xs`: 14px (`.rusi-icon-xs`) — dùng trong tag, badge phụ, breadcrumb.
-  - `sm`: 16px (`.rusi-icon-sm`) — dùng trong nút phụ, bảng danh sách từ, action row.
-  - `md`: 20px (`.rusi-icon-md`) — dùng trong menu dropdown, header navigation.
-  - `lg`: 24px (`.rusi-icon-lg`) — chuẩn mặc định cho cards, tính năng chính.
-  - `xl`: 32px / 48px (`.rusi-icon-xl`) — dùng trong empty state, modal, hero banner.
+* **Kích thước chuẩn**: `xs` (14px), `sm` (16px), `md` (20px), `lg` (24px - mặc định), `xl` (32px/48px).
+* **Vùng chạm cảm ứng (Tap Target)**: Đảm bảo tối thiểu $44 \times 44$px trên Mobile/Tablet qua CSS hitbox (`touch-action: manipulation`).
 
 ---
 
-### 9.2. Bảng Danh mục Icon Chuẩn (Icon Catalog Mapping)
+### 9.2. Bảng Danh Mục Icon Cốt Lõi Hệ Thống
 
-| Phân hệ / Nhóm | ID Icon Chuẩn | Tên Đại Diện | Emojis & Alias Tương Đương Được Tự Động Phân Giải |
+| Nhóm chức năng | ID Icon Chuẩn | Tên đại diện | Mục đích & Ngữ cảnh sử dụng |
 |---|---|---|---|
-| **7 Chuyên Mục (Pillars)** | `archive-jar` | Lọ từ vựng Spaced Repetition | `🫙`, `🏺`, `vocab`, `jar`, `tuvung` |
-| | `pen-tool` | Luyện viết tả tranh (Письмо) | `✍️`, `pismo`, `writing`, `pen` |
-| | `headphones` | Luyện nghe 4 Part CEFR | `🎧`, `audio`, `listening`, `nghe` |
-| | `mic-speaking` | Luyện nói & Shadowing AI | `🎙️`, `mic`, `speaking`, `noi`, `shadowing` |
-| | `graduation-cap` | Phòng thi thử TRKI quốc tế | `🎓`, `exam`, `trki`, `torfl`, `thi` |
-| | `book-open-blog` | Blog & Cẩm nang du học | `📖`, `📰`, `blog`, `book`, `reading` |
-| | `shopping-bag-shop` | Shop hàng Nga & Dịch vụ | `🛍️`, `shop`, `cart`, `bag`, `store` |
-| **Gamification & Mascot** | `flame-streak` | Chuỗi ngày học Streak | `🔥`, `streak`, `flame`, `fire`, `lua` |
-| | `zap-xp` | Điểm kinh nghiệm XP | `⚡`, `xp`, `zap`, `energy`, `diem` |
-| | `trophy-reward` | Cúp bảng xếp hạng học viên | `🏆`, `trophy`, `cup`, `rank`, `leaderboard` |
-| | `cat-mascot` | Trợ lý linh vật Mèo Rusika | `🐱`, `cat`, `mascot`, `rusika`, `meo` |
-| | `award-badge` | Huy hiệu chứng nhận khóa học | `🎖️`, `award`, `badge`, `medal`, `huy-hieu` |
-| | `crown-vip` | Hội viên PRO / VIP đặc quyền | `👑`, `crown`, `vip`, `pro` |
-| **Phòng Thi & Trợ Lý AI** | `timer-clock` | Đồng hồ đếm ngược server-side | `⏱️`, `clock`, `timer`, `time`, `dong-ho` |
-| | `bot-rusika` | Trợ lý trí tuệ nhân tạo Rusika | `🤖`, `bot`, `ai`, `robot` |
-| | `keyboard-cyrillic`| Bàn phím ảo gõ tiếng Nga | `⌨️`, `keyboard`, `cyrillic`, `ban-phim` |
-| | `waveform-audio` | Sóng âm thanh so sánh giọng nói | `waveform`, `soundwave` |
-| | `flashcards-layers` | Thẻ lật học từ thông minh 2 mặt | `flashcard`, `layers`, `flashcards` |
-| | `sparkles-clean` | Gợi ý & Tự động sửa lỗi AI | `✨`, `sparkles`, `magic` |
-| | `shield-anti-cheat` | Giám sát chuyển tab, chống gian lận | `🛡️`, `shield`, `anti-cheat`, `security` |
-| | `check-circle-correct` | Chỉ báo đáp án đúng / đạt điểm | `✅`, `correct`, `check-circle`, `dung` |
-| **Shop & VietQR** | `qr-code-vietqr` | Mã QR thanh toán tức thì 2.0 | `qr`, `vietqr`, `qrcode` |
-| | `credit-card` | Thẻ Mir / ATM quốc tế | `💳`, `card`, `the`, `bank` |
-| | `copy-clipboard` | Sao chép số tài khoản & nội dung | `📋`, `copy`, `clipboard`, `sao-chep` |
-| | `package-order` | Kiện hàng & đơn hàng quà tặng | `📦`, `package`, `order`, `box` |
-| | `truck-shipping` | Vận chuyển hồ sơ du học | `🚚`, `truck`, `ship`, `shipping` |
-| **Admin CMS & An Ninh** | `layout-dashboard`| Bảng điều khiển tổng quan | `📊`, `dashboard`, `overview` |
-| | `users-students` | Quản lý học viên & CRM | `👥`, `users`, `students`, `crm` |
-| | `database-tests` | Ngân hàng đề thi & từ điển | `🗄️`, `database`, `db` |
-| | `history-audit` | Nhật ký kiểm toán an ninh | `📜`, `audit`, `logs`, `history` |
-| | `settings-gear` | Cấu hình R2, Webhook, API | `⚙️`, `🛠️`, `settings`, `gear`, `config` |
-| **Điều Hướng & Tiện Ích** | `lock-pro` | Khóa Paywall nội dung VIP | `🔒`, `lock`, `khoa`, `paywall` |
-| | `play-control` | Bật phát âm thanh bài nghe | `▶️`, `play`, `phat` |
-| | `pause-control` | Tạm dừng phát âm thanh | `⏸️`, `pause`, `dung` |
-| | `volume-high` | Phát âm từ vựng / Âm lượng | `🔊`, `volume`, `sound`, `speak` |
-| | `arrow-right` | Mũi tên tiếp theo / CTA Link | `→`, `arrow`, `next`, `tiep` |
-| | `chevron-down` | Dropdown menu & mở rộng | `▾`, `chevron`, `down`, `caret` |
-| | `log-out` | Đăng xuất tài khoản an toàn | `🚪`, `logout`, `signout`, `exit` |
-| | `search-icon` | Tra cứu từ điển Cyrillic | `🔍`, `search`, `tim-kiem` |
-| | `star` | Đánh dấu sao từ khó | `⭐`, `star`, `favorite` |
-| | `trash-2` | Xóa bản ghi / Xóa từ khỏi lọ | `🗑️`, `trash`, `delete`, `del` |
-| | `refresh-cw` | Làm mới / Đồng bộ Supabase Cloud | `🔄`, `refresh`, `sync`, `reload` |
-| | `file-text` | Tài liệu văn bản / Bài viết | `📄`, `file`, `doc`, `document` |
-| | `cloud-upload` | Đẩy dữ liệu lên Cloud / Backup | `☁️`, `upload`, `cloud-up` |
-| | `cloud-download` | Tải dữ liệu về Web / Khôi phục | `📥`, `download`, `cloud-down` |
-| | `save` | Lưu cấu hình / Lưu từ vựng | `💾`, `save`, `luu` |
-| | `eye` | Xem trước Live Preview Studio | `👁️`, `eye`, `preview` |
-| | `frown` | Đánh giá từ vựng mức Khó | `😣`, `frown`, `kho` |
-| | `smile` | Đánh giá từ vựng mức Tốt | `🙂`, `smile`, `tot` |
-| | `folder` | Thư mục từ vựng & dữ liệu | `📂`, `folder`, `thu-muc` |
-| | `inbox` | Hộp thư rỗng / Chưa có từ | `📭`, `inbox`, `hop-thu` |
-| | `bar-chart-2` | Biểu đồ phân tích năng lực | `📊`, `chart`, `barchart` |
-| | `shuffle` | Xáo trộn ngẫu nhiên thẻ học | `🔀`, `shuffle`, `xao-tron` |
-| | `maximize-2` | Phóng to toàn màn hình Flashcard | `⛶`, `maximize`, `fullscreen` |
-| | `minimize-2` | Thu nhỏ màn hình (Esc) | `minimize` |
-| | `circle-dot` | Nút chọn trắc nghiệm Quizlet | `🔘`, `circle-dot`, `trac-nghiem` |
-| **Chủ Đề & Ngữ Cảnh (Topics)** | `plane` | Du lịch, sân bay, khách sạn | `✈️`, `plane`, `flight`, `du-lich` |
-| | `shopping-cart` | Siêu thị Auchan, mua sắm | `🛒`, `shopping-cart`, `sieu-thi` |
-| | `building-2` | Ký túc xá, phòng ở, tòa nhà | `🏢`, `building`, `ktx`, `nha` |
-| | `utensils` | Ẩm thực, nhà hàng, món ăn Nga | `🥞`, `🍽️`, `utensils`, `food` |
-| | `coffee` | Quán cà phê, đời sống sinh viên | `☕`, `coffee`, `cafe` |
-| | `train` | Tàu điện ngầm Metro, bến tàu | `🚇`, `train`, `metro`, `tau` |
-| | `rocket` | Công nghệ, vũ trụ, khoa học | `🚀`, `rocket`, `vu-tru` |
-| | `handshake` | Ngoại giao, giao tiếp, kết bạn | `🤝`, `handshake`, `giao-tiep` |
-| | `map` | Bản đồ nước Nga, du lịch địa lý | `🗺️`, `map`, `ban-do` |
-| | `map-pin` | Điểm đến, ghim vị trí | `📌`, `map-pin`, `dia-diem` |
-| | `image` | Tả tranh, miêu tả hình ảnh | `🖼️`, `image`, `ta-tranh` |
-| | `mail` | Viết thư, bưu điện Nga | `✉️`, `mail`, `letter`, `thu` |
-| | `medal` | Cấp độ chứng chỉ TRKI A1, A2, B1 | `🏅`, `🥉`, `🥈`, `🥇`, `medal` |
-| | `briefcase` | Công việc, sự nghiệp, công ty | `💼`, `briefcase`, `work` |
-| | `film` | Điện ảnh, kịch bản, phim Nga | `🎬`, `film`, `movie`, `cinema` |
-| | `gem` | TRKI B2 cao cấp, VIP | `💎`, `gem`, `diamond` |
-| | `newspaper` | Báo chí, cẩm nang tin tức | `📰`, `newspaper`, `bao-chi` |
-| | `message-square` | Mẫu câu đàm thoại bản xứ | `💬`, `message-square`, `chat` |
-| | `flag` | Quốc kỳ Nga, ngôn ngữ | `🇷🇺`, `flag` |
-| | `heart` | Gia đình, tình cảm | `❤️`, `heart`, `gia-dinh` |
-| | `activity` | Thể thao, rèn luyện sức khỏe | `⚽`, `activity`, `sport`, `the-thao` |
-| | `pill` | Hiệu thuốc, y tế, dược phẩm | `💊`, `pill`, `medicine`, `thuoc` |
-| | `shirt` | Trang phục, quần áo, giặt giũ | `👕`, `shirt`, `quan-ao`, `giat` |
-| | `snowflake` | Mùa đông nước Nga, thời tiết lạnh | `❄️`, `snowflake`, `winter`, `tuyet` |
-| | `alert-triangle` | Cảnh báo, lưu ý quan trọng | `⚠️`, `alert-triangle`, `warning`, `canh-bao` |
+| **7 Chuyên Mục** | `archive-jar` | Lọ từ vựng | Chuyên mục Từ Vựng, thẻ Lọ từ vựng Spaced Repetition |
+| | `pen-tool` | Bút viết | Chuyên mục Luyện Viết (Письмо), đề bài tả tranh & luận |
+| | `headphones` | Tai nghe | Chuyên mục Luyện Nghe, bài nghe hiểu 4 Part & chép chính tả |
+| | `mic-speaking` | Micro | Chuyên mục Luyện Nói, YouTube Shadowing Studio |
+| | `graduation-cap` | Mũ tốt nghiệp | Chuyên mục Khảo Thí TRKI, phòng thi thử mô phỏng |
+| | `book-open-blog` | Sách mở | Chuyên mục Blog, cẩm nang du học & đời sống Nga |
+| | `shopping-bag-shop` | Túi mua sắm | Chuyên mục Shop, sản phẩm nội địa Nga & dịch vụ du học |
+| **Gamification** | `flame-streak` | Ngọn lửa | Chuỗi ngày học liên tục (Streak) |
+| | `zap-xp` | Tia chớp | Điểm kinh nghiệm XP, nút nâng cấp PRO |
+| | `trophy-reward` | Cúp vàng | Bảng xếp hạng học viên, kỷ lục cá nhân |
+| | `crown-vip` | Vương miện | Huy hiệu PRO Member, modal khóa nội dung trả phí |
+| **Học Tập & Thi** | `timer-clock` | Đồng hồ | Tiện ích Pomodoro mini, đồng hồ đếm ngược phòng thi |
+| | `check-circle-correct` | Tích tròn | Đáp án đúng, trạng thái hoàn thành bài học |
+| | `volume-high` | Loa phát thanh | Nút phát âm thanh mẫu từ vựng & câu thoại |
+| | `rotate-ccw` | Mũi tên lặp lại | Nút tự động lặp lại (Loop), nút nói lại câu trong Speaking |
+| | `lock-pro` | Khóa bảo vệ | Biểu tượng khóa nội dung dành riêng cho PRO |
 
 ---
 
-### 9.3. Kiến Trúc Thư Viện `rusi-icons.js` & Cách Triển Khai
-
-Thư viện `rusi-icons.js` là module trung tâm quản lý và render toàn bộ hệ thống biểu tượng SVG (dựa trên chuẩn nét Lucide Vector) trên toàn bộ website, thay thế hoàn toàn emoji hệ điều hành và font icon phân mảnh.
-
-File được nhúng tại thẻ `<head>` hoặc ngay trước file script điều khiển chính `app.js` trên tất cả các trang web HTML:
-
+### 9.3. Kiến Trúc Thư Viện `rusi-icons.js` & Triển Khai
+Thư viện `rusi-icons.js` được nhúng tại thẻ `<head>` trên tất cả 16 tệp HTML:
 ```html
-<!-- Nhúng thư viện icon độc lập kèm tham số Cache-Busting theo phiên bản -->
-<script src="rusi-icons.js?v=3.3"></script>
+<script src="rusi-icons.js?v=5.0"></script>
 ```
 
-#### 1. Sử dụng trong HTML Tĩnh (Tự Động Render):
-Hệ thống tự động quét và biến các thẻ sau thành thẻ SVG Lucide chuẩn nét:
-```html
-<!-- Dùng thuộc tính data-rusi-icon -->
-<i data-rusi-icon="headphones" data-size="24"></i>
-<span data-rusi-icon="crown-vip" data-size="16"></span>
-
-<!-- Hoặc tương thích thẻ custom element -->
-<rusi-icon name="archive-jar" size="20"></rusi-icon>
-
-<!-- Hoặc tương thích chuẩn Lucide HTML -->
-<i data-lucide="pen-tool"></i>
-```
-
-#### 2. Sử dụng trong JavaScript / Template String Render:
-```javascript
-// Sinh chuỗi HTML SVG chuẩn:
-const iconHtml = window.RusiIcons.get("headphones", {
-  size: 24,            // kích thước pixel (mặc định 24)
-  strokeWidth: 2,      // độ dày nét vẽ (mặc định 2)
-  color: "currentColor", // màu sắc kế thừa
-  className: "my-icon" // class bổ sung nếu cần
-});
-
-// Chuyển đổi an toàn từ emoji hoặc dữ liệu lưu từ database:
-const userIcon = window.RusiIcons.get(doc.icon || "archive-jar", { size: 18 });
-```
-
-#### 3. Kích hoạt quét lại phần tử động:
-Khi giao diện được vẽ lại động bằng JS:
-```javascript
-window.RusiIcons.replace(document.getElementById("myContainer"));
-```
+1. **Sử dụng trong HTML**:
+   ```html
+   <i data-rusi-icon="headphones" data-size="24"></i>
+   <span data-rusi-icon="crown-vip" data-size="16"></span>
+   ```
+2. **Sử dụng trong JavaScript Template Strings**:
+   ```javascript
+   const html = window.RusiIcons.get("archive-jar", { size: 20 });
+   ```
+3. **Quét lại DOM sau khi render động**:
+   ```javascript
+   window.RusiIcons.replace(document.getElementById("myContainer"));
+   ```
 
 ---
 
-### 9.4. Quy Định Bắt Buộc Khi Tạo Mới Trang & UI Components:
+## 10. TIÊU CHUẨN ĐỐI SOÁT & BẢO ĐẢM CHẤT LƯỢNG HỆ THỐNG (QUALITY ASSURANCE BASELINE)
 
-1. **Chuẩn hóa Biểu Tượng Hệ Thống — Tuyệt Đối Không Dùng Emoji Hệ Điều Hành**:
-   * **Nguyên tắc**: Không đặt emoji gốc (`🎧`, `🎙️`, `✍️`, `👑`, `⚡`, `⭐`, `🗑️`) làm biểu tượng nút bấm, điều hướng hoặc nhãn chọn vì gây vỡ font và phân mảnh hiển thị trên iOS/Android/Windows.
-   * **Triển khai SVG**: Bắt buộc gọi qua `RusiIcons.get(id, { size, strokeWidth })` hoặc khai báo thuộc tính `data-rusi-icon="id"` để xuất ra SVG Lucide đồng nhất:
-     - Nút Nâng cấp PRO: Dùng icon `zap` (`RusiIcons.get('zap', { size: 16 })` + chữ "PRO"), không dùng emoji `⚡`.
-     - Phím tắt Pomodoro: Dùng icon `timer` / `clock` (hoặc icon SVG thiết kế riêng). *(Lưu ý: Chỉ cho phép ngoại lệ emoji `🍅` nếu được chỉ định cụ thể cho nhãn Pomodoro)*.
-   * **Render dữ liệu danh mục & phân hệ (Lọ từ vựng, Nghe, Nói, Viết, TRKI, Blog, Shop, CMS)**: Tuyệt đối không render raw emoji từ Database/JSON. Phải chuẩn hóa qua hàm helper với cơ chế fallback an toàn:
-     `RusiIcons.get(item.iconSlug || DEFAULT_FALLBACK_ICON, { size: 24 })`.
+> Toàn bộ các tiêu chuẩn kỹ thuật dưới đây đã được nghiệm thu thực tế trên toàn bộ 16 trang webapp và bắt buộc phải được duy trì nghiêm ngặt trong mọi lần nâng cấp tiếp theo:
 
-2. **Kế thừa Màu Sắc & Trạng Thái (Dynamic State Inheritance)**:
-   * Thuộc tính màu SVG luôn thiết lập `stroke="currentColor"` (hoặc `fill="currentColor"` với solid icon).
-   * Không gán cứng mã màu (hardcode hex color) vào inline SVG; để icon tự động kế thừa màu sắc mượt mà khi `:hover`, `:active`, khi chuyển Theme Russian Winter (Light) và theo biến CSS của component cha.
+1. **Kiến Trúc Offline-First & Graceful Degradation**:
+   Mọi trang (`vocabulary.html`, `listening.html`, `speaking.html`, `writing.html`, `mock-test.html`, `blog.html`, `shop.html`, `product-detail.html`) luôn có cơ chế fallback tự động về hằng số dữ liệu chuẩn trong `data.js` kết hợp bộ nhớ đệm `STORE` khi mạng chập chờn hoặc Supabase chưa phản hồi. Tuyệt đối không bao giờ để xảy ra tình trạng màn hình trắng.
 
-3. **Quy Chuẩn Vùng Chạm (Tap Target $\ge 44 \times 44$px)**:
-   * Dù kích thước hiển thị (visual size) của icon chỉ từ 16px – 24px, container nút bấm (`.dau-action-icon-btn`, `.btn-icon`, `.header-actions button`) trên Mobile/Tablet phải đạt vùng chạm thực tế tối thiểu $44 \times 44$px (`touch-action: manipulation`).
-   * Sử dụng kỹ thuật hitbox mở rộng bằng CSS pseudo-element để tránh làm phình to bố cục hiển thị:
-     ```css
-     .btn-icon-compact {
-       width: 34px;
-       height: 34px;
-       position: relative;
-       display: inline-flex;
-       align-items: center;
-       justify-content: center;
-     }
-     .btn-icon-compact::after {
-       content: '';
-       position: absolute;
-       inset: -5px; /* Mở rộng hitbox đạt chuẩn 44x44px */
-     }
-     ```
+2. **Đồng Bộ Phiên Bản Cache-Busting Thống Nhất**:
+   100% 16 tệp HTML đồng bộ gọi cùng phiên bản cache-busting mới nhất (`styles.css?v=9.5`, `pages.js?v=9.5`, `app.js?v=8.5`, `data.js?v=8.0`, `rusi-icons.js?v=5.0`). Mọi thay đổi mã nguồn phải tự động tăng query parameter để Cloudflare và trình duyệt cập nhật tài nguyên lập tức.
 
-4. **Chuẩn Hóa Khả Năng Tiếp Cận (Accessibility / A11y)**:
-   * Mọi nút bấm chỉ chứa icon (Icon-only buttons như Sửa, Xóa, Phát âm, Thu nhỏ) bắt buộc phải có thuộc tính `aria-label="Tên hành động"` hoặc nhãn ẩn `<span class="sr-only">Tên hành động</span>` để đảm bảo chuẩn tiếp cận và trải nghiệm SEO/Reader.
+3. **Phòng Thi TRKI Zero-Answer Leak & Server-Side Grading**:
+   Đề thi công khai tuyệt đối không chứa đáp án đúng. Mọi bài thi thử TRKI đều chấm điểm tập trung tại server qua RPC `rusi_grade_trki_exam` đối chiếu với `private.exam_answer_keys`.
 
+4. **Không Gian Luyện Nói YouTube Shadowing & Chấm WER Realtime**:
+   30 bộ bài học (24 video hoạt hình có timestamp + 6 bộ hội thoại thực tế). Trình phát YouTube 16:9 đồng bộ postMessage, đệm bù trễ (+0.4s) chống vấp âm, nhận diện giọng nói Web Speech `ru-RU`, thuật toán WER Levenshtein bóc tách từng từ đúng/sai và tô màu trực tiếp trên câu tiếng Nga.
 
----
+5. **Chuẩn Mực Responsive & Quy Tắc "More..." (Overflow Protection)**:
+   * Mobile: 1 cột duy nhất, chiều cao Header cố định 60px, tap target $\ge 44 \times 44$px, font input $\ge 16$px (chống auto-zoom iOS), `overflow-x: hidden`.
+   * Tabs và bộ lọc cuộn ngang kích hoạt lớp mặt nạ làm mờ `mask-image` mép phải (`.rusi-scroll-track-faded`), không để chữ bị chém ngang.
 
-## 10. BÁO CÁO TOÀN DIỆN RÀ SOÁT GIAO DIỆN (UI/UX COMPREHENSIVE AUDIT REPORT) & KẾ HOẠCH TỐI ƯU HÓA HỆ THỐNG
+6. **Vệ Sinh Thư Viện & Zero Dead Code**:
+   Loại bỏ triệt để các thư viện CDN thừa không dùng (như Wavesurfer). Vẽ biểu đồ sóng âm và phân tích âm thanh hoàn toàn bằng native Web Audio API và Web Speech API thuần.
 
-> **Ngày thực hiện thẩm định**: 07/11/2026.  
-> **Phạm vi thẩm định**: Toàn bộ 16 trang HTML tĩnh/động, hệ thống stylesheet (`styles.css`, `admin.css`), các module JavaScript render giao diện (`pages.js`, `app.js`, `dict-detail.js`, `pomodoro.js`, `rusi-icons.js`, `auth-page.js`, `admin.js`), hệ thống Vector Icon Lucide 24px, và các tài nguyên đa phương tiện (Assets/Images).  
-> **Tiêu chuẩn đối chiếu**: Quy chuẩn Thiết kế Figma Make App, Quy chuẩn Responsive Mobile/Tablet & Overflow "More..." (Mục 3), Nguyên tắc Andrej Karpathy (Surgical & Simplicity First), và Tiêu chuẩn Giao diện Chống Slop (Impeccable & Taste Skill).
-
----
-
-### 10.1. Tổng Quan Kết Quả Rà Soát (Executive Summary)
-
-Dự án RUSI TRKI sở hữu kiến trúc giao diện tương đối đồng bộ với hệ thống Design System màu sắc Russian Winter (Cool Blue `#eef4fb`, Russian Crimson Red `#c52233`, Russian Navy `#102a4c`), Typography `Inter`, cùng hệ thống Icon Vector Lucide hiện đại. Đa số các trang cốt lõi (`index.html`, `vocabulary.html`, `listening.html`, `speaking.html`, `writing.html`, `mock-test.html`) đều đã được tích hợp Skeleton Loading mượt mà và Header Navigation chuẩn 60px.
-
-Tuy nhiên, quá trình rà soát chi tiết mã nguồn và kiểm tra chéo đa nền tảng đã phát hiện **10 điểm bất cập và lỗi giao diện** (từ mức độ nghiêm trọng ảnh hưởng đến luồng người dùng đến các điểm cần tinh chỉnh thẩm mỹ).
-
-#### Bảng Ma Trận Hiện Trạng Giao Diện Từng Trang (Page-by-Page Audit Matrix):
-
-| Trang HTML | Cấp Độ Phụ Thuộc | Header 60px | Footer Shell | Phiên Bản CSS | Phiên Bản Pages JS | Phiên Bản Data JS | Mascot Rusika Floating Bubble | Pomodoro Widget Header | Đánh Giá Tình Trạng Giao Diện |
-|---|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|---|
-| `index.html` | Trang Chủ | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ✅ Hoạt động | ✅ Đầy đủ | **Tốt** (Cần gỡ bỏ Wavesurfer CDN thừa) |
-| `vocabulary.html` | Core Module 1 | ✅ Đầy đủ | ✅ Đầy đủ | `v=8.4` | `v=8.5` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | **Khá** (Cần kích hoạt Mascot AI, prefix webkit 3D) |
-| `listening.html` | Core Module 3 | ✅ Đầy đủ | ✅ Đầy đủ | `v=8.9` | `v=9.0` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | **Khá** (Gỡ Wavesurfer thừa, bật Mascot AI) |
-| `speaking.html` | Core Module 4 | ✅ Đầy đủ | ✅ Đầy đủ | `v=8.94` | `v=9.3` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | **Tốt** (Bản Pages mới nhất `v=9.3`, cần bật Mascot AI) |
-| `writing.html` | Core Module 2 | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | **Khá** (Cần nâng CSS lên bản mới nhất) |
-| `mock-test.html` | Core Module 5 | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | **Khá** (Split-pane CBT chuẩn, cần bật Mascot AI) |
-| `blog.html` | Core Module 6 | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | ⚠️ **Cảnh báo**: Nguy cơ trống trang nếu Supabase offline |
-| `blog-post.html` | Chi Tiết Blog | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | **Khá** (Thiếu nhúng modal tra từ 6 cách) |
-| `shop.html` | Core Module 7 | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ⚠️ Bị thiếu | ✅ Đầy đủ | ⚠️ **Cảnh báo**: Nguy cơ trống trang nếu Supabase offline |
-| `product-detail.html` | Chi Tiết Shop | ✅ Đầy đủ | ✅ Đầy đủ | ❌ `v=6.5` | ❌ `v=7.0` | ❌ `v=4.9` | ⚠️ Bị thiếu | ✅ Đầy đủ | 🔴 **Lỗi**: Lệch phiên bản nghiêm trọng; màn hình trắng nếu offline |
-| `upgrade.html` | Cổng Nâng Cấp | ✅ Đầy đủ | ✅ Đầy đủ | `v=7.6` | `v=8.1` | `v=8.0` | ⚠️ Bị thiếu | ❌ Thiếu script | 🔴 **Lỗi**: Thiếu `pomodoro.js` gây lỗi khi click icon timer |
-| `how-to-study.html` | Cẩm Nang Học | ✅ Đầy đủ | ✅ Đầy đủ | ❌ `v=7.1` | ❌ `v=7.0` | ❌ `v=4.9` | ⚠️ Bị thiếu | ✅ Đầy đủ | ⚠️ **Lỗi**: Dùng phiên bản script/style cũ, lệch giao diện |
-| `admin.html` | Quản Trị CMS | Độc lập | Độc lập | `admin.css` | Độc lập | ❌ `v=4.9` | N/A | N/A | **Khá** (Dùng icon Lucide `v=3.2`, data `v=4.9`) |
-| `login.html` | Xác Thực | Độc lập | Độc lập | ❌ `v=6.5` | N/A | ❌ `v=4.9` | N/A | N/A | **Khá** (Cần đồng bộ CSS lên bản mới nhất) |
-| `signup.html` | Đăng Ký | Độc lập | Độc lập | ❌ `v=6.5` | N/A | ❌ `v=4.9` | N/A | N/A | **Khá** (Cần đồng bộ CSS lên bản mới nhất) |
-| `404.html` | Trang Báo Lỗi | ✅ Đầy đủ | ✅ Đầy đủ | ❌ `v=6.5` | N/A | ❌ `v=4.9` | Mascot tĩnh | N/A | **Khá** (Cần đồng bộ CSS lên bản mới nhất) |
-
----
-
-### 10.2. Chi Tiết Danh Mục 10 Lỗi Giao Diện & Bất Cập Kỹ Thuật Phát Hiện
-
-#### 🔴 Nhóm Lỗi Mức Độ 1: Nghiêm Trọng / Rủi Ro Trải Nghiệm Cao (Critical / High)
-
-1. **Lỗi Vi Phạm Kiến Trúc Offline-First — Nguy Cơ Màn Hình Trắng Trong Shop, Blog & Product Detail**:
-   * *Vị trí*: `pages.js` (dòng 11322 tại `initBlogPage`, dòng 11459 tại `initShopPage`) và `product-detail.html` (dòng 58–71).
-   * *Mô tả hiện tượng*: Mã nguồn khởi tạo danh sách bài viết và sản phẩm theo cơ chế:
-     ```javascript
-     // Trong initBlogPage:
-     const posts = (cloudPosts && cloudPosts.length) ? cloudPosts : [];
-     // Trong initShopPage:
-     const products = (cloudProducts && cloudProducts.length) ? cloudProducts : [];
-     // Trong product-detail.html:
-     let products = (cached && cached.length) ? cached : [];
-     ```
-   * *Hậu quả*: Khi học viên mở trang trong điều kiện mạng chập chờn, hoặc máy chủ Supabase chưa kịp phản hồi, hoặc bộ nhớ đệm cache rỗng, biến dữ liệu bị ép thành mảng rỗng `[]`. Giao diện Blog và Shop bị **trống trắng hoàn toàn**, còn `product-detail.html` hiển thị lỗi *"Không tìm thấy sản phẩm hoặc sản phẩm đã hết hàng"* — dù trong file `data.js` đã có sẵn đầy đủ biến dữ liệu chuẩn `BLOG_POSTS` và `SHOP_PRODUCTS`.
-   * *Giải pháp khắc phục*: Luôn thực hiện cơ chế Graceful Degradation / Hybrid Fallback:
-     ```javascript
-     const posts = (cloudPosts && cloudPosts.length) ? cloudPosts : (typeof BLOG_POSTS !== "undefined" ? BLOG_POSTS : []);
-     const products = (cloudProducts && cloudProducts.length) ? cloudProducts : (typeof SHOP_PRODUCTS !== "undefined" ? SHOP_PRODUCTS : []);
-     ```
-
-2. **Lỗi Phân Mảnh Phiên Bản Tài Nguyên (Resource Versioning & Cache Desynchronization)**:
-   * *Vị trí*: Các thẻ `<link rel="stylesheet">` và `<script src="...">` trên 16 trang HTML.
-   * *Mô tả hiện tượng*:
-     - `styles.css`: Đang tồn tại song song 6 phiên bản khác nhau (`v=6.5`, `v=7.1`, `v=7.6`, `v=8.4`, `v=8.9`, `v=8.94`). Các trang `product-detail.html`, `how-to-study.html`, `login.html`, `signup.html`, `404.html` đang nhận bản CSS cũ `v=6.5` hoặc `v=7.1`, thiếu hụt hoàn toàn các tinh chỉnh mới về chiều cao cố định Header 60px, viền vàng Avatar PRO, và hiệu ứng Mobile Drawer.
-     - `pages.js`: Bị phân mảnh giữa `v=7.0` (trên `product-detail.html`, `how-to-study.html`), `v=8.1`, `v=8.5`, `v=9.0` và `v=9.3` (trên `speaking.html`).
-     - `data.js`: Bị lệch giữa `v=4.9` và `v=8.0`. Phiên bản `v=4.9` thiếu hàng trăm câu ví dụ và bài tập mới.
-   * *Giải pháp khắc phục*: Chuẩn hóa đồng bộ một phiên bản cao nhất duy nhất trên toàn bộ hệ thống (ví dụ: `styles.css?v=9.5`, `pages.js?v=9.5`, `app.js?v=8.5`, `data.js?v=8.0`).
-
-3. **Lỗi Thiếu Thư Viện `pomodoro.js` Trên Trang Cổng Thanh Toán `upgrade.html`**:
-   * *Vị trí*: `upgrade.html` phần chèn script chân trang.
-   * *Mô tả hiện tượng*: Trang `upgrade.html` nhúng `app.js` nhưng **bị bỏ quên thẻ `<script src="pomodoro.js">`**.
-   * *Hậu quả*: Khi học viên đã sở hữu tài khoản PRO truy cập trang `upgrade.html` (để kiểm tra quyền lợi hoặc nâng cấp gói trọn đời), thanh Header vẫn tự động hiển thị nút Pomodoro `#headerPomoBtn`. Tuy nhiên khi học viên nhấp vào, Popover thời gian không mở được hoặc sinh lỗi `ReferenceError: RusiPomodoro is not defined` trong console trình duyệt.
-   * *Giải pháp khắc phục*: Bổ sung `<script src="pomodoro.js?v=6.5"></script>` vào trước thẻ `</body>` của `upgrade.html`.
-
----
-
-#### 🟡 Nhóm Lỗi Mức Độ 2: Trung Bình / Trải Nghiệm Tương Tác Chưa Đồng Bộ (Medium)
-
-4. **Trợ Lý Học Tập AI Mascot Rusika (`#rusikaFloatingWidget`) Bị Bỏ Quên Ở Toàn Bộ Các Trang Bài Học**:
-   * *Vị trí*: `pages.js` (dòng 11713 tại hàm `initIndexPage`).
-   * *Mô tả hiện tượng*: Hàm `MascotRusika.renderFloatingWidget()` chịu trách nhiệm tạo nút tròn bong bóng nổi thông minh ở góc dưới màn hình. Tuy nhiên, hàm này **chỉ được gọi duy nhất bên trong `initIndexPage()`** (chỉ chạy trên `index.html`).
-   * *Hậu quả*: Trên các trang học tập quan trọng nhất — nơi học viên thực sự cần hỏi đáp ngữ pháp và dịch thuật theo ngữ cảnh (`vocabulary.html`, `listening.html`, `speaking.html`, `writing.html`, `mock-test.html`, `blog.html`) — nút Trợ lý AI Mascot Rusika hoàn toàn **không xuất hiện**.
-   * *Giải pháp khắc phục*: Chuyển lời gọi `MascotRusika.renderFloatingWidget()` vào hàm khởi tạo chung `DOMContentLoaded` trong `app.js` để tự động hiển thị trên tất cả các trang bài học (ngoại trừ trang quản trị `admin.html` và trang auth `login`/`signup`).
-
-5. **Lỗi Hiển Thị Sai Ngữ Cảnh Biểu Tượng Icon "Nghe Chậm" Trong Từ Điển (`dict-detail.js`)**:
-   * *Vị trí*: `dict-detail.js` dòng 566:
-     ```html
-     <button class="wd-speak-btn slow" id="wdSlow" title="Nghe chậm">
-       ${window.RusiIcons ? RusiIcons.get("snail", { size: 20 }) : "🐢"}
-     </button>
-     ```
-   * *Mô tả hiện tượng*: Mã nguồn gọi biểu tượng tên là `"snail"`. Tuy nhiên, trong từ điển định nghĩa của `rusi-icons.js` **không hề có icon nào tên `"snail"`**.
-   * *Hậu quả*: Theo cơ chế fallback an toàn của `rusi-icons.js`, khi không tìm thấy icon, nó tự động trả về biểu tượng `sparkles-clean` (ngôi sao lấp lánh AI). Học viên khi mở modal từ điển tra từ sẽ thấy nút "Nghe chậm" hiển thị **hình ngôi sao phép thuật**, gây hiểu nhầm sang tính năng tạo gợi ý AI thay vì nút phát âm audio tốc độ chậm.
-   * *Giải pháp khắc phục*: Bổ sung định nghĩa SVG Lucide cho icon `snail` (hoặc alias trỏ về biểu tượng ốc sên/rùa/đồng hồ đo tốc độ) vào thư viện `rusi-icons.js`.
-
-6. **Thiếu Lớp Mặt Nạ Cuộn Mờ Mép ("More..." Faded Track Overflow) Trên Các Thanh Tabs Di Động**:
-   * *Vị trí*: `styles.css` tại media query `@media (max-width: 1024px)`.
-   * *Mô tả hiện tượng*: Các bộ tabs gồm `.level-tabs`, `.tabs`, `.shop-filters`, `.dau-level-pills` có ghi chú CSS `/* mask removed */` và đang thiếu thuộc tính mặt nạ:
-     ```css
-     mask-image: linear-gradient(to right, black 85%, transparent 100%);
-     -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
-     ```
-   * *Hậu quả*: Vi phạm điều 3.2 của Quy Chuẩn Responsive trong `AGENTS.md` và `PROJECT_SPEC.md`. Khi hiển thị 6 cấp độ A1–C2 trên điện thoại, tab cuối cùng bị chém ngang thân chữ mà không có hiệu ứng mờ viền báo hiệu trực quan cho học viên biết là có thể vuốt sang phải.
-   * *Giải pháp khắc phục*: Kích hoạt lại lớp mặt nạ làm mờ `mask-image` trên toàn bộ container cuộn ngang của tabs và bộ lọc.
-
----
-
-#### 🟢 Nhóm Lỗi Mức Độ 3: Tối Ưu Tốc Độ Tải Trang & Khả Năng Tiếp Cận (Low / Polish)
-
-7. **Thư Viện CDN Bên Thứ Ba Không Sử Dụng (Dead CDN Dependency) Gây Nghẽn Tải Trang**:
-   * *Vị trí*: Thẻ `<script src="https://cdn.jsdelivr.net/npm/wavesurfer.js@7/dist/wavesurfer.min.js">` tại `index.html` (dòng 668) và `listening.html` (dòng 109).
-   * *Mô tả hiện tượng*: Kiểm tra toàn bộ mã nguồn của dự án (`pages.js`, `app.js`, `listening.html`) cho thấy **không có bất kỳ dòng code nào khởi tạo hay gọi `WaveSurfer`**. Hệ thống đã tự xây dựng bộ vẽ sóng âm độc lập thông qua Web Audio API thuần và CSS animation.
-   * *Hậu quả*: Trình duyệt phải tải thêm tệp tin bên ngoài dung lượng ~100KB từ máy chủ jsdelivr, làm tăng độ trễ chặn render (render-blocking) và tăng nguy cơ lỗi nếu CDN bên ngoài gặp sự cố mạng tại Việt Nam.
-   * *Giải pháp khắc phục*: Gỡ bỏ thẻ nhúng `wavesurfer.min.js` trên cả `index.html` và `listening.html`.
-
-8. **Thiếu Vendor Prefix WebKit Cho Tính Năng Lật Thẻ Flashcard 3D Trên Safari iOS**:
-   * *Vị trí*: `styles.css` tại các lớp `.flashcard`, `.flash-inner`, `.flash-face`.
-   * *Mô tả hiện tượng*: Có 9 vị trí khai báo `backface-visibility: hidden` nhưng chỉ có 4 vị trí có tiền tố `-webkit-backface-visibility: hidden`.
-   * *Hậu quả*: Trên các thiết bị iPhone/iPad chạy trình duyệt Safari hoặc WebKit view cũ, khi học viên lật thẻ Flashcard Spaced Repetition (SM-2), mặt sau của thẻ có thể bị hiển thị ngược chữ (mirroring effect) hoặc bị xuyên thấu thấy nội dung của mặt trước.
-   * *Giải pháp khắc phục*: Bổ sung đồng bộ `-webkit-backface-visibility: hidden;` đi kèm mọi khai báo `backface-visibility: hidden;`.
-
-9. **Modal Tra Từ Điển 6 Cách Kiểu TFlat (`dict-detail.js` & `dict-data.js`) Chưa Được Kích Hoạt Toàn Hệ Thống**:
-   * *Vị trí*: Chỉ mới được nhúng duy nhất tại `vocabulary.html`, vắng mặt tại `blog-post.html`, `mock-test.html` (phần bài đọc Чтение), `writing.html`.
-   * *Mô tả hiện tượng*: Theo Mục 1 của Spec, hệ thống cam kết hỗ trợ tra cứu nhanh 6 Cách và chia động từ đa tầng từ bất kỳ bài đọc nào trên website khi bôi đen hoặc click đúp. Tuy nhiên các trang bài đọc khác chưa được nhúng bộ thư viện này.
-   * *Giải pháp khắc phục*: Nhúng `dict-data.js` và `dict-detail.js` vào các trang có ngữ cảnh đọc hiểu dài (`blog-post.html`, `mock-test.html`).
-
-10. **Trang Báo Lỗi `404.html` Chưa Cập Nhật Đồng Bộ Nhận Diện Mùa Đông (Russian Winter)**:
-    * *Vị trí*: `404.html`.
-    * *Mô tả hiện tượng*: Đang dùng liên kết `styles.css?v=6.5` và `data.js?v=4.9`, avatar Mascot Rusika tại trang 404 đang dùng ảnh tĩnh chưa tận dụng bộ SVG Mascot 4 mùa linh hoạt của `app.js`.
-    * *Giải pháp khắc phục*: Nâng cấp phiên bản CSS và tích hợp SVG Mascot Rusika Cấp 1 mùa đông đồng bộ.
-
----
-
-### 10.3. Kế Hoạch & Lộ Trình Triển Khai Khắc Phục Chuẩn Xác (Implementation Roadmap)
-
-Tuân thủ nghiêm ngặt **Quy tắc bất khả xâm phạm về bảo toàn nội dung** (giữ nguyên 100% câu chữ, dữ liệu từ vựng và bài học) và **Nguyên tắc Andrej Karpathy** (Surgical Changes — can thiệp chính xác vào đúng những dòng code liên quan, không tạo abstraction thừa):
-
-```text
-[GIAI ĐOẠN 1: BẢO VỆ DỮ LIỆU & FIX CRITICAL]
- ├── Bước 1: Khắc phục fallback Graceful Degradation trong pages.js (Shop, Blog) & product-detail.html
- ├── Bước 2: Bổ sung <script src="pomodoro.js"> vào upgrade.html
- └── Bước 3: Đồng bộ toàn bộ phiên bản cache-busting (?v=9.5) trên 16 trang HTML
-
-[GIAI ĐOẠN 2: ĐỒNG BỘ GIAO DIỆN & TƯƠNG TÁC]
- ├── Bước 4: Bổ sung SVG icon "snail" chuẩn Lucide vào rusi-icons.js
- ├── Bước 5: Đưa MascotRusika.renderFloatingWidget() vào app.js cho toàn bộ các trang bài học
- └── Bước 6: Khôi phục mask-image cuộn mờ cho level-tabs và bộ lọc di động trong styles.css
-
-[GIAI ĐOẠN 3: TỐI ƯU HIỆU NĂNG & THẨM ĐỊNH LẠI]
- ├── Bước 7: Gỡ bỏ CDN WaveSurfer thừa trên index.html và listening.html
- ├── Bước 8: Bổ sung tiền tố -webkit-backface-visibility cho Flashcard 3D trong styles.css
- └── Bước 9: Chạy kiểm thử tự động, thẩm định viewport Mobile (360px, 414px) và Tablet (768px, 1024px)
-```
-
-### 10.4. Kết Quả Nghiệm Thu Triển Khai Toàn Diện (Completed & Verified)
-
-Toàn bộ 10 điểm bất cập và các yêu cầu tinh chỉnh giao diện luyện nghe / luyện dịch đã được khắc phục triệt để và thẩm định hoàn tất:
-
-1. ✅ **Offline-First Graceful Degradation**: Bổ sung fallback về hằng số dữ liệu chuẩn `BLOG_POSTS` và `SHOP_PRODUCTS` tại `pages.js` (hàm `initBlogPage`, `initShopPage`) và `product-detail.html`. Trang không bao giờ bị trắng màn hình khi chưa có Supabase hoặc ngoại tuyến.
-2. ✅ **Đồng Bộ Hoàn Toàn Cache-Busting Across 16 HTML Files**: Toàn bộ hệ thống 16 trang HTML đã được đồng bộ chuẩn hóa phiên bản cache-busting: `styles.css?v=9.5`, `pages.js?v=9.5`, `app.js?v=8.5`, `data.js?v=8.0`, `rusi-icons.js?v=5.0`, `auth.js?v=7.5`, `supabase-client.js?v=7.5`, `pomodoro.js?v=7.0`, `dict-detail.js?v=7.0`, `dict-data.js?v=8.0`.
-3. ✅ **Bổ Sung `pomodoro.js` Vào `upgrade.html`**: Đã nhúng script `pomodoro.js?v=7.0`, tài khoản PRO trên trang nâng cấp mở popover bấm giờ Pomodoro mượt mà không lỗi.
-4. ✅ **Trợ Lý AI Mascot Rusika Toàn Diện**: Kích hoạt `MascotRusika.renderFloatingWidget()` tự động tại `app.js` (`bootApp`), hiển thị bong bóng hỗ trợ trên toàn bộ các chuyên mục học tập (`vocabulary`, `listening`, `speaking`, `writing`, `mock-test`), trừ các trang xác thực và quản trị.
-5. ✅ **Vector SVG Icon `snail` Chuẩn Lucide**: Bổ sung icon `snail` và các bí danh `turtle`, `slow`, `nghe-cham` vào `rusi-icons.js`. Nút nghe chậm trong từ điển đa tầng `dict-detail.js` hiển thị icon ốc sên chuẩn xác, không còn bị fallback nhầm sang icon sao AI.
-6. ✅ **Khôi Phục Gradient Mask Cho Tabs Di Động ("More..." Faded Track Overflow)**: Phục hồi `-webkit-mask-image` và `mask-image: linear-gradient(to right, #000 85%, transparent 100%)` trên các thanh cuộn ngang `level-tabs`, `tabs`, `shop-filters`, `admin-tabs`, đảm bảo tab không bị cắt cụt cứng ngắc khi cuộn trên di động.
-7. ✅ **Loại Bỏ Thư Viện Thừa CDN WaveSurfer**: Gỡ bỏ script WaveSurfer (~100KB) khỏi `index.html` và `listening.html`, tiết kiệm băng thông và tăng tốc thời gian tải trang.
-8. ✅ **Vendor Prefix Safari iOS Cho Flashcard 3D**: Bổ sung `-webkit-backface-visibility: hidden;` đồng bộ vào tất cả các lớp thẻ flashcard 3D trong `styles.css`.
-9. ✅ **Tích Hợp Từ Điển 6 Cách Đa Tầng**: Nhúng `dict-data.js` và `dict-detail.js` vào `blog-post.html` và `mock-test.html`, hỗ trợ click đúp / bôi đen tra cứu từ vựng trực tiếp khi đọc bài.
-10. ✅ **Nâng Cấp Trang `404.html`**: Đồng bộ phiên bản CSS/JS mới nhất, tích hợp đầy đủ nhận diện Mascot Rusika mùa đông và bảng điều hướng 7 chuyên mục.
-11. ✅ **Cải Tiến Giao Diện Điều Khiển Nghe (`.lis-dict-player-controls`)**: 
-    - Đảm bảo 100% controls luôn nằm trên cùng 1 hàng đơn trên tất cả các thiết bị (`flex-wrap: nowrap !important`).
-    - Tự động ẩn text lời thoại (`.lis-ctrl-btn-text`, `#compTransLabel`) và chữ phát lại khi màn hình co hẹp, chuyển đổi sang nút tròn icon thanh lịch (38px trên tablet, 36px trên di động nhỏ).
-12. ✅ **Thiết Kế Lại Thanh Nộp Bài Nghe Hiểu (`.lis-comp-submit-bar`)**: Thiết kế tối giản, hiện đại, gọn gàng với badge đếm số câu đã chọn và nút nộp bài đỏ Nga cao cấp.
-13. ✅ **Tối Giản Banner Hoàn Thành Nghe Chép (`.lis-dict-completed-banner.is-completed-card`)**:
-    - Loại bỏ đoạn văn dài dòng theo yêu cầu, rút gọn tiêu đề thành "Đã hoàn thành!".
-    - Thiết kế phẳng gọn 1 hàng duy nhất trên di động và tablet, ưu tiên icon với các nút thao tác "Luyện lại" và "Đáp án" gọn gàng, tự động ẩn chữ trên màn hình siêu hẹp ($\le 380px$).
-14. ✅ **Thiết Kế Lại Toàn Diện Mục Cảm Nhận Học Viên (`#cam-nhan` Testimonial Section)**:
-    - Loại bỏ hoàn toàn hiệu ứng xếp chồng crossfade chữ làm dính và rối mặt chữ (`grid-area: stack` cũ). Thay thế bằng slider trượt ngang 100% độc lập (`flex: 0 0 100%`), đảm bảo mỗi slide feedback trượt vào/ra mượt mà, không bao giờ đè chữ lên nhau.
-    - Hỗ trợ thao tác vuốt chạm cảm ứng (touch swipe) và kéo chuột (mouse drag) với độ trễ 0ms cực nhạy.
-    - Bổ sung khối tiêu đề chuyên mục sang trọng (`.testimonial-header`) và khung card bề mặt cao cấp (`.testimonial-card-wrap`) với badge quote đỏ Nga thanh lịch, tạo khoảng đệm phân tách tự nhiên giữa Gói học phí (`#hoc-phi`) và Giải đáp FAQ (`#faq`).
+7. **Đồng Bộ Giao Diện & Mascot AI Rusika**:
+   Trợ lý AI Mascot Rusika nổi (`#rusikaFloatingWidget`) tự động kích hoạt trên tất cả các trang bài học qua `bootApp()`. Popover Pomodoro mini tích hợp chân Header đóng chéo tự động với menu tài khoản.

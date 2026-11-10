@@ -64,10 +64,12 @@ async function main() {
 
   const tables = [
     { key: 'vocab_jars', query: 'select=*&is_system=eq.true&order=code.asc', label: 'Lọ từ vựng hệ thống (vocab_jars)' },
+    { key: 'topic_articles', query: 'select=*&order=id.asc', label: 'Bài học chủ đề (topic_articles)' },
     { key: 'vocabularies', query: 'select=*&order=topic_code.asc,created_at.asc', label: 'Từ vựng chi tiết (vocabularies)' },
     { key: 'listening_lessons', query: 'select=*&order=part_number.asc', label: 'Bài luyện nghe (listening_lessons)' },
     { key: 'speaking_lessons', query: 'select=*&order=code.asc', label: 'Bài luyện nói (speaking_lessons)' },
-    { key: 'writing_topics', query: 'select=*&order=code.asc', label: 'Đề luyện viết (writing_topics)' },
+    { key: 'writing_tasks', query: 'select=*&order=code.asc', label: 'Đề luyện viết chuẩn (writing_tasks)' },
+    { key: 'writing_topics', query: 'select=*&order=code.asc', label: 'Đề luyện viết tương thích (writing_topics)' },
     { key: 'grammar_lessons', query: 'select=*&order=id.asc', label: 'Bài ngữ pháp (grammar_lessons)' },
     { key: 'shop_products', query: 'select=*&order=price.asc', label: 'Sản phẩm shop (shop_products)' },
     { key: 'packages', query: 'select=*&order=price.asc', label: 'Gói học Pro (packages)' },

@@ -695,16 +695,18 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     ru: (w.ru || "").trim(),
     stress: (w.stress || w.ru || "").trim(),
     vi: (w.vi || w.meaning || "").trim(),
-    note: (w.note || w.pos || w.trans || "").trim(),
+    note: (w.note || w.notes || w.pos || w.trans || "").trim(),
+    notes: (w.notes || w.note || "").trim(),
     pos: (w.pos || "").trim(),
     gender: (w.gender || "").trim(),
     ex: stripQuotes(w.ex),
     ex_vi: (w.ex_vi || "").trim(),
     collocation: stripQuotes(w.collocation),
+    structures: Array.isArray(w.structures) ? w.structures : (w.structures ? [w.structures] : []),
     verb_obj: (w.verb_obj || w.gov || "").trim(),
     gov: (w.gov || "").trim(),
-    syn: stripQuotes(w.syn),
-    ant: stripQuotes(w.ant)
+    syn: stripQuotes(w.syn || (Array.isArray(w.synonyms) ? w.synonyms.join(", ") : "")),
+    ant: stripQuotes(w.ant || (Array.isArray(w.antonyms) ? w.antonyms.join(", ") : ""))
   }));
 
   if (words.length === 0) {
@@ -868,34 +870,47 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               ` : ""}
 
               <!-- CHI TIẾT NGỮ PHÁP (CỤM ĐỘNG TỪ, QUẢN CÁCH, ĐỒNG/TRÁI NGHĨA, GHI CHÚ) -->
-              ${(currentWord.collocation || currentWord.verb_obj || currentWord.gov || currentWord.syn || currentWord.ant || currentWord.note) ? `
-                <div class="qcard-details-grid">
-                  ${(currentWord.collocation || currentWord.verb_obj || currentWord.gov) ? `
-                    <div class="qcard-detail-item">
-                      <span class="qcard-detail-label">Cụm từ / Quản cách:</span>
-                      <span class="qcard-detail-val ru">${esc(currentWord.collocation || currentWord.verb_obj || currentWord.gov)}</span>
-                    </div>
-                  ` : ""}
-                  ${currentWord.syn ? `
-                    <div class="qcard-detail-item">
-                      <span class="qcard-detail-label">Đồng nghĩa:</span>
-                      <span class="qcard-detail-val ru">${esc(currentWord.syn)}</span>
-                    </div>
-                  ` : ""}
-                  ${currentWord.ant ? `
-                    <div class="qcard-detail-item">
-                      <span class="qcard-detail-label">Trái nghĩa:</span>
-                      <span class="qcard-detail-val ru">${esc(currentWord.ant)}</span>
-                    </div>
-                  ` : ""}
-                  ${currentWord.note ? `
-                    <div class="qcard-detail-item">
-                      <span class="qcard-detail-label">Ghi chú:</span>
-                      <span class="qcard-detail-val">${esc(currentWord.note)}</span>
-                    </div>
-                  ` : ""}
-                </div>
-              ` : ""}
+              ${(() => {
+                const structStr = (Array.isArray(currentWord.structures) && currentWord.structures.length)
+                  ? currentWord.structures.map(s => typeof s === "string" ? s : (s && (s.structure || s.ru || s.text) || "")).filter(Boolean).join(" · ")
+                  : (currentWord.verb_obj || currentWord.gov || "");
+                const hasExtras = Boolean(currentWord.collocation || structStr || currentWord.syn || currentWord.ant || currentWord.note);
+                if (!hasExtras) return "";
+                return `
+                  <div class="qcard-details-grid">
+                    ${currentWord.collocation ? `
+                      <div class="qcard-detail-item">
+                        <span class="qcard-detail-label">Cụm từ:</span>
+                        <span class="qcard-detail-val ru">${esc(currentWord.collocation)}</span>
+                      </div>
+                    ` : ""}
+                    ${structStr ? `
+                      <div class="qcard-detail-item">
+                        <span class="qcard-detail-label">Cấu trúc / Quản cách:</span>
+                        <span class="qcard-detail-val ru">${esc(structStr)}</span>
+                      </div>
+                    ` : ""}
+                    ${currentWord.syn ? `
+                      <div class="qcard-detail-item">
+                        <span class="qcard-detail-label">Đồng nghĩa:</span>
+                        <span class="qcard-detail-val ru">${esc(currentWord.syn)}</span>
+                      </div>
+                    ` : ""}
+                    ${currentWord.ant ? `
+                      <div class="qcard-detail-item">
+                        <span class="qcard-detail-label">Trái nghĩa:</span>
+                        <span class="qcard-detail-val ru">${esc(currentWord.ant)}</span>
+                      </div>
+                    ` : ""}
+                    ${currentWord.note ? `
+                      <div class="qcard-detail-item">
+                        <span class="qcard-detail-label">Ghi chú:</span>
+                        <span class="qcard-detail-val">${esc(currentWord.note)}</span>
+                      </div>
+                    ` : ""}
+                  </div>
+                `;
+              })()}
             </div>
 
           </div>
@@ -1667,10 +1682,15 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             ` : filtered.map((w, idx) => {
               const isStarred = starredList.includes(w.ru.toLowerCase());
               const isMastered = masteredList.includes(w.ru.toLowerCase().trim());
-              const isExpanded = showDetails;
               const displayWord = w.stress || w.ru;
+              const structStr = (Array.isArray(w.structures) && w.structures.length)
+                ? w.structures.map(s => typeof s === "string" ? s : (s && (s.structure || s.ru || s.text) || "")).filter(Boolean).join(" · ")
+                : (w.verb_obj || w.gov || "");
+              const hasNote = Boolean(w.note && w.note !== getWordType(w) && w.note !== w.pos);
+              const hasExtras = Boolean(w.collocation || structStr || w.syn || w.ant || hasNote);
+
               return `
-                <div class="dau-vocab-row-card ${isMastered ? "mastered" : ""} ${isExpanded ? "is-expanded" : ""}" data-ru="${esc(w.ru)}" data-idx="${idx}">
+                <div class="dau-vocab-row-card ${isMastered ? "mastered" : ""}" data-ru="${esc(w.ru)}" data-idx="${idx}">
                   <!-- SPEC 1: BỐ CỤC 3 PHẦN TRỰC QUAN -->
                   <div class="dau-row-main-grid">
                     <!-- CỘT 1 (TRÁI): TỪ TIẾNG NGA IN ĐẬM KÈM TRỌNG ÂM & TỪ LOẠI -->
@@ -1681,7 +1701,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                       ${getWordType(w) ? `<div class="dau-row-pos-line">(${esc(getWordType(w))})</div>` : ""}
                     </div>
 
-                    <!-- CỘT 2 (GIỮA): NGHĨA TIẾNG VIỆT & CÂU VÍ DỤ SONG NGỮ, CỤM ĐỘNG TỪ, QUẢN CÁCH, ĐỒNG/TRÁI NGHĨA, GHI CHÚ -->
+                    <!-- CỘT 2 (GIỮA): NGHĨA TIẾNG VIỆT & CÂU VÍ DỤ SONG NGỮ, CỤM TỪ, CẤU TRÚC / QUẢN CÁCH, ĐỒNG/TRÁI NGHĨA, GHI CHÚ (HIỂN THỊ ĐẦY ĐỦ TRỰC TIẾP) -->
                     <div class="dau-row-col-vi">
                       <div class="dau-row-vi-text">${esc(w.vi)}</div>
                       ${w.ex ? `
@@ -1692,18 +1712,18 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                           ${w.ex_vi ? `<div class="dau-row-ex-vi">${esc(w.ex_vi)}</div>` : ""}
                         </div>
                       ` : ""}
-                      ${isExpanded ? `
-                        <div class="dau-row-expanded-details">
+                      ${hasExtras ? `
+                        <div class="dau-row-expanded-details" style="display:block">
                           ${w.collocation ? `
                             <div class="dau-row-extra-line">
-                              <span class="dau-row-extra-label">Cụm động từ:</span>
+                              <span class="dau-row-extra-label">Cụm từ:</span>
                               <span class="dau-row-extra-val ru">${esc(w.collocation)}</span>
                             </div>
                           ` : ""}
-                          ${(w.verb_obj || w.gov) ? `
+                          ${structStr ? `
                             <div class="dau-row-extra-line">
-                              <span class="dau-row-extra-label">Tân ngữ trực tiếp / Quản cách:</span>
-                              <span class="dau-row-extra-val ru">${esc(w.verb_obj || w.gov)}</span>
+                              <span class="dau-row-extra-label">Cấu trúc / Quản cách:</span>
+                              <span class="dau-row-extra-val ru">${esc(structStr)}</span>
                             </div>
                           ` : ""}
                           ${w.syn ? `
@@ -1718,15 +1738,13 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                               <span class="dau-row-extra-val ru">${esc(w.ant)}</span>
                             </div>
                           ` : ""}
-                          ${w.note ? `
+                          ${hasNote ? `
                             <div class="dau-row-extra-line">
                               <span class="dau-row-extra-label">Ghi chú:</span>
                               <span class="dau-row-extra-val">${esc(w.note)}</span>
                             </div>
                           ` : ""}
                         </div>
-                      ` : (!w.ex && w.note) ? `
-                        <div class="dau-row-note-short">${esc(w.note)}</div>
                       ` : ""}
                     </div>
 
@@ -1894,20 +1912,23 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         btnStudy.onclick = () => switchMode("flashcard");
       }
 
-      // Row card click to preview word in top box
-      pane.querySelectorAll(".dau-vocab-row-card").forEach((card) => {
-        card.onclick = (e) => {
-          if (e.target.closest("button") || e.target.closest("a") || e.target.closest("input")) return;
-          const ru = card.dataset.ru;
-          if (!ru) return;
-          const pIdx = previewWords.findIndex(pw => pw.ru === ru);
-          if (pIdx !== -1) {
-            previewIdx = pIdx;
-            previewFlipped = false;
-            renderListUI();
-          }
-        };
-      });
+      // Row card click to preview word in top box (nếu có khung preview trên cùng)
+      const pCardElem = pane.querySelector("#dauPreviewCard");
+      if (pCardElem) {
+        pane.querySelectorAll(".dau-vocab-row-card").forEach((card) => {
+          card.onclick = (e) => {
+            if (e.target.closest("button") || e.target.closest("a") || e.target.closest("input")) return;
+            const ru = card.dataset.ru;
+            if (!ru) return;
+            const pIdx = previewWords.findIndex(pw => pw.ru === ru);
+            if (pIdx !== -1) {
+              previewIdx = pIdx;
+              previewFlipped = false;
+              renderListUI();
+            }
+          };
+        });
+      }
 
       // Sync preview flashcard button
       pane.querySelectorAll(".btn-sync-preview").forEach((b) => {
@@ -2161,21 +2182,29 @@ function initVocabPage() {
     const baseJars = (cloudJars && cloudJars.length) ? cloudJars : ((typeof VOCAB_JARS !== "undefined" && Array.isArray(VOCAB_JARS)) ? VOCAB_JARS : []);
     // Loại bỏ toàn bộ lọ từ cá nhân khỏi danh sách bài học theo cấp độ (A1, A2...)
     const systemJars = baseJars.filter(j => j.is_system !== false && !String(j.id).startsWith("custom-"));
-    const jars = systemJars.map(j => ({
-      id: j.id,
-      code: j.code || j.id,
-      kind: "jar",
-      level: j.level || "A1",
-      levelName: j.levelName || (j.level === "B2" ? "Trung cấp cao B2" : j.level === "B1" ? "Trung cấp B1" : j.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
-      title: j.name || j.title,
-      desc: j.desc || j.description || "",
-      icon: j.icon || "archive-jar",
-      wordsCount: (j.words || []).length,
-      is_pro_only: Boolean(j.is_pro_only || j.is_vip || (j.level === "B2" && j.id !== "jar_travel") || j.id === "jar_bank" || j.id === "jar_hospital" || j.id === "jar_dekanat"),
-      words: j.words || [],
-      article: j.article || null,
-      raw: j
-    }));
+    const jars = systemJars.map(j => {
+      const jarWords = (j.words && j.words.length)
+        ? j.words
+        : ((typeof VOCAB_JARS !== "undefined" && Array.isArray(VOCAB_JARS))
+          ? ((VOCAB_JARS.find(x => x.id === j.id || x.code === j.id || x.id === j.code || x.code === j.code) || {}).words || [])
+          : []);
+      return {
+        id: j.id,
+        code: j.code || j.id,
+        kind: "jar",
+        level: j.level || "A1",
+        levelName: j.levelName || (j.level === "B2" ? "Trung cấp cao B2" : j.level === "B1" ? "Trung cấp B1" : j.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
+        title: j.name || j.title,
+        name: j.name || j.title,
+        desc: j.desc || j.description || "",
+        icon: j.icon || "archive-jar",
+        wordsCount: jarWords.length || j.word_count || 0,
+        is_pro_only: Boolean(j.is_pro_only || j.is_pro || j.is_vip || (j.level === "B2" && j.id !== "jar_travel") || j.id === "jar_bank" || j.id === "jar_hospital" || j.id === "jar_dekanat"),
+        words: jarWords,
+        article: j.article || null,
+        raw: j
+      };
+    });
     return jars;
   };
 
@@ -3158,11 +3187,12 @@ const showTopicArticle = (jarId) => {
     }
 
     // Điểm ngữ pháp cốt lõi
+    const gNotes = (customArticle && (customArticle.grammarNotes || customArticle.grammar_notes)) || [];
     let grammarHtml = "";
-    if (customArticle && customArticle.grammarNotes && customArticle.grammarNotes.length) {
+    if (gNotes.length) {
       grammarHtml = `
         <div class="topic-grammar-cards">
-          ${customArticle.grammarNotes.map(g => `
+          ${gNotes.map(g => `
             <div class="topic-grammar-card">
               <h4>${esc(g.title)}</h4>
               <p style="white-space:pre-line">${esc(g.content)}</p>
@@ -3186,8 +3216,9 @@ const showTopicArticle = (jarId) => {
     }
 
     // Chuỗi hành động & Mẫu câu ngữ cảnh (Action Chains Table từ file Excel)
+    const aChains = (customArticle && (customArticle.actionChains || customArticle.action_chains)) || [];
     let actionChainsHtml = "";
-    if (customArticle && customArticle.actionChains && customArticle.actionChains.length) {
+    if (aChains.length) {
       actionChainsHtml = `
         <!-- PHẦN: CHUỖI HÀNH ĐỘNG & MẪU CÂU NGỮ CẢNH -->
         <section class="topic-article-section">
@@ -3195,7 +3226,7 @@ const showTopicArticle = (jarId) => {
             <span class="sec-badge">II</span> Chuỗi hành động &amp; Mẫu câu ngữ cảnh
           </h2>
           <div class="topic-action-chains-wrapper">
-            ${customArticle.actionChains.map((group, gIdx) => `
+            ${aChains.map((group, gIdx) => `
               <div class="topic-action-chain-group" style="margin-bottom:24px">
                 <h3 style="font-size:1.05rem;font-weight:700;color:var(--primary);margin:0 0 10px 0;display:flex;align-items:center;gap:6px">
                   ${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 16 }) : "✦"} ${esc(group.subTopic || ("Nhóm " + (gIdx + 1)))}
@@ -3246,6 +3277,14 @@ const showTopicArticle = (jarId) => {
     // Bảng từ vựng chi tiết
     const vocabRowsHtml = words.map((w, idx) => {
       const posLabel = typeof formatRussianGrammar === "function" ? formatRussianGrammar(w.pos, null, w.gender) : (w.pos || "");
+      const structStr = (Array.isArray(w.structures) && w.structures.length)
+        ? w.structures.map(s => typeof s === "string" ? s : (s && (s.structure || s.ru || s.text) || "")).filter(Boolean).join(" · ")
+        : (w.verb_obj || w.gov || "");
+      const synStr = w.syn || (Array.isArray(w.synonyms) ? w.synonyms.join(", ") : "");
+      const antStr = w.ant || (Array.isArray(w.antonyms) ? w.antonyms.join(", ") : "");
+      const hasNote = Boolean(w.note && w.note !== posLabel && w.note !== w.pos);
+      const hasExtras = Boolean(w.collocation || structStr || synStr || antStr || hasNote);
+
       return `
       <tr>
         <td style="width:40px;color:#94a3b8;font-weight:700;text-align:center">${idx + 1}</td>
@@ -3253,7 +3292,18 @@ const showTopicArticle = (jarId) => {
           <div class="topic-word-ru ru">${esc(w.stress || w.ru)}</div>
           ${posLabel ? `<span class="topic-word-note ru" style="font-style:italic;color:var(--primary,#0039a6);font-weight:600">(${esc(posLabel)})</span>` : (w.note ? `<span class="topic-word-note">${esc(w.note)}</span>` : '')}
         </td>
-        <td style="min-width:130px" class="topic-word-vi">${esc(w.vi)}</td>
+        <td style="min-width:150px" class="topic-word-vi">
+          <div style="font-weight:600">${esc(w.vi)}</div>
+          ${hasExtras ? `
+            <div style="margin-top:6px;font-size:0.82rem;line-height:1.4">
+              ${w.collocation ? `<div style="color:var(--primary)"><b>Cụm từ:</b> <span class="ru">${esc(w.collocation)}</span></div>` : ""}
+              ${structStr ? `<div style="color:var(--primary)"><b>Cấu trúc:</b> <span class="ru">${esc(structStr)}</span></div>` : ""}
+              ${synStr ? `<div style="color:var(--primary)"><b>Đồng nghĩa:</b> <span class="ru">${esc(synStr)}</span></div>` : ""}
+              ${antStr ? `<div style="color:var(--primary)"><b>Trái nghĩa:</b> <span class="ru">${esc(antStr)}</span></div>` : ""}
+              ${hasNote ? `<div style="color:var(--muted)"><b>Ghi chú:</b> ${esc(w.note)}</div>` : ""}
+            </div>
+          ` : ""}
+        </td>
         <td style="min-width:220px">
           <div class="topic-word-ex ru" style="font-weight:600;color:var(--primary,#0039a6);margin-bottom:2px">${w.ex ? esc(stripQuotes(w.ex)) : '—'}</div>
           ${w.ex_vi ? `<div style="font-size:0.82rem;color:#475569;line-height:1.35">${esc(w.ex_vi)}</div>` : ''}
@@ -3357,14 +3407,14 @@ const showTopicArticle = (jarId) => {
           </div>
         </section>
 
-        ${(customArticle && (customArticle.content_markdown || customArticle.content)) ? `
+        ${(customArticle && (customArticle.content_md || customArticle.content_markdown || customArticle.content)) ? `
           <!-- PHẦN: NỘI DUNG BÀI GIẢNG / BÀI ĐỌC CHUYÊN SÂU MARKDOWN (.MD) -->
           <section class="topic-article-section topic-article-markdown-body">
             <h2 class="topic-article-sec-title" style="margin-bottom:18px">
               <span class="sec-badge">✦</span> Nội dung bài học chuyên đề (.md)
             </h2>
             <div class="rusi-md-rendered">
-              ${window.RusiMarkdown ? RusiMarkdown.render(customArticle.content_markdown || customArticle.content) : `<p>${esc(customArticle.content_markdown || customArticle.content)}</p>`}
+              ${window.RusiMarkdown ? RusiMarkdown.render(customArticle.content_md || customArticle.content_markdown || customArticle.content) : `<p>${esc(customArticle.content_md || customArticle.content_markdown || customArticle.content)}</p>`}
             </div>
           </section>
         ` : ""}
@@ -3387,9 +3437,9 @@ const showTopicArticle = (jarId) => {
             <span class="sec-badge">${actionChainsHtml ? "IV" : "III"}</span> Điểm ngữ pháp &amp; Bí kíp sinh tồn
           </h2>
           ${grammarHtml}
-          ${customArticle && customArticle.culturalTip ? `
+          ${(customArticle && (customArticle.culturalTip || customArticle.cultural_tip)) ? `
             <div style="margin-top:16px;background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:10px;padding:14px 18px;font-size:0.88rem;color:#92400e;line-height:1.55">
-              <strong>${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} Mẹo văn hóa thực tế:</strong> ${esc(customArticle.culturalTip)}
+              <strong>${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} Mẹo văn hóa thực tế:</strong> ${esc(customArticle.culturalTip || customArticle.cultural_tip)}
             </div>
           ` : ''}
         </section>
@@ -3481,11 +3531,21 @@ const showTopicArticle = (jarId) => {
   const showJarDetail = (jarId, initialMode = "list") => {
     window.currentActiveJarId = jarId;
     const customJars = STORE.get("custom_jars", []);
-    const baseJars = (cloudJars && cloudJars.length) ? cloudJars : ((window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("jars:system") : []) || [];
+    const baseJars = (cloudJars && cloudJars.length)
+      ? cloudJars
+      : ((typeof VOCAB_JARS !== "undefined" && Array.isArray(VOCAB_JARS))
+        ? VOCAB_JARS
+        : (((window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("jars:system") : []) || []));
     let jar = [...baseJars, ...customJars].find((j) => j.id === jarId || j.code === jarId);
     if (!jar) {
       console.warn("Không tìm thấy lọ từ vựng:", jarId);
       return;
+    }
+    if (!jar.words || !jar.words.length) {
+      if (typeof VOCAB_JARS !== "undefined" && Array.isArray(VOCAB_JARS)) {
+        const localMatch = VOCAB_JARS.find(j => j.id === jar.id || j.code === jar.id || j.id === jar.code || j.code === jar.code);
+        if (localMatch && Array.isArray(localMatch.words)) jar.words = localMatch.words;
+      }
     }
 
     // Kiểm tra quyền truy cập PRO
@@ -4430,7 +4490,10 @@ function initListeningPage() {
   const lessonImage = (l) => l.image || l.image_url || LESSON_COVERS[l.category] || DEFAULT_LISTENING_COVER;
 
   const getListeningLessons = () => {
-    return (cloudListening && cloudListening.length) ? cloudListening : [];
+    if (cloudListening && cloudListening.length) return cloudListening;
+    if (typeof window !== "undefined" && window.LISTENING_LESSONS && window.LISTENING_LESSONS.length) return window.LISTENING_LESSONS;
+    if (typeof LISTENING_LESSONS !== "undefined" && Array.isArray(LISTENING_LESSONS) && LISTENING_LESSONS.length) return LISTENING_LESSONS;
+    return [];
   };
 
   const loadCloudListening = async () => {
@@ -5732,8 +5795,33 @@ function initListeningPage() {
     ]
   };
 
-  const getSentenceVocab = (sentenceText, lesson) => {
+  const getSentenceVocab = (sentenceText, lesson, lineIdx) => {
     const trimmed = (sentenceText || "").trim();
+
+    // 1. Ưu tiên lấy từ vựng liên kết chính xác từ từ điển vocabularies qua bảng listening_lesson_vocab
+    if (lesson && Array.isArray(lesson.vocab_items) && lesson.vocab_items.length > 0) {
+      const matchedFromDb = lesson.vocab_items
+        .filter((item) => {
+          if (!item || !item.vocab) return false;
+          if (typeof lineIdx === "number" && item.line_index !== null && item.line_index !== undefined) {
+            return item.line_index === lineIdx;
+          }
+          const word = (item.vocab.word_normalized || item.vocab.word_with_stress || "").toLowerCase();
+          return word && trimmed.toLowerCase().includes(word);
+        })
+        .map((item) => ({
+          ru: item.vocab.word_normalized || item.vocab.word_with_stress,
+          stress: item.vocab.word_with_stress || item.vocab.word_normalized,
+          vi: item.vocab.meaning_vi,
+          pos: item.vocab.pos || "слов.",
+          audio: item.vocab.audio_url || null
+        }));
+
+      if (matchedFromDb.length > 0) {
+        return matchedFromDb;
+      }
+    }
+
     if (DICT_SENTENCE_VOCAB_DB[trimmed]) {
       return DICT_SENTENCE_VOCAB_DB[trimmed];
     }
@@ -5811,23 +5899,30 @@ function initListeningPage() {
     let playbackStartTimestamp = 0;
     let playbackBaseTimeSec = 0;
 
+    let compNativeAudio = null;
     const recomputeTimeline = () => {
       timeline = [];
       let acc = 0;
       lines.forEach((ln, idx) => {
-        const t = ln ? (ln.ru || "") : "";
-        const dur = calcLineDurSec(t, currentSpeed);
+        const t = ln ? (ln.text_ru || ln.ru || "") : "";
+        const start = (typeof ln.start_sec === "number") ? ln.start_sec : acc;
+        const dur = (typeof ln.end_sec === "number" && typeof ln.start_sec === "number" && ln.end_sec > ln.start_sec)
+          ? (ln.end_sec - ln.start_sec)
+          : calcLineDurSec(t, currentSpeed);
+        const end = (typeof ln.end_sec === "number") ? ln.end_sec : (start + dur);
         timeline.push({
           idx,
-          start: acc,
+          start,
           dur,
-          end: acc + dur,
+          end,
           text: t,
           line: ln
         });
-        acc += dur + PAUSE_GAP_SEC;
+        acc = end + PAUSE_GAP_SEC;
       });
-      totalDurationSec = Math.max(3.0, acc);
+      totalDurationSec = (lesson.duration_seconds && lesson.duration_seconds > 0)
+        ? lesson.duration_seconds
+        : Math.max(3.0, acc);
     };
     recomputeTimeline();
 
@@ -5849,6 +5944,9 @@ function initListeningPage() {
     };
 
     const stopSpeechAndTimers = () => {
+      if (compNativeAudio) {
+        try { compNativeAudio.pause(); } catch (_) {}
+      }
       if (playTimeout) {
         clearTimeout(playTimeout);
         playTimeout = null;
@@ -5864,8 +5962,15 @@ function initListeningPage() {
 
     const pauseAudio = () => {
       if (!isPlaying) return;
-      const elapsed = (Date.now() - playbackStartTimestamp) / 1000;
-      currentTimeSec = Math.min(totalDurationSec, playbackBaseTimeSec + elapsed);
+      if (compNativeAudio && !compNativeAudio.paused) {
+        try {
+          compNativeAudio.pause();
+          currentTimeSec = compNativeAudio.currentTime;
+        } catch (_) {}
+      } else {
+        const elapsed = (Date.now() - playbackStartTimestamp) / 1000;
+        currentTimeSec = Math.min(totalDurationSec, playbackBaseTimeSec + elapsed);
+      }
       isPlaying = false;
       stopSpeechAndTimers();
       if (compWaveform) compWaveform.pause();
@@ -5876,6 +5981,12 @@ function initListeningPage() {
       isPlaying = false;
       currentTimeSec = 0;
       currentLineIdx = -1;
+      if (compNativeAudio) {
+        try {
+          compNativeAudio.pause();
+          compNativeAudio.currentTime = 0;
+        } catch (_) {}
+      }
       stopSpeechAndTimers();
       if (compWaveform) compWaveform.stop();
       updatePlaybackUI();
@@ -5901,8 +6012,8 @@ function initListeningPage() {
       playbackBaseTimeSec = sec;
 
       if (compWaveform) {
-        const allRuText = lines.map(l => l.ru || "").join(" ");
-        compWaveform.start(allRuText, totalDurationSec);
+        const allRuText = lines.map(l => l.text_ru || l.ru || "").join(" ");
+        compWaveform.start(allRuText, totalDurationSec, lesson.audio_url || null);
         compWaveform.seek(currentTimeSec / totalDurationSec);
       }
 
@@ -5933,8 +6044,9 @@ function initListeningPage() {
         if (animFrameId) cancelAnimationFrame(animFrameId);
         const tick = () => {
           if (!isPlaying) return;
-          const elapsed = (Date.now() - playbackStartTimestamp) / 1000;
-          const cur = Math.min(totalDurationSec, playbackBaseTimeSec + elapsed);
+          const cur = (compNativeAudio && !compNativeAudio.paused)
+            ? compNativeAudio.currentTime
+            : Math.min(totalDurationSec, playbackBaseTimeSec + (Date.now() - playbackStartTimestamp) / 1000);
           currentTimeSec = cur;
           if (compWaveform) compWaveform.setProgress(cur / totalDurationSec);
 
@@ -5961,6 +6073,25 @@ function initListeningPage() {
       };
 
       startProgressTicker();
+
+      if (lesson.audio_url) {
+        try {
+          if (!compNativeAudio) {
+            compNativeAudio = new Audio(lesson.audio_url);
+          }
+          compNativeAudio.playbackRate = currentSpeed;
+          compNativeAudio.currentTime = currentTimeSec;
+          compNativeAudio.play().catch(() => {});
+          compNativeAudio.onended = () => {
+            isPlaying = false;
+            currentLineIdx = -1;
+            if (compWaveform) compWaveform.complete();
+            updatePlaybackUI();
+          };
+          updatePlaybackUI();
+          return;
+        } catch (_) {}
+      }
 
       const playSegmentFrom = (segIndex, charOffset = 0) => {
         if (!isPlaying || segIndex >= timeline.length) {
@@ -6632,16 +6763,24 @@ function initListeningPage() {
     // Thu thập danh sách câu luyện trong bài hiện tại
     const rawSentences = (Array.isArray(lesson.dictation) && lesson.dictation.length > 0)
       ? lesson.dictation
-      : (Array.isArray(lesson.lines) && lesson.lines.length > 0 ? lesson.lines.map(l => l.ru) : ["Вот, пожалуйста."]);
+      : (Array.isArray(lesson.lines) && lesson.lines.length > 0 ? lesson.lines.map(l => l.text_ru || l.ru) : ["Вот, пожалуйста."]);
 
     const sentences = rawSentences.map((raw, idx) => {
-      const lineMatch = (lesson.lines || []).find(l => l.ru && (l.ru.includes(raw) || raw.includes(l.ru)));
-      const vi = lineMatch ? lineMatch.vi : (lesson.vi || "");
+      const lineMatch = (lesson.lines || []).find(l => {
+        const text = l.text_ru || l.ru || "";
+        return text && (text.includes(raw) || raw.includes(text));
+      });
+      const vi = lineMatch ? (lineMatch.translation_vi || lineMatch.vi) : (lesson.vi || "");
+      const lineIdx = lineMatch ? lesson.lines.indexOf(lineMatch) : idx;
       return {
         idx,
+        lineIdx,
+        start_sec: lineMatch ? lineMatch.start_sec : null,
+        end_sec: lineMatch ? lineMatch.end_sec : null,
+        audio_url: (lineMatch && lineMatch.audio_url) || lesson.audio_url || null,
         ru: raw,
         vi,
-        vocab: getSentenceVocab(raw, lesson)
+        vocab: getSentenceVocab(raw, lesson, lineIdx)
       };
     });
 
@@ -6662,6 +6801,7 @@ function initListeningPage() {
     let isRePracticing = false;
     let showCompletedReview = false;
     let rePracticeDone = new Set();
+    let dictNativeAudio = null;
 
     const isSentenceDone = (idx) => {
       const key = `${lesson.id}_dict_${idx}`;
@@ -6691,6 +6831,9 @@ function initListeningPage() {
     };
 
     const stopAudio = () => {
+      if (dictNativeAudio) {
+        try { dictNativeAudio.pause(); } catch (_) {}
+      }
       if (typeof window !== "undefined" && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
@@ -6755,25 +6898,73 @@ function initListeningPage() {
         }
       };
 
-      if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
-        const u = new SpeechSynthesisUtterance(s.ru);
-        u.lang = "ru-RU";
-        u.rate = speed;
-        if (typeof pickVoice === "function") {
-          const v = pickVoice("ru-RU");
-          if (v) u.voice = v;
-        }
-        u.onboundary = (e) => {
-          if (dictWaveform && e.charIndex !== undefined && s.ru.length > 0) {
-            dictWaveform.updateBoundary(e.charIndex, e.charLength || 0);
+      const speakWithSynthesis = () => {
+        if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
+          const u = new SpeechSynthesisUtterance(s.ru);
+          u.lang = "ru-RU";
+          u.rate = speed;
+          if (typeof pickVoice === "function") {
+            const v = pickVoice("ru-RU");
+            if (v) u.voice = v;
           }
-        };
-        u.onend = onPlaybackDone;
-        u.onerror = onPlaybackDone;
-        window.speechSynthesis.speak(u);
-      } else {
-        setTimeout(onPlaybackDone, estDurationMs);
+          u.onboundary = (e) => {
+            if (dictWaveform && e.charIndex !== undefined && s.ru.length > 0) {
+              dictWaveform.updateBoundary(e.charIndex, e.charLength || 0);
+            }
+          };
+          u.onend = onPlaybackDone;
+          u.onerror = onPlaybackDone;
+          window.speechSynthesis.speak(u);
+        } else {
+          setTimeout(onPlaybackDone, Math.max(1200, estDurationSec * 1000));
+        }
+      };
+
+      if (soundUrl) {
+        try {
+          if (!dictNativeAudio) {
+            dictNativeAudio = new Audio();
+          }
+          dictNativeAudio.src = soundUrl;
+          dictNativeAudio.playbackRate = speed;
+          const startT = (typeof s.start_sec === "number") ? s.start_sec : 0;
+          const endT = (typeof s.end_sec === "number") ? s.end_sec : (startT + estDurationSec);
+          dictNativeAudio.currentTime = startT;
+
+          let hasEnded = false;
+          const checkEnd = () => {
+            if (!hasEnded && dictNativeAudio && dictNativeAudio.currentTime >= endT) {
+              hasEnded = true;
+              dictNativeAudio.pause();
+              dictNativeAudio.removeEventListener("timeupdate", checkEnd);
+              onPlaybackDone();
+            }
+          };
+
+          dictNativeAudio.addEventListener("timeupdate", checkEnd);
+          dictNativeAudio.onended = () => {
+            if (!hasEnded) {
+              hasEnded = true;
+              dictNativeAudio.removeEventListener("timeupdate", checkEnd);
+              onPlaybackDone();
+            }
+          };
+          dictNativeAudio.onerror = () => {
+            dictNativeAudio.removeEventListener("timeupdate", checkEnd);
+            speakWithSynthesis();
+          };
+
+          dictNativeAudio.play().catch(() => {
+            speakWithSynthesis();
+          });
+          return;
+        } catch (_) {
+          speakWithSynthesis();
+          return;
+        }
       }
+
+      speakWithSynthesis();
     };
 
     const tokenizeSentence = (sentenceText) => {
@@ -7899,7 +8090,7 @@ function initSpeakingPage() {
                 <div class="dau-card-subinfo">
                   <span>${s.level}</span>
                   <span class="dau-card-sep">•</span>
-                  <span class="dau-card-count">${(s.items || []).length} câu</span>
+                  <span class="dau-card-count">${(s.items || s.sentences || (s.raw_data && s.raw_data.items) || []).length} câu</span>
                 </div>
               </div>
             </div>
@@ -8036,7 +8227,7 @@ const openSpeakingWorkspace = (set) => {
     document.body.classList.add("in-workspace");
     const todayKey = "speak_today_" + new Date().toDateString();
     const attemptsToday = STORE.get(todayKey, 0);
-    const items = set.items || set.sentences || [];
+    const items = (Array.isArray(set.sentences) && set.sentences.length) ? set.sentences : ((Array.isArray(set.items) && set.items.length) ? set.items : ((set.raw_data && set.raw_data.items) || []));
 
     // Phân tích YouTube video nếu bài học là dạng YouTube Shadowing
     const parseYoutubeId = (obj) => {
@@ -8062,9 +8253,25 @@ const openSpeakingWorkspace = (set) => {
     if (hasVideo) {
       const startQ = (set.start_sec || (set.video && set.video.startSec)) ? `&start=${set.start_sec || set.video.startSec}` : "";
       const endQ = (set.end_sec || (set.video && set.video.endSec)) ? `&end=${set.end_sec || set.video.endSec}` : "";
-      const originQ = (typeof window !== "undefined" && window.location.origin) ? `&origin=${encodeURIComponent(window.location.origin)}` : "";
+      const hasValidOrigin = typeof window !== "undefined" && window.location.origin && window.location.origin !== "null" && !window.location.origin.startsWith("file:");
+      const originQ = hasValidOrigin ? `&origin=${encodeURIComponent(window.location.origin)}` : "";
       ytVideoUrl = `https://www.youtube.com/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1${startQ}${endQ}${originQ}`;
     }
+
+    // Gửi lệnh an toàn tới YouTube Iframe Player
+    const sendYtCommand = (func, args = []) => {
+      const ytPlayer = el("#spYoutubePlayer");
+      if (ytPlayer && ytPlayer.contentWindow) {
+        try {
+          ytPlayer.contentWindow.postMessage(JSON.stringify({ event: "listening" }), "*");
+          ytPlayer.contentWindow.postMessage(JSON.stringify({
+            event: "command",
+            func: func,
+            args: Array.isArray(args) ? args : [args]
+          }), "*");
+        } catch (_) {}
+      }
+    };
 
     let currentSentenceIdx = 0;
     let currentSpeed = 1.0;
@@ -8261,6 +8468,7 @@ const openSpeakingWorkspace = (set) => {
     const getItemSec = (idx) => {
       const it = items[idx];
       if (!it) return 0;
+      if (typeof it.start_sec === "number") return it.start_sec;
       if (typeof it.startSec === "number") return it.startSec;
       if (typeof it.start === "number") return it.start;
       if (typeof it.sec === "number") return it.sec;
@@ -8277,6 +8485,7 @@ const openSpeakingWorkspace = (set) => {
     const getItemEndSec = (idx) => {
       const it = items[idx];
       if (!it) return getItemSec(idx) + 5;
+      if (typeof it.end_sec === "number") return it.end_sec;
       if (typeof it.endSec === "number") return it.endSec;
       if (typeof it.end === "number") return it.end;
       if (typeof it.duration === "number") return getItemSec(idx) + it.duration;
@@ -8290,16 +8499,7 @@ const openSpeakingWorkspace = (set) => {
         clearTimeout(segmentTimer);
         segmentTimer = null;
       }
-      const ytPlayer = el("#spYoutubePlayer");
-      if (ytPlayer && ytPlayer.contentWindow) {
-        try {
-          ytPlayer.contentWindow.postMessage(JSON.stringify({
-            event: "command",
-            func: "pauseVideo",
-            args: ""
-          }), "*");
-        } catch (_) {}
-      }
+      sendYtCommand("pauseVideo", []);
       isPlaying = false;
       const btnPlay = el("#btnPlayModel");
       if (btnPlay) {
@@ -8312,23 +8512,8 @@ const openSpeakingWorkspace = (set) => {
     // Tự động nhảy video đến thời điểm của câu
     const seekVideoToSentence = (idx) => {
       if (!hasVideo) return;
-      handlePlayVideo();
       const sec = getItemSec(idx);
-      const ytPlayer = el("#spYoutubePlayer");
-      if (ytPlayer && ytPlayer.contentWindow) {
-        try {
-          ytPlayer.contentWindow.postMessage(JSON.stringify({
-            event: "command",
-            func: "seekTo",
-            args: [sec, true]
-          }), "*");
-          ytPlayer.contentWindow.postMessage(JSON.stringify({
-            event: "command",
-            func: "playVideo",
-            args: ""
-          }), "*");
-        } catch (_) {}
-      }
+      sendYtCommand("seekTo", [sec, true]);
     };
 
     // Thuật toán so khớp chuỗi từ Word Error Rate (WER) tiếng Nga chuẩn
@@ -8416,13 +8601,15 @@ const openSpeakingWorkspace = (set) => {
           matched = res.alignments.find(a => a.word === cTok);
         }
 
-        if (!matched || matched.status === "correct") {
+        if (matched && matched.status === "correct") {
           return `<span class="sp-target-word sp-word-correct" title="Phát âm chuẩn xác">${esc(tok)}</span>`;
-        } else if (matched.status === "missing") {
+        } else if (matched && matched.status === "missing") {
           return `<span class="sp-target-word sp-word-wrong" style="opacity:0.75;text-decoration:underline dashed;" title="Chưa nhận diện được từ này">${esc(tok)}</span>`;
-        } else {
+        } else if (matched && matched.status === "wrong") {
           const tip = matched.heard ? `Nhận diện: «${matched.heard}»` : "Cần phát âm rõ ràng hơn";
           return `<span class="sp-target-word sp-word-wrong" title="${esc(tip)}">${esc(tok)}</span>`;
+        } else {
+          return `<span class="sp-target-word" style="opacity:0.8;" title="Chưa phát âm">${esc(tok)}</span>`;
         }
       }).join("");
 
@@ -8469,7 +8656,6 @@ const openSpeakingWorkspace = (set) => {
         btn.onclick = () => {
           const idx = parseInt(btn.dataset.idx, 10);
           loadSentence(idx);
-          seekVideoToSentence(idx);
           playCurrentSentence();
           // Đóng drawer trên mobile nếu đang mở
           const side = el("#spSidebarPanel");
@@ -8523,30 +8709,12 @@ const openSpeakingWorkspace = (set) => {
         // 1. Phân hệ YouTube: Phát đoạn theo start - end
         const start = getItemSec(currentSentenceIdx);
         const end = getItemEndSec(currentSentenceIdx);
-        const durationSec = Math.max(0.6, end - start) / currentSpeed;
+        // Bù thêm 400ms đệm tránh YouTube đang tải buffering bị ngắt cụt câu
+        const durationSec = (Math.max(1.0, end - start) / currentSpeed) + 0.4;
 
-        handlePlayVideo();
-
-        const ytPlayer = el("#spYoutubePlayer");
-        if (ytPlayer && ytPlayer.contentWindow) {
-          try {
-            ytPlayer.contentWindow.postMessage(JSON.stringify({
-              event: "command",
-              func: "setPlaybackRate",
-              args: [currentSpeed]
-            }), "*");
-            ytPlayer.contentWindow.postMessage(JSON.stringify({
-              event: "command",
-              func: "seekTo",
-              args: [start, true]
-            }), "*");
-            ytPlayer.contentWindow.postMessage(JSON.stringify({
-              event: "command",
-              func: "playVideo",
-              args: ""
-            }), "*");
-          } catch (_) {}
-        }
+        sendYtCommand("setPlaybackRate", [currentSpeed]);
+        sendYtCommand("seekTo", [start, true]);
+        sendYtCommand("playVideo", []);
 
         if (segmentTimer) clearTimeout(segmentTimer);
         segmentTimer = setTimeout(() => {
@@ -8686,10 +8854,16 @@ const openSpeakingWorkspace = (set) => {
     };
 
     const startRecording = () => {
-      if (!Monetization.isPro()) {
+      // Kiểm tra khóa bài học dành cho PRO
+      if (set.is_pro_only && (typeof Monetization === "undefined" || !Monetization.isPro())) {
+        Monetization.showProGateModal("Nội dung luyện nói dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn.");
+        return;
+      }
+      // Hạn mức thực hành miễn phí trong ngày (đủ để học viên hoàn thành trọn vẹn bài học 25-30 câu)
+      if (typeof Monetization !== "undefined" && !Monetization.isPro()) {
         const used = STORE.get(todayKey, 0);
-        if (used >= 2) {
-          Monetization.showProGateModal("Lượt luyện nói hôm nay đã hết", "Bạn đã dùng hết 2 lượt luyện nói miễn phí hôm nay. Nâng cấp lên gói PRO để mở khóa AI chấm âm vị không giới hạn số lượt.");
+        if (used >= 30) {
+          Monetization.showProGateModal("Lượt luyện nói hôm nay đã hết", "Bạn đã dùng hết 30 lượt luyện nói miễn phí hôm nay. Nâng cấp lên gói PRO để mở khóa AI chấm âm vị không giới hạn số lượt.");
           return;
         }
       }
@@ -8737,7 +8911,9 @@ const openSpeakingWorkspace = (set) => {
 
       recognitionInstance = new SR();
       recognitionInstance.lang = "ru-RU";
-      recognitionInstance.continuous = true;
+      try {
+        recognitionInstance.continuous = true;
+      } catch (_) {}
       recognitionInstance.interimResults = true;
       recognitionInstance.maxAlternatives = 3;
 
@@ -8750,6 +8926,13 @@ const openSpeakingWorkspace = (set) => {
           }
         }, 2500);
       };
+
+      // Đặt hẹn giờ nếu sau 8 giây người học chưa phát âm
+      silenceTimer = setTimeout(() => {
+        if (isRecording && !lastHeardText) {
+          stopRecording();
+        }
+      }, 8000);
 
       recognitionInstance.onresult = (ev) => {
         let interimChunk = "";
@@ -8980,6 +9163,13 @@ const openSpeakingWorkspace = (set) => {
       stopRecording();
       document.removeEventListener("keydown", onWorkspaceKeydown);
       document.body.classList.remove("in-workspace");
+      if (typeof window !== "undefined" && window.history && window.history.replaceState) {
+        try {
+          window.history.replaceState({}, document.title, window.location.pathname);
+        } catch (_) {}
+      }
+      currentLevel = set.level || "A1";
+      currentPage = 1;
       renderHub();
       window.scrollTo({ top: 0, behavior: "smooth" });
     };
@@ -9017,13 +9207,10 @@ const openSpeakingWorkspace = (set) => {
     // Feedback action buttons
     if (el("#btnFeedbackRetry")) el("#btnFeedbackRetry").onclick = startRecording;
 
-    // Nhấp vào câu tiếng Nga để phát âm mẫu hoặc nhảy video đến đoạn đó
+    // Nhấp vào câu tiếng Nga để phát âm mẫu hoặc nghe video câu đó
     const ruSentenceEl = el("#spTargetRu");
     if (ruSentenceEl) {
       ruSentenceEl.onclick = () => {
-        if (hasVideo) {
-          seekVideoToSentence(currentSentenceIdx);
-        }
         playCurrentSentence();
       };
     }
@@ -9042,6 +9229,13 @@ const openSpeakingWorkspace = (set) => {
     el("#spTargetVi").onclick = () => {
       if (!isTranslationVisible) toggleTranslation();
     };
+
+    // Thiết lập kết nối ban đầu với YouTube Player
+    if (hasVideo) {
+      setTimeout(() => {
+        sendYtCommand("listening", []);
+      }, 500);
+    }
 
     // Khởi chạy câu đầu tiên & playlist
     renderPlaylist();
@@ -9583,8 +9777,19 @@ function initWritingPage() {
   let cloudWriting = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("writing:all") : null;
 
   const icon = (name, size) => window.RusiIcons ? RusiIcons.get(name, { size }) : "";
-  const getTasks = () => (cloudWriting && cloudWriting.length) ? cloudWriting : [];
-  const taskMode = (task) => task.task_type === "picture_desc" ? "picture" : "translation";
+  const getTasks = () => {
+    if (cloudWriting && cloudWriting.length) return cloudWriting;
+    if (typeof window !== "undefined" && window.WRITING_TASKS && window.WRITING_TASKS.length) return window.WRITING_TASKS;
+    if (typeof WRITING_TASKS !== "undefined" && Array.isArray(WRITING_TASKS) && WRITING_TASKS.length) return WRITING_TASKS;
+    return [];
+  };
+  const taskMode = (task) => {
+    if (task.topicType === "picture" || task.topicType === "translation") return task.topicType;
+    if (task.task_type === "picture_desc" || task.category === "photo" || (task.title && task.title.toLowerCase().includes("tả tranh"))) return "picture";
+    if (task.task_type === "translation") return "translation";
+    if (task.image_url || task.image) return "picture";
+    return "translation";
+  };
 
   const getFirstLevelWithTasks = (mode) => {
     const tasks = getTasks();
@@ -9701,8 +9906,8 @@ function initWritingPage() {
     return "Từ vựng gợi ý cho bài viết";
   };
   const taskImage = (task) => task.image_url || (taskMode(task) === "picture" ? PICTURE_FALLBACK : TRANSLATION_FALLBACK);
-  const topicKey = (task) => task.category || task.category_name || task.categoryName || task.id;
-  const topicName = (task) => task.categoryName || task.category_name || task.title;
+  const topicKey = (task) => task.topicKey || task.category || task.category_name || task.categoryName || task.id;
+  const topicName = (task) => task.topicName || task.categoryName || task.category_name || task.title;
 
   const filteredTasks = () => getTasks().filter((task) =>
     task.level === currentLevel && taskMode(task) === currentMode
@@ -9714,6 +9919,9 @@ function initWritingPage() {
       const key = topicKey(task);
       if (!groups.has(key)) groups.set(key, { key, name: topicName(task), tasks: [] });
       groups.get(key).tasks.push(task);
+    });
+    groups.forEach((g) => {
+      g.tasks.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
     });
     return Array.from(groups.values());
   };
@@ -9980,7 +10188,7 @@ function initWritingPage() {
                     <button type="button" class="writing-exercise-item ${active ? "active" : ""}" data-task-id="${esc(task.id)}">
                       <span class="writing-exercise-index">${String(index + 1).padStart(2, "0")}</span>
                       <span class="writing-exercise-title">
-                        <strong>Bài luyện ${index + 1}</strong>
+                        <strong>${esc(task.title || `Bài luyện ${index + 1}`)}</strong>
                       </span>
                       <span class="writing-exercise-status">${done ? icon("check-circle-correct", 16) : icon("arrow-right", 15)}</span>
                     </button>
@@ -10074,19 +10282,22 @@ function initWritingPage() {
                     ${words.map((word, idx) => {
                       const wordRu = typeof word === "object" && word !== null ? (word.ru || word.word || "") : String(word);
                       const wordVi = getWordVi(word);
+                      const wordPos = typeof word === "object" && word !== null && word.pos ? word.pos : "";
+                      const audioUrl = typeof word === "object" && word !== null && word.audio_url ? word.audio_url : "";
                       return `
                         <div class="dau-vocab-row-card" data-ru="${esc(wordRu)}" data-idx="${idx}">
                           <div class="dau-row-main-grid">
                             <div class="dau-row-col-ru">
                               <div class="dau-row-ru-header">
                                 <span class="dau-row-ru ru">${esc(wordRu)}</span>
+                                ${wordPos ? `<span class="dau-row-pos" style="font-size:0.75rem;padding:2px 6px;border-radius:4px;background:rgba(23,87,166,0.08);color:var(--primary);margin-left:6px">${esc(wordPos)}</span>` : ""}
                               </div>
                             </div>
                             <div class="dau-row-col-vi">
                               <div class="dau-row-vi-text">${esc(wordVi)}</div>
                             </div>
                             <div class="dau-row-col-actions">
-                              <button type="button" class="dau-action-icon-btn writing-vocab-speak" data-word="${esc(wordRu)}" aria-label="Nghe phát âm ${esc(wordRu)}" title="Phát âm tiếng Nga">
+                              <button type="button" class="dau-action-icon-btn writing-vocab-speak" data-word="${esc(wordRu)}" ${audioUrl ? `data-audio="${esc(audioUrl)}"` : ""} aria-label="Nghe phát âm ${esc(wordRu)}" title="Phát âm tiếng Nga">
                                 ${icon("volume-high", 16)}
                               </button>
                               <button type="button" class="dau-action-icon-btn writing-vocab-add" data-word="${esc(wordRu)}" data-vi="${esc(wordVi)}" aria-label="Thêm ${esc(wordRu)} vào lọ từ" title="Lưu vào Lọ cá nhân">
@@ -10190,7 +10401,14 @@ function initWritingPage() {
         };
       }
       panel.querySelectorAll(".writing-vocab-speak").forEach((button) => {
-        button.onclick = () => speak(button.dataset.word);
+        button.onclick = () => {
+          if (button.dataset.audio) {
+            const audio = new Audio(button.dataset.audio);
+            audio.play().catch(() => speak(button.dataset.word));
+          } else {
+            speak(button.dataset.word);
+          }
+        };
       });
       panel.querySelectorAll(".writing-vocab-add").forEach((button) => {
         button.onclick = () => window.openAddToJarModal({
@@ -10289,7 +10507,8 @@ function initMockTestPage() {
   const host = el("#testHost");
   if (!host) return;
   const cachedTests = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("tests:all") : null;
-  let bank = (cachedTests && cachedTests.length) ? cachedTests : [];
+  const localBank = (typeof TRKI_BANK !== "undefined" && Array.isArray(TRKI_BANK)) ? TRKI_BANK : ((typeof window !== "undefined" && Array.isArray(window.TRKI_BANK)) ? window.TRKI_BANK : []);
+  let bank = (cachedTests && cachedTests.length) ? cachedTests : localBank;
 
   let currentLevel = "A1";
   let currentPage = 1;
@@ -11011,7 +11230,7 @@ function initMockTestPage() {
             </div>
           </div>
         `;
-      } else if (part.lines) {
+      } else if (part.lines || part.audio_url) {
         // SPLIT-PANE LAYOUT FOR LISTENING
         html += `
           <div class="cbt-split-container">
@@ -11357,41 +11576,84 @@ function initMockTestPage() {
 
     const play = el("#playAudio");
     let isTestAudioPlaying = false;
+    let trkiNativeAudio = null;
     if (play) {
       play.onclick = () => {
         if (isTestAudioPlaying) {
+          if (trkiNativeAudio) {
+            trkiNativeAudio.pause();
+            trkiNativeAudio.currentTime = 0;
+            trkiNativeAudio = null;
+          }
           if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
           isTestAudioPlaying = false;
           play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
           return;
         }
-        const lisPart = activeParts.find((p) => p.lines);
-        if (!lisPart || !Array.isArray(lisPart.lines) || !lisPart.lines.length) return;
-        const fullText = lisPart.lines.map((l) => l.ru || "").filter(Boolean).join(" ");
-        if (!fullText) return;
 
-        isTestAudioPlaying = true;
-        play.innerHTML = `${window.RusiIcons ? RusiIcons.get("pause-control", { size: 16 }) : ""} Tạm dừng đối thoại`;
+        const lisPart = activeParts.find((p) => p.audio_url || p.lines);
+        if (!lisPart) return;
 
-        if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
-          window.speechSynthesis.cancel();
-          const u = new SpeechSynthesisUtterance(fullText);
-          u.lang = "ru-RU";
-          u.rate = 0.85;
-          if (typeof pickVoice === "function") {
-            const v = pickVoice("ru-RU");
-            if (v) u.voice = v;
+        const fallbackSpeech = () => {
+          if (!lisPart.lines || !Array.isArray(lisPart.lines) || !lisPart.lines.length) {
+            isTestAudioPlaying = false;
+            if (play) play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
+            return;
           }
-          u.onend = () => {
+          const fullText = lisPart.lines.map((l) => l.ru || "").filter(Boolean).join(" ");
+          if (!fullText) {
             isTestAudioPlaying = false;
-            if (play) play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
-          };
-          u.onerror = () => {
-            isTestAudioPlaying = false;
-            if (play) play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
-          };
-          window.speechSynthesis.speak(u);
+            return;
+          }
+
+          isTestAudioPlaying = true;
+          play.innerHTML = `${window.RusiIcons ? RusiIcons.get("pause-control", { size: 16 }) : ""} Tạm dừng đối thoại`;
+
+          if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(fullText);
+            u.lang = "ru-RU";
+            u.rate = 0.85;
+            if (typeof pickVoice === "function") {
+              const v = pickVoice("ru-RU");
+              if (v) u.voice = v;
+            }
+            u.onend = () => {
+              isTestAudioPlaying = false;
+              if (play) play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
+            };
+            u.onerror = () => {
+              isTestAudioPlaying = false;
+              if (play) play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
+            };
+            window.speechSynthesis.speak(u);
+          }
+        };
+
+        if (lisPart.audio_url) {
+          try {
+            isTestAudioPlaying = true;
+            play.innerHTML = `${window.RusiIcons ? RusiIcons.get("pause-control", { size: 16 }) : ""} Tạm dừng đối thoại`;
+            trkiNativeAudio = new Audio(lisPart.audio_url);
+            trkiNativeAudio.onended = () => {
+              isTestAudioPlaying = false;
+              trkiNativeAudio = null;
+              if (play) play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
+            };
+            trkiNativeAudio.onerror = () => {
+              console.warn("[TRKI Audio] Không thể tải audio_url, chuyển sang SpeechSynthesis fallback");
+              trkiNativeAudio = null;
+              fallbackSpeech();
+            };
+            trkiNativeAudio.play().catch(() => fallbackSpeech());
+            return;
+          } catch(e) {
+            fallbackSpeech();
+            return;
+          }
         }
+
+        fallbackSpeech();
       };
     }
 
