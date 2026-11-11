@@ -330,13 +330,13 @@
         var elapsed = Date.now() - startTime;
 
         if (res.error) {
-          // Nếu bảng chưa được tạo (lỗi 42P01: relation does not exist), báo cụ thể để chạy schema.sql
+          // Nếu bảng chưa được tạo (lỗi 42P01: relation does not exist), báo cụ thể để khởi tạo schema
           if (res.error.code === "42P01" || (res.error.message && res.error.message.includes("does not exist"))) {
             return {
               ok: true,
               tablesMissing: true,
               latency: elapsed,
-              message: "Kết nối Supabase thành công! (Lưu ý: Bảng 'profiles' chưa tạo, hãy chạy supabase-schema.sql trong SQL Editor)."
+              message: "Kết nối Supabase thành công! (Lưu ý: Bảng 'profiles' chưa tạo, hãy khởi tạo schema trong Supabase SQL Editor)."
             };
           }
           return {
