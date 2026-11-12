@@ -40,7 +40,7 @@
           <div class="payload-password-wrapper">
             <input type="password" class="p-input" id="adminPasswordInput" placeholder="Nhập mật khẩu" required autocomplete="current-password" />
             <button type="button" class="payload-password-toggle" id="btnTogglePassword" aria-label="Hiện mật khẩu" title="Hiện/ẩn mật khẩu">
-              <i data-rusi-icon="eye" data-size="16"></i>
+              <svg class="rusi-icon rusi-icon-eye" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             </button>
           </div>
         </div>
@@ -134,7 +134,7 @@
             <span class="payload-brand-sub">Payload CMS v3</span>
           </div>
         </a>
-        <button class="p-btn-icon" id="sidebarCloseBtn" type="button" title="Đóng menu" style="display:none"><i data-rusi-icon="x" data-size="18"></i></button>
+        <button class="p-btn-icon" id="sidebarCloseBtn" type="button" title="Đóng menu" style="display:none"><svg class="rusi-icon rusi-icon-x" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
       </div>
 
       <div class="payload-sidebar-nav">
@@ -157,17 +157,6 @@
           </ul>
         </div>
 
-        <!-- Group: Bài Nộp & Khảo Thí -->
-        <div class="payload-nav-group">
-          <div class="payload-nav-heading">
-            <span>Bài Nộp & Khảo Thí</span>
-            <span class="payload-nav-badge" id="badgeCountSubmissions">4</span>
-          </div>
-          <ul class="payload-nav-list" id="navListSubmissions">
-            <!-- Render dynamically -->
-          </ul>
-        </div>
-
         <!-- Group: Kinh doanh & Dịch vụ -->
         <div class="payload-nav-group">
           <div class="payload-nav-heading">
@@ -182,7 +171,7 @@
         <!-- Group: Hệ thống & Cấu hình -->
         <div class="payload-nav-group">
           <div class="payload-nav-heading">
-            <span>Hệ Thống & Khảo Thí</span>
+            <span>Hệ Thống & Cấu Hình</span>
           </div>
           <ul class="payload-nav-list">
             <li class="payload-nav-item">
@@ -193,22 +182,10 @@
               </a>
             </li>
             <li class="payload-nav-item">
-              <a class="payload-nav-link" data-nav="globals:site-settings" href="#globals/site-settings">
-                <span class="payload-nav-icon"><i data-rusi-icon="settings-gear" data-size="18"></i></span>
-                <span class="payload-nav-label">Cấu hình hệ thống</span>
-              </a>
-            </li>
-            <li class="payload-nav-item">
               <a class="payload-nav-link" data-nav="supabase-sync" href="#supabase-sync">
                 <span class="payload-nav-icon"><i data-rusi-icon="refresh-cw" data-size="18"></i></span>
                 <span class="payload-nav-label">Supabase Cloud Sync</span>
                 <span class="p-pill p-pill-success" style="font-size:9px;padding:1px 5px">Cloud</span>
-              </a>
-            </li>
-            <li class="payload-nav-item">
-              <a class="payload-nav-link" data-nav="api-explorer" href="#api-explorer">
-                <span class="payload-nav-icon"><i data-rusi-icon="waveform-audio" data-size="18"></i></span>
-                <span class="payload-nav-label">REST API & Schema</span>
               </a>
             </li>
           </ul>
@@ -225,9 +202,9 @@
           </div>
         </div>
         <div class="payload-footer-actions">
-          <button class="p-btn-icon" id="btnToggleTheme" type="button" title="Chuyển đổi Sáng / Tối"><i data-rusi-icon="moon" data-size="16"></i></button>
-          <a class="p-btn-icon" id="btnOpenLiveSite" href="index.html" target="_blank" title="Mở trang web học viên"><i data-rusi-icon="external-link" data-size="16"></i></a>
-          <button class="p-btn-icon" id="btnSignOut" type="button" title="Đăng xuất"><i data-rusi-icon="log-out" data-size="16"></i></button>
+          <button class="p-btn-icon" id="btnToggleTheme" type="button" title="Chuyển đổi Sáng / Tối"><svg class="rusi-icon rusi-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg></button>
+          <a class="p-btn-icon" id="btnOpenLiveSite" href="index.html" target="_blank" title="Mở trang web học viên"><svg class="rusi-icon rusi-icon-external-link" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a>
+          <button class="p-btn-icon" id="btnSignOut" type="button" title="Đăng xuất"><svg class="rusi-icon rusi-icon-log-out" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" x2="9" y1="12" y2="12"></line></svg></button>
         </div>
       </div>
     </aside>
@@ -238,7 +215,7 @@
       <header class="payload-topbar">
         <div class="payload-topbar-left">
           <button class="payload-menu-toggle" id="btnMenuToggle" type="button" aria-label="Mở menu điều hướng">
-            <i data-rusi-icon="menu" data-size="18"></i>
+            <svg class="rusi-icon rusi-icon-menu" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
           </button>
           <nav class="payload-breadcrumbs" id="breadcrumbsNav" aria-label="Breadcrumb">
             <a class="payload-crumb-item" href="#dashboard">Dashboard</a>
@@ -262,34 +239,8 @@
       </div>
     </main>
 
-    <!-- BACKDROP FOR MOBILE DRAWER & LIVE PREVIEW -->
+    <!-- BACKDROP FOR MOBILE SIDEBAR -->
     <div class="payload-backdrop" id="payloadBackdrop"></div>
-
-    <!-- LIVE PREVIEW DRAWER (PAYLOAD 3.0 SIGNATURE) -->
-    <div class="payload-preview-drawer" id="previewDrawer">
-      <div class="payload-preview-head">
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-weight:700;font-size:14px;display:inline-flex;align-items:center;gap:6px"><i data-rusi-icon="eye" data-size="16"></i> Live Preview Studio</span>
-          <select class="payload-filter-select" id="previewPageSelector" style="font-size:12px;padding:4px 8px">
-            <option value="mock-test.html">Đề thi TRKI (mock-test.html)</option>
-            <option value="vocabulary.html">Lọ từ vựng &amp; Bài chủ đề (vocabulary.html)</option>
-            <option value="listening.html">Luyện nghe (listening.html)</option>
-            <option value="speaking.html">Luyện nói (speaking.html)</option>
-            <option value="writing.html">Luyện viết (writing.html)</option>
-            <option value="shop.html">Shop hàng Nga (shop.html)</option>
-            <option value="blog.html">Cẩm nang Blog (blog.html)</option>
-            <option value="blog-post.html">Chi tiết bài viết (blog-post.html)</option>
-            <option value="index.html">Trang chủ (index.html)</option>
-          </select>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenNewTabPreview" type="button" onclick="window.openPreviewInNewTab()" title="Mở trang xem trước trên tab trình duyệt mới"><i data-rusi-icon="external-link" data-size="14"></i> Mở tab mới</button>
-          <button class="p-btn p-btn-secondary p-btn-sm" id="btnRefreshPreview" type="button" title="Làm mới khung xem thử"><i data-rusi-icon="refresh-cw" data-size="14"></i> Tải lại</button>
-          <button class="p-btn-icon" id="btnClosePreview" type="button" title="Đóng xem trước"><i data-rusi-icon="x" data-size="14"></i></button>
-        </div>
-      </div>
-      <iframe class="payload-preview-frame" id="previewIframe" src="about:blank"></iframe>
-    </div>
 
   </div>
 
@@ -300,7 +251,7 @@
   <div class="payload-preview-drawer" id="modalSupabaseDrawer" style="max-width:540px;width:90vw">
     <div class="payload-preview-head">
       <span style="font-weight:700"><i data-rusi-icon="database-tests" data-size="16"></i> Kết nối Supabase PostgreSQL</span>
-      <button class="p-btn-icon" id="modalSbClose" type="button"><i data-rusi-icon="x" data-size="14"></i></button>
+      <button class="p-btn-icon" id="modalSbClose" type="button"><svg class="rusi-icon rusi-icon-x" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
     </div>
     <div style="padding:24px;overflow-y:auto;flex:1">
       <div style="background:var(--p-surface-elevated);border:1px solid var(--p-border);border-radius:var(--p-radius-lg);padding:16px;margin-bottom:20px">

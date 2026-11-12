@@ -12,6 +12,7 @@
  *   - window.RusiSupabase.profile: { get, upsert, updateGamification }
  *   - window.RusiSupabase.jars: { getAll, save, delete, syncAll }
  *   - window.RusiSupabase.tests: { getPublished, saveResult, getHistory }
+ *   - window.RusiSupabase.questionBank: { getAll, getByTest, getRandom }
  *   - window.RusiSupabase.auth: { signInGoogle, signInEmail, signUpEmail, signOut, getSession }
  *   - window.RusiSupabase.orders: { createPending, checkStatus, getMine }
  */
@@ -24,7 +25,21 @@
   // Kiểm tra định dạng UUID hợp lệ (ngăn ngừa lỗi 400 Bad Request từ PostgreSQL khi dùng Firebase Auth UID)
   function isValidUUID(str) {
     if (!str || typeof str !== "string") return false;
-    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str.trim());
+  }
+
+  // Trình sinh mã định danh chuẩn UUID v4 (RFC 4122) bảo đảm đồng bộ 100% với PostgreSQL gen_random_uuid()
+  function generateUUID() {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      try {
+        return crypto.randomUUID();
+      } catch (_) {}
+    }
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+      var r = (Math.random() * 16) | 0;
+      var v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
   }
 
   // Wrapper timeout cho các query Supabase nhằm tránh treo vĩnh viễn khi mạng gián đoạn
@@ -54,7 +69,7 @@
    * ========================================================================= */
   var DEFAULT_CACHE_TTL_MS = 15 * 60 * 1000; // 15 phút
   var _memoryCache = new Map();
-  var CACHE_PREFIX = "rusi_sb_cache_v5:";
+  var CACHE_PREFIX = "rusi_sb_cache_v6:";
 
   var RusiCache = {
     get: function (key) {
@@ -108,7 +123,7 @@
           var toRemove = [];
           for (var i = 0; i < window.sessionStorage.length; i++) {
             var k = window.sessionStorage.key(i);
-            if (k && k.indexOf(CACHE_PREFIX) === 0) {
+            if (k && (k.indexOf(CACHE_PREFIX) === 0 || k.indexOf("rusi_sb_cache_") === 0)) {
               toRemove.push(k);
             }
           }
@@ -276,6 +291,12 @@
   }
 
   var RusiSupabase = {
+    /** Tiện ích sinh mã định danh chuẩn UUID v4 */
+    generateUUID: generateUUID,
+
+    /** Kiểm tra định dạng chuỗi UUID hợp lệ */
+    isValidUUID: isValidUUID,
+
     /** Kiểm tra xem Client đã sẵn sàng hoạt động chưa */
     isReady: function () {
       return Boolean(getClient());
@@ -539,7 +560,11 @@
         var sb = getClient();
         if (!sb || !userId || !jar || !isValidUUID(userId)) return false;
         try {
+          if (!jar.id || !isValidUUID(jar.id)) {
+            jar.id = generateUUID();
+          }
           var row = {
+            id: jar.id,
             owner_id: userId,
             name: jar.name || jar.title || "Lọ từ vựng",
             icon: jar.icon || "archive-jar",
@@ -549,25 +574,39 @@
             word_count: Array.isArray(jar.words) ? jar.words.length : 0,
             updated_at: new Date().toISOString()
           };
-          if (jar.id && isValidUUID(jar.id)) {
-            row.id = jar.id;
-          }
           var res = await sb.from("vocab_jars").upsert(row).select().single();
           if (res.error || !res.data) return false;
           var jarId = res.data.id;
+          jar.id = jarId;
+          jar.uuid = jarId;
 
-          // Nếu có danh sách từ và từ đã có UUID, liên kết qua jar_items
+          // Nếu có danh sách từ, bảo đảm các từ có UUID hợp lệ và liên kết qua jar_items
           if (Array.isArray(jar.words) && jar.words.length > 0) {
             var itemsToInsert = [];
-            jar.words.forEach(function (w, idx) {
-              if (w && w.id && isValidUUID(w.id)) {
-                itemsToInsert.push({
-                  jar_id: jarId,
-                  vocab_id: w.id,
-                  position: idx + 1
-                });
+            var wordsToUpsert = [];
+            for (var idx = 0; idx < jar.words.length; idx++) {
+              var w = jar.words[idx];
+              if (!w) continue;
+              if (!w.id || !isValidUUID(w.id)) {
+                w.id = generateUUID();
               }
-            });
+              wordsToUpsert.push({
+                id: w.id,
+                word_with_stress: w.stress || w.word_with_stress || w.ru || "сло́во",
+                meaning_vi: w.meaning_vi || w.vi || "",
+                pos: w.pos || "noun",
+                level: w.level || jar.level || "A1",
+                updated_at: new Date().toISOString()
+              });
+              itemsToInsert.push({
+                jar_id: jarId,
+                vocab_id: w.id,
+                position: idx + 1
+              });
+            }
+            if (wordsToUpsert.length > 0) {
+              await sb.from("vocabularies").upsert(wordsToUpsert, { onConflict: "id" });
+            }
             if (itemsToInsert.length > 0) {
               await sb.from("jar_items").upsert(itemsToInsert, { onConflict: "jar_id,vocab_id" });
             }
@@ -586,8 +625,10 @@
             await sb.from("jar_items").delete().eq("jar_id", jarId);
             var res = await sb.from("vocab_jars").delete().eq("id", jarId).eq("owner_id", userId);
             return !res.error;
+          } else {
+            await sb.from("vocab_jars").delete().eq("code", jarId).eq("owner_id", userId);
+            return true;
           }
-          return true;
         } catch (_) {
           return false;
         }
@@ -791,6 +832,58 @@
         } catch (_) {
           return false;
         }
+      }
+    },
+
+    /* =========================================================================
+     * 3b. NGÂN HÀNG CÂU HỎI TRKI CỐT LÕI (CORE QUESTION BANK)
+     * ========================================================================= */
+    questionBank: {
+      getAll: async function (opts) {
+        opts = opts || {};
+        var cacheKey = "question_bank:" + (opts.level || "all") + ":" + (opts.sub_test || "all") + ":" + (opts.limit || 200);
+        return RusiCache.withCache(cacheKey, async function () {
+          var sb = getClient();
+          if (!sb) return [];
+          try {
+            var q = sb.from("trki_question_bank").select("*").eq("is_published", true).order("order_index", { ascending: true });
+            if (opts.level && opts.level !== "all") q = q.eq("level", opts.level);
+            if (opts.sub_test && opts.sub_test !== "all") q = q.eq("sub_test", opts.sub_test);
+            if (opts.test_code) q = q.eq("test_code", opts.test_code);
+            if (opts.topic) q = q.ilike("topic", "%" + opts.topic + "%");
+            if (opts.grammar_case) q = q.eq("grammar_case", opts.grammar_case);
+            if (opts.limit) q = q.limit(opts.limit);
+            var res = await withTimeout(q, 4500);
+            if (res.error || !res.data) return [];
+            return res.data;
+          } catch (e) {
+            console.warn("[RusiSupabase] Lỗi lấy ngân hàng câu hỏi:", e);
+            return [];
+          }
+        });
+      },
+
+      getByTest: async function (testCode) {
+        var sb = getClient();
+        if (!sb || !testCode) return [];
+        try {
+          var res = await sb.from("trki_question_bank")
+            .select("*")
+            .eq("test_code", testCode)
+            .eq("is_published", true)
+            .order("order_index", { ascending: true });
+          return res.data || [];
+        } catch (_) {
+          return [];
+        }
+      },
+
+      getRandom: async function (opts) {
+        opts = opts || {};
+        var all = await RusiSupabase.questionBank.getAll({ level: opts.level, sub_test: opts.sub_test, limit: 150 });
+        if (!all || !all.length) return [];
+        var shuffled = all.slice().sort(function () { return 0.5 - Math.random(); });
+        return shuffled.slice(0, opts.count || 10);
       }
     },
 
@@ -1399,6 +1492,7 @@
   };
 
   window.RusiSupabase = RusiSupabase;
+  window.RusiUUID = generateUUID;
 
   // Tự động kiểm tra kết nối nền khi tài liệu nạp xong
   document.addEventListener("DOMContentLoaded", function () {

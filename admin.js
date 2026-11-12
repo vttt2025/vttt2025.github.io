@@ -19,6 +19,92 @@
   const THEME_KEY = "payload_theme";
   const DEV_MODE_KEY = "trki_dev_mode";
 
+  // Trình sinh và kiểm tra mã UUID v4 chuẩn RFC 4122 cho toàn bộ hệ thống Admin CMS & Supabase
+  function generateUUID() {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      try {
+        return crypto.randomUUID();
+      } catch (_) {}
+    }
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+      var r = (Math.random() * 16) | 0;
+      var v = c === "x" ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  function isValidUUID(str) {
+    if (!str || typeof str !== "string") return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str.trim());
+  }
+
+  function buildTopicArticleMarkdown(art, key) {
+    if (!art || typeof art !== "object") return "";
+    if (art.content_md && typeof art.content_md === "string" && art.content_md.trim()) {
+      return art.content_md.trim();
+    }
+    if (art.content && typeof art.content === "string" && art.content.trim()) {
+      return art.content.trim();
+    }
+    if (art.content_markdown && typeof art.content_markdown === "string" && art.content_markdown.trim()) {
+      return art.content_markdown.trim();
+    }
+
+    const sections = [];
+    sections.push(`# Bài học: ${art.title || art.name || key}`);
+
+    if (art.intro || art.desc) {
+      sections.push(`## I. Bối cảnh & Tình huống giao tiếp\n\n${(art.intro || art.desc).trim()}`);
+    }
+
+    const cTip = art.culturalTip || art.cultural_tip;
+    if (cTip) {
+      sections.push(`> [!NOTE]\n> **Mẹo văn hóa thực tế:** ${cTip.trim()}`);
+    }
+
+    const aChains = Array.isArray(art.actionChains) ? art.actionChains : (Array.isArray(art.action_chains) ? art.action_chains : []);
+    if (aChains.length) {
+      sections.push(`## II. Chuỗi hành động đời sống & Cụm từ ngữ cảnh`);
+      aChains.forEach((group, gIdx) => {
+        const gTitle = group.subTopic || (`Chuỗi hành động ${gIdx + 1}`);
+        let block = `### ${gTitle}\n\n`;
+        if (group.items && group.items.length) {
+          block += `| Đối tượng / Từ vựng | Hành động | Ngữ cảnh | Ví dụ thực tế |\n| --- | --- | --- | --- |\n`;
+          group.items.forEach(it => {
+            const target = [it.target, it.target_vi].filter(Boolean).join(" — ").replace(/\n+/g, " ");
+            const action = [it.action, it.action_vi].filter(Boolean).join(" — ").replace(/\n+/g, " ");
+            const place = [it.place, it.place_vi].filter(Boolean).join(" — ").replace(/\n+/g, " ");
+            const ex = [it.ex, it.ex_vi].filter(Boolean).join(" — ").replace(/\n+/g, " ");
+            block += `| ${target || "—"} | ${action || "—"} | ${place || "—"} | ${ex || "—"} |\n`;
+          });
+        }
+        sections.push(block.trim());
+      });
+    }
+
+    const dialogues = Array.isArray(art.dialogues) ? art.dialogues : [];
+    if (dialogues.length) {
+      let diaBlock = `## III. Hội thoại mẫu điển hình\n\n`;
+      dialogues.forEach(d => {
+        const who = d.speaker || d.who || "Người nói";
+        const role = d.role ? ` *(${d.role})*` : "";
+        diaBlock += `- **${who}**${role}: ${d.ru} *(“${d.vi}”)*\n`;
+      });
+      sections.push(diaBlock.trim());
+    }
+
+    const gNotes = Array.isArray(art.grammarNotes) ? art.grammarNotes : (Array.isArray(art.grammar_notes) ? art.grammar_notes : []);
+    if (gNotes.length) {
+      let gBlock = `## IV. Điểm ngữ pháp trọng tâm & Bẫy kỳ thi\n\n`;
+      gNotes.forEach((g, idx) => {
+        gBlock += `### ${g.title || `Quy tắc ${idx + 1}`}\n\n${g.content || ""}\n\n`;
+      });
+      sections.push(gBlock.trim());
+    }
+
+    return sections.join("\n\n");
+  }
+
   // =========================================================================
   // 1. SCHEMAS REGISTRY (10 COLLECTIONS & GLOBALS MATCHING DATA.JS)
   // =========================================================================
@@ -169,24 +255,66 @@
       singular: "Từ vựng",
       icon: "book-open",
       webUrl: "vocabulary.html",
-      source: () => (window.VOCABULARIES || window.VOCABULARIES_DATA || []),
+      source: () => {
+        if (Array.isArray(window.VOCABULARIES) && window.VOCABULARIES.length > 0) return window.VOCABULARIES;
+        if (Array.isArray(window.VOCABULARIES_DATA) && window.VOCABULARIES_DATA.length > 0) return window.VOCABULARIES_DATA;
+        // Trích xuất tự động từ window.VOCAB_JARS làm nguồn dữ liệu dự phòng an toàn
+        const map = new Map();
+        (window.VOCAB_JARS || []).forEach((j) => {
+          (j.words || []).forEach((w) => {
+            if (w && (w.ru || w.word_with_stress)) {
+              const key = w.id || w.word_with_stress || w.ru;
+              if (!map.has(key)) {
+                map.set(key, {
+                  id: w.id || generateUUID(),
+                  word_with_stress: w.word_with_stress || w.stress || w.ru,
+                  word_normalized: w.word_normalized || w.ru || "",
+                  ru: w.ru || w.word_with_stress,
+                  meaning_vi: w.meaning_vi || w.vi || "",
+                  vi: w.vi || w.meaning_vi || "",
+                  pos: w.pos || w.type || "сущ.",
+                  level: w.level || j.level || "A1",
+                  gender: w.gender || "",
+                  aspect: w.aspect || "",
+                  structures: Array.isArray(w.structures) ? w.structures : [],
+                  examples: Array.isArray(w.examples) ? w.examples : (w.ex ? [{ ru: w.ex, vi: w.ex_vi || "" }] : []),
+                  synonyms: Array.isArray(w.synonyms) ? w.synonyms : [],
+                  antonyms: Array.isArray(w.antonyms) ? w.antonyms : [],
+                  notes: w.notes || w.note || "",
+                  audio_url: w.audio_url || w.audio || "",
+                  publication_status: "published"
+                });
+              }
+            }
+          });
+        });
+        const words = Array.from(map.values());
+        if (typeof window !== "undefined" && words.length > 0) window.VOCABULARIES = words;
+        return words;
+      },
       desc: "Kho từ vựng tiếng Nga toàn diện có trọng âm, từ loại, phiên âm IPA, giải nghĩa và bảng chia từ.",
       createDefault: () => ({
-        id: "voc_" + Date.now().toString().slice(-6),
+        id: generateUUID(),
         word_with_stress: "студе́нт",
         word_normalized: "студент",
-        pos: "noun",
+        pos: "сущ.",
         meaning_vi: "sinh viên nam",
         meaning_ru: "учащийся вуза",
         level: "A1",
-        gender: "m",
+        gender: "м.",
         transcription: "stʊˈdʲent",
         notes: "Danh từ đực, biến đổi đuôi phụ âm cứng.",
         audio_url: "",
+        examples: [
+          { ru: "Я студе́нт.", vi: "Tôi là sinh viên." }
+        ],
+        structures: [],
+        synonyms: [],
+        antonyms: [],
         publication_status: "published"
       }),
       fields: [
-        { key: "id", label: "Mã từ vựng / UUID", type: "text", required: true, help: "UUID hoặc mã định danh duy nhất" },
+        { key: "id", label: "Mã từ vựng / UUID", type: "text", required: true, help: "UUID hoặc mã định danh duy nhất (tự động sinh theo chuẩn RFC 4122)" },
         { key: "word_with_stress", label: "Từ tiếng Nga (Có trọng âm)", type: "text", required: true, help: "Ví dụ: студе́нт, кни́га, изуча́ть" },
         { key: "meaning_vi", label: "Nghĩa tiếng Việt", type: "text", required: true },
         {
@@ -194,16 +322,24 @@
           label: "Từ loại (Part of Speech)",
           type: "select",
           options: [
-            { v: "noun", l: "Danh từ (существительное)" },
-            { v: "verb", l: "Động từ (глагол)" },
-            { v: "adj", l: "Tính từ (прилагательное)" },
-            { v: "adv", l: "Phó từ (наречие)" },
-            { v: "prep", l: "Giới từ (предлог)" },
-            { v: "conj", l: "Liên từ (союз)" },
-            { v: "pronoun", l: "Đại từ (местоимение)" },
-            { v: "particle", l: "Trợ từ (частица)" }
+            { v: "сущ.", l: "Danh từ (существительное — сущ.)" },
+            { v: "гл.", l: "Động từ (глагол — гл.)" },
+            { v: "прил.", l: "Tính từ (прилагательное — прил.)" },
+            { v: "нар.", l: "Phó từ (наречие — нар.)" },
+            { v: "предл.", l: "Giới từ (предлог — предл.)" },
+            { v: "союз", l: "Liên từ (союз)" },
+            { v: "мест.", l: "Đại từ (местоимение — мест.)" },
+            { v: "част.", l: "Trợ từ (частица — част.)" },
+            { v: "межд.", l: "Thán từ (междометие — межд.)" },
+            { v: "noun", l: "Danh từ (noun)" },
+            { v: "verb", l: "Động từ (verb)" },
+            { v: "adj", l: "Tính từ (adj)" },
+            { v: "adv", l: "Phó từ (adv)" },
+            { v: "prep", l: "Giới từ (prep)" },
+            { v: "conj", l: "Liên từ (conj)" },
+            { v: "pronoun", l: "Đại từ (pronoun)" }
           ],
-          defaultValue: "noun"
+          defaultValue: "сущ."
         },
         {
           key: "level",
@@ -225,9 +361,12 @@
           type: "select",
           options: [
             { v: "", l: "Không áp dụng" },
-            { v: "m", l: "Giống đực (мужской род — он)" },
-            { v: "f", l: "Giống cái (женский род — она)" },
-            { v: "n", l: "Giống trung (средний род — оно)" }
+            { v: "м.", l: "Giống đực (мужской род — м. / он)" },
+            { v: "ж.", l: "Giống cái (женский род — ж. / она)" },
+            { v: "ср.", l: "Giống trung (средний род — ср. / оно)" },
+            { v: "m", l: "Giống đực (m)" },
+            { v: "f", l: "Giống cái (f)" },
+            { v: "n", l: "Giống trung (n)" }
           ]
         },
         {
@@ -236,8 +375,10 @@
           type: "select",
           options: [
             { v: "", l: "Không áp dụng" },
-            { v: "impf", l: "Chưa hoàn thành thể (НСВ)" },
-            { v: "pf", l: "Hoàn thành thể (СВ)" }
+            { v: "НСВ", l: "Chưa hoàn thành thể (НСВ)" },
+            { v: "СВ", l: "Hoàn thành thể (СВ)" },
+            { v: "impf", l: "Chưa hoàn thành thể (impf / НСВ)" },
+            { v: "pf", l: "Hoàn thành thể (pf / СВ)" }
           ]
         },
         { key: "transcription", label: "Phiên âm quốc tế IPA", type: "text", placeholder: "stʊˈdʲent" },
@@ -266,21 +407,26 @@
       webUrl: "vocabulary.html",
       source: () => (window.VOCAB_JARS || []),
       desc: "Kho lọ từ vựng theo chuỗi hành động và ngữ cảnh sống còn tại Nga, tích hợp thuật toán lặp lại ngắt quãng SM-2.",
-      createDefault: () => ({
-        id: "jar_" + Date.now().toString().slice(-4),
-        name: "Lọ từ vựng mới",
-        level: "A1",
-        levelName: "Sơ cấp A1",
-        color: "#102a4c",
-        desc: "Từ vựng sinh hoạt và giao tiếp sống còn.",
-        icon: "archive-jar",
-        is_pro_only: false,
-        publication_status: "published",
-        words: [
-          { ru: "сло́во", vi: "từ ngữ", note: "сущ. ср. (оно)", ex: "Русское слово." },
-          { ru: "кни́га", vi: "quyển sách", note: "сущ. ж. (она)", ex: "Я читаю интересную книгу." }
-        ]
-      }),
+      createDefault: () => {
+        const jarCode = "jar_" + Date.now().toString().slice(-4);
+        return {
+          id: jarCode,
+          code: jarCode,
+          uuid: generateUUID(),
+          name: "Lọ từ vựng mới",
+          level: "A1",
+          levelName: "Sơ cấp A1",
+          color: "#102a4c",
+          desc: "Từ vựng sinh hoạt và giao tiếp sống còn.",
+          icon: "archive-jar",
+          is_pro_only: false,
+          publication_status: "published",
+          words: [
+            { id: generateUUID(), ru: "сло́во", vi: "từ ngữ", note: "сущ. ср. (оно)", ex: "Русское слово." },
+            { id: generateUUID(), ru: "кни́га", vi: "quyển sách", note: "сущ. ж. (она)", ex: "Я читаю интересную книгу." }
+          ]
+        };
+      },
       fields: [
         { key: "id", label: "Mã lọ (Code ID duy nhất)", type: "text", required: true, help: "Ví dụ: jar_auchan, jar_chemodan" },
         { key: "name", label: "Tên lọ từ vựng", type: "text", required: true },
@@ -325,29 +471,6 @@
       ]
     },
 
-    JAR_ITEMS: {
-      slug: "JAR_ITEMS",
-      group: "system",
-      label: "Liên kết Từ - Lọ",
-      singular: "Mục gán lọ",
-      icon: "archive-jar",
-      webUrl: "vocabulary.html",
-      source: () => (window.JAR_ITEMS || []),
-      desc: "Bảng gán liên kết giữa kho từ vựng và từng lọ từ vựng theo thứ tự hiển thị.",
-      createDefault: () => ({
-        id: "ji_" + Date.now().toString().slice(-6),
-        jar_id: "",
-        vocab_id: "",
-        position: 0
-      }),
-      fields: [
-        { key: "id", label: "ID liên kết", type: "text", required: true },
-        { key: "jar_id", label: "UUID Lọ từ vựng (jar_id)", type: "text", required: true, help: "UUID của lọ trong bảng vocab_jars" },
-        { key: "vocab_id", label: "UUID Từ vựng (vocab_id)", type: "text", required: true, help: "UUID của từ trong bảng vocabularies" },
-        { key: "position", label: "Thứ tự sắp xếp trong lọ (Position)", type: "number", defaultValue: 0 }
-      ]
-    },
-
     TOPIC_ARTICLES: {
       slug: "TOPIC_ARTICLES",
       group: "study",
@@ -358,54 +481,73 @@
       desc: "Nội dung bài học chuyên sâu theo chủ đề được biên soạn bằng Markdown (.md) chuẩn Supabase.",
       source: () => {
         const raw = window.TOPIC_ARTICLES || {};
-        return Object.keys(raw).map((k) => ({
-          id: k,
-          title: raw[k].title || raw[k].name || ("Bài học: " + k),
-          level: raw[k].level || "A1",
-          intro: raw[k].intro || "",
-          content: raw[k].content_md || raw[k].content || raw[k].content_markdown || "",
-          content_md: raw[k].content_md || raw[k].content || raw[k].content_markdown || "",
-          content_markdown: raw[k].content_md || raw[k].content || raw[k].content_markdown || "",
-          audioUrl: raw[k].audioUrl || raw[k].audio_url || "",
-          culturalTip: raw[k].cultural_tip || raw[k].culturalTip || "",
-          dialogues: Array.isArray(raw[k].dialogues) ? raw[k].dialogues : [],
-          grammar: raw[k].grammar || { title: "", rule: "", examples: [] },
-          grammarNotes: Array.isArray(raw[k].grammarNotes) ? raw[k].grammarNotes : (Array.isArray(raw[k].grammar_notes) ? raw[k].grammar_notes : []),
-          vocabTable: Array.isArray(raw[k].vocabTable) ? raw[k].vocabTable : []
-        }));
+        return Object.keys(raw).map((k) => {
+          const item = raw[k] || {};
+          const mdContent = buildTopicArticleMarkdown(item, k);
+          return {
+            id: k,
+            title: item.title || item.name || ("Bài học: " + k),
+            level: item.level || "A1",
+            intro: item.intro || item.desc || "",
+            content: mdContent,
+            content_md: mdContent,
+            content_markdown: mdContent,
+            audioUrl: item.audioUrl || item.audio_url || "",
+            culturalTip: item.cultural_tip || item.culturalTip || "",
+            dialogues: Array.isArray(item.dialogues) ? item.dialogues : [],
+            grammarNotes: Array.isArray(item.grammarNotes) ? item.grammarNotes : (Array.isArray(item.grammar_notes) ? item.grammar_notes : []),
+            actionChains: Array.isArray(item.actionChains) ? item.actionChains : (Array.isArray(item.action_chains) ? item.action_chains : [])
+          };
+        });
       },
       createDefault: () => ({
         id: "chu_de_moi_" + Date.now().toString().slice(-4),
         title: "Bài học chủ đề mới",
         level: "A1",
         intro: "Giới thiệu bối cảnh thực tế đời sống sinh viên và giao tiếp tại Nga...",
-        culturalTip: "Tại Nga, khi bước vào căn hộ hoặc ký túc xá, bạn luôn cần cởi giày ngoài hành lang (Прихожая) và mang dép đi trong nhà (Тапочки).",
         audioUrl: "",
         content_md: `# Bài học: Giao tiếp & Đời sống thực tế tại Nga
 
 ## I. Bối cảnh & Tình huống giao tiếp
-Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống giao tiếp thường nhật khi sinh sống và du học tại Liên bang Nga.
+Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống giao tiếp thường nhật khi sinh sống, học tập và du học tại Liên bang Nga.
 
 > [!NOTE]
-> Hãy chú ý trọng âm của từ vựng tiếng Nga. Trọng âm chuẩn xác giúp người bản xứ hiểu ngay ý bạn muốn diễn đạt.
+> **Mẹo văn hóa thực tế:** Hãy chú ý trọng âm của từ vựng tiếng Nga. Trọng âm chuẩn xác giúp người bản xứ hiểu ngay ý bạn muốn diễn đạt.
 
-## II. Hội thoại mẫu điển hình
-- **Анна**: Привет! Как твои дела? *(Chào bạn! Bạn khỏe không?)*
-- **Максим**: Всё отлично, спасибо! А у тебя? *(Mọi thứ đều tuyệt, cảm ơn bạn! Còn bạn thì sao?)*
+## II. Chuỗi hành động đời sống & Từ vựng theo ngữ cảnh
 
-## III. Bảng từ vựng cốt lõi
-| Từ tiếng Nga | Loại từ | Nghĩa tiếng Việt | Câu ví dụ |
+### Tình huống 1: Sinh hoạt thường nhật
+
+| Đối tượng / Từ vựng | Hành động | Ngữ cảnh | Ví dụ thực tế |
 | --- | --- | --- | --- |
-| **студе́нт** | сущ. м. | sinh viên nam | Он русский студент. |
-| **кни́га** | сущ. ж. | quyển sách | Я читаю интересную книгу. |
-| **изуча́ть** | глаг. | học tập, nghiên cứu | Мы изучаем русский язык в университете. |
+| **студе́нт** (sinh viên) | изуча́ть (học tập) | в университе́те (ở trường ĐH) | Студе́нт у́чится в университе́те. |
+| **кни́га** (quyển sách) | чита́ть (đọc) | в библиоте́ке (ở thư viện) | Я чита́ю интере́сную кни́гу. |
+
+## III. Hội thoại mẫu điển hình
+- **Анна**: Приве́т! Как твои́ дела́? *(Chào bạn! Bạn khỏe không?)*
+- **Макси́м**: Всё отли́чно, спаси́бо! А у тебя́? *(Mọi thứ đều tuyệt, cảm ơn bạn! Còn bạn thì sao?)*
+- **Анна**: Я иду́ в библиоте́ку гото́виться к экза́мену по ру́сскому языку́. *(Mình đang đến thư viện ôn thi tiếng Nga.)*
+
+## IV. Điểm ngữ pháp trọng tâm & Bẫy kỳ thi
+### 1. Cấu trúc ngữ pháp cơ bản
+- Mẫu câu: \`Chủ ngữ + Động từ + Tân ngữ\`
+- Ví dụ: \`Мы изучаем русский язык.\` (Chúng tôi học tiếng Nga.)
 
 > [!TIP]
 > Sử dụng các cụm từ trong ngoặc kép «...» để ghi nhớ các cụm thành ngữ hoặc quán ngữ phổ biến!
+
+> [!WARNING]
+> Cẩn thận phân biệt giữa động từ chưa hoàn thành thể (НСВ) và hoàn thành thể (СВ).
 `
       }),
       fields: [
-        { key: "id", label: "Mã chủ đề (khớp với ID Lọ từ vựng)", type: "text", required: true, help: "Ví dụ: bo_phan_co_the, jar_auchan, jar_chemodan..." },
+        {
+          key: "id",
+          label: "Mã chủ đề (khớp với ID Lọ từ vựng / Topic ID)",
+          type: "text",
+          required: true,
+          help: "Ví dụ: bo_phan_co_the, con_vat, do_an_uong, jar_auchan, phuong_tien_giao_thong..."
+        },
         { key: "title", label: "Tiêu đề bài học chủ đề", type: "text", required: true },
         {
           key: "level",
@@ -421,92 +563,14 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           ],
           defaultValue: "A1"
         },
-        { key: "intro", label: "Đoạn văn bối cảnh giới thiệu tóm tắt", type: "textarea", rows: 3 },
-        { key: "culturalTip", label: "Mẹo văn hóa & Giao tiếp thực tế tại Nga (Cultural Tip)", type: "textarea", rows: 2, help: "Lưu ý văn hóa và thói quen bản xứ khi giao tiếp trong ngữ cảnh này." },
+        { key: "intro", label: "Đoạn văn tóm tắt bối cảnh (Intro)", type: "textarea", rows: 2, help: "Tùy chọn. Nếu để trống, hệ thống sẽ tự động lấy đoạn mở đầu của bài viết." },
         { key: "audioUrl", label: "URL File âm thanh (tùy chọn)", type: "text", placeholder: "https://..." },
-        { key: "content_md", label: "Nội dung bài học chuyên sâu (.md Markdown)", type: "markdown", required: true, help: "Hỗ trợ tiêu đề (#, ##), danh sách, bảng biểu, trích dẫn (>), code block và callout (> [!TIP])." }
-      ]
-    },
-
-    GRAMMAR_LESSONS: {
-      slug: "GRAMMAR_LESSONS",
-      group: "study",
-      label: "Ngữ pháp chuyên sâu",
-      singular: "Bài ngữ pháp",
-      icon: "sparkles-clean",
-      webUrl: "vocabulary.html",
-      desc: "Tổng hợp các bài học ngữ pháp chuyên sâu: Các Cách (Падежи), Thể động từ, Giới từ và bảng chia mẫu.",
-      source: () => (window.GRAMMAR_LESSONS || []),
-      createDefault: () => ({
-        id: "grammar_" + Date.now().toString().slice(-4),
-        title: "Bài ngữ pháp mới",
-        vi: "Ý nghĩa và cách dùng trong giao tiếp",
-        level: "A1",
-        topic: "Danh từ & 6 Cách",
-        summary: "Quy tắc ngữ pháp cốt lõi và lưu ý trọng âm khi biến đổi từ.",
-        publication_status: "published",
-        content_md: `# Bài học Ngữ pháp: Cách dùng và Quy tắc
-
-## 1. Bản chất và Ý nghĩa ngữ pháp
-Quy tắc ngữ pháp này giúp bạn biểu đạt chính xác hành động và tân ngữ trong câu tiếng Nga.
-
-## 2. Bảng biến đổi đuôi từ mẫu
-| Dạng nguyên mẫu | Biến đổi | Ví dụ trong câu |
-| --- | --- | --- |
-| **студент** (đực) | **студента** | Я вижу студента. |
-| **книга** (nữ) | **книгу** | Мы читаем книгу. |
-| **письмо** (trung) | **письмо** | Он пишет письмо. |
-
-> [!TIP]
-> Luôn chú ý quy tắc chính tả sau các phụ âm đặc biệt (ж, ш, ч, щ, ц, г, к, х)!
-`,
-        rules: [
-          "Quy tắc 1: Cách dùng cơ bản trong câu.",
-          "Quy tắc 2: Quy tắc biến đổi đuôi từ."
-        ],
-        table: {
-          head: ["Nguyên mẫu", "Dạng biến đổi", "Ví dụ"],
-          rows: [
-            ["книга (nữ)", "книгу", "Я читаю книгу."]
-          ]
-        },
-        quickQuiz: [
-          {
-            q: "Chọn dạng đúng của từ...",
-            options: ["книга", "книгу", "книге", "книгой"],
-            a: 1,
-            explain: "Tân ngữ trực tiếp dùng cách 4: đuôi -а đổi thành -у."
-          }
-        ]
-      }),
-      fields: [
-        { key: "id", label: "Mã bài học (ID / Code)", type: "text", required: true, help: "Ví dụ: accusative, genitive, verb_aspect..." },
-        { key: "title", label: "Tiêu đề tiếng Nga", type: "text", required: true },
-        { key: "vi", label: "Ý nghĩa & diễn giải tiếng Việt", type: "text", required: true },
         {
-          key: "level",
-          label: "Trình độ CEFR",
-          type: "select",
-          options: [
-            { v: "A1", l: "A1 (Sơ cấp)" },
-            { v: "A2", l: "A2 (Cơ bản)" },
-            { v: "B1", l: "B1 (Trung cấp 1)" },
-            { v: "B2", l: "B2 (Trung cấp 2)" }
-          ],
-          defaultValue: "A1"
-        },
-        { key: "topic", label: "Chủ đề liên quan", type: "text", defaultValue: "Danh từ & 6 Cách" },
-        { key: "summary", label: "Tóm tắt quy tắc cốt lõi", type: "textarea", rows: 2 },
-        { key: "content_md", label: "Nội dung phân tích chuyên sâu (.md Markdown)", type: "markdown", help: "Giải thích chi tiết, bảng chia mẫu và mẹo dùng trong giao tiếp." },
-        {
-          key: "publication_status",
-          label: "Trạng thái",
-          type: "select",
-          options: [
-            { v: "published", l: "Công khai (Published)" },
-            { v: "draft", l: "Bản nháp (Draft)" }
-          ],
-          defaultValue: "published"
+          key: "content_md",
+          label: "Nội dung bài học chuyên sâu (.md Markdown)",
+          type: "markdown",
+          required: true,
+          help: "Soạn thảo toàn bộ nội dung bài học bằng Markdown: Tiêu đề (#, ##), chuỗi hành động, bảng từ vựng 4 cột, hội thoại, mẹo ghi nhớ (> [!TIP], > [!NOTE], > [!WARNING])."
         }
       ]
     },
@@ -520,17 +584,21 @@ Quy tắc ngữ pháp này giúp bạn biểu đạt chính xác hành động v
       webUrl: "listening.html",
       source: () => (window.LISTENING_TOPICS || []),
       desc: "Chủ đề luyện nghe hiểu & chép chính tả phân theo cấp độ A1–B2 và ngữ cảnh thực tế tại Nga.",
-      createDefault: () => ({
-        id: "topic-lis-" + Date.now().toString().slice(-4),
-        code: "topic-lis-" + Date.now().toString().slice(-4),
-        title: "Chủ đề nghe mới",
-        level: "A1",
-        category: "airport",
-        description: "Mô tả ngữ cảnh giao tiếp và tình huống đối thoại thực tế",
-        icon: "headphones",
-        sort_order: 10,
-        is_pro_only: false
-      }),
+      createDefault: () => {
+        const topCode = "topic-lis-" + Date.now().toString().slice(-4);
+        return {
+          id: topCode,
+          code: topCode,
+          uuid: generateUUID(),
+          title: "Chủ đề nghe mới",
+          level: "A1",
+          category: "airport",
+          description: "Mô tả ngữ cảnh giao tiếp và tình huống đối thoại thực tế",
+          icon: "headphones",
+          sort_order: 10,
+          is_pro_only: false
+        };
+      },
       fields: [
         { key: "code", label: "Mã chủ đề (Code duy nhất)", type: "text", required: true, help: "Ví dụ: topic-lis-a1-airport, topic-lis-a1-shop" },
         { key: "title", label: "Tên chủ đề nghe", type: "text", required: true, placeholder: "Ví dụ: Ở sân bay (В аэропорту)" },
@@ -572,27 +640,31 @@ Quy tắc ngữ pháp này giúp bạn biểu đạt chính xác hành động v
       webUrl: "listening.html",
       source: () => (window.LISTENING_LESSONS || []),
       desc: "Bài luyện nghe hiểu và nghe chép chính tả thống nhất kèm audio Supabase Storage (listening-audio) và trắc nghiệm.",
-      createDefault: () => ({
-        id: "lis_" + Date.now().toString().slice(-4),
-        code: "lis_" + Date.now().toString().slice(-4),
-        topic_id: "",
-        title: "Bài nghe mới",
-        vi: "Tiêu đề tiếng Việt",
-        level: "A1",
-        levelName: "Sơ cấp A1",
-        category: "comprehension",
-        categoryName: "Nghe hiểu",
-        audio_url: "",
-        duration_seconds: 30,
-        sort_order: 1,
-        is_pro_only: false,
-        lines: [
-          { who: "Người 1", ru: "Здравствуйте!", vi: "Xin chào!", start_sec: 0, end_sec: 2.5, words: [] }
-        ],
-        questions: [
-          { q: "Câu hỏi trắc nghiệm?", options: ["Đáp án 1", "Đáp án 2", "Đáp án 3"], a: 0, ex: "Giải thích..." }
-        ]
-      }),
+      createDefault: () => {
+        const lisCode = "lis_" + Date.now().toString().slice(-4);
+        return {
+          id: lisCode,
+          code: lisCode,
+          lesson_uuid: generateUUID(),
+          topic_id: "",
+          title: "Bài nghe mới",
+          vi: "Tiêu đề tiếng Việt",
+          level: "A1",
+          levelName: "Sơ cấp A1",
+          category: "comprehension",
+          categoryName: "Nghe hiểu",
+          audio_url: "",
+          duration_seconds: 30,
+          sort_order: 1,
+          is_pro_only: false,
+          lines: [
+            { who: "Người 1", ru: "Здравствуйте!", vi: "Xin chào!", start_sec: 0, end_sec: 2.5, words: [] }
+          ],
+          questions: [
+            { q: "Câu hỏi trắc nghiệm?", options: ["Đáp án 1", "Đáp án 2", "Đáp án 3"], a: 0, ex: "Giải thích..." }
+          ]
+        };
+      },
       fields: [
         { key: "code", label: "Mã bài nghe (Code duy nhất)", type: "text", required: true, help: "Ví dụ: lis-airport, lis-shop, lis-cafe" },
         {
@@ -634,6 +706,7 @@ Quy tắc ngữ pháp này giúp bạn biểu đạt chính xác hành động v
           placeholder: "https://...supabase.co/storage/v1/object/public/listening-audio/...",
           help: "Audio MP3 lưu trữ trên Supabase Storage bucket listening-audio"
         },
+        { key: "youtube_id", label: "Mã YouTube Video ID (tùy chọn)", type: "text", placeholder: "Ví dụ: 5KOKztPa1yI", help: "Dành cho bài nghe có video minh họa trên YouTube" },
         { key: "duration_seconds", label: "Thời lượng Audio (giây)", type: "number", defaultValue: 30 },
         { key: "sort_order", label: "Thứ tự sắp xếp", type: "number", defaultValue: 1 },
         {
@@ -658,38 +731,42 @@ Quy tắc ngữ pháp này giúp bạn biểu đạt chính xác hành động v
       webUrl: "speaking.html",
       source: () => (window.SPEAKING_SETS || []),
       desc: "Kho mẫu câu luyện nói phản xạ, ngữ điệu và phát âm tiếng Nga có AI chấm điểm âm vị.",
-      createDefault: () => ({
-        id: "YT_SPEAKING_" + Date.now().toString(36).slice(-6),
-        code: "YT_SPEAKING_" + Date.now().toString(36).slice(-6),
-        title: "Bài luyện nói Shadowing mới",
-        level: "A1",
-        levelName: "Sơ cấp A1",
-        category: "shadowing_youtube",
-        categoryName: "Shadowing qua phim hoạt hình",
-        sentence_ru: "Привет! Как тебя зовут?",
-        phonemeTarget: "Luyện ngữ điệu kể chuyện, trọng âm từ và ngắt nhịp tự nhiên",
-        youtubeId: "",
-        video_url: "",
-        icon: "youtube",
-        is_pro_only: false,
-        sort_order: 10,
-        items: [
-          {
-            id: 1,
-            order: 1,
-            who: "Người nói 1",
-            ru: "Привет! Как тебя зовут?",
-            text_ru: "Привет! Как тебя зовут?",
-            text_stressed: "Приве́т! Как тебя́ зову́т?",
-            vi: "Xin chào! Bạn tên là gì?",
-            translation_vi: "Xin chào! Bạn tên là gì?",
-            start: 0,
-            end: 4.5,
-            startSec: 0,
-            endSec: 4.5
-          }
-        ]
-      }),
+      createDefault: () => {
+        const spCode = "speaking_" + Date.now().toString(36).slice(-6);
+        return {
+          id: spCode,
+          code: spCode,
+          uuid: generateUUID(),
+          title: "Bài luyện nói Shadowing mới",
+          level: "A1",
+          levelName: "Sơ cấp A1",
+          category: "shadowing_youtube",
+          categoryName: "Shadowing qua phim hoạt hình",
+          sentence_ru: "Привет! Как тебя зовут?",
+          phonemeTarget: "Luyện ngữ điệu kể chuyện, trọng âm từ và ngắt nhịp tự nhiên",
+          youtubeId: "",
+          video_url: "",
+          icon: "youtube",
+          is_pro_only: false,
+          sort_order: 10,
+          items: [
+            {
+              id: 1,
+              order: 1,
+              who: "Người nói 1",
+              ru: "Привет! Как тебя зовут?",
+              text_ru: "Привет! Как тебя зовут?",
+              text_stressed: "Приве́т! Как тебя́ зову́т?",
+              vi: "Xin chào! Bạn tên là gì?",
+              translation_vi: "Xin chào! Bạn tên là gì?",
+              start: 0,
+              end: 4.5,
+              startSec: 0,
+              endSec: 4.5
+            }
+          ]
+        };
+      },
       fields: [
         { key: "id", label: "Mã bài luyện nói (Code / Slug)", type: "text", required: true, help: "Ví dụ: YT_SPEAKING_5KOKztPa1yI, sp_basic_01" },
         { key: "title", label: "Tên bài luyện nói", type: "text", required: true, placeholder: "Ví dụ: Цып-Цып: Знакомство — Làm quen" },
@@ -749,26 +826,30 @@ Quy tắc ngữ pháp này giúp bạn biểu đạt chính xác hành động v
       webUrl: "writing.html",
       source: () => (window.WRITING_TASKS || []),
       desc: "Bài luyện tập con thuộc Chủ đề viết (kèm ảnh Storage bucket writing-images, bài mẫu chuẩn TRKI, gợi ý và AI Prompt).",
-      createDefault: () => ({
-        id: "wtk_" + Date.now().toString().slice(-4),
-        code: "wtk_" + Date.now().toString().slice(-4),
-        topic_id: "",
-        title: "Bài luyện viết mới",
-        level: "A1",
-        level_name: "Sơ cấp A1",
-        task_type: "picture_desc",
-        category: "daily",
-        image_url: "",
-        prompt: "Посмотрите на фотографию и подробно опишите, что вы видите.",
-        model_answer: "Вот семья. Утrom они завтракают на кухне...",
-        min_words: 30,
-        tips: ["Sử dụng cách 1 cho chủ ngữ", "Dùng cách 6 chỉ nơi chốn: в/на + giới cách"],
-        ai_prompt: "Hãy đóng vai giám khảo TRKI chấm điểm bài viết tiếng Nga của học viên theo 4 tiêu chí TRKI...",
-        suggested_words: ["семья", "завтракать", "кухня", "утром"],
-        sort_order: 1,
-        is_pro_only: false,
-        publication_status: "published"
-      }),
+      createDefault: () => {
+        const taskCode = "wtk_" + Date.now().toString().slice(-4);
+        return {
+          id: taskCode,
+          code: taskCode,
+          taskId: generateUUID(),
+          topic_id: "",
+          title: "Bài luyện viết mới",
+          level: "A1",
+          level_name: "Sơ cấp A1",
+          task_type: "picture_desc",
+          category: "daily",
+          image_url: "",
+          prompt: "Посмотрите на фотографию и подробно опишите, что вы видите.",
+          model_answer: "Вот семья. Утром они завтракают на кухне...",
+          min_words: 30,
+          tips: ["Sử dụng cách 1 cho chủ ngữ", "Dùng cách 6 chỉ nơi chốn: в/на + giới cách"],
+          ai_prompt: "Hãy đóng vai giám khảo TRKI chấm điểm bài viết tiếng Nga của học viên theo 4 tiêu chí TRKI...",
+          suggested_words: ["семья", "завтракать", "кухня", "утром"],
+          sort_order: 1,
+          is_pro_only: false,
+          publication_status: "published"
+        };
+      },
       fields: [
         { key: "code", label: "Mã bài viết (Code duy nhất)", type: "text", required: true, help: "Ví dụ: pic_a1_01, trans_a1_01" },
         {
@@ -847,20 +928,24 @@ Quy tắc ngữ pháp này giúp bạn biểu đạt chính xác hành động v
       webUrl: "writing.html",
       source: () => (window.WRITING_TOPICS || []),
       desc: "Chủ đề luyện viết cấp độ A1–B2 chia theo 2 chế độ: Tả tranh (picture) và Luyện dịch (translation).",
-      createDefault: () => ({
-        id: "topic_pic_" + Date.now().toString().slice(-4),
-        code: "topic_pic_" + Date.now().toString().slice(-4),
-        title: "Chủ đề viết mới",
-        level: "A1",
-        level_name: "Sơ cấp A1",
-        type: "picture",
-        category: "daily",
-        category_name: "Sinh hoạt thường nhật",
-        description: "Mô tả bối cảnh và định hướng luyện tập cho học viên",
-        icon: "timer-clock",
-        sort_order: 10,
-        is_pro_only: false
-      }),
+      createDefault: () => {
+        const topicCode = "topic_pic_" + Date.now().toString().slice(-4);
+        return {
+          id: topicCode,
+          code: topicCode,
+          uuid: generateUUID(),
+          title: "Chủ đề viết mới",
+          level: "A1",
+          level_name: "Sơ cấp A1",
+          type: "picture",
+          category: "daily",
+          category_name: "Sinh hoạt thường nhật",
+          description: "Mô tả bối cảnh và định hướng luyện tập cho học viên",
+          icon: "timer-clock",
+          sort_order: 10,
+          is_pro_only: false
+        };
+      },
       fields: [
         { key: "code", label: "Mã chủ đề (Code ID duy nhất)", type: "text", required: true, help: "Ví dụ: topic_pic_daily_a1, topic_trans_comm_a1" },
         { key: "title", label: "Tên chủ đề bài viết", type: "text", required: true, placeholder: "Ví dụ: Sinh hoạt thường nhật & Gia đình" },
@@ -904,208 +989,7 @@ Quy tắc ngữ pháp này giúp bạn biểu đạt chính xác hành động v
       ]
     },
 
-    VOCAB_LESSONS: {
-      slug: "VOCAB_LESSONS",
-      group: "study",
-      label: "Video «Хочу в Россию»",
-      singular: "Tập phim",
-      icon: "film",
-      webUrl: "vocabulary.html",
-      source: () => (window.VOCAB_LESSONS || []),
-      desc: "Series video hoạt hình tình huống đời sống sinh viên du học tại Nga.",
-      createDefault: () => ({
-        id: "ep_" + Date.now().toString().slice(-4),
-        type: "series",
-        level: "A1",
-        ep: 1,
-        ru: "Новый день в Москве",
-        vi: "Ngày mới ở Moskva",
-        scene: "building-2",
-        story: "Anya thức dậy tại ký túc xá và bắt đầu một ngày mới tại thủ đô.",
-        video_url: "",
-        publication_status: "published",
-        is_pro_only: false,
-        words: [
-          { ru: "утро", vi: "buổi sáng", note: "danh từ trung" },
-          { ru: "завтрак", vi: "bữa sáng", note: "danh từ đực" }
-        ]
-      }),
-      fields: [
-        { key: "id", label: "ID bài học / Code", type: "text", required: true },
-        {
-          key: "type",
-          label: "Loại bài",
-          type: "select",
-          options: [{ v: "series", l: "Series theo tập" }, { v: "topic", l: "Chủ đề tự do" }],
-          defaultValue: "series"
-        },
-        { key: "ep", label: "Số tập (Episode)", type: "number", defaultValue: 1 },
-        { key: "ru", label: "Tiêu đề tiếng Nga", type: "text", required: true },
-        { key: "vi", label: "Tiêu đề tiếng Việt", type: "text", required: true },
-        { key: "story", label: "Cốt truyện / Bối cảnh", type: "textarea", rows: 3 },
-        { key: "video_url", label: "URL Video (YouTube / MP4 / Cloudflare Stream)", type: "text" },
-        { key: "scene", label: "Mã Icon Cảnh Phim", type: "text", defaultValue: "film" },
-        {
-          key: "is_pro_only",
-          label: "Quyền truy cập",
-          type: "select",
-          options: [
-            { v: "false", l: "Miễn phí (Free)" },
-            { v: "true", l: "Khóa VIP (Chỉ dành cho PRO)" }
-          ],
-          defaultValue: "false"
-        },
-        {
-          key: "publication_status",
-          label: "Trạng thái",
-          type: "select",
-          options: [
-            { v: "published", l: "Đã xuất bản (Công khai)" },
-            { v: "draft", l: "Bản nháp (Draft)" }
-          ],
-          defaultValue: "published"
-        }
-      ]
-    },
-
-    // --- 2. BÀI NỘP & TIẾN ĐỘ (Submissions & Student Progress) ---
-    WRITING_SUBMISSIONS: {
-      slug: "WRITING_SUBMISSIONS",
-      group: "submissions",
-      label: "Bài nộp Luyện viết",
-      singular: "Bài nộp viết",
-      icon: "file-check",
-      webUrl: "writing.html",
-      source: () => (window.WRITING_SUBMISSIONS || []),
-      desc: "Quản lý bài làm viết học viên nộp lên hệ thống, chấm điểm và phản hồi từ giáo viên & AI.",
-      createDefault: () => ({
-        id: "sub_" + Date.now().toString().slice(-6),
-        user_id: "",
-        task_id: "",
-        student_text: "Меня зовут Антон. Я изучаю русский язык...",
-        word_count: 50,
-        overall_score: 85,
-        status: "submitted",
-        teacher_notes: "",
-        submitted_at: new Date().toISOString()
-      }),
-      fields: [
-        { key: "id", label: "ID Bài nộp (UUID)", type: "text", required: true },
-        { key: "user_id", label: "UUID Học viên (user_id)", type: "text", required: true },
-        { key: "task_id", label: "UUID Đề bài viết (task_id)", type: "text", required: true },
-        { key: "student_text", label: "Bài viết của học viên", type: "textarea", required: true, rows: 5 },
-        { key: "word_count", label: "Số từ thực tế (Word Count)", type: "number", defaultValue: 40 },
-        { key: "overall_score", label: "Điểm chấm (Thang điểm 100)", type: "number" },
-        {
-          key: "status",
-          label: "Trạng thái chấm",
-          type: "select",
-          options: [
-            { v: "submitted", l: "Mới nộp (Chờ chấm)" },
-            { v: "grading", l: "Đang chấm bài" },
-            { v: "graded", l: "Đã hoàn thành chấm" }
-          ],
-          defaultValue: "submitted"
-        },
-        { key: "teacher_notes", label: "Nhận xét & Lời khuyên của Giáo viên", type: "textarea", rows: 3 },
-        { key: "submitted_at", label: "Thời gian nộp bài", type: "text" }
-      ]
-    },
-
-    TRKI_SUBMISSIONS: {
-      slug: "TRKI_SUBMISSIONS",
-      group: "submissions",
-      label: "Kết quả thi TRKI",
-      singular: "Kết quả thi",
-      icon: "award",
-      webUrl: "mock-test.html",
-      source: () => (window.TRKI_SUBMISSIONS || []),
-      desc: "Lịch sử và kết quả làm bài thi thử TRKI của từng học viên trên toàn hệ thống.",
-      createDefault: () => ({
-        id: "exam_sub_" + Date.now().toString().slice(-6),
-        user_id: "",
-        exam_id: "trki_a1",
-        score_percent: 75,
-        passed: true,
-        time_spent_sec: 2400,
-        submitted_at: new Date().toISOString()
-      }),
-      fields: [
-        { key: "id", label: "ID Bài thi (UUID)", type: "text", required: true },
-        { key: "user_id", label: "UUID Học viên (user_id)", type: "text", required: true },
-        { key: "exam_id", label: "Mã đề thi TRKI (exam_id)", type: "text", required: true },
-        { key: "score_percent", label: "Tỷ lệ điểm đạt được (%)", type: "number", required: true, defaultValue: 70 },
-        {
-          key: "passed",
-          label: "Kết quả đạt chuẩn",
-          type: "select",
-          options: [
-            { v: "true", l: "ĐẠT (Pass)" },
-            { v: "false", l: "CHƯA ĐẠT (Fail)" }
-          ],
-          defaultValue: "true"
-        },
-        { key: "time_spent_sec", label: "Thời gian làm bài (giây)", type: "number", defaultValue: 2400 },
-        { key: "submitted_at", label: "Thời gian hoàn thành", type: "text" }
-      ]
-    },
-
-    USER_PROGRESS: {
-      slug: "USER_PROGRESS",
-      group: "submissions",
-      label: "Tiến độ học viên (Progress)",
-      singular: "Tiến độ",
-      icon: "trending-up",
-      webUrl: "index.html",
-      source: () => (window.USER_PROGRESS || []),
-      desc: "Thống kê tổng điểm kinh nghiệm XP, chuỗi ngày học (Streak) và trạng thái các kỹ năng.",
-      createDefault: () => ({
-        user_id: "usr_" + Date.now().toString().slice(-6),
-        xp_total: 100,
-        streak_count: 1,
-        last_study_date: new Date().toISOString().slice(0, 10)
-      }),
-      fields: [
-        { key: "user_id", label: "UUID Học viên (Khóa chính user_id)", type: "text", required: true },
-        { key: "xp_total", label: "Tổng điểm kinh nghiệm (XP)", type: "number", required: true, defaultValue: 0 },
-        { key: "streak_count", label: "Chuỗi ngày học liên tục (Streak)", type: "number", required: true, defaultValue: 0 },
-        { key: "last_study_date", label: "Ngày học gần nhất (YYYY-MM-DD)", type: "text" }
-      ]
-    },
-
-    USER_VOCAB_PROGRESS: {
-      slug: "USER_VOCAB_PROGRESS",
-      group: "submissions",
-      label: "Tiến độ thẻ từ SM-2",
-      singular: "Thẻ nhớ SM-2",
-      icon: "repeat",
-      webUrl: "vocabulary.html",
-      source: () => (window.USER_VOCAB_PROGRESS || []),
-      desc: "Dữ liệu thuật toán lặp lại ngắt quãng SuperMemo-2 (SM-2) theo từng từ vựng của học viên.",
-      createDefault: () => ({
-        id: "sm2_" + Date.now().toString().slice(-6),
-        user_id: "",
-        vocab_id: "",
-        direction: 1,
-        interval_days: 1,
-        ease_factor: 2.5,
-        review_count: 0,
-        lapse_count: 0,
-        next_review_at: new Date().toISOString()
-      }),
-      fields: [
-        { key: "id", label: "ID Bản ghi tiến độ", type: "text", required: true },
-        { key: "user_id", label: "UUID Học viên (user_id)", type: "text", required: true },
-        { key: "vocab_id", label: "UUID Từ vựng (vocab_id)", type: "text", required: true },
-        { key: "interval_days", label: "Khoảng cách ôn tập tiếp theo (ngày)", type: "number", defaultValue: 1 },
-        { key: "ease_factor", label: "Hệ số dễ (Ease Factor, mặc định 2.5)", type: "number", defaultValue: 2.5 },
-        { key: "review_count", label: "Số lần đã ôn tập (Review Count)", type: "number", defaultValue: 0 },
-        { key: "lapse_count", label: "Số lần quên (Lapse Count)", type: "number", defaultValue: 0 },
-        { key: "next_review_at", label: "Lịch ôn tập tiếp theo", type: "text" }
-      ]
-    },
-
-    // --- 3. KINH DOANH & DỊCH VỤ (Commerce & Editorial) ---
+    // --- 2. KINH DOANH & DỊCH VỤ (Commerce & Editorial) ---
     SHOP_PRODUCTS: {
       slug: "SHOP_PRODUCTS",
       group: "commerce",
@@ -1115,20 +999,25 @@ Quy tắc ngữ pháp này giúp bạn biểu đạt chính xác hành động v
       webUrl: "shop.html",
       source: () => (window.SHOP_PRODUCTS || []),
       desc: "Sản phẩm bánh kẹo Alenka, mỹ phẩm Siberia và các gói dịch vụ Du học Nga.",
-      createDefault: () => ({
-        id: "prod_" + Date.now().toString().slice(-4),
-        category: "banh_keo",
-        categoryName: "Bánh kẹo Nga",
-        product_type: "physical",
-        title: "Bánh kẹo Nga nhập khẩu mới",
-        desc: "Sản phẩm chính hãng nội địa Nga thơm ngon, hạn sử dụng mới nhất.",
-        price: 55000,
-        priceOld: 70000,
-        stock: 100,
-        image: "https://images.unsplash.com/photo-1548907040-4baa42d10919?auto=format&fit=crop&w=600&q=80",
-        badge: "Mới",
-        status: "published"
-      }),
+      createDefault: () => {
+        const prodCode = "prod_" + Date.now().toString().slice(-4);
+        return {
+          id: prodCode,
+          code: prodCode,
+          uuid: generateUUID(),
+          category: "banh_keo",
+          categoryName: "Bánh kẹo Nga",
+          product_type: "physical",
+          title: "Bánh kẹo Nga nhập khẩu mới",
+          desc: "Sản phẩm chính hãng nội địa Nga thơm ngon, hạn sử dụng mới nhất.",
+          price: 55000,
+          priceOld: 70000,
+          stock: 100,
+          image: "https://images.unsplash.com/photo-1548907040-4baa42d10919?auto=format&fit=crop&w=600&q=80",
+          badge: "Mới",
+          status: "published"
+        };
+      },
       fields: [
         { key: "id", label: "Mã SKU / Code sản phẩm", type: "text", required: true, help: "Ví dụ: prod_alenka, prod_tea, prod_book_a1" },
         { key: "title", label: "Tên sản phẩm / dịch vụ", type: "text", required: true },
@@ -1254,17 +1143,21 @@ Quy tắc ngữ pháp này giúp bạn biểu đạt chính xác hành động v
       webUrl: "index.html#pricing",
       source: () => (window.SHOP_ORDERS || []),
       desc: "Quản lý đơn hàng mua gói học PRO, sách và giáo trình tiếng Nga qua VietQR.",
-      createDefault: () => ({
-        id: "ORD-" + Date.now().toString().slice(-6),
-        order_code: "ORD-" + Date.now().toString().slice(-6),
-        userEmail: "",
-        packageId: "pro_6m",
-        packageName: "Gói Luyện Thi 6 Tháng",
-        amount: 299000,
-        paymentMethod: "VietQR",
-        status: "pending",
-        createdAt: new Date().toISOString()
-      }),
+      createDefault: () => {
+        const ordCode = "ORD-" + Date.now().toString().slice(-6);
+        return {
+          id: ordCode,
+          order_code: ordCode,
+          uuid: generateUUID(),
+          userEmail: "",
+          packageId: "pro_6m",
+          packageName: "Gói Luyện Thi 6 Tháng",
+          amount: 299000,
+          paymentMethod: "VietQR",
+          status: "pending",
+          createdAt: new Date().toISOString()
+        };
+      },
       fields: [
         { key: "id", label: "Mã đơn hàng / Order Code", type: "text", required: true },
         { key: "userEmail", label: "Email học viên", type: "text", required: true },
@@ -1306,16 +1199,20 @@ Quy tắc ngữ pháp này giúp bạn biểu đạt chính xác hành động v
       webUrl: "blog.html",
       source: () => (window.BLOG_POSTS || []),
       desc: "Kinh nghiệm xin học bổng chính phủ, đời sống ký túc xá và thủ tục du học Nga.",
-      createDefault: () => ({
-        slug: "bai-viet-moi-" + Date.now().toString().slice(-4),
-        title: "Bài viết cẩm nang mới",
-        category: "du_hoc",
-        categoryName: "CẨM NANG DU HỌC NGA",
-        author: "Ban Biên Tập RUSI TRKI",
-        cover_url: "assets/red-square.jpg",
-        summary: "Tóm tắt ngắn gọn nội dung bài viết về kinh nghiệm học tập và đời sống tại Nga.",
-        publication_status: "published",
-        content_md: `# Tiêu đề bài viết cẩm nang du học
+      createDefault: () => {
+        const slugCode = "bai-viet-moi-" + Date.now().toString().slice(-4);
+        return {
+          id: slugCode,
+          slug: slugCode,
+          uuid: generateUUID(),
+          title: "Bài viết cẩm nang mới",
+          category: "du_hoc",
+          categoryName: "CẨM NANG DU HỌC NGA",
+          author: "Ban Biên Tập RUSI TRKI",
+          cover_url: "assets/red-square.jpg",
+          summary: "Tóm tắt ngắn gọn nội dung bài viết về kinh nghiệm học tập và đời sống tại Nga.",
+          publication_status: "published",
+          content_md: `# Tiêu đề bài viết cẩm nang du học
 
 ## 1. Giới thiệu tổng quan
 Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý báu để tiếp cận nền giáo dục đại học hàng đầu thế giới.
@@ -1337,7 +1234,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 > [!TIP]
 > Hãy chủ động kết nối với hội sinh viên Việt Nam tại trường bạn sắp theo học để được hỗ trợ đón sân bay và làm thủ tục nhập học nhanh chóng.
 `
-      }),
+        };
+      },
       fields: [
         { key: "slug", label: "Slug URL bài viết", type: "text", required: true, help: "Ví dụ: kinh-nghiem-xin-hoc-bong-nga" },
         { key: "title", label: "Tiêu đề bài viết", type: "text", required: true },
@@ -1387,7 +1285,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         ];
       },
       createDefault: () => ({
-        id: "usr_" + Date.now().toString().slice(-4),
+        id: generateUUID(),
         email: "student@example.com",
         full_name: "Học viên mới",
         role: "student",
@@ -1421,6 +1319,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           ],
           defaultValue: "false"
         },
+        { key: "pro_expires_at", label: "Thời hạn VIP PRO (Hết hạn)", type: "text", placeholder: "2026-12-31T23:59:59Z", help: "Thời điểm hết hạn gói VIP (chuẩn ISO date, để trống nếu vĩnh viễn)" },
+        { key: "avatar_url", label: "URL Ảnh đại diện (avatar_url)", type: "text", placeholder: "https://..." },
         { key: "streak", label: "Chuỗi ngày học liên tục (Streak)", type: "number", defaultValue: 0 },
         { key: "xp", label: "Điểm kinh nghiệm (XP)", type: "number", defaultValue: 0 }
       ]
@@ -1641,28 +1541,29 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
   // 4. SIDEBAR & BREADCRUMBS
   // =========================================================================
 
+  // Danh sách các bộ sưu tập phân cấp phụ ẩn khỏi sidebar (đã tích hợp trong dropdown bài học)
+  const HIDDEN_CMS_KEYS = new Set([
+    "LISTENING_TOPICS",    // Chủ đề luyện nghe phụ (đã tích hợp chọn trong LISTENING_LESSONS)
+    "WRITING_TOPICS"       // Chủ đề luyện viết phụ (đã tích hợp chọn trong WRITING_TASKS)
+  ]);
+
   function renderSidebarLists() {
     const listStudy = document.getElementById("navListStudy");
-    const listSubmissions = document.getElementById("navListSubmissions");
     const listCommerce = document.getElementById("navListCommerce");
 
     if (listStudy) listStudy.innerHTML = "";
-    if (listSubmissions) listSubmissions.innerHTML = "";
     if (listCommerce) listCommerce.innerHTML = "";
 
-    const countStudy = COLLECTION_KEYS.filter((k) => COLLECTIONS[k].group === "study").length;
-    const countCommerce = COLLECTION_KEYS.filter((k) => COLLECTIONS[k].group === "commerce").length;
-    const countSubmissions = COLLECTION_KEYS.filter((k) => COLLECTIONS[k].group === "submissions").length;
+    const countStudy = COLLECTION_KEYS.filter((k) => COLLECTIONS[k].group === "study" && !HIDDEN_CMS_KEYS.has(k)).length;
+    const countCommerce = COLLECTION_KEYS.filter((k) => COLLECTIONS[k].group === "commerce" && !HIDDEN_CMS_KEYS.has(k)).length;
     const bStudy = document.getElementById("badgeCountStudy");
     const bCommerce = document.getElementById("badgeCountCommerce");
-    const bSubmissions = document.getElementById("badgeCountSubmissions");
     if (bStudy) bStudy.textContent = countStudy;
     if (bCommerce) bCommerce.textContent = countCommerce;
-    if (bSubmissions) bSubmissions.textContent = countSubmissions;
 
     COLLECTION_KEYS.forEach((key) => {
       const col = COLLECTIONS[key];
-      if (col.group === "system") return;
+      if (col.group === "system" || col.group === "submissions" || HIDDEN_CMS_KEYS.has(key)) return;
 
       const items = getMergedList(key);
       const li = document.createElement("li");
@@ -1675,10 +1576,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         </a>
       `;
 
-      const listSubmissions = document.getElementById("navListSubmissions");
       if (col.group === "study" && listStudy) listStudy.appendChild(li);
       else if (col.group === "commerce" && listCommerce) listCommerce.appendChild(li);
-      else if (col.group === "submissions" && listSubmissions) listSubmissions.appendChild(li);
       else if (listStudy) listStudy.appendChild(li);
     });
 
@@ -1769,9 +1668,21 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       }
     } else if (State.currentRoute === "editor") {
       const mapping = SupabaseSyncEngine && SupabaseSyncEngine.MAPPINGS[State.currentSlug];
-      const tablePill = mapping ? `<span class="p-pill p-pill-success" style="font-size:11px;padding:3px 8px;display:inline-flex;align-items:center;gap:4px" title="Bảng đích trên Supabase">${window.RusiIcons ? RusiIcons.get("database-tests", { size: 12 }) : ""} ${mapping.table}</span>` : "";
-      primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSaveDoc" type="button" title="Lưu và tiếp tục chỉnh sửa (Ctrl+S)">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Lưu thay đổi</button>`;
-      secondaryBtn = `${tablePill}<button class="p-btn p-btn-secondary p-btn-sm" id="btnSaveAndClose" type="button" title="Lưu và quay lại danh sách">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""} Lưu &amp; Đóng</button><button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenPreviewDrawer" type="button" title="Xem trước bài viết (Ctrl+P)">${window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : ""} Live Preview</button>`;
+      const tablePill = mapping ? `<span class="p-pill p-pill-success" style="font-size:11px;padding:3px 7px;display:inline-flex;align-items:center;gap:4px" title="Bảng đích Supabase">${window.RusiIcons ? RusiIcons.get("database-tests", { size: 12 }) : ""} ${mapping.table}</span>` : "";
+      const statusPill = `<span class="p-pill ${State.isCreating ? "p-pill-warning" : "p-pill-info"}" style="font-size:11px;padding:3px 7px">${State.isCreating ? "Mới" : "Đang sửa"}</span>`;
+      const docIdStr = State.currentDocId || (State.currentDraft ? (State.currentDraft.id || State.currentDraft.slug || "") : "");
+      const idTag = docIdStr ? `<span style="font-size:11px;color:var(--p-text-muted);font-family:ui-monospace,monospace;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 6px;background:var(--p-surface-subtle,#f1f5f9);border-radius:4px;border:1px solid var(--p-border-subtle,#e2e8f0)" title="Mã ID: ${escAttr(docIdStr)}">ID: ${esc(docIdStr)}</span>` : "";
+
+      primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSaveDoc" type="button" title="Lưu thay đổi (Ctrl+S)">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Lưu thay đổi</button>`;
+
+      const backBtn = `<a class="p-btn p-btn-ghost p-btn-sm" href="#collection/${State.currentSlug}" title="Quay lại danh sách">← Quay lại</a>`;
+      const previewBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenPreviewDrawer" type="button" onclick="window.openPreviewInNewTab()" title="Xem trước bài viết trên tab mới (Ctrl+P)">${window.RusiIcons ? RusiIcons.get("external-link", { size: 13 }) : ""} Xem trước ↗</button>`;
+      const saveCloseBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSaveAndClose" type="button" title="Lưu và quay lại danh sách">${window.RusiIcons ? RusiIcons.get("check", { size: 13 }) : ""} Lưu &amp; Đóng</button>`;
+      const deleteBtn = (!State.isCreating && State.currentDocId)
+        ? `<button class="p-btn p-btn-ghost p-btn-sm" id="btnDeleteDocTopbar" type="button" title="Xóa tài liệu này" style="color:var(--p-danger,#ef4444)">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 13 }) : ""} Xóa</button>`
+        : "";
+
+      secondaryBtn = `${backBtn}${statusPill}${idTag}${tablePill}${deleteBtn}${previewBtn}${saveCloseBtn}`;
     } else {
       primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSyncWeb" type="button">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} Đẩy về Web</button>`;
       secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenSupabaseModal" type="button">${window.RusiIcons ? RusiIcons.get("database-tests", { size: 14 }) : ""} Supabase</button>`;
@@ -1824,13 +1735,16 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     if (btnSbModal) btnSbModal.onclick = openSupabaseModal;
 
     const btnPreview = document.getElementById("btnOpenPreviewDrawer");
-    if (btnPreview) btnPreview.onclick = openLivePreview;
+    if (btnPreview) btnPreview.onclick = window.openPreviewInNewTab;
 
     const btnSave = document.getElementById("btnSaveDoc");
     if (btnSave) btnSave.onclick = () => window.saveDocument(true);
 
     const btnSaveClose = document.getElementById("btnSaveAndClose");
     if (btnSaveClose) btnSaveClose.onclick = () => window.saveDocument(false);
+
+    const btnDeleteTop = document.getElementById("btnDeleteDocTopbar");
+    if (btnDeleteTop) btnDeleteTop.onclick = () => window.deleteDocument(State.currentSlug, State.currentDocId);
 
     const kebabBtn = document.getElementById("btnKebabToggle");
     const kebabDropdown = document.getElementById("kebabDropdown");
@@ -1861,14 +1775,15 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
   function renderDashboard(container) {
     let totalDocs = 0;
-    COLLECTION_KEYS.forEach((k) => totalDocs += getMergedList(k).length);
-
     const isSbConfigured = window.isSupabaseConfigured && window.isSupabaseConfigured();
 
     let collectionsHtml = "";
     COLLECTION_KEYS.forEach((key) => {
       const col = COLLECTIONS[key];
+      if (col.group === "system" || col.group === "submissions" || HIDDEN_CMS_KEYS.has(key)) return;
+
       const items = getMergedList(key);
+      totalDocs += items.length;
       collectionsHtml += `
         <div class="payload-collection-card">
           <div class="payload-collection-card-head">
@@ -2009,12 +1924,6 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         } else if (slug === "PACKAGES") {
           const pVnd = it.price_vnd || it.price;
           subText = `${pVnd ? Number(pVnd).toLocaleString("vi-VN") + " đ" : "Liên hệ"} • ${it.duration_days ? it.duration_days + " ngày" : "Trọn đời"} • ${(it.features || []).length} quyền lợi`;
-        } else if (slug === "WRITING_SUBMISSIONS") {
-          const uId = it.user_id ? String(it.user_id).slice(0, 8) + "..." : "Ẩn danh";
-          subText = `Học viên: ${uId} • Số từ: ${it.word_count || 0} • Điểm: ${it.overall_score != null ? it.overall_score + "/100" : "Chờ chấm"}`;
-        } else if (slug === "TRKI_SUBMISSIONS") {
-          const uId = it.user_id ? String(it.user_id).slice(0, 8) + "..." : "Ẩn danh";
-          subText = `Học viên: ${uId} • Điểm: ${it.score_percent}% • ${it.passed ? "ĐẠT" : "CHƯA ĐẠT"}`;
         } else {
           subText = it.desc || it.vi || it.meaning_vi || it.student_text || (it.score_percent !== undefined ? ("Điểm: " + it.score_percent + "%") : "") || (it.parts ? (it.parts.length + " phần thi") : "");
         }
@@ -2245,6 +2154,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
     // Crisp Notion 3.0 vector SVG icons
     const NOTION_ICONS = {
+      undo: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg>`,
+      redo: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path></svg>`,
       plus: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`,
       chevron: `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`,
       text: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>`,
@@ -2272,7 +2183,12 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       edit: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`,
       preview: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
       zen: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>`,
-      zenExit: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`
+      zenExit: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
+      alignLeft: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>`,
+      alignCenter: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="18" y1="14" x2="6" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>`,
+      alignRight: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="7" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>`,
+      eraser: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"></path><path d="M22 21H7"></path><path d="m5 11 9 9"></path></svg>`,
+      codeSnippet: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>`
     };
 
     // Build form field inputs with two-way binding
@@ -2304,23 +2220,13 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
               l: `[${t.level || "A1"}] ${t.title || t.code}`
             }))
           ];
-        } else if (f.key === "jar_id" && slug === "JAR_ITEMS") {
-          const jars = getMergedList("VOCAB_JARS");
-          optsList = [
-            { v: "", l: "-- Chọn Lọ từ vựng (Vocab Jar) --" },
-            ...jars.map(j => ({
-              v: j.id || j.code,
-              code: j.code,
-              l: `[${j.level || "A1"}] ${j.title || j.name || j.code}`
-            }))
-          ];
         }
         const opts = optsList.map((o) => {
           const isSelected = String(val) === String(o.v) || (o.code && String(val) === String(o.code));
           return `<option value="${escAttr(o.v)}" ${isSelected ? "selected" : ""}>${esc(o.l)}</option>`;
         }).join("");
         formFieldsHtml += `
-          <div class="p-form-group">
+          <div class="p-field-row">
             <label class="p-label">${esc(f.label)} ${f.required ? '<span class="p-label-req">*</span>' : ""}</label>
             <select class="p-select live-draft-field" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}">${opts}</select>
             ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
@@ -2328,7 +2234,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         `;
       } else if (f.type === "textarea") {
         formFieldsHtml += `
-          <div class="p-form-group">
+          <div class="p-field-row">
             <label class="p-label">${esc(f.label)} ${f.required ? '<span class="p-label-req">*</span>' : ""}</label>
             <textarea class="p-textarea live-draft-field" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}" rows="4">${esc(val)}</textarea>
             ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
@@ -2337,7 +2243,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       } else if (f.type === "list-lines") {
         const linesVal = Array.isArray(val) ? val.join("\n") : (val || "");
         formFieldsHtml += `
-          <div class="p-form-group">
+          <div class="p-field-row">
             <label class="p-label">${esc(f.label)} ${f.required ? '<span class="p-label-req">*</span>' : ""}</label>
             <textarea class="p-textarea live-draft-field-lines" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}" rows="5" placeholder="Mỗi dòng là một mục...">${esc(linesVal)}</textarea>
             ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
@@ -2361,21 +2267,14 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         const readTimeVal = Math.max(1, Math.ceil(wordCountVal / 180));
 
         formFieldsHtml += `
-          <div class="p-form-group">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-              <label class="p-label" style="margin:0">${esc(f.label)} ${f.required ? '<span class="p-label-req">*</span>' : ""}</label>
-              <div style="font-size:12px;color:var(--p-text-muted)">Định dạng: <strong>Markdown (.md) chuẩn Supabase (content_md)</strong></div>
-            </div>
             <div class="p-md-editor-wrap" data-md-field="${escAttr(f.key)}">
-              <!-- Notion-Inspired Modern Markdown Toolbar -->
+              <!-- Notion-Inspired Modern Markdown Toolbar (100% Icon Only) -->
               <div class="p-md-toolbar notion-toolbar">
                 <div class="p-md-actions-row">
-                  <!-- Notion Add Block Menu Button -->
+                  <!-- Block insertion menu (icon-only button) -->
                   <div class="notion-dropdown-wrap">
-                    <button type="button" class="notion-tb-btn notion-tb-primary-btn btn-notion-insert" title="Chèn khối Notion (Gõ / trong văn bản để mở)">
-                      <span class="notion-tb-icon">${NOTION_ICONS.plus}</span>
-                      <span>Chèn khối</span>
-                      <span class="notion-tb-arrow">${NOTION_ICONS.chevron}</span>
+                    <button type="button" class="notion-tb-btn notion-tb-primary-btn btn-notion-insert" title="Chèn khối nhanh (/ hoặc click)">
+                      ${NOTION_ICONS.plus}
                     </button>
                     <!-- Notion Block Menu Popover -->
                     <div class="notion-menu-popover notion-block-menu" style="display:none">
@@ -2506,12 +2405,10 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                     </div>
                   </div>
 
-                  <!-- Notion Turn Into Block Dropdown -->
+                  <!-- Notion Turn Into Block Dropdown (icon-only button) -->
                   <div class="notion-dropdown-wrap">
-                    <button type="button" class="notion-tb-btn btn-notion-turninto" title="Chuyển đổi kiểu dòng hiện tại (Turn into...)">
-                      <span>${NOTION_ICONS.text}</span>
-                      <span>Kiểu khối</span>
-                      <span class="notion-tb-arrow">${NOTION_ICONS.chevron}</span>
+                    <button type="button" class="notion-tb-btn btn-notion-turninto" title="Chuyển kiểu dòng (Turn into...)">
+                      ${NOTION_ICONS.text}
                     </button>
                     <div class="notion-menu-popover notion-turninto-menu" style="display:none;width:220px">
                       <div class="notion-menu-group-label">CHUYỂN KIỂU (TURN INTO)</div>
@@ -2530,6 +2427,28 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
                   <span class="p-md-sep"></span>
 
+                  <!-- Direct Headings & Structure Blocks (All Icon Only) -->
+                  <div class="p-md-group">
+                    <button type="button" class="notion-tb-btn" data-notion-turn="h1" title="Tiêu đề 1 (#)"><strong style="font-size:11px">H1</strong></button>
+                    <button type="button" class="notion-tb-btn" data-notion-turn="h2" title="Tiêu đề 2 (##)"><strong style="font-size:11px">H2</strong></button>
+                    <button type="button" class="notion-tb-btn" data-notion-turn="h3" title="Tiêu đề 3 (###)"><strong style="font-size:11px">H3</strong></button>
+                    <button type="button" class="notion-tb-btn" data-notion-action="ul" title="Danh sách chấm (-)">${NOTION_ICONS.ul}</button>
+                    <button type="button" class="notion-tb-btn" data-notion-action="ol" title="Danh sách số (1.)">${NOTION_ICONS.ol}</button>
+                    <button type="button" class="notion-tb-btn" data-notion-action="task" title="Việc cần làm (Checklist)">${NOTION_ICONS.task}</button>
+                    <button type="button" class="notion-tb-btn" data-notion-action="quote" title="Trích dẫn (&gt;)">${NOTION_ICONS.quote}</button>
+                    <button type="button" class="notion-tb-btn" data-notion-action="hr" title="Đường phân cách (---)">${NOTION_ICONS.hr}</button>
+                  </div>
+
+                  <span class="p-md-sep"></span>
+
+                  <!-- Undo / Redo (Notion Style) -->
+                  <div class="p-md-group">
+                    <button type="button" class="notion-tb-btn btn-notion-undo" title="Hoàn tác (Ctrl+Z)">${NOTION_ICONS.undo}</button>
+                    <button type="button" class="notion-tb-btn btn-notion-redo" title="Làm lại (Ctrl+Y / Ctrl+Shift+Z)">${NOTION_ICONS.redo}</button>
+                  </div>
+
+                  <span class="p-md-sep"></span>
+
                   <!-- Inline Typography (Notion Style) -->
                   <div class="p-md-group">
                     <button type="button" class="notion-tb-btn" data-action="bold" title="In đậm (Ctrl+B)">${NOTION_ICONS.bold}</button>
@@ -2538,16 +2457,24 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                     <button type="button" class="notion-tb-btn" data-action="mark" title="Đánh dấu nổi bật (Highlight)">${NOTION_ICONS.highlight}</button>
                     <button type="button" class="notion-tb-btn" data-action="code-inline" title="Mã trong dòng (inline code)">${NOTION_ICONS.code}</button>
                     <button type="button" class="notion-tb-btn" data-action="link" title="Chèn liên kết (Ctrl+K)">${NOTION_ICONS.link}</button>
+                    <button type="button" class="notion-tb-btn" data-action="clear-format" title="Xóa định dạng (Eraser)">${NOTION_ICONS.eraser}</button>
                   </div>
 
                   <span class="p-md-sep"></span>
 
-                  <!-- Russian Accents Dropdown Palette -->
+                  <!-- Text Alignment -->
+                  <div class="p-md-group">
+                    <button type="button" class="notion-tb-btn" data-action="align-left" title="Căn lề trái">${NOTION_ICONS.alignLeft}</button>
+                    <button type="button" class="notion-tb-btn" data-action="align-center" title="Căn giữa">${NOTION_ICONS.alignCenter}</button>
+                    <button type="button" class="notion-tb-btn" data-action="align-right" title="Căn lề phải">${NOTION_ICONS.alignRight}</button>
+                  </div>
+
+                  <span class="p-md-sep"></span>
+
+                  <!-- Russian Accents Dropdown Palette (icon-only button) -->
                   <div class="notion-dropdown-wrap">
-                    <button type="button" class="notion-tb-btn btn-notion-stress" title="Bảng ký tự trọng âm tiếng Nga (Ctrl+Shift+S)">
+                    <button type="button" class="notion-tb-btn btn-notion-stress" title="Trọng âm &amp; Ký tự tiếng Nga (Ctrl+Shift+S)">
                       <span class="notion-ru-tb-icon">á</span>
-                      <span>Trọng âm</span>
-                      <span class="notion-tb-arrow">${NOTION_ICONS.chevron}</span>
                     </button>
                     <div class="notion-menu-popover notion-stress-menu" style="display:none;width:290px;padding:12px">
                       <div class="notion-stress-header">
@@ -2579,12 +2506,10 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                     </div>
                   </div>
 
-                  <!-- Callouts Dropdown -->
+                  <!-- Callouts Dropdown (icon-only button) -->
                   <div class="notion-dropdown-wrap">
                     <button type="button" class="notion-tb-btn btn-notion-callout" title="Chèn hộp ghi chú Callout">
                       ${NOTION_ICONS.callout}
-                      <span>Callout</span>
-                      <span class="notion-tb-arrow">${NOTION_ICONS.chevron}</span>
                     </button>
                     <div class="notion-menu-popover notion-callout-menu" style="display:none;width:250px">
                       <button type="button" class="notion-menu-item" data-notion-action="tip">
@@ -2618,12 +2543,10 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                     </div>
                   </div>
 
-                  <!-- Tables Dropdown -->
+                  <!-- Tables Dropdown (icon-only button) -->
                   <div class="notion-dropdown-wrap">
                     <button type="button" class="notion-tb-btn btn-notion-table" title="Chèn bảng dữ liệu hoặc từ vựng">
                       ${NOTION_ICONS.table}
-                      <span>Bảng</span>
-                      <span class="notion-tb-arrow">${NOTION_ICONS.chevron}</span>
                     </button>
                     <div class="notion-menu-popover notion-table-menu" style="display:none;width:260px">
                       <button type="button" class="notion-menu-item" data-notion-action="table-vocab">
@@ -2645,55 +2568,170 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                     </div>
                   </div>
 
-                  <!-- Modes & Zen (Right-aligned) -->
+                  <!-- Media Buttons -->
+                  <div class="p-md-group">
+                    <button type="button" class="notion-tb-btn" data-notion-action="img" title="Chèn hình ảnh minh họa">${NOTION_ICONS.image}</button>
+                    <button type="button" class="notion-tb-btn" data-notion-action="audio" title="Khung nghe Audio tiếng Nga">${NOTION_ICONS.audio}</button>
+                  </div>
+
+                  <!-- Modes & Zen (Right-aligned, icon-only) -->
                   <div class="notion-view-modes" style="margin-left:auto">
-                    <button type="button" class="notion-view-btn" data-mode="edit" title="Chỉ hiện ô soạn thảo">${NOTION_ICONS.edit}<span>Soạn</span></button>
-                    <button type="button" class="notion-view-btn active" data-mode="split" title="Chia đôi màn hình">${NOTION_ICONS.split}<span>Chia đôi</span></button>
-                    <button type="button" class="notion-view-btn" data-mode="preview" title="Chỉ hiện bản xem trước">${NOTION_ICONS.preview}<span>Xem trước</span></button>
+                    <button type="button" class="notion-view-btn active" data-canvas-mode="wysiwyg" title="Soạn thảo trực quan chuẩn Notion">
+                      ${NOTION_ICONS.edit}
+                    </button>
+                    <button type="button" class="notion-view-btn" data-canvas-mode="raw" title="Xem &amp; sửa mã nguồn Markdown (.md)">
+                      ${NOTION_ICONS.codeSnippet}
+                    </button>
                     <span class="notion-view-sep"></span>
                     <button type="button" class="notion-zen-btn" data-action="zen" title="Toàn màn hình không xao nhãng (Esc)">${NOTION_ICONS.zen}</button>
                   </div>
                 </div>
               </div>
 
-              <!-- Panes with Synced Scrolling -->
-              <div class="p-md-panes split-mode">
-                <div class="p-md-editor-pane">
-                  <textarea class="p-md-textarea live-draft-field live-markdown-input" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}" placeholder="Soạn thảo nội dung bài viết bằng cú pháp Markdown...">${esc(mdVal)}</textarea>
-                </div>
-                <div class="p-md-preview-pane">
-                  <div class="p-md-preview-header">
-                    <span class="p-md-preview-title">BẢN XEM TRƯỚC</span>
-                    <span class="notion-live-pill"><span class="notion-live-dot"></span> Trực tiếp</span>
-                  </div>
-                  <div class="rusi-md-rendered p-md-preview-body">
+              <!-- Notion Single-Column Document Surface (NO split screen!) -->
+              <div class="notion-editor-surface">
+                <div class="notion-doc-paper">
+                  <div class="notion-canvas rusi-md-rendered" contenteditable="true" spellcheck="false" data-placeholder="Gõ '/' để chèn bảng, callout, ngữ pháp hoặc bắt đầu viết...">
                     ${renderedMd}
                   </div>
                 </div>
               </div>
 
-              <!-- Status bar -->
-              <div class="p-md-statusbar">
-                <div class="p-md-counters">
-                  <span><b class="md-word-count">${wordCountVal}</b> từ</span>
-                  <span class="md-counter-sep">·</span>
-                  <span><b class="md-char-count">${String(mdVal).length}</b> ký tự</span>
-                  <span class="md-counter-sep">·</span>
-                  <span><b class="md-line-count">${lineCountVal}</b> dòng</span>
-                  <span class="md-counter-sep">·</span>
-                  <span class="md-read-time">~${readTimeVal} phút đọc</span>
+              <!-- Raw Markdown Pane (Hidden by default, for viewing/pasting raw markdown) -->
+              <div class="notion-raw-pane" style="display:none">
+                <textarea class="p-md-textarea live-draft-field live-markdown-input" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}" placeholder="Soạn thảo nội dung bài viết bằng cú pháp Markdown...">${esc(mdVal)}</textarea>
+              </div>
+
+              <!-- Floating Slash Palette (Positioned dynamically near cursor) -->
+              <div class="notion-slash-palette" style="display:none">
+                <div class="notion-slash-header">
+                  <span class="notion-slash-icon">/</span>
+                  <input type="text" class="notion-slash-filter" placeholder="Tìm khối (bảng, mẹo, ghi chú, h1, h2...)" />
+                  <span class="notion-slash-kbd">ESC đóng</span>
                 </div>
-                <div class="p-md-statusbar-hints">
-                  <span>Gõ <code>/</code> chèn khối</span>
-                  <span class="md-counter-sep">·</span>
-                  <span><code>Ctrl+Shift+S</code> trọng âm</span>
-                  <span class="md-counter-sep">·</span>
-                  <span>Markdown Supabase</span>
+                <div class="notion-slash-list">
+                  <div class="notion-menu-group-label">BẢNG DỮ LIỆU &amp; TỪ VỰNG</div>
+                  <button type="button" class="notion-slash-item" data-notion-action="table-vocab">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.table}</span>
+                    <div class="notion-slash-item-info">
+                      <div class="notion-slash-item-title">Bảng từ vựng tiếng Nga 4 cột</div>
+                      <div class="notion-slash-item-desc">Từ trọng âm, loại từ, nghĩa tiếng Việt, ví dụ song ngữ</div>
+                    </div>
+                    <span class="notion-slash-item-shortcut">/bangtu</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="table">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.table}</span>
+                    <div class="notion-slash-item-info">
+                      <div class="notion-slash-item-title">Bảng dữ liệu 3x3</div>
+                      <div class="notion-slash-item-desc">Bảng bảng biểu tiêu chuẩn</div>
+                    </div>
+                    <span class="notion-slash-item-shortcut">/bang</span>
+                  </button>
+
+                  <div class="notion-menu-group-label">HỘP GHI CHÚ CALLOUT</div>
+                  <button type="button" class="notion-slash-item" data-notion-action="tip">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.tip}</span>
+                    <div class="notion-slash-item-info">
+                      <div class="notion-slash-item-title">Mẹo ghi nhớ (Tip)</div>
+                      <div class="notion-slash-item-desc">Hộp mẹo học và bí quyết ngôn ngữ</div>
+                    </div>
+                    <span class="notion-slash-item-shortcut">/tip</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="note">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.note}</span>
+                    <div class="notion-slash-item-info">
+                      <div class="notion-slash-item-title">Ghi chú bối cảnh (Note)</div>
+                      <div class="notion-slash-item-desc">Giải thích văn hóa và ngữ cảnh giao tiếp</div>
+                    </div>
+                    <span class="notion-slash-item-shortcut">/note</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="important">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.important}</span>
+                    <div class="notion-slash-item-info">
+                      <div class="notion-slash-item-title">Lưu ý trọng tâm (Important)</div>
+                      <div class="notion-slash-item-desc">Kiến thức thi cử quan trọng</div>
+                    </div>
+                    <span class="notion-slash-item-shortcut">/luuy</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="warning">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.warning}</span>
+                    <div class="notion-slash-item-info">
+                      <div class="notion-slash-item-title">Cảnh báo bẫy thi (Warning)</div>
+                      <div class="notion-slash-item-desc">Lỗi người học hay sai</div>
+                    </div>
+                    <span class="notion-slash-item-shortcut">/baythi</span>
+                  </button>
+
+                  <div class="notion-menu-group-label">MẪU BÀI HỌC TRKI</div>
+                  <button type="button" class="notion-slash-item" data-notion-action="template-article">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.template}</span>
+                    <div class="notion-slash-item-info">
+                      <div class="notion-slash-item-title">Mẫu bài học TRKI 5 phần</div>
+                      <div class="notion-slash-item-desc">Bối cảnh, Hội thoại, Bảng từ, Ngữ pháp, Bài tập</div>
+                    </div>
+                    <span class="notion-slash-item-shortcut">/mau</span>
+                  </button>
+
+                  <div class="notion-menu-group-label">KHỐI VĂN BẢN &amp; TIÊU ĐỀ</div>
+                  <button type="button" class="notion-slash-item" data-notion-action="h1">
+                    <span class="notion-slash-item-icon"><span class="notion-tag-h">H1</span></span>
+                    <div class="notion-slash-item-info"><div class="notion-slash-item-title">Tiêu đề 1</div><div class="notion-slash-item-desc">Tiêu đề lớn</div></div>
+                    <span class="notion-slash-item-shortcut">#</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="h2">
+                    <span class="notion-slash-item-icon"><span class="notion-tag-h">H2</span></span>
+                    <div class="notion-slash-item-info"><div class="notion-slash-item-title">Tiêu đề 2</div><div class="notion-slash-item-desc">Tiêu đề mục vừa</div></div>
+                    <span class="notion-slash-item-shortcut">##</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="h3">
+                    <span class="notion-slash-item-icon"><span class="notion-tag-h">H3</span></span>
+                    <div class="notion-slash-item-info"><div class="notion-slash-item-title">Tiêu đề 3</div><div class="notion-slash-item-desc">Tiêu đề mục nhỏ</div></div>
+                    <span class="notion-slash-item-shortcut">###</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="ul">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.ul}</span>
+                    <div class="notion-slash-item-info"><div class="notion-slash-item-title">Danh sách chấm</div><div class="notion-slash-item-desc">Liệt kê không thứ tự</div></div>
+                    <span class="notion-slash-item-shortcut">-</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="ol">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.ol}</span>
+                    <div class="notion-slash-item-info"><div class="notion-slash-item-title">Danh sách số</div><div class="notion-slash-item-desc">Liệt kê theo thứ tự từng bước</div></div>
+                    <span class="notion-slash-item-shortcut">1.</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="task">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.task}</span>
+                    <div class="notion-slash-item-info"><div class="notion-slash-item-title">Việc cần làm (To-do)</div><div class="notion-slash-item-desc">Checklist có ô tích hoàn thành</div></div>
+                    <span class="notion-slash-item-shortcut">[]</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="quote">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.quote}</span>
+                    <div class="notion-slash-item-info"><div class="notion-slash-item-title">Trích dẫn (Quote)</div><div class="notion-slash-item-desc">Đoạn văn trích dẫn nổi bật</div></div>
+                    <span class="notion-slash-item-shortcut">&gt;</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="hr">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.hr}</span>
+                    <div class="notion-slash-item-info"><div class="notion-slash-item-title">Đường phân cách (Divider)</div><div class="notion-slash-item-desc">Phân chia các phần bài viết</div></div>
+                    <span class="notion-slash-item-shortcut">---</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="audio">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.audio}</span>
+                    <div class="notion-slash-item-info"><div class="notion-slash-item-title">Khung nghe Audio</div><div class="notion-slash-item-desc">Chèn audio phát âm tiếng Nga</div></div>
+                    <span class="notion-slash-item-shortcut">/audio</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="img">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.image}</span>
+                    <div class="notion-slash-item-info"><div class="notion-slash-item-title">Hình ảnh minh họa</div><div class="notion-slash-item-desc">Chèn ảnh trực quan vào bài đọc</div></div>
+                    <span class="notion-slash-item-shortcut">/anh</span>
+                  </button>
+                  <button type="button" class="notion-slash-item" data-notion-action="code">
+                    <span class="notion-slash-item-icon">${NOTION_ICONS.code}</span>
+                    <div class="notion-slash-item-info"><div class="notion-slash-item-title">Khối mã nguồn (Code)</div><div class="notion-slash-item-desc">Mã hoặc định dạng chuyên biệt</div></div>
+                    <span class="notion-slash-item-shortcut">/code</span>
+                  </button>
                 </div>
               </div>
             </div>
             ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
-          </div>
         `;
       } else {
         const isIdDisabled = !State.isCreating && (f.key === "id" || f.key === "slug");
@@ -2718,7 +2756,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         }
 
         formFieldsHtml += `
-          <div class="p-form-group">
+          <div class="p-field-row">
             <label class="p-label">${esc(f.label)} ${f.required ? '<span class="p-label-req">*</span>' : ""}</label>
             <input type="${f.type === "number" ? "number" : "text"}" class="p-input live-draft-field" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}" value="${escAttr(val)}" ${isIdDisabled ? "readonly style='background:var(--p-surface-hover);cursor:not-allowed'" : ""} />
             ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
@@ -2728,42 +2766,39 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       }
     });
 
-    if (slug === "TOPIC_ARTICLES" && State.activeEditorTab === "structure") {
+    if ((slug === "TOPIC_ARTICLES" || !structureHtml) && State.activeEditorTab === "structure") {
       State.activeEditorTab = "content";
     }
 
-    const structureHtml = slug !== "TOPIC_ARTICLES" ? renderActiveStructureBuilder(slug, draft) : "";
-    const jsonString = JSON.stringify(draft, null, 2);
+    const hasStructure = Boolean(slug !== "TOPIC_ARTICLES" && structureHtml && structureHtml.trim());
+
+    const tabsHtml = hasStructure ? `
+      <!-- Editor Tabs -->
+      <div class="payload-editor-tabs">
+        <button class="payload-editor-tab ${State.activeEditorTab === "content" ? "active" : ""}" data-tab="content" type="button" onclick="window.switchEditorTab('content')">
+          ${window.RusiIcons ? RusiIcons.get("file-text", { size: 14 }) : ""} Nội dung chính
+        </button>
+        <button class="payload-editor-tab ${State.activeEditorTab === "structure" ? "active" : ""}" data-tab="structure" type="button" onclick="window.switchEditorTab('structure')">
+          ${window.RusiIcons ? RusiIcons.get("flashcards-layers", { size: 14 }) : ""} ${
+            slug === "TRKI_BANK" ? "5 Phân hệ thi TRKI &amp; Đáp án" :
+            slug === "VOCABULARIES" ? "Ví dụ câu &amp; Cấu trúc ngữ pháp" :
+            slug === "VOCAB_JARS" ? "Danh sách từ vựng trong lọ" :
+            slug === "LISTENING_LESSONS" ? "Lời thoại chính tả &amp; Trắc nghiệm" :
+            slug === "SPEAKING_SETS" ? "Danh sách câu luyện nói Shadowing" :
+            slug === "WRITING_TASKS" ? "Gợi ý, Từ vựng &amp; AI Rubric" :
+            slug === "PACKAGES" ? "Danh sách quyền lợi gói" :
+            slug === "SHOP_PRODUCTS" ? "Thông số &amp; Quyền lợi sách" :
+            "Cấu trúc dữ liệu chi tiết"
+          }
+        </button>
+      </div>
+    ` : "";
 
     container.innerHTML = `
-      <div class="payload-doc-editor">
+      <div class="payload-doc-editor is-article-studio">
         <!-- Main Content Area -->
         <div class="payload-doc-main">
-          <!-- Editor Tabs -->
-          <div class="payload-editor-tabs">
-            <button class="payload-editor-tab ${State.activeEditorTab === "content" ? "active" : ""}" data-tab="content" type="button" onclick="window.switchEditorTab('content')">
-              ${window.RusiIcons ? RusiIcons.get("file-text", { size: 14 }) : ""} Nội dung chính
-            </button>
-            ${slug !== "TOPIC_ARTICLES" ? `
-            <button class="payload-editor-tab ${State.activeEditorTab === "structure" ? "active" : ""}" data-tab="structure" type="button" onclick="window.switchEditorTab('structure')">
-              ${window.RusiIcons ? RusiIcons.get("flashcards-layers", { size: 14 }) : ""} ${
-                slug === "TRKI_BANK" ? "5 Phân hệ thi TRKI &amp; Đáp án" :
-                slug === "VOCAB_JARS" ? "Danh sách từ vựng trong lọ" :
-                slug === "LISTENING_LESSONS" ? "Lời thoại chính tả &amp; Trắc nghiệm" :
-                slug === "SPEAKING_SETS" ? "Danh sách câu luyện nói Shadowing" :
-                slug === "GRAMMAR_LESSONS" ? "Quy tắc ngữ pháp &amp; Trắc nghiệm" :
-                slug === "WRITING_TASKS" ? "Gợi ý, Từ vựng &amp; AI Rubric" :
-                slug === "PACKAGES" ? "Danh sách quyền lợi gói" :
-                slug === "SHOP_PRODUCTS" ? "Thông số &amp; Quyền lợi sách" :
-                slug === "WRITING_SUBMISSIONS" ? "Chấm bài &amp; Nhận xét" :
-                "Cấu trúc Array Builder"
-              }
-            </button>
-            ` : ""}
-            <button class="payload-editor-tab ${State.activeEditorTab === "json" ? "active" : ""}" data-tab="json" type="button" onclick="window.switchEditorTab('json')">
-              ${window.RusiIcons ? RusiIcons.get("keyboard-cyrillic", { size: 14 }) : ""} JSON / Mã nguồn
-            </button>
-          </div>
+          ${tabsHtml}
 
           <!-- Tab 1: Content Fields -->
           <div id="tabContent" style="display:${State.activeEditorTab === "content" ? "block" : "none"}">
@@ -2772,69 +2807,12 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
             </form>
           </div>
 
-          <!-- Tab 2: Structure / Array Builder (khi không phải TOPIC_ARTICLES) -->
-          ${slug !== "TOPIC_ARTICLES" ? `
+          <!-- Tab 2: Structure / Array Builder (khi có cấu trúc chi tiết) -->
+          ${hasStructure ? `
           <div id="tabStructure" style="display:${State.activeEditorTab === "structure" ? "block" : "none"}">
             ${structureHtml}
           </div>
           ` : ""}
-
-          <!-- Tab 3: JSON / Code Editor -->
-          <div id="tabJson" style="display:${State.activeEditorTab === "json" ? "block" : "none"}">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-              <span style="font-size:12.5px;color:var(--p-text-muted)">Chỉnh sửa JSON trực tiếp với kiểm tra cú pháp thời gian thực:</span>
-              <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.formatJsonEditor()">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} Format JSON</button>
-            </div>
-            <textarea class="payload-code-editor" id="jsonEditorArea">${esc(jsonString)}</textarea>
-          </div>
-        </div>
-
-        <!-- Single Clean Sidebar Focused on CRUD -->
-        <div class="payload-doc-sidebar">
-          <div class="payload-doc-card">
-            <div class="payload-doc-card-title">
-              <span>Hành động &amp; Xuất bản</span>
-              ${State.isCreating ? '<span class="p-pill p-pill-warning">Mới</span>' : '<span class="p-pill p-pill-info">Đang sửa</span>'}
-            </div>
-
-            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">
-              <button class="p-btn p-btn-primary" id="btnSidebarSave" type="button" onclick="window.saveDocument(true)" style="width:100%;padding:10px 14px;font-size:13.5px">
-                ${window.RusiIcons ? RusiIcons.get("save", { size: 15 }) : ""} Lưu thay đổi (Ctrl+S)
-              </button>
-              <button class="p-btn p-btn-secondary" id="btnSidebarSaveClose" type="button" onclick="window.saveDocument(false)" style="width:100%;padding:8px 12px;font-size:13px">
-                ${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""} Lưu &amp; Đóng
-              </button>
-              <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.openLivePreview()" style="width:100%;color:var(--p-primary);margin-top:2px">
-                ${window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : ""} Xem trước (Live Preview)
-              </button>
-            </div>
-
-            <div class="p-meta-summary">
-              <div class="p-meta-row">
-                <span>Mã ID:</span>
-                <code>${esc(draft.id || draft.slug || draft.title || "(Chưa đặt)")}</code>
-              </div>
-              <div class="p-meta-row">
-                <span>Phân hệ:</span>
-                <span style="font-weight:600;color:var(--p-text)">${esc(col.label)}</span>
-              </div>
-              <div class="p-meta-row">
-                <span>Cơ sở dữ liệu:</span>
-                <span style="color:var(--p-success);font-weight:600">● Supabase Cloud</span>
-              </div>
-            </div>
-
-            <div class="p-sidebar-divider"></div>
-
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <a class="p-btn p-btn-ghost p-btn-sm" href="#collection/${slug}">← Quay lại</a>
-              ${!State.isCreating && State.currentDocId ? `
-                <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.deleteDocument('${escAttr(slug)}', '${escAttr(State.currentDocId)}')" style="color:var(--p-danger)">
-                  ${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""} Xóa tài liệu
-                </button>
-              ` : ""}
-            </div>
-          </div>
         </div>
       </div>
     `;
@@ -2869,7 +2847,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         idInp.addEventListener("input", () => { manualChanged = true; });
         titleInp.addEventListener("input", (e) => {
           if (!manualChanged) {
-            const prefix = slug === "TRKI_BANK" ? "trki_" : slug === "VOCAB_JARS" ? "jar_" : (slug.toLowerCase() + "_");
+            const prefix = slug === "TRKI_BANK" ? "trki_" : slug === "VOCAB_JARS" ? "jar_" : (slug === "TOPIC_ARTICLES" ? "" : (slug.toLowerCase() + "_"));
             const generated = prefix + slugify(e.target.value);
             if (generated.length > prefix.length) {
               idInp.value = generated;
@@ -2892,360 +2870,1036 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       };
     }
 
-    // Bind Modern Markdown editors with live preview, synced scrolling & formatting toolbar
+    // =========================================================================
+    // NOTION-STYLE WYSIWYG DOCUMENT CANVAS & TWO-WAY MARKDOWN SYNC
+    // =========================================================================
+    function inlineNodeToMarkdown(node) {
+      if (!node) return "";
+      if (node.nodeType === 3) return node.nodeValue;
+      if (node.nodeType !== 1) return "";
+
+      const tag = node.tagName.toLowerCase();
+      if (node.classList && (
+        node.classList.contains("notion-ui-helper") ||
+        node.classList.contains("notion-table-toolbar") ||
+        node.classList.contains("notion-callout-del") ||
+        node.classList.contains("notion-slash-palette")
+      )) {
+        return "";
+      }
+
+      if (tag === "br") return "\n";
+
+      const inner = Array.from(node.childNodes).map(inlineNodeToMarkdown).join("");
+
+      if (tag === "strong" || tag === "b") return `**${inner.trim()}**`;
+      if (tag === "em" || tag === "i") return `*${inner.trim()}*`;
+      if (tag === "del" || tag === "s" || tag === "strike") return `~~${inner.trim()}~~`;
+      if (tag === "code" && !node.closest("pre")) return `\`${inner.trim()}\``;
+      if (tag === "a") {
+        const href = node.getAttribute("href") || "#";
+        return `[${inner.trim() || href}](${href})`;
+      }
+      if (tag === "img") {
+        const src = node.getAttribute("src") || "";
+        const alt = node.getAttribute("alt") || "";
+        return `![${alt}](${src})`;
+      }
+      if (tag === "mark") return `<mark>${inner.trim()}</mark>`;
+
+      return inner;
+    }
+
+    function blockNodeToMarkdown(node) {
+      if (!node) return "";
+      if (node.nodeType === 3) {
+        const text = node.nodeValue.trim();
+        return text ? `${text}\n\n` : "";
+      }
+      if (node.nodeType !== 1) return "";
+
+      if (node.classList && (
+        node.classList.contains("notion-ui-helper") ||
+        node.classList.contains("notion-slash-palette") ||
+        node.classList.contains("notion-table-toolbar")
+      )) {
+        return "";
+      }
+
+      const tag = node.tagName.toLowerCase();
+
+      // Headings
+      if (tag === "h1") return `# ${inlineNodeToMarkdown(node).trim()}\n\n`;
+      if (tag === "h2") return `## ${inlineNodeToMarkdown(node).trim()}\n\n`;
+      if (tag === "h3") return `### ${inlineNodeToMarkdown(node).trim()}\n\n`;
+      if (tag === "h4") return `#### ${inlineNodeToMarkdown(node).trim()}\n\n`;
+
+      // Horizontal rule
+      if (tag === "hr") return `---\n\n`;
+
+      // Code block
+      if (tag === "pre") {
+        const codeEl = node.querySelector("code");
+        const codeText = codeEl ? codeEl.textContent : node.textContent;
+        return "```\n" + codeText.trim() + "\n```\n\n";
+      }
+
+      // Audio tag
+      if (tag === "audio") {
+        const src = node.getAttribute("src") || "";
+        return `<audio controls src="${src}"></audio>\n\n`;
+      }
+
+      // Callout box
+      if (node.classList && node.classList.contains("rusi-md-callout")) {
+        let alertType = "NOTE";
+        if (node.classList.contains("rusi-md-callout-tip")) alertType = "TIP";
+        else if (node.classList.contains("rusi-md-callout-warning")) alertType = "WARNING";
+        else if (node.classList.contains("rusi-md-callout-important")) alertType = "IMPORTANT";
+        else if (node.classList.contains("rusi-md-callout-caution")) alertType = "CAUTION";
+
+        const textEl = node.querySelector(".rusi-md-callout-text") || node.querySelector(".rusi-md-callout-body") || node;
+        const rawText = inlineNodeToMarkdown(textEl).trim();
+        const lines = rawText.split("\n").map(l => l.trim()).filter(Boolean);
+        if (lines.length === 0) return `> [!${alertType}]\n> \n\n`;
+        const quoteLines = lines.map(l => `> ${l}`).join("\n");
+        return `> [!${alertType}]\n${quoteLines}\n\n`;
+      }
+
+      // Blockquote
+      if (tag === "blockquote") {
+        const rawText = inlineNodeToMarkdown(node).trim();
+        const lines = rawText.split("\n").map(l => l.trim()).filter(Boolean);
+        if (lines.length === 0) return "";
+        const quoteLines = lines.map(l => `> ${l}`).join("\n");
+        return `${quoteLines}\n\n`;
+      }
+
+      // Tables
+      let tableEl = tag === "table" ? node : node.querySelector("table");
+      if (tableEl) {
+        const rows = Array.from(tableEl.querySelectorAll("tr"));
+        if (rows.length === 0) return "";
+        let tableMd = "";
+        let colCount = 0;
+        rows.forEach((tr, rIdx) => {
+          if (tr.classList.contains("notion-ui-helper")) return;
+          const cells = Array.from(tr.querySelectorAll("th, td"));
+          if (cells.length === 0) return;
+          if (rIdx === 0) colCount = cells.length;
+          const rowText = cells.map(c => inlineNodeToMarkdown(c).trim().replace(/\|/g, "\\|")).join(" | ");
+          tableMd += `| ${rowText} |\n`;
+          if (rIdx === 0) {
+            const sep = Array(cells.length || colCount || 3).fill("---").join(" | ");
+            tableMd += `| ${sep} |\n`;
+          }
+        });
+        return `${tableMd}\n`;
+      }
+
+      // Lists
+      if (tag === "ul") {
+        const items = Array.from(node.querySelectorAll(":scope > li"));
+        let listMd = "";
+        items.forEach(li => {
+          const text = inlineNodeToMarkdown(li).trim();
+          if (text) listMd += `- ${text}\n`;
+        });
+        return listMd ? `${listMd}\n` : "";
+      }
+
+      if (tag === "ol") {
+        const items = Array.from(node.querySelectorAll(":scope > li"));
+        let listMd = "";
+        items.forEach((li, idx) => {
+          const text = inlineNodeToMarkdown(li).trim();
+          if (text) listMd += `${idx + 1}. ${text}\n`;
+        });
+        return listMd ? `${listMd}\n` : "";
+      }
+
+      // Standard paragraph or div container
+      if (tag === "p" || tag === "div") {
+        const blockTags = ["H1","H2","H3","H4","P","DIV","TABLE","UL","OL","BLOCKQUOTE","PRE","HR"];
+        const hasBlockChildren = Array.from(node.children).some(child => blockTags.includes(child.tagName));
+        if (hasBlockChildren) {
+          return Array.from(node.childNodes).map(blockNodeToMarkdown).join("");
+        }
+        const pText = inlineNodeToMarkdown(node).trim();
+        return pText ? `${pText}\n\n` : "";
+      }
+
+      const defaultText = inlineNodeToMarkdown(node).trim();
+      return defaultText ? `${defaultText}\n\n` : "";
+    }
+
+    window.domToMarkdown = function(canvasEl) {
+      if (!canvasEl) return "";
+      let md = "";
+      Array.from(canvasEl.childNodes).forEach(node => {
+        md += blockNodeToMarkdown(node);
+      });
+      return md.replace(/\n{3,}/g, "\n\n").trim();
+    };
+
+    // Helper: Enhance visual elements (interactive table controls & callouts)
+    function enhanceCanvasElements(canvas) {
+      if (!canvas) return;
+
+      // Enhance tables ("như bảng là ra bảng liền")
+      canvas.querySelectorAll("table").forEach((tbl) => {
+        tbl.classList.add("rusi-md-table", "notion-interactive-table");
+        tbl.setAttribute("contenteditable", "true");
+
+        // Đảm bảo từng ô có contenteditable
+        tbl.querySelectorAll("th, td").forEach((cell) => {
+          cell.setAttribute("contenteditable", "true");
+        });
+
+        // Bọc trong .notion-table-wrapper nếu chưa có
+        let wrapper = tbl.closest(".notion-table-wrapper");
+        if (!wrapper) {
+          wrapper = document.createElement("div");
+          wrapper.className = "topic-vocab-table-wrapper notion-table-wrapper";
+          wrapper.setAttribute("contenteditable", "false");
+          tbl.parentNode.insertBefore(wrapper, tbl);
+          wrapper.appendChild(tbl);
+        }
+
+        // Gắn thanh công cụ bảng nếu chưa có
+        if (!wrapper.querySelector(".notion-table-toolbar")) {
+          const tb = document.createElement("div");
+          tb.className = "notion-table-toolbar notion-ui-helper";
+          tb.setAttribute("contenteditable", "false");
+          tb.innerHTML = `
+            <button type="button" class="notion-tbl-btn btn-add-row" title="Thêm 1 dòng mới vào cuối bảng">+ Thêm dòng</button>
+            <button type="button" class="notion-tbl-btn btn-add-col" title="Thêm 1 cột mới vào bên phải">+ Thêm cột</button>
+            <button type="button" class="notion-tbl-btn btn-del-row" title="Xóa dòng hiện tại">- Xóa dòng</button>
+            <button type="button" class="notion-tbl-btn btn-del-tbl" title="Xóa toàn bộ bảng này">🗑️ Xóa bảng</button>
+          `;
+          wrapper.insertBefore(tb, wrapper.firstChild);
+        }
+      });
+
+      // Enhance callout blocks
+      canvas.querySelectorAll(".rusi-md-callout").forEach((callout) => {
+        callout.classList.add("notion-callout-block");
+        callout.setAttribute("contenteditable", "false");
+
+        const textEl = callout.querySelector(".rusi-md-callout-text") || callout.querySelector(".rusi-md-callout-body");
+        if (textEl) {
+          textEl.setAttribute("contenteditable", "true");
+        }
+
+        if (!callout.querySelector(".notion-callout-del")) {
+          const delBtn = document.createElement("button");
+          delBtn.type = "button";
+          delBtn.className = "notion-callout-del notion-ui-helper";
+          delBtn.title = "Xóa hộp ghi chú này";
+          delBtn.innerHTML = "✕";
+          callout.appendChild(delBtn);
+        }
+      });
+    }
+
+    // Bind Modern Notion WYSIWYG Markdown editors
     document.querySelectorAll(".p-md-editor-wrap").forEach((wrap) => {
       const fieldKey = wrap.dataset.mdField;
+      const canvas = wrap.querySelector(".notion-canvas");
       const textarea = wrap.querySelector(".live-markdown-input");
-      const previewBody = wrap.querySelector(".p-md-preview-body");
+      const surface = wrap.querySelector(".notion-editor-surface");
+      const rawPane = wrap.querySelector(".notion-raw-pane");
+      const slashPalette = wrap.querySelector(".notion-slash-palette");
+      const slashFilter = wrap.querySelector(".notion-slash-filter");
       const charCount = wrap.querySelector(".md-char-count");
       const wordCount = wrap.querySelector(".md-word-count");
       const lineCount = wrap.querySelector(".md-line-count");
       const readTime = wrap.querySelector(".md-read-time");
-      const panes = wrap.querySelector(".p-md-panes");
 
-      const updatePreview = () => {
+      // =========================================================================
+      // NOTION HISTORY MANAGER (UNDO / REDO STACK)
+      // =========================================================================
+      const historyStack = [];
+      let historyIndex = -1;
+      let isRestoringHistory = false;
+      const MAX_HISTORY = 60;
+
+      const pushHistorySnapshot = () => {
+        if (!canvas || isRestoringHistory) return;
+        const currentHtml = canvas.innerHTML;
+        if (historyIndex >= 0 && historyStack[historyIndex] === currentHtml) return;
+        historyStack.splice(historyIndex + 1);
+        historyStack.push(currentHtml);
+        if (historyStack.length > MAX_HISTORY) {
+          historyStack.shift();
+        } else {
+          historyIndex++;
+        }
+      };
+
+      const doUndo = () => {
+        if (!canvas) return;
+        if (historyIndex > 0) {
+          historyIndex--;
+          isRestoringHistory = true;
+          canvas.innerHTML = historyStack[historyIndex];
+          enhanceCanvasElements(canvas);
+          syncCanvasToMarkdown();
+          isRestoringHistory = false;
+          toast("Đã hoàn tác (Undo)");
+        } else {
+          toast("Không còn thao tác nào để hoàn tác", "info");
+        }
+      };
+
+      const doRedo = () => {
+        if (!canvas) return;
+        if (historyIndex < historyStack.length - 1) {
+          historyIndex++;
+          isRestoringHistory = true;
+          canvas.innerHTML = historyStack[historyIndex];
+          enhanceCanvasElements(canvas);
+          syncCanvasToMarkdown();
+          isRestoringHistory = false;
+          toast("Đã làm lại (Redo)");
+        } else {
+          toast("Không còn thao tác nào để làm lại", "info");
+        }
+      };
+
+      // Khởi tạo các phần tử tương tác trên canvas & lưu snapshot đầu tiên
+      if (canvas) {
+        enhanceCanvasElements(canvas);
+        pushHistorySnapshot();
+      }
+
+      // Hàm đồng bộ canvas sang markdown và State.currentDraft
+      const syncCanvasToMarkdown = (shouldUpdateCounters = true) => {
+        if (!canvas) return "";
+        const md = window.domToMarkdown(canvas);
+        if (textarea) textarea.value = md;
+        State.currentDraft[fieldKey] = md;
+        if (fieldKey === "content_md" || fieldKey === "content" || fieldKey === "content_markdown") {
+          State.currentDraft.content_md = md;
+          State.currentDraft.content = md;
+          State.currentDraft.content_markdown = md;
+        }
+
+        if (shouldUpdateCounters) {
+          const words = md.trim() ? md.trim().split(/\s+/).length : 0;
+          const lines = md.split("\n").length;
+          if (charCount) charCount.textContent = md.length;
+          if (wordCount) wordCount.textContent = words;
+          if (lineCount) lineCount.textContent = lines;
+          if (readTime) readTime.textContent = `~${Math.max(1, Math.ceil(words / 180))} phút đọc`;
+        }
+        return md;
+      };
+
+      // Tự động đồng bộ từ textarea khi người dùng sửa ở tab mã Markdown
+      const syncTextareaToDraft = () => {
         if (!textarea) return;
         const text = textarea.value;
         State.currentDraft[fieldKey] = text;
-        // Tự động đồng bộ các trường content_md, content, content_markdown
         if (fieldKey === "content_md" || fieldKey === "content" || fieldKey === "content_markdown") {
           State.currentDraft.content_md = text;
           State.currentDraft.content = text;
           State.currentDraft.content_markdown = text;
         }
-
         const words = text.trim() ? text.trim().split(/\s+/).length : 0;
         const lines = text.split("\n").length;
         if (charCount) charCount.textContent = text.length;
         if (wordCount) wordCount.textContent = words;
         if (lineCount) lineCount.textContent = lines;
         if (readTime) readTime.textContent = `~${Math.max(1, Math.ceil(words / 180))} phút đọc`;
-
-        if (previewBody && window.RusiMarkdown && typeof window.RusiMarkdown.render === "function") {
-          previewBody.innerHTML = window.RusiMarkdown.render(text);
-        }
       };
 
       if (textarea) {
-        textarea.addEventListener("input", updatePreview);
+        textarea.addEventListener("input", syncTextareaToDraft);
+      }
 
-        // Cuộn đồng bộ giữa khung soạn thảo và bản xem trước
-        let isSyncingEditor = false;
-        let isSyncingPreview = false;
+      // Lắng nghe thay đổi nội dung trực tiếp trên Notion Canvas
+      let inputDebounceTimer = null;
+      let historyDebounceTimer = null;
+      if (canvas) {
+        canvas.addEventListener("input", () => {
+          clearTimeout(inputDebounceTimer);
+          inputDebounceTimer = setTimeout(() => {
+            syncCanvasToMarkdown();
+          }, 150);
 
-        textarea.addEventListener("scroll", () => {
-          if (isSyncingEditor || !panes || !panes.classList.contains("split-mode") || !previewBody) return;
-          isSyncingPreview = true;
-          const maxScrollTop = textarea.scrollHeight - textarea.clientHeight;
-          if (maxScrollTop > 0) {
-            const scrollRatio = textarea.scrollTop / maxScrollTop;
-            const previewMax = previewBody.scrollHeight - previewBody.clientHeight;
-            previewBody.scrollTop = scrollRatio * previewMax;
-          }
-          requestAnimationFrame(() => { isSyncingPreview = false; });
+          clearTimeout(historyDebounceTimer);
+          historyDebounceTimer = setTimeout(() => {
+            pushHistorySnapshot();
+          }, 350);
         });
+      }
 
-        if (previewBody) {
-          previewBody.addEventListener("scroll", () => {
-            if (isSyncingPreview || !panes || !panes.classList.contains("split-mode")) return;
-            isSyncingEditor = true;
-            const maxScrollTop = previewBody.scrollHeight - previewBody.clientHeight;
-            if (maxScrollTop > 0) {
-              const scrollRatio = previewBody.scrollTop / maxScrollTop;
-              const editorMax = textarea.scrollHeight - textarea.clientHeight;
-              textarea.scrollTop = scrollRatio * editorMax;
-            }
-            requestAnimationFrame(() => { isSyncingEditor = false; });
-          });
-        }
+      // Xử lý các thao tác click trực tiếp trên bảng & callout
+      if (canvas) {
+        canvas.addEventListener("click", (e) => {
+          const btnAddRow = e.target.closest(".btn-add-row");
+          const btnAddCol = e.target.closest(".btn-add-col");
+          const btnDelRow = e.target.closest(".btn-del-row");
+          const btnDelTbl = e.target.closest(".btn-del-tbl");
+          const btnDelCallout = e.target.closest(".notion-callout-del");
 
-        // Phím tắt thông minh trong khung soạn thảo
-        textarea.addEventListener("keydown", (e) => {
-          // Tab / Shift+Tab thụt lề
-          if (e.key === "Tab") {
+          if (btnAddRow) {
             e.preventDefault();
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const val = textarea.value;
+            const wrapTbl = btnAddRow.closest(".notion-table-wrapper");
+            if (!wrapTbl) return;
+            const tbl = wrapTbl.querySelector("table");
+            if (!tbl) return;
+            let tbody = tbl.querySelector("tbody");
+            if (!tbody) {
+              tbody = document.createElement("tbody");
+              tbl.appendChild(tbody);
+            }
+            const colCount = (tbl.querySelector("thead tr") ? tbl.querySelector("thead tr").children.length : 4) || 4;
+            const newTr = document.createElement("tr");
+            for (let c = 0; c < colCount; c++) {
+              const td = document.createElement("td");
+              td.setAttribute("contenteditable", "true");
+              td.innerHTML = "&nbsp;";
+              newTr.appendChild(td);
+            }
+            tbody.appendChild(newTr);
+            const firstTd = newTr.querySelector("td");
+            if (firstTd) firstTd.focus();
+            syncCanvasToMarkdown();
+            pushHistorySnapshot();
+            return;
+          }
 
-            if (e.shiftKey) {
-              const before = val.substring(0, start);
-              if (before.endsWith("  ")) {
-                textarea.value = val.substring(0, start - 2) + val.substring(start);
-                textarea.setSelectionRange(start - 2, end - 2);
-              }
+          if (btnAddCol) {
+            e.preventDefault();
+            const wrapTbl = btnAddCol.closest(".notion-table-wrapper");
+            if (!wrapTbl) return;
+            const tbl = wrapTbl.querySelector("table");
+            if (!tbl) return;
+            const theadTr = tbl.querySelector("thead tr");
+            if (theadTr) {
+              const th = document.createElement("th");
+              th.setAttribute("contenteditable", "true");
+              th.textContent = `Cột ${theadTr.children.length + 1}`;
+              theadTr.appendChild(th);
+            }
+            const bodyRows = tbl.querySelectorAll("tbody tr");
+            bodyRows.forEach((tr) => {
+              const td = document.createElement("td");
+              td.setAttribute("contenteditable", "true");
+              td.innerHTML = "&nbsp;";
+              tr.appendChild(td);
+            });
+            syncCanvasToMarkdown();
+            pushHistorySnapshot();
+            return;
+          }
+
+          if (btnDelRow) {
+            e.preventDefault();
+            const wrapTbl = btnDelRow.closest(".notion-table-wrapper");
+            if (!wrapTbl) return;
+            const tbl = wrapTbl.querySelector("table");
+            if (!tbl) return;
+            const tbody = tbl.querySelector("tbody");
+            if (!tbody || tbody.rows.length <= 1) {
+              toast("Bảng cần giữ lại ít nhất 1 dòng nội dung.", "warning");
+              return;
+            }
+            const activeEl = document.activeElement;
+            let targetTr = activeEl && activeEl.closest("tbody tr");
+            if (!targetTr || !tbody.contains(targetTr)) {
+              targetTr = tbody.rows[tbody.rows.length - 1];
+            }
+            if (targetTr) targetTr.remove();
+            syncCanvasToMarkdown();
+            pushHistorySnapshot();
+            return;
+          }
+
+          if (btnDelTbl) {
+            e.preventDefault();
+            const wrapTbl = btnDelTbl.closest(".notion-table-wrapper");
+            if (wrapTbl && confirm("Bạn có chắc chắn muốn xóa toàn bộ bảng này không?")) {
+              wrapTbl.remove();
+              syncCanvasToMarkdown();
+              pushHistorySnapshot();
+            }
+            return;
+          }
+
+          if (btnDelCallout) {
+            e.preventDefault();
+            const callout = btnDelCallout.closest(".rusi-md-callout");
+            if (callout) {
+              callout.remove();
+              syncCanvasToMarkdown();
+              pushHistorySnapshot();
+            }
+            return;
+          }
+        });
+      }
+
+      // Click trên notion-doc-paper hoặc notion-editor-surface để focus vào cuối canvas
+      const paper = wrap.querySelector(".notion-doc-paper");
+      if (paper && canvas) {
+        paper.addEventListener("click", (e) => {
+          if (e.target.closest("button, a, input, select, textarea, .notion-ui-helper, .notion-table-toolbar, .notion-callout-del, table, th, td")) {
+            return;
+          }
+          if (e.target === paper || e.target === surface || e.target === canvas) {
+            canvas.focus();
+            const lastChild = canvas.lastElementChild;
+            const sel = window.getSelection();
+            const range = document.createRange();
+            if (!lastChild) {
+              const p = document.createElement("p");
+              p.innerHTML = "<br>";
+              canvas.appendChild(p);
+              range.selectNodeContents(p);
+              range.collapse(false);
+            } else if (lastChild.classList.contains("notion-table-wrapper") || lastChild.classList.contains("notion-callout-block") || lastChild.tagName === "PRE" || lastChild.tagName === "HR") {
+              const p = document.createElement("p");
+              p.innerHTML = "<br>";
+              canvas.appendChild(p);
+              range.selectNodeContents(p);
+              range.collapse(false);
             } else {
-              textarea.value = val.substring(0, start) + "  " + val.substring(end);
-              textarea.setSelectionRange(start + 2, start + 2);
+              range.selectNodeContents(lastChild);
+              range.collapse(false);
             }
-            updatePreview();
-            return;
-          }
-
-          // Ctrl/Cmd + B => Bold
-          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
-            e.preventDefault();
-            insertSnippet("**", "**", "in đậm");
-            return;
-          }
-
-          // Ctrl/Cmd + I => Italic
-          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "i") {
-            e.preventDefault();
-            insertSnippet("*", "*", "in nghiêng");
-            return;
-          }
-
-          // Ctrl/Cmd + K => Link
-          if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
-            e.preventDefault();
-            insertSnippet("[", "](https://rusitrki.com)", "tiêu đề liên kết");
-            return;
-          }
-
-          // Ctrl/Cmd + Shift + S => Trọng âm tiếng Nga
-          if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "s") {
-            e.preventDefault();
-            insertRussianChar("\u0301");
-            return;
-          }
-
-          // Esc => Thoát chế độ toàn màn hình & đóng menu Notion
-          if (e.key === "Escape") {
-            hideAllNotionPopovers();
-            if (wrap.classList.contains("fullscreen-mode")) {
-              e.preventDefault();
-              wrap.classList.remove("fullscreen-mode");
-              const zenBtn = wrap.querySelector(".p-md-zen-btn");
-              if (zenBtn) zenBtn.innerHTML = "⛶ Toàn màn hình";
+            if (sel) {
+              sel.removeAllRanges();
+              sel.addRange(range);
             }
-            return;
           }
         });
       }
 
-      // Notion Popovers & Dropdowns
-      const blockMenu = wrap.querySelector(".notion-block-menu");
-      const turnIntoMenu = wrap.querySelector(".notion-turninto-menu");
-      const stressMenu = wrap.querySelector(".notion-stress-menu");
-      const calloutMenu = wrap.querySelector(".notion-callout-menu");
-      const tableMenu = wrap.querySelector(".notion-table-menu");
+      // Xử lý phím tắt trong Canvas (Tab bảng, Esc, Enter Slash, Ctrl+Z, Ctrl+Y)
+      const handleEditorKeydown = (e) => {
+        // Ctrl/Cmd + Z => Undo (khi không giữ Shift)
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z") {
+          if (canvas && (!rawPane || rawPane.style.display !== "block")) {
+            e.preventDefault();
+            doUndo();
+            return;
+          }
+        }
 
-      const btnInsert = wrap.querySelector(".btn-notion-insert");
-      const btnTurnInto = wrap.querySelector(".btn-notion-turninto");
-      const btnStress = wrap.querySelector(".btn-notion-stress");
-      const btnCallout = wrap.querySelector(".btn-notion-callout");
-      const btnTable = wrap.querySelector(".btn-notion-table");
+        // Ctrl/Cmd + Y hoặc Ctrl/Cmd + Shift + Z => Redo
+        if (((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "y") ||
+            ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "z")) {
+          if (canvas && (!rawPane || rawPane.style.display !== "block")) {
+            e.preventDefault();
+            doRedo();
+            return;
+          }
+        }
 
-      const hideAllNotionPopovers = () => {
-        if (blockMenu) blockMenu.style.display = "none";
-        if (turnIntoMenu) turnIntoMenu.style.display = "none";
-        if (stressMenu) stressMenu.style.display = "none";
-        if (calloutMenu) calloutMenu.style.display = "none";
-        if (tableMenu) tableMenu.style.display = "none";
-      };
-
-      const toggleMenu = (menu) => {
-        if (!menu) return;
-        const isShown = menu.style.display === "block";
-        hideAllNotionPopovers();
-        if (!isShown) menu.style.display = "block";
-      };
-
-      if (btnInsert && blockMenu) {
-        btnInsert.onclick = (e) => { e.stopPropagation(); toggleMenu(blockMenu); };
-      }
-      if (btnTurnInto && turnIntoMenu) {
-        btnTurnInto.onclick = (e) => { e.stopPropagation(); toggleMenu(turnIntoMenu); };
-      }
-      if (btnStress && stressMenu) {
-        btnStress.onclick = (e) => { e.stopPropagation(); toggleMenu(stressMenu); };
-      }
-      if (btnCallout && calloutMenu) {
-        btnCallout.onclick = (e) => { e.stopPropagation(); toggleMenu(calloutMenu); };
-      }
-      if (btnTable && tableMenu) {
-        btnTable.onclick = (e) => { e.stopPropagation(); toggleMenu(tableMenu); };
-      }
-
-      // Notion Slash Command (/) tracking
-      let isSlashActive = false;
-      let slashPos = -1;
-
-      if (textarea) {
-        textarea.addEventListener("input", () => {
-          const val = textarea.value;
-          const cursor = textarea.selectionStart;
-          if (cursor > 0 && val[cursor - 1] === "/") {
-            const charBefore = cursor >= 2 ? val[cursor - 2] : "\n";
-            if (charBefore === "\n" || charBefore === " " || cursor === 1) {
-              isSlashActive = true;
-              slashPos = cursor - 1;
-              if (blockMenu) {
-                hideAllNotionPopovers();
-                blockMenu.style.display = "block";
+        // Tab chuyển ô trong bảng và tự thêm dòng ở ô cuối cùng
+        if (e.key === "Tab") {
+          const cell = document.activeElement && document.activeElement.closest("th, td");
+          if (cell) {
+            const table = cell.closest("table");
+            if (table) {
+              e.preventDefault();
+              const allCells = Array.from(table.querySelectorAll("th, td"));
+              const currIdx = allCells.indexOf(cell);
+              if (!e.shiftKey) {
+                if (currIdx < allCells.length - 1) {
+                  allCells[currIdx + 1].focus();
+                } else {
+                  // Auto-append new row when pressing Tab on the last cell!
+                  const wrapTbl = table.closest(".notion-table-wrapper");
+                  const btnAdd = wrapTbl ? wrapTbl.querySelector(".btn-add-row") : null;
+                  if (btnAdd) btnAdd.click();
+                }
+              } else {
+                if (currIdx > 0) {
+                  allCells[currIdx - 1].focus();
+                }
               }
               return;
             }
           }
-          if (isSlashActive) {
-            if (slashPos < 0 || val[slashPos] !== "/" || cursor < slashPos) {
-              isSlashActive = false;
-              slashPos = -1;
-              hideAllNotionPopovers();
+        }
+
+        // Phím tắt Ctrl/Cmd + B / I / Shift+S
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "b") {
+          e.preventDefault();
+          document.execCommand("bold");
+          syncCanvasToMarkdown();
+          pushHistorySnapshot();
+          return;
+        }
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "i") {
+          e.preventDefault();
+          document.execCommand("italic");
+          syncCanvasToMarkdown();
+          pushHistorySnapshot();
+          return;
+        }
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === "s") {
+          e.preventDefault();
+          insertRussianChar("\u0301");
+          return;
+        }
+
+        // Phím Esc đóng menu và thoát Zen mode
+        if (e.key === "Escape") {
+          hideSlashPalette();
+          hideAllNotionPopovers();
+          if (wrap.classList.contains("fullscreen-mode")) {
+            e.preventDefault();
+            wrap.classList.remove("fullscreen-mode");
+            const zenBtn = wrap.querySelector(".p-md-zen-btn, .notion-zen-btn");
+            if (zenBtn) zenBtn.innerHTML = NOTION_ICONS.zen;
+          }
+          return;
+        }
+
+        // Điều hướng phím mũi tên và Enter khi menu Slash đang mở
+        if (slashPalette && slashPalette.style.display !== "none") {
+          const visibleItems = Array.from(slashPalette.querySelectorAll(".notion-slash-item")).filter(it => it.style.display !== "none");
+          let activeIdx = visibleItems.findIndex(it => it.classList.contains("active"));
+
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            if (activeIdx < visibleItems.length - 1) activeIdx++;
+            else activeIdx = 0;
+            visibleItems.forEach((it, i) => it.classList.toggle("active", i === activeIdx));
+            if (visibleItems[activeIdx]) visibleItems[activeIdx].scrollIntoView({ block: "nearest" });
+            return;
+          }
+          if (e.key === "ArrowUp") {
+            e.preventDefault();
+            if (activeIdx > 0) activeIdx--;
+            else activeIdx = visibleItems.length - 1;
+            visibleItems.forEach((it, i) => it.classList.toggle("active", i === activeIdx));
+            if (visibleItems[activeIdx]) visibleItems[activeIdx].scrollIntoView({ block: "nearest" });
+            return;
+          }
+          if (e.key === "Enter") {
+            e.preventDefault();
+            const selectedItem = visibleItems[activeIdx] || visibleItems[0];
+            if (selectedItem) {
+              executeBlockAction(selectedItem.dataset.notionAction);
+            }
+            return;
+          }
+        }
+      };
+
+      if (canvas) {
+        canvas.addEventListener("keydown", handleEditorKeydown);
+      }
+      wrap.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "z" || e.key.toLowerCase() === "y")) {
+          handleEditorKeydown(e);
+        }
+      });
+
+      // Gắn sự kiện các nút Hoàn tác & Làm lại trên toolbar
+      const btnUndo = wrap.querySelector(".btn-notion-undo");
+      const btnRedo = wrap.querySelector(".btn-notion-redo");
+      if (btnUndo) btnUndo.onclick = () => doUndo();
+      if (btnRedo) btnRedo.onclick = () => doRedo();
+
+      // Xử lý Floating Slash Command Menu (Gõ '/' là ra ngay)
+      let slashTextNode = null;
+      let slashCharIndex = -1;
+
+      const hideSlashPalette = () => {
+        if (!slashPalette) return;
+        slashPalette.style.display = "none";
+        if (slashFilter) slashFilter.value = "";
+      };
+
+      const showSlashPaletteNearCursor = (range, query = "") => {
+        if (!slashPalette) return;
+
+        let rect = null;
+        if (slashTextNode && slashCharIndex >= 0) {
+          try {
+            const charRange = document.createRange();
+            charRange.setStart(slashTextNode, slashCharIndex);
+            charRange.setEnd(slashTextNode, Math.min(slashTextNode.nodeValue.length, slashCharIndex + 1));
+            const cr = charRange.getBoundingClientRect();
+            if (cr && (cr.width > 0 || cr.height > 0 || cr.top > 0 || cr.left > 0)) {
+              rect = cr;
+            }
+          } catch (err) {}
+        }
+        if (!rect || (rect.width === 0 && rect.height === 0 && rect.top === 0 && rect.left === 0)) {
+          const r = range.getBoundingClientRect();
+          if (r && (r.width > 0 || r.height > 0 || r.top > 0 || r.left > 0)) {
+            rect = r;
+          }
+        }
+        if (!rect || (rect.width === 0 && rect.height === 0 && rect.top === 0 && rect.left === 0)) {
+          if (range.startContainer && range.startContainer.parentElement) {
+            rect = range.startContainer.parentElement.getBoundingClientRect();
+          }
+        }
+
+        const wrapRect = wrap.getBoundingClientRect();
+        if (!rect || (rect.top === 0 && rect.bottom === 0)) {
+          rect = { top: wrapRect.top + 50, bottom: wrapRect.top + 70, left: wrapRect.left + 20, right: wrapRect.left + 40, width: 20, height: 20 };
+        }
+
+        const paletteWidth = 330;
+        const paletteHeight = 360;
+
+        let top = (rect.bottom - wrapRect.top + 6);
+        let left = (rect.left - wrapRect.left);
+
+        // If near bottom of browser viewport, flip above cursor
+        const spaceBelow = window.innerHeight - rect.bottom;
+        if (spaceBelow < 340 && rect.top > 320) {
+          top = Math.max(10, rect.top - wrapRect.top - paletteHeight - 6);
+        }
+
+        // Ensure inside wrap bounds
+        if (left + paletteWidth > wrapRect.width - 16) {
+          left = Math.max(12, wrapRect.width - paletteWidth - 16);
+        }
+        if (left < 12) left = 12;
+
+        slashPalette.style.top = `${Math.round(top)}px`;
+        slashPalette.style.left = `${Math.round(left)}px`;
+        slashPalette.style.display = "flex";
+
+        filterSlashItems(query);
+      };
+
+      const filterSlashItems = (query = "") => {
+        if (!slashPalette) return;
+        const cleanQ = query.trim().toLowerCase();
+        const items = slashPalette.querySelectorAll(".notion-slash-item");
+        let hasMatch = false;
+
+        items.forEach((it, idx) => {
+          const title = (it.querySelector(".notion-slash-item-title")?.textContent || "").toLowerCase();
+          const desc = (it.querySelector(".notion-slash-item-desc")?.textContent || "").toLowerCase();
+          const shortcut = (it.querySelector(".notion-slash-item-shortcut")?.textContent || "").toLowerCase();
+          const action = (it.dataset.notionAction || "").toLowerCase();
+
+          const isMatch = !cleanQ || title.includes(cleanQ) || desc.includes(cleanQ) || shortcut.includes(cleanQ) || action.includes(cleanQ);
+          it.style.display = isMatch ? "flex" : "none";
+          if (isMatch && !hasMatch) {
+            it.classList.add("active");
+            hasMatch = true;
+          } else {
+            it.classList.remove("active");
+          }
+        });
+
+        // Ẩn nhóm nếu không có item nào hiển thị
+        slashPalette.querySelectorAll(".notion-menu-group-label").forEach((lbl) => {
+          let next = lbl.nextElementSibling;
+          let groupHasVisible = false;
+          while (next && !next.classList.contains("notion-menu-group-label")) {
+            if (next.classList.contains("notion-slash-item") && next.style.display !== "none") {
+              groupHasVisible = true;
+              break;
+            }
+            next = next.nextElementSibling;
+          }
+          lbl.style.display = groupHasVisible ? "block" : "none";
+        });
+      };
+
+      // Bắt sự kiện gõ '/' trong canvas
+      if (canvas) {
+        canvas.addEventListener("keyup", (e) => {
+          if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === "Escape") return;
+          const sel = window.getSelection();
+          if (!sel || sel.rangeCount === 0) return;
+          const range = sel.getRangeAt(0);
+          const node = range.startContainer;
+
+          if (node.nodeType === 3) {
+            const text = node.nodeValue;
+            const offset = range.startOffset;
+            const lastSlash = text.lastIndexOf("/", offset - 1);
+            if (lastSlash !== -1) {
+              const charBefore = lastSlash > 0 ? text[lastSlash - 1] : "\n";
+              if (charBefore === " " || charBefore === "\n" || charBefore === "\u00A0" || lastSlash === 0) {
+                slashTextNode = node;
+                slashCharIndex = lastSlash;
+                const query = text.substring(lastSlash + 1, offset);
+                showSlashPaletteNearCursor(range, query);
+                return;
+              }
             }
           }
+          hideSlashPalette();
         });
       }
 
-      const onDocClick = (e) => {
-        if (!wrap.contains(e.target)) {
-          hideAllNotionPopovers();
-        }
-      };
-      document.addEventListener("click", onDocClick);
-
-      // Notion "Turn Into..." logic
-      const turnCurrentLineInto = (type) => {
-        if (!textarea) return;
-        const start = textarea.selectionStart;
-        const val = textarea.value;
-        const lineStart = val.lastIndexOf("\n", start - 1) + 1;
-        let lineEnd = val.indexOf("\n", start);
-        if (lineEnd === -1) lineEnd = val.length;
-
-        const currentLine = val.substring(lineStart, lineEnd);
-        const cleanLine = currentLine
-          .replace(/^#{1,6}\s+/, "")
-          .replace(/^>\s*(\[!.*\]\s*)?/, "")
-          .replace(/^(\d+\.|[-*•]|\-\s*\[\s*\])\s+/, "")
-          .trim();
-
-        let newLine = cleanLine;
-        if (type === "h1") newLine = "# " + cleanLine;
-        else if (type === "h2") newLine = "## " + cleanLine;
-        else if (type === "h3") newLine = "### " + cleanLine;
-        else if (type === "ul") newLine = "- " + cleanLine;
-        else if (type === "ol") newLine = "1. " + cleanLine;
-        else if (type === "task") newLine = "- [ ] " + cleanLine;
-        else if (type === "quote") newLine = "> " + cleanLine;
-        else if (type === "tip") newLine = "> [!TIP]\n> " + cleanLine;
-        else if (type === "note") newLine = "> [!NOTE]\n> " + cleanLine;
-        else if (type === "p") newLine = cleanLine;
-
-        textarea.value = val.substring(0, lineStart) + newLine + val.substring(lineEnd);
-        const newPos = lineStart + newLine.length;
-        textarea.setSelectionRange(newPos, newPos);
-        textarea.focus();
-        updatePreview();
-      };
-
-      // Mode switch buttons (Soạn thảo, Chia đôi, Xem trước, Zen)
-      wrap.querySelectorAll(".p-md-mode-btn[data-mode], .notion-view-btn[data-mode]").forEach((btn) => {
-        btn.onclick = () => {
-          wrap.querySelectorAll(".p-md-mode-btn[data-mode], .notion-view-btn[data-mode]").forEach((b) => b.classList.remove("active"));
-          btn.classList.add("active");
-          const mode = btn.dataset.mode;
-          panes.classList.remove("split-mode", "edit-only", "preview-only");
-          if (mode === "edit") panes.classList.add("edit-only");
-          else if (mode === "preview") panes.classList.add("preview-only");
-          else panes.classList.add("split-mode");
-        };
-      });
-
-      // Chế độ toàn màn hình không xao nhãng (Zen Mode)
-      const zenBtn = wrap.querySelector(".p-md-zen-btn, .notion-zen-btn");
-      if (zenBtn) {
-        zenBtn.onclick = () => {
-          const isFs = wrap.classList.toggle("fullscreen-mode");
-          zenBtn.innerHTML = isFs ? NOTION_ICONS.zenExit : NOTION_ICONS.zen;
-          if (isFs) {
-            toast("Đã bật Chế độ toàn màn hình (Nhấn Esc hoặc bấm nút để thoát).");
-          }
-        };
+      // Xử lý ô tìm kiếm trong slash palette nếu gõ trực tiếp vào
+      if (slashFilter) {
+        slashFilter.addEventListener("input", () => {
+          filterSlashItems(slashFilter.value);
+        });
       }
 
-      // Chèn ký tự / trọng âm tiếng Nga vào vị trí con trỏ
-      const insertRussianChar = (charVal) => {
-        if (!textarea) return;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const original = textarea.value;
-
-        if (charVal === "\u0301" || charVal === "&#769;") {
-          const combiningAccent = "\u0301";
-          if (start !== end) {
-            const selected = original.substring(start, end);
-            textarea.value = original.substring(0, start) + selected + combiningAccent + original.substring(end);
-            textarea.setSelectionRange(end + 1, end + 1);
-          } else {
-            textarea.value = original.substring(0, start) + combiningAccent + original.substring(end);
-            textarea.setSelectionRange(start + 1, start + 1);
+      // Chèn khối visual HTML trực tiếp vào vị trí con trỏ ("như bảng là ra bảng liền")
+      const insertVisualBlockHtml = (html) => {
+        // Dọn dẹp ký tự '/' và từ khóa tìm kiếm đã gõ
+        if (slashTextNode && slashCharIndex >= 0) {
+          try {
+            const sel = window.getSelection();
+            const currOffset = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).startOffset : slashCharIndex + 1;
+            const original = slashTextNode.nodeValue;
+            slashTextNode.nodeValue = original.substring(0, slashCharIndex) + original.substring(currOffset);
+          } catch (err) {
+            // fallback
           }
-        } else {
-          textarea.value = original.substring(0, start) + charVal + original.substring(end);
-          const newCursor = start + charVal.length;
-          textarea.setSelectionRange(newCursor, newCursor);
         }
-        textarea.focus();
-        updatePreview();
+        hideSlashPalette();
+        slashTextNode = null;
+        slashCharIndex = -1;
+
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = html;
+        const frag = document.createDocumentFragment();
+        let firstFocusable = null;
+
+        while (tempDiv.firstChild) {
+          const child = tempDiv.firstChild;
+          frag.appendChild(child);
+          if (!firstFocusable && child.nodeType === 1) {
+            firstFocusable = child.querySelector("th, td, .rusi-md-callout-text, p, h1, h2, h3, li") || child;
+          }
+        }
+
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0 && canvas.contains(sel.getRangeAt(0).commonAncestorContainer)) {
+          const range = sel.getRangeAt(0);
+          range.collapse(false);
+          range.insertNode(frag);
+        } else {
+          canvas.appendChild(frag);
+        }
+
+        enhanceCanvasElements(canvas);
+
+        if (firstFocusable) {
+          firstFocusable.focus();
+        }
+        syncCanvasToMarkdown();
+        pushHistorySnapshot();
       };
 
-      wrap.querySelectorAll("[data-ru-char]").forEach((btn) => {
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          insertRussianChar(btn.dataset.ruChar);
-        };
-      });
+      // Hành động chèn khối tương tác
+      const executeBlockAction = (act) => {
+        hideAllNotionPopovers();
+        hideSlashPalette();
 
-      // Insert markdown syntax helper
-      const insertSnippet = (prefix, suffix, defaultTxt) => {
-        if (!textarea) return;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const val = textarea.value;
-        const selected = val.substring(start, end) || defaultTxt;
-        const replacement = prefix + selected + suffix;
-        textarea.value = val.substring(0, start) + replacement + val.substring(end);
-        const newCursor = start + prefix.length + selected.length;
-        textarea.setSelectionRange(newCursor, newCursor);
-        textarea.focus();
-        updatePreview();
-      };
+        if (act === "table-vocab") {
+          // Bảng từ vựng 4 cột song ngữ tiếng Nga có trọng âm ("như bảng là ra bảng liền")
+          const vocabTblHtml = `
+            <div class="topic-vocab-table-wrapper notion-table-wrapper" contenteditable="false">
+              <div class="notion-table-toolbar notion-ui-helper" contenteditable="false">
+                <button type="button" class="notion-tbl-btn btn-add-row" title="Thêm 1 dòng mới vào cuối bảng">+ Thêm dòng</button>
+                <button type="button" class="notion-tbl-btn btn-add-col" title="Thêm 1 cột mới vào bên phải">+ Thêm cột</button>
+                <button type="button" class="notion-tbl-btn btn-del-row" title="Xóa dòng hiện tại">- Xóa dòng</button>
+                <button type="button" class="notion-tbl-btn btn-del-tbl" title="Xóa toàn bộ bảng">🗑️ Xóa bảng</button>
+              </div>
+              <table class="topic-vocab-table rusi-md-table notion-interactive-table" contenteditable="true">
+                <thead>
+                  <tr>
+                    <th contenteditable="true">Từ tiếng Nga (Trọng âm)</th>
+                    <th contenteditable="true">Từ loại</th>
+                    <th contenteditable="true">Nghĩa tiếng Việt</th>
+                    <th contenteditable="true">Câu ví dụ song ngữ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td contenteditable="true"><strong>студе́нт</strong></td>
+                    <td contenteditable="true">сущ. м.</td>
+                    <td contenteditable="true">sinh viên nam</td>
+                    <td contenteditable="true">Он ру́сский студе́нт.</td>
+                  </tr>
+                  <tr>
+                    <td contenteditable="true"><strong>кни́га</strong></td>
+                    <td contenteditable="true">сущ. ж.</td>
+                    <td contenteditable="true">quyển sách</td>
+                    <td contenteditable="true">Я чита́ю интере́сную кни́гу.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="rusi-md-p"><br></p>
+          `;
+          insertVisualBlockHtml(vocabTblHtml);
+          toast("Đã chèn bảng từ vựng 4 cột tương tác trực tiếp!");
+          return;
+        }
 
-      // Xử lý action chung (Toolbar buttons & Notion Menu Items)
-      const triggerAction = (act) => {
-        if (act === "bold") insertSnippet("**", "**", "in đậm");
-        else if (act === "italic") insertSnippet("*", "*", "in nghiêng");
-        else if (act === "strike") insertSnippet("~~", "~~", "văn bản gạch ngang");
-        else if (act === "mark") insertSnippet("<mark>", "</mark>", "văn bản nổi bật");
-        else if (act === "code-inline") insertSnippet("`", "`", "mã nguồn");
-        else if (act === "h1") insertSnippet("\n# ", "\n", "Tiêu đề chính bài viết");
-        else if (act === "h2") insertSnippet("\n## ", "\n", "Tiêu đề phần");
-        else if (act === "h3") insertSnippet("\n### ", "\n", "Tiêu đề mục con");
-        else if (act === "ul") insertSnippet("\n- ", "\n", "Mục danh sách");
-        else if (act === "ol") insertSnippet("\n1. ", "\n", "Bước thực hiện");
-        else if (act === "task") insertSnippet("\n- [ ] ", "\n", "Mục công việc cần kiểm tra");
-        else if (act === "quote") insertSnippet("\n> ", "\n", "Đoạn trích dẫn văn bản");
-        else if (act === "tip") insertSnippet("\n> [!TIP]\n> ", "\n", "Ghi nhớ mẹo học tiếng Nga tại đây");
-        else if (act === "note") insertSnippet("\n> [!NOTE]\n> ", "\n", "Ghi chú bối cảnh và giải thích thêm");
-        else if (act === "important") insertSnippet("\n> [!IMPORTANT]\n> ", "\n", "Kiến thức trọng tâm bắt buộc ghi nhớ");
-        else if (act === "warning") insertSnippet("\n> [!WARNING]\n> ", "\n", "Cảnh báo ngoại lệ và bẫy hay gặp trong đề thi");
-        else if (act === "ru-quote") insertSnippet("«", "»", "cụm từ tiếng Nga");
-        else if (act === "table") {
-          const tbl = `\n| Cột 1 | Cột 2 | Cột 3 |\n| --- | --- | --- |\n| Dòng 1 | Nội dung A | Ví dụ minh họa |\n| Dòng 2 | Nội dung B | Ví dụ minh họa |\n`;
-          insertSnippet(tbl, "", "");
-        } else if (act === "table-vocab") {
-          const vocabTbl = `\n| Từ tiếng Nga (Trọng âm) | Từ loại | Nghĩa tiếng Việt | Câu ví dụ song ngữ |\n| --- | --- | --- | --- |\n| **студе́нт** | сущ. м. | sinh viên nam | Он ру́сский студе́нт. |\n| **кни́га** | сущ. ж. | quyển sách | Я чита́ю интере́сную кни́гу. |\n| **изуча́ть** | глаг. | học tập, nghiên cứu | Мы изуча́ем ру́сский язы́к. |\n`;
-          insertSnippet(vocabTbl, "", "");
-        } else if (act === "code") insertSnippet("\n```\n", "\n```\n", "console.log('RUSI TRKI');");
-        else if (act === "link") insertSnippet("[", "](https://rusitrki.com)", "Tiêu đề liên kết");
-        else if (act === "img") insertSnippet("![", "](assets/red-square.jpg)", "Mô tả hình ảnh");
-        else if (act === "audio") insertSnippet('\n<audio controls src="', '"></audio>\n', "assets/audio/lesson.mp3");
-        else if (act === "hr") insertSnippet("\n---\n", "", "");
-        else if (act === "template-article") {
-          if (textarea.value.trim() && !confirm("Chèn mẫu bài học TRKI sẽ thêm bố cục chuẩn vào bài viết. Bạn có muốn tiếp tục?")) return;
-          const template = `# Bài học: Giao tiếp & Đời sống thực tế tại Nga
+        if (act === "table") {
+          // Bảng tiêu chuẩn 3x3
+          const tblHtml = `
+            <div class="topic-vocab-table-wrapper notion-table-wrapper" contenteditable="false">
+              <div class="notion-table-toolbar notion-ui-helper" contenteditable="false">
+                <button type="button" class="notion-tbl-btn btn-add-row" title="Thêm dòng">+ Thêm dòng</button>
+                <button type="button" class="notion-tbl-btn btn-add-col" title="Thêm cột">+ Thêm cột</button>
+                <button type="button" class="notion-tbl-btn btn-del-row" title="Xóa dòng">- Xóa dòng</button>
+                <button type="button" class="notion-tbl-btn btn-del-tbl" title="Xóa bảng">🗑️ Xóa bảng</button>
+              </div>
+              <table class="topic-vocab-table rusi-md-table notion-interactive-table" contenteditable="true">
+                <thead>
+                  <tr>
+                    <th contenteditable="true">Cột 1</th>
+                    <th contenteditable="true">Cột 2</th>
+                    <th contenteditable="true">Cột 3</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td contenteditable="true">Dòng 1</td>
+                    <td contenteditable="true">Nội dung A</td>
+                    <td contenteditable="true">Ví dụ minh họa</td>
+                  </tr>
+                  <tr>
+                    <td contenteditable="true">Dòng 2</td>
+                    <td contenteditable="true">Nội dung B</td>
+                    <td contenteditable="true">Ví dụ minh họa</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="rusi-md-p"><br></p>
+          `;
+          insertVisualBlockHtml(tblHtml);
+          return;
+        }
+
+        if (act === "tip") {
+          insertVisualBlockHtml(`
+            <div class="rusi-md-callout rusi-md-callout-tip notion-callout-block" contenteditable="false">
+              <span class="rusi-md-callout-icon">💡</span>
+              <div class="rusi-md-callout-body">
+                <div class="rusi-md-callout-title">Mẹo ghi nhớ</div>
+                <div class="rusi-md-callout-text" contenteditable="true">Ghi nhớ mẹo học hoặc cấu trúc tiếng Nga tại đây...</div>
+              </div>
+              <button type="button" class="notion-callout-del notion-ui-helper" title="Xóa hộp này">✕</button>
+            </div>
+            <p class="rusi-md-p"><br></p>
+          `);
+          return;
+        }
+
+        if (act === "note") {
+          insertVisualBlockHtml(`
+            <div class="rusi-md-callout rusi-md-callout-note notion-callout-block" contenteditable="false">
+              <span class="rusi-md-callout-icon">📌</span>
+              <div class="rusi-md-callout-body">
+                <div class="rusi-md-callout-title">Ghi chú bối cảnh</div>
+                <div class="rusi-md-callout-text" contenteditable="true">Giải thích văn hóa và ngữ cảnh giao tiếp tại đây...</div>
+              </div>
+              <button type="button" class="notion-callout-del notion-ui-helper" title="Xóa hộp này">✕</button>
+            </div>
+            <p class="rusi-md-p"><br></p>
+          `);
+          return;
+        }
+
+        if (act === "important") {
+          insertVisualBlockHtml(`
+            <div class="rusi-md-callout rusi-md-callout-important notion-callout-block" contenteditable="false">
+              <span class="rusi-md-callout-icon">⚡</span>
+              <div class="rusi-md-callout-body">
+                <div class="rusi-md-callout-title">Lưu ý trọng tâm</div>
+                <div class="rusi-md-callout-text" contenteditable="true">Kiến thức quan trọng thi cử cần nhớ tại đây...</div>
+              </div>
+              <button type="button" class="notion-callout-del notion-ui-helper" title="Xóa hộp này">✕</button>
+            </div>
+            <p class="rusi-md-p"><br></p>
+          `);
+          return;
+        }
+
+        if (act === "warning") {
+          insertVisualBlockHtml(`
+            <div class="rusi-md-callout rusi-md-callout-warning notion-callout-block" contenteditable="false">
+              <span class="rusi-md-callout-icon">⚠️</span>
+              <div class="rusi-md-callout-body">
+                <div class="rusi-md-callout-title">Cảnh báo bẫy thi</div>
+                <div class="rusi-md-callout-text" contenteditable="true">Lỗi người học hay sai trong bài kiểm tra...</div>
+              </div>
+              <button type="button" class="notion-callout-del notion-ui-helper" title="Xóa hộp này">✕</button>
+            </div>
+            <p class="rusi-md-p"><br></p>
+          `);
+          return;
+        }
+
+        if (act === "dialogue") {
+          insertVisualBlockHtml(`
+            <p class="rusi-md-p"><strong>Анна</strong>: Приве́т! Как твои́ дела́? <em>(Chào bạn! Bạn khỏe không?)</em></p>
+            <p class="rusi-md-p"><strong>Макси́м</strong>: Всё отли́чно, спаси́бо! А у тебя́? <em>(Mọi thứ đều tuyệt, cảm ơn bạn! Còn bạn?)</em></p>
+            <p class="rusi-md-p"><br></p>
+          `);
+          return;
+        }
+
+        if (act === "h1") {
+          insertVisualBlockHtml(`<h1 class="rusi-md-h1">Tiêu đề chính</h1><p class="rusi-md-p"><br></p>`);
+          return;
+        }
+        if (act === "h2") {
+          insertVisualBlockHtml(`<h2 class="rusi-md-h2">Tiêu đề phần</h2><p class="rusi-md-p"><br></p>`);
+          return;
+        }
+        if (act === "h3") {
+          insertVisualBlockHtml(`<h3 class="rusi-md-h3">Tiêu đề mục nhỏ</h3><p class="rusi-md-p"><br></p>`);
+          return;
+        }
+        if (act === "ul") {
+          insertVisualBlockHtml(`<ul class="rusi-md-ul"><li>Mục danh sách 1</li><li>Mục danh sách 2</li></ul><p class="rusi-md-p"><br></p>`);
+          return;
+        }
+        if (act === "ol") {
+          insertVisualBlockHtml(`<ol class="rusi-md-ol"><li>Bước thực hiện 1</li><li>Bước thực hiện 2</li></ol><p class="rusi-md-p"><br></p>`);
+          return;
+        }
+        if (act === "quote") {
+          insertVisualBlockHtml(`<blockquote class="rusi-md-quote">Đoạn trích dẫn văn bản tại đây...</blockquote><p class="rusi-md-p"><br></p>`);
+          return;
+        }
+        if (act === "hr") {
+          insertVisualBlockHtml(`<hr class="rusi-md-divider"><p class="rusi-md-p"><br></p>`);
+          return;
+        }
+        if (act === "audio") {
+          insertVisualBlockHtml(`<div class="topic-audio-box" style="margin:16px 0"><audio controls src="assets/audio/lesson.mp3"></audio></div><p class="rusi-md-p"><br></p>`);
+          return;
+        }
+        if (act === "task") {
+          insertVisualBlockHtml(`<p class="rusi-md-task"><input type="checkbox" /> <span>Việc cần hoàn thành...</span></p><p class="rusi-md-p"><br></p>`);
+          return;
+        }
+        if (act === "img") {
+          const url = prompt("Nhập đường dẫn hình ảnh (URL):", "assets/images/demo.jpg");
+          if (url) {
+            insertVisualBlockHtml(`<figure class="rusi-md-figure" style="text-align:center;margin:16px 0"><img src="${escAttr(url)}" alt="Hình ảnh minh họa" style="max-width:100%;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08)" /><figcaption style="font-size:12px;color:#64748b;margin-top:6px">Chú thích hình ảnh</figcaption></figure><p class="rusi-md-p"><br></p>`);
+          }
+          return;
+        }
+        if (act === "code") {
+          insertVisualBlockHtml(`<pre class="rusi-md-pre"><code class="rusi-md-code">// Khối mã nguồn hoặc nội dung chuyên biệt tại đây...</code></pre><p class="rusi-md-p"><br></p>`);
+          return;
+        }
+
+        if (act === "template-article") {
+          if (canvas.textContent.trim() && !confirm("Chèn mẫu bài học TRKI sẽ thêm bố cục chuẩn vào bài viết. Bạn có muốn tiếp tục?")) return;
+          const templateMd = `# Bài học: Giao tiếp & Đời sống thực tế tại Nga
 
 ## I. Bối cảnh & Tình huống giao tiếp
 Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống giao tiếp thường nhật khi sinh sống và du học tại Liên bang Nga.
@@ -3279,52 +3933,259 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
 ## V. Lời khuyên văn hóa (Культурный совет)
 Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nhớ xưng hô bằng họ tên đệm (Имя và Отчество) và dùng đại từ «Вы».
 `;
-          if (!textarea.value.trim()) {
-            textarea.value = template;
+          const templateHtml = (window.RusiMarkdown && typeof window.RusiMarkdown.render === "function")
+            ? window.RusiMarkdown.render(templateMd)
+            : `<p>${templateMd}</p>`;
+
+          insertVisualBlockHtml(templateHtml);
+          toast("Đã chèn mẫu bài học TRKI chuẩn 5 phần thành công!");
+          return;
+        }
+      };
+
+      // Xử lý chèn ký tự và trọng âm tiếng Nga (Ctrl+Shift+S)
+      const insertRussianChar = (charVal) => {
+        // Nếu đang mở tab mã markdown thô
+        if (rawPane && rawPane.style.display !== "none" && textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const original = textarea.value;
+
+          if (charVal === "\u0301" || charVal === "&#769;") {
+            const combiningAccent = "\u0301";
+            if (start !== end) {
+              const selected = original.substring(start, end);
+              textarea.value = original.substring(0, start) + selected + combiningAccent + original.substring(end);
+              textarea.setSelectionRange(end + 1, end + 1);
+            } else {
+              textarea.value = original.substring(0, start) + combiningAccent + original.substring(end);
+              textarea.setSelectionRange(start + 1, start + 1);
+            }
           } else {
-            textarea.value = textarea.value.trim() + "\n\n" + template;
+            textarea.value = original.substring(0, start) + charVal + original.substring(end);
+            const newCursor = start + charVal.length;
+            textarea.setSelectionRange(newCursor, newCursor);
           }
           textarea.focus();
-          updatePreview();
-          toast("Đã chèn mẫu bài học TRKI chuẩn 5 phần thành công!");
+          syncTextareaToDraft();
+          return;
         }
-      };
 
-      const runActionWithSlashCleanup = (act) => {
-        if (isSlashActive && slashPos >= 0 && textarea) {
-          const val = textarea.value;
-          if (val[slashPos] === "/") {
-            textarea.value = val.substring(0, slashPos) + val.substring(slashPos + 1);
-            textarea.setSelectionRange(slashPos, slashPos);
+        // Chèn vào vị trí con trỏ trên Notion Canvas hoặc ô bảng
+        if (canvas) {
+          if (charVal === "\u0301" || charVal === "&#769;") {
+            document.execCommand("insertText", false, "\u0301");
+          } else {
+            document.execCommand("insertText", false, charVal);
           }
+          syncCanvasToMarkdown();
+          pushHistorySnapshot();
         }
-        isSlashActive = false;
-        slashPos = -1;
-        hideAllNotionPopovers();
-        triggerAction(act);
       };
 
-      // Xử lý các nút thanh công cụ
-      wrap.querySelectorAll("[data-action]").forEach((btn) => {
-        btn.onclick = () => {
-          triggerAction(btn.dataset.action);
-        };
-      });
-
-      // Xử lý các mục trong Notion Block Menu
-      wrap.querySelectorAll("[data-notion-action]").forEach((btn) => {
+      wrap.querySelectorAll("[data-ru-char]").forEach((btn) => {
         btn.onclick = (e) => {
           e.stopPropagation();
-          runActionWithSlashCleanup(btn.dataset.notionAction);
+          insertRussianChar(btn.dataset.ruChar);
         };
       });
 
-      // Xử lý các mục trong Notion Turn Into Menu
+      // Format inline commands: bold, italic, underline, highlight, link
+      const triggerInlineAction = (act) => {
+        if (rawPane && rawPane.style.display !== "none" && textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const val = textarea.value;
+          const sel = val.substring(start, end) || "nội dung";
+          let rep = sel;
+          if (act === "bold") rep = `**${sel}**`;
+          else if (act === "italic") rep = `*${sel}*`;
+          else if (act === "strike") rep = `~~${sel}~~`;
+          else if (act === "mark") rep = `<mark>${sel}</mark>`;
+          else if (act === "code-inline") rep = `\`${sel}\``;
+          else if (act === "link") rep = `[${sel}](https://rusitrki.com)`;
+          else if (act === "ru-quote") rep = `«${sel}»`;
+          else if (act === "align-center") rep = `<div align="center">\n${sel}\n</div>`;
+          else if (act === "align-right") rep = `<div align="right">\n${sel}\n</div>`;
+          else if (act === "align-left") rep = `<div align="left">\n${sel}\n</div>`;
+          else if (act === "clear-format") rep = sel.replace(/[*_~`#><[\]()]/g, "");
+
+          textarea.value = val.substring(0, start) + rep + val.substring(end);
+          textarea.setSelectionRange(start + rep.length, start + rep.length);
+          textarea.focus();
+          syncTextareaToDraft();
+          return;
+        }
+
+        if (act === "bold") document.execCommand("bold");
+        else if (act === "italic") document.execCommand("italic");
+        else if (act === "strike") document.execCommand("strikeThrough");
+        else if (act === "code-inline") {
+          const sel = window.getSelection();
+          if (sel && sel.toString()) {
+            document.execCommand("insertHTML", false, `<code class="rusi-md-inline-code">${sel.toString()}</code>`);
+          }
+        } else if (act === "mark") {
+          const sel = window.getSelection();
+          if (sel && sel.toString()) {
+            document.execCommand("insertHTML", false, `<mark>${sel.toString()}</mark>`);
+          }
+        } else if (act === "link") {
+          const url = prompt("Nhập địa chỉ liên kết (URL):", "https://rusitrki.com");
+          if (url) document.execCommand("createLink", false, url);
+        } else if (act === "ru-quote") {
+          const sel = window.getSelection();
+          if (sel && sel.toString()) {
+            document.execCommand("insertText", false, `«${sel.toString()}»`);
+          } else {
+            document.execCommand("insertText", false, "«»");
+          }
+        } else if (act === "clear-format") {
+          document.execCommand("removeFormat");
+          document.execCommand("unlink");
+        } else if (act === "align-left") {
+          document.execCommand("justifyLeft");
+        } else if (act === "align-center") {
+          document.execCommand("justifyCenter");
+        } else if (act === "align-right") {
+          document.execCommand("justifyRight");
+        }
+        syncCanvasToMarkdown();
+        pushHistorySnapshot();
+      };
+
+      wrap.querySelectorAll("[data-action]").forEach((btn) => {
+        const act = btn.dataset.action;
+        if (act === "zen") {
+          btn.onclick = () => {
+            const isFs = wrap.classList.toggle("fullscreen-mode");
+            btn.innerHTML = isFs ? NOTION_ICONS.zenExit : NOTION_ICONS.zen;
+            if (isFs) toast("Đã mở Chế độ tập trung toàn màn hình Notion (Esc để thoát).");
+          };
+        } else {
+          btn.onclick = () => triggerInlineAction(act);
+        }
+      });
+
+      // Notion Popovers toggle
+      const blockMenu = wrap.querySelector(".notion-block-menu");
+      const turnIntoMenu = wrap.querySelector(".notion-turninto-menu");
+      const stressMenu = wrap.querySelector(".notion-stress-menu");
+      const calloutMenu = wrap.querySelector(".notion-callout-menu");
+      const tableMenu = wrap.querySelector(".notion-table-menu");
+
+      const btnInsert = wrap.querySelector(".btn-notion-insert");
+      const btnTurnInto = wrap.querySelector(".btn-notion-turninto");
+      const btnStress = wrap.querySelector(".btn-notion-stress");
+      const btnCallout = wrap.querySelector(".btn-notion-callout");
+      const btnTable = wrap.querySelector(".btn-notion-table");
+
+      const hideAllNotionPopovers = () => {
+        if (blockMenu) blockMenu.style.display = "none";
+        if (turnIntoMenu) turnIntoMenu.style.display = "none";
+        if (stressMenu) stressMenu.style.display = "none";
+        if (calloutMenu) calloutMenu.style.display = "none";
+        if (tableMenu) tableMenu.style.display = "none";
+      };
+
+      const toggleMenu = (menu) => {
+        if (!menu) return;
+        const isShown = menu.style.display === "block";
+        hideAllNotionPopovers();
+        hideSlashPalette();
+        if (!isShown) menu.style.display = "block";
+      };
+
+      if (btnInsert && blockMenu) btnInsert.onclick = (e) => { e.stopPropagation(); toggleMenu(blockMenu); };
+      if (btnTurnInto && turnIntoMenu) btnTurnInto.onclick = (e) => { e.stopPropagation(); toggleMenu(turnIntoMenu); };
+      if (btnStress && stressMenu) btnStress.onclick = (e) => { e.stopPropagation(); toggleMenu(stressMenu); };
+      if (btnCallout && calloutMenu) btnCallout.onclick = (e) => { e.stopPropagation(); toggleMenu(calloutMenu); };
+      if (btnTable && tableMenu) btnTable.onclick = (e) => { e.stopPropagation(); toggleMenu(tableMenu); };
+
+      // Giữ focus và vùng bôi đen (selection) khi nhấn các nút trên thanh công cụ
+      const toolbarEl = wrap.querySelector(".p-md-toolbar");
+      if (toolbarEl) {
+        toolbarEl.addEventListener("mousedown", (e) => {
+          const btn = e.target.closest("button");
+          if (btn && !btn.closest(".notion-slash-filter")) {
+            e.preventDefault();
+          }
+        });
+      }
+
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".notion-dropdown-wrap")) {
+          hideAllNotionPopovers();
+        }
+        if (!e.target.closest(".notion-slash-palette")) {
+          hideSlashPalette();
+        }
+      });
+
+      // Notion Turn Into logic
+      const turnCurrentSelectionInto = (type) => {
+        if (rawPane && rawPane.style.display !== "none" && textarea) {
+          // Handled for raw mode
+          return;
+        }
+        if (canvas) {
+          canvas.focus();
+          if (type === "h1") document.execCommand("formatBlock", false, "h1");
+          else if (type === "h2") document.execCommand("formatBlock", false, "h2");
+          else if (type === "h3") document.execCommand("formatBlock", false, "h3");
+          else if (type === "p") document.execCommand("formatBlock", false, "p");
+          else if (type === "ul") document.execCommand("insertUnorderedList");
+          else if (type === "ol") document.execCommand("insertOrderedList");
+          else if (type === "quote") document.execCommand("formatBlock", false, "blockquote");
+          else if (type === "tip") executeBlockAction("tip");
+          else if (type === "note") executeBlockAction("note");
+          syncCanvasToMarkdown();
+          pushHistorySnapshot();
+        }
+      };
+
       wrap.querySelectorAll("[data-notion-turn]").forEach((btn) => {
         btn.onclick = (e) => {
           e.stopPropagation();
           hideAllNotionPopovers();
-          turnCurrentLineInto(btn.dataset.notionTurn);
+          turnCurrentSelectionInto(btn.dataset.notionTurn);
+        };
+      });
+
+      // Xử lý các mục trong Popovers & Slash Palette
+      wrap.querySelectorAll("[data-notion-action]").forEach((btn) => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          executeBlockAction(btn.dataset.notionAction);
+        };
+      });
+
+      // Chuyển đổi chế độ: [Soạn trực quan Notion] vs [Mã Markdown .md]
+      wrap.querySelectorAll("[data-canvas-mode]").forEach((btn) => {
+        btn.onclick = () => {
+          wrap.querySelectorAll("[data-canvas-mode]").forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          const mode = btn.dataset.canvasMode;
+
+          if (mode === "raw") {
+            syncCanvasToMarkdown();
+            if (surface) surface.style.display = "none";
+            if (rawPane) rawPane.style.display = "block";
+            if (textarea) textarea.focus();
+          } else {
+            // Chuyển về chế độ trực quan Notion
+            const md = textarea ? textarea.value : "";
+            if (window.RusiMarkdown && typeof window.RusiMarkdown.render === "function") {
+              canvas.innerHTML = window.RusiMarkdown.render(md);
+            } else {
+              canvas.textContent = md;
+            }
+            enhanceCanvasElements(canvas);
+            pushHistorySnapshot();
+            if (rawPane) rawPane.style.display = "none";
+            if (surface) surface.style.display = "block";
+            canvas.focus();
+          }
         };
       });
     });
@@ -3333,13 +4194,7 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
   window.switchEditorTab = function (tab) {
     State.activeEditorTab = tab;
 
-    // Sync state before switching
-    if (tab === "json") {
-      const jsonArea = document.getElementById("jsonEditorArea");
-      if (jsonArea) {
-        jsonArea.value = JSON.stringify(State.currentDraft, null, 2);
-      }
-    } else if (tab === "structure") {
+    if (tab === "structure") {
       const tabS = document.getElementById("tabStructure");
       if (tabS && State.currentSlug && State.currentDraft) {
         tabS.innerHTML = renderActiveStructureBuilder(State.currentSlug, State.currentDraft);
@@ -3348,11 +4203,9 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
 
     const tabC = document.getElementById("tabContent");
     const tabS = document.getElementById("tabStructure");
-    const tabJ = document.getElementById("tabJson");
 
     if (tabC) tabC.style.display = tab === "content" ? "block" : "none";
     if (tabS) tabS.style.display = tab === "structure" ? "block" : "none";
-    if (tabJ) tabJ.style.display = tab === "json" ? "block" : "none";
 
     document.querySelectorAll(".payload-editor-tab").forEach((btn) => {
       const tabAttr = btn.getAttribute("data-tab");
@@ -3382,15 +4235,12 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
   // =========================================================================
 
   function renderActiveStructureBuilder(slug, draft) {
-    if (slug === "TRKI_BANK") {
+    if (slug === "VOCABULARIES") {
+      return renderVocabDetailsBuilder(draft);
+    } else if (slug === "TRKI_BANK") {
       return renderTrkiPartsBuilder(draft.parts || [], draft);
-    } else if (slug === "VOCAB_JARS" || slug === "VOCAB_LESSONS") {
+    } else if (slug === "VOCAB_JARS") {
       return renderVocabWordsBuilder(draft.words || []);
-    } else if (slug === "GRAMMAR_LESSONS") {
-      const rules = Array.isArray(draft.rules) ? draft.rules : [];
-      const tableData = draft.table_data || draft.table || {};
-      const questions = Array.isArray(draft.questions) ? draft.questions : (Array.isArray(draft.quickQuiz) ? draft.quickQuiz : []);
-      return renderGrammarBuilder(rules, tableData, questions);
     } else if (slug === "LISTENING_LESSONS") {
       const lines = (Array.isArray(draft.lines) && draft.lines.length) ? draft.lines : ((draft.raw_data && Array.isArray(draft.raw_data.lines)) ? draft.raw_data.lines : []);
       const questions = (Array.isArray(draft.questions) && draft.questions.length) ? draft.questions : ((draft.raw_data && Array.isArray(draft.raw_data.questions)) ? draft.raw_data.questions : []);
@@ -3421,8 +4271,6 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
       const specs = (Array.isArray(draft.features) && draft.features.length) ? draft.features : (Array.isArray(draft.specs) ? draft.specs : []);
       if (!Array.isArray(draft.features) || draft.features.length === 0) draft.features = specs;
       return renderShopSpecsBuilder(draft.features);
-    } else if (slug === "WRITING_SUBMISSIONS") {
-      return renderWritingGradingBuilder(draft);
     } else {
       return `<div style="padding:24px;color:var(--p-text-muted)">Phân hệ này không yêu cầu Array Builder phức tạp. Vui lòng chỉnh sửa tại tab Nội dung chính hoặc JSON.</div>`;
     }
@@ -4467,91 +5315,320 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     State.currentDraft.features[idx] = val;
   };
 
-  // --- Teacher Writing Grading Studio ---
-  function renderWritingGradingBuilder(draft) {
-    const studentText = draft.student_text || draft.content_ru || "";
-    const words = studentText ? studentText.trim().split(/\s+/).filter(Boolean).length : 0;
-    const scoreVal = draft.overall_score != null ? draft.overall_score : "";
-    const statusVal = draft.status || "submitted";
-    const notesVal = draft.teacher_notes || "";
+  // --- Kho từ vựng: Chi tiết Ví dụ câu & Cấu trúc ngữ pháp ---
+  function renderVocabDetailsBuilder(draft) {
+    if (!draft) return "";
+    draft.examples = Array.isArray(draft.examples) ? draft.examples : [];
+    draft.structures = Array.isArray(draft.structures) ? draft.structures : [];
+    draft.synonyms = Array.isArray(draft.synonyms) ? draft.synonyms : [];
+    draft.antonyms = Array.isArray(draft.antonyms) ? draft.antonyms : [];
 
-    return `
-      <div class="payload-array-container" style="background:var(--p-surface-elevated, #fff);border:1px solid var(--p-border-subtle, rgba(0,0,0,0.08));border-radius:12px;padding:18px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--p-border-subtle, rgba(0,0,0,0.08));">
-          <div>
-            <h3 style="margin:0 0 4px 0;font-size:16px;font-weight:700">Studio Chấm bài Luyện viết (Письмо)</h3>
-            <p style="margin:0;font-size:12.5px;color:var(--p-text-muted)">Học viên: <code>${esc(draft.user_id || "Chưa định danh")}</code> • Mã đề: <code>${esc(draft.task_id || "Tự do")}</code></p>
+    let exRowsHtml = "";
+    draft.examples.forEach((ex, idx) => {
+      const ruVal = typeof ex === "string" ? ex : (ex.ru || "");
+      const viVal = typeof ex === "string" ? "" : (ex.vi || "");
+      exRowsHtml += `
+        <div class="payload-array-row" style="margin-bottom:10px;padding:12px;background:var(--p-surface-elevated,#fff);border:1px solid var(--p-border-subtle,#e5e7eb);border-radius:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span class="payload-array-row-num" style="font-weight:700;color:var(--p-primary,#0039A6)">Ví dụ #${idx + 1}</span>
+            <button class="p-btn-icon" type="button" onclick="window.removeVocabExample(${idx})" title="Xóa ví dụ này" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span class="p-pill ${statusVal === "graded" ? "p-pill-success" : statusVal === "grading" ? "p-pill-warning" : "p-pill-info"}">
-              ${statusVal === "graded" ? "Đã chấm điểm" : statusVal === "grading" ? "Đang chấm" : "Chờ chấm"}
-            </span>
-          </div>
-        </div>
-
-        <div style="margin-bottom:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <label style="font-size:13px;font-weight:700">Bài làm của học viên:</label>
-            <span class="p-pill p-pill-muted">Độ dài: <b>${words} từ</b></span>
-          </div>
-          <div style="padding:14px 16px;background:var(--p-surface-subtle, rgba(0,0,0,0.02));border:1px solid var(--p-border-subtle, rgba(0,0,0,0.08));border-radius:8px;font-size:14px;line-height:1.7;white-space:pre-wrap;max-height:280px;overflow-y:auto;font-family:inherit;">
-            ${esc(studentText) || '<em style="color:var(--p-text-muted)">Học viên chưa nhập nội dung bài viết.</em>'}
-          </div>
-        </div>
-
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:16px;margin-bottom:16px">
-          <div>
-            <label class="p-label" style="font-weight:700">Điểm số tổng kết (Thang 100):</label>
-            <input type="number" min="0" max="100" class="p-input" id="gradingScoreInput" value="${escAttr(scoreVal)}" placeholder="Ví dụ: 85" oninput="if(State.currentDraft) State.currentDraft.overall_score = parseFloat(this.value)||0;" style="font-size:16px;font-weight:700" />
-          </div>
-          <div>
-            <label class="p-label" style="font-weight:700">Trạng thái bài làm:</label>
-            <select class="p-select" id="gradingStatusSelect" onchange="if(State.currentDraft) State.currentDraft.status = this.value;">
-              <option value="submitted" ${statusVal === "submitted" ? "selected" : ""}>Mới nộp (Chờ chấm)</option>
-              <option value="grading" ${statusVal === "grading" ? "selected" : ""}>Đang chấm bài</option>
-              <option value="graded" ${statusVal === "graded" ? "selected" : ""}>Đã hoàn thành chấm</option>
-            </select>
-          </div>
-        </div>
-
-        <div style="margin-bottom:16px">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-            <label class="p-label" style="font-weight:700">Nhận xét &amp; Gợi ý sửa lỗi của Giáo viên:</label>
-            <div style="display:flex;gap:6px">
-              <button type="button" class="p-btn p-btn-ghost p-btn-xs" onclick="window.appendQuickTeacherNote('Bài viết tốt, bố cục rõ ràng!')">+ Tốt</button>
-              <button type="button" class="p-btn p-btn-ghost p-btn-xs" onclick="window.appendQuickTeacherNote('Cần chú ý chia động từ và giống danh từ.')">+ Ngữ pháp</button>
-              <button type="button" class="p-btn p-btn-ghost p-btn-xs" onclick="window.appendQuickTeacherNote('Nên bổ sung thêm liên từ nối câu (потому что, поэтому, однако).')">+ Liên từ</button>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div>
+              <label class="p-label" style="font-size:11.5px">Câu tiếng Nga (Có trọng âm):</label>
+              <input type="text" class="p-input" placeholder="Ví dụ: Мо́ре о́чень споко́йное сего́дня." value="${escAttr(ruVal)}" oninput="window.updateVocabExample(${idx}, 'ru', this.value)" style="font-size:13.5px" />
+            </div>
+            <div>
+              <label class="p-label" style="font-size:11.5px">Dịch nghĩa tiếng Việt:</label>
+              <input type="text" class="p-input" placeholder="Ví dụ: Biển hôm nay rất yên bình." value="${escAttr(viVal)}" oninput="window.updateVocabExample(${idx}, 'vi', this.value)" style="font-size:13px" />
             </div>
           </div>
-          <textarea class="p-textarea" id="gradingNotesInput" rows="5" placeholder="Ghi nhận xét chi tiết, chỉ ra lỗi dùng từ, chia cách hoặc gợi ý cách viết tự nhiên hơn..." oninput="if(State.currentDraft) State.currentDraft.teacher_notes = this.value;">${esc(notesVal)}</textarea>
+        </div>
+      `;
+    });
+
+    let strRowsHtml = "";
+    draft.structures.forEach((st, idx) => {
+      const patVal = typeof st === "string" ? st : (st.pattern || st.structure || "");
+      const meanVal = typeof st === "string" ? "" : (st.meaning || st.vi || "");
+      strRowsHtml += `
+        <div class="payload-array-row" style="margin-bottom:8px;padding:10px;background:var(--p-surface-elevated,#fff);border:1px solid var(--p-border-subtle,#e5e7eb);border-radius:8px">
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="payload-array-row-num">#${idx + 1}</span>
+            <input type="text" class="p-input" placeholder="Mẫu cụm: e.g. плавать в + Cách 6" value="${escAttr(patVal)}" oninput="window.updateVocabStructure(${idx}, 'pattern', this.value)" style="flex:1;font-size:13px" />
+            <input type="text" class="p-input" placeholder="Ý nghĩa / giải thích..." value="${escAttr(meanVal)}" oninput="window.updateVocabStructure(${idx}, 'meaning', this.value)" style="flex:1;font-size:13px" />
+            <button class="p-btn-icon" type="button" onclick="window.removeVocabStructure(${idx})" title="Xóa cụm từ này" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
+          </div>
+        </div>
+      `;
+    });
+
+    const synText = draft.synonyms.join(", ");
+    const antText = draft.antonyms.join(", ");
+
+    return `
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <!-- Section 1: Examples -->
+        <div class="payload-array-container">
+          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div>
+              <div style="font-weight:700;font-size:15px;color:var(--p-text)">Câu ví dụ thực tế (Examples — ${draft.examples.length} câu)</div>
+              <div style="font-size:12px;color:var(--p-text-muted)">Các câu văn minh họa cách dùng từ trong ngữ cảnh đời sống thực tế</div>
+            </div>
+            <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addVocabExample()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu ví dụ</button>
+          </div>
+          <div class="payload-array-items">
+            ${exRowsHtml || '<div style="padding:24px;text-align:center;color:var(--p-text-muted);border:1px dashed var(--p-border-subtle);border-radius:8px">Chưa có câu ví dụ nào. Bấm "+ Thêm câu ví dụ" để bổ sung ví dụ minh họa.</div>'}
+          </div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;gap:10px">
-          <button class="p-btn p-btn-primary" type="button" onclick="window.submitGradingResult()">${window.RusiIcons ? RusiIcons.get("check-circle", { size: 14 }) : ""} Lưu điểm &amp; Hoàn tất chấm</button>
+        <!-- Section 2: Structures / Collocations -->
+        <div class="payload-array-container">
+          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div>
+              <div style="font-weight:700;font-size:15px;color:var(--p-text)">Cụm từ &amp; Cấu trúc kết hợp (Structures &amp; Collocations — ${draft.structures.length} cụm)</div>
+              <div style="font-size:12px;color:var(--p-text-muted)">Các mẫu kết hợp giới từ, cách ngữ pháp và quán ngữ thường gặp</div>
+            </div>
+            <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.addVocabStructure()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm cấu trúc mẫu</button>
+          </div>
+          <div class="payload-array-items">
+            ${strRowsHtml || '<div style="padding:20px;text-align:center;color:var(--p-text-muted);border:1px dashed var(--p-border-subtle);border-radius:8px">Chưa có cấu trúc mẫu nào. Bấm "+ Thêm cấu trúc mẫu" để bổ sung.</div>'}
+          </div>
+        </div>
+
+        <!-- Section 3: Synonyms & Antonyms -->
+        <div style="background:var(--p-surface-elevated,#fff);border:1px solid var(--p-border-subtle,#e5e7eb);border-radius:10px;padding:16px">
+          <div style="font-weight:700;font-size:14px;margin-bottom:12px;color:var(--p-text)">Từ đồng nghĩa &amp; Trái nghĩa (Synonyms &amp; Antonyms)</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px">
+            <div>
+              <label class="p-label" style="font-size:12px">Từ đồng nghĩa (Phân cách bằng dấu phẩy):</label>
+              <input type="text" class="p-input" placeholder="Ví dụ: студент, учащийся..." value="${escAttr(synText)}" oninput="window.updateVocabSynonyms(this.value)" style="font-size:13px" />
+              <div style="font-size:11px;color:var(--p-text-muted);margin-top:4px">Lưu trữ dưới dạng mảng chuỗi <code>text[]</code> trong Supabase</div>
+            </div>
+            <div>
+              <label class="p-label" style="font-size:12px">Từ trái nghĩa (Phân cách bằng dấu phẩy):</label>
+              <input type="text" class="p-input" placeholder="Ví dụ: преподаватель, профессор..." value="${escAttr(antText)}" oninput="window.updateVocabAntonyms(this.value)" style="font-size:13px" />
+              <div style="font-size:11px;color:var(--p-text-muted);margin-top:4px">Lưu trữ dưới dạng mảng chuỗi <code>text[]</code> trong Supabase</div>
+            </div>
+          </div>
         </div>
       </div>
     `;
   }
 
-  window.appendQuickTeacherNote = function (note) {
-    const area = document.getElementById("gradingNotesInput");
-    if (!area || !State.currentDraft) return;
-    area.value = (area.value ? area.value + "\n" : "") + note;
-    State.currentDraft.teacher_notes = area.value;
+  window.addVocabExample = function () {
+    if (!State.currentDraft) return;
+    State.currentDraft.examples = Array.isArray(State.currentDraft.examples) ? State.currentDraft.examples : [];
+    State.currentDraft.examples.push({ ru: "", vi: "" });
+    refreshStructureTab();
   };
 
-  window.submitGradingResult = function () {
-    if (!State.currentDraft) return;
-    const scoreInp = document.getElementById("gradingScoreInput");
-    const notesInp = document.getElementById("gradingNotesInput");
-    const statusSel = document.getElementById("gradingStatusSelect");
-    if (scoreInp) State.currentDraft.overall_score = parseFloat(scoreInp.value) || 0;
-    if (notesInp) State.currentDraft.teacher_notes = notesInp.value;
-    if (statusSel) State.currentDraft.status = statusSel.value || "graded";
-    State.currentDraft.graded_at = new Date().toISOString();
-    window.saveDocument();
-    toast("Đã lưu điểm và hoàn tất chấm bài cho học viên!");
+  window.removeVocabExample = function (idx) {
+    if (!State.currentDraft || !Array.isArray(State.currentDraft.examples)) return;
+    State.currentDraft.examples.splice(idx, 1);
+    refreshStructureTab();
   };
+
+  window.updateVocabExample = function (idx, field, val) {
+    if (!State.currentDraft || !Array.isArray(State.currentDraft.examples) || !State.currentDraft.examples[idx]) return;
+    if (typeof State.currentDraft.examples[idx] === "string") {
+      State.currentDraft.examples[idx] = { ru: State.currentDraft.examples[idx], vi: "" };
+    }
+    State.currentDraft.examples[idx][field] = val;
+  };
+
+  window.addVocabStructure = function () {
+    if (!State.currentDraft) return;
+    State.currentDraft.structures = Array.isArray(State.currentDraft.structures) ? State.currentDraft.structures : [];
+    State.currentDraft.structures.push({ pattern: "", meaning: "" });
+    refreshStructureTab();
+  };
+
+  window.removeVocabStructure = function (idx) {
+    if (!State.currentDraft || !Array.isArray(State.currentDraft.structures)) return;
+    State.currentDraft.structures.splice(idx, 1);
+    refreshStructureTab();
+  };
+
+  window.updateVocabStructure = function (idx, field, val) {
+    if (!State.currentDraft || !Array.isArray(State.currentDraft.structures) || !State.currentDraft.structures[idx]) return;
+    if (typeof State.currentDraft.structures[idx] === "string") {
+      State.currentDraft.structures[idx] = { pattern: State.currentDraft.structures[idx], meaning: "" };
+    }
+    State.currentDraft.structures[idx][field] = val;
+  };
+
+  window.updateVocabSynonyms = function (val) {
+    if (!State.currentDraft) return;
+    State.currentDraft.synonyms = String(val || "").split(",").map(s => s.trim()).filter(Boolean);
+  };
+
+  window.updateVocabAntonyms = function (val) {
+    if (!State.currentDraft) return;
+    State.currentDraft.antonyms = String(val || "").split(",").map(s => s.trim()).filter(Boolean);
+  };
+
+  // --- Lọ từ vựng: Danh sách từ trong lọ (VOCAB_JARS) ---
+  function renderVocabWordsBuilder(words) {
+    const wordList = Array.isArray(words) ? words : [];
+    let rowsHtml = "";
+    wordList.forEach((w, idx) => {
+      const ruVal = w.stress || w.word_with_stress || w.ru || "";
+      const viVal = w.meaning_vi || w.vi || "";
+      const posVal = w.pos || w.note || "";
+      const exVal = w.ex || (Array.isArray(w.examples) && w.examples[0] ? w.examples[0].ru : "");
+      const exViVal = w.ex_vi || (Array.isArray(w.examples) && w.examples[0] ? w.examples[0].vi : "");
+      rowsHtml += `
+        <div class="payload-array-row" style="margin-bottom:10px;padding:12px;background:var(--p-surface-elevated,#fff);border:1px solid var(--p-border-subtle,#e5e7eb);border-radius:10px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="payload-array-row-num" style="font-weight:700;color:var(--p-primary,#0039A6)">#${idx + 1}</span>
+              <span style="font-weight:600;font-size:14px">${esc(ruVal || "Từ mới")}</span>
+              ${w.level ? `<span class="p-pill p-pill-info" style="font-size:10px">${esc(w.level)}</span>` : ""}
+            </div>
+            <div style="display:flex;gap:4px">
+              <button class="p-btn-icon" type="button" onclick="window.removeVocabJarWord(${idx})" title="Xóa từ khỏi lọ" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:8px;margin-bottom:8px">
+            <div>
+              <label class="p-label" style="font-size:11px">Từ tiếng Nga (Có trọng âm):</label>
+              <input type="text" class="p-input" placeholder="студе́нт" value="${escAttr(ruVal)}" oninput="window.updateVocabJarWord(${idx}, 'ru', this.value)" style="font-size:13.5px" />
+            </div>
+            <div>
+              <label class="p-label" style="font-size:11px">Nghĩa tiếng Việt:</label>
+              <input type="text" class="p-input" placeholder="sinh viên nam" value="${escAttr(viVal)}" oninput="window.updateVocabJarWord(${idx}, 'vi', this.value)" style="font-size:13px" />
+            </div>
+            <div>
+              <label class="p-label" style="font-size:11px">Từ loại / Giống / Ghi chú:</label>
+              <input type="text" class="p-input" placeholder="сущ. м. (он)" value="${escAttr(posVal)}" oninput="window.updateVocabJarWord(${idx}, 'pos', this.value)" style="font-size:12.5px" />
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:8px">
+            <input type="text" class="p-input" placeholder="Câu ví dụ tiếng Nga..." value="${escAttr(exVal)}" oninput="window.updateVocabJarWord(${idx}, 'ex', this.value)" style="font-size:12.5px" />
+            <input type="text" class="p-input" placeholder="Bản dịch tiếng Việt ví dụ..." value="${escAttr(exViVal)}" oninput="window.updateVocabJarWord(${idx}, 'ex_vi', this.value)" style="font-size:12.5px" />
+          </div>
+        </div>
+      `;
+    });
+
+    return `
+      <div class="payload-array-container">
+        <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div>
+            <div style="font-weight:700;font-size:15px;color:var(--p-text)">Danh sách từ vựng trong lọ (${wordList.length} từ)</div>
+            <div style="font-size:12px;color:var(--p-text-muted)">Các từ vựng cốt lõi liên kết trong lọ, tự động đồng bộ sang bảng jar_items &amp; vocabularies</div>
+          </div>
+          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addVocabJarWord()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm từ vào lọ</button>
+        </div>
+        <div class="payload-array-items">
+          ${rowsHtml || '<div style="padding:28px;text-align:center;color:var(--p-text-muted);border:1px dashed var(--p-border-subtle);border-radius:8px">Lọ từ chưa có từ vựng nào. Bấm "+ Thêm từ vào lọ" để thêm.</div>'}
+        </div>
+      </div>
+    `;
+  }
+
+  window.addVocabJarWord = function () {
+    if (!State.currentDraft) return;
+    State.currentDraft.words = Array.isArray(State.currentDraft.words) ? State.currentDraft.words : [];
+    State.currentDraft.words.push({
+      id: generateUUID(),
+      word_with_stress: "",
+      ru: "",
+      meaning_vi: "",
+      vi: "",
+      pos: "сущ.",
+      level: State.currentDraft.level || "A1",
+      ex: "",
+      ex_vi: ""
+    });
+    refreshStructureTab();
+  };
+
+  window.removeVocabJarWord = function (idx) {
+    if (!State.currentDraft || !Array.isArray(State.currentDraft.words)) return;
+    State.currentDraft.words.splice(idx, 1);
+    refreshStructureTab();
+  };
+
+  window.updateVocabJarWord = function (idx, field, val) {
+    if (!State.currentDraft || !Array.isArray(State.currentDraft.words) || !State.currentDraft.words[idx]) return;
+    const item = State.currentDraft.words[idx];
+    item[field] = val;
+    if (field === "ru") {
+      item.word_with_stress = val;
+      item.stress = val;
+    }
+    if (field === "vi") {
+      item.meaning_vi = val;
+    }
+  };
+
+  // --- Speaking Sets Builder ---
+  function renderSpeakingBuilder(items, draft) {
+    let rowsHtml = "";
+    (items || []).forEach((it, idx) => {
+      rowsHtml += `
+        <div class="payload-array-row" style="margin-bottom:8px;padding:10px;background:var(--p-surface-elevated,#fff);border:1px solid var(--p-border-subtle,#e5e7eb);border-radius:8px">
+          <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
+            <span class="payload-array-row-num">#${idx + 1}</span>
+            <input type="text" class="p-input" placeholder="Người nói..." value="${escAttr(it.who || "")}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) State.currentDraft.items[${idx}].who = this.value;" style="width:130px;font-size:12px" />
+            <input type="number" step="0.5" class="p-input" placeholder="Từ giây" value="${it.startSec != null ? it.startSec : (it.start || 0)}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) { State.currentDraft.items[${idx}].startSec = parseFloat(this.value)||0; State.currentDraft.items[${idx}].start = parseFloat(this.value)||0; }" style="width:70px;font-size:12px;text-align:center" />
+            <input type="number" step="0.5" class="p-input" placeholder="Đến giây" value="${it.endSec != null ? it.endSec : (it.end || 5)}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) { State.currentDraft.items[${idx}].endSec = parseFloat(this.value)||0; State.currentDraft.items[${idx}].end = parseFloat(this.value)||0; }" style="width:70px;font-size:12px;text-align:center" />
+            <button class="p-btn-icon" type="button" onclick="if(State.currentDraft && State.currentDraft.items) { State.currentDraft.items.splice(${idx}, 1); refreshStructureTab(); }" title="Xóa câu" style="margin-left:auto;color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 13 }) : "✕"}</button>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <input type="text" class="p-input" placeholder="Câu tiếng Nga (Có trọng âm)..." value="${escAttr(it.text_stressed || it.text_ru || it.ru || "")}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) { State.currentDraft.items[${idx}].text_stressed = this.value; State.currentDraft.items[${idx}].text_ru = this.value; State.currentDraft.items[${idx}].ru = this.value; }" style="font-size:13px" />
+            <input type="text" class="p-input" placeholder="Bản dịch tiếng Việt..." value="${escAttr(it.translation_vi || it.vi || "")}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) { State.currentDraft.items[${idx}].translation_vi = this.value; State.currentDraft.items[${idx}].vi = this.value; }" style="font-size:12.5px" />
+          </div>
+        </div>
+      `;
+    });
+
+    return `
+      <div class="payload-array-container">
+        <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div>
+            <div style="font-weight:700;font-size:14.5px">Danh sách câu thoại Shadowing (${(items || []).length} câu)</div>
+            <div style="font-size:12px;color:var(--p-text-muted)">Khớp theo mốc thời gian phụ đề video YouTube</div>
+          </div>
+          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="if(State.currentDraft) { State.currentDraft.items = Array.isArray(State.currentDraft.items) ? State.currentDraft.items : []; State.currentDraft.items.push({ id: Date.now(), who: 'Người nói', startSec: 0, endSec: 5, start: 0, end: 5, ru: '', text_ru: '', text_stressed: '', vi: '', translation_vi: '' }); refreshStructureTab(); }">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu thoại</button>
+        </div>
+        <div class="payload-array-items">
+          ${rowsHtml || '<div style="padding:20px;text-align:center;color:var(--p-text-muted)">Chưa có câu thoại nào. Bấm "+ Thêm câu thoại" để tạo.</div>'}
+        </div>
+      </div>
+    `;
+  }
+
+  // --- Packages Features Builder ---
+  function renderPackagesFeaturesBuilder(features) {
+    let rowsHtml = "";
+    (features || []).forEach((feat, idx) => {
+      rowsHtml += `
+        <div class="payload-array-row" style="margin-bottom:8px;display:flex;gap:8px;align-items:center">
+          <span class="payload-array-row-num">#${idx + 1}</span>
+          <input type="text" class="p-input" placeholder="Ví dụ: Mở khóa trọn bộ 10 lọ từ vựng..." value="${escAttr(feat)}" oninput="if(State.currentDraft && State.currentDraft.features) State.currentDraft.features[${idx}] = this.value;" style="flex:1;font-size:13px" />
+          <button class="p-btn-icon" type="button" onclick="if(State.currentDraft && State.currentDraft.features) { State.currentDraft.features.splice(${idx}, 1); refreshStructureTab(); }" title="Xóa quyền lợi" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
+        </div>
+      `;
+    });
+
+    return `
+      <div class="payload-array-container">
+        <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <div>
+            <div style="font-weight:700;font-size:14.5px">Danh sách quyền lợi gói (${(features || []).length} mục)</div>
+            <div style="font-size:12px;color:var(--p-text-muted)">Hiển thị trên bảng giá và trang thanh toán</div>
+          </div>
+          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="if(State.currentDraft) { State.currentDraft.features = Array.isArray(State.currentDraft.features) ? State.currentDraft.features : []; State.currentDraft.features.push('Quyền lợi mới'); refreshStructureTab(); }">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm quyền lợi</button>
+        </div>
+        <div class="payload-array-items">
+          ${rowsHtml || '<div style="padding:20px;text-align:center;color:var(--p-text-muted)">Chưa có quyền lợi nào. Bấm "+ Thêm quyền lợi" để tạo.</div>'}
+        </div>
+      </div>
+    `;
+  }
 
   function refreshStructureTab() {
     const tabS = document.getElementById("tabStructure");
@@ -4649,45 +5726,44 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         idKey: (doc) => doc.id || doc.word_with_stress,
         toRow: (doc) => {
           const w = String(doc.word_with_stress || doc.ru || doc.word || "").trim();
+          const vId = (doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID();
+          doc.id = vId;
           return {
-            id: (doc.id && String(doc.id).includes("-")) ? doc.id : undefined,
+            id: vId,
             word_with_stress: w || "сло́во",
-            pos: doc.pos || doc.type || "noun",
+            pos: doc.pos || doc.type || "сущ.",
             meaning_vi: doc.meaning_vi || doc.vi || "từ ngữ",
-            meaning_ru: doc.meaning_ru || null,
             level: doc.level || "A1",
             gender: doc.gender || null,
             aspect: doc.aspect || null,
-            transcription: doc.transcription || doc.ipa || null,
             notes: doc.notes || doc.note || null,
             structures: Array.isArray(doc.structures) ? doc.structures : [],
             examples: Array.isArray(doc.examples) ? doc.examples : (doc.ex ? [{ ru: doc.ex, vi: doc.ex_vi || "" }] : []),
-            collocations: (doc.collocations && typeof doc.collocations === "object") ? doc.collocations : {},
-            cases_table: (doc.cases_table && typeof doc.cases_table === "object") ? doc.cases_table : {},
-            conjugation_data: (doc.conjugation_data && typeof doc.conjugation_data === "object") ? doc.conjugation_data : {},
+            synonyms: Array.isArray(doc.synonyms) ? doc.synonyms : [],
+            antonyms: Array.isArray(doc.antonyms) ? doc.antonyms : [],
             audio_url: doc.audio_url || doc.audioUrl || null,
-            publication_status: doc.publication_status || "published",
             updated_at: new Date().toISOString()
           };
         },
         fromRow: (row) => ({
-          id: row.id || row.source_key || row.word_with_stress,
+          id: row.id,
+          uuid: row.id,
           word_with_stress: row.word_with_stress,
           ru: row.word_with_stress,
           word_normalized: row.word_normalized,
           pos: row.pos,
           meaning_vi: row.meaning_vi,
           vi: row.meaning_vi,
-          meaning_ru: row.meaning_ru || "",
           level: row.level || "A1",
           gender: row.gender || "",
           aspect: row.aspect || "",
-          transcription: row.transcription || "",
-          ipa: row.transcription || "",
           notes: row.notes || "",
           audio_url: row.audio_url || "",
-          publication_status: row.publication_status || "published",
-          examples: Array.isArray(row.examples) ? row.examples : []
+          examples: Array.isArray(row.examples) ? row.examples : [],
+          structures: Array.isArray(row.structures) ? row.structures : [],
+          synonyms: Array.isArray(row.synonyms) ? row.synonyms : [],
+          antonyms: Array.isArray(row.antonyms) ? row.antonyms : [],
+          publication_status: "published"
         })
       },
 
@@ -4700,61 +5776,34 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         toRow: (doc) => {
           const wordsArr = Array.isArray(doc.words) ? doc.words : [];
           const jarName = doc.name || doc.jar_name || doc.title || "Lọ từ vựng";
+          const jarUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
+          doc.uuid = jarUuid;
+          const jarCode = String(doc.code || doc.id).trim();
           return {
-            code: String(doc.id || doc.code).trim(),
+            id: jarUuid,
+            code: jarCode,
             name: jarName,
-            jar_name: jarName,
             level: doc.level || "A1",
-            level_name: doc.levelName || doc.level_name || ("Sơ cấp " + (doc.level || "A1")),
-            description: doc.desc || doc.description || "",
             icon: doc.icon || "archive-jar",
-            icon_slug: doc.icon || "archive-jar",
-            color_code: doc.color || doc.color_code || "#102a4c",
             is_system: true,
-            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
-            words: wordsArr,
-            words_summary: wordsArr.slice(0, 5),
+            is_pro: Boolean(doc.is_pro === true || doc.is_pro_only === true || doc.is_pro_only === "true"),
             word_count: wordsArr.length,
-            article: doc.article || null,
-            publication_status: doc.publication_status || "published",
             updated_at: new Date().toISOString()
           };
         },
         fromRow: (row) => ({
           id: row.code || row.id,
+          uuid: row.id,
           code: row.code || row.id,
           name: row.name || row.jar_name || "Lọ từ vựng",
           jar_name: row.jar_name || row.name || "Lọ từ vựng",
           level: row.level || "A1",
           levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
-          desc: row.description || "",
-          icon: row.icon || row.icon_slug || "archive-jar",
-          color: row.color_code || "#102a4c",
-          is_pro_only: Boolean(row.is_pro_only),
-          publication_status: row.publication_status || "published",
-          words: Array.isArray(row.words) ? row.words : [],
-          article: row.article || null
-        })
-      },
-
-      JAR_ITEMS: {
-        table: "jar_items",
-        conflict: "jar_id,vocab_id",
-        deleteCol: "jar_id",
-        label: "Liên kết Từ - Lọ",
-        idKey: (doc) => doc.id || (doc.jar_id + "_" + doc.vocab_id),
-        toRow: (doc) => ({
-          jar_id: doc.jar_id,
-          vocab_id: doc.vocab_id,
-          position: Number(doc.position) || 0,
-          added_at: doc.added_at || new Date().toISOString()
-        }),
-        fromRow: (row) => ({
-          id: row.jar_id + "_" + row.vocab_id,
-          jar_id: row.jar_id,
-          vocab_id: row.vocab_id,
-          position: Number(row.position) || 0,
-          added_at: row.added_at
+          desc: "Lọ từ vựng chủ đề",
+          icon: row.icon || "archive-jar",
+          is_pro_only: Boolean(row.is_pro),
+          word_count: Number(row.word_count) || 0,
+          words: Array.isArray(row.words) ? row.words : []
         })
       },
 
@@ -4765,6 +5814,17 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         label: "Bài học chủ đề (Article)",
         idKey: (doc) => doc.id,
         toRow: (doc) => {
+          const mdContent = doc.content_md != null ? doc.content_md : (doc.content != null ? doc.content : (doc.content_markdown || ""));
+          let intro = (doc.intro || "").trim();
+          if (!intro && mdContent) {
+            const p = mdContent.split("\n\n").find(x => x.trim() && !x.trim().startsWith("#") && !x.trim().startsWith(">") && !x.trim().startsWith("|") && !x.trim().startsWith("-"));
+            if (p) intro = p.trim().slice(0, 300);
+          }
+          let cTip = (doc.culturalTip || doc.cultural_tip || "").trim();
+          if (!cTip && mdContent) {
+            const tipMatch = mdContent.match(/>\s*\[!(?:NOTE|TIP)\][\s\S]*?(?=\n\n|$)/i);
+            if (tipMatch) cTip = tipMatch[0].replace(/>\s*(\[!.*\]\s*)?/g, "").trim().slice(0, 300);
+          }
           const dialogues = Array.isArray(doc.dialogues) ? doc.dialogues.map(d => ({
             speaker: (d.speaker || d.who || "Người nói").trim(),
             who: (d.speaker || d.who || "Người nói").trim(),
@@ -4774,23 +5834,26 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           })) : [];
           const grammarNotes = Array.isArray(doc.grammarNotes) ? doc.grammarNotes : (Array.isArray(doc.grammar_notes) ? doc.grammar_notes : (doc.grammar ? [{ title: doc.grammar.title || "", content: doc.grammar.rule || "" }] : []));
           const actionChains = Array.isArray(doc.actionChains) ? doc.actionChains : (Array.isArray(doc.action_chains) ? doc.action_chains : []);
-          const mdContent = doc.content_md != null ? doc.content_md : (doc.content != null ? doc.content : (doc.content_markdown || ""));
           return {
-            id: String(doc.id).trim(),
+            id: String(doc.id || doc.code || "").trim(),
             title: doc.title || ("Bài học: " + doc.id),
             level: doc.level || "A1",
-            intro: doc.intro || "",
+            intro: intro,
             content_md: mdContent,
             audio_url: doc.audioUrl || doc.audio_url || null,
             dialogues: dialogues,
             grammar_notes: grammarNotes,
             action_chains: actionChains,
-            cultural_tip: doc.culturalTip || doc.cultural_tip || "",
+            cultural_tip: cTip,
             updated_at: new Date().toISOString()
           };
         },
         fromRow: (row) => {
           const art = row.article || {};
+          let mdContent = row.content_md || art.content_md || art.content || art.content_markdown || "";
+          if (!mdContent && typeof buildTopicArticleMarkdown === "function") {
+            mdContent = buildTopicArticleMarkdown(row, row.id || row.code);
+          }
           const rowDia = Array.isArray(row.dialogues) ? row.dialogues : (Array.isArray(art.dialogues) ? art.dialogues : []);
           const normDia = rowDia.map(d => ({
             speaker: d.speaker || d.who || "",
@@ -4799,7 +5862,6 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             ru: d.ru || "",
             vi: d.vi || ""
           }));
-          const mdContent = row.content_md || art.content_md || art.content || art.content_markdown || "";
           return {
             id: row.id || row.code,
             title: row.title || art.title || ("Bài học: " + (row.id || row.code)),
@@ -4823,18 +5885,22 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         deleteCol: "code",
         label: "Chủ đề luyện nghe",
         idKey: (doc) => doc.code || doc.id,
-        toRow: (doc) => ({
-          id: (doc.id && String(doc.id).includes("-")) ? doc.id : undefined,
-          code: String(doc.code || doc.id || "").trim(),
-          title: doc.title || "Chủ đề luyện nghe",
-          level: doc.level || "A1",
-          category: doc.category || "airport",
-          description: doc.description || "",
-          icon: doc.icon || "headphones",
-          sort_order: Number(doc.sort_order) || 0,
-          is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
-          updated_at: new Date().toISOString()
-        }),
+        toRow: (doc) => {
+          const topUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
+          doc.uuid = topUuid;
+          return {
+            id: topUuid,
+            code: String(doc.code || doc.id || "").trim(),
+            title: doc.title || "Chủ đề luyện nghe",
+            level: doc.level || "A1",
+            category: doc.category || "airport",
+            description: doc.description || "",
+            icon: doc.icon || "headphones",
+            sort_order: Number(doc.sort_order) || 0,
+            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
+            updated_at: new Date().toISOString()
+          };
+        },
         fromRow: (row) => ({
           id: row.code || row.id,
           uuid: row.id,
@@ -4855,26 +5921,35 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         deleteCol: "code",
         label: "Bài luyện nghe & chính tả",
         idKey: (doc) => doc.code || doc.id,
-        toRow: (doc) => ({
-          code: String(doc.code || doc.id).trim(),
-          topic_id: (doc.topic_id && String(doc.topic_id).includes("-")) ? doc.topic_id : (doc.topic_id || null),
-          title: doc.title || "Bài luyện nghe",
-          vi: doc.vi || "",
-          translation_vi: doc.vi || "",
-          level: doc.level || "A1",
-          level_name: doc.levelName || ("Sơ cấp " + (doc.level || "A1")),
-          category: doc.category || "comprehension",
-          category_name: doc.categoryName || "Nghe hiểu",
-          audio_url: doc.audio_url || doc.audioUrl || null,
-          duration_seconds: Number(doc.duration_seconds || doc.durationSeconds) || 30,
-          lines: Array.isArray(doc.lines) ? doc.lines : [],
-          questions: Array.isArray(doc.questions) ? doc.questions : [],
-          sort_order: Number(doc.sort_order) || 1,
-          is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
-          updated_at: new Date().toISOString()
-        }),
+        toRow: (doc) => {
+          const lesUuid = (doc.lesson_uuid && isValidUUID(doc.lesson_uuid)) ? doc.lesson_uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
+          doc.lesson_uuid = lesUuid;
+          return {
+            id: lesUuid,
+            code: String(doc.code || doc.id).trim(),
+            topic_id: (doc.topic_id && isValidUUID(doc.topic_id)) ? doc.topic_id : null,
+            title: doc.title || "Bài luyện nghe",
+            vi: doc.vi || "",
+            translation_vi: doc.vi || "",
+            level: doc.level || "A1",
+            level_name: doc.levelName || ("Sơ cấp " + (doc.level || "A1")),
+            category: doc.category || "comprehension",
+            category_name: doc.categoryName || "Nghe hiểu",
+            audio_url: doc.audio_url || doc.audioUrl || null,
+            youtube_id: doc.youtube_id || doc.youtubeId || null,
+            video_youtube_id: doc.youtube_id || doc.youtubeId || null,
+            duration_seconds: Number(doc.duration_seconds || doc.durationSeconds) || 30,
+            lines: Array.isArray(doc.lines) ? doc.lines : [],
+            questions: Array.isArray(doc.questions) ? doc.questions : [],
+            sort_order: Number(doc.sort_order) || 1,
+            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
+            updated_at: new Date().toISOString()
+          };
+        },
         fromRow: (row) => ({
           id: row.code || row.id,
+          uuid: row.id,
+          lesson_uuid: row.id,
           code: row.code || row.id,
           topic_id: row.topic_id || "",
           title: row.title || "",
@@ -4885,6 +5960,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           categoryName: row.category_name || "Nghe hiểu",
           audio_url: row.audio_url || "",
           audioUrl: row.audio_url || "",
+          youtube_id: row.youtube_id || row.video_youtube_id || "",
+          youtubeId: row.youtube_id || row.video_youtube_id || "",
           duration_seconds: Number(row.duration_seconds) || 30,
           sort_order: Number(row.sort_order) || 1,
           is_pro_only: Boolean(row.is_pro_only),
@@ -4903,7 +5980,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const raw = doc.raw_data || {};
           const ytId = doc.youtubeId || doc.youtube_id || raw.youtube_video_id || "";
           const itemsArr = Array.isArray(doc.sentences) && doc.sentences.length ? doc.sentences : (Array.isArray(doc.items) ? doc.items : []);
+          const spUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
+          doc.uuid = spUuid;
           return {
+            id: spUuid,
             code: String(doc.id || doc.code).trim(),
             title: doc.title || "Bài luyện nói",
             level: doc.level || "A1",
@@ -4998,9 +6078,12 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const promptText = doc.prompt || doc.prompt_text || "";
           const tipsArr = Array.isArray(doc.tips) ? doc.tips : (typeof doc.tips === "string" ? doc.tips.split("\n").map(s => s.trim()).filter(Boolean) : []);
           const wordsArr = Array.isArray(doc.suggested_words) ? doc.suggested_words : (typeof doc.suggested_words === "string" ? doc.suggested_words.split("\n").map(s => s.trim()).filter(Boolean) : []);
+          const taskUuid = (doc.taskId && isValidUUID(doc.taskId)) ? doc.taskId : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
+          doc.taskId = taskUuid;
           return {
+            id: taskUuid,
             code: String(doc.code || doc.id).trim(),
-            topic_id: (doc.topic_id && String(doc.topic_id).includes("-")) ? doc.topic_id : (doc.topic_id || null),
+            topic_id: (doc.topic_id && isValidUUID(doc.topic_id)) ? doc.topic_id : null,
             title: doc.title || "Bài luyện viết",
             level: doc.level || "A1",
             level_name: doc.levelName || ("Sơ cấp " + (doc.level || "A1")),
@@ -5010,6 +6093,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             image_url: doc.image_url || null,
             prompt: promptText,
             prompt_text: promptText,
+            source_text: doc.source_text || (doc.task_type === "translation" ? promptText : null),
             model_answer: modelText,
             sample_essay: modelText,
             min_words: Number(doc.min_words || doc.minWords) || 30,
@@ -5024,6 +6108,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         },
         fromRow: (row) => ({
           id: row.code || row.id,
+          uuid: row.id,
+          taskId: row.id,
           code: row.code || row.id,
           topic_id: row.topic_id || "",
           title: row.title || "",
@@ -5052,21 +6138,25 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         deleteCol: "code",
         label: "Chủ đề luyện viết & dịch",
         idKey: (doc) => doc.code || doc.id,
-        toRow: (doc) => ({
-          id: (doc.id && String(doc.id).includes("-")) ? doc.id : undefined,
-          code: String(doc.code || doc.id || "").trim(),
-          title: doc.title || "Chủ đề viết",
-          level: doc.level || "A1",
-          level_name: doc.level_name || doc.levelName || ("Sơ cấp " + (doc.level || "A1")),
-          type: doc.type || "picture",
-          category: doc.category || "daily",
-          category_name: doc.category_name || doc.categoryName || "Sinh hoạt thường nhật",
-          description: doc.description || "",
-          icon: doc.icon || "timer-clock",
-          sort_order: Number(doc.sort_order) || 0,
-          is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
-          updated_at: new Date().toISOString()
-        }),
+        toRow: (doc) => {
+          const wtUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
+          doc.uuid = wtUuid;
+          return {
+            id: wtUuid,
+            code: String(doc.code || doc.id || "").trim(),
+            title: doc.title || "Chủ đề viết",
+            level: doc.level || "A1",
+            level_name: doc.level_name || doc.levelName || ("Sơ cấp " + (doc.level || "A1")),
+            type: doc.type || "picture",
+            category: doc.category || "daily",
+            category_name: doc.category_name || doc.categoryName || "Sinh hoạt thường nhật",
+            description: doc.description || "",
+            icon: doc.icon || "timer-clock",
+            sort_order: Number(doc.sort_order) || 0,
+            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
+            updated_at: new Date().toISOString()
+          };
+        },
         fromRow: (row) => ({
           id: row.code || row.id,
           uuid: row.id,
@@ -5086,162 +6176,6 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         })
       },
 
-      WRITING_SUBMISSIONS: {
-        table: "writing_submissions",
-        conflict: "id",
-        deleteCol: "id",
-        label: "Bài nộp Luyện viết",
-        idKey: (doc) => doc.id,
-        toRow: (doc) => {
-          const isUuid = (str) => typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str.trim());
-          return {
-            id: (doc.id && isUuid(doc.id)) ? doc.id : undefined,
-            user_id: (doc.user_id && isUuid(doc.user_id)) ? doc.user_id : null,
-            task_id: (doc.task_id && isUuid(doc.task_id)) ? doc.task_id : null,
-            student_text: doc.student_text || doc.content_ru || "",
-            content_ru: doc.student_text || doc.content_ru || "",
-            word_count: Number(doc.word_count) || (doc.student_text ? doc.student_text.trim().split(/\s+/).length : 0),
-            overall_score: doc.overall_score != null ? Number(doc.overall_score) : null,
-            status: doc.status || "submitted",
-            teacher_notes: doc.teacher_notes || "",
-            submitted_at: doc.submitted_at || new Date().toISOString(),
-            graded_at: doc.graded_at || null,
-            ai_feedback: (doc.ai_feedback && typeof doc.ai_feedback === "object") ? doc.ai_feedback : {}
-          };
-        },
-        fromRow: (row) => ({
-          id: row.id || ("sub_" + row.user_id + "_" + row.task_id),
-          user_id: row.user_id,
-          task_id: row.task_id,
-          student_text: row.student_text || row.content_ru || "",
-          word_count: Number(row.word_count) || 0,
-          overall_score: row.overall_score != null ? Number(row.overall_score) : null,
-          status: row.status || "submitted",
-          teacher_notes: row.teacher_notes || "",
-          submitted_at: row.submitted_at,
-          graded_at: row.graded_at,
-          ai_feedback: row.ai_feedback || {}
-        })
-      },
-
-      TRKI_SUBMISSIONS: {
-        table: "trki_submissions",
-        conflict: "id",
-        deleteCol: "id",
-        label: "Kết quả thi TRKI",
-        idKey: (doc) => doc.id,
-        toRow: (doc) => {
-          const isUuid = (str) => typeof str === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str.trim());
-          return {
-            id: (doc.id && isUuid(doc.id)) ? doc.id : undefined,
-            user_id: (doc.user_id && isUuid(doc.user_id)) ? doc.user_id : null,
-            exam_id: doc.exam_id || "trki_a1",
-            score_percent: Number(doc.score_percent) || 0,
-            passed: Boolean(doc.passed === true || doc.passed === "true"),
-            section_scores: (doc.section_scores && typeof doc.section_scores === "object") ? doc.section_scores : {},
-            user_answers: (doc.user_answers && typeof doc.user_answers === "object") ? doc.user_answers : {},
-            time_spent_sec: Number(doc.time_spent_sec) || 0,
-            submitted_at: doc.submitted_at || new Date().toISOString()
-          };
-        },
-        fromRow: (row) => ({
-          id: row.id || ("exam_" + row.user_id + "_" + row.exam_id),
-          user_id: row.user_id,
-          exam_id: row.exam_id,
-          score_percent: Number(row.score_percent) || 0,
-          passed: Boolean(row.passed),
-          time_spent_sec: Number(row.time_spent_sec) || 0,
-          submitted_at: row.submitted_at
-        })
-      },
-
-      VOCAB_LESSONS: {
-        table: "vocab_lessons",
-        conflict: "code",
-        deleteCol: "code",
-        label: "Video «Хочу в Россию»",
-        idKey: (doc) => doc.id || doc.code,
-        toRow: (doc) => {
-          const storyContent = doc.content_md || doc.story || ("# " + (doc.ru || "") + "\n\n" + (doc.vi || "") + "\n\n" + (doc.story || ""));
-          return {
-            code: String(doc.id).trim(),
-            title: doc.ru || doc.title || "Tập phim «Хочу в Россию»",
-            level: doc.level || "A1",
-            content_md: storyContent,
-            publication_status: "published",
-            updated_at: new Date().toISOString()
-          };
-        },
-        fromRow: (row) => ({
-          id: row.code || row.id,
-          ru: row.title || "",
-          title: row.title || "",
-          level: row.level || "A1",
-          story: row.content_md || "",
-          content_md: row.content_md || ""
-        })
-      },
-
-      USER_PROGRESS: {
-        table: "user_progress",
-        conflict: "user_id",
-        deleteCol: "user_id",
-        label: "Tiến độ học tập",
-        idKey: (doc) => doc.user_id || doc.id,
-        toRow: (doc) => ({
-          user_id: doc.user_id || doc.id,
-          xp_total: Number(doc.xp_total) || 0,
-          streak_count: Number(doc.streak_count) || 0,
-          last_study_date: doc.last_study_date || new Date().toISOString().slice(0, 10),
-          vocab_stats: (doc.vocab_stats && typeof doc.vocab_stats === "object") ? doc.vocab_stats : { due: 0, learning: 0, mastered: 0 },
-          done_list: (doc.done_list && typeof doc.done_list === "object") ? doc.done_list : { trkiDone: [], speakDone: [], vocabDone: [], writeDone: [], listenDone: [] },
-          updated_at: new Date().toISOString()
-        }),
-        fromRow: (row) => ({
-          id: row.user_id,
-          user_id: row.user_id,
-          xp_total: Number(row.xp_total) || 0,
-          streak_count: Number(row.streak_count) || 0,
-          last_study_date: row.last_study_date || "",
-          vocab_stats: row.vocab_stats || {},
-          done_list: row.done_list || {}
-        })
-      },
-
-      USER_VOCAB_PROGRESS: {
-        table: "user_vocab_progress",
-        conflict: "user_id,vocab_id,direction",
-        deleteCol: "user_id",
-        label: "Tiến độ thẻ từ SM-2",
-        idKey: (doc) => doc.id || (doc.user_id + "_" + doc.vocab_id),
-        toRow: (doc) => ({
-          user_id: doc.user_id,
-          vocab_id: doc.vocab_id,
-          direction: Number(doc.direction) || 1,
-          learning_state: Number(doc.learning_state) || 1,
-          interval_seconds: (Number(doc.interval_days) || 1) * 86400,
-          interval_days: Number(doc.interval_days) || 1,
-          ease_factor: Number(doc.ease_factor) || 2.5,
-          next_review_at: doc.next_review_at || new Date().toISOString(),
-          review_count: Number(doc.review_count) || 0,
-          lapse_count: Number(doc.lapse_count) || 0,
-          is_suspended: Boolean(doc.is_suspended),
-          row_version: 1,
-          updated_at: new Date().toISOString()
-        }),
-        fromRow: (row) => ({
-          id: row.user_id + "_" + row.vocab_id,
-          user_id: row.user_id,
-          vocab_id: row.vocab_id,
-          direction: Number(row.direction) || 1,
-          interval_days: Number(row.interval_days) || 1,
-          ease_factor: Number(row.ease_factor) || 2.5,
-          next_review_at: row.next_review_at,
-          review_count: Number(row.review_count) || 0,
-          lapse_count: Number(row.lapse_count) || 0
-        })
-      },
-
       SHOP_PRODUCTS: {
         table: "shop_products",
         conflict: "code",
@@ -5253,10 +6187,12 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const origPr = Number(doc.priceOld || doc.original_price || doc.origPrice) || 0;
           const prodTitle = doc.title || doc.name || "Sản phẩm";
           const imgUrl = doc.image || doc.image_url || "";
-          const pId = String(doc.id || doc.code).trim();
+          const prodCode = String(doc.code || doc.id || ("prod_" + Date.now().toString().slice(-4))).trim();
+          const prodUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
+          doc.uuid = prodUuid;
           return {
-            id: pId,
-            code: pId,
+            id: prodUuid,
+            code: prodCode,
             name: prodTitle,
             title: prodTitle,
             category: doc.category || "banh_keo",
@@ -5279,6 +6215,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         },
         fromRow: (row) => ({
           id: row.code || row.id,
+          uuid: row.id,
+          code: row.code || row.id,
           title: row.title || row.name || "",
           name: row.title || row.name || "",
           category: row.category || "banh_keo",
@@ -5358,10 +6296,13 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const mdContent = doc.content_md != null ? doc.content_md : (doc.content != null ? doc.content : (doc.content_markdown || ""));
           const coverImg = doc.cover_url || doc.cover || doc.cover_image || "assets/red-square.jpg";
           const isPub = (doc.publication_status === "published" || doc.published === true || doc.publication_status === undefined);
-          const slugVal = String(doc.slug || doc.id || ("post_" + Date.now())).trim();
+          const slugVal = String(doc.slug || doc.id || ("post-" + Date.now())).trim();
+          const postUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
+          doc.uuid = postUuid;
           return {
-            id: slugVal,
+            id: postUuid,
             slug: slugVal,
+            code: slugVal,
             title: doc.title || "Bài viết Blog",
             category: doc.category || doc.tag || "du_hoc",
             author: doc.author || "Ban Biên Tập RUSI TRKI",
@@ -5377,6 +6318,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         fromRow: (row) => ({
           slug: row.slug,
           id: row.slug,
+          uuid: row.id,
           title: row.title || "",
           category: row.category || "du_hoc",
           author: row.author || "Ban Biên Tập RUSI TRKI",
@@ -5392,50 +6334,6 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         })
       },
 
-      GRAMMAR_LESSONS: {
-        table: "grammar_lessons",
-        conflict: "id",
-        deleteCol: "id",
-        label: "Bài học Ngữ pháp",
-        idKey: (doc) => doc.id,
-        toRow: (doc) => {
-          const rulesArr = Array.isArray(doc.rules) ? doc.rules : [];
-          const examplesArr = Array.isArray(doc.examples) ? doc.examples : [];
-          return {
-            id: String(doc.id).trim(),
-            title: doc.title || "Bài học ngữ pháp",
-            vi: doc.vi || "",
-            level: doc.level || "A1",
-            topic: doc.topic || "Danh từ & 6 Cách",
-            category: doc.category || doc.topic || "Danh từ & 6 Cách",
-            summary: doc.summary || doc.vi || "",
-            content_md: doc.content_md || doc.content || "",
-            rules: rulesArr,
-            examples: examplesArr,
-            table_data: doc.table_data || doc.table || null,
-            questions: Array.isArray(doc.questions || doc.quickQuiz) ? (doc.questions || doc.quickQuiz) : [],
-            publication_status: doc.publication_status || "published",
-            updated_at: new Date().toISOString()
-          };
-        },
-        fromRow: (row) => ({
-          id: row.id,
-          title: row.title || "",
-          vi: row.vi || "",
-          level: row.level || "A1",
-          topic: row.topic || "Danh từ & 6 Cách",
-          summary: row.summary || "",
-          content_md: row.content_md || "",
-          content: row.content_md || "",
-          publication_status: row.publication_status || "published",
-          rules: Array.isArray(row.rules) ? row.rules : [],
-          examples: Array.isArray(row.examples) ? row.examples : [],
-          table: row.table_data || null,
-          table_data: row.table_data || null,
-          quickQuiz: Array.isArray(row.questions) ? row.questions : []
-        })
-      },
-
       USERS: {
         table: "profiles",
         conflict: "id",
@@ -5443,20 +6341,24 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         label: "Học viên & Quản trị",
         idKey: (doc) => doc.id,
         toRow: (doc) => ({
-          id: String(doc.id).trim(),
+          id: (doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID(),
           full_name: doc.full_name || doc.name || "",
           avatar_url: doc.avatar_url || null,
-          timezone: "Asia/Ho_Chi_Minh",
+          timezone: doc.timezone || "Asia/Ho_Chi_Minh",
           role: doc.role || "student",
           is_pro: Boolean(doc.is_pro === true || doc.is_pro === "true"),
+          pro_expires_at: doc.pro_expires_at ? new Date(doc.pro_expires_at).toISOString() : null,
           updated_at: new Date().toISOString()
         }),
         fromRow: (row) => ({
           id: row.id,
           email: row.email || "",
           full_name: row.full_name || "",
+          avatar_url: row.avatar_url || "",
+          timezone: row.timezone || "Asia/Ho_Chi_Minh",
           role: row.role || "student",
           is_pro: Boolean(row.is_pro),
+          pro_expires_at: row.pro_expires_at || "",
           streak: 0,
           xp: 0
         })
@@ -5468,20 +6370,27 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         deleteCol: "order_code",
         label: "Đơn hàng & Giao dịch",
         idKey: (doc) => doc.order_code || doc.id,
-        toRow: (doc) => ({
-          order_code: String(doc.order_code || doc.id || ("ORD-" + Date.now().toString().slice(-6))).trim(),
-          user_id: doc.userId || null,
-          package_id: doc.packageId || doc.package_id || "",
-          amount: Number(doc.amount) || 0,
-          amount_minor: (Number(doc.amount) || 0) * 100,
-          currency: "VND",
-          payment_method: String(doc.paymentMethod || doc.payment_method || "VIETQR").toUpperCase(),
-          status: String(doc.status || "pending").toLowerCase(),
-          expires_at: doc.expires_at || new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
-          updated_at: new Date().toISOString()
-        }),
+        toRow: (doc) => {
+          const ordCode = String(doc.order_code || doc.id || ("ORD-" + Date.now().toString().slice(-6))).trim();
+          const ordUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
+          doc.uuid = ordUuid;
+          return {
+            id: ordUuid,
+            order_code: ordCode,
+            user_id: (doc.userId && isValidUUID(doc.userId)) ? doc.userId : null,
+            package_id: doc.packageId || doc.package_id || "",
+            amount: Number(doc.amount) || 0,
+            amount_minor: (Number(doc.amount) || 0) * 100,
+            currency: "VND",
+            payment_method: String(doc.paymentMethod || doc.payment_method || "VIETQR").toUpperCase(),
+            status: String(doc.status || "pending").toLowerCase(),
+            expires_at: doc.expires_at || new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+            updated_at: new Date().toISOString()
+          };
+        },
         fromRow: (row) => ({
           id: row.order_code || row.id,
+          uuid: row.id,
           order_code: row.order_code || row.id,
           userId: row.user_id || "",
           userEmail: row.customer_email || "",
@@ -5543,27 +6452,48 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           return { ok: false, error, message: error.message || "Lỗi Supabase" };
         }
 
-        // Đồng bộ gương song song cho 18 tables
-        if (slug === "TOPIC_ARTICLES") {
+        // Đồng bộ gương song song cho các bảng liên kết
+        if (slug === "VOCAB_JARS") {
           try {
-            await sb.from("vocab_jars").update({
-              article: {
-                id: doc.id,
-                title: doc.title,
-                level: doc.level,
-                intro: doc.intro,
-                content: doc.content || doc.content_markdown,
-                audioUrl: doc.audioUrl,
-                dialogues: doc.dialogues,
-                grammar: doc.grammar,
-                grammarNotes: doc.grammarNotes,
-                vocabTable: doc.vocabTable,
-                actionChains: doc.actionChains,
-                culturalTip: doc.culturalTip
-              },
-              updated_at: new Date().toISOString()
-            }).eq("code", String(doc.id).trim());
-          } catch (_) {}
+            const words = Array.isArray(doc.words) ? doc.words : [];
+            if (words.length > 0) {
+              const jarId = (data && data[0] && data[0].id) || row.id;
+              const itemsToInsert = [];
+              const wordsToUpsert = [];
+              for (let idx = 0; idx < words.length; idx++) {
+                const w = words[idx];
+                if (!w) continue;
+                const wId = (w.id && isValidUUID(w.id)) ? w.id : generateUUID();
+                w.id = wId;
+                wordsToUpsert.push({
+                  id: wId,
+                  word_with_stress: w.stress || w.word_with_stress || w.ru || "сло́во",
+                  meaning_vi: w.meaning_vi || w.vi || "",
+                  pos: w.pos || "сущ.",
+                  level: w.level || doc.level || "A1",
+                  gender: w.gender || null,
+                  aspect: w.aspect || null,
+                  notes: w.notes || w.note || null,
+                  structures: Array.isArray(w.structures) ? w.structures : [],
+                  examples: Array.isArray(w.examples) ? w.examples : (w.ex ? [{ ru: w.ex, vi: w.ex_vi || "" }] : []),
+                  updated_at: new Date().toISOString()
+                });
+                itemsToInsert.push({
+                  jar_id: jarId,
+                  vocab_id: wId,
+                  position: idx + 1
+                });
+              }
+              if (wordsToUpsert.length > 0) {
+                await sb.from("vocabularies").upsert(wordsToUpsert, { onConflict: "id" });
+              }
+              if (itemsToInsert.length > 0) {
+                await sb.from("jar_items").upsert(itemsToInsert, { onConflict: "jar_id,vocab_id" });
+              }
+            }
+          } catch (e) {
+            console.warn("[SupabaseSyncEngine] Đồng bộ jar_items cảnh báo:", e);
+          }
         }
 
         return { ok: true, table: mapping.table, data };
@@ -5581,21 +6511,36 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       if (!sb) return { ok: false, message: "Supabase client chưa sẵn sàng." };
 
       try {
-        const { error } = await sb
-          .from(mapping.table)
-          .delete()
-          .eq(mapping.deleteCol, idKey);
+        let query = sb.from(mapping.table).delete();
+        if (isValidUUID(idKey)) {
+          if (mapping.deleteCol === "id") {
+            query = query.eq("id", idKey);
+          } else {
+            query = query.or(`id.eq.${idKey},${mapping.deleteCol}.eq.${idKey}`);
+          }
+        } else {
+          if (mapping.deleteCol === "id") {
+            if (mapping.conflict && mapping.conflict !== "id" && !mapping.conflict.includes(",")) {
+              query = query.eq(mapping.conflict, idKey);
+            } else {
+              query = query.eq(mapping.deleteCol, idKey);
+            }
+          } else {
+            query = query.eq(mapping.deleteCol, idKey);
+          }
+        }
+
+        const { error } = await query;
 
         if (error) {
           console.error(`[SupabaseSyncEngine] Lỗi xoá bảng ${mapping.table}:`, error);
           return { ok: false, error, message: error.message };
         }
 
-        if (slug === "TOPIC_ARTICLES") {
+        if (slug === "VOCAB_JARS" && isValidUUID(idKey)) {
           try {
-            await sb.from("vocab_jars").update({ article: null, updated_at: new Date().toISOString() }).eq("code", idKey);
+            await sb.from("jar_items").delete().eq("jar_id", idKey);
           } catch (_) {}
-        
         }
 
         return { ok: true, table: mapping.table };
@@ -5779,15 +6724,52 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         toast("Lỗi cú pháp JSON: " + err.message, "error");
         return;
       }
+    } else {
+      // Đồng bộ tức thời tất cả các input DOM vào State.currentDraft trước khi lưu
+      document.querySelectorAll(".live-draft-field").forEach((inp) => {
+        const k = inp.getAttribute("data-key") || inp.name;
+        if (k) {
+          State.currentDraft[k] = inp.type === "number" ? Number(inp.value) : inp.value;
+        }
+      });
+      // Nếu có canvas Notion trực quan, đồng bộ canvas sang markdown trước khi lưu
+      const canvasEl = document.querySelector(".notion-canvas");
+      if (canvasEl && typeof window.domToMarkdown === "function") {
+        const md = window.domToMarkdown(canvasEl);
+        const mdInp = document.querySelector(".live-markdown-input");
+        if (mdInp) mdInp.value = md;
+        State.currentDraft.content_md = md;
+        State.currentDraft.content = md;
+        State.currentDraft.content_markdown = md;
+      } else {
+        const mdInp = document.querySelector(".live-markdown-input");
+        if (mdInp) {
+          const val = mdInp.value;
+          State.currentDraft.content_md = val;
+          State.currentDraft.content = val;
+          State.currentDraft.content_markdown = val;
+        }
+      }
     }
 
     const data = State.currentDraft;
+
+    if (slug === "TOPIC_ARTICLES") {
+      if (!data.intro && data.content_md) {
+        const matchIntro = data.content_md.split("\n\n").find(p => p.trim() && !p.trim().startsWith("#") && !p.trim().startsWith(">") && !p.trim().startsWith("|") && !p.trim().startsWith("-"));
+        if (matchIntro) data.intro = matchIntro.trim().slice(0, 300);
+      }
+    }
 
     // Form validation: Kiểm tra các trường bắt buộc
     for (const f of col.fields) {
       if (f.required) {
         const val = data[f.key];
         if (val === undefined || val === null || String(val).trim() === "") {
+          if (f.key === "id" && (slug === "VOCABULARIES" || slug === "VOCAB_JARS")) {
+            data.id = generateUUID();
+            continue;
+          }
           restoreButtons(false);
           toast(`Vui lòng nhập trường bắt buộc: "${f.label}"`, "warning");
           const inp = document.querySelector(`[data-key="${f.key}"]`);
@@ -5798,6 +6780,12 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           }
           return;
         }
+      }
+    }
+
+    if (slug === "VOCABULARIES") {
+      if (!data.id || !isValidUUID(data.id)) {
+        data.id = (data.uuid && isValidUUID(data.uuid)) ? data.uuid : generateUUID();
       }
     }
 
@@ -5845,6 +6833,24 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       try {
         const syncRes = await SupabaseSyncEngine.upsertDoc(slug, data);
         if (syncRes.ok) {
+          if (syncRes.data && syncRes.data[0]) {
+            const returnedRow = syncRes.data[0];
+            if (returnedRow.id) {
+              data.uuid = returnedRow.id;
+              if (isValidUUID(returnedRow.id) && (!data.id || isValidUUID(data.id))) {
+                data.id = returnedRow.id;
+                idKey = returnedRow.id;
+              }
+              const curStore = loadAdminStore();
+              if (curStore[slug]) {
+                const docIdx = curStore[slug].findIndex(it => (it.id || it.slug || it.title) === (State.currentDocId || idKey));
+                if (docIdx >= 0) {
+                  curStore[slug][docIdx] = { ...curStore[slug][docIdx], ...data };
+                  saveAdminStore(curStore);
+                }
+              }
+            }
+          }
           toast(`Đã lưu & đồng bộ thành công lên Supabase (bảng ${syncRes.table})!`, "success");
         } else {
           toast(`Đã lưu trên máy. Supabase phản hồi: ${syncRes.message}`, "warning");
@@ -6102,6 +7108,32 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
 
     if (!drawer || !backdrop) return;
 
+    // Flush current DOM input values into draft buffer
+    if (State.currentDraft && State.activeEditorTab !== "json") {
+      document.querySelectorAll(".live-draft-field").forEach((inp) => {
+        const k = inp.getAttribute("data-key") || inp.name;
+        if (k) State.currentDraft[k] = inp.type === "number" ? Number(inp.value) : inp.value;
+      });
+      // Nếu có canvas Notion trực quan, đồng bộ canvas sang markdown trước khi lưu
+      const canvasEl = document.querySelector(".notion-canvas");
+      if (canvasEl && typeof window.domToMarkdown === "function") {
+        const md = window.domToMarkdown(canvasEl);
+        const mdInp = document.querySelector(".live-markdown-input");
+        if (mdInp) mdInp.value = md;
+        State.currentDraft.content_md = md;
+        State.currentDraft.content = md;
+        State.currentDraft.content_markdown = md;
+      } else {
+        const mdInp = document.querySelector(".live-markdown-input");
+        if (mdInp) {
+          const val = mdInp.value;
+          State.currentDraft.content_md = val;
+          State.currentDraft.content = val;
+          State.currentDraft.content_markdown = val;
+        }
+      }
+    }
+
     // Temporary sync draft data to local cache so preview iframe reads latest changes
     if (State.currentDraft && State.currentSlug) {
       const store = loadAdminStore();
@@ -6161,6 +7193,32 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
   }
 
   window.openPreviewInNewTab = function () {
+    // Flush current DOM input values into draft buffer
+    if (State.currentDraft && State.activeEditorTab !== "json") {
+      document.querySelectorAll(".live-draft-field").forEach((inp) => {
+        const k = inp.getAttribute("data-key") || inp.name;
+        if (k) State.currentDraft[k] = inp.type === "number" ? Number(inp.value) : inp.value;
+      });
+      // Nếu có canvas Notion trực quan, đồng bộ canvas sang markdown trước khi lưu
+      const canvasEl = document.querySelector(".notion-canvas");
+      if (canvasEl && typeof window.domToMarkdown === "function") {
+        const md = window.domToMarkdown(canvasEl);
+        const mdInp = document.querySelector(".live-markdown-input");
+        if (mdInp) mdInp.value = md;
+        State.currentDraft.content_md = md;
+        State.currentDraft.content = md;
+        State.currentDraft.content_markdown = md;
+      } else {
+        const mdInp = document.querySelector(".live-markdown-input");
+        if (mdInp) {
+          const val = mdInp.value;
+          State.currentDraft.content_md = val;
+          State.currentDraft.content = val;
+          State.currentDraft.content_markdown = val;
+        }
+      }
+    }
+
     const docId = State.currentDraft ? (State.currentDraft.id || State.currentDraft.slug) : State.currentDocId;
     let targetUrl = "index.html";
     if (State.currentSlug && COLLECTIONS[State.currentSlug]) {

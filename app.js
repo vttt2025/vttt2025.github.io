@@ -2480,10 +2480,25 @@ function bootApp() {
   try { applySeason("winter"); } catch (e) { console.error("[Boot] applySeason:", e); }
   try { Progress.checkStreakStatus(); } catch (e) { console.error("[Boot] checkStreakStatus:", e); }
   try { bindAuthToHeader(); } catch (e) { console.error("[Boot] bindAuthToHeader:", e); }
-  // Dọn dẹp dữ liệu lưu trữ tạm thời cũ của client nếu có, giữ nguyên trki_admin_data cho CMS Admin
+  // Dọn dẹp triệt để dữ liệu mock/cũ của client, chỉ sử dụng dữ liệu từ Supabase Cloud
   try {
+    const pageName = document.body ? document.body.dataset.page : "";
+    if (pageName !== "admin") {
+      localStorage.removeItem("trki_admin_data");
+    }
     localStorage.removeItem("trki_local_data");
     localStorage.removeItem("rusi_local_data");
+    sessionStorage.removeItem("rusi_live_preview_draft");
+    localStorage.removeItem("rusi_live_preview_draft");
+    // Xoá bộ nhớ đệm sessionStorage cũ của các phiên bản trước
+    if (typeof sessionStorage !== "undefined") {
+      for (let i = sessionStorage.length - 1; i >= 0; i--) {
+        const sk = sessionStorage.key(i);
+        if (sk && (sk.startsWith("rusi_sb_cache_v5:") || sk.startsWith("rusi_local_") || sk.startsWith("trki_local_"))) {
+          sessionStorage.removeItem(sk);
+        }
+      }
+    }
   } catch (_) {}
   try { warmBrowserCache(); } catch (e) { console.warn("[Boot] warmBrowserCache:", e); }
   try {
@@ -2665,21 +2680,58 @@ const RusiMarkdown = {
         continue;
       }
 
-      // Blockquotes & Alerts: > text or > [!NOTE] or > [!TIP]
+      // Blockquotes & Alerts: > text or > [!NOTE] or > [!TIP] or > [!WARNING]
       if (trimmed.startsWith(">")) {
         flushList();
-        let quoteContent = trimmed.replace(/^>\s?/, "");
-        if (quoteContent.startsWith("[!NOTE]") || quoteContent.startsWith("[!TIP]") || quoteContent.startsWith("[!IMPORTANT]")) {
-          const isTip = quoteContent.includes("TIP");
-          quoteContent = quoteContent.replace(/^\[!(NOTE|TIP|IMPORTANT)\]\s*/i, "");
+        flushTable();
+        const quoteLines = [];
+        while (i < lines.length && lines[i].trim().startsWith(">")) {
+          quoteLines.push(lines[i].trim().replace(/^>\s?/, ""));
+          i++;
+        }
+        i--;
+
+        const first = quoteLines[0] || "";
+        const alertMatch = first.match(/^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(.*)$/i);
+        if (alertMatch) {
+          const alertType = alertMatch[1].toUpperCase();
+          const firstContent = alertMatch[2] ? alertMatch[2].trim() : "";
+          const rest = quoteLines.slice(1);
+          if (firstContent) rest.unshift(firstContent);
+          const fullContent = rest.map(l => this.formatInline(l)).join("<br/>");
+
+          let icon = "📌";
+          let typeClass = "rusi-md-callout-note";
+          let typeTitle = "Ghi chú";
+          if (alertType === "TIP") {
+            icon = "💡";
+            typeClass = "rusi-md-callout-tip";
+            typeTitle = "Mẹo ghi nhớ";
+          } else if (alertType === "WARNING") {
+            icon = "⚠️";
+            typeClass = "rusi-md-callout-warning";
+            typeTitle = "Cảnh báo";
+          } else if (alertType === "IMPORTANT") {
+            icon = "⚡";
+            typeClass = "rusi-md-callout-important";
+            typeTitle = "Lưu ý trọng tâm";
+          } else if (alertType === "CAUTION") {
+            icon = "🛑";
+            typeClass = "rusi-md-callout-warning";
+            typeTitle = "Cẩn trọng";
+          }
+
           out.push(`
-            <div class="rusi-md-callout ${isTip ? 'rusi-md-callout-tip' : 'rusi-md-callout-note'}">
-              <span class="rusi-md-callout-icon">${isTip ? '💡' : '📌'}</span>
-              <div class="rusi-md-callout-text">${this.formatInline(quoteContent)}</div>
+            <div class="rusi-md-callout ${typeClass}">
+              <span class="rusi-md-callout-icon">${icon}</span>
+              <div class="rusi-md-callout-body">
+                <div class="rusi-md-callout-title">${typeTitle}</div>
+                <div class="rusi-md-callout-text">${fullContent}</div>
+              </div>
             </div>
           `);
         } else {
-          out.push(`<blockquote class="rusi-md-quote">${this.formatInline(quoteContent)}</blockquote>`);
+          out.push(`<blockquote class="rusi-md-quote">${quoteLines.map(l => this.formatInline(l)).join("<br/>")}</blockquote>`);
         }
         continue;
       }

@@ -1195,9 +1195,13 @@
     },
 
     /**
-     * Tạo phần tử DOM SVG thực thụ
+     * Tạo phần tử DOM SVG thực thụ hoặc thay thế các icon bên trong DOM container
      */
     render: function (name, opts) {
+      if (name && typeof name === 'object' && name.nodeType === 1) {
+        this.replace(name);
+        return name;
+      }
       var html = this.get(name, opts);
       var t = document.createElement("template");
       t.innerHTML = html.trim();

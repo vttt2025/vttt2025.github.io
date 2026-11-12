@@ -22,6 +22,28 @@ function el(sel) {
   return document.querySelector(sel);
 }
 
+function generateUUID() {
+  if (typeof window !== "undefined" && window.RusiUUID && typeof window.RusiUUID.generate === "function") {
+    return window.RusiUUID.generate();
+  }
+  if (typeof window !== "undefined" && window.RusiSupabase && typeof window.RusiSupabase.generateUUID === "function") {
+    return window.RusiSupabase.generateUUID();
+  }
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+function isValidUUID(str) {
+  if (typeof str !== "string") return false;
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str.trim());
+}
+
 function renderDauPagination(containerEl, currentPage, totalPages, onPageChange, options) {
   if (!containerEl) return;
   if (!totalPages || totalPages <= 1 || currentPage >= totalPages) {
@@ -386,9 +408,11 @@ window.openAddToJarModal = function(wordData) {
       newName.focus();
       return false;
     }
-    const newJarId = "custom-jar-" + Date.now();
+    const newJarId = generateUUID();
     const newJar = {
       id: newJarId,
+      uuid: newJarId,
+      code: "custom_" + newJarId.slice(0, 8),
       name: createdName,
       icon: "archive-jar",
       desc: "Lọ từ vựng cá nhân",
@@ -399,6 +423,9 @@ window.openAddToJarModal = function(wordData) {
     currentCustomJars.push(newJar);
     if (typeof STORE !== "undefined") {
       STORE.set("custom_jars", currentCustomJars);
+    }
+    if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
+      window.RusiSupabase.jars.save(window.Auth.user.uid, newJar).catch(() => {});
     }
     sel.value = newJarId;
 
@@ -488,6 +515,7 @@ window.openAddToJarModal = function(wordData) {
     jar.words = jar.words || [];
     const existingIdx = jar.words.findIndex(w => (w.ru || "").trim().toLowerCase() === ru.toLowerCase());
     const wordPayload = {
+      id: (existingIdx >= 0 && jar.words[existingIdx].id && isValidUUID(jar.words[existingIdx].id)) ? jar.words[existingIdx].id : generateUUID(),
       ru: ru,
       vi: finalVi,
       stress: stress,
@@ -506,6 +534,9 @@ window.openAddToJarModal = function(wordData) {
 
     if (typeof STORE !== "undefined") {
       STORE.set("custom_jars", currentCustomJars);
+    }
+    if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
+      window.RusiSupabase.jars.save(window.Auth.user.uid, jar).catch(() => {});
     }
     if (typeof playQuizletSound === "function") playQuizletSound("correct");
     closeModal();
@@ -641,8 +672,15 @@ function openAddWordToJarModal(jarId, onSuccess) {
     if (!jar) { if (typeof toast === "function") toast("Không tìm thấy lọ!"); return; }
 
     jar.words = jar.words || [];
-    const wordPayload = { ru, stress, vi, note, ex };
     const existingIdx = jar.words.findIndex(w => (w.ru || "").trim().toLowerCase() === ru.toLowerCase());
+    const wordPayload = {
+      id: (existingIdx >= 0 && jar.words[existingIdx].id && isValidUUID(jar.words[existingIdx].id)) ? jar.words[existingIdx].id : generateUUID(),
+      ru,
+      stress,
+      vi,
+      note,
+      ex
+    };
 
     if (existingIdx >= 0) {
       jar.words[existingIdx] = Object.assign({}, jar.words[existingIdx], wordPayload);
@@ -654,6 +692,9 @@ function openAddWordToJarModal(jarId, onSuccess) {
 
     if (typeof STORE !== "undefined") {
       STORE.set("custom_jars", customJars);
+    }
+    if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
+      window.RusiSupabase.jars.save(window.Auth.user.uid, jar).catch(() => {});
     }
     if (typeof playQuizletSound === "function") playQuizletSound("correct");
     closeModal();
@@ -920,9 +961,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       <!-- CONTROLS: CĂN GIỮA TUYỆT ĐỐI THEO CARD < 1/26 > (Req 6) -->
       <div class="quizlet-controls" style="display:flex;justify-content:center;align-items:center;margin:20px auto;width:100%;max-width:860px;box-sizing:border-box">
         <div class="quizlet-nav-wrap" style="margin:0 auto;display:inline-flex;align-items:center;justify-content:center;gap:18px">
-          <button type="button" class="quizlet-nav-btn" id="qNavPrev" title="Thẻ trước (Phím ←)">‹</button>
+          <button type="button" class="quizlet-nav-btn" id="qNavPrev" title="Thẻ trước (Phím ←)">${window.RusiIcons ? RusiIcons.get("chevron-left", { size: 22 }) : "‹"}</button>
           <div class="quizlet-counter" style="font-weight:700;font-size:1.15rem;min-width:80px;text-align:center">${fIdx + 1} / ${fActiveWords.length}</div>
-          <button type="button" class="quizlet-nav-btn" id="qNavNext" title="Thẻ sau (Phím →)">›</button>
+          <button type="button" class="quizlet-nav-btn" id="qNavNext" title="Thẻ sau (Phím →)">${window.RusiIcons ? RusiIcons.get("chevron-right", { size: 22 }) : "›"}</button>
         </div>
       </div>
 
@@ -2004,6 +2045,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               if (target && target.words) {
                 target.words = target.words.filter(w => (w.ru || "").trim() !== wordRu.trim());
                 STORE.set("custom_jars", jars);
+                if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
+                  window.RusiSupabase.jars.save(window.Auth.user.uid, target).catch(() => {});
+                }
                 toast(`Đã xóa từ «${wordRu}» khỏi lọ!`);
                 words = target.words;
                 previewWords = [...words];
@@ -2653,6 +2697,9 @@ function initVocabPage() {
             let jars = STORE.get("custom_jars", []);
             jars = jars.filter(j => j.id !== jId);
             STORE.set("custom_jars", jars);
+            if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
+              window.RusiSupabase.jars.delete(window.Auth.user.uid, jId).catch(() => {});
+            }
             toast(`Đã xóa lọ «${jName}»`);
             renderVocabCards();
           }
@@ -3053,16 +3100,23 @@ function initVocabPage() {
         return;
       }
       const customJars = STORE.get("custom_jars", []);
-      customJars.push({
-        id: "custom-jar-" + Date.now(),
+      const newJarId = generateUUID();
+      const newJar = {
+        id: newJarId,
+        uuid: newJarId,
+        code: "custom_" + newJarId.slice(0, 8),
         name,
         icon: "archive-jar", // Mặc định không cho tạo icon
         desc: "Lọ từ vựng cá nhân do học viên tạo",
         words: [],
         level: "custom",
         is_system: false
-      });
+      };
+      customJars.push(newJar);
       STORE.set("custom_jars", customJars);
+      if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
+        window.RusiSupabase.jars.save(window.Auth.user.uid, newJar).catch(() => {});
+      }
       toast("Đã tạo lọ từ vựng mới thành công!");
       closeModal();
       renderVocabHub();
@@ -3156,161 +3210,64 @@ const showTopicArticle = (jarId) => {
     const isUserPro = Boolean(typeof Monetization !== "undefined" && Monetization.isPro && Monetization.isPro());
     const printDate = new Date().toLocaleDateString("vi-VN", { year: "numeric", month: "2-digit", day: "2-digit" });
 
-    // Tạo nội dung hội thoại mẫu
-    let dialoguesHtml = "";
-    if (customArticle && customArticle.dialogues && customArticle.dialogues.length) {
-      dialoguesHtml = customArticle.dialogues.map((d, i) => `
-        <div class="topic-dialogue-line">
-          <div class="topic-speaker-avatar ${i % 2 === 0 ? 'speaker-a' : 'speaker-b'}" title="${esc(d.role || d.speaker)}">
-            ${esc((d.speaker || 'AB').slice(0, 2))}
-          </div>
-          <div class="topic-dialogue-content">
-            <div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:2px">${esc(d.speaker)} ${d.role ? `<span style="font-weight:400;font-size:0.7rem">(${esc(d.role)})</span>` : ''}</div>
-            <div class="topic-dialogue-ru ru">${esc(d.ru)}</div>
-            <div class="topic-dialogue-vi">${esc(d.vi)}</div>
-          </div>
-        </div>
-      `).join("");
-    } else {
-      const sampleWords = words.slice(0, 5);
-      dialoguesHtml = sampleWords.map((w, i) => `
-        <div class="topic-dialogue-line">
-          <div class="topic-speaker-avatar ${i % 2 === 0 ? 'speaker-a' : 'speaker-b'}">
-            ${i % 2 === 0 ? 'A' : 'B'}
-          </div>
-          <div class="topic-dialogue-content">
-            <div class="topic-dialogue-ru ru">${esc(w.ex || w.ru)}</div>
-            <div class="topic-dialogue-vi">${esc(w.vi)} ${w.note ? `— <em>${esc(w.note)}</em>` : ''}</div>
-          </div>
-        </div>
-      `).join("");
+    // 1. Lấy nội dung Markdown bài học (.content_md / .content_markdown / .content)
+    let articleMd = (customArticle && (customArticle.content_md || customArticle.content_markdown || customArticle.content)) || "";
+    articleMd = typeof articleMd === "string" ? articleMd.trim() : "";
+
+    // 2. Fallback sạch sẽ nếu chưa có content_md sẵn: tự động kết hợp từ các dữ liệu thực của chủ đề (intro, actionChains, grammar, mẹo văn hóa), tuyệt đối không sinh nội dung giả/thừa:
+    if (!articleMd) {
+      const mdSections = [];
+      if (customArticle && customArticle.intro) {
+        mdSections.push(customArticle.intro.trim());
+      } else if (jar && jar.desc) {
+        mdSections.push(jar.desc.trim());
+      }
+
+      const aChains = (customArticle && (customArticle.actionChains || customArticle.action_chains)) || [];
+      if (aChains.length) {
+        aChains.forEach((group, gIdx) => {
+          const groupTitle = group.subTopic || ("Chuỗi hành động ngữ cảnh " + (gIdx + 1));
+          mdSections.push(`### ${groupTitle}`);
+          if (group.items && group.items.length) {
+            mdSections.push("| Đối tượng / Từ vựng | Hành động | Ngữ cảnh | Ví dụ thực tế |");
+            mdSections.push("| --- | --- | --- | --- |");
+            group.items.forEach(it => {
+              const target = [it.target, it.target_vi].filter(Boolean).join(" — ").replace(/\n+/g, " ");
+              const action = [it.action, it.action_vi].filter(Boolean).join(" — ").replace(/\n+/g, " ");
+              const place = [it.place, it.place_vi].filter(Boolean).join(" — ").replace(/\n+/g, " ");
+              const ex = [it.ex, it.ex_vi].filter(Boolean).join(" — ").replace(/\n+/g, " ");
+              mdSections.push(`| ${target || "—"} | ${action || "—"} | ${place || "—"} | ${ex || "—"} |`);
+            });
+          }
+        });
+      }
+
+      if (customArticle && customArticle.dialogues && customArticle.dialogues.length) {
+        mdSections.push(`### Hội thoại mẫu`);
+        customArticle.dialogues.forEach(d => {
+          mdSections.push(`- **${d.speaker || "Người nói"}**${d.role ? ` *(${d.role})*` : ""}: ${d.ru} *(“${d.vi}”)*`);
+        });
+      }
+
+      const gNotes = (customArticle && (customArticle.grammarNotes || customArticle.grammar_notes)) || [];
+      if (gNotes.length) {
+        mdSections.push(`### Điểm ngữ pháp trọng tâm`);
+        gNotes.forEach(g => {
+          mdSections.push(`#### ${g.title}\n\n${g.content}`);
+        });
+      }
+
+      const cTip = customArticle && (customArticle.culturalTip || customArticle.cultural_tip);
+      if (cTip) {
+        mdSections.push(`> [!TIP]\n> **Mẹo văn hóa thực tế:** ${cTip}`);
+      }
+
+      articleMd = mdSections.join("\n\n");
     }
 
-    // Điểm ngữ pháp cốt lõi
-    const gNotes = (customArticle && (customArticle.grammarNotes || customArticle.grammar_notes)) || [];
-    let grammarHtml = "";
-    if (gNotes.length) {
-      grammarHtml = `
-        <div class="topic-grammar-cards">
-          ${gNotes.map(g => `
-            <div class="topic-grammar-card">
-              <h4>${esc(g.title)}</h4>
-              <p style="white-space:pre-line">${esc(g.content)}</p>
-            </div>
-          `).join("")}
-        </div>
-      `;
-    } else {
-      grammarHtml = `
-        <div class="topic-grammar-cards">
-          <div class="topic-grammar-card">
-            <h4>1. Phân loại từ vựng &amp; Giống ngữ pháp</h4>
-            <p>Ghi nhớ chính xác giống của danh từ trong chủ đề (он, она, оно) để phối hợp chuẩn xác với tính từ và đại từ chỉ định.</p>
-          </div>
-          <div class="topic-grammar-card">
-            <h4>2. Mẫu câu ứng dụng theo ngữ cảnh</h4>
-            <p>Vận dụng các cụm động từ đi kèm trong các câu ví dụ thực tế giúp hình thành phản xạ ngôn ngữ tự nhiên.</p>
-          </div>
-        </div>
-      `;
-    }
-
-    // Chuỗi hành động & Mẫu câu ngữ cảnh (Action Chains Table từ file Excel)
-    const aChains = (customArticle && (customArticle.actionChains || customArticle.action_chains)) || [];
-    let actionChainsHtml = "";
-    if (aChains.length) {
-      actionChainsHtml = `
-        <!-- PHẦN: CHUỖI HÀNH ĐỘNG & MẪU CÂU NGỮ CẢNH -->
-        <section class="topic-article-section">
-          <h2 class="topic-article-sec-title">
-            <span class="sec-badge">II</span> Chuỗi hành động &amp; Mẫu câu ngữ cảnh
-          </h2>
-          <div class="topic-action-chains-wrapper">
-            ${aChains.map((group, gIdx) => `
-              <div class="topic-action-chain-group" style="margin-bottom:24px">
-                <h3 style="font-size:1.05rem;font-weight:700;color:var(--primary);margin:0 0 10px 0;display:flex;align-items:center;gap:6px">
-                  ${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 16 }) : "✦"} ${esc(group.subTopic || ("Nhóm " + (gIdx + 1)))}
-                </h3>
-                <div class="topic-vocab-table-wrapper" style="overflow-x:auto">
-                  <table class="topic-vocab-table">
-                    <thead>
-                      <tr>
-                        <th style="width:40px;text-align:center">#</th>
-                        <th>Đối tượng / Từ vựng</th>
-                        <th>Hành động / Công dụng</th>
-                        <th>Ngữ cảnh / Địa điểm</th>
-                        <th>Ví dụ thực tế (Nga — Việt)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${group.items.map((it, idx) => `
-                        <tr>
-                          <td style="text-align:center;color:#94a3b8;font-weight:700">${idx + 1}</td>
-                          <td style="min-width:130px">
-                            <div class="topic-word-ru ru">${esc(it.target || "—")}</div>
-                            ${it.target_vi ? `<div class="topic-word-vi" style="font-size:0.82rem;color:#475569;white-space:pre-line">${esc(it.target_vi)}</div>` : ""}
-                          </td>
-                          <td style="min-width:140px">
-                            <div class="ru" style="font-weight:600;color:#0f1f38;white-space:pre-line">${esc(it.action || "—")}</div>
-                            ${it.action_vi ? `<div style="font-size:0.82rem;color:#64748b;white-space:pre-line">${esc(it.action_vi)}</div>` : ""}
-                          </td>
-                          <td style="min-width:140px">
-                            <div class="ru" style="color:#1e293b;white-space:pre-line">${esc(it.place || "—")}</div>
-                            ${it.place_vi ? `<div style="font-size:0.82rem;color:#64748b;white-space:pre-line">${esc(it.place_vi)}</div>` : ""}
-                          </td>
-                          <td style="min-width:240px">
-                            ${it.ex ? `<div class="topic-word-ex ru" style="font-weight:600;color:var(--primary);margin-bottom:2px;white-space:pre-line">${esc(stripQuotes(it.ex))}</div>` : ""}
-                            ${it.ex_vi ? `<div style="font-size:0.82rem;color:#475569;white-space:pre-line">${esc(it.ex_vi)}</div>` : ""}
-                          </td>
-                        </tr>
-                      `).join("")}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            `).join("")}
-          </div>
-        </section>
-      `;
-    }
-
-    // Bảng từ vựng chi tiết
-    const vocabRowsHtml = words.map((w, idx) => {
-      const posLabel = typeof formatRussianGrammar === "function" ? formatRussianGrammar(w.pos, null, w.gender) : (w.pos || "");
-      const structStr = (Array.isArray(w.structures) && w.structures.length)
-        ? w.structures.map(s => typeof s === "string" ? s : (s && (s.structure || s.ru || s.text) || "")).filter(Boolean).join(" · ")
-        : (w.verb_obj || w.gov || "");
-      const synStr = w.syn || (Array.isArray(w.synonyms) ? w.synonyms.join(", ") : "");
-      const antStr = w.ant || (Array.isArray(w.antonyms) ? w.antonyms.join(", ") : "");
-      const hasNote = Boolean(w.note && w.note !== posLabel && w.note !== w.pos);
-      const hasExtras = Boolean(w.collocation || structStr || synStr || antStr || hasNote);
-
-      return `
-      <tr>
-        <td style="width:40px;color:#94a3b8;font-weight:700;text-align:center">${idx + 1}</td>
-        <td style="min-width:140px">
-          <div class="topic-word-ru ru">${esc(w.stress || w.ru)}</div>
-          ${posLabel ? `<span class="topic-word-note ru" style="font-style:italic;color:var(--primary,#0039a6);font-weight:600">(${esc(posLabel)})</span>` : (w.note ? `<span class="topic-word-note">${esc(w.note)}</span>` : '')}
-        </td>
-        <td style="min-width:150px" class="topic-word-vi">
-          <div style="font-weight:600">${esc(w.vi)}</div>
-          ${hasExtras ? `
-            <div style="margin-top:6px;font-size:0.82rem;line-height:1.4">
-              ${w.collocation ? `<div style="color:var(--primary)"><b>Cụm từ:</b> <span class="ru">${esc(w.collocation)}</span></div>` : ""}
-              ${structStr ? `<div style="color:var(--primary)"><b>Cấu trúc:</b> <span class="ru">${esc(structStr)}</span></div>` : ""}
-              ${synStr ? `<div style="color:var(--primary)"><b>Đồng nghĩa:</b> <span class="ru">${esc(synStr)}</span></div>` : ""}
-              ${antStr ? `<div style="color:var(--primary)"><b>Trái nghĩa:</b> <span class="ru">${esc(antStr)}</span></div>` : ""}
-              ${hasNote ? `<div style="color:var(--muted)"><b>Ghi chú:</b> ${esc(w.note)}</div>` : ""}
-            </div>
-          ` : ""}
-        </td>
-        <td style="min-width:220px">
-          <div class="topic-word-ex ru" style="font-weight:600;color:var(--primary,#0039a6);margin-bottom:2px">${w.ex ? esc(stripQuotes(w.ex)) : '—'}</div>
-          ${w.ex_vi ? `<div style="font-size:0.82rem;color:#475569;line-height:1.35">${esc(w.ex_vi)}</div>` : ''}
-        </td>
-      </tr>
-    `;
-    }).join("");
+    const renderedContent = (articleMd && window.RusiMarkdown)
+      ? RusiMarkdown.render(articleMd)
+      : (articleMd ? `<div class="rusi-md-p">${esc(articleMd)}</div>` : `<p style="color:var(--muted);font-style:italic">Nội dung bài học chủ đề đang được biên soạn bằng Markdown (.md) trên CMS Studio.</p>`);
 
     detail.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
@@ -3324,7 +3281,7 @@ const showTopicArticle = (jarId) => {
         <div class="topic-article-top-actions">
           <button type="button" class="btn btn-outline btn-sm is-pro-action" id="btnPrintTopicArticle" title="${isUserPro ? "Xuất PDF / In bài học (PRO)" : "Xuất PDF bài học (Dành riêng cho Hội viên PRO)"}">
             ${isUserPro ? (window.RusiIcons ? RusiIcons.get("download", { size: 15 }) : "") : (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 15 }) : "")} <span class="btn-text">Xuất PDF</span>
-            <span class="dau-pro-mini-badge" style="font-size:0.62rem;font-weight:800;background:linear-gradient(135deg,#c52233,#800020);color:#fff;padding:1px 5px;border-radius:4px;margin-left:4px">PRO</span>
+            <span class="dau-pro-mini-badge" style="font-size:0.62rem;font-weight:800;background:linear-gradient(135deg,#facc15,#eab308);color:#78350f;padding:1px 5px;border-radius:4px;margin-left:4px">PRO</span>
           </button>
           <button type="button" class="btn btn-primary btn-sm" id="btnOpenJarFromArticleTop" title="Xem lọ từ vựng (${words.length} từ)">
             ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 15 }) : ""} <span class="btn-text">Xem lọ từ vựng (${words.length} từ)</span>
@@ -3386,7 +3343,7 @@ const showTopicArticle = (jarId) => {
             ${window.RusiIcons ? RusiIcons.get("book-open", { size: 14 }) : ""} BÀI HỌC CHỦ ĐỀ · ${jar.level} (${levelLabel})
           </span>
           <h1 class="topic-article-title">${esc(jar.name)}</h1>
-          <p class="topic-article-desc">${esc(jar.desc || "Khám phá vốn từ vựng và mẫu câu giao tiếp then chốt về chủ đề " + jar.name)}</p>
+          ${jar.desc ? `<p class="topic-article-desc">${esc(jar.desc)}</p>` : ""}
           <div class="topic-article-meta-row">
             <span>${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} ${words.length} từ vựng cốt lõi</span>
             <span>${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} 15–20 phút học</span>
@@ -3394,89 +3351,22 @@ const showTopicArticle = (jarId) => {
           </div>
         </header>
 
-        <!-- PHẦN 1: BỐI CẢNH & TÌNH HUỐNG THỰC TẾ -->
-        <section class="topic-article-section">
-          <h2 class="topic-article-sec-title">
-            <span class="sec-badge">I</span> Bối cảnh &amp; Tình huống giao tiếp thực tế
-          </h2>
-          <div style="font-size:0.95rem;line-height:1.7;color:#334155;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:18px 22px">
-            ${customArticle && customArticle.intro ? (window.RusiMarkdown ? RusiMarkdown.render(customArticle.intro) : esc(customArticle.intro)) : `
-              Chủ đề <strong>«${esc(jar.name)}»</strong> đóng vai trò vô cùng thiết yếu trong đời sống và giao tiếp tiếng Nga trình độ ${jar.level}. 
-              Nắm vững hệ thống từ vựng và cấu trúc diễn đạt của chủ đề này giúp bạn tự tin xử lý mọi tình huống thực tế khi du học, công tác hoặc thi chứng chỉ TRKI.
-            `}
-          </div>
-        </section>
+        <!-- NỘI DUNG BÀI HỌC CHÍNH PHỤ THUỘC VÀO CONTENT.MD MARKDOWN -->
+        <div class="topic-article-body rusi-md-rendered">
+          ${renderedContent}
+        </div>
 
-        ${(customArticle && (customArticle.content_md || customArticle.content_markdown || customArticle.content)) ? `
-          <!-- PHẦN: NỘI DUNG BÀI GIẢNG / BÀI ĐỌC CHUYÊN SÂU MARKDOWN (.MD) -->
-          <section class="topic-article-section topic-article-markdown-body">
-            <h2 class="topic-article-sec-title" style="margin-bottom:18px">
-              <span class="sec-badge">✦</span> Nội dung bài học chuyên đề (.md)
-            </h2>
-            <div class="rusi-md-rendered">
-              ${window.RusiMarkdown ? RusiMarkdown.render(customArticle.content_md || customArticle.content_markdown || customArticle.content) : `<p>${esc(customArticle.content_md || customArticle.content_markdown || customArticle.content)}</p>`}
-            </div>
-          </section>
-        ` : ""}
-
-        ${actionChainsHtml}
-
-        <!-- PHẦN HỘI THOẠI MẪU & CÂU GIAO TIẾP THEN CHỐT -->
-        <section class="topic-article-section">
-          <h2 class="topic-article-sec-title">
-            <span class="sec-badge">${actionChainsHtml ? "III" : "II"}</span> Hội thoại mẫu &amp; Mẫu câu then chốt
-          </h2>
-          <div class="topic-dialogue-box">
-            ${dialoguesHtml}
-          </div>
-        </section>
-
-        <!-- PHẦN ĐIỂM NGỮ PHÁP & LƯU Ý VĂN HÓA -->
-        <section class="topic-article-section">
-          <h2 class="topic-article-sec-title">
-            <span class="sec-badge">${actionChainsHtml ? "IV" : "III"}</span> Điểm ngữ pháp &amp; Bí kíp sinh tồn
-          </h2>
-          ${grammarHtml}
-          ${(customArticle && (customArticle.culturalTip || customArticle.cultural_tip)) ? `
-            <div style="margin-top:16px;background:#fffbeb;border:1px solid #fde68a;border-left:4px solid #f59e0b;border-radius:10px;padding:14px 18px;font-size:0.88rem;color:#92400e;line-height:1.55">
-              <strong>${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} Mẹo văn hóa thực tế:</strong> ${esc(customArticle.culturalTip || customArticle.cultural_tip)}
-            </div>
-          ` : ''}
-        </section>
-
-        <!-- PHẦN BẢNG TỪ VỰNG TRỌNG TÂM -->
-        <section class="topic-article-section">
-          <h2 class="topic-article-sec-title">
-            <span class="sec-badge">${actionChainsHtml ? "V" : "IV"}</span> Bảng từ vựng trọng tâm (${words.length} từ)
-          </h2>
-          <div class="topic-vocab-table-wrapper">
-            <table class="topic-vocab-table">
-              <thead>
-                <tr>
-                  <th style="width:40px;text-align:center">#</th>
-                  <th>Từ tiếng Nga</th>
-                  <th>Nghĩa tiếng Việt</th>
-                  <th>Ví dụ &amp; Ngữ cảnh</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${vocabRowsHtml}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- PHẦN 5: MỤC XEM LỌ TỪ VỰNG & LUYỆN FLASHCARD -->
-        <section class="topic-article-section topic-article-footer-cta">
+        <!-- MỤC XEM LỌ TỪ VỰNG & LUYỆN FLASHCARD -->
+        <section class="topic-article-footer-cta no-print">
           <div class="topic-article-footer-cta-info">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
               <span style="color:var(--russia-blue, #1757a6)">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 24 }) : ""}</span>
               <h3 style="margin:0;font-size:1.15rem;color:#0f1f38">Lọ từ vựng «${esc(jar.name)}»</h3>
             </div>
-            <p>Đã sẵn sàng ghi nhớ bền vững ${words.length} từ vựng với mô hình Lọ Từ Vựng độc quyền và thuật toán Spaced Repetition (SM-2)?</p>
+            <p>Đã sẵn sàng ghi nhớ bền vững ${words.length} từ vựng với mô hình Lọ Từ Vựng và Flashcard Spaced Repetition?</p>
           </div>
           <button type="button" class="btn btn-primary" id="btnOpenJarFromArticleBottom" style="white-space:nowrap;font-weight:700;padding:12px 22px">
-            ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Mở Lọ &amp; Học Flashcard ngay →
+            ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Mở Lọ &amp; Học Flashcard (${words.length} từ) →
           </button>
         </section>
 
@@ -3572,7 +3462,6 @@ const showTopicArticle = (jarId) => {
             ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
           </button>
           <div class="dau-workspace-info">
-            ${isCustom ? '<span class="dau-badge dau-badge-custom">LỌ CỦA TÔI</span>' : ''}
             <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(jar.icon || "archive-jar", { size: 18 }) : ""} ${esc(jar.name)}</span>
           </div>
 
@@ -3631,6 +3520,9 @@ const showTopicArticle = (jarId) => {
               let jars = STORE.get("custom_jars", []);
               jars = jars.filter(j => j.id !== jar.id);
               STORE.set("custom_jars", jars);
+              if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
+                window.RusiSupabase.jars.delete(window.Auth.user.uid, jar.id).catch(() => {});
+              }
               toast(`Đã xóa lọ «${jar.name}» thành công!`);
               showMainLayout();
             }
@@ -3669,7 +3561,7 @@ const showTopicArticle = (jarId) => {
   };
 
   const showLesson = (id) => {
-    const found = VOCAB_LESSONS.find(l => l.id === id);
+    const found = (typeof VOCAB_LESSONS !== "undefined" && Array.isArray(VOCAB_LESSONS)) ? VOCAB_LESSONS.find(l => l.id === id) : null;
     if (!found) return;
     document.body.classList.add("in-workspace");
     const mainLayout = el("#vocMainLayout");
@@ -3688,7 +3580,7 @@ const showTopicArticle = (jarId) => {
         <!-- STICKY TOP BACK BAR -->
         <div class="dau-workspace-back-bar">
           <button type="button" class="dau-back-btn" id="btnBackLessons" title="Quay lại danh sách từ vựng" aria-label="Quay lại danh sách từ vựng">
-            <i data-rusi-icon="arrow-left" data-size="18"></i>
+            ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
           </button>
           <div class="dau-workspace-info">
             <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(found.scene || "book-open-blog", { size: 22 }) : ""} ${esc(found.ru)}</span>
@@ -4743,7 +4635,7 @@ function initListeningPage() {
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
         <button type="button" class="dau-back-btn" id="btnBackLisList" title="Quay lại danh sách bài nghe" aria-label="Quay lại danh sách bài nghe">
-          <i data-rusi-icon="arrow-left" data-size="18"></i>
+          ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
         </button>
         <div class="dau-workspace-info">
           <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(lesson.icon || "headphones", { size: 22 }) : ""} ${esc(lesson.title)}</span>
@@ -9501,7 +9393,7 @@ function initWritingPageLegacy() {
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
         <button type="button" class="dau-back-btn" id="btnBackWriteList" title="Quay lại danh sách bài viết" aria-label="Quay lại danh sách bài viết">
-          <i data-rusi-icon="arrow-left" data-size="18"></i>
+          ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
         </button>
         <div class="dau-workspace-info">
           <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(t.icon || "pen-tool", { size: 22 }) : ""} ${esc(t.title)}</span>
@@ -10220,12 +10112,6 @@ function initWritingPage() {
                   <p class="writing-translation-text ru">${esc(t.prompt || "")}</p>
                 </div>
               `}
-              ${tips.length ? `
-                <div class="writing-hints hidden" id="writingHints">
-                  <div>${icon("sparkles-clean", 18)} <strong>Câu hỏi và ý gợi mở</strong></div>
-                  <ul>${tips.map((tip) => `<li>${esc(tip)}</li>`).join("")}</ul>
-                </div>
-              ` : ""}
 
               <div class="writing-answer-head">
                 <div>
@@ -10263,6 +10149,13 @@ function initWritingPage() {
                 <h4>${icon("sparkles-clean", 18)} Bài văn mẫu đạt điểm tối đa TRKI</h4>
                 <p class="ru">${esc(modelAnswer(t))}</p>
               </div>
+
+              ${tips.length ? `
+                <div class="writing-hints hidden" id="writingHints">
+                  <h4>${icon("sparkles-clean", 18)} Câu hỏi và ý gợi mở</h4>
+                  <ul>${tips.map((tip) => `<li>${esc(tip)}</li>`).join("")}</ul>
+                </div>
+              ` : ""}
 
               ${words.length ? `
                 <div class="writing-vocab-popover-card hidden" id="writingVocabDropdownBox">
@@ -10369,9 +10262,17 @@ function initWritingPage() {
       if (hintButton) {
         hintButton.onclick = () => {
           const hints = panel.querySelector("#writingHints");
+          if (!hints) return;
           const open = hints.classList.toggle("hidden") === false;
           hintButton.setAttribute("aria-expanded", open ? "true" : "false");
           hintButton.classList.toggle("active", open);
+          const textSpan = hintButton.querySelector(".writing-btn-text");
+          if (textSpan) {
+            textSpan.textContent = open ? "Ẩn gợi ý" : "Gợi ý";
+          }
+          if (open) {
+            hints.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
         };
       }
 
@@ -10468,11 +10369,25 @@ function initWritingPage() {
         scoreBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
       };
 
-      panel.querySelector(".btn-model").onclick = (event) => {
-        const answer = panel.querySelector(".model-answer");
-        const open = answer.classList.toggle("hidden") === false;
-        event.currentTarget.innerHTML = `${icon("eye", 17)} ${open ? "Ẩn bài mẫu" : "Xem bài mẫu"}`;
-      };
+      const modelButton = panel.querySelector(".btn-model");
+      if (modelButton) {
+        modelButton.onclick = () => {
+          const answer = panel.querySelector(".model-answer");
+          if (!answer) return;
+          const open = answer.classList.toggle("hidden") === false;
+          modelButton.classList.toggle("active", open);
+          modelButton.setAttribute("aria-expanded", open ? "true" : "false");
+          const textSpan = modelButton.querySelector(".writing-btn-text");
+          if (textSpan) {
+            textSpan.textContent = open ? "Ẩn bài mẫu" : "Bài mẫu";
+          } else {
+            modelButton.innerHTML = `${icon("eye", 18)} <span class="writing-btn-text">${open ? "Ẩn bài mẫu" : "Bài mẫu"}</span>`;
+          }
+          if (open) {
+            answer.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          }
+        };
+      }
     };
 
     renderTask();
@@ -11172,7 +11087,7 @@ function initMockTestPage() {
       <!-- STICKY TOP BACK BAR WITH TIMER -->
       <div class="dau-workspace-back-bar">
         <button type="button" class="dau-back-btn" id="btnExitTest" title="Thoát phòng thi" aria-label="Thoát phòng thi">
-          <i data-rusi-icon="arrow-left" data-size="18"></i>
+          ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
         </button>
         <div class="dau-workspace-info">
           <span class="dau-workspace-title">${roomTitle}</span>
@@ -11411,8 +11326,8 @@ function initMockTestPage() {
     `;
 
     host.innerHTML = html;
-    if (window.RusiIcons && typeof RusiIcons.render === "function") {
-      RusiIcons.render(host);
+    if (window.RusiIcons && typeof RusiIcons.replace === "function") {
+      RusiIcons.replace(host);
     }
 
     el("#btnExitTest").onclick = () => {
@@ -11751,7 +11666,7 @@ function initMockTestPage() {
       <!-- STICKY TOP BACK BAR -->
       <div class="dau-workspace-back-bar">
         <button type="button" class="dau-back-btn" id="btnReviewBack" title="Quay lại danh sách đề thi" aria-label="Quay lại danh sách đề thi">
-          <i data-rusi-icon="arrow-left" data-size="18"></i>
+          ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
         </button>
         <div class="dau-workspace-info">
           <span class="dau-workspace-title">Kết quả khảo thí ТРКИ: ${esc(currentTest.title)}</span>
@@ -11904,8 +11819,8 @@ function initMockTestPage() {
     el("#btnRetryTop").onclick = () => startTest(currentTest, activePartId, examMode);
     el("#retryTest").onclick = () => startTest(currentTest, activePartId, examMode);
     el("#btnBackToHub").onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); };
-    if (window.RusiIcons && typeof RusiIcons.render === "function") {
-      RusiIcons.render(host);
+    if (window.RusiIcons && typeof RusiIcons.replace === "function") {
+      RusiIcons.replace(host);
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -12348,7 +12263,7 @@ function initIndexPage() {
   const vocabDone = Progress.doneList("vocabDone").length;
   if (el("#pwXp")) el("#pwXp").textContent = xp;
   if (el("#pwStreak")) el("#pwStreak").textContent = streak;
-  if (el("#pwVocab")) el("#pwVocab").textContent = `${vocabDone}/${VOCAB_LESSONS.length}`;
+  if (el("#pwVocab")) el("#pwVocab").textContent = `${vocabDone}/${(window.VOCAB_JARS || []).length}`;
   const best = STORE.get("bestTest", null);
   if (el("#pwBest")) el("#pwBest").textContent = best === null ? "—" : best + "%";
 
