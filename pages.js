@@ -10025,27 +10025,36 @@ function initWritingPage() {
               <!-- THANH THAO TÁC LUYỆN VIẾT & HẠN MỨC AI TỐI GIẢN, HIỆN ĐẠI -->
               <div class="writing-primary-actions writing-action-bar">
                 <div class="writing-bar-left">
-                  <button type="button" class="btn btn-primary btn-submit" title="Nhận xét AI" aria-label="Nhận xét AI">
-                    ${icon("bot-rusika", 17)} <span class="writing-btn-text">Nhận xét AI</span>
+                  <button type="button" class="btn btn-primary btn-submit" title="Chấm điểm và nhận xét AI" aria-label="Chấm điểm AI">
+                    ${icon("bot-rusika", 18)}
+                    <span class="writing-btn-text writing-btn-text-full">Nhận xét AI</span>
+                    <span class="writing-btn-text writing-btn-text-compact">Chấm AI</span>
                   </button>
                   <div class="writing-quota-pill" id="writingAiQuotaBadge" title="Hạn mức chấm điểm AI hôm nay (tự động làm mới mỗi ngày)">
                     <span class="writing-quota-dot"></span>
-                    <span id="writingAiQuotaText">Đang kiểm tra...</span>
+                    <span id="writingAiQuotaText">
+                      <span class="quota-full-txt">Đang kiểm tra...</span>
+                      <span class="quota-compact-txt">...</span>
+                    </span>
                   </div>
                 </div>
 
                 <div class="writing-bar-right">
                   <button type="button" class="btn btn-outline btn-model" title="Bài mẫu TRKI" aria-label="Bài mẫu TRKI">
-                    ${icon("eye", 16)} <span class="writing-btn-text">Bài mẫu</span>
+                    ${icon("eye", 17)} <span class="writing-btn-text">Bài mẫu</span>
                   </button>
                   ${tips.length ? `
                     <button type="button" class="btn btn-outline btn-writing-hint" id="writingHintToggle" aria-expanded="false" aria-controls="writingHints" title="Hiển thị câu hỏi gợi ý" aria-label="Gợi ý">
-                      ${icon("help-circle", 16)} <span class="writing-btn-text">Gợi ý</span>
+                      ${icon("help-circle", 17)} <span class="writing-btn-text">Gợi ý</span>
                     </button>
                   ` : ""}
                   ${words.length ? `
-                    <button type="button" class="btn btn-outline btn-writing-vocab" id="btnWritingVocabToggle" title="Xem từ vựng gợi ý (${words.length})" aria-label="Từ vựng gợi ý">
-                      ${icon("archive-jar", 16)} <span class="writing-btn-text">Từ vựng (${words.length})</span>
+                    <button type="button" class="btn btn-outline btn-writing-vocab" id="btnWritingVocabToggle" title="Xem từ vựng gợi ý (${words.length})" aria-label="Từ vựng gợi ý (${words.length})">
+                      <span class="writing-btn-icon-wrap">
+                        ${icon("archive-jar", 17)}
+                        <span class="writing-vocab-pill-count">${words.length}</span>
+                      </span>
+                      <span class="writing-btn-text">Từ vựng (${words.length})</span>
                     </button>
                   ` : ""}
                 </div>
@@ -10234,7 +10243,7 @@ function initWritingPage() {
         const curUser = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
         const isPro = typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : Boolean(curUser?.is_pro);
         if (!curUser) {
-          quotaText.innerHTML = `<span style="color:var(--muted)">Đăng nhập nhận 3 lượt AI/ngày</span>`;
+          quotaText.innerHTML = `<span class="quota-full-txt" style="color:var(--muted)">Đăng nhập nhận 3 lượt AI/ngày</span><span class="quota-compact-txt" style="color:var(--muted)">3 lượt</span>`;
           if (quotaDot) quotaDot.className = "writing-quota-dot is-off";
           return;
         }
@@ -10245,14 +10254,25 @@ function initWritingPage() {
             if (quotaDot) {
               quotaDot.className = "writing-quota-dot " + (isZero ? "is-empty" : "is-active");
             }
-            quotaText.innerHTML = `Còn <b>${q.remaining}/${q.max_limit}</b> lượt ${isPro ? '<span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">PRO</span>' : '<span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">Free</span>'}`;
+            const tierBadge = isPro
+              ? '<span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">PRO</span>'
+              : '<span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">Free</span>';
+            quotaText.innerHTML = `<span class="quota-full-txt">Còn <b>${q.remaining}/${q.max_limit}</b> lượt</span><span class="quota-compact-txt"><b>${q.remaining}/${q.max_limit}</b></span> ${tierBadge}`;
           } catch (_) {
             if (quotaDot) quotaDot.className = "writing-quota-dot is-active";
-            quotaText.innerHTML = isPro ? `Còn <b>20</b> lượt <span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">PRO</span>` : `Còn <b>3</b> lượt <span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">Free</span>`;
+            const remaining = isPro ? 20 : 3;
+            const tierBadge = isPro
+              ? '<span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">PRO</span>'
+              : '<span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">Free</span>';
+            quotaText.innerHTML = `<span class="quota-full-txt">Còn <b>${remaining}</b> lượt</span><span class="quota-compact-txt"><b>${remaining}</b></span> ${tierBadge}`;
           }
         } else {
           if (quotaDot) quotaDot.className = "writing-quota-dot is-active";
-          quotaText.innerHTML = isPro ? `Còn <b>20</b> lượt <span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">PRO</span>` : `Còn <b>3</b> lượt <span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">Free</span>`;
+          const remaining = isPro ? 20 : 3;
+          const tierBadge = isPro
+            ? '<span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">PRO</span>'
+            : '<span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">Free</span>';
+          quotaText.innerHTML = `<span class="quota-full-txt">Còn <b>${remaining}</b> lượt</span><span class="quota-compact-txt"><b>${remaining}</b></span> ${tierBadge}`;
         }
       };
       updateQuotaDisplay();

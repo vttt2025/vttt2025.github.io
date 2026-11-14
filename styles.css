@@ -16054,6 +16054,22 @@ body[data-page="writing"].in-workspace main.container {
   color: var(--primary);
 }
 
+.writing-primary-actions .writing-btn-text-compact {
+  display: none;
+}
+.writing-quota-pill .quota-compact-txt {
+  display: none;
+}
+.writing-btn-icon-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.writing-vocab-pill-count {
+  display: none;
+}
+
 .writing-score-result,
 .model-answer,
 .writing-hints {
@@ -16306,6 +16322,96 @@ body[data-page="writing"].in-workspace main.container {
   .writing-practice-panel {
     padding: 14px;
   }
+
+  /* Thanh thao tác luyện viết dạng Compact / Icon trên tablet (<= 1024px) */
+  .writing-primary-actions.writing-action-bar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .writing-bar-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .writing-primary-actions .btn-primary.btn-submit {
+    height: 38px;
+    min-height: 38px;
+    padding: 0 12px;
+    gap: 6px;
+    font-size: 0.84rem;
+  }
+  .writing-primary-actions .writing-btn-text-full {
+    display: none !important;
+  }
+  .writing-primary-actions .writing-btn-text-compact {
+    display: inline !important;
+  }
+
+  .writing-quota-pill {
+    height: 38px;
+    padding: 0 8px;
+    font-size: 0.78rem;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .writing-quota-pill .quota-full-txt {
+    display: none !important;
+  }
+  .writing-quota-pill .quota-compact-txt {
+    display: inline !important;
+    font-weight: 800;
+  }
+
+  .writing-bar-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .writing-bar-right .btn-outline {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    padding: 0;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .writing-bar-right .writing-btn-text {
+    display: none !important;
+  }
+
+  .writing-vocab-pill-count {
+    display: inline-flex !important;
+    position: absolute;
+    top: -5px;
+    right: -7px;
+    min-width: 15px;
+    height: 15px;
+    padding: 0 3px;
+    border-radius: 999px;
+    background: var(--primary, #1757a6);
+    color: #ffffff;
+    font-size: 9.5px;
+    font-weight: 800;
+    line-height: 1;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--surface);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  }
 }
 
 @media (max-width: 768px) {
@@ -16494,54 +16600,86 @@ body[data-page="writing"].in-workspace main.container {
     border-right: 0;
   }
 
-  /* Bố cục thanh thao tác viết trên tablet & mobile (<= 768px) */
+  /* Bố cục thanh thao tác viết dạng Icon & Hạn mức gọn gàng trên mobile (<= 768px) */
   .writing-primary-actions.writing-action-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    padding: 10px 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+    gap: 6px;
+    padding: 6px 8px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .writing-primary-actions.writing-action-bar::-webkit-scrollbar {
+    display: none;
   }
 
   .writing-bar-left {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
-    width: 100%;
+    gap: 5px;
+    flex-shrink: 0;
+    width: auto;
   }
 
   .writing-bar-left .btn-primary.btn-submit {
-    flex: 1 1 auto;
-    min-height: 44px;
-    height: 44px;
-    font-size: 0.88rem;
-    justify-content: center;
+    flex: 0 0 auto;
+    min-height: 38px;
+    height: 38px;
+    padding: 0 10px;
+    font-size: 0.82rem;
+    gap: 5px;
+    white-space: nowrap;
+  }
+  .writing-bar-left .writing-btn-text-full {
+    display: none !important;
+  }
+  .writing-bar-left .writing-btn-text-compact {
+    display: inline !important;
   }
 
   .writing-bar-left .writing-quota-pill {
     flex: 0 0 auto;
-    height: 44px;
-    padding: 0 10px;
-    font-size: 0.8rem;
+    height: 38px;
+    padding: 0 7px;
+    font-size: 0.76rem;
+    gap: 4px;
     white-space: nowrap;
+  }
+  .writing-bar-left .writing-quota-pill .quota-full-txt {
+    display: none !important;
+  }
+  .writing-bar-left .writing-quota-pill .quota-compact-txt {
+    display: inline !important;
+    font-weight: 800;
   }
 
   .writing-bar-right {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 6px;
-    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    width: auto;
   }
 
   .writing-bar-right .btn-outline {
-    width: 100%;
-    min-width: 0;
-    min-height: 40px;
-    height: 40px;
-    padding: 0 6px;
-    font-size: 0.82rem;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    padding: 0;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
+    position: relative;
     flex: none;
-    text-align: center;
+  }
+
+  .writing-bar-right .writing-btn-text {
+    display: none !important;
   }
 }
 
@@ -16587,29 +16725,38 @@ body[data-page="writing"].in-workspace main.container {
   }
 
   .writing-primary-actions.writing-action-bar {
-    padding: 8px 10px;
-    gap: 8px;
-  }
-
-  .writing-bar-left .btn-primary.btn-submit {
-    font-size: 0.84rem;
-    padding: 0 10px;
-  }
-
-  .writing-bar-left .writing-quota-pill {
-    padding: 0 8px;
-    font-size: 0.76rem;
+    padding: 6px 6px;
     gap: 5px;
   }
 
-  .writing-bar-right .btn-outline {
-    padding: 0 4px;
+  .writing-bar-left .btn-primary.btn-submit {
+    height: 36px;
+    min-height: 36px;
+    padding: 0 8px;
     font-size: 0.78rem;
     gap: 4px;
   }
 
+  .writing-bar-left .writing-quota-pill {
+    height: 36px;
+    padding: 0 6px;
+    font-size: 0.72rem;
+    gap: 4px;
+  }
+
+  .writing-bar-right {
+    gap: 4px;
+  }
+
+  .writing-bar-right .btn-outline {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 9px;
+  }
+
   .writing-primary-actions .writing-btn-text {
-    display: inline !important;
+    display: none !important;
   }
 
   .writing-score-result,
@@ -16625,6 +16772,21 @@ body[data-page="writing"].in-workspace main.container {
 
   .writing-vocab-toggle {
     padding: 10px;
+  }
+}
+
+@media (max-width: 360px) {
+  .writing-primary-actions .writing-btn-text-compact {
+    display: none !important;
+  }
+  .writing-bar-left .btn-primary.btn-submit {
+    width: 36px;
+    min-width: 36px;
+    padding: 0;
+    justify-content: center;
+  }
+  .writing-quota-pill .user-tier-badge {
+    display: none !important;
   }
 }
 
