@@ -3120,7 +3120,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           ${tabsHtml}
 
           <!-- Tab 1: Content Fields -->
-          <div id="tabContent" style="display:${State.activeEditorTab === "content" ? "block" : "none"}">
+          <div id="tabContent" class="${slug === "TOPIC_ARTICLES" && String(State.currentDocId) === "con_vat" ? "topic-article-con-vat-studio" : ""}" style="display:${State.activeEditorTab === "content" ? "block" : "none"}">
             <form id="docForm">
               ${formFieldsHtml}
             </form>
