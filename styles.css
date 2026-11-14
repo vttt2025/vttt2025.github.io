@@ -30765,9 +30765,7 @@ body.index-personalized main {
 
 html.index-personalized main > :not(#indexUserProgressHost),
 body.index-personalized main > :not(#indexUserProgressHost),
-body.index-personalized #app-footer,
-html.index-personalized .rusika-floating-widget,
-body.index-personalized .rusika-floating-widget {
+body.index-personalized #app-footer {
   display: none !important;
 }
 
