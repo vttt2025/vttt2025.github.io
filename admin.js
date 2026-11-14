@@ -760,7 +760,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         content_md: "# BÀI HỌC: TIÊU ĐỀ BÀI HỌC\n\n## 1. Mục tiêu bài học\n- Nắm vững quy tắc biến cách...\n\n## 2. Bảng quy tắc chia đuôi\n\n| Giống | Số ít | Số nhiều |\n|---|---|---|\n| Giống đực | ... | ... |\n\n## 3. Bài tập củng cố\n",
         order_index: 1,
         publication_status: "published",
-        access_entitlement: "free"
+        is_pro_only: false
       }),
       fields: [
         { key: "id", label: "Mã định danh duy nhất (ID)", type: "text", required: true, help: "Ví dụ: lesson_grammar_01, lesson_grammar_09" },
@@ -796,14 +796,14 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         { key: "content_md", label: "Nội dung bài học chuyên sâu (Markdown WYSIWYG)", type: "markdown", required: true, help: "Biên tập trực quan với tiêu đề, bảng, Mermaid flowcharts, code blocks và bài tập." },
         { key: "order_index", label: "Thứ tự sắp xếp bài giảng", type: "number", defaultValue: 1 },
         {
-          key: "access_entitlement",
+          key: "is_pro_only",
           label: "Quyền truy cập bài giảng",
           type: "select",
           options: [
-            { v: "free", l: "Miễn phí (Free cho mọi học viên)" },
-            { v: "pro", l: "Chuyên sâu PRO (Chỉ học viên VIP)" }
+            { v: "false", l: "Miễn phí (Free cho mọi học viên)" },
+            { v: "true", l: "Chuyên sâu PRO (Chỉ học viên VIP)" }
           ],
-          defaultValue: "free"
+          defaultValue: "false"
         },
         {
           key: "publication_status",
@@ -6426,6 +6426,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             summary: doc.summary || "",
             content_md: mdContent,
             sort_order: Number(doc.sort_order) || 1,
+            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
             is_published: Boolean(doc.is_published === undefined ? true : (doc.is_published === true || doc.is_published === "true")),
             updated_at: new Date().toISOString()
           };
@@ -6443,6 +6444,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             content: mdContent,
             content_markdown: mdContent,
             sort_order: Number(row.sort_order) || 1,
+            is_pro_only: Boolean(row.is_pro_only),
             is_published: row.is_published !== undefined ? Boolean(row.is_published) : true
           };
         }

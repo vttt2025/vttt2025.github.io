@@ -414,7 +414,8 @@ async function main() {
     rules: Array.isArray(g.rules) ? g.rules : [],
     table_data: g.table_data || {},
     questions: Array.isArray(g.questions) ? g.questions : [],
-    order_index: g.order_index || 0
+    order_index: g.order_index || 0,
+    is_pro_only: Boolean(g.is_pro_only)
   }));
   console.log(`✓ ${formattedGrammar.length} bài`);
 
