@@ -1463,10 +1463,6 @@ const SEASON_META = {
   winter: { icon: "snowflake", label: "Mùa đông", fx: ["*", "•", "*", "•"] }
 };
 
-function autoSeason() {
-  return "winter";
-}
-
 function currentSeason() {
   return "winter";
 }
@@ -1511,8 +1507,6 @@ function applySeason(season = "winter") {
     fx.appendChild(s);
   }
 }
-
-function cycleSeason() {}
 
 /** Hộp thoại Đăng nhập / Đăng ký hiện đại */
 const AuthModal = {
