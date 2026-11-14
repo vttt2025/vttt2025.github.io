@@ -69,6 +69,10 @@
         const edgeUrl = (config.url ? config.url.replace(/\/$/, "") : "https://nrhtdwjihnlaxrbitmcf.supabase.co") + "/functions/v1/ai-review";
         const anonKey = config.anonKey || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaHRkd2ppaG5sYXhyYml0bWNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1ODk5MjgsImV4cCI6MjEwODE2NTkyOH0.qMGTYhVyoyht7jrBCSN2VczeqShmsBedC-Qdg_C5-FI";
 
+        const fetchSignal = (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function")
+          ? AbortSignal.timeout(12000)
+          : undefined;
+
         const res = await fetch(edgeUrl, {
           method: "POST",
           headers: {
@@ -76,7 +80,8 @@
             "Authorization": `Bearer ${anonKey}`,
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ text, level, taskTitle, minWords })
+          body: JSON.stringify({ text, level, taskTitle, minWords }),
+          signal: fetchSignal
         });
 
         if (res.ok) {

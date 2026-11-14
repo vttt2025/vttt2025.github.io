@@ -10061,7 +10061,9 @@ function initWritingPage() {
           return;
         }
         const text = area.value.trim();
-        const count = text ? text.split(/\s+/).length : 0;
+        const wordsArr = text.split(/\s+/).filter(Boolean);
+        const count = wordsArr.length;
+        const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
         if (count < minWords(t)) {
           toast(`Bài viết cần tối thiểu ${minWords(t)} từ (hiện tại: ${count} từ). Hãy viết thêm nhé!`);
           return;
@@ -10094,165 +10096,171 @@ function initWritingPage() {
         }
         if (submitBtn) submitBtn.disabled = true;
 
-        let total = null;
-        let scores = [0, 0, 0, 0];
-        let feedbackComment = "";
+        try {
+          let total = null;
+          let scores = [0, 0, 0, 0];
+          let feedbackComment = "";
 
-        // Ưu tiên gọi Groq AI (Qwen 3.8 27B) chấm bài chuyên sâu
-        if (window.RusiAI && typeof RusiAI.reviewWriting === "function") {
-          try {
-            const aiRes = await RusiAI.reviewWriting({
-              text,
-              level: t.level || currentLevel,
-              taskTitle: (t.title || "") + (t.prompt ? " - " + t.prompt : (t.prompt_text ? " - " + t.prompt_text : "")),
-              minWords: minWords(t)
-            });
-            if (aiRes && aiRes.success) {
-              total = Number(aiRes.total);
-              scores = [Number(aiRes.grammar) || 0, Number(aiRes.lexis) || 0, Number(aiRes.structure) || 0, Number(aiRes.content) || 0];
-              feedbackComment = aiRes.feedback;
+          // Ưu tiên gọi Groq AI (Qwen 3.8 27B) chấm bài chuyên sâu
+          if (window.RusiAI && typeof RusiAI.reviewWriting === "function") {
+            try {
+              const aiRes = await RusiAI.reviewWriting({
+                text,
+                level: t.level || currentLevel,
+                taskTitle: (t.title || "") + (t.prompt ? " - " + t.prompt : (t.prompt_text ? " - " + t.prompt_text : "")),
+                minWords: minWords(t)
+              });
+              if (aiRes && aiRes.success) {
+                total = Number(aiRes.total);
+                scores = [Number(aiRes.grammar) || 0, Number(aiRes.lexis) || 0, Number(aiRes.structure) || 0, Number(aiRes.content) || 0];
+                feedbackComment = aiRes.feedback;
+              }
+            } catch (aiErr) {
+              console.warn("Groq AI lỗi kết nối, chuyển sang bộ chấm cục bộ:", aiErr);
             }
-          } catch (aiErr) {
-            console.warn("Groq AI lỗi kết nối, chuyển sang bộ chấm cục bộ:", aiErr);
           }
-        }
 
-        // Dự phòng cục bộ (Offline Fallback Rubric chỉ khi AI hoàn toàn không phản hồi)
-        if (total === null || total === undefined) {
-          const wordsArr = text.split(/\s+/).filter(Boolean);
-          const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
-          const uniqueWords = new Set(wordsArr.map(w => w.toLowerCase().replace(/[^а-яё]/gi, "")));
+          // Dự phòng cục bộ (Offline Fallback Rubric chỉ khi AI hoàn toàn không phản hồi)
+          if (total === null || total === undefined) {
+            const uniqueWords = new Set(wordsArr.map(w => w.toLowerCase().replace(/[^а-яё]/gi, "")));
 
-          let grammarScore = 18;
-          if (latinChars.length === 0) grammarScore += 2;
-          if (sentences.length >= 2) grammarScore += 2;
-          const hasCapitalization = sentences.every(s => /^[А-ЯЁ«"]/.test(s));
-          if (hasCapitalization) grammarScore += 1;
-          const hasVerbs = wordsArr.some(w => /(?:ет|ут|ют|ит|ат|ят|ал|ала|али|ть|ся|сь)$/i.test(w));
-          if (hasVerbs) grammarScore += 2;
-          grammarScore = Math.max(12, Math.min(25, grammarScore));
+            let grammarScore = 18;
+            if (latinChars.length === 0) grammarScore += 2;
+            if (sentences.length >= 2) grammarScore += 2;
+            const hasCapitalization = sentences.every(s => /^[А-ЯЁ«"]/.test(s));
+            if (hasCapitalization) grammarScore += 1;
+            const hasVerbs = wordsArr.some(w => /(?:ет|ут|ют|ит|ат|ят|ал|ала|али|ть|ся|сь)$/i.test(w));
+            if (hasVerbs) grammarScore += 2;
+            grammarScore = Math.max(12, Math.min(25, grammarScore));
 
-          let lexisScore = 17;
-          const lexicalDiversity = wordsArr.length > 0 ? (uniqueWords.size / wordsArr.length) : 1;
-          if (lexicalDiversity >= 0.65) lexisScore += 3;
-          else if (lexicalDiversity >= 0.5) lexisScore += 1;
-          const usedHints = words.filter(hw => {
-            const wRu = (typeof hw === "object" && hw ? (hw.ru || hw.word) : String(hw)).toLowerCase().replace(/[^а-яё]/gi, "");
-            return wRu && text.toLowerCase().includes(wRu);
-          });
-          lexisScore += Math.min(4, usedHints.length);
-          if (wordsArr.some(w => w.length >= 7)) lexisScore += 1;
-          lexisScore = Math.max(12, Math.min(25, lexisScore));
+            let lexisScore = 17;
+            const lexicalDiversity = wordsArr.length > 0 ? (uniqueWords.size / wordsArr.length) : 1;
+            if (lexicalDiversity >= 0.65) lexisScore += 3;
+            else if (lexicalDiversity >= 0.5) lexisScore += 1;
+            const usedHints = words.filter(hw => {
+              const wRu = (typeof hw === "object" && hw ? (hw.ru || hw.word) : String(hw)).toLowerCase().replace(/[^а-яё]/gi, "");
+              return wRu && text.toLowerCase().includes(wRu);
+            });
+            lexisScore += Math.min(4, usedHints.length);
+            if (wordsArr.some(w => w.length >= 7)) lexisScore += 1;
+            lexisScore = Math.max(12, Math.min(25, lexisScore));
 
-          let structureScore = 18;
-          const connectors = ["и", "а", "но", "потому что", "поэтому", "когда", "если", "чтобы", "также", "потом", "затем", "так как"];
-          const foundConnectors = connectors.filter(c => text.toLowerCase().includes(c));
-          structureScore += Math.min(4, foundConnectors.length);
-          if (sentences.length >= 3) structureScore += 2;
-          structureScore = Math.max(12, Math.min(25, structureScore));
+            let structureScore = 18;
+            const connectors = ["и", "а", "но", "потому что", "поэтому", "когда", "если", "чтобы", "также", "потом", "затем", "так как"];
+            const foundConnectors = connectors.filter(c => text.toLowerCase().includes(c));
+            structureScore += Math.min(4, foundConnectors.length);
+            if (sentences.length >= 3) structureScore += 2;
+            structureScore = Math.max(12, Math.min(25, structureScore));
 
-          let contentScore = 18;
-          const lengthRatio = count / minWords(t);
-          if (lengthRatio >= 1.25) contentScore += 4;
-          else if (lengthRatio >= 1.0) contentScore += 2;
-          if (sentences.length >= 3) contentScore += 2;
-          contentScore = Math.max(12, Math.min(25, contentScore));
+            let contentScore = 18;
+            const lengthRatio = count / minWords(t);
+            if (lengthRatio >= 1.25) contentScore += 4;
+            else if (lengthRatio >= 1.0) contentScore += 2;
+            if (sentences.length >= 3) contentScore += 2;
+            contentScore = Math.max(12, Math.min(25, contentScore));
 
-          scores = [grammarScore, lexisScore, structureScore, contentScore];
-          total = scores.reduce((sum, score) => sum + score, 0);
+            scores = [grammarScore, lexisScore, structureScore, contentScore];
+            total = scores.reduce((sum, score) => sum + score, 0);
 
-          feedbackComment = `Bài viết đạt độ dài <b>${count} từ</b> với <b>${sentences.length} câu</b> hoàn chỉnh. `;
-          if (usedHints.length > 0) {
-            feedbackComment += `Bạn đã áp dụng thành công <b>${usedHints.length} từ vựng gợi ý</b> của bài. `;
+            feedbackComment = `Bài viết đạt độ dài <b>${count} từ</b> với <b>${sentences.length} câu</b> hoàn chỉnh. `;
+            if (usedHints.length > 0) {
+              feedbackComment += `Bạn đã áp dụng thành công <b>${usedHints.length} từ vựng gợi ý</b> của bài. `;
+            }
+            if (foundConnectors.length > 0) {
+              feedbackComment += `Khả năng liên kết câu tốt với các từ nối: <i>«${foundConnectors.slice(0, 3).join(", ")}»</i>. `;
+            }
+            if (latinChars.length > 0) {
+              feedbackComment += `<br><span style="color:var(--secondary)">Lưu ý: Có xuất hiện một số ký tự Latinh trong bài, hãy kiểm tra lại bàn phím nhé.</span>`;
+            } else {
+              feedbackComment += `Chính tả Cyrillic chuẩn xác. Tiếp tục duy trì phong độ nhé!`;
+            }
           }
-          if (foundConnectors.length > 0) {
-            feedbackComment += `Khả năng liên kết câu tốt với các từ nối: <i>«${foundConnectors.slice(0, 3).join(", ")}»</i>. `;
-          }
-          if (latinChars.length > 0) {
-            feedbackComment += `<br><span style="color:var(--secondary)">Lưu ý: Có xuất hiện một số ký tự Latinh trong bài, hãy kiểm tra lại bàn phím nhé.</span>`;
-          } else {
-            feedbackComment += `Chính tả Cyrillic chuẩn xác. Tiếp tục duy trì phong độ nhé!`;
-          }
-        }
 
-        if (submitBtn) submitBtn.disabled = false;
+          const isPassed = total >= 66;
+          const earnedXp = isPassed
+            ? ((typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.WRITING_SUBMIT : 15) + (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.WRITING_PASS_BONUS : 15))
+            : (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.WRITING_SUBMIT : 15);
 
-        const isPassed = total >= 66;
-        scoreBox.innerHTML = `
-          <div class="rusi-ai-review-card">
-            <!-- Top Bar: Điểm số & Đánh giá CEFR -->
-            <div class="rusi-ai-eval-header">
-              <div class="rusi-ai-score-cluster">
-                <div class="rusi-ai-score-circle ${isPassed ? 'is-pass' : 'is-retry'}">
-                  <span class="rusi-ai-score-big">${total}</span>
-                  <span class="rusi-ai-score-denom">/100</span>
-                </div>
-                <div class="rusi-ai-title-wrap">
-                  <div class="rusi-ai-eval-meta">ĐÁNH GIÁ CHUẨN ТРКИ / CEFR</div>
-                  <div class="rusi-ai-eval-badge ${isPassed ? 'is-pass' : 'is-retry'}">
-                    ${icon(isPassed ? 'check-circle-correct' : 'alert-triangle', 16)}
-                    <span>${isPassed ? 'СДАНО · ĐẠT YÊU CẦU' : 'CẦN CỐ GẮNG (Chuẩn ≥ 66/100)'}</span>
+          scoreBox.innerHTML = `
+            <div class="rusi-ai-review-card">
+              <!-- Top Bar: Điểm số & Đánh giá CEFR -->
+              <div class="rusi-ai-eval-header">
+                <div class="rusi-ai-score-cluster">
+                  <div class="rusi-ai-score-circle ${isPassed ? 'is-pass' : 'is-retry'}">
+                    <span class="rusi-ai-score-big">${total}</span>
+                    <span class="rusi-ai-score-denom">/100</span>
+                  </div>
+                  <div class="rusi-ai-title-wrap">
+                    <div class="rusi-ai-eval-meta">ĐÁNH GIÁ CHUẨN ТРКИ / CEFR</div>
+                    <div class="rusi-ai-eval-badge ${isPassed ? 'is-pass' : 'is-retry'}">
+                      ${icon(isPassed ? 'check-circle-correct' : 'alert-triangle', 16)}
+                      <span>${isPassed ? 'СДАНО · ĐẠT YÊU CẦU' : 'CẦN CỐ GẮNG (Chuẩn ≥ 66/100)'}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div class="rusi-ai-chips-wrap">
-                <span class="rusi-metric-chip">${icon('file-text', 14)} <b>${count}</b> từ</span>
-                <span class="rusi-metric-chip">${icon('check-circle', 14)} <b>${sentences.length}</b> câu</span>
-                <span class="rusi-metric-chip">${icon('zap-xp', 14)} <b>+${earnedXp}</b> XP</span>
-              </div>
-            </div>
-
-            <!-- Dải 4 tiêu chí (Criteria Horizontal Ribbon) -->
-            <div class="rusi-ai-criteria-ribbon">
-              ${[
-                ["Ngữ pháp", "Грамматика", scores[0]],
-                ["Vốn từ", "Лексика", scores[1]],
-                ["Bố cục", "Структура", scores[2]],
-                ["Nội dung", "Содержание", scores[3]]
-              ].map(([viLbl, ruLbl, sc]) => `
-                <div class="rusi-crit-cell">
-                  <div class="rusi-crit-labels">
-                    <span class="rusi-crit-name">${viLbl} <small>(${ruLbl})</small></span>
-                    <span class="rusi-crit-val"><b>${sc}</b>/25</span>
-                  </div>
-                  <div class="rusi-crit-track">
-                    <div class="rusi-crit-bar-fill ${sc >= 17 ? 'is-good' : 'is-mid'}" style="width:${Math.round((sc / 25) * 100)}%"></div>
-                  </div>
+                <div class="rusi-ai-chips-wrap">
+                  <span class="rusi-metric-chip">${icon('file-text', 14)} <b>${count}</b> từ</span>
+                  <span class="rusi-metric-chip">${icon('check-circle', 14)} <b>${sentences.length}</b> câu</span>
+                  <span class="rusi-metric-chip">${icon('zap-xp', 14)} <b>+${earnedXp}</b> XP</span>
                 </div>
-              `).join("")}
-            </div>
+              </div>
 
-            <!-- Khung nhận xét Trợ lý AI Rusika -->
-            <div class="rusi-ai-feedback-container">
-              <div class="rusi-ai-feedback-header">
-                <span class="rusi-ai-avatar">${icon('bot-rusika', 20)}</span>
-                <span class="rusi-ai-author">Nhận xét chi tiết từ Trợ lý Rusika AI</span>
+              <!-- Dải 4 tiêu chí (Criteria Horizontal Ribbon) -->
+              <div class="rusi-ai-criteria-ribbon">
+                ${[
+                  ["Ngữ pháp", "Грамматика", scores[0]],
+                  ["Vốn từ", "Лексика", scores[1]],
+                  ["Bố cục", "Структура", scores[2]],
+                  ["Nội dung", "Содержание", scores[3]]
+                ].map(([viLbl, ruLbl, sc]) => `
+                  <div class="rusi-crit-cell">
+                    <div class="rusi-crit-labels">
+                      <span class="rusi-crit-name">${viLbl} <small>(${ruLbl})</small></span>
+                      <span class="rusi-crit-val"><b>${sc}</b>/25</span>
+                    </div>
+                    <div class="rusi-crit-track">
+                      <div class="rusi-crit-bar-fill ${sc >= 17 ? 'is-good' : 'is-mid'}" style="width:${Math.round((sc / 25) * 100)}%"></div>
+                    </div>
+                  </div>
+                `).join("")}
               </div>
-              <div class="rusi-ai-feedback-body">
-                ${feedbackComment}
+
+              <!-- Khung nhận xét Trợ lý AI Rusika -->
+              <div class="rusi-ai-feedback-container">
+                <div class="rusi-ai-feedback-header">
+                  <span class="rusi-ai-avatar">${icon('bot-rusika', 20)}</span>
+                  <span class="rusi-ai-author">Nhận xét chi tiết từ Trợ lý Rusika AI</span>
+                </div>
+                <div class="rusi-ai-feedback-body">
+                  ${feedbackComment}
+                </div>
               </div>
             </div>
-          </div>
-        `;
-        revealVocab();
-        const earnedXp = isPassed
-          ? ((typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.WRITING_SUBMIT : 15) + (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.WRITING_PASS_BONUS : 15))
-          : (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.WRITING_SUBMIT : 15);
-        if (typeof Progress !== "undefined") {
-          Progress.addXp(earnedXp, {
-            title: `Bài viết: ${t.title || t.id}`,
-            skill_type: "writing",
-            item_id: t.id,
-            score: total
-          });
-          Progress.markDone("writeDone", t.id, {
-            skill_type: "writing",
-            item_id: t.id,
-            score: total,
-            xp_earned: earnedXp
-          });
+          `;
+          revealVocab();
+
+          if (typeof Progress !== "undefined") {
+            Progress.addXp(earnedXp, {
+              title: `Bài viết: ${t.title || t.id}`,
+              skill_type: "writing",
+              item_id: t.id,
+              score: total
+            });
+            Progress.markDone("writeDone", t.id, {
+              skill_type: "writing",
+              item_id: t.id,
+              score: total,
+              xp_earned: earnedXp
+            });
+          }
+          toast(`AI Rusika đã phân tích và chấm xong bài viết (+${earnedXp} XP)!`);
+          scoreBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } catch (submitErr) {
+          console.error("Lỗi khi xử lý bài viết:", submitErr);
+          toast("Có lỗi xảy ra khi chấm bài viết. Vui lòng thử lại!");
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
         }
-        toast(`AI Rusika đã phân tích và chấm xong bài viết (+${earnedXp} XP)!`);
         scoreBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
       };
 
