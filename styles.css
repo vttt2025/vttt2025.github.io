@@ -20520,6 +20520,34 @@ body[data-page="upgrade"] main.container {
   .pdetail-tabs-section {
     padding: 18px;
   }
+  .pdetail-tab-btns {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding-bottom: 6px;
+    padding-right: 28px;
+    -webkit-mask-image: linear-gradient(to right, #000 85%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 85%, transparent 100%);
+  }
+  .pdetail-tab-btns::-webkit-scrollbar {
+    display: none;
+  }
+  .pdetail-tab-btn {
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding: 10px 14px;
+    font-size: 0.92rem;
+    min-height: 44px;
+  }
+  .pdetail-qty-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 /* =====================================================================
@@ -32358,5 +32386,42 @@ body.index-personalized #indexUserProgressHost {
   }
   .voc-pmodal-row {
     padding: 10px 12px;
+  }
+}
+
+/* =====================================================================
+ * MOBILE & TABLET ENHANCEMENTS: IOS ZOOM PREVENTION & TOUCH TARGETS
+ * ===================================================================== */
+@media (max-width: 768px) {
+  /* Ngăn iOS Safari tự động zoom trang khi chạm vào ô nhập liệu (font >= 16px) */
+  input.dau-vocab-search-input,
+  input.lis-dict-input-note,
+  input.add-jar-input,
+  input.create-jar-input,
+  .auth-form-group input,
+  .pdetail-qty-val {
+    font-size: 16px !important;
+  }
+
+  /* Mở rộng Touch Hitbox 44x44px cho các nút compact trên điện thoại */
+  .dau-card.dau-card-compact .topic-circle-btn,
+  .dau-card.dau-card-compact .btn-topic-article,
+  .dau-card.dau-card-compact .topic-text-btn,
+  .dau-card.dau-card-compact .btn-jar-list {
+    position: relative;
+  }
+
+  .dau-card.dau-card-compact .topic-circle-btn::after,
+  .dau-card.dau-card-compact .btn-topic-article::after,
+  .dau-card.dau-card-compact .topic-text-btn::after,
+  .dau-card.dau-card-compact .btn-jar-list::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    pointer-events: auto;
+  }
+
+  .dau-card.dau-card-compact .topic-footer-actions {
+    gap: 10px !important;
   }
 }

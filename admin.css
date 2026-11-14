@@ -4551,3 +4551,11 @@ body.payload-body {
     font-size: 16px;
   }
 }
+
+@media (max-width: 768px) {
+  .payload-filter-select,
+  .p-bulk-import-textarea,
+  .p-dia-script-textarea {
+    font-size: 16px !important;
+  }
+}
