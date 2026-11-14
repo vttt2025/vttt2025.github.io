@@ -31491,44 +31491,44 @@ body.index-personalized #indexUserProgressHost {
 }
 
 
-/* 2. THẺ VOICE MEMO & KẾT QUẢ THU ÂM (LUYỆN NÓI SHADOWING - REFINED CARD) */
+/* =====================================================================
+   2. THẺ VOICE MEMO TỐI GIẢN (SLIM AUDIO CAPSULE, APPLE/TELEGRAM AESTHETIC)
+   ===================================================================== */
 .sp-voice-memo-widget {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  padding: 14px 20px;
-  border-radius: 16px;
+  gap: 10px;
+  padding: 6px 14px;
+  min-height: 44px;
+  border-radius: 9999px;
   background: var(--surface);
-  border: 1.5px solid var(--border);
-  box-shadow: 0 4px 18px rgba(16, 42, 76, 0.05);
-  margin-top: 14px;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  animation: spResultSlideIn 0.25s ease-out;
-  box-sizing: border-box;
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 10px rgba(16, 42, 76, 0.04);
+  margin: 12px auto 0 auto;
+  max-width: 620px;
   width: 100%;
+  box-sizing: border-box;
+  animation: spResultSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.2s ease;
 }
 
 [data-theme="dark"] .sp-voice-memo-widget {
-  background: #151d2c;
-  border-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  background: #141b26;
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
+/* Bên trái: Nút Play hoặc đèn nhấp nháy thu âm */
 .sp-voice-memo-widget .sp-vm-left {
   display: flex;
   align-items: center;
-  gap: 14px;
-  min-width: 0;
-  flex: 1;
+  flex-shrink: 0;
 }
 
-/* Nút Play/Pause tròn cao cấp */
 .sp-voice-memo-widget .sp-vm-play-btn {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  min-height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: none;
   background: var(--primary);
@@ -31537,29 +31537,26 @@ body.index-personalized #indexUserProgressHost {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: 0 2px 6px rgba(23, 87, 166, 0.25);
+  transition: transform 0.15s ease, background 0.15s ease;
+  padding: 0;
   flex-shrink: 0;
-  box-shadow: 0 2px 10px rgba(23, 87, 166, 0.25);
-  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
 }
 
 .sp-voice-memo-widget .sp-vm-play-btn:hover {
-  transform: scale(1.06);
+  transform: scale(1.08);
   background: var(--primary-dark, #103c74);
-  box-shadow: 0 4px 14px rgba(23, 87, 166, 0.35);
 }
 
 .sp-voice-memo-widget.is-playing .sp-vm-play-btn {
   background: var(--green, #16a34a);
-  box-shadow: 0 2px 12px rgba(22, 163, 74, 0.4);
 }
 
-/* Hiệu ứng đỏ nhấp nháy trực quan khi đang thu âm */
+/* Đèn đỏ nhấp nháy khi thu âm */
 .sp-rec-live-indicator {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  min-height: 40px;
-  display: flex;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   position: relative;
@@ -31568,224 +31565,179 @@ body.index-personalized #indexUserProgressHost {
 
 .sp-rec-pulse-ring {
   position: absolute;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: rgba(220, 38, 38, 0.25);
-  animation: spPulseRing 1.3s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+  background: rgba(239, 68, 68, 0.25);
+  animation: spPulseRing 1.2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
 }
 
 .sp-rec-pulse-core {
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  background: #dc2626;
-  box-shadow: 0 0 10px rgba(220, 38, 38, 0.7);
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
   position: relative;
   z-index: 1;
 }
 
-@keyframes spPulseRing {
-  0% { transform: scale(0.6); opacity: 0.9; }
-  100% { transform: scale(1.4); opacity: 0; }
-}
-
-/* Khu vực nội dung trung tâm: Meta, Lời thoại & Sóng âm */
-.sp-voice-memo-widget .sp-vm-info {
+/* Khu vực trung tâm: Lời thoại & Audio track */
+.sp-voice-memo-widget .sp-vm-center {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 10px;
   min-width: 0;
   flex: 1;
 }
 
-.sp-voice-memo-widget .sp-result-meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.75rem;
-  font-weight: 750;
-  color: var(--muted);
-  letter-spacing: 0.02em;
+.sp-voice-memo-widget .sp-user-transcript-text {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+  letter-spacing: 0.01em;
 }
 
-.sp-voice-memo-widget .sp-result-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--muted);
-  display: inline-block;
+.sp-voice-memo-widget .sp-user-transcript-text .sp-tr-placeholder,
+.sp-voice-memo-widget .sp-user-transcript-text .sp-tr-empty {
+  color: var(--muted);
+  font-weight: 500;
+  font-style: italic;
+  font-size: 0.86rem;
+}
+
+.sp-voice-memo-widget .sp-vm-audio-track {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   flex-shrink: 0;
 }
 
-.sp-voice-memo-widget .sp-result-dot.is-listening {
-  background: #dc2626;
-  animation: spPulse 1s infinite;
-}
-
-.sp-voice-memo-widget .sp-result-dot.is-excellent {
-  background: var(--green, #16a34a);
-}
-
-.sp-voice-memo-widget .sp-result-dot.is-good {
-  background: var(--primary, #1757a6);
-}
-
-.sp-voice-memo-widget .sp-result-dot.is-retry {
-  background: var(--red, #dc2626);
-}
-
-.sp-voice-memo-widget .sp-vm-duration {
-  font-family: var(--font-mono, monospace);
-  font-size: 0.76rem;
-  font-weight: 700;
-  color: var(--primary);
-  background: rgba(23, 87, 166, 0.08);
-  padding: 1px 6px;
-  border-radius: 4px;
-  margin-left: 4px;
-}
-
-/* Lời thoại người học (xuống dòng tự nhiên, không bị cắt dở dang) */
-.sp-voice-memo-widget .sp-user-transcript-text {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text);
-  line-height: 1.45;
-  word-break: break-word;
-}
-
-/* Waveform sóng âm thanh động 16 vạch nhấp nháy chuẩn Figma */
 .sp-voice-memo-widget .sp-vm-waveform {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 3px;
-  height: 18px;
-  padding: 2px 0;
+  gap: 2.5px;
+  height: 14px;
 }
 
 .sp-voice-memo-widget .sp-vm-bar {
   display: inline-block;
-  width: 2.5px;
-  min-width: 2.5px;
+  width: 2px;
+  min-width: 2px;
   height: var(--h, 40%);
-  background: color-mix(in srgb, var(--primary) 30%, var(--border));
-  border-radius: 9999px;
-  transition: height 0.15s ease, background 0.2s ease;
+  background: color-mix(in srgb, var(--primary) 35%, var(--border));
+  border-radius: 999px;
+  transition: height 0.15s ease, background 0.15s ease;
 }
 
 .sp-voice-memo-widget.is-playing .sp-vm-bar {
   background: var(--primary);
-  animation: spVmWavePulse 0.9s infinite ease-in-out alternate;
+  animation: spVmWavePulse 0.85s infinite ease-in-out alternate;
 }
-
 .sp-voice-memo-widget.is-playing .sp-vm-bar:nth-child(2n) { animation-delay: 0.12s; }
 .sp-voice-memo-widget.is-playing .sp-vm-bar:nth-child(3n) { animation-delay: 0.24s; }
-.sp-voice-memo-widget.is-playing .sp-vm-bar:nth-child(4n) { animation-delay: 0.36s; }
 
-@keyframes spVmWavePulse {
-  0% { transform: scaleY(0.35); }
-  100% { transform: scaleY(1.35); }
+.sp-voice-memo-widget .sp-vm-duration {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
-/* Bên phải: Điểm số & Các nút thao tác */
+/* Bên phải: Điểm số & Các nút icon tròn tinh gọn */
 .sp-voice-memo-widget .sp-result-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
+.sp-voice-memo-widget .sp-score-badge,
 .sp-voice-memo-widget .sp-score-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 99px;
+  justify-content: center;
+  min-width: 38px;
+  padding: 3px 8px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-family: var(--font-mono, inherit);
   background: var(--bg);
+  color: var(--text-secondary);
   border: 1px solid var(--border);
-  font-size: 0.84rem;
-  font-weight: 750;
-  color: var(--text);
+  letter-spacing: -0.02em;
 }
 
+.sp-voice-memo-widget .sp-score-badge.is-excellent,
 .sp-voice-memo-widget .sp-score-pill.is-excellent {
   background: #dcfce7;
-  border-color: rgba(22, 163, 74, 0.3);
   color: #15803d;
+  border-color: rgba(22, 163, 74, 0.25);
 }
 
+.sp-voice-memo-widget .sp-score-badge.is-good,
 .sp-voice-memo-widget .sp-score-pill.is-good {
   background: #e0f2fe;
-  border-color: rgba(2, 132, 199, 0.3);
   color: #0369a1;
+  border-color: rgba(2, 132, 199, 0.25);
 }
 
+.sp-voice-memo-widget .sp-score-badge.is-retry,
 .sp-voice-memo-widget .sp-score-pill.is-retry {
   background: #fee2e2;
-  border-color: rgba(220, 38, 38, 0.3);
   color: #b91c1c;
+  border-color: rgba(220, 38, 38, 0.25);
 }
 
+.sp-voice-memo-widget .sp-score-badge.is-pending,
 .sp-voice-memo-widget .sp-score-pill.is-pending {
   color: var(--muted);
+  font-style: italic;
 }
 
-.sp-voice-memo-widget .sp-result-retry-btn {
-  height: 34px;
-  padding: 0 12px;
-  border-radius: 10px;
-  font-size: 0.78rem;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.sp-voice-memo-widget .sp-vm-btn-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
   border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.sp-voice-memo-widget .sp-result-retry-btn:hover {
-  background: var(--primary);
-  color: #fff;
-  border-color: var(--primary);
-}
-
-.sp-voice-memo-widget .sp-vm-action-btn.sp-vm-del {
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted);
   cursor: pointer;
+  padding: 0;
   transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
-.sp-voice-memo-widget .sp-vm-action-btn.sp-vm-del:hover {
-  background: rgba(220, 38, 38, 0.08);
-  border-color: #dc2626;
+.sp-voice-memo-widget .sp-vm-btn-icon:hover {
+  background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+
+.sp-voice-memo-widget .sp-vm-btn-icon.sp-btn-del:hover {
+  background: #fee2e2;
   color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.3);
 }
 
-@media (max-width: 680px) {
+/* Đảm bảo responsive tối giản không bị vỡ layout trên mobile */
+@media (max-width: 480px) {
   .sp-voice-memo-widget {
-    flex-direction: column;
-    align-items: stretch;
-    border-radius: 14px;
-    padding: 12px 14px;
-    gap: 10px;
+    padding: 5px 10px;
+    gap: 8px;
   }
-  .sp-voice-memo-widget .sp-result-right {
-    justify-content: flex-end;
-    padding-top: 8px;
-    border-top: 1px solid var(--border);
+  .sp-voice-memo-widget .sp-vm-waveform {
+    display: none !important;
   }
 }
 

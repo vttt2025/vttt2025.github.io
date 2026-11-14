@@ -8252,14 +8252,14 @@ const openSpeakingWorkspace = (set) => {
       const liveInd = el("#spRecLiveInd");
       const delBtn = el("#btnVmDelete");
       const durEl = el("#spVmDuration");
-      const wfEl = el("#spVmWaveform");
+      const trackEl = el("#spVmAudioTrack");
       const memo = userVoiceMemos[idx];
       if (memo && memo.url) {
         if (bar) bar.style.display = "flex";
         if (playBtn) playBtn.style.display = "inline-flex";
         if (liveInd) liveInd.style.display = "none";
         if (delBtn) delBtn.style.display = "inline-flex";
-        if (wfEl) wfEl.style.display = "flex";
+        if (trackEl) trackEl.style.display = "inline-flex";
         if (durEl) {
           durEl.style.display = "inline-block";
           durEl.textContent = formatVmTime(memo.duration || 0);
@@ -8267,9 +8267,9 @@ const openSpeakingWorkspace = (set) => {
         stopActiveVmAudio();
       } else {
         if (playBtn) playBtn.style.display = "none";
-        if (liveInd) liveInd.style.display = isRecording ? "flex" : "none";
+        if (liveInd) liveInd.style.display = isRecording ? "inline-flex" : "none";
         if (delBtn) delBtn.style.display = "none";
-        if (wfEl) wfEl.style.display = "none";
+        if (trackEl) trackEl.style.display = "none";
         if (durEl) durEl.style.display = "none";
         stopActiveVmAudio();
       }
@@ -8395,66 +8395,58 @@ const openSpeakingWorkspace = (set) => {
               <div class="sp-vi-translation" id="spTargetVi" title="Nhấn phím T để ẩn/hiện dịch"></div>
             </div>
 
-            <!-- THẺ VOICE MEMO FIGMA THỐNG NHẤT (GHI ÂM + KẾT QUẢ + PHÁT LẠI + SÓNG ÂM) -->
+            <!-- THẺ VOICE MEMO TỐI GIẢN (SLIM AUDIO CAPSULE, KHÔNG CHỮ RƯỜM RÀ) -->
             <div class="sp-voice-memo-widget" id="spSpeechResultBar" style="display:none;">
               <div class="sp-vm-left">
                 <!-- Nút tròn Play/Pause nghe lại giọng mình -->
-                <button type="button" class="sp-vm-play-btn" id="btnVmPlay" style="display:none;" title="Nghe lại giọng nói của bạn" aria-label="Nghe lại giọng nói">
-                  <span id="spVmPlayIcon">${icon("play", 16)}</span>
+                <button type="button" class="sp-vm-play-btn" id="btnVmPlay" style="display:none;" title="Nghe lại" aria-label="Phát lại">
+                  <span id="spVmPlayIcon">${icon("play", 13)}</span>
                 </button>
 
-                <!-- Vòng tròn đỏ nhấp nháy trực quan khi đang thu âm học viên nói -->
+                <!-- Vòng tròn đỏ nhấp nháy khi đang thu âm -->
                 <div class="sp-rec-live-indicator" id="spRecLiveInd" style="display:none;" title="Đang ghi âm">
                   <span class="sp-rec-pulse-ring"></span>
                   <span class="sp-rec-pulse-core"></span>
                 </div>
+              </div>
 
-                <!-- Lời thoại & Trạng thái ghi âm -->
-                <div class="sp-vm-info">
-                  <div class="sp-result-meta" id="spResultMeta">
-                    <span class="sp-result-dot" id="spResultDot"></span>
-                    <span class="sp-result-caption" id="spResultStatusLbl">Giọng của bạn</span>
-                    <span class="sp-vm-duration" id="spVmDuration" style="display:none;">00:00</span>
-                  </div>
-                  <div class="sp-user-transcript-text" id="spUserTranscriptText">Đang lắng nghe... Hãy nói câu tiếng Nga</div>
-
-                  <!-- Waveform thanh sóng âm sống động khi nghe lại -->
-                  <div class="sp-vm-waveform" id="spVmWaveform" style="display:none;">
+              <!-- Nội dung lời thoại & Sóng âm thanh động -->
+              <div class="sp-vm-center">
+                <span class="sp-user-transcript-text ru" id="spUserTranscriptText">Đang nghe...</span>
+                <div class="sp-vm-audio-track" id="spVmAudioTrack" style="display:none;">
+                  <div class="sp-vm-waveform" id="spVmWaveform">
                     <span class="sp-vm-bar" style="--h: 30%"></span>
-                    <span class="sp-vm-bar" style="--h: 60%"></span>
-                    <span class="sp-vm-bar" style="--h: 90%"></span>
-                    <span class="sp-vm-bar" style="--h: 45%"></span>
-                    <span class="sp-vm-bar" style="--h: 75%"></span>
-                    <span class="sp-vm-bar" style="--h: 100%"></span>
-                    <span class="sp-vm-bar" style="--h: 55%"></span>
-                    <span class="sp-vm-bar" style="--h: 80%"></span>
-                    <span class="sp-vm-bar" style="--h: 40%"></span>
                     <span class="sp-vm-bar" style="--h: 70%"></span>
-                    <span class="sp-vm-bar" style="--h: 95%"></span>
+                    <span class="sp-vm-bar" style="--h: 40%"></span>
+                    <span class="sp-vm-bar" style="--h: 90%"></span>
+                    <span class="sp-vm-bar" style="--h: 60%"></span>
+                    <span class="sp-vm-bar" style="--h: 100%"></span>
                     <span class="sp-vm-bar" style="--h: 50%"></span>
                     <span class="sp-vm-bar" style="--h: 85%"></span>
+                    <span class="sp-vm-bar" style="--h: 40%"></span>
                     <span class="sp-vm-bar" style="--h: 65%"></span>
-                    <span class="sp-vm-bar" style="--h: 35%"></span>
-                    <span class="sp-vm-bar" style="--h: 70%"></span>
                   </div>
+                  <span class="sp-vm-duration" id="spVmDuration">00:00</span>
                 </div>
               </div>
 
-              <!-- Bên phải: Điểm số, Nút Nói lại và Nút Xóa bản ghi -->
+              <!-- Thao tác bên phải: Điểm số & Các nút icon tròn tinh gọn -->
               <div class="sp-result-right">
-                <div class="sp-score-pill" id="spResultScoreWrap">
+                <div class="sp-score-badge" id="spResultScoreWrap" title="Điểm phát âm">
                   <span class="sp-score-num" id="spResultScoreVal">--</span>
-                  <span class="sp-score-sep" id="spScoreSep">•</span>
-                  <span class="sp-score-tag" id="spResultScoreLbl">Chờ đánh giá</span>
                 </div>
-                <button type="button" class="sp-result-retry-btn" id="btnFeedbackRetry" title="Nói lại câu này (Phím R)" aria-label="Nói lại">
+                <button type="button" class="sp-vm-btn-icon sp-btn-retry" id="btnFeedbackRetry" title="Nói lại (R)" aria-label="Nói lại">
                   ${icon("rotate-ccw", 14)}
-                  <span>Nói lại</span>
                 </button>
-                <button type="button" class="sp-vm-action-btn sp-vm-del" id="btnVmDelete" style="display:none;" title="Xóa bản ghi âm này" aria-label="Xóa">
+                <button type="button" class="sp-vm-btn-icon sp-btn-del" id="btnVmDelete" style="display:none;" title="Xóa bản ghi" aria-label="Xóa">
                   ${icon("trash-2", 14)}
                 </button>
-                <div class="score-ring" id="spScoreRing" style="display:none;" title="Độ chính xác">--</div>
+                <!-- Thẻ ẩn tương thích ngược cho JS -->
+                <span id="spResultStatusLbl" style="display:none;"></span>
+                <span id="spResultScoreLbl" style="display:none;"></span>
+                <span id="spScoreSep" style="display:none;"></span>
+                <span id="spResultDot" style="display:none;"></span>
+                <span id="spScoreRing" style="display:none;"></span>
               </div>
             </div>
 
@@ -8855,9 +8847,9 @@ const openSpeakingWorkspace = (set) => {
             ringEl.textContent = `${prevScore}%`;
             ringEl.className = "score-ring " + (prevScore >= 80 ? "" : prevScore >= 60 ? "mid" : "low");
           }
-          if (scWrap) scWrap.className = "sp-score-pill " + (prevScore >= 80 ? "is-excellent" : prevScore >= 60 ? "is-good" : "is-retry");
+          if (scWrap) scWrap.className = "sp-score-badge " + (prevScore >= 80 ? "is-excellent" : prevScore >= 60 ? "is-good" : "is-retry");
           if (dotEl) dotEl.className = "sp-result-dot " + (prevScore >= 80 ? "is-excellent" : prevScore >= 60 ? "is-good" : "is-retry");
-          if (trEl) trEl.innerHTML = `<span style="color:var(--muted);font-style:italic;">Kết quả từ lần luyện trước</span>`;
+          if (trEl) trEl.innerHTML = `<span class="sp-tr-empty">Bản ghi đã lưu</span>`;
         } else {
           resBar.style.display = "none";
         }
@@ -8975,22 +8967,23 @@ const openSpeakingWorkspace = (set) => {
       const statusLbl = el("#spResultStatusLbl");
       const dotEl = el("#spResultDot");
       const liveInd = el("#spRecLiveInd");
-      if (liveInd) liveInd.style.display = "flex";
+      if (resBar) resBar.style.display = "flex";
+      if (liveInd) liveInd.style.display = "inline-flex";
       const vmPlayBtn = el("#btnVmPlay");
       if (vmPlayBtn) vmPlayBtn.style.display = "none";
       const vmDelBtn = el("#btnVmDelete");
       if (vmDelBtn) vmDelBtn.style.display = "none";
-      const vmWf = el("#spVmWaveform");
-      if (vmWf) vmWf.style.display = "none";
+      const vmTrack = el("#spVmAudioTrack");
+      if (vmTrack) vmTrack.style.display = "none";
       const vmDur = el("#spVmDuration");
       if (vmDur) vmDur.style.display = "none";
-      if (userTrEl) userTrEl.innerHTML = `<span style="color:var(--muted);font-style:italic;">Đang lắng nghe... Hãy nói câu tiếng Nga</span>`;
-      if (statusLbl) statusLbl.textContent = "Đang ghi âm...";
+      if (userTrEl) userTrEl.innerHTML = `<span class="sp-tr-placeholder">Đang nghe...</span>`;
+      if (statusLbl) statusLbl.textContent = "Đang ghi âm";
       if (scoreValEl) scoreValEl.textContent = "...";
-      if (scoreLblEl) scoreLblEl.textContent = "Đang nhận diện";
+      if (scoreLblEl) scoreLblEl.textContent = "";
       if (ringEl) ringEl.textContent = "...";
       if (dotEl) dotEl.className = "sp-result-dot is-listening";
-      if (scoreWrapEl) scoreWrapEl.className = "sp-score-pill is-pending";
+      if (scoreWrapEl) scoreWrapEl.className = "sp-score-badge is-pending";
 
       recognitionInstance = new SR();
       recognitionInstance.lang = "ru-RU";
@@ -9046,7 +9039,7 @@ const openSpeakingWorkspace = (set) => {
           scoreLblEl.textContent = sim >= 80 ? "Xuất sắc" : sim >= 60 ? "Khá tốt" : "Thử lại";
         }
         if (scoreWrapEl) {
-          scoreWrapEl.className = "sp-score-pill " + (sim >= 80 ? "is-excellent" : sim >= 60 ? "is-good" : "is-retry");
+          scoreWrapEl.className = "sp-score-badge " + (sim >= 80 ? "is-excellent" : sim >= 60 ? "is-good" : "is-retry");
         }
         if (dotEl) {
           dotEl.className = "sp-result-dot " + (sim >= 80 ? "is-excellent" : sim >= 60 ? "is-good" : "is-retry");
