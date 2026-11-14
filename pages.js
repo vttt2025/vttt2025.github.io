@@ -8249,6 +8249,7 @@ const openSpeakingWorkspace = (set) => {
     const renderVoiceMemoUI = (idx) => {
       const bar = el("#spSpeechResultBar");
       const playBtn = el("#btnVmPlay");
+      const liveInd = el("#spRecLiveInd");
       const delBtn = el("#btnVmDelete");
       const durEl = el("#spVmDuration");
       const wfEl = el("#spVmWaveform");
@@ -8256,6 +8257,7 @@ const openSpeakingWorkspace = (set) => {
       if (memo && memo.url) {
         if (bar) bar.style.display = "flex";
         if (playBtn) playBtn.style.display = "inline-flex";
+        if (liveInd) liveInd.style.display = "none";
         if (delBtn) delBtn.style.display = "inline-flex";
         if (wfEl) wfEl.style.display = "flex";
         if (durEl) {
@@ -8265,6 +8267,7 @@ const openSpeakingWorkspace = (set) => {
         stopActiveVmAudio();
       } else {
         if (playBtn) playBtn.style.display = "none";
+        if (liveInd) liveInd.style.display = isRecording ? "flex" : "none";
         if (delBtn) delBtn.style.display = "none";
         if (wfEl) wfEl.style.display = "none";
         if (durEl) durEl.style.display = "none";
@@ -8399,6 +8402,12 @@ const openSpeakingWorkspace = (set) => {
                 <button type="button" class="sp-vm-play-btn" id="btnVmPlay" style="display:none;" title="Nghe lại giọng nói của bạn" aria-label="Nghe lại giọng nói">
                   <span id="spVmPlayIcon">${icon("play", 16)}</span>
                 </button>
+
+                <!-- Vòng tròn đỏ nhấp nháy trực quan khi đang thu âm học viên nói -->
+                <div class="sp-rec-live-indicator" id="spRecLiveInd" style="display:none;" title="Đang ghi âm">
+                  <span class="sp-rec-pulse-ring"></span>
+                  <span class="sp-rec-pulse-core"></span>
+                </div>
 
                 <!-- Lời thoại & Trạng thái ghi âm -->
                 <div class="sp-vm-info">
@@ -8965,8 +8974,16 @@ const openSpeakingWorkspace = (set) => {
       const ringEl = el("#spScoreRing");
       const statusLbl = el("#spResultStatusLbl");
       const dotEl = el("#spResultDot");
-
-      if (resBar) resBar.style.display = "flex";
+      const liveInd = el("#spRecLiveInd");
+      if (liveInd) liveInd.style.display = "flex";
+      const vmPlayBtn = el("#btnVmPlay");
+      if (vmPlayBtn) vmPlayBtn.style.display = "none";
+      const vmDelBtn = el("#btnVmDelete");
+      if (vmDelBtn) vmDelBtn.style.display = "none";
+      const vmWf = el("#spVmWaveform");
+      if (vmWf) vmWf.style.display = "none";
+      const vmDur = el("#spVmDuration");
+      if (vmDur) vmDur.style.display = "none";
       if (userTrEl) userTrEl.innerHTML = `<span style="color:var(--muted);font-style:italic;">Đang lắng nghe... Hãy nói câu tiếng Nga</span>`;
       if (statusLbl) statusLbl.textContent = "Đang ghi âm...";
       if (scoreValEl) scoreValEl.textContent = "...";
@@ -9064,6 +9081,8 @@ const openSpeakingWorkspace = (set) => {
 
       const btnMic = el("#btnRecordMic");
       if (btnMic) btnMic.classList.remove("is-recording");
+      const liveInd = el("#spRecLiveInd");
+      if (liveInd) liveInd.style.display = "none";
 
       if (recognitionInstance) {
         try { recognitionInstance.stop(); } catch (e) {}
