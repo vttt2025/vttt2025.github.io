@@ -11672,153 +11672,104 @@ function initMockTestPage() {
           ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
         </button>
         <div class="dau-workspace-info">
-          <span class="dau-workspace-title">Kết quả khảo thí ТРКИ: ${esc(currentTest.title)}</span>
+          <span class="dau-workspace-title">${esc(currentTest.title)}</span>
         </div>
         <button class="btn btn-primary btn-sm dau-top-btn" id="btnRetryTop" title="Thi lại">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 15 }) : ""} <span class="btn-text">Thi lại</span></button>
       </div>
 
       <div class="trki-workspace-result">
-        <!-- 1. THẺ HERO KẾT QUẢ ĐÁNH GIÁ (CĂN RỘNG CHUẨN XÁC BẰNG DAU-WORKSPACE-BACK-BAR, MINIMALIST) -->
+        <!-- 1. THẺ HERO KẾT QUẢ ĐÁNH GIÁ (GỌN GÀNG, HIỆN ĐẠI, 1 KHỐI DUY NHẤT) -->
         <div class="trki-hero-eval-card ${examStatus === 'pass' ? 'is-pass' : 'is-fail'}">
-          <div class="trki-hero-eval-left">
-            <div class="trki-eval-status-pill ${examStatus === 'pass' ? 'pass' : examStatus === 'retake' ? 'retake' : 'fail'}">
-              ${window.RusiIcons ? RusiIcons.get(examStatus === "pass" ? "check-circle-correct" : examStatus === "retake" ? "rotate-ccw" : "alert-triangle", { size: 16 }) : ""}
-              <span>${statusBadgeText}</span>
+          <div class="trki-eval-top">
+            <div class="trki-eval-top-info">
+              <div class="trki-eval-status-pill ${examStatus === 'pass' ? 'pass' : examStatus === 'retake' ? 'retake' : 'fail'}">
+                ${window.RusiIcons ? RusiIcons.get(examStatus === "pass" ? "check-circle-correct" : examStatus === "retake" ? "rotate-ccw" : "alert-triangle", { size: 15 }) : ""}
+                <span>${statusBadgeText}</span>
+              </div>
+              <h2 class="trki-eval-title">${esc(currentTest.title)}</h2>
+              <p class="trki-eval-subtitle">
+                ${isSubset ? esc(activeParts.map(p => p.vi).join(" · ")) : `Khảo thí chuẩn quốc tế ТРКИ · Cấp độ ${esc(currentTest.level)}`}
+              </p>
             </div>
-            <h2 class="trki-eval-title">
-              ${isSubset ? `Kết quả ôn luyện: ${esc(activeParts.map(p => p.vi).join(" · "))}` : `Khảo thí chứng chỉ tiếng Nga quốc tế ТРКИ · Cấp độ ${esc(currentTest.level)}`}
-            </h2>
-            <p class="trki-eval-desc">
-              ${esc(currentTest.title)} — ${statusDesc}
-            </p>
-          </div>
-          <div class="trki-hero-eval-right">
-            <div class="trki-score-display">
+            <div class="trki-eval-top-score">
               <span class="trki-score-num ${examStatus === 'pass' ? 'pass' : 'fail'}">${pct}%</span>
               <span class="trki-score-ratio">${correct}/${total} câu đúng</span>
             </div>
           </div>
-        </div>
 
-        <!-- 2. THỐNG KÊ KẾT QUẢ PHÂN MÔN (SUBTESTS GRID) -->
-        <div class="trki-section-head">
-          <span class="trki-section-icon">${window.RusiIcons ? RusiIcons.get("bar-chart-2", { size: 18 }) : ""}</span>
-          <span class="trki-section-label">Thống kê tỷ lệ đạt từng phân môn</span>
-        </div>
-
-        <div class="trki-subtest-grid">
-          ${detail.map((d) => `
-            <div class="trki-subtest-card ${d.passed ? 'is-pass' : 'is-fail'}">
-              <div class="trki-subtest-header">
-                <span class="trki-subtest-title">${esc(d.part.vi)}</span>
-                <span class="trki-subtest-pill ${d.passed ? 'pass' : 'fail'}">
-                  ${d.passed ? 'СДАНО' : 'НЕ СДАНО'}
-                </span>
-              </div>
-              <div class="trki-subtest-numbers">
-                <span class="trki-subtest-count"><b>${d.count}</b>/${d.total} câu</span>
-                <span class="trki-subtest-pct ${d.passed ? 'pass' : 'fail'}">${d.pct}%</span>
-              </div>
-              <div class="trki-subtest-track">
-                <div class="trki-subtest-fill ${d.passed ? 'pass' : 'fail'}" style="width:${d.pct}%"></div>
-              </div>
+          ${detail.length > 0 ? `
+            <div class="trki-subtest-compact-grid">
+              ${detail.map((d) => `
+                <div class="trki-subtest-compact-item ${d.passed ? 'is-pass' : 'is-fail'}">
+                  <div class="trki-subtest-compact-row">
+                    <span class="trki-subtest-compact-name">${esc(d.part.vi)}</span>
+                    <span class="trki-subtest-compact-score ${d.passed ? 'pass' : 'fail'}">${d.count}/${d.total} (${d.pct}%)</span>
+                  </div>
+                  <div class="trki-subtest-compact-track">
+                    <div class="trki-subtest-compact-fill ${d.passed ? 'pass' : 'fail'}" style="width:${d.pct}%"></div>
+                  </div>
+                </div>
+              `).join("")}
             </div>
-          `).join("")}
-
-          ${isSubset ? `
-            <div class="trki-subtest-card" style="background:color-mix(in srgb, var(--primary) 3%, var(--surface));justify-content:center;align-items:center;text-align:center;padding:20px">
-              <div style="font-weight:750;color:var(--text);margin-bottom:6px">Luyện các phần khác của đề này</div>
-              <p style="font-size:0.82rem;color:var(--muted);margin:0 0 12px">Chọn làm tiếp các phân môn còn lại để hoàn thành bài thi toàn diện.</p>
-              <button type="button" class="btn btn-outline btn-sm" id="btnChooseOtherParts" style="font-weight:700">
-                Chọn phần khác ▾
-              </button>
-            </div>
-          ` : `
-            <div class="trki-subtest-card" style="background:color-mix(in srgb, var(--primary) 3%, var(--surface))">
-              <div class="trki-subtest-header">
-                <span class="trki-subtest-title">Субтест 4: Письмо (Viết)</span>
-                <span class="trki-subtest-pill" style="background:rgba(23,87,166,0.1);color:var(--primary)">TỰ LUẬN AI</span>
-              </div>
-              <p style="font-size:0.82rem;color:var(--muted);margin:6px 0 10px;line-height:1.4">Tả tranh và tóm tắt đề thi chuẩn TRKI.</p>
-              <a href="writing.html" style="font-size:0.84rem;font-weight:700;color:var(--primary);text-decoration:none;display:inline-flex;align-items:center;gap:4px">
-                Luyện Viết ngay ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 12 }) : "→"}
-              </a>
-            </div>
-
-            <div class="trki-subtest-card" style="background:color-mix(in srgb, var(--red) 3%, var(--surface))">
-              <div class="trki-subtest-header">
-                <span class="trki-subtest-title">Субтест 5: Говорение (Nói)</span>
-                <span class="trki-subtest-pill" style="background:rgba(197,34,51,0.1);color:var(--red,#c52233)">VẤN ĐÁP AI</span>
-              </div>
-              <p style="font-size:0.82rem;color:var(--muted);margin:6px 0 10px;line-height:1.4">Shadowing và phản xạ tình huống chuẩn TRKI.</p>
-              <a href="speaking.html" style="font-size:0.84rem;font-weight:700;color:var(--red,#c52233);text-decoration:none;display:inline-flex;align-items:center;gap:4px">
-                Luyện Nói ngay ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 12 }) : "→"}
-              </a>
-            </div>
-          `}
+          ` : ""}
         </div>
 
-        <!-- 3. THANH THAO TÁC (ACTIONS TOOLBAR) -->
-        <div class="trki-result-actions">
-          <button class="btn btn-primary" id="retryTest">
-            ${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 16 }) : ""}
-            <span>${isSubset ? (activeParts.length === 1 ? "Làm lại phần này" : "Làm lại các phần này") : "Làm lại đề này"}</span>
-          </button>
-          <button class="btn btn-outline" id="btnBackToHub">
-            ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 16 }) : ""}
-            <span>Quay lại danh sách đề thi</span>
-          </button>
-          <button class="btn btn-outline" onclick="window.scrollTo({top:0,behavior:'smooth'})">
-            <span>Lên đầu trang ↑</span>
-          </button>
+        <!-- 2. BẢNG PHÂN TÍCH ĐÁP ÁN & GIẢI THÍCH LỜI GIẢI THÀNH 1 KHỐI DUY NHẤT -->
+        <div class="trki-unified-review-card">
+          <div class="trki-review-card-head">
+            <div class="trki-review-card-title">
+              ${window.RusiIcons ? RusiIcons.get("file-text", { size: 18 }) : ""}
+              <span>Phân tích đáp án & giải thích lời giải chi tiết</span>
+            </div>
+            <span class="trki-review-count-badge">${total} câu hỏi</span>
+          </div>
+          <div id="reviewHost" class="trki-review-items-list"></div>
         </div>
-
-        <!-- 4. BẢNG PHÂN TÍCH ĐÁP ÁN & GIẢI THÍCH NGỮ PHÁP CHI TIẾT -->
-        <div class="trki-section-head" style="margin-top:24px">
-          <span class="trki-section-icon">${window.RusiIcons ? RusiIcons.get("file-text", { size: 18 }) : ""}</span>
-          <span class="trki-section-label">Phân tích đáp án & giải thích ngữ pháp chi tiết</span>
-        </div>
-        <div id="reviewHost" class="trki-review-host"></div>
       </div>
     `;
 
     const review = el("#reviewHost");
     activeParts.forEach((part) => {
-      review.innerHTML += `
-        <div class="trki-subtest-review-block">
-          <div class="trki-subtest-review-title">
-            ${esc(part.name)} (${esc(part.vi)})
-          </div>
-        </div>`;
+      if (activeParts.length > 1) {
+        review.innerHTML += `
+          <div class="trki-part-divider-row">
+            <span class="trki-part-divider-title">${esc(part.name)} — ${esc(part.vi)}</span>
+          </div>`;
+      }
       if (Array.isArray(part.questions) && part.questions.length > 0) {
         review.innerHTML += part.questions
           .map((q, qi) => {
             const given = answers[part.id + "_" + qi];
             const ok = given === q.a;
             return `
-          <div class="trki-q-card ${ok ? 'is-correct' : 'is-wrong'}">
-            <div class="trki-q-header">
-              <span class="trki-q-index">Câu ${qi + 1}</span>
-              <span class="trki-q-badge ${ok ? 'pass' : 'fail'}">
-                ${ok ? '✓ Đúng' : '✕ Sai'}
-              </span>
+          <div class="trki-review-row ${ok ? 'is-correct' : 'is-wrong'}">
+            <div class="trki-review-row-header">
+              <div class="trki-review-num-wrap">
+                <span class="trki-review-num">Câu ${qi + 1}</span>
+                <span class="trki-review-pill ${ok ? 'pass' : 'fail'}">
+                  ${ok ? '✓ Đúng' : '✕ Sai'}
+                </span>
+              </div>
             </div>
-            <p class="trki-q-prompt ru">${esc(q.q)}</p>
-            <div class="trki-q-answers">
-              <div class="trki-q-user-ans">
-                <span>Bạn chọn:</span>
-                <b class="ru ${ok ? 'pass' : 'fail'}">${given !== undefined ? esc(q.options[given]) : "— bỏ trống —"}</b>
+            <p class="trki-review-prompt ru">${esc(q.q)}</p>
+            <div class="trki-review-answers-grid">
+              <div class="trki-review-ans-col">
+                <span class="trki-ans-label">Bạn chọn:</span>
+                <span class="trki-ans-val ru ${ok ? 'pass' : 'fail'}">${given !== undefined ? esc(q.options[given]) : "— bỏ trống —"}</span>
               </div>
               ${ok ? "" : `
-                <div class="trki-q-correct-ans">
-                  <span>Đáp án đúng:</span>
-                  <b class="ru pass">${esc(q.options[q.a])}</b>
+                <div class="trki-review-ans-col">
+                  <span class="trki-ans-label">Đáp án đúng:</span>
+                  <span class="trki-ans-val ru pass">${esc(q.options[q.a])}</span>
                 </div>
               `}
             </div>
-            <div class="trki-q-explain">
-              <div class="trki-q-explain-head"><b>💡 Giải thích quy tắc:</b></div>
-              <div class="trki-q-explain-body">${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}</div>
+            <div class="trki-review-expl">
+              <span class="trki-expl-icon">💡</span>
+              <div class="trki-expl-content">
+                <b class="trki-expl-title">Giải thích:</b>
+                <span class="trki-expl-text">${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}</span>
+              </div>
             </div>
           </div>`;
           })
@@ -11828,32 +11779,31 @@ function initMockTestPage() {
           const wId = "write_" + part.id + "_" + wti;
           const userText = answers[wId] || "";
           return `
-            <div class="trki-q-card" style="border-left: 3.5px solid var(--primary)">
-              <div class="trki-q-header">
-                <span class="trki-q-index">Bài tự luận ${wti + 1}</span>
-                <span class="trki-q-badge pass" style="background:rgba(23,87,166,0.08);color:var(--primary)">
-                  ${esc(wt.type || "Tự luận")}
-                </span>
+            <div class="trki-review-row" style="border-left-color: var(--primary)">
+              <div class="trki-review-row-header">
+                <div class="trki-review-num-wrap">
+                  <span class="trki-review-num">Bài tự luận ${wti + 1}</span>
+                  <span class="trki-review-pill pass" style="background:rgba(23,87,166,0.08);color:var(--primary)">
+                    ${esc(wt.type || "Tự luận")}
+                  </span>
+                </div>
               </div>
-              <p class="trki-q-prompt ru">${esc(wt.title)}</p>
-              <div class="trki-q-explain" style="margin-top:6px">
-                <div class="trki-q-explain-head"><b>Bài làm đã nộp của bạn:</b></div>
-                <div class="trki-q-explain-body" style="white-space:pre-wrap;margin-top:4px">${esc(userText) || "— Chưa nộp bài viết —"}</div>
+              <p class="trki-review-prompt ru">${esc(wt.title)}</p>
+              <div class="trki-review-expl">
+                <div class="trki-expl-content">
+                  <b class="trki-expl-title">Bài làm đã nộp của bạn:</b>
+                  <div class="trki-expl-text" style="white-space:pre-wrap;margin-top:4px">${esc(userText) || "— Chưa nộp bài viết —"}</div>
+                </div>
               </div>
             </div>`;
         }).join("");
       }
     });
 
-    const otherPartsBtn = el("#btnChooseOtherParts");
-    if (otherPartsBtn) {
-      otherPartsBtn.onclick = () => openSubtestPickerModal(currentTest);
-    }
-
     el("#btnReviewBack").onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); window.scrollTo({ top: 0, behavior: "smooth" }); };
     el("#btnRetryTop").onclick = () => startTest(currentTest, activePartId, examMode);
-    el("#retryTest").onclick = () => startTest(currentTest, activePartId, examMode);
-    el("#btnBackToHub").onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); };
+    if (el("#retryTest")) el("#retryTest").onclick = () => startTest(currentTest, activePartId, examMode);
+    if (el("#btnBackToHub")) el("#btnBackToHub").onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); };
     if (window.RusiIcons && typeof RusiIcons.replace === "function") {
       RusiIcons.replace(host);
     }

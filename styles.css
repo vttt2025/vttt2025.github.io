@@ -31837,7 +31837,7 @@ body.index-personalized #indexUserProgressHost {
   }
 }
 
-/* 3. KHUNG KẾT QUẢ KHẢO THÍ ТРКИ (CĂN CHUẨN RỘNG BẰNG DAU-WORKSPACE-BACK-BAR, MINIMALIST) */
+/* 3. KHUNG KẾT QUẢ KHẢO THÍ ТРКИ (CĂN CHUẨN RỘNG BẰNG DAU-WORKSPACE-BACK-BAR, MINIMALIST & UNIFIED) */
 .trki-workspace-result {
   width: 100%;
   box-sizing: border-box;
@@ -31848,6 +31848,7 @@ body.index-personalized #indexUserProgressHost {
   gap: 20px;
 }
 
+/* 1. THẺ HERO ĐÁNH GIÁ (GỌN GÀNG, HIỆN ĐẠI, TẬP TRUNG KẾT QUẢ) */
 .trki-hero-eval-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -31855,19 +31856,25 @@ body.index-personalized #indexUserProgressHost {
   padding: 24px 28px;
   box-shadow: 0 4px 16px rgba(16, 42, 76, 0.05);
   display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-sizing: border-box;
+}
+
+.trki-eval-top {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
   flex-wrap: wrap;
-  box-sizing: border-box;
 }
 
-.trki-hero-eval-left {
+.trki-eval-top-info {
   display: flex;
   flex-direction: column;
   gap: 8px;
   flex: 1;
-  min-width: 280px;
+  min-width: 260px;
 }
 
 .trki-eval-status-pill {
@@ -31905,30 +31912,23 @@ body.index-personalized #indexUserProgressHost {
   line-height: 1.35;
 }
 
-.trki-eval-desc {
+.trki-eval-subtitle {
   font-size: 0.9rem;
   color: var(--muted);
   margin: 0;
-  line-height: 1.55;
-  max-width: 700px;
+  line-height: 1.5;
 }
 
-.trki-hero-eval-right {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  flex-shrink: 0;
-}
-
-.trki-score-display {
+.trki-eval-top-score {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .trki-score-num {
-  font-size: 3rem;
+  font-size: 2.8rem;
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.03em;
@@ -31948,303 +31948,305 @@ body.index-personalized #indexUserProgressHost {
   color: var(--muted);
 }
 
-.trki-section-head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 10px 0 0;
-  font-size: 1.08rem;
-  font-weight: 800;
-  color: var(--text);
-}
-
-.trki-section-icon {
-  display: inline-flex;
-  align-items: center;
-  color: var(--primary);
-}
-
-.trki-subtest-grid {
+/* Compact Subtest Progress inside Hero Card */
+.trki-subtest-compact-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
 }
 
-@media (max-width: 900px) {
-  .trki-subtest-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 540px) {
-  .trki-subtest-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.trki-subtest-card {
-  background: var(--surface);
+.trki-subtest-compact-item {
+  background: color-mix(in srgb, var(--primary) 3%, var(--surface));
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px 18px;
+  border-radius: 10px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  gap: 8px;
 }
 
-.trki-subtest-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 14px rgba(16, 42, 76, 0.05);
-}
-
-.trki-subtest-header {
+.trki-subtest-compact-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.trki-subtest-title {
-  font-size: 0.92rem;
-  font-weight: 750;
-  color: var(--text);
-}
-
-.trki-subtest-pill {
-  font-size: 0.72rem;
-  font-weight: 800;
-  padding: 2px 8px;
-  border-radius: 99px;
-  letter-spacing: 0.02em;
-}
-
-.trki-subtest-pill.pass {
-  background: #dcfce7;
-  color: #15803d;
-}
-
-.trki-subtest-pill.fail {
-  background: #fee2e2;
-  color: #b91c1c;
-}
-
-.trki-subtest-numbers {
-  display: flex;
-  align-items: baseline;
   justify-content: space-between;
   gap: 8px;
 }
 
-.trki-subtest-count {
+.trki-subtest-compact-name {
   font-size: 0.88rem;
-  color: var(--muted);
-}
-
-.trki-subtest-count b {
-  color: var(--primary);
   font-weight: 750;
+  color: var(--text);
 }
 
-.trki-subtest-pct {
-  font-size: 1.15rem;
-  font-weight: 850;
+.trki-subtest-compact-score {
+  font-size: 0.85rem;
+  font-weight: 800;
 }
 
-.trki-subtest-pct.pass {
+.trki-subtest-compact-score.pass {
   color: var(--green, #16a34a);
 }
 
-.trki-subtest-pct.fail {
+.trki-subtest-compact-score.fail {
   color: var(--red, #dc2626);
 }
 
-.trki-subtest-track {
-  height: 6px;
+.trki-subtest-compact-track {
+  height: 5px;
   background: var(--border);
   border-radius: 99px;
   overflow: hidden;
 }
 
-.trki-subtest-fill {
+.trki-subtest-compact-fill {
   height: 100%;
   border-radius: 99px;
   transition: width 0.4s ease;
 }
 
-.trki-subtest-fill.pass {
+.trki-subtest-compact-fill.pass {
   background: var(--green, #16a34a);
 }
 
-.trki-subtest-fill.fail {
+.trki-subtest-compact-fill.fail {
   background: var(--red, #dc2626);
 }
 
-.trki-result-actions {
+/* 2. BẢNG PHÂN TÍCH ĐÁP ÁN & GIẢI THÍCH LỜI GIẢI (1 KHỐI DUY NHẤT) */
+.trki-unified-review-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 16px);
+  box-shadow: 0 4px 16px rgba(16, 42, 76, 0.05);
+  overflow: hidden;
+}
+
+.trki-review-card-head {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 6px;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+  border-bottom: 1px solid var(--border);
 }
 
-@media (max-width: 680px) {
-  .trki-hero-eval-card {
-    padding: 18px 16px;
-    border-radius: 14px;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-  .trki-hero-eval-left {
-    min-width: 0;
-    width: 100%;
-  }
-  .trki-hero-eval-right {
-    width: 100%;
-    justify-content: flex-start;
-  }
-  .trki-score-display {
-    align-items: flex-start;
-  }
-  .trki-score-num {
-    font-size: 2.5rem;
-  }
-  .trki-result-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-  .trki-result-actions .btn {
-    width: 100%;
-    justify-content: center;
-  }
-}
-
-/* Question Review Cards */
-.trki-review-host {
+.trki-review-card-title {
   display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.trki-subtest-review-block {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-top: 8px;
-}
-
-.trki-subtest-review-title {
+  align-items: center;
+  gap: 8px;
   font-size: 1.05rem;
   font-weight: 800;
   color: var(--text);
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 8px;
 }
 
-.trki-q-card {
+.trki-review-count-badge {
+  font-size: 0.78rem;
+  font-weight: 750;
+  color: var(--muted);
   background: var(--surface);
+  padding: 3px 10px;
+  border-radius: 99px;
   border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 16px 20px;
+}
+
+.trki-review-items-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.trki-part-divider-row {
+  padding: 12px 24px;
+  background: color-mix(in srgb, var(--muted) 8%, var(--surface));
+  border-bottom: 1px solid var(--border);
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.trki-review-row {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   gap: 10px;
-  transition: border-color 0.15s ease;
+  border-left: 4px solid transparent;
+  transition: background 0.15s ease;
 }
 
-.trki-q-card.is-correct {
-  border-left: 3.5px solid var(--green, #16a34a);
+.trki-review-row:last-child {
+  border-bottom: none;
 }
 
-.trki-q-card.is-wrong {
-  border-left: 3.5px solid var(--red, #dc2626);
+.trki-review-row.is-correct {
+  border-left-color: var(--green, #16a34a);
 }
 
-.trki-q-header {
+.trki-review-row.is-wrong {
+  border-left-color: var(--red, #dc2626);
+}
+
+.trki-review-row:hover {
+  background: color-mix(in srgb, var(--primary) 2%, var(--surface));
+}
+
+.trki-review-row-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.trki-q-index {
+.trki-review-num-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.trki-review-num {
   font-size: 0.84rem;
   font-weight: 800;
   color: var(--muted);
   text-transform: uppercase;
 }
 
-.trki-q-badge {
-  font-size: 0.76rem;
+.trki-review-pill {
+  font-size: 0.74rem;
   font-weight: 800;
-  padding: 2px 10px;
+  padding: 2px 8px;
   border-radius: 99px;
 }
 
-.trki-q-badge.pass {
+.trki-review-pill.pass {
   background: #dcfce7;
   color: #15803d;
 }
 
-.trki-q-badge.fail {
+.trki-review-pill.fail {
   background: #fee2e2;
   color: #b91c1c;
 }
 
-.trki-q-prompt {
-  font-size: 1.02rem;
+.trki-review-prompt {
+  font-size: 1.04rem;
   font-weight: 600;
   color: var(--text);
   margin: 0;
-  line-height: 1.5;
+  line-height: 1.55;
 }
 
-.trki-q-answers {
+.trki-review-answers-grid {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 8px 14px;
+  background: color-mix(in srgb, var(--text) 3%, var(--surface));
+  border-radius: 8px;
+}
+
+.trki-review-ans-col {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
   font-size: 0.9rem;
 }
 
-.trki-q-user-ans,
-.trki-q-correct-ans {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.trki-q-user-ans span,
-.trki-q-correct-ans span {
+.trki-ans-label {
   color: var(--muted);
+  font-weight: 600;
 }
 
-.trki-q-answers b.pass {
+.trki-ans-val {
+  font-weight: 750;
+}
+
+.trki-ans-val.pass {
   color: var(--green, #16a34a);
 }
 
-.trki-q-answers b.fail {
+.trki-ans-val.fail {
   color: var(--red, #dc2626);
 }
 
-.trki-q-explain {
-  margin-top: 4px;
-  padding: 12px 14px;
-  background: var(--bg);
-  border-radius: 10px;
+.trki-review-expl {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--primary) 4%, var(--surface));
+  border-radius: 8px;
   font-size: 0.88rem;
-  line-height: 1.6;
+  line-height: 1.55;
 }
 
-.trki-q-explain-head {
+.trki-expl-icon {
+  flex-shrink: 0;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.trki-expl-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trki-expl-title {
   color: var(--primary);
-  margin-bottom: 4px;
+  font-weight: 750;
 }
 
-.trki-q-explain-body {
+.trki-expl-text {
   color: var(--text);
 }
 
+/* RESPONSIVE MOBILE & TABLET FOR TRKI RESULT */
+@media (max-width: 680px) {
+  .trki-hero-eval-card {
+    padding: 18px 16px;
+    border-radius: 14px;
+    gap: 16px;
+  }
+  .trki-eval-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .trki-eval-top-info {
+    min-width: 0;
+    width: 100%;
+  }
+  .trki-eval-top-score {
+    width: 100%;
+    align-items: flex-start;
+  }
+  .trki-score-num {
+    font-size: 2.4rem;
+  }
+  .trki-subtest-compact-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding-top: 14px;
+  }
+  .trki-review-card-head {
+    padding: 14px 16px;
+  }
+  .trki-part-divider-row {
+    padding: 10px 16px;
+  }
+  .trki-review-row {
+    padding: 14px 16px;
+  }
+  .trki-review-answers-grid {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 8px 10px;
+  }
+}
 
 /* 4. MODAL DANH SÁCH TỪ VỰNG TIẾN ĐỘ */
 .voc-progress-modal-box {
