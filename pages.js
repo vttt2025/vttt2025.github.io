@@ -10403,14 +10403,25 @@ function initWritingPage() {
           let feedbackComment = "";
           let quotaInfo = null;
 
-          // Ưu tiên gọi Groq AI (Qwen 3.8 27B) chấm bài chuyên sâu và kiểm soát hạn mức Supabase
+          const modelAns = modelAnswer(t);
+          const taskTipsList = taskTips(t);
+          const taskWordsList = taskWords(t).map(w => typeof w === "object" && w ? (w.ru || w.word || "") : String(w)).filter(Boolean);
+          const isPicture = taskMode(t) === "picture";
+
+          // Ưu tiên gọi Groq AI (Qwen 3.8 27B) chấm bài chuyên sâu đối chiếu sát bức ảnh và bài mẫu
           if (window.RusiAI && typeof RusiAI.reviewWriting === "function") {
             try {
               const aiRes = await RusiAI.reviewWriting({
                 text,
                 level: t.level || currentLevel,
-                taskTitle: (t.title || "") + (t.prompt ? " - " + t.prompt : (t.prompt_text ? " - " + t.prompt_text : "")),
+                taskTitle: (t.title || "Bài luyện viết") + (t.category_name ? ` (${t.category_name})` : ""),
+                prompt: (t.prompt || "") + (t.vi ? ` (${t.vi})` : ""),
                 minWords: minWords(t),
+                modelAnswer: modelAns,
+                imageDesc: taskTipsList.join(". "),
+                suggestedWords: taskWordsList.join(", "),
+                taskType: isPicture ? "picture" : "translation",
+                imageUrl: isPicture ? taskImage(t) : "",
                 userId: curUser.id || curUser.uid,
                 isPro: isPro
               });
@@ -10451,7 +10462,7 @@ function initWritingPage() {
             }
           }
 
-          // Dự phòng cục bộ (Offline Fallback Rubric chỉ khi AI hoàn toàn không phản hồi)
+          // Dự phòng cục bộ (Offline Fallback Rubric đối chiếu bài mẫu & mô tả tranh)
           if (total === null || total === undefined) {
             const uniqueWords = new Set(wordsArr.map(w => w.toLowerCase().replace(/[^а-яё]/gi, "")));
 
@@ -10464,17 +10475,17 @@ function initWritingPage() {
             if (hasVerbs) grammarScore += 2;
             grammarScore = Math.max(12, Math.min(25, grammarScore));
 
-            let lexisScore = 17;
+            let lexisScore = 16;
             const lexicalDiversity = wordsArr.length > 0 ? (uniqueWords.size / wordsArr.length) : 1;
-            if (lexicalDiversity >= 0.65) lexisScore += 3;
+            if (lexicalDiversity >= 0.65) lexisScore += 2;
             else if (lexicalDiversity >= 0.5) lexisScore += 1;
             const usedHints = words.filter(hw => {
               const wRu = (typeof hw === "object" && hw ? (hw.ru || hw.word) : String(hw)).toLowerCase().replace(/[^а-яё]/gi, "");
               return wRu && text.toLowerCase().includes(wRu);
             });
-            lexisScore += Math.min(4, usedHints.length);
+            lexisScore += Math.min(5, usedHints.length * 1.5);
             if (wordsArr.some(w => w.length >= 7)) lexisScore += 1;
-            lexisScore = Math.max(12, Math.min(25, lexisScore));
+            lexisScore = Math.max(12, Math.min(25, Math.round(lexisScore)));
 
             let structureScore = 18;
             const connectors = ["и", "а", "но", "потому что", "поэтому", "когда", "если", "чтобы", "также", "потом", "затем", "так как"];
@@ -10483,27 +10494,44 @@ function initWritingPage() {
             if (sentences.length >= 3) structureScore += 2;
             structureScore = Math.max(12, Math.min(25, structureScore));
 
-            let contentScore = 18;
+            // Tiêu chí Nội dung & Độ sát thực tế ảnh (đối chiếu bài mẫu và từ vựng tranh):
+            let contentScore = 13;
             const lengthRatio = count / minWords(t);
-            if (lengthRatio >= 1.25) contentScore += 4;
-            else if (lengthRatio >= 1.0) contentScore += 2;
+            if (lengthRatio >= 1.0) contentScore += 3;
+
+            let modelMatches = 0;
+            if (modelAns) {
+              const modelWordsSet = new Set(
+                modelAns.toLowerCase().replace(/[^а-яё\s]/gi, " ").split(/\s+/).filter(w => w.length >= 3)
+              );
+              wordsArr.forEach(w => {
+                const clean = w.toLowerCase().replace(/[^а-яё]/gi, "");
+                if (clean.length >= 3 && modelWordsSet.has(clean)) modelMatches++;
+              });
+            }
+
+            if (modelMatches >= 5 || usedHints.length >= 3) contentScore += 7;
+            else if (modelMatches >= 3 || usedHints.length >= 2) contentScore += 4;
+            else if (modelMatches >= 1 || usedHints.length >= 1) contentScore += 2;
+
             if (sentences.length >= 3) contentScore += 2;
-            contentScore = Math.max(12, Math.min(25, contentScore));
+            contentScore = Math.max(10, Math.min(25, contentScore));
 
             scores = [grammarScore, lexisScore, structureScore, contentScore];
             total = scores.reduce((sum, score) => sum + score, 0);
 
-            feedbackComment = `Bài viết đạt độ dài <b>${count} từ</b> với <b>${sentences.length} câu</b> hoàn chỉnh. `;
-            if (usedHints.length > 0) {
-              feedbackComment += `Bạn đã áp dụng thành công <b>${usedHints.length} từ vựng gợi ý</b> của bài. `;
-            }
-            if (foundConnectors.length > 0) {
-              feedbackComment += `Khả năng liên kết câu tốt với các từ nối: <i>«${foundConnectors.slice(0, 3).join(", ")}»</i>. `;
-            }
-            if (latinChars.length > 0) {
-              feedbackComment += `<br><span style="color:var(--secondary)">Lưu ý: Có xuất hiện một số ký tự Latinh trong bài, hãy kiểm tra lại bàn phím nhé.</span>`;
+            if (isPicture) {
+              if (modelMatches >= 3 || usedHints.length >= 2) {
+                feedbackComment = `Bài viết bám sát bối cảnh bức tranh (${count} từ, ${sentences.length} câu). Bạn đã quan sát tốt các nhân vật và vận dụng thành công <b>${usedHints.length} từ vựng gợi ý</b> của tranh. Tiếp tục trau chuốt thêm biến cách để bài viết hoàn hảo hơn nhé!`;
+              } else {
+                feedbackComment = `Bài viết đạt độ dài (${count} từ) nhưng chưa miêu tả sát các chi tiết nhân vật/hành động trong bức tranh so với bài mẫu. Hãy quan sát kỹ tranh và xem phần <b>«Bài mẫu»</b> để học cách miêu tả sinh động hơn nhé!`;
+              }
             } else {
-              feedbackComment += `Chính tả Cyrillic chuẩn xác. Tiếp tục duy trì phong độ nhé!`;
+              feedbackComment = `Bài viết hoàn thành tốt yêu cầu luyện dịch (${count} từ, ${sentences.length} câu hoàn chỉnh). Khả năng diễn đạt và liên kết câu mạch lạc.`;
+            }
+
+            if (latinChars.length > 0) {
+              feedbackComment += `<br><span style="color:var(--secondary)">Lưu ý: Có xuất hiện một số ký tự Latinh trong bài, hãy kiểm tra lại bàn phím tiếng Nga nhé.</span>`;
             }
           }
 
@@ -10713,7 +10741,7 @@ function initMockTestPage() {
             Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
             return true;
           }
-          openSubtestPickerModal(found, examMode);
+          startTest(found, null, examMode);
           return true;
         }
       }
@@ -10745,195 +10773,11 @@ function initMockTestPage() {
 
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
-  const openSubtestPickerModal = (test, preferredMode = examMode) => {
-    const testId = (test && (test.id || test.code)) || "";
-    if (typeof window.requireAuth === "function" && !window.requireAuth("mock-test.html?exam=" + encodeURIComponent(testId))) return;
-    let modal = document.getElementById("trkiSubtestModal");
-    if (!modal) {
-      modal = document.createElement("div");
-      modal.id = "trkiSubtestModal";
-      modal.className = "trki-modal-backdrop";
-      document.body.appendChild(modal);
-    }
-
-    const totalQ = test.parts ? test.parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0) : 34;
-    let currentModalMode = preferredMode || examMode || "practice";
-    const allPartIds = (test.parts || []).map(p => p.id);
-    let selectedPartIds = new Set(allPartIds); // Mặc định chọn tất cả các Part (Full Test)
-
-    // Khởi tạo HTML 1 lần duy nhất để không bị tải lại hoặc giật lag khi click
-    modal.innerHTML = `
-      <div class="trki-modal-card">
-        <button type="button" class="trki-modal-close" id="btnCloseSubtestModal" title="Đóng cửa sổ" aria-label="Đóng cửa sổ">
-          ${icon("x", 16) || "✕"}
-        </button>
-
-        <div class="trki-modal-header">
-          <h3 class="trki-modal-title">${esc(test.title)}</h3>
-        </div>
-
-        <!-- 2 HÌNH THỨC: LUYỆN TẬP VÀ LUYỆN THI -->
-        <div class="trki-modal-tabs" role="tablist">
-          <button type="button" class="trki-modal-tab ${currentModalMode === "practice" ? "active" : ""}" data-mode="practice" role="tab" aria-selected="${currentModalMode === "practice" ? "true" : "false"}">
-            ${icon("target", 16)} Luyện tập
-          </button>
-          <button type="button" class="trki-modal-tab ${currentModalMode === "exam" ? "active" : ""}" data-mode="exam" role="tab" aria-selected="${currentModalMode === "exam" ? "true" : "false"}">
-            ${icon("graduation-cap", 16)} Luyện thi
-          </button>
-        </div>
-
-        <!-- LỰA CHỌN PHẦN THI / LUYỆN TẬP (HỖ TRỢ CHỌN NHIỀU PART BẤT KỲ) -->
-        <div class="trki-choice-list">
-          <!-- 1. FULL TEST / CHỌN TẤT CẢ CÁC 5 PART -->
-          <div class="trki-choice-item selected" id="btnChoiceAllParts" data-part-id="all">
-            <div class="trki-choice-checkbox">
-              ${window.RusiIcons ? RusiIcons.get("check", { size: 12, strokeWidth: 2.5 }) : "<span>✓</span>"}
-            </div>
-            <div class="trki-choice-content">
-              <div class="trki-choice-row">
-                <span class="trki-choice-title" id="trkiAllPartsTitle">Full Test</span>
-                <span class="trki-choice-meta-pill">${test.durationMin || 45}p · ${totalQ} câu</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. CÁC PHÂN MÔN (THEO PART) -->
-          ${(test.parts || []).map((p) => {
-            const pDur = p.durationMin || (p.id === 'gram' ? 25 : p.id === 'reading' ? 15 : p.id === 'writing' ? 25 : p.id === 'speaking' ? 15 : 10);
-            const pCount = p.questions ? p.questions.length : p.writing_tasks ? p.writing_tasks.length : p.speaking_tasks ? p.speaking_tasks.length : 1;
-            const pLabel = p.writing_tasks ? `${pCount} bài viết` : p.speaking_tasks ? `${pCount} tình huống` : `${pCount} câu`;
-            return `
-              <div class="trki-choice-item selected" data-part-id="${p.id}">
-                <div class="trki-choice-checkbox">
-                  ${window.RusiIcons ? RusiIcons.get("check", { size: 12, strokeWidth: 2.5 }) : "<span>✓</span>"}
-                </div>
-                <div class="trki-choice-content">
-                  <div class="trki-choice-row">
-                    <span class="trki-choice-title">${esc(p.name)}</span>
-                    <span class="trki-choice-meta-pill">${pDur}p · ${pLabel}</span>
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join("")}
-        </div>
-
-        <!-- NÚT BẮT ĐẦU VỚI SỐ LƯỢNG PART ĐÃ CHỌN -->
-        <div class="trki-modal-actions">
-          <button type="button" class="trki-modal-btn-start" id="btnStartTrkiAction">
-            Bắt đầu (${selectedPartIds.size} Part) →
-          </button>
-        </div>
-      </div>
-    `;
-
-    // Cập nhật giao diện in-place (không render lại DOM để tránh giật lag)
-    const updateModalState = () => {
-      const isAllSelected = allPartIds.length > 0 && selectedPartIds.size === allPartIds.length;
-      const selectedCount = selectedPartIds.size;
-
-      const choiceAll = modal.querySelector("#btnChoiceAllParts");
-      if (choiceAll) {
-        choiceAll.classList.toggle("selected", isAllSelected);
-      }
-
-      modal.querySelectorAll(".trki-choice-item[data-part-id]:not(#btnChoiceAllParts)").forEach(item => {
-        const pId = item.dataset.partId;
-        item.classList.toggle("selected", selectedPartIds.has(pId));
-      });
-
-      const allPartsTitle = modal.querySelector("#trkiAllPartsTitle");
-      if (allPartsTitle) {
-        allPartsTitle.textContent = (currentModalMode === "exam") ? "Full Test (Đầy đủ cả đề)" : "Chọn tất cả các Part";
-      }
-
-      modal.querySelectorAll(".trki-modal-tab").forEach(tab => {
-        const active = tab.dataset.mode === currentModalMode;
-        tab.classList.toggle("active", active);
-        tab.setAttribute("aria-selected", active ? "true" : "false");
-      });
-
-      const btnStart = modal.querySelector("#btnStartTrkiAction");
-      if (btnStart) {
-        btnStart.disabled = (selectedCount === 0);
-        const actionPrefix = currentModalMode === "exam" ? "Bắt đầu làm bài thi" : "Bắt đầu luyện tập";
-        btnStart.textContent = (selectedCount === 0)
-          ? `${actionPrefix} (Chọn ít nhất 1 Part) →`
-          : `${actionPrefix} (${selectedCount} Part) →`;
-      }
-    };
-    updateModalState();
-
-    const btnClose = modal.querySelector("#btnCloseSubtestModal");
-    if (btnClose) btnClose.onclick = () => closeModal();
-
-    // Chuyển tab Luyện thi / Luyện tập
-    modal.querySelectorAll(".trki-modal-tab").forEach(tab => {
-      tab.onclick = () => {
-        const mode = tab.dataset.mode;
-        if (mode !== currentModalMode) {
-          currentModalMode = mode;
-          updateModalState();
-        }
-      };
-    });
-
-    // Chọn / Bỏ chọn tất cả các Part
-    const choiceAll = modal.querySelector("#btnChoiceAllParts");
-    if (choiceAll) {
-      choiceAll.onclick = () => {
-        if (selectedPartIds.size === allPartIds.length) {
-          selectedPartIds.clear();
-        } else {
-          selectedPartIds = new Set(allPartIds);
-        }
-        updateModalState();
-      };
-    }
-
-    // Chọn / Bỏ chọn từng Part riêng lẻ
-    modal.querySelectorAll(".trki-choice-item[data-part-id]:not(#btnChoiceAllParts)").forEach(item => {
-      item.onclick = () => {
-        const pId = item.dataset.partId;
-        if (selectedPartIds.has(pId)) {
-          selectedPartIds.delete(pId);
-        } else {
-          selectedPartIds.add(pId);
-        }
-        updateModalState();
-      };
-    });
-
-    // Nút bắt đầu hành động
-    const btnStart = modal.querySelector("#btnStartTrkiAction");
-    if (btnStart) {
-      btnStart.onclick = () => {
-        if (selectedPartIds.size === 0) return;
-        // Hiện loading state khi fetch câu hỏi từ ngân hàng
-        btnStart.disabled = true;
-        btnStart.textContent = "Đang tải câu hỏi...";
-        const selectedList = Array.from(selectedPartIds);
-        const partParam = (selectedList.length === allPartIds.length) ? null : selectedList;
-        closeModal();
-        startTest(test, partParam, currentModalMode);
-      };
-    }
-
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") closeModal();
-    };
-    document.addEventListener("keydown", onKeyDown);
-
-    const closeModal = () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.body.classList.remove("modal-open");
-      if (modal) modal.remove();
-    };
-    document.body.classList.add("modal-open");
-
-    modal.onclick = (e) => {
-      if (e.target === modal) closeModal();
-    };
+  const matchesTestMode = (t, mode) => {
+    const tm = (t.test_mode || t.mode || "").toLowerCase();
+    if (tm) return tm === mode;
+    const isFull = t.sub_test_type === "full" || (Array.isArray(t.parts) && t.parts.length >= 5) || Boolean(t.part5 && Object.keys(t.part5).length > 0);
+    return mode === "exam" ? isFull : !isFull;
   };
 
   const renderTrkiCards = () => {
@@ -10949,7 +10793,7 @@ function initMockTestPage() {
 
     // Cập nhật số lượng trên các nút cấp độ
     LEVELS.forEach(([level]) => {
-      const count = bank.filter(t => t.level === level).length;
+      const count = bank.filter(t => t.level === level && matchesTestMode(t, examMode)).length;
       const countNode = host.querySelector(`[data-trki-count="${level}"]`);
       if (countNode) countNode.textContent = count;
     });
@@ -10962,7 +10806,7 @@ function initMockTestPage() {
       b.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
-    const filtered = bank.filter(t => t.level === currentLevel);
+    const filtered = bank.filter(t => t.level === currentLevel && matchesTestMode(t, examMode));
 
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
@@ -10989,7 +10833,7 @@ function initMockTestPage() {
         const qCount = t.questionsCount || (t.questions ? t.questions.length : (t.parts ? t.parts.reduce((a, b) => a + (b.questions ? b.questions.length : 0), 0) : 34));
         const durMin = Math.round((t.durationSeconds || (t.durationMin ? t.durationMin * 60 : 2700)) / 60);
         const cleanTitle = (t.title || "").replace(/\s*\([^)]*\)/g, "").trim();
-        const countLabel = examMode === "practice" ? `${qCount} câu hỏi · Luyện tập tự do` : `${qCount} câu hỏi · ${durMin} phút`;
+        const countLabel = examMode === "practice" ? `${qCount} câu hỏi · Luyện tập tự do` : `Đề thi chuẩn 5 phần · ${durMin} phút`;
         const actionLabel = isDone ? "Đã hoàn thành" : (examMode === "practice" ? "Vào luyện tập" : "Vào luyện thi");
         const iconKey = examMode === "practice" ? "target" : (t.icon || "graduation-cap");
 
@@ -11039,12 +10883,13 @@ function initMockTestPage() {
       const openExam = (id) => {
         const test = bank.find(x => x.id === id);
         if (!test) return;
+        if (typeof window.requireAuth === "function" && !window.requireAuth("mock-test.html?exam=" + encodeURIComponent((test.id || test.code) || "") + "&mode=" + examMode)) return;
         const isPro = Boolean(test.is_pro_only || test.is_pro);
         if (isPro && !Monetization.isPro()) {
           Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
           return;
         }
-        openSubtestPickerModal(test, examMode);
+        startTest(test, null, examMode);
       };
 
       gridHost.querySelectorAll(".btn-trki-action, .btn-trki-circle").forEach(btn => {
@@ -11202,9 +11047,6 @@ function initMockTestPage() {
     document.body.classList.add("in-workspace");
     started = true;
     tabSwitches = 0;
-
-    const modal = document.getElementById("trkiSubtestModal");
-    if (modal) modal.remove();
 
     // Bug #1 fix: Nạp câu hỏi từ trki_question_bank nếu test có code trki_zlat_*
     if (currentTest && currentTest.code && currentTest.code.startsWith("trki_zlat")) {

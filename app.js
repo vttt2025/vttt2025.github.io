@@ -539,6 +539,13 @@ const MascotRusika = {
   },
 
   renderFloatingWidget() {
+    const p = document.body ? document.body.dataset.page : "";
+    const learningPages = ["vocabulary", "listening", "speaking", "writing", "mock-test", "admin", "login", "signup"];
+    if (learningPages.includes(p) || (document.body && document.body.classList.contains("in-workspace"))) {
+      const existing = document.getElementById("rusikaFloatingWidget");
+      if (existing) existing.remove();
+      return;
+    }
     let widget = document.getElementById("rusikaFloatingWidget");
     if (!widget) {
       widget = document.createElement("div");
@@ -1153,25 +1160,28 @@ const Monetization = {
         <button class="vietqr-close" id="closeVietQr" title="Đóng">&times;</button>
         
         <div class="vietqr-header">
-          <span class="vietqr-chip-kicker" style="display:inline-flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} NÂNG CẤP TÀI KHOẢN PRO • KÍCH HOẠT TỨC THÌ</span>
-          <h3>Cổng Thanh Toán Tự Động VietQR</h3>
+          <div class="vietqr-header-title">
+            <span class="vietqr-badge-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} RUSI PRO</span>
+            <h3>Thanh toán qua VietQR</h3>
+          </div>
           <div class="vietqr-user-context">
-            <span style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("users-students", { size: 14 }) : ""} Kích hoạt cho:</span>
+            <span>Tài khoản:</span>
             <b>${esc(user.name || "Học viên")}</b>
-            <span style="color:#64748B">(${esc(user.email || "Tài khoản Khách")})</span>
+            <span class="vietqr-user-email">(${esc(user.email || "Khách")})</span>
           </div>
         </div>
 
-        <!-- BỘ CHỌN 3 GÓI CƯỚC LINH HOẠT -->
+        <!-- BỘ CHỌN GÓI CƯỚC TINH GỌN (SEGMENTED TABS) -->
         <div class="vietqr-pkg-tabs" role="tablist">
           ${pkgs.map((p) => {
             const isActive = (p.id || "").toLowerCase() === (currentPkg.id || "").toLowerCase();
             return `
             <button type="button" class="vietqr-pkg-tab ${isActive ? "active" : ""}" data-pkg-select="${p.id}">
-              ${p.popular ? `<span class="vietqr-pkg-tab-hot" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 12 }) : ""} Phổ Biến Nhất</span>` : (p.id === "pro_vip" ? `<span class="vietqr-pkg-tab-hot" style="background:#d97706;color:#fff;display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} VIP Quyền Năng</span>` : "") }
-              <span class="vietqr-pkg-tab-badge">${esc(p.badge || "PRO")}</span>
-              <span class="vietqr-pkg-tab-title">${esc(p.title)}</span>
-              <span class="vietqr-pkg-tab-price">${p.price.toLocaleString("vi-VN")} đ</span>
+              <div class="vietqr-pkg-tab-main">
+                <span class="vietqr-pkg-tab-title">${esc(p.title)}</span>
+                <span class="vietqr-pkg-tab-price">${p.price.toLocaleString("vi-VN")} đ</span>
+              </div>
+              ${p.popular ? `<span class="vietqr-pkg-tab-hot">Phổ biến</span>` : (p.id === "pro_vip" ? `<span class="vietqr-pkg-tab-hot vip">VIP</span>` : "")}
             </button>`;
           }).join("")}
         </div>
@@ -1180,16 +1190,19 @@ const Monetization = {
         <div class="vietqr-body-grid">
           <!-- CỘT 1: ẢNH QR & ĐỒNG HỒ PHIÊN -->
           <div class="vietqr-scan-card">
-            <div class="vietqr-timer-badge">
-              <span style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Phiên hết hạn:</span>
-              <b id="vietqrTimerDisplay">${formatTime(timeLeft)}</b>
-            </div>
             <div class="vietqr-scan-box">
               <img class="vietqr-img" id="vietqrImgTag" src="${qrUrl}" alt="VietQR Thanh toán Rusi TRKI" />
             </div>
-            <div class="vietqr-live-status">
-              <span class="vietqr-pulse-dot"></span>
-              <span>Đang chờ quét mã từ Mobile Banking</span>
+            <div class="vietqr-scan-meta">
+              <div class="vietqr-timer-badge">
+                ${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 13 }) : ""}
+                <span>Hết hạn:</span>
+                <b id="vietqrTimerDisplay">${formatTime(timeLeft)}</b>
+              </div>
+              <div class="vietqr-live-status">
+                <span class="vietqr-pulse-dot"></span>
+                <span>Chờ quét mã</span>
+              </div>
             </div>
           </div>
 
@@ -1197,51 +1210,43 @@ const Monetization = {
           <div class="vietqr-details-card">
             <div class="vietqr-info-table">
               <div class="vietqr-info-row">
-                <span class="lbl">Ngân hàng:</span>
+                <span class="lbl">Ngân hàng</span>
                 <span class="val">VietinBank (Công Thương)</span>
               </div>
               <div class="vietqr-info-row">
-                <span class="lbl">Số tài khoản:</span>
+                <span class="lbl">Số tài khoản</span>
                 <span class="val">
-                  <b>108873919999</b>
-                  <button class="vietqr-copy-btn" data-copy="108873919999" type="button">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : ""} Chép</button>
+                  <b class="vietqr-highlight-num">108873919999</b>
+                  <button class="vietqr-copy-btn" data-copy="108873919999" type="button" title="Sao chép số tài khoản">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 13 }) : ""} Chép</button>
                 </span>
               </div>
               <div class="vietqr-info-row">
-                <span class="lbl">Chủ tài khoản:</span>
+                <span class="lbl">Chủ tài khoản</span>
                 <span class="val">RUSI TRKI PLATFORM</span>
               </div>
               <div class="vietqr-info-row">
-                <span class="lbl">Số tiền:</span>
-                <span class="val" style="color:var(--secondary);font-size:1.08rem">
+                <span class="lbl">Số tiền</span>
+                <span class="val vietqr-amount-val">
                   <b>${currentPkg.price.toLocaleString("vi-VN")} đ</b>
-                  <button class="vietqr-copy-btn" data-copy="${currentPkg.price}" type="button">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : ""} Chép</button>
+                  <button class="vietqr-copy-btn" data-copy="${currentPkg.price}" type="button" title="Sao chép số tiền">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 13 }) : ""} Chép</button>
                 </span>
               </div>
               <div class="vietqr-info-row">
-                <span class="lbl">Cú pháp CK:</span>
+                <span class="lbl">Nội dung CK</span>
                 <span class="val">
-                  <code style="background:var(--primary-soft);color:var(--primary-dark);padding:2px 6px;border-radius:4px;font-weight:800">${orderId}</code>
-                  <button class="vietqr-copy-btn" data-copy="${orderId}" type="button">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : ""} Chép</button>
+                  <code class="vietqr-memo-code">${orderId}</code>
+                  <button class="vietqr-copy-btn" data-copy="${orderId}" type="button" title="Sao chép nội dung">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 13 }) : ""} Chép</button>
                 </span>
               </div>
             </div>
 
-            <!-- QUYỀN LỢI GÓI NỔI BẬT -->
-            <div class="vietqr-perks-box">
-              <div class="vietqr-perks-title" style="display:inline-flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("award-badge", { size: 16 }) : ""} Quyền lợi nổi bật (${esc(currentPkg.badge || "PRO")}):</div>
-              <ul class="vietqr-perks-list">
-                ${(currentPkg.features || []).slice(0, 3).map((f) => `<li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> <span>${esc(f)}</span></li>`).join("")}
-              </ul>
-            </div>
-
             <!-- NÚT KÍCH HOẠT & CAM KẾT AN TOÀN -->
-            <div>
+            <div class="vietqr-action-box">
               <button class="btn-confirm-vietqr" id="btnConfirmPaid" type="button">
-                ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} Tôi đã chuyển khoản xong (Kích hoạt ngay)
+                ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} Tôi đã chuyển khoản xong
               </button>
               <div class="vietqr-guarantee">
-                ${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 14 }) : ""} Tự động đối soát chữ ký số (Signature Verification) 24/7. Tài khoản được kích hoạt ngay lập tức mà không cần chờ duyệt tay.
+                ${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 13 }) : ""} Đối soát tự động 24/7 · Kích hoạt ngay lập tức
               </div>
             </div>
           </div>
@@ -1578,8 +1583,7 @@ const NAV_LINKS = [
   ["listening.html", "Nghe"],
   ["speaking.html", "Nói"],
   ["mock-test.html", "TRKI"],
-  ["blog.html", "Blog"],
-  ["shop.html", "Shop"]
+  ["blog.html", "Blog"]
 ];
 
 const SEASON_ORDER = ["winter"];
@@ -2517,7 +2521,6 @@ function renderFooter() {
         <a href="speaking.html">Nói</a>
         <a href="mock-test.html">TRKI</a>
         <a href="blog.html">Blog</a>
-        <a href="shop.html">Shop</a>
       </div>
       <div class="footer-copyright">
         <small>© 2026 RUSI TRKI. Mọi quyền được bảo lưu.</small>
@@ -2665,7 +2668,8 @@ function bootApp() {
   try {
     if (typeof MascotRusika !== "undefined" && typeof MascotRusika.renderFloatingWidget === "function") {
       const p = document.body ? document.body.dataset.page : "";
-      if (p !== "admin" && p !== "login" && p !== "signup") {
+      const learningPages = ["vocabulary", "listening", "speaking", "writing", "mock-test", "admin", "login", "signup"];
+      if (!learningPages.includes(p) && !document.body.classList.contains("in-workspace")) {
         MascotRusika.renderFloatingWidget();
       }
     }
@@ -2702,9 +2706,6 @@ function warmBrowserCache() {
       if (window.RusiSupabase.tests && typeof window.RusiSupabase.tests.getPublished === "function") {
         window.RusiSupabase.tests.getPublished().catch(() => {});
       }
-      if (window.RusiSupabase.shop && typeof window.RusiSupabase.shop.getAll === "function") {
-        window.RusiSupabase.shop.getAll().catch(() => {});
-      }
       if (window.RusiSupabase.packages && typeof window.RusiSupabase.packages.getAll === "function") {
         window.RusiSupabase.packages.getAll().catch(() => {});
       }
@@ -2731,21 +2732,6 @@ window.addEventListener("pageshow", (event) => {
 function mergeAdminData() {
   // Đã loại bỏ hoàn toàn việc đọc/gộp dữ liệu từ localStorage theo yêu cầu kiến trúc đám mây 100%
 }
-
-// =====================================================================
-// GLOBAL DOUBLE-CLICK RUSSIAN WORD LOOKUP (PROJECT_SPEC line 140)
-// =====================================================================
-document.addEventListener("dblclick", (e) => {
-  if (e.target.closest("input, textarea, select, button, a, audio, video, [contenteditable]")) return;
-  const selection = (window.getSelection ? window.getSelection().toString() : "").trim();
-  if (!selection) return;
-  const cleanWord = selection.replace(/^[«"'(—\s]+|[»"')!?,.:;—\s]+$/g, "").trim();
-  if (cleanWord.length >= 2 && /[\u0400-\u04FF]/.test(cleanWord)) {
-    if (window.WordDetail && typeof window.WordDetail.open === "function") {
-      window.WordDetail.open(cleanWord);
-    }
-  }
-});
 
 // =====================================================================
 // RUSI TRKI — BỘ BIÊN DỊCH MARKDOWN (.MD) TOÀN HỆ THỐNG

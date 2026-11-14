@@ -393,10 +393,13 @@ async function main() {
       pass_percent: t.pass_percent || 60,
       is_pro_only: Boolean(t.is_pro_only),
       is_published: Boolean(t.is_published !== false),
+      test_mode: t.test_mode || 'practice',
       parts: parts,
       part1: t.part1 || raw.part1,
       part2: t.part2 || raw.part2,
       part3: t.part3 || raw.part3,
+      part4: t.part4 || raw.part4,
+      part5: t.part5 || raw.part5,
       raw_data: raw
     };
   });

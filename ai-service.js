@@ -63,7 +63,20 @@
      * Tự động ưu tiên gọi qua Supabase Edge Function để bảo mật API Key trên GitHub Pages.
      * Quản lý hạn mức sử dụng: 3 lượt/ngày (Free), 20 lượt/ngày (PRO), lưu trên Supabase.
      */
-    async reviewWriting({ text, level = "A1", taskTitle = "", minWords = 20, userId = null, isPro = null }) {
+    async reviewWriting({
+      text,
+      level = "A1",
+      taskTitle = "",
+      prompt = "",
+      minWords = 20,
+      modelAnswer = "",
+      imageDesc = "",
+      suggestedWords = "",
+      taskType = "picture",
+      imageUrl = "",
+      userId = null,
+      isPro = null
+    }) {
       const curUser = (typeof window !== "undefined" && window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
       const effectiveUserId = userId || curUser?.id || curUser?.uid || null;
       const effectiveIsPro = (isPro !== null && isPro !== undefined)
@@ -91,7 +104,13 @@
             text,
             level,
             taskTitle,
+            prompt,
             minWords,
+            modelAnswer,
+            imageDesc,
+            suggestedWords,
+            taskType,
+            imageUrl,
             userId: effectiveUserId,
             isPro: effectiveIsPro
           }),
@@ -137,16 +156,52 @@
 
       // 2. DỰ PHÒNG: Gọi trực tiếp Groq AI (nếu có lưu API Key riêng)
       if (GROQ_CONFIG.apiKey) {
-        const systemPrompt = `Bạn là giám khảo tiếng Nga TRKI. Chấm bài học viên theo thang điểm 100 và trả về JSON:
-{"total": <0-100>, "grammar": <0-25>, "lexis": <0-25>, "structure": <0-25>, "content": <0-25>, "passed": <true/false>, "feedback": "<Nhận xét tiếng Việt tối đa 2-3 câu ngắn gọn: 1 câu khen điểm tốt, 1-2 câu sửa cụ thể từ/câu sai và đưa câu mẫu tiếng Nga chuẩn>"}`;
+        const isPictureTask = taskType === "picture" || Boolean(imageDesc) || Boolean(imageUrl);
 
-        const userPrompt = `Cấp độ: ${level || "A1"}, Yêu cầu: ${minWords || 10} từ, Đề: ${taskTitle || "Luyện viết"}
-Bài làm: "${text.trim()}"`;
+        const systemPrompt = `Bạn là Giám khảo chấm thi phần Viết (Письмо) chứng chỉ tiếng Nga quốc tế ТРКИ / CEFR.
+Nhiệm vụ của bạn là đọc kỹ bài làm của thí sinh, ĐỐI CHIẾU SÁT SAO VỚI BÀI MẪU TRKI, MÔ TẢ TRANH VÀ CÁC TỪ VỰNG GỢI Ý ĐƯỢC CẤP, sau đó chấm điểm theo thang 100 và nhận xét chi tiết bằng tiếng Việt sư phạm.
+
+TIÊU CHÍ ĐÁNH GIÁ (Mỗi tiêu chí 0-25 điểm, Tổng = 100 điểm):
+1. content (Nội dung & Độ sát thực tế ảnh - 0 đến 25đ):
+   - ĐẶC BIỆT QUAN TRỌNG: Thí sinh có miêu tả đúng các nhân vật, hành động, đồ vật, bối cảnh trong bức tranh không?
+   - Đối chiếu với [BÀI MẪU] và [MÔ TẢ TRANH]: Nếu thí sinh viết lạc đề (không miêu tả những gì diễn ra trong tranh, viết lan man sang chuyện khác, hoặc thiếu hụt quá nhiều chi tiết cốt lõi), điểm content PHẢI CHO DƯỚI 15/25.
+   - Nếu thí sinh miêu tả sinh động, đầy đủ các nhân vật, bối cảnh, cảm xúc tương tự bài mẫu, cho điểm cao (20-25/25).
+2. lexis (Vốn từ vựng - 0 đến 25đ):
+   - Có vận dụng các từ vựng đặc trưng của chủ đề tranh và các từ gợi ý không?
+   - Vốn từ có chuẩn xác, phong phú theo cấp độ ${level || "A1"} không?
+3. grammar (Ngữ pháp & Biến cách - 0 đến 25đ):
+   - Chia đúng động từ (thì, dạng hoàn thành/chưa hoàn thành), biến cách danh từ/tính từ (падежи), giới từ (в, на, за столом, с кем...).
+4. structure (Bố cục & Từ nối - 0 đến 25đ):
+   - Đạt đủ số từ yêu cầu (${minWords || 15} từ).
+   - Có mở bài, thân bài, kết bài và các từ nối logic (потому что, поэтому, на фотографии видно...).
+
+QUY CÁCH PHẢN HỒI (BẮT BUỘC TRẢ VỀ JSON THUẦN TÚY):
+{
+  "total": <tổng điểm 0-100>,
+  "grammar": <0-25>,
+  "lexis": <0-25>,
+  "structure": <0-25>,
+  "content": <0-25>,
+  "passed": <true nếu total >= 66, ngược lại false>,
+  "feedback": "<Nhận xét tiếng Việt từ 2-4 câu: (1) Nhận xét cụ thể về độ bám sát bức tranh so với bài mẫu: đã tả đúng được những gì (nhân vật, hành động...), còn thiếu chi tiết nào; (2) Khen điểm tốt về từ vựng/cấu trúc; (3) Chỉ rõ 1 lỗi ngữ pháp/biến cách cụ thể và đưa câu sửa tiếng Nga chuẩn xác theo bài mẫu>"
+}`;
+
+        const userPrompt = `[THÔNG TIN ĐỀ THI]
+- Đề bài: ${taskTitle || "Luyện viết"}
+- Cấp độ: ${level || "A1"} (Yêu cầu tối thiểu: ${minWords || 15} từ)
+- Dạng bài: ${isPictureTask ? "Tả tranh thực tế" : "Luyện dịch / Viết luận"}
+${prompt ? `- Yêu cầu đề bài: ${prompt}` : ""}
+${imageDesc ? `- MÔ TẢ CHI TIẾT TRANH CẦN THỂ HIỆN: ${imageDesc}` : ""}
+${suggestedWords ? `- TỪ VỰNG THEN CHỐT CỦA TRANH: ${suggestedWords}` : ""}
+${modelAnswer ? `- BÀI VIẾT MẪU ĐẠT ĐIỂM TỐI ĐA TRKI: "${modelAnswer}"` : ""}
+
+[BÀI LÀM CỦA HỌC VIÊN]:
+"${text.trim()}"`;
 
         const rawReply = await this.chatDirect([
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
-        ], { temperature: 0.1, maxTokens: 280, json: true });
+        ], { temperature: 0.1, maxTokens: 380, json: true });
 
         try {
           const cleaned = rawReply.replace(/```json/gi, "").replace(/```/g, "").trim();

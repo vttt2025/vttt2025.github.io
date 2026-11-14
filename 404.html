@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="styles.css?v=9.5" />
+  <link rel="stylesheet" href="styles.css?v=10.3" />
   <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
 
   <script>
@@ -56,7 +56,6 @@
         'mock-test': 'mock-test.html',
         'trki': 'mock-test.html',
         'blog': 'blog.html',
-        'shop': 'shop.html',
         'admin': 'admin.html',
         'upgrade': 'upgrade.html',
         'nang-cap': 'upgrade.html',
@@ -156,13 +155,13 @@
       align-items: center;
       gap: 16px;
       background: var(--surface, #ffffff);
-      border: 1px solid var(--border, #d2e0f0);
-      border-radius: 16px;
-      padding: 16px 22px;
-      max-width: 580px;
+      border: 1.5px solid var(--border, #d2e0f0);
+      border-radius: 18px;
+      padding: 18px 24px;
+      max-width: 620px;
       margin: 0 auto 32px;
       text-align: left;
-      box-shadow: var(--shadow, 0 4px 20px rgba(16, 42, 76, 0.08));
+      box-shadow: 0 4px 20px rgba(16, 42, 76, 0.06);
     }
     .mascot-avatar-wrap {
       flex-shrink: 0;
@@ -197,28 +196,40 @@
       justify-content: center;
       margin-bottom: 48px;
     }
-    .error-actions .button {
+    .error-actions .button,
+    .error-actions .btn {
       padding: 12px 24px;
       min-height: 48px;
       font-size: 0.95rem;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
       text-decoration: none;
+      transition: all 0.2s ease;
     }
     .error-btn-home {
       background: var(--russia-red, #c52233) !important;
       color: #fff !important;
       box-shadow: 0 10px 25px rgba(197, 34, 51, 0.28) !important;
+      border: 1px solid var(--russia-red, #c52233);
     }
     .error-btn-home:hover {
       background: var(--russia-red-dark, #991b2b) !important;
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(197, 34, 51, 0.35) !important;
     }
     .error-btn-outline {
       background: var(--surface, #ffffff);
       color: var(--russia-navy, #102a4c);
-      border: 1px solid var(--border, #d2e0f0);
+      border: 1.5px solid var(--border, #d2e0f0);
     }
     .error-btn-outline:hover {
       border-color: var(--russia-blue, #1757a6);
-      background: var(--surface-hover, #e5effa);
+      color: var(--russia-blue, #1757a6);
+      background: var(--surface-hover, #eef4fb);
+      transform: translateY(-2px);
     }
     .error-shortcuts-title {
       font-size: 1.05rem;
@@ -235,23 +246,31 @@
     .error-hub-card {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       background: var(--surface, #ffffff);
-      border: 1px solid var(--border, #d2e0f0);
-      border-radius: 12px;
-      padding: 14px 16px;
+      border: 1.5px solid var(--border, #d2e0f0);
+      border-radius: 16px;
+      padding: 14px 18px;
       text-decoration: none;
       color: var(--text, #0f1f38);
-      transition: all 0.2s ease;
+      box-shadow: 0 4px 16px rgba(16, 42, 76, 0.04);
+      transition: all 0.22s ease;
     }
     .error-hub-card:hover {
       border-color: var(--russia-blue, #1757a6);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(23, 87, 166, 0.12);
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(23, 87, 166, 0.12);
     }
     .error-hub-icon {
-      font-size: 1.5rem;
-      line-height: 1;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: #eef4fb;
+      color: var(--russia-blue, #1757a6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
     .error-hub-text strong {
       display: block;
@@ -342,9 +361,9 @@
           </a>
         </div>
 
-        <!-- Quick 7-Hub Shortcuts -->
+        <!-- Quick Shortcuts -->
         <div class="error-hub-shortcuts">
-          <h2 class="error-shortcuts-title">Hoặc chuyển nhanh đến 7 chuyên mục học tập:</h2>
+          <h2 class="error-shortcuts-title">Hoặc chuyển nhanh đến các chuyên mục học tập:</h2>
           <div class="error-hub-grid">
             <a class="error-hub-card" href="vocabulary.html">
               <span class="error-hub-icon"><i data-rusi-icon="archive-jar" data-size="22"></i></span>
@@ -388,13 +407,6 @@
                 <small>Kinh nghiệm & đời sống Nga</small>
               </div>
             </a>
-            <a class="error-hub-card" href="shop.html">
-              <span class="error-hub-icon"><i data-rusi-icon="shopping-bag-shop" data-size="22"></i></span>
-              <div class="error-hub-text">
-                <strong>7. Rusi Shop</strong>
-                <small>Giáo trình & quà lưu niệm</small>
-              </div>
-            </a>
           </div>
         </div>
 
@@ -405,11 +417,11 @@
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="supabase-client.js?v=7.5"></script>
-<script src="rusi-icons.js?v=5.0"></script>
-  <script src="data.js?v=8.0"></script>
+  <script src="supabase-client.js?v=7.6"></script>
+  <script src="rusi-icons.js?v=5.0"></script>
+  <script src="data.js?v=9.0"></script>
   <script src="auth.js?v=7.5"></script>
-  <script src="app.js?v=8.5"></script>
+  <script src="app.js?v=8.7"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const avatarEl = document.getElementById("mascot404Avatar");

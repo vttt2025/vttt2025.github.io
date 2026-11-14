@@ -184,6 +184,7 @@
         sub_test_type: "full",
         category: "full",
         categoryName: "Đề thi toàn diện (5 phần)",
+        test_mode: "practice",
         durationMin: 45,
         passPercent: 66,
         is_pro_only: false,
@@ -223,6 +224,16 @@
           defaultValue: "full"
         },
         { key: "categoryName", label: "Tên phân loại đề", type: "text", defaultValue: "Đề thi toàn diện (3 phần)" },
+        {
+          key: "test_mode",
+          label: "Chế độ thi (Test Mode)",
+          type: "select",
+          options: [
+            { v: "practice", l: "Luyện tập (Tự do theo chuyên đề / từng phần lẻ)" },
+            { v: "exam", l: "Luyện thi (Đề thi thử TRKI chính thức — Đủ 5 phần)" }
+          ],
+          defaultValue: "practice"
+        },
         { key: "durationMin", label: "Thời gian làm bài (phút)", type: "number", defaultValue: 45 },
         { key: "passPercent", label: "Điểm chuẩn đạt (%)", type: "number", defaultValue: 66 },
         {
@@ -6122,6 +6133,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             answers: doc.answers || {},
             is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
             is_published: Boolean(doc.is_published === undefined ? true : (doc.is_published === true || doc.is_published === "true")),
+            test_mode: doc.test_mode || doc.mode || "practice",
             raw_data: { parts: partsArr },
             updated_at: new Date().toISOString()
           };
@@ -6143,6 +6155,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             category: subType,
             sub_test_type: subType,
             categoryName: row.categoryName || (subType === "full" ? "Đề thi toàn diện (5 phần)" : subType),
+            test_mode: row.test_mode || "practice",
             durationMin: Number(row.duration_min || row.duration_minutes) || 45,
             passPercent: Number(row.pass_percent || row.passing_score) || 66,
             is_pro_only: Boolean(row.is_pro_only),
