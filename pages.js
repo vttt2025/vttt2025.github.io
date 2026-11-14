@@ -1072,7 +1072,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                       ` : ""}
                       ${notes ? `
                         <div class="qcard-meta-note">
-                          <span class="note-bullet">💡</span>
+                          <span class="note-bullet">${typeof RusiIcons !== "undefined" ? RusiIcons.get("lightbulb", { size: 14 }) : "💡"}</span>
                           <span class="note-content">${esc(notes)}</span>
                         </div>
                       ` : ""}
@@ -11270,10 +11270,10 @@ function initMockTestPage() {
     if (totalQCheck === 0) {
       host.innerHTML = `
         <div style="padding:60px 24px;text-align:center;max-width:480px;margin:0 auto">
-          <div style="font-size:48px;margin-bottom:16px">📭</div>
+          <div style="margin-bottom:16px;color:var(--muted)">${typeof RusiIcons !== "undefined" ? RusiIcons.get("inbox", { size: 48 }) : "📭"}</div>
           <h3 style="margin-bottom:8px">Chưa có câu hỏi cho đề thi này</h3>
           <p style="color:var(--muted);margin-bottom:20px">Ngân hàng câu hỏi đang được cập nhật. Vui lòng thử lại sau ít phút.</p>
-          <button class="btn btn-primary" id="btnBackFromEmpty">← Quay lại danh sách đề</button>
+          <button class="btn btn-primary" id="btnBackFromEmpty" style="display:inline-flex;align-items:center;gap:6px;margin:0 auto">${typeof RusiIcons !== "undefined" ? RusiIcons.get("arrow-left", { size: 16 }) : "←"} Quay lại danh sách đề</button>
         </div>
       `;
       document.body.classList.remove("in-workspace");
@@ -12058,7 +12058,7 @@ function initMockTestPage() {
               `}
             </div>
             <div class="trki-review-expl">
-              <span class="trki-expl-icon">💡</span>
+              <span class="trki-expl-icon">${typeof RusiIcons !== "undefined" ? RusiIcons.get("lightbulb", { size: 16 }) : "💡"}</span>
               <div class="trki-expl-content">
                 <b class="trki-expl-title">Giải thích:</b>
                 <span class="trki-expl-text">${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}</span>

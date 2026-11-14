@@ -294,7 +294,7 @@ const WordDetail = (() => {
       <div class="wd-section ${open ? "open" : ""}" data-sec="${id}">
         <button class="wd-sec-head" type="button">
           <span class="wd-sec-title"><span class="wd-sec-icon">${(window.RusiIcons && ({meaning:"book-open",wiktionary:"globe",gov:"puzzle",ex:"message-square",rel:"refresh-cw",fam:"layers",forms:"table",srs:"zap-xp"})[id]) ? RusiIcons.get(({meaning:"book-open",wiktionary:"globe",gov:"puzzle",ex:"message-square",rel:"refresh-cw",fam:"layers",forms:"table",srs:"zap-xp"})[id], {size:16}) : icon}</span>${esc(title)}${badge ? `<span class="wd-badge">${badge}</span>` : ""}</span>
-          <span class="wd-sec-arrow">▾</span>
+          <span class="wd-sec-arrow">${(window.RusiIcons ? RusiIcons.get("chevron-down", { size: 14 }) : "▾")}</span>
         </button>
         <div class="wd-sec-body"><div class="wd-sec-inner">${innerHTML}</div></div>
       </div>`;

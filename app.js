@@ -2861,23 +2861,23 @@ const RusiMarkdown = {
           if (firstContent) rest.unshift(firstContent);
           const fullContent = rest.map(l => this.formatInline(l)).join("<br/>");
 
-          let icon = "📌";
+          let icon = (typeof RusiIcons !== "undefined") ? RusiIcons.get("bookmark", { size: 18 }) : "📌";
           let typeClass = "rusi-md-callout-note";
           let typeTitle = "Ghi chú";
           if (alertType === "TIP") {
-            icon = "💡";
+            icon = (typeof RusiIcons !== "undefined") ? RusiIcons.get("lightbulb", { size: 18 }) : "💡";
             typeClass = "rusi-md-callout-tip";
             typeTitle = "Mẹo ghi nhớ";
           } else if (alertType === "WARNING") {
-            icon = "⚠️";
+            icon = (typeof RusiIcons !== "undefined") ? RusiIcons.get("alert-triangle", { size: 18 }) : "⚠️";
             typeClass = "rusi-md-callout-warning";
             typeTitle = "Cảnh báo";
           } else if (alertType === "IMPORTANT") {
-            icon = "⚡";
+            icon = (typeof RusiIcons !== "undefined") ? RusiIcons.get("zap", { size: 18 }) : "⚡";
             typeClass = "rusi-md-callout-important";
             typeTitle = "Lưu ý trọng tâm";
           } else if (alertType === "CAUTION") {
-            icon = "🛑";
+            icon = (typeof RusiIcons !== "undefined") ? RusiIcons.get("alert-circle", { size: 18 }) : "🛑";
             typeClass = "rusi-md-callout-warning";
             typeTitle = "Cẩn trọng";
           }

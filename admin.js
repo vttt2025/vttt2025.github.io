@@ -2422,7 +2422,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     if (!State.currentDraft) {
       container.innerHTML = `
         <div style="padding:48px 20px;text-align:center">
-          <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+          <div style="margin-bottom:12px;color:var(--p-amber)">${typeof RusiIcons !== "undefined" ? RusiIcons.get("alert-triangle", { size: 36 }) : "⚠️"}</div>
           <div style="font-size:16px;font-weight:600;margin-bottom:6px">Không tìm thấy bản ghi dữ liệu</div>
           <div style="color:var(--p-text-muted);font-size:13px;margin-bottom:16px">Mã bản ghi: <code>${esc(State.currentDocId || "")}</code></div>
           <a class="p-btn p-btn-secondary" href="#collection/${escAttr(slug)}">Quay lại danh sách</a>
@@ -3394,7 +3394,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
             <button type="button" class="notion-tbl-btn btn-add-row" title="Thêm 1 dòng mới vào cuối bảng">+ Thêm dòng</button>
             <button type="button" class="notion-tbl-btn btn-add-col" title="Thêm 1 cột mới vào bên phải">+ Thêm cột</button>
             <button type="button" class="notion-tbl-btn btn-del-row" title="Xóa dòng hiện tại">- Xóa dòng</button>
-            <button type="button" class="notion-tbl-btn btn-del-tbl" title="Xóa toàn bộ bảng này">🗑️ Xóa bảng</button>
+            <button type="button" class="notion-tbl-btn btn-del-tbl" title="Xóa toàn bộ bảng này">${typeof RusiIcons !== "undefined" ? RusiIcons.get("trash-2", { size: 13 }) : ""} Xóa bảng</button>
           `;
           wrapper.insertBefore(tb, wrapper.firstChild);
         }
@@ -4027,7 +4027,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                 <button type="button" class="notion-tbl-btn btn-add-row" title="Thêm 1 dòng mới vào cuối bảng">+ Thêm dòng</button>
                 <button type="button" class="notion-tbl-btn btn-add-col" title="Thêm 1 cột mới vào bên phải">+ Thêm cột</button>
                 <button type="button" class="notion-tbl-btn btn-del-row" title="Xóa dòng hiện tại">- Xóa dòng</button>
-                <button type="button" class="notion-tbl-btn btn-del-tbl" title="Xóa toàn bộ bảng">🗑️ Xóa bảng</button>
+                <button type="button" class="notion-tbl-btn btn-del-tbl" title="Xóa toàn bộ bảng">${typeof RusiIcons !== "undefined" ? RusiIcons.get("trash-2", { size: 13 }) : ""} Xóa bảng</button>
               </div>
               <table class="topic-vocab-table rusi-md-table notion-interactive-table" contenteditable="true">
                 <thead>
@@ -4069,7 +4069,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                 <button type="button" class="notion-tbl-btn btn-add-row" title="Thêm dòng">+ Thêm dòng</button>
                 <button type="button" class="notion-tbl-btn btn-add-col" title="Thêm cột">+ Thêm cột</button>
                 <button type="button" class="notion-tbl-btn btn-del-row" title="Xóa dòng">- Xóa dòng</button>
-                <button type="button" class="notion-tbl-btn btn-del-tbl" title="Xóa bảng">🗑️ Xóa bảng</button>
+                <button type="button" class="notion-tbl-btn btn-del-tbl" title="Xóa bảng">${typeof RusiIcons !== "undefined" ? RusiIcons.get("trash-2", { size: 13 }) : ""} Xóa bảng</button>
               </div>
               <table class="topic-vocab-table rusi-md-table notion-interactive-table" contenteditable="true">
                 <thead>
@@ -4579,7 +4579,7 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
     } else if (slug === "WRITING_TOPICS" || slug === "LISTENING_TOPICS") {
       return `
         <div style="padding:28px 20px;text-align:center;background:var(--p-surface-subtle,#f9fafb);border:1px dashed var(--p-border-subtle,#e5e7eb);border-radius:12px;margin:12px 0;">
-          <div style="font-size:24px;margin-bottom:8px">📂</div>
+          <div style="margin-bottom:8px;color:var(--p-primary,#4361ee)">${typeof RusiIcons !== "undefined" ? RusiIcons.get("folder", { size: 28 }) : "📂"}</div>
           <div style="font-weight:700;font-size:14px;color:var(--p-text,#1f2937);margin-bottom:4px">Chủ đề phân cấp độc lập</div>
           <div style="font-size:13px;color:var(--p-text-muted,#6b7280);max-width:480px;margin:0 auto;line-height:1.5">
             Chủ đề này đóng vai trò phân nhóm danh mục cha. Các bài luyện tập con (Writing Tasks / Listening Lessons) sẽ được liên kết trực tiếp tới chủ đề này qua trường <code>topic_id</code>. Hãy chỉnh sửa thông tin chủ đề tại tab <strong>Nội dung chính</strong> hoặc <strong>JSON</strong>.
@@ -4642,17 +4642,18 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
     const t5Count = (draft.part5 && Array.isArray(draft.part5.speaking_tasks)) ? draft.part5.speaking_tasks.length : ((draft.part5 && Array.isArray(draft.part5.tasks)) ? draft.part5.tasks.length : 0);
 
     const navTabs = [
-      { id: 0, label: `📝 Phần 1: Ngữ pháp (${q1Count})`, title: "Лексика и грамматика" },
-      { id: 1, label: `📖 Phần 2: Đọc hiểu (${q2Count})`, title: "Чтение" },
-      { id: 2, label: `🎧 Phần 3: Nghe hiểu (${q3Count})`, title: "Аудирование" },
-      { id: 3, label: `✍️ Phần 4: Viết (${t4Count})`, title: "Письмо" },
-      { id: 4, label: `🗣️ Phần 5: Nói (${t5Count})`, title: "Говорение" },
-      { id: 5, label: `🔑 Đáp án (Answers)`, title: "Bảng đáp án đề thi" }
+      { id: 0, icon: "pen-tool", label: `Phần 1: Ngữ pháp (${q1Count})`, title: "Лексика и грамматика" },
+      { id: 1, icon: "book-open-blog", label: `Phần 2: Đọc hiểu (${q2Count})`, title: "Чтение" },
+      { id: 2, icon: "headphones", label: `Phần 3: Nghe hiểu (${q3Count})`, title: "Аудирование" },
+      { id: 3, icon: "pen-tool", label: `Phần 4: Viết (${t4Count})`, title: "Письмо" },
+      { id: 4, icon: "mic-speaking", label: `Phần 5: Nói (${t5Count})`, title: "Говорение" },
+      { id: 5, icon: "key", label: `Đáp án (Answers)`, title: "Bảng đáp án đề thi" }
     ];
 
     const tabsHtml = navTabs.map(t => `
-      <button type="button" class="p-btn ${activeTab === t.id ? 'p-btn-primary' : 'p-btn-secondary'} p-btn-sm" onclick="window.switchTrkiSubtest(${t.id})" title="${escAttr(t.title)}" style="font-size:12px;padding:6px 12px;border-radius:8px">
-        ${t.label}
+      <button type="button" class="p-btn ${activeTab === t.id ? 'p-btn-primary' : 'p-btn-secondary'} p-btn-sm" onclick="window.switchTrkiSubtest(${t.id})" title="${escAttr(t.title)}" style="font-size:12px;padding:6px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:6px">
+        ${typeof RusiIcons !== "undefined" ? RusiIcons.get(t.icon, { size: 14 }) : ""}
+        <span>${t.label}</span>
       </button>
     `).join("");
 
