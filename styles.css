@@ -16622,14 +16622,14 @@ body[data-page="writing"].in-workspace main.container {
     border-right: 0;
   }
 
-  /* Bố cục thanh thao tác viết phẳng trên mobile (<= 768px) */
+  /* Bố cục thanh thao tác viết phẳng trên mobile (<= 768px): CHỈ HIỂN THỊ ICON */
   .writing-primary-actions.writing-action-bar {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     flex-wrap: nowrap;
-    gap: 6px;
+    gap: 8px;
     padding: 0;
     margin-top: 10px;
     background: transparent;
@@ -16642,7 +16642,7 @@ body[data-page="writing"].in-workspace main.container {
   .writing-bar-right {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     flex-shrink: 0;
   }
 
@@ -16650,29 +16650,44 @@ body[data-page="writing"].in-workspace main.container {
     display: none;
   }
 
-  /* Nút Chấm AI giữ chữ "Chấm AI" gọn đẹp, height 36px */
+  /* Nút Chấm AI: Thu gọn thành icon button 36x36px trên điện thoại */
   .writing-primary-actions .btn-primary.btn-submit {
+    width: 36px;
+    min-width: 36px;
     height: 36px;
     min-height: 36px;
-    padding: 0 11px;
+    padding: 0;
     border-radius: 8px;
-    font-size: 0.8rem;
-    gap: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
   }
 
-  /* Hạn mức AI tinh gọn dạng pill chuẩn 36px, 1 dòng duy nhất */
+  .writing-primary-actions .btn-primary.btn-submit .writing-btn-text {
+    display: none !important;
+  }
+
+  /* Hạn mức AI: Thu gọn thành icon button tia chớp 36x36px trên điện thoại */
   .writing-quota-pill {
+    width: 36px;
+    min-width: 36px;
     height: 36px;
-    padding: 0 8px;
-    font-size: 0.76rem;
-    gap: 4px;
+    min-height: 36px;
+    padding: 0;
     border-radius: 8px;
-    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+    cursor: pointer;
   }
 
-  /* Các nút công cụ phụ 36x36px */
+  .writing-quota-pill #writingAiQuotaText {
+    display: none !important;
+  }
+
+  /* Các nút công cụ phụ: Chỉ hiển thị icon 36x36px */
   .writing-bar-right .btn-outline {
     width: 36px;
     height: 36px;
@@ -16734,37 +16749,52 @@ body[data-page="writing"].in-workspace main.container {
 
   .writing-primary-actions.writing-action-bar {
     padding: 0;
-    gap: 4px;
+    gap: 6px;
     margin-top: 8px;
   }
 
   .writing-bar-left,
   .writing-bar-right {
-    gap: 4px;
+    gap: 5px;
   }
 
   .writing-primary-actions .btn-primary.btn-submit {
+    width: 34px;
+    min-width: 34px;
     height: 34px;
     min-height: 34px;
-    padding: 0 8px;
-    font-size: 0.78rem;
-    gap: 4px;
+    padding: 0;
     border-radius: 7px;
   }
 
+  .writing-primary-actions .btn-primary.btn-submit .writing-btn-text {
+    display: none !important;
+  }
+
   .writing-quota-pill {
+    width: 34px;
+    min-width: 34px;
     height: 34px;
-    padding: 0 6px;
-    font-size: 0.72rem;
-    gap: 3px;
+    min-height: 34px;
+    padding: 0;
     border-radius: 7px;
+  }
+
+  .writing-quota-pill #writingAiQuotaText {
+    display: none !important;
   }
 
   .writing-bar-right .btn-outline {
     width: 34px;
-    height: 34px;
     min-width: 34px;
+    height: 34px;
+    min-height: 34px;
+    padding: 0;
     border-radius: 7px;
+  }
+
+  .writing-bar-right .writing-btn-text {
+    display: none !important;
   }
 
   .writing-score-result,
@@ -16786,36 +16816,44 @@ body[data-page="writing"].in-workspace main.container {
 @media (max-width: 360px) {
   .writing-primary-actions.writing-action-bar {
     padding: 0;
-    gap: 3px;
+    gap: 4px;
     margin-top: 6px;
   }
   .writing-bar-left,
   .writing-bar-right {
-    gap: 3px;
+    gap: 4px;
   }
   .writing-primary-actions .btn-primary.btn-submit {
-    width: 34px;
-    min-width: 34px;
-    height: 34px;
-    min-height: 34px;
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
     padding: 0;
     border-radius: 7px;
   }
   .writing-primary-actions .btn-primary.btn-submit .writing-btn-text {
     display: none !important;
   }
-  .writing-bar-right .btn-outline {
-    width: 34px;
-    min-width: 34px;
-    height: 34px;
-    min-height: 34px;
+  .writing-quota-pill {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
+    padding: 0;
     border-radius: 7px;
   }
-  .writing-quota-pill {
-    height: 34px;
-    padding: 0 5px;
-    font-size: 0.7rem;
+  .writing-quota-pill #writingAiQuotaText {
+    display: none !important;
+  }
+  .writing-bar-right .btn-outline {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
     border-radius: 7px;
+  }
+  .writing-bar-right .writing-btn-text {
+    display: none !important;
   }
 }
 

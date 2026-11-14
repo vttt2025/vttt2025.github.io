@@ -10290,6 +10290,15 @@ function initWritingPage() {
       };
       updateQuotaDisplay();
 
+      const quotaBadgeEl = panel.querySelector("#writingAiQuotaBadge");
+      if (quotaBadgeEl) {
+        quotaBadgeEl.addEventListener("click", () => {
+          if (typeof toast === "function") {
+            toast(quotaBadgeEl.title || "Hạn mức chấm điểm AI hôm nay");
+          }
+        });
+      }
+
       panel.querySelector(".btn-submit").onclick = async () => {
         const curUser = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
         const isPro = typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : Boolean(curUser?.is_pro);
