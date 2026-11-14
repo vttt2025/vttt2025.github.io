@@ -27,8 +27,18 @@
      */
     async chatDirect(messages, options = {}) {
       const model = options.model || GROQ_CONFIG.textModel;
-      const temperature = options.temperature !== undefined ? options.temperature : 0.2;
-      const maxTokens = options.maxTokens || 1200;
+      const temperature = options.temperature !== undefined ? options.temperature : 0.1;
+      const maxTokens = options.maxTokens || 280;
+
+      const bodyPayload = {
+        model,
+        messages,
+        temperature,
+        max_tokens: maxTokens
+      };
+      if (options.json) {
+        bodyPayload.response_format = { type: "json_object" };
+      }
 
       const response = await fetch(`${GROQ_CONFIG.baseUrl}/chat/completions`, {
         method: "POST",
@@ -36,12 +46,7 @@
           "Authorization": `Bearer ${GROQ_CONFIG.apiKey}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          model,
-          messages,
-          temperature,
-          max_tokens: maxTokens
-        })
+        body: JSON.stringify(bodyPayload)
       });
 
       if (!response.ok) {
@@ -97,56 +102,44 @@
 
       // 2. DỰ PHÒNG: Gọi trực tiếp Groq AI (nếu có lưu API Key riêng)
       if (GROQ_CONFIG.apiKey) {
-      const systemPrompt = `Bạn là trợ lý AI chuyên gia tiếng Nga và luyện thi TRKI của RUSI TRKI.
-Nhiệm vụ của bạn là đọc bài làm tiếng Nga của học viên và đánh giá công tâm, chi tiết theo 4 tiêu chí CEFR (Thang điểm 100).
-Bạn PHẢI trả về ĐÚNG ĐỊNH DẠNG JSON sau (không dùng markdown code block, chỉ chuỗi JSON):
-{
-  "total": <tổng điểm từ 0-100, là tổng của 4 điểm bên dưới>,
-  "grammar": <điểm ngữ pháp từ 0-25: biến cách, chia động từ, giống số, thì>,
-  "lexis": <điểm vốn từ từ 0-25: mức độ đa dạng, dùng từ chuẩn xác>,
-  "structure": <điểm bố cục từ 0-25: liên kết câu, từ nối, cấu trúc đoạn>,
-  "content": <điểm nội dung từ 0-25: đáp ứng yêu cầu đề bài, độ dài>,
-  "passed": <boolean: true nếu total >= 66>,
-  "feedback": "<nhận xét chi tiết bằng tiếng Việt: khen điểm tốt, chỉ ra cụ thể từ hoặc câu bị sai ngữ pháp/dùng từ gượng gạo và gợi ý câu chuẩn tự nhiên của người bản xứ>"
-}`;
+        const systemPrompt = `Bạn là giám khảo tiếng Nga TRKI. Chấm bài học viên theo thang điểm 100 và trả về JSON:
+{"total": <0-100>, "grammar": <0-25>, "lexis": <0-25>, "structure": <0-25>, "content": <0-25>, "passed": <true/false>, "feedback": "<Nhận xét tiếng Việt tối đa 2-3 câu ngắn gọn: 1 câu khen điểm tốt, 1-2 câu sửa cụ thể từ/câu sai và đưa câu mẫu tiếng Nga chuẩn>"}`;
 
-      const userPrompt = `Cấp độ: ${level}
-Đề bài: ${taskTitle || "Luyện viết tiếng Nga"} (Yêu cầu tối thiểu: ${minWords} từ)
-Bài làm của học viên:
-"${text}"`;
+        const userPrompt = `Cấp độ: ${level || "A1"}, Yêu cầu: ${minWords || 10} từ, Đề: ${taskTitle || "Luyện viết"}
+Bài làm: "${text.trim()}"`;
 
-      const rawReply = await this.chatDirect([
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt }
-      ], { temperature: 0.2 });
+        const rawReply = await this.chatDirect([
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ], { temperature: 0.1, maxTokens: 280, json: true });
 
-      try {
-        const cleaned = rawReply.replace(/```json/gi, "").replace(/```/g, "").trim();
-        const parsed = JSON.parse(cleaned);
-        return {
-          success: true,
-          total: Number(parsed.total) || 75,
-          grammar: Number(parsed.grammar) || 18,
-          lexis: Number(parsed.lexis) || 18,
-          structure: Number(parsed.structure) || 18,
-          content: Number(parsed.content) || 18,
-          passed: parsed.passed !== undefined ? Boolean(parsed.passed) : (Number(parsed.total) >= 66),
-          feedback: parsed.feedback || "Bài viết hoàn thành tốt."
-        };
-      } catch (err) {
-        console.warn("Lỗi parse JSON từ AI, dùng text phản hồi:", err);
-        return {
-          success: true,
-          total: 80,
-          grammar: 20,
-          lexis: 20,
-          structure: 20,
-          content: 20,
-          passed: true,
-          feedback: rawReply
-        };
+        try {
+          const cleaned = rawReply.replace(/```json/gi, "").replace(/```/g, "").trim();
+          const parsed = JSON.parse(cleaned);
+          return {
+            success: true,
+            total: Number(parsed.total) || 75,
+            grammar: Number(parsed.grammar) || 18,
+            lexis: Number(parsed.lexis) || 18,
+            structure: Number(parsed.structure) || 18,
+            content: Number(parsed.content) || 18,
+            passed: parsed.passed !== undefined ? Boolean(parsed.passed) : (Number(parsed.total) >= 66),
+            feedback: parsed.feedback || "Bài viết hoàn thành tốt."
+          };
+        } catch (err) {
+          console.warn("Lỗi parse JSON từ AI, dùng text phản hồi:", err);
+          return {
+            success: true,
+            total: 80,
+            grammar: 20,
+            lexis: 20,
+            structure: 20,
+            content: 20,
+            passed: true,
+            feedback: rawReply
+          };
+        }
       }
-    }
 
     return null;
   }

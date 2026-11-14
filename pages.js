@@ -10094,7 +10094,7 @@ function initWritingPage() {
         }
         if (submitBtn) submitBtn.disabled = true;
 
-        let total = 0;
+        let total = null;
         let scores = [0, 0, 0, 0];
         let feedbackComment = "";
 
@@ -10108,8 +10108,8 @@ function initWritingPage() {
               minWords: minWords(t)
             });
             if (aiRes && aiRes.success) {
-              total = aiRes.total;
-              scores = [aiRes.grammar, aiRes.lexis, aiRes.structure, aiRes.content];
+              total = Number(aiRes.total);
+              scores = [Number(aiRes.grammar) || 0, Number(aiRes.lexis) || 0, Number(aiRes.structure) || 0, Number(aiRes.content) || 0];
               feedbackComment = aiRes.feedback;
             }
           } catch (aiErr) {
@@ -10117,8 +10117,8 @@ function initWritingPage() {
           }
         }
 
-        // Dự phòng cục bộ (Offline Fallback Rubric)
-        if (!total) {
+        // Dự phòng cục bộ (Offline Fallback Rubric chỉ khi AI hoàn toàn không phản hồi)
+        if (total === null || total === undefined) {
           const wordsArr = text.split(/\s+/).filter(Boolean);
           const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
           const uniqueWords = new Set(wordsArr.map(w => w.toLowerCase().replace(/[^а-яё]/gi, "")));
