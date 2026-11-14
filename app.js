@@ -2184,7 +2184,7 @@ function renderIndexProgressIfLoggedIn(user) {
             <span class="index-progress-pulse-dot" aria-hidden="true"></span>
             <span>Tiến độ học tập</span>
           </div>
-          <h2 class="index-progress-title">Chào mừng trở lại, ${esc(userName)}!</h2>
+          <h2 class="index-progress-title">Chào mừng trở lại, <span class="index-user-name">${esc(userName)}</span>!</h2>
           <p class="index-progress-desc">Theo dõi toàn bộ quá trình học và biết nội dung cần ưu tiên tiếp theo.</p>
         </div>
 
