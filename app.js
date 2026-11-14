@@ -1514,26 +1514,6 @@ function applySeason(season = "winter") {
 
 function cycleSeason() {}
 
-function lockMobileMenuScroll() {
-  if (!document.body || document.body.classList.contains("menu-locked")) return;
-  const scrollY = Math.max(0, window.scrollY || window.pageYOffset || 0);
-  document.body.dataset.menuScrollY = String(scrollY);
-  document.body.style.top = `-${scrollY}px`;
-  document.body.classList.add("menu-locked");
-  document.documentElement.classList.add("menu-locked");
-}
-
-function unlockMobileMenuScroll() {
-  if (!document.body) return;
-  const wasLocked = document.body.classList.contains("menu-locked");
-  const scrollY = Number(document.body.dataset.menuScrollY || 0);
-  document.body.classList.remove("menu-locked");
-  document.documentElement.classList.remove("menu-locked");
-  document.body.style.removeProperty("top");
-  delete document.body.dataset.menuScrollY;
-  if (wasLocked) window.scrollTo(0, scrollY);
-}
-
 /** Hộp thoại Đăng nhập / Đăng ký hiện đại */
 const AuthModal = {
   open(initialTab = "login") {
@@ -1687,7 +1667,7 @@ function renderHeader() {
       mobileBtn.setAttribute("aria-expanded", "false");
     }
     if (backdrop) backdrop.classList.remove("is-open");
-    unlockMobileMenuScroll();
+    document.body.classList.remove("menu-locked");
   };
 
   const openMobileMenu = () => {
@@ -1705,7 +1685,7 @@ function renderHeader() {
       mobileBtn.setAttribute("aria-expanded", "true");
     }
     if (backdrop) backdrop.classList.add("is-open");
-    lockMobileMenuScroll();
+    document.body.classList.add("menu-locked");
   };
 
   if (mobileBtn && nav) {
@@ -1987,9 +1967,7 @@ function renderUserArea() {
           mobileBtn.classList.remove("is-open");
           mobileBtn.setAttribute("aria-expanded", "false");
         }
-        const backdrop = document.getElementById("headerBackdrop");
-        if (backdrop) backdrop.classList.remove("is-open");
-        unlockMobileMenuScroll();
+        document.body.classList.remove("menu-locked");
       }
     });
   }
