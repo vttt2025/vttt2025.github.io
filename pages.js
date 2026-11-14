@@ -10182,56 +10182,55 @@ function initWritingPage() {
             : (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.WRITING_SUBMIT : 15);
 
           scoreBox.innerHTML = `
-            <div class="rusi-ai-review-card">
-              <!-- Top Bar: Điểm số & Đánh giá CEFR -->
+            <div class="rusi-ai-review-card ${isPassed ? 'is-pass' : 'is-retry'}">
+              <!-- Top Bar: Điểm số & Đánh giá chung -->
               <div class="rusi-ai-eval-header">
-                <div class="rusi-ai-score-cluster">
-                  <div class="rusi-ai-score-circle ${isPassed ? 'is-pass' : 'is-retry'}">
-                    <span class="rusi-ai-score-big">${total}</span>
-                    <span class="rusi-ai-score-denom">/100</span>
+                <div class="rusi-ai-eval-lead">
+                  <div class="rusi-ai-status-pill ${isPassed ? 'pass' : 'retry'}">
+                    ${icon(isPassed ? 'check-circle-correct' : 'alert-triangle', 15)}
+                    <span>${isPassed ? 'Đạt yêu cầu' : 'Chưa đạt (Cần ≥ 66 điểm)'}</span>
                   </div>
-                  <div class="rusi-ai-title-wrap">
-                    <div class="rusi-ai-eval-meta">ĐÁNH GIÁ CHUẨN ТРКИ / CEFR</div>
-                    <div class="rusi-ai-eval-badge ${isPassed ? 'is-pass' : 'is-retry'}">
-                      ${icon(isPassed ? 'check-circle-correct' : 'alert-triangle', 16)}
-                      <span>${isPassed ? 'СДАНО · ĐẠT YÊU CẦU' : 'CẦN CỐ GẮNG (Chuẩn ≥ 66/100)'}</span>
-                    </div>
+                  <div class="rusi-ai-meta-line">
+                    <span><b>${count}</b> từ</span>
+                    <span class="rusi-meta-dot">·</span>
+                    <span><b>${sentences.length}</b> câu</span>
+                    <span class="rusi-meta-dot">·</span>
+                    <span class="rusi-xp-text">+${earnedXp} XP</span>
                   </div>
                 </div>
-                <div class="rusi-ai-chips-wrap">
-                  <span class="rusi-metric-chip">${icon('file-text', 14)} <b>${count}</b> từ</span>
-                  <span class="rusi-metric-chip">${icon('check-circle', 14)} <b>${sentences.length}</b> câu</span>
-                  <span class="rusi-metric-chip">${icon('zap-xp', 14)} <b>+${earnedXp}</b> XP</span>
+                <div class="rusi-ai-score-box">
+                  <span class="rusi-ai-score-num ${isPassed ? 'pass' : 'retry'}">${total}</span>
+                  <span class="rusi-ai-score-max">/100</span>
                 </div>
               </div>
 
-              <!-- Dải 4 tiêu chí (Criteria Horizontal Ribbon) -->
-              <div class="rusi-ai-criteria-ribbon">
+              <!-- 4 Tiêu chí đánh giá (Chỉ Tiếng Việt) -->
+              <div class="rusi-ai-criteria-grid">
                 ${[
-                  ["Ngữ pháp", "Грамматика", scores[0]],
-                  ["Vốn từ", "Лексика", scores[1]],
-                  ["Bố cục", "Структура", scores[2]],
-                  ["Nội dung", "Содержание", scores[3]]
-                ].map(([viLbl, ruLbl, sc]) => `
-                  <div class="rusi-crit-cell">
-                    <div class="rusi-crit-labels">
-                      <span class="rusi-crit-name">${viLbl} <small>(${ruLbl})</small></span>
-                      <span class="rusi-crit-val"><b>${sc}</b>/25</span>
+                  ["Ngữ pháp", scores[0]],
+                  ["Vốn từ", scores[1]],
+                  ["Bố cục", scores[2]],
+                  ["Nội dung", scores[3]]
+                ].map(([lbl, sc]) => `
+                  <div class="rusi-crit-card">
+                    <div class="rusi-crit-header">
+                      <span class="rusi-crit-title">${lbl}</span>
+                      <span class="rusi-crit-score"><b>${sc}</b>/25</span>
                     </div>
                     <div class="rusi-crit-track">
-                      <div class="rusi-crit-bar-fill ${sc >= 17 ? 'is-good' : 'is-mid'}" style="width:${Math.round((sc / 25) * 100)}%"></div>
+                      <div class="rusi-crit-fill ${sc >= 17 ? 'good' : 'mid'}" style="width:${Math.round((sc / 25) * 100)}%"></div>
                     </div>
                   </div>
                 `).join("")}
               </div>
 
-              <!-- Khung nhận xét Trợ lý AI Rusika -->
-              <div class="rusi-ai-feedback-container">
-                <div class="rusi-ai-feedback-header">
-                  <span class="rusi-ai-avatar">${icon('bot-rusika', 20)}</span>
-                  <span class="rusi-ai-author">Nhận xét chi tiết từ Trợ lý Rusika AI</span>
+              <!-- Nhận xét chi tiết từ AI -->
+              <div class="rusi-ai-feedback-section">
+                <div class="rusi-ai-feedback-title-bar">
+                  <span class="rusi-ai-feedback-icon">${icon('bot-rusika', 16)}</span>
+                  <span class="rusi-ai-feedback-heading">Nhận xét chi tiết</span>
                 </div>
-                <div class="rusi-ai-feedback-body">
+                <div class="rusi-ai-feedback-content">
                   ${feedbackComment}
                 </div>
               </div>

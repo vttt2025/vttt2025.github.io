@@ -31231,17 +31231,17 @@ body.index-personalized #indexUserProgressHost {
  * RUSI UI ENHANCEMENTS: AI REVIEW, UNIFIED VOICE MEMO, WIDE TEST RESULT
  * ============================================================================ */
 
-/* 1. GIAO DIỆN NHẬN XÉT AI BÀI VIẾT HIỆN ĐẠI & TINH TẾ (EDITORIAL DESIGN) */
+/* 1. GIAO DIỆN NHẬN XÉT AI BÀI VIẾT HIỆN ĐẠI, TINH TẾ & TỐI GIẢN */
 .rusi-ai-review-card {
   margin-top: 24px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 24px 28px;
-  box-shadow: 0 4px 20px rgba(16, 42, 76, 0.05);
+  border-radius: var(--radius, 16px);
+  padding: 22px 26px;
+  box-shadow: 0 4px 16px rgba(16, 42, 76, 0.04);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   box-sizing: border-box;
   animation: spResultSlideIn 0.3s ease-out;
 }
@@ -31250,173 +31250,126 @@ body.index-personalized #indexUserProgressHost {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
-  padding-bottom: 18px;
+  gap: 16px;
+  padding-bottom: 16px;
   border-bottom: 1px solid var(--border);
 }
 
-.rusi-ai-score-cluster {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.rusi-ai-score-circle {
-  display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 2px;
-  padding: 10px 18px;
-  border-radius: 14px;
-  background: var(--bg);
-  border: 1.5px solid var(--border);
-  flex-shrink: 0;
-}
-
-.rusi-ai-score-circle.is-pass {
-  background: rgba(22, 163, 74, 0.08);
-  border-color: rgba(22, 163, 74, 0.3);
-}
-
-.rusi-ai-score-circle.is-retry {
-  background: rgba(220, 38, 38, 0.08);
-  border-color: rgba(220, 38, 38, 0.3);
-}
-
-.rusi-ai-score-big {
-  font-size: 2.2rem;
-  font-weight: 850;
-  line-height: 1;
-  color: var(--text);
-  letter-spacing: -0.02em;
-}
-
-.rusi-ai-score-circle.is-pass .rusi-ai-score-big {
-  color: var(--green, #16a34a);
-}
-
-.rusi-ai-score-circle.is-retry .rusi-ai-score-big {
-  color: var(--red, #dc2626);
-}
-
-.rusi-ai-score-denom {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--muted);
-}
-
-.rusi-ai-title-wrap {
+.rusi-ai-eval-lead {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 }
 
-.rusi-ai-eval-meta {
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.rusi-ai-eval-badge {
+.rusi-ai-status-pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   font-weight: 800;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
   padding: 4px 12px;
   border-radius: 99px;
   width: fit-content;
 }
 
-.rusi-ai-eval-badge.is-pass {
+.rusi-ai-status-pill.pass {
   background: #dcfce7;
   color: #15803d;
 }
 
-.rusi-ai-eval-badge.is-retry {
+.rusi-ai-status-pill.retry {
   background: #fee2e2;
   color: #b91c1c;
 }
 
-.rusi-ai-chips-wrap {
+.rusi-ai-meta-line {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  font-size: 0.88rem;
+  color: var(--muted);
 }
 
-.rusi-metric-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
+.rusi-ai-meta-line b {
   color: var(--text);
-  background: var(--bg);
-  border: 1px solid var(--border);
-  padding: 6px 12px;
-  border-radius: 99px;
-  font-weight: 500;
+  font-weight: 750;
 }
 
-.rusi-metric-chip b {
-  color: var(--primary);
+.rusi-meta-dot {
+  color: var(--border);
   font-weight: 700;
 }
 
-/* Criteria Horizontal Ribbon */
-.rusi-ai-criteria-ribbon {
+.rusi-xp-text {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.rusi-ai-score-box {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.rusi-ai-score-num {
+  font-size: 2.7rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.rusi-ai-score-num.pass {
+  color: var(--green, #16a34a);
+}
+
+.rusi-ai-score-num.retry {
+  color: var(--red, #dc2626);
+}
+
+.rusi-ai-score-max {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+/* Criteria Grid (4 Cards) */
+.rusi-ai-criteria-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 12px;
 }
 
-@media (max-width: 768px) {
-  .rusi-ai-criteria-ribbon {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .rusi-ai-criteria-ribbon {
-    grid-template-columns: 1fr;
-  }
-}
-
-.rusi-crit-cell {
+.rusi-crit-card {
+  background: color-mix(in srgb, var(--primary) 2.5%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.rusi-crit-labels {
+.rusi-crit-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
 }
 
-.rusi-crit-name {
-  font-size: 0.84rem;
-  font-weight: 700;
+.rusi-crit-title {
+  font-size: 0.86rem;
+  font-weight: 750;
   color: var(--text);
 }
 
-.rusi-crit-name small {
-  color: var(--muted);
-  font-weight: 500;
-  margin-left: 2px;
-}
-
-.rusi-crit-val {
-  font-size: 0.84rem;
+.rusi-crit-score {
+  font-size: 0.82rem;
   color: var(--muted);
 }
 
-.rusi-crit-val b {
+.rusi-crit-score b {
   color: var(--primary);
   font-weight: 800;
 }
@@ -31428,69 +31381,70 @@ body.index-personalized #indexUserProgressHost {
   overflow: hidden;
 }
 
-.rusi-crit-bar-fill {
+.rusi-crit-fill {
   height: 100%;
   border-radius: 99px;
   transition: width 0.4s ease;
 }
 
-.rusi-crit-bar-fill.is-good {
+.rusi-crit-fill.good {
   background: var(--green, #16a34a);
 }
 
-.rusi-crit-bar-fill.is-mid {
+.rusi-crit-fill.mid {
   background: var(--amber, #f59e0b);
 }
 
-/* AI Feedback Note Box */
-.rusi-ai-feedback-container {
+/* AI Feedback Section */
+.rusi-ai-feedback-section {
   background: color-mix(in srgb, var(--primary) 3%, var(--surface));
   border: 1px solid var(--border);
   border-left: 3.5px solid var(--primary);
   border-radius: 12px;
-  padding: 18px 22px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-
-.rusi-ai-feedback-header {
-  display: flex;
-  align-items: center;
   gap: 8px;
 }
 
-.rusi-ai-avatar {
-  display: inline-flex;
+.rusi-ai-feedback-title-bar {
+  display: flex;
   align-items: center;
+  gap: 6px;
   color: var(--primary);
 }
 
-.rusi-ai-author {
-  font-size: 0.92rem;
+.rusi-ai-feedback-heading {
+  font-size: 0.88rem;
   font-weight: 800;
   color: var(--text);
 }
 
-.rusi-ai-feedback-body {
+.rusi-ai-feedback-content {
   font-size: 0.92rem;
-  line-height: 1.7;
+  line-height: 1.65;
   color: var(--text);
 }
 
-.rusi-ai-feedback-body p {
+.rusi-ai-feedback-content p {
   margin: 0 0 8px;
 }
 
-.rusi-ai-feedback-body p:last-child {
+.rusi-ai-feedback-content p:last-child {
   margin-bottom: 0;
 }
 
-.rusi-ai-feedback-body b {
+.rusi-ai-feedback-content b {
   color: var(--primary);
 }
 
-@media (max-width: 680px) {
+@media (max-width: 768px) {
+  .rusi-ai-criteria-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
   .rusi-ai-review-card {
     padding: 16px 14px;
     border-radius: 14px;
@@ -31500,13 +31454,15 @@ body.index-personalized #indexUserProgressHost {
   .rusi-ai-eval-header {
     gap: 12px;
     padding-bottom: 12px;
+    flex-direction: row;
+    align-items: flex-start;
   }
-  .rusi-ai-score-cluster {
-    width: 100%;
-    justify-content: space-between;
+  .rusi-ai-score-num {
+    font-size: 2.3rem;
   }
-  .rusi-ai-chips-wrap {
-    width: 100%;
+  .rusi-ai-criteria-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 }
 
