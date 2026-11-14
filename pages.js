@@ -9880,6 +9880,13 @@ function initWritingPage() {
                 ` : ""}
               </div>
 
+              <!-- HẠN MỨC CHẤM ĐIỂM AI (3 lượt/ngày Free, 20 lượt/ngày PRO) -->
+              <div class="writing-ai-quota-wrap" id="writingAiQuotaBadge">
+                <span class="writing-ai-quota-pill">
+                  ${icon("bot-rusika", 13)} Lượt chấm AI hôm nay: <span id="writingAiQuotaText">Đang kiểm tra...</span>
+                </span>
+              </div>
+
               <div class="ai-score-box hidden"></div>
               <div class="model-answer hidden">
                 <h4>${icon("sparkles-clean", 18)} Bài văn mẫu đạt điểm tối đa TRKI</h4>
@@ -10055,8 +10062,47 @@ function initWritingPage() {
         });
       });
 
+      // --- CẬP NHẬT HIỂN THỊ HẠN MỨC CHẤM AI TRÊN SUPABASE (3 lượt/ngày Free, 20 lượt/ngày PRO) ---
+      const updateQuotaDisplay = async () => {
+        const quotaText = panel.querySelector("#writingAiQuotaText");
+        if (!quotaText) return;
+        const curUser = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
+        const isPro = typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : Boolean(curUser?.is_pro);
+        if (!curUser) {
+          quotaText.innerHTML = `<span style="color:var(--muted)">Đăng nhập để nhận 3 lượt AI/ngày</span>`;
+          return;
+        }
+        if (window.RusiSupabase?.aiQuota?.get) {
+          try {
+            const q = await window.RusiSupabase.aiQuota.get(curUser.id || curUser.uid, isPro);
+            quotaText.innerHTML = `Còn <b>${q.remaining}/${q.max_limit}</b> lượt ${isPro ? '<span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">PRO</span>' : '<span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">Free</span>'}`;
+          } catch (_) {
+            quotaText.textContent = isPro ? "Còn 20 lượt/ngày (PRO)" : "Còn 3 lượt/ngày (Free)";
+          }
+        } else {
+          quotaText.textContent = isPro ? "Còn 20 lượt/ngày (PRO)" : "Còn 3 lượt/ngày (Free)";
+        }
+      };
+      updateQuotaDisplay();
+
       panel.querySelector(".btn-submit").onclick = async () => {
-        if (t.is_pro_only && !Monetization.isPro()) {
+        const curUser = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
+        const isPro = typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : Boolean(curUser?.is_pro);
+
+        // Bắt buộc đăng nhập để xác thực danh tính và giới hạn 3 lượt/ngày
+        if (!curUser) {
+          toast("Vui lòng đăng nhập tài khoản để sử dụng tính năng chấm điểm AI (Miễn phí 3 lượt/ngày)!");
+          if (typeof AuthModal !== "undefined" && typeof AuthModal.open === "function") {
+            AuthModal.open();
+          } else {
+            setTimeout(() => {
+              window.location.href = "login.html?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+            }, 1200);
+          }
+          return;
+        }
+
+        if (t.is_pro_only && !isPro) {
           Monetization.showProGateModal("Nội dung dành cho PRO", "Bài viết này yêu cầu gói PRO để mở khóa AI Rusika chấm chi tiết theo chuẩn ТРКИ.");
           return;
         }
@@ -10100,20 +10146,50 @@ function initWritingPage() {
           let total = null;
           let scores = [0, 0, 0, 0];
           let feedbackComment = "";
+          let quotaInfo = null;
 
-          // Ưu tiên gọi Groq AI (Qwen 3.8 27B) chấm bài chuyên sâu
+          // Ưu tiên gọi Groq AI (Qwen 3.8 27B) chấm bài chuyên sâu và kiểm soát hạn mức Supabase
           if (window.RusiAI && typeof RusiAI.reviewWriting === "function") {
             try {
               const aiRes = await RusiAI.reviewWriting({
                 text,
                 level: t.level || currentLevel,
                 taskTitle: (t.title || "") + (t.prompt ? " - " + t.prompt : (t.prompt_text ? " - " + t.prompt_text : "")),
-                minWords: minWords(t)
+                minWords: minWords(t),
+                userId: curUser.id || curUser.uid,
+                isPro: isPro
               });
-              if (aiRes && aiRes.success) {
-                total = Number(aiRes.total);
-                scores = [Number(aiRes.grammar) || 0, Number(aiRes.lexis) || 0, Number(aiRes.structure) || 0, Number(aiRes.content) || 0];
-                feedbackComment = aiRes.feedback;
+
+              if (aiRes) {
+                // Kiểm tra giới hạn lượt chấm AI hôm nay
+                if (aiRes.limitReached) {
+                  if (scoreBox) scoreBox.classList.add("hidden");
+                  if (submitBtn) submitBtn.disabled = false;
+                  if (!isPro && typeof Monetization !== "undefined" && typeof Monetization.showProGateModal === "function") {
+                    Monetization.showProGateModal(
+                      "Hết lượt chấm AI hôm nay (3/3 lượt)",
+                      "Bạn đã sử dụng hết 3 lượt chấm AI miễn phí hôm nay. Nâng cấp tài khoản PRO ngay để nhận 20 lượt chấm AI/ngày và mở khóa toàn bộ tính năng cao cấp!"
+                    );
+                  } else {
+                    toast(aiRes.message || "Bạn đã dùng hết 20 lượt chấm AI hôm nay. Lượt chấm sẽ tự động làm mới vào ngày mai!");
+                  }
+                  updateQuotaDisplay();
+                  return;
+                }
+
+                if (aiRes.requireAuth) {
+                  if (scoreBox) scoreBox.classList.add("hidden");
+                  if (submitBtn) submitBtn.disabled = false;
+                  toast(aiRes.message || "Vui lòng đăng nhập để sử dụng tính năng chấm điểm AI!");
+                  return;
+                }
+
+                if (aiRes.success) {
+                  total = Number(aiRes.total);
+                  scores = [Number(aiRes.grammar) || 0, Number(aiRes.lexis) || 0, Number(aiRes.structure) || 0, Number(aiRes.content) || 0];
+                  feedbackComment = aiRes.feedback;
+                  quotaInfo = aiRes.quota;
+                }
               }
             } catch (aiErr) {
               console.warn("Groq AI lỗi kết nối, chuyển sang bộ chấm cục bộ:", aiErr);
@@ -10196,6 +10272,10 @@ function initWritingPage() {
                     <span><b>${sentences.length}</b> câu</span>
                     <span class="rusi-meta-dot">·</span>
                     <span class="rusi-xp-text">+${earnedXp} XP</span>
+                    ${quotaInfo ? `
+                      <span class="rusi-meta-dot">·</span>
+                      <span style="color:var(--primary);font-weight:700">${icon('bot-rusika', 13)} Còn ${quotaInfo.remaining}/${quotaInfo.max_limit} lượt</span>
+                    ` : ""}
                   </div>
                 </div>
                 <div class="rusi-ai-score-box">
@@ -10253,6 +10333,7 @@ function initWritingPage() {
             });
           }
           toast(`AI Rusika đã phân tích và chấm xong bài viết (+${earnedXp} XP)!`);
+          updateQuotaDisplay();
           scoreBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
         } catch (submitErr) {
           console.error("Lỗi khi xử lý bài viết:", submitErr);

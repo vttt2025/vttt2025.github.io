@@ -61,8 +61,15 @@
     /**
      * Chấm điểm & nhận xét bài viết tiếng Nga theo 4 tiêu chí CEFR / TRKI
      * Tự động ưu tiên gọi qua Supabase Edge Function để bảo mật API Key trên GitHub Pages.
+     * Quản lý hạn mức sử dụng: 3 lượt/ngày (Free), 20 lượt/ngày (PRO), lưu trên Supabase.
      */
-    async reviewWriting({ text, level = "A1", taskTitle = "", minWords = 20 }) {
+    async reviewWriting({ text, level = "A1", taskTitle = "", minWords = 20, userId = null, isPro = null }) {
+      const curUser = (typeof window !== "undefined" && window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
+      const effectiveUserId = userId || curUser?.id || curUser?.uid || null;
+      const effectiveIsPro = (isPro !== null && isPro !== undefined)
+        ? Boolean(isPro)
+        : (typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : Boolean(curUser?.is_pro));
+
       // 1. ƯU TIÊN HÀNG ĐẦU: Gọi trực tiếp Supabase Edge Function an toàn (Bảo vệ API Key tuyệt đối)
       try {
         const config = (typeof window !== "undefined" && window.SUPABASE_CONFIG) ? window.SUPABASE_CONFIG : {};
@@ -80,7 +87,14 @@
             "Authorization": `Bearer ${anonKey}`,
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({ text, level, taskTitle, minWords }),
+          body: JSON.stringify({
+            text,
+            level,
+            taskTitle,
+            minWords,
+            userId: effectiveUserId,
+            isPro: effectiveIsPro
+          }),
           signal: fetchSignal
         });
 
@@ -95,7 +109,23 @@
               structure: Number(data.structure) || 0,
               content: Number(data.content) || 0,
               passed: data.passed !== undefined ? Boolean(data.passed) : (Number(data.total) >= 66),
-              feedback: data.feedback || "Bài viết đã được AI phân tích."
+              feedback: data.feedback || "Bài viết đã được AI phân tích.",
+              quota: data.quota || null
+            };
+          } else if (data && data.limitReached) {
+            return {
+              success: false,
+              limitReached: true,
+              used_count: data.used_count,
+              max_limit: data.max_limit,
+              is_pro: data.is_pro,
+              message: data.message || "Bạn đã dùng hết số lượt chấm AI hôm nay."
+            };
+          } else if (data && data.requireAuth) {
+            return {
+              success: false,
+              requireAuth: true,
+              message: data.message || "Vui lòng đăng nhập để sử dụng tính năng chấm điểm AI."
             };
           }
         } else {

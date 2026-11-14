@@ -1552,6 +1552,51 @@
         var res = await sb.auth.getSession();
         return (res.data && res.data.session) || null;
       }
+    },
+
+    // Quản lý hạn mức sử dụng AI mỗi ngày (3 lượt cho Free, 20 lượt cho PRO)
+    aiQuota: {
+      get: async function (userId, isPro) {
+        var sb = getClient();
+        if (!sb || !userId) {
+          return { used_count: 0, max_limit: isPro ? 20 : 3, remaining: isPro ? 20 : 3, is_pro: Boolean(isPro) };
+        }
+        try {
+          var res = await withTimeout(
+            sb.rpc("get_user_ai_quota", {
+              p_user_id: isValidUUID(userId) ? userId : null,
+              p_is_pro: Boolean(isPro)
+            }),
+            3500
+          );
+          if (res.error) throw res.error;
+          return res.data || { used_count: 0, max_limit: isPro ? 20 : 3, remaining: isPro ? 20 : 3, is_pro: Boolean(isPro) };
+        } catch (err) {
+          console.warn("[RusiSupabase] Lỗi get_user_ai_quota:", err);
+          return { used_count: 0, max_limit: isPro ? 20 : 3, remaining: isPro ? 20 : 3, is_pro: Boolean(isPro) };
+        }
+      },
+
+      consume: async function (userId, isPro) {
+        var sb = getClient();
+        if (!sb || !userId) {
+          return { allowed: false, reason: "unauthenticated", message: "Vui lòng đăng nhập để sử dụng tính năng chấm điểm AI." };
+        }
+        try {
+          var res = await withTimeout(
+            sb.rpc("check_and_consume_ai_quota", {
+              p_user_id: isValidUUID(userId) ? userId : null,
+              p_is_pro: Boolean(isPro)
+            }),
+            4500
+          );
+          if (res.error) throw res.error;
+          return res.data;
+        } catch (err) {
+          console.warn("[RusiSupabase] Lỗi check_and_consume_ai_quota:", err);
+          return { allowed: true, used_count: 1, max_limit: isPro ? 20 : 3, remaining: (isPro ? 20 : 3) - 1, is_pro: Boolean(isPro) };
+        }
+      }
     }
   };
 

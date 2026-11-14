@@ -15937,6 +15937,30 @@ body[data-page="writing"].in-workspace main.container {
   color: #1757a6;
 }
 
+.writing-ai-quota-wrap {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.writing-ai-quota-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--primary) 3.5%, var(--surface));
+  border: 1px solid var(--border);
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-weight: 500;
+}
+
+.writing-ai-quota-pill b {
+  color: var(--primary);
+  font-weight: 750;
+}
+
 .writing-score-result,
 .model-answer,
 .writing-hints {

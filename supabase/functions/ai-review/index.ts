@@ -1,7 +1,9 @@
 // supabase/functions/ai-review/index.ts
 // Supabase Edge Function: Chấm bài viết tiếng Nga TRKI bằng Groq AI (Qwen 3.8 27B) siêu tối giản token
+// Tích hợp kiểm soát hạn mức sử dụng: 3 lượt/ngày (Free), 20 lượt/ngày (PRO)
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,7 +40,7 @@ serve(async (req) => {
   }
 
   try {
-    const { text, level, taskTitle, minWords } = await req.json();
+    const { text, level, taskTitle, minWords, userId, isPro } = await req.json();
 
     if (!text || typeof text !== "string" || text.trim().length === 0) {
       return new Response(JSON.stringify({ success: false, error: "Bài viết không được để trống" }), {
@@ -47,10 +49,65 @@ serve(async (req) => {
       });
     }
 
+    // 1. BẮT BUỘC ĐĂNG NHẬP ĐỂ QUẢN LÝ LƯỢT DÙNG THEO TỪNG HỌC VIÊN
+    if (!userId) {
+      return new Response(JSON.stringify({
+        success: false,
+        requireAuth: true,
+        message: "Vui lòng đăng nhập để sử dụng tính năng chấm điểm AI (Miễn phí 3 lượt/ngày)!"
+      }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+
+    // 2. KIỂM TRA & TIÊU THỤ HẠN MỨC TRÊN SUPABASE (3 lượt/ngày cho Free, 20 lượt/ngày cho PRO)
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    let quotaInfo = null;
+
+    if (supabaseUrl && supabaseServiceKey) {
+      try {
+        const supabase = createClient(supabaseUrl, supabaseServiceKey);
+        const { data: quota, error: quotaErr } = await supabase.rpc("check_and_consume_ai_quota", {
+          p_user_id: userId,
+          p_is_pro: Boolean(isPro)
+        });
+
+        if (quotaErr) {
+          console.warn("Lỗi RPC check_and_consume_ai_quota:", quotaErr);
+        } else if (quota) {
+          if (!quota.allowed) {
+            return new Response(JSON.stringify({
+              success: false,
+              limitReached: true,
+              used_count: quota.used_count,
+              max_limit: quota.max_limit,
+              remaining: 0,
+              is_pro: Boolean(isPro),
+              message: quota.message || "Bạn đã dùng hết số lượt chấm AI hôm nay."
+            }), {
+              status: 200,
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          }
+          quotaInfo = {
+            used_count: quota.used_count,
+            max_limit: quota.max_limit,
+            remaining: quota.remaining,
+            is_pro: Boolean(isPro)
+          };
+        }
+      } catch (dbErr) {
+        console.warn("Lỗi kết nối Supabase kiểm tra quota:", dbErr);
+      }
+    }
+
+    // 3. GỌI GROQ AI NẾU HẠN MỨC HỢP LỆ
     const GROQ_API_KEY = Deno.env.get("GROQ_API_KEY");
     if (!GROQ_API_KEY) {
       console.warn("Chưa cấu hình GROQ_API_KEY trong Supabase Secrets, dùng bộ chấm fallback");
-      return new Response(JSON.stringify({ success: true, ...fallbackReview(text, level, minWords) }), {
+      return new Response(JSON.stringify({ success: true, ...fallbackReview(text, level, minWords), quota: quotaInfo }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -85,8 +142,7 @@ Bài làm: "${text.trim()}"`;
     if (!groqRes.ok) {
       const errText = await groqRes.text();
       console.warn(`Groq API Error (${groqRes.status}): ${errText}`);
-      // Fallback an toàn nếu Groq bị rate-limit hoặc lỗi tạm thời, không để app bị lỗi 500
-      return new Response(JSON.stringify({ success: true, ...fallbackReview(text, level, minWords) }), {
+      return new Response(JSON.stringify({ success: true, ...fallbackReview(text, level, minWords), quota: quotaInfo }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
@@ -108,7 +164,11 @@ Bài làm: "${text.trim()}"`;
       evaluation = fallbackReview(text, level, minWords);
     }
 
-    return new Response(JSON.stringify({ success: true, ...evaluation }), {
+    return new Response(JSON.stringify({
+      success: true,
+      ...evaluation,
+      quota: quotaInfo
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   } catch (err) {
