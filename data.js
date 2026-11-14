@@ -2,7 +2,7 @@
  * ============================================================================
  * RUSI TRKI — CLIENT DATA BRIDGE (100% SUPABASE CLOUD SYNCHRONIZED)
  * Nguồn dữ liệu: Supabase PostgreSQL (https://nrhtdwjihnlaxrbitmcf.supabase.co)
- * Thời gian đồng bộ: 2026-11-14T15:36:46.933Z
+ * Thời gian đồng bộ: 2026-11-14T15:56:20.548Z
  * ============================================================================
  * Toàn bộ dữ liệu dưới đây được ánh xạ trực tiếp từ các bảng Supabase Cloud:
  * - VOCAB_JARS (32 lọ & 1500 từ vựng)
@@ -165,7 +165,7 @@ const VOCAB_JARS = [
         "meaning_vi": "nằm",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "полежа́ть",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -546,7 +546,7 @@ const VOCAB_JARS = [
         "meaning_vi": "bơi",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "поплы́ть / попла́вать",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -635,7 +635,7 @@ const VOCAB_JARS = [
         "meaning_vi": "chạy",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "побежа́ть / побе́гать",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -811,7 +811,7 @@ const VOCAB_JARS = [
         "meaning_vi": "bay",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "полете́ть / полета́ть",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -1749,7 +1749,7 @@ const VOCAB_JARS = [
         "meaning_vi": "làm việc với giấy tờ",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "порабо́тать с докуме́нтами",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -2018,7 +2018,7 @@ const VOCAB_JARS = [
         "meaning_vi": "luyện tập",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "позанима́ться",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -3088,7 +3088,7 @@ const VOCAB_JARS = [
         "meaning_vi": "lãnh đạo",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "НСВ",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -3297,7 +3297,7 @@ const VOCAB_JARS = [
         "meaning_vi": "học",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "вы́учиться",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -3313,7 +3313,9 @@ const VOCAB_JARS = [
         "antonyms": [],
         "syn": "",
         "synonyms": [],
-        "structures": [],
+        "structures": [
+          "учи́ться + где? (П.п. - С6) (ở đâu: в шко́ле, в институ́те)"
+        ],
         "notes": ""
       },
       {
@@ -3494,7 +3496,7 @@ const VOCAB_JARS = [
         "meaning_vi": "bay",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "полете́ть / полета́ть",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -3554,7 +3556,7 @@ const VOCAB_JARS = [
         "meaning_vi": "đi bộ",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "пойти́ / походи́ть",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -3701,7 +3703,7 @@ const VOCAB_JARS = [
         "meaning_vi": "đi (bằng phương tiện)",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "пое́хать / поезди́ть",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -4683,7 +4685,7 @@ const VOCAB_JARS = [
         "meaning_vi": "tập luyện",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "позанима́ться",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -5534,7 +5536,7 @@ const VOCAB_JARS = [
         "meaning_vi": "mặc, đeo, đội",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "поноси́ть",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -7731,7 +7733,7 @@ const VOCAB_JARS = [
         "meaning_vi": "đi (vào phòng)",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "войти́ (СВ) / входи́ть (НСВ)",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -8063,7 +8065,7 @@ const VOCAB_JARS = [
         "meaning_vi": "nằm",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "полежа́ть",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -8618,7 +8620,7 @@ const VOCAB_JARS = [
         "meaning_vi": "cắt, thái (chung chung)",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "поре́зать / наре́зать",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -8802,7 +8804,7 @@ const VOCAB_JARS = [
         "word_normalized": "в туалет",
         "vi": "đi vệ sinh",
         "meaning_vi": "đi vệ sinh",
-        "pos": "нар.",
+        "pos": "нареч.",
         "gender": "",
         "aspect": "",
         "level": "A1",
@@ -8926,7 +8928,7 @@ const VOCAB_JARS = [
         "meaning_vi": "làm việc",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "порабо́тать",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -9048,7 +9050,7 @@ const VOCAB_JARS = [
         "meaning_vi": "đi ra (khỏi phòng)",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "вы́йти (СВ) / выходи́ть (НСВ)",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -9312,7 +9314,9 @@ const VOCAB_JARS = [
         "antonyms": [],
         "syn": "",
         "synonyms": [],
-        "structures": [],
+        "structures": [
+          "принима́ть / приня́ть + что? (В.п. - С4) (принимать ванну, душ)"
+        ],
         "notes": ""
       },
       {
@@ -10178,7 +10182,7 @@ const VOCAB_JARS = [
         "meaning_vi": "ngồi",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "посиде́ть",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -10705,7 +10709,7 @@ const VOCAB_JARS = [
         "meaning_vi": "cắt, thái (chung chung)",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "поре́зать / наре́зать",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -12212,7 +12216,7 @@ const VOCAB_JARS = [
         "meaning_vi": "sống",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "пожи́ть",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -12961,7 +12965,7 @@ const VOCAB_JARS = [
         "meaning_vi": "làm việc",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "порабо́тать",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -13050,7 +13054,7 @@ const VOCAB_JARS = [
         "meaning_vi": "nghiên cứu",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "НСВ/СВ",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -14099,7 +14103,7 @@ const VOCAB_JARS = [
         "meaning_vi": "bơi",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "поплы́ть / попла́вать",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -14130,7 +14134,7 @@ const VOCAB_JARS = [
         "meaning_vi": "đi đến chỗ bác sĩ",
         "pos": "гл.",
         "gender": "",
-        "aspect": "",
+        "aspect": "пойти́ / пое́хать к врачу́",
         "level": "A1",
         "audio": "",
         "audio_url": "",
@@ -14817,8 +14821,10 @@ const VOCAB_JARS = [
             "vi": "Anh ấy có đôi chân khỏe và mạnh mẽ"
           }
         ],
-        "ant": "",
-        "antonyms": [],
+        "ant": "сла́бый (yếu)",
+        "antonyms": [
+          "сла́бый (yếu)"
+        ],
         "syn": "",
         "synonyms": [],
         "structures": [],
@@ -15310,8 +15316,10 @@ const VOCAB_JARS = [
             "vi": "Cô ấy có hàm răng trắng khỏe."
           }
         ],
-        "ant": "",
-        "antonyms": [],
+        "ant": "больно́й (bệnh tật)",
+        "antonyms": [
+          "больно́й (bệnh tật)"
+        ],
         "syn": "",
         "synonyms": [],
         "structures": [],
@@ -15432,10 +15440,14 @@ const VOCAB_JARS = [
             "vi": "Cô ấy có đôi môi mỏng đẹp."
           }
         ],
-        "ant": "",
-        "antonyms": [],
-        "syn": "",
-        "synonyms": [],
+        "ant": "некраси́вый (xấu)",
+        "antonyms": [
+          "некраси́вый (xấu)"
+        ],
+        "syn": "прекра́сный (tuyệt đẹp)",
+        "synonyms": [
+          "прекра́сный (tuyệt đẹp)"
+        ],
         "structures": [],
         "notes": ""
       },
@@ -15490,8 +15502,10 @@ const VOCAB_JARS = [
             "vi": "Anh ấy có mũi cao thẳng."
           }
         ],
-        "ant": "",
-        "antonyms": [],
+        "ant": "криво́й (cong, xiên)",
+        "antonyms": [
+          "криво́й (cong, xiên)"
+        ],
         "syn": "",
         "synonyms": [],
         "structures": [],
@@ -57070,14 +57084,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Наш но́мер в оте́ле на второ́м этаже́.",
+              "vi": "Phòng khách sạn của chúng tôi ở tầng 2."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Con số, số phòng",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "но́мер телефо́на, но́мер в гости́нице"
+          ],
+          "updated_at": "2026-11-14T15:55:54.289259+00:00",
           "word_normalized": "номер",
           "word_with_stress": "Но́мер"
         },
@@ -57749,14 +57770,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Я купи́л биле́т на по́езд в Москву́.",
+              "vi": "Tôi đã mua vé tàu hỏa đi Moskva."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Vé",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "биле́т + куда? (В.п. - С4) (билет на самолёт, билет в Москву)"
+          ],
+          "updated_at": "2026-11-14T15:55:54.283856+00:00",
           "word_normalized": "билет",
           "word_with_stress": "Биле́т"
         },
@@ -57771,14 +57799,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Я купи́л биле́т на по́езд в Москву́.",
+              "vi": "Tôi đã mua vé tàu hỏa đi Moskva."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Vé",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "биле́т + куда? (В.п. - С4) (билет на самолёт, билет в Москву)"
+          ],
+          "updated_at": "2026-11-14T15:55:54.283856+00:00",
           "word_normalized": "билет",
           "word_with_stress": "Биле́т"
         },
@@ -58749,14 +58784,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Покажи́те, пожа́луйста, ваш па́спорт.",
+              "vi": "Làm ơn cho tôi xem hộ chiếu của bạn."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:29.962544+00:00",
           "meaning_vi": "Hộ chiếu",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.22812+00:00",
+          "structures": [
+            "па́спорт граждани́на, заграни́чный па́спорт"
+          ],
+          "updated_at": "2026-11-14T15:55:54.283703+00:00",
           "word_normalized": "паспорт",
           "word_with_stress": "Па́спорт"
         },
@@ -58771,14 +58813,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Я купи́л биле́т на по́езд в Москву́.",
+              "vi": "Tôi đã mua vé tàu hỏa đi Moskva."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Vé",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "биле́т + куда? (В.п. - С4) (билет на самолёт, билет в Москву)"
+          ],
+          "updated_at": "2026-11-14T15:55:54.283856+00:00",
           "word_normalized": "билет",
           "word_with_stress": "Биле́т"
         },
@@ -58793,14 +58842,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Где мо́жно получи́ть бага́ж?",
+              "vi": "Có thể lấy hành lý ở đâu?"
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Hành lý ký gửi",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "сдава́ть / сдать бага́ж (gửi hành lý)"
+          ],
+          "updated_at": "2026-11-14T15:55:54.284021+00:00",
           "word_normalized": "багаж",
           "word_with_stress": "Бага́ж"
         },
@@ -58815,14 +58871,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Мой чемода́н о́чень тяжёлый.",
+              "vi": "Chiếc vali của tôi rất nặng."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Chiếc vali",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "собира́ть / собра́ть чемода́н"
+          ],
+          "updated_at": "2026-11-14T15:55:54.286553+00:00",
           "word_normalized": "чемодан",
           "word_with_stress": "Чемода́н"
         },
@@ -58837,14 +58900,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "n",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Э́то ме́сто свобо́дно? Мо́жно здесь сесть?",
+              "vi": "Chỗ này có trống không? Tôi có thể ngồi đây được không?"
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Chỗ ngồi, nơi chốn",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "свобо́дное ме́сто, ме́сто в самолёте"
+          ],
+          "updated_at": "2026-11-14T15:55:54.284176+00:00",
           "word_normalized": "место",
           "word_with_stress": "Ме́сто"
         },
@@ -58859,14 +58929,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Наш рейс отпра́вится во́время.",
+              "vi": "Chuyến bay của chúng tôi sẽ khởi hành đúng giờ."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Chuyến bay",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "рейс + куда? (В.п. - С4) (рейс в Москву, прямой рейс)"
+          ],
+          "updated_at": "2026-11-14T15:55:54.2873+00:00",
           "word_normalized": "рейс",
           "word_with_stress": "Рейс"
         },
@@ -58881,14 +58958,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Покажи́те, пожа́луйста, ваш па́спорт.",
+              "vi": "Làm ơn cho tôi xem hộ chiếu của bạn."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:29.962544+00:00",
           "meaning_vi": "Hộ chiếu",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.22812+00:00",
+          "structures": [
+            "па́спорт граждани́на, заграни́чный па́спорт"
+          ],
+          "updated_at": "2026-11-14T15:55:54.283703+00:00",
           "word_normalized": "паспорт",
           "word_with_stress": "Па́спорт"
         },
@@ -58903,14 +58987,23 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Пассажи́ры прохо́дят па́спортный контро́ль.",
+              "vi": "Hành khách đang làm thủ tục kiểm tra hộ chiếu."
+            }
+          ],
+          "synonyms": [
+            "прове́рка"
+          ],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Kiểm soát, kiểm tra",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "па́спортный контро́ль, тамо́женный контро́ль"
+          ],
+          "updated_at": "2026-11-14T15:55:54.287542+00:00",
           "word_normalized": "контроль",
           "word_with_stress": "Контро́ль"
         },
@@ -58925,14 +59018,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Наш рейс отпра́вится во́время.",
+              "vi": "Chuyến bay của chúng tôi sẽ khởi hành đúng giờ."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Chuyến bay",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "рейс + куда? (В.п. - С4) (рейс в Москву, прямой рейс)"
+          ],
+          "updated_at": "2026-11-14T15:55:54.2873+00:00",
           "word_normalized": "рейс",
           "word_with_stress": "Рейс"
         },
@@ -59191,14 +59291,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Купи́, пожа́луйста, све́жий бе́лый хлеб.",
+              "vi": "Làm ơn mua giúp bánh mì trắng tươi mới nhé."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Bánh mì",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "бе́лый хлеб, чёрный хлеб, кусок хлеба"
+          ],
+          "updated_at": "2026-11-14T15:55:54.289416+00:00",
           "word_normalized": "хлеб",
           "word_with_stress": "Хлеб"
         },
@@ -59213,14 +59320,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Купи́, пожа́луйста, све́жий бе́лый хлеб.",
+              "vi": "Làm ơn mua giúp bánh mì trắng tươi mới nhé."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Bánh mì",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "бе́лый хлеб, чёрный хлеб, кусок хлеба"
+          ],
+          "updated_at": "2026-11-14T15:55:54.289416+00:00",
           "word_normalized": "хлеб",
           "word_with_stress": "Хлеб"
         },
@@ -59235,14 +59349,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Э́та кни́га сто́ит три́ста рубле́й.",
+              "vi": "Cuốn sách này giá ba trăm rúp."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Đồng rúp Nga",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "оди́н рубль, два рубля́, сто рубле́й"
+          ],
+          "updated_at": "2026-11-14T15:55:54.290188+00:00",
           "word_normalized": "рубль",
           "word_with_stress": "Рубль"
         },
@@ -59257,14 +59378,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Купи́, пожа́луйста, све́жий бе́лый хлеб.",
+              "vi": "Làm ơn mua giúp bánh mì trắng tươi mới nhé."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Bánh mì",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "бе́лый хлеб, чёрный хлеб, кусок хлеба"
+          ],
+          "updated_at": "2026-11-14T15:55:54.289416+00:00",
           "word_normalized": "хлеб",
           "word_with_stress": "Хлеб"
         },
@@ -59333,14 +59461,21 @@ const LISTENING_LESSONS = [
           "notes": null,
           "aspect": null,
           "gender": "m",
-          "antonyms": null,
-          "examples": [],
-          "synonyms": null,
+          "antonyms": [],
+          "examples": [
+            {
+              "ru": "Э́та кни́га сто́ит три́ста рубле́й.",
+              "vi": "Cuốn sách này giá ba trăm rúp."
+            }
+          ],
+          "synonyms": [],
           "audio_url": null,
           "created_at": "2026-11-10T16:52:49.224545+00:00",
           "meaning_vi": "Đồng rúp Nga",
-          "structures": [],
-          "updated_at": "2026-11-10T16:52:49.224545+00:00",
+          "structures": [
+            "оди́н рубль, два рубля́, сто рубле́й"
+          ],
+          "updated_at": "2026-11-14T15:55:54.290188+00:00",
           "word_normalized": "рубль",
           "word_with_stress": "Рубль"
         },
