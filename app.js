@@ -573,7 +573,10 @@ const MascotRusika = {
       closeBtn.onclick = (e) => {
         e.stopPropagation();
         const tooltip = document.getElementById("rusikaFloatTooltip");
-        if (tooltip) tooltip.style.display = "none";
+        if (tooltip) {
+          tooltip.style.display = "none";
+          tooltip.dataset.closedByUser = "true";
+        }
       };
     }
   },
@@ -690,6 +693,10 @@ const MascotRusika = {
     const overlay = document.getElementById("rusikaChatOverlay");
     if (overlay) overlay.style.display = "none";
     document.body.classList.remove("rusika-chat-open");
+    const tooltip = document.getElementById("rusikaFloatTooltip");
+    if (tooltip && !tooltip.dataset.closedByUser && !document.body.classList.contains("in-workspace")) {
+      tooltip.style.display = "";
+    }
   },
 
   toggleChat() {
@@ -2658,7 +2665,7 @@ function bootApp() {
   try {
     if (typeof MascotRusika !== "undefined" && typeof MascotRusika.renderFloatingWidget === "function") {
       const p = document.body ? document.body.dataset.page : "";
-      if (p && p !== "admin" && p !== "login" && p !== "signup") {
+      if (p !== "admin" && p !== "login" && p !== "signup") {
         MascotRusika.renderFloatingWidget();
       }
     }

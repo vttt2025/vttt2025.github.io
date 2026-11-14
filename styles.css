@@ -4150,6 +4150,33 @@ body[data-season="winter"] footer { background: #08192d !important; color: #94a3
   color: #ffffff;
 }
 
+/* Ẩn bong bóng chat Mascot Rusika khi vào luyện tập / làm bài để tập trung và tránh đè nội dung */
+body.in-workspace .rusika-float-tooltip,
+body.in-workspace #rusikaFloatTooltip,
+body[data-page="workspace"] .rusika-float-tooltip,
+body.trki-test-running .rusika-float-tooltip,
+body.in-exam .rusika-float-tooltip,
+body.exam-mode .rusika-float-tooltip,
+body.has-active-practice .rusika-float-tooltip,
+body.writing-drawer-open .rusika-float-tooltip,
+body:has(#trkiSubtestModal) .rusika-float-tooltip,
+body:has(#trkiTestHost:not(.hidden)) .rusika-float-tooltip,
+body:has(.trki-modal-backdrop) .rusika-float-tooltip,
+body:has(#antiCheatModal) .rusika-float-tooltip,
+body:has(#jarDetailHost:not(.hidden)) .rusika-float-tooltip,
+body:has(.quizlet-suite) .rusika-float-tooltip,
+body:has(#qCardContainer) .rusika-float-tooltip,
+body:has(.writing-workspace-grid) .rusika-float-tooltip,
+body:has(#spWsGrid) .rusika-float-tooltip,
+body:has(#listeningWorkspace:not(.hidden)) .rusika-float-tooltip,
+body:has(#readingWorkspace:not(.hidden)) .rusika-float-tooltip,
+body:has(.writing-action-bar) .rusika-float-tooltip {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
 /* 3. AI Chat Window & Overlay */
 .rusika-chat-overlay {
   position: fixed;
@@ -10543,6 +10570,7 @@ img, video, iframe {
   .rusika-floating-widget {
     bottom: max(16px, env(safe-area-inset-bottom));
     right: 16px;
+    gap: 8px;
   }
   .rusika-float-btn {
     width: 56px;
@@ -10553,7 +10581,14 @@ img, video, iframe {
     height: 44px;
   }
   .rusika-float-tooltip {
-    display: none;
+    display: flex;
+    font-size: 11.5px;
+    padding: 6px 10px;
+    max-width: min(210px, calc(100vw - 88px));
+    white-space: normal;
+    line-height: 1.3;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
   }
 
   .rusika-chat-overlay {
