@@ -25396,17 +25396,19 @@ body.has-bottom-bar .rusika-floating-widget {
   margin-top: 4px !important;
 }
 
-/* MẶT SAU FLASHCARD: NỘI DUNG CĂN GIỮA, NÚT ICON LỌ GÓC PHẢI */
+/* MẶT SAU FLASHCARD: NỘI DUNG 4 TẦNG CHUẨN MỰC: NGHĨA -> NGỮ PHÁP -> CẤU TRÚC -> VÍ DỤ -> MỞ RỘNG */
 .quizlet-card-back {
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  justify-content: center !important;
+  justify-content: flex-start !important;
   position: relative !important;
   text-align: center !important;
-  padding: 36px 28px 28px 28px !important;
+  padding: 38px 24px 24px 24px !important;
   overflow-y: auto !important;
   border-radius: 20px !important;
+  box-sizing: border-box !important;
+  scrollbar-width: thin;
 }
 
 .quizlet-card-back .qcard-top-row {
@@ -25420,54 +25422,392 @@ body.has-bottom-bar .rusika-floating-widget {
 .quizlet-card-back .qcard-main {
   display: flex !important;
   flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  margin: auto !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  margin: auto 0 !important;
   width: 100% !important;
   max-width: 580px !important;
-  text-align: center !important;
-  gap: 14px !important;
+  gap: 12px !important;
   box-sizing: border-box !important;
+}
+
+/* TẦNG 1: BẢN CHẤT CỐT LÕI & TỪ LOẠI */
+.qcard-tier-core {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
 }
 
 .quizlet-card-back .qcard-meaning {
   text-align: center !important;
-  font-size: clamp(1.4rem, 2.5vw, 1.85rem) !important;
-  font-weight: 800 !important;
+  font-size: clamp(1.4rem, 2.7vw, 1.88rem) !important;
+  font-weight: 850 !important;
   color: var(--primary, #1757a6) !important;
-  margin-bottom: 2px !important;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+  letter-spacing: -0.01em;
 }
 
-.quizlet-card-back .qcard-ex-box {
-  width: 100% !important;
-  max-width: 520px !important;
-  margin: 0 auto !important;
-  text-align: center !important;
-  background: rgba(23, 87, 166, 0.04) !important;
-  border: 1px solid rgba(23, 87, 166, 0.12) !important;
-  border-radius: 12px !important;
-  padding: 10px 14px !important;
+[data-theme="dark"] .quizlet-card-back .qcard-meaning {
+  color: #60a5fa !important;
 }
 
-[data-theme="dark"] .quizlet-card-back .qcard-ex-box {
-  background: rgba(255, 255, 255, 0.035) !important;
-  border-color: rgba(255, 255, 255, 0.08) !important;
+.qcard-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 2px;
 }
 
-.quizlet-card-back .qcard-ex-text {
-  text-align: center !important;
-  font-size: 0.92rem !important;
+.qcard-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 6px;
+  letter-spacing: 0.01em;
+  line-height: 1.25;
+  box-sizing: border-box;
 }
 
-.quizlet-card-back .qcard-ex-trans {
-  text-align: center !important;
-  font-size: 0.86rem !important;
+/* Từ loại chung (POS) */
+.qcard-badge-pos {
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  color: var(--primary, #1757a6);
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
 }
 
-.quizlet-card-back .qcard-details-grid {
-  width: 100% !important;
-  max-width: 520px !important;
-  margin: 0 auto !important;
+/* Giống đực: Xanh dương */
+.qcard-badge-gender-m {
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+  border: 1px solid rgba(37, 99, 235, 0.28);
+}
+
+/* Giống cái: Hồng / Đỏ mềm */
+.qcard-badge-gender-f {
+  background: rgba(225, 29, 72, 0.09);
+  color: #be123c;
+  border: 1px solid rgba(225, 29, 72, 0.25);
+}
+
+/* Giống trung: Xanh lá */
+.qcard-badge-gender-n {
+  background: rgba(22, 163, 74, 0.1);
+  color: #15803d;
+  border: 1px solid rgba(22, 163, 74, 0.28);
+}
+
+/* Giống đực/cái */
+.qcard-badge-gender-mf {
+  background: rgba(147, 51, 234, 0.1);
+  color: #7e22ce;
+  border: 1px solid rgba(147, 51, 234, 0.25);
+}
+
+/* Thể chưa hoàn thành (НСВ): Cam ấm */
+.qcard-badge-aspect-ipfv {
+  background: rgba(217, 119, 6, 0.1);
+  color: #b45309;
+  border: 1px solid rgba(217, 119, 6, 0.28);
+}
+
+/* Thể hoàn thành (СВ): Xanh ngọc / Teal */
+.qcard-badge-aspect-pf {
+  background: rgba(13, 148, 136, 0.1);
+  color: #0f766e;
+  border: 1px solid rgba(13, 148, 136, 0.28);
+}
+
+/* Thể đối ứng / khác */
+.qcard-badge-aspect-both,
+.qcard-badge-aspect-custom {
+  background: rgba(99, 102, 241, 0.1);
+  color: #4f46e5;
+  border: 1px solid rgba(99, 102, 241, 0.25);
+}
+
+/* Level CEFR */
+.qcard-badge-level {
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--text);
+  border: 1px solid var(--border);
+  font-weight: 800;
+  font-size: 0.74rem;
+}
+
+[data-theme="dark"] .qcard-badge-pos {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+[data-theme="dark"] .qcard-badge-gender-m {
+  background: rgba(59, 130, 246, 0.18);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+[data-theme="dark"] .qcard-badge-gender-f {
+  background: rgba(244, 63, 94, 0.18);
+  color: #fda4af;
+  border-color: rgba(244, 63, 94, 0.35);
+}
+
+[data-theme="dark"] .qcard-badge-gender-n {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+[data-theme="dark"] .qcard-badge-aspect-ipfv {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+[data-theme="dark"] .qcard-badge-aspect-pf {
+  background: rgba(20, 184, 166, 0.18);
+  color: #5eead4;
+  border-color: rgba(20, 184, 166, 0.35);
+}
+
+/* TẦNG 2: CẤU TRÚC NGỮ PHÁP & CHÍNH TẢ (STRUCTURES) */
+.qcard-tier-structures {
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  background: color-mix(in srgb, var(--primary) 3.5%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--border));
+  border-radius: 12px;
+  padding: 8px 13px;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .qcard-tier-structures {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+.qcard-tier-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 750;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 5px;
+}
+
+.qcard-struct-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.qcard-struct-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 0.88rem;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.qcard-struct-bullet {
+  color: var(--primary, #1757a6);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.qcard-struct-text {
+  font-weight: 600;
+  font-family: var(--font-ru, inherit);
+}
+
+/* TẦNG 3: NGỮ CẢNH & VÍ DỤ THỰC TẾ (EXAMPLES) */
+.qcard-tier-examples {
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  background: rgba(23, 87, 166, 0.04);
+  border: 1px solid rgba(23, 87, 166, 0.12);
+  border-radius: 12px;
+  padding: 10px 14px;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+[data-theme="dark"] .qcard-tier-examples {
+  background: rgba(255, 255, 255, 0.035);
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+.qcard-ex-primary {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.qcard-ex-ru {
+  font-size: 0.93rem;
+  font-weight: 650;
+  color: var(--text);
+  line-height: 1.4;
+  font-family: var(--font-ru, inherit);
+}
+
+.qcard-ex-vi {
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.qcard-btn-more-ex {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 4px 0 0 0;
+  margin-top: 5px;
+  color: var(--primary, #1757a6);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: opacity 0.15s;
+}
+
+.qcard-btn-more-ex:hover {
+  opacity: 0.8;
+}
+
+.qcard-more-ex-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 7px;
+  padding-top: 7px;
+  border-top: 1px dashed rgba(23, 87, 166, 0.16);
+}
+
+.qcard-more-ex-list.hidden {
+  display: none !important;
+}
+
+.qcard-more-ex-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* TẦNG 4: TỪ ĐỒNG NGHĨA, TRÁI NGHĨA & LƯU Ý */
+.qcard-tier-extras {
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  text-align: left;
+  box-sizing: border-box;
+}
+
+.qcard-syn-ant-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 12px;
+  text-align: center;
+}
+
+.qcard-syn-item b,
+.qcard-ant-item b {
+  color: var(--text);
+  font-weight: 750;
+  margin-right: 3px;
+}
+
+.qcard-syn-sep {
+  color: var(--border);
+  font-weight: 300;
+}
+
+.qcard-note-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  background: color-mix(in srgb, #f59e0b 8%, var(--surface));
+  border: 1px solid color-mix(in srgb, #f59e0b 24%, var(--border));
+  border-radius: 10px;
+  padding: 7px 11px;
+  font-size: 0.81rem;
+  color: var(--text);
+  line-height: 1.35;
+  box-sizing: border-box;
+}
+
+.qcard-note-icon {
+  color: #d97706;
+  flex-shrink: 0;
+  display: inline-flex;
+  margin-top: 1px;
+}
+
+.qcard-note-text {
+  flex: 1;
+  min-width: 0;
+}
+
+[data-theme="dark"] .qcard-note-callout {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.22);
+}
+
+@media (max-width: 640px) {
+  .quizlet-card-back {
+    padding: 38px 14px 18px 14px !important;
+  }
+
+  .quizlet-card-back .qcard-meaning {
+    font-size: 1.32rem !important;
+  }
+
+  .qcard-badge {
+    font-size: 0.74rem;
+    padding: 2px 7px;
+  }
+
+  .qcard-struct-item {
+    font-size: 0.84rem;
+  }
+
+  .qcard-ex-ru {
+    font-size: 0.88rem;
+  }
+
+  .qcard-ex-vi {
+    font-size: 0.81rem;
+  }
 }
 
 /* NÚT LỌ Ở MẶT SAU: CHỈ HIỂN THỊ ICON LỌ (KHÔNG CHỮ) */

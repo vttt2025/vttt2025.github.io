@@ -872,7 +872,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             </div>
           </div>
 
-          <!-- BACK FACE (VI) — CĂN GIỮA CÂN ĐỐI, CHỈ CÓ ICON LỌ KHÔNG HIỂN THỊ CHỮ LƯU -->
+          <!-- BACK FACE (VI) — THIẾT KẾ 4 TẦNG: NGHĨA -> NGỮ PHÁP -> CẤU TRÚC -> VÍ DỤ -> MỞ RỘNG -->
           <div class="quizlet-card-face quizlet-card-back">
             <div class="qcard-top-row">
               <div class="qcard-actions">
@@ -881,60 +881,211 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             </div>
 
             <div class="qcard-main">
-              <!-- NGHĨA TIẾNG VIỆT CHÍNH -->
-              <div class="qcard-meaning">${esc(currentWord.vi)}</div>
-
-              <!-- VÍ DỤ CÂU THỰC TẾ SONG NGỮ NGA - VIỆT -->
-              ${currentWord.ex ? `
-                <div class="qcard-ex-box">
-                  <div class="qcard-ex-header">
-                    <span class="qcard-ex-label">Ví dụ ngữ cảnh</span>
-                  </div>
-                  <div class="qcard-ex-text ru">${esc(currentWord.ex)}</div>
-                  ${currentWord.ex_vi ? `<div class="qcard-ex-trans">${esc(currentWord.ex_vi)}</div>` : ""}
-                </div>
-              ` : ""}
-
-              <!-- CHI TIẾT NGỮ PHÁP (CỤM ĐỘNG TỪ, QUẢN CÁCH, ĐỒNG/TRÁI NGHĨA, GHI CHÚ) -->
               ${(() => {
-                const structStr = (Array.isArray(currentWord.structures) && currentWord.structures.length)
-                  ? currentWord.structures.map(s => typeof s === "string" ? s : (s && (s.structure || s.ru || s.text) || "")).filter(Boolean).join(" · ")
-                  : (currentWord.verb_obj || currentWord.gov || "");
-                const hasExtras = Boolean(currentWord.collocation || structStr || currentWord.syn || currentWord.ant || currentWord.note);
-                if (!hasExtras) return "";
+                const viMeaning = currentWord.meaning_vi || currentWord.vi || "";
+
+                // TẦNG 1: BADGES (POS, GENDER, ASPECT, LEVEL)
+                const badges = [];
+                const posRaw = (currentWord.pos || "").trim().toLowerCase();
+                const gRaw = (currentWord.gender || "").trim().toLowerCase();
+                const aspRaw = (currentWord.aspect || currentWord.gram || "").trim().toLowerCase();
+
+                let posLabel = "";
+                let isNoun = false;
+                let isVerb = false;
+
+                if (posRaw.includes("сущ") || posRaw.includes("noun") || posRaw.includes("danh")) {
+                  posLabel = "Danh từ";
+                  isNoun = true;
+                } else if (posRaw.includes("гл") || posRaw.includes("verb") || posRaw.includes("động")) {
+                  posLabel = "Động từ";
+                  isVerb = true;
+                } else if (posRaw.includes("прил") || posRaw.includes("adj") || posRaw.includes("tính")) {
+                  posLabel = "Tính từ";
+                } else if (posRaw.includes("нар") || posRaw.includes("adv") || posRaw.includes("phó") || posRaw.includes("trạng")) {
+                  posLabel = "Trạng từ";
+                } else if (posRaw.includes("предл") || posRaw.includes("prep") || posRaw.includes("giới")) {
+                  posLabel = "Giới từ";
+                } else if (posRaw.includes("союз") || posRaw.includes("conj") || posRaw.includes("liên")) {
+                  posLabel = "Liên từ";
+                } else if (posRaw.includes("мест") || posRaw.includes("pronoun") || posRaw.includes("đại")) {
+                  posLabel = "Đại từ";
+                } else if (posRaw.includes("част") || posRaw.includes("trợ")) {
+                  posLabel = "Trợ từ";
+                } else if (posRaw.includes("межд") || posRaw.includes("thán")) {
+                  posLabel = "Thán từ";
+                } else if (currentWord.pos) {
+                  posLabel = currentWord.pos;
+                } else if (gRaw) {
+                  posLabel = "Danh từ";
+                  isNoun = true;
+                }
+
+                if (posLabel) {
+                  badges.push({ text: `[${posLabel}]`, cls: "qcard-badge-pos" });
+                }
+
+                // Thuộc tính ngữ pháp: Danh từ có Giống (đực/cái/trung/đực-cái)
+                if (isNoun || gRaw) {
+                  if (gRaw.includes("м./ж") || gRaw.includes("m/f") || gRaw.includes("общ") || posRaw.includes("м./ж")) {
+                    badges.push({ text: "[Giống đực/cái (м./ж.)]", cls: "qcard-badge-gender-mf" });
+                  } else if (gRaw.includes("ср") || gRaw === "с" || gRaw === "n" || gRaw.includes("neut") || gRaw.includes("trung") || posRaw.includes("ср")) {
+                    badges.push({ text: "[Giống trung (ср.р)]", cls: "qcard-badge-gender-n" });
+                  } else if (gRaw.includes("ж") || gRaw === "f" || gRaw.includes("fem") || gRaw.includes("cái") || posRaw.includes("ж.")) {
+                    badges.push({ text: "[Giống cái (ж.р)]", cls: "qcard-badge-gender-f" });
+                  } else if (gRaw.includes("м") || gRaw === "m" || gRaw.includes("masc") || gRaw.includes("đực") || posRaw.includes("м.")) {
+                    badges.push({ text: "[Giống đực (м.р)]", cls: "qcard-badge-gender-m" });
+                  }
+                }
+
+                // Thuộc tính ngữ pháp: Động từ có Thể (Hoàn thành / Chưa hoàn thành)
+                if (isVerb || aspRaw) {
+                  if (aspRaw.includes("нсв/св") || aspRaw.includes("двувид")) {
+                    badges.push({ text: "[Lưỡng thể (НСВ/СВ)]", cls: "qcard-badge-aspect-both" });
+                  } else if (aspRaw.includes("нсв") || aspRaw.includes("impf") || aspRaw.includes("ipfv") || aspRaw.includes("chưa")) {
+                    badges.push({ text: "[Thể chưa hoàn thành (НСВ)]", cls: "qcard-badge-aspect-ipfv" });
+                  } else if (aspRaw.includes("св") || aspRaw.includes("pf") || aspRaw.includes("hoàn thành")) {
+                    badges.push({ text: "[Thể hoàn thành (СВ)]", cls: "qcard-badge-aspect-pf" });
+                  } else if (currentWord.aspect) {
+                    badges.push({ text: `[Thể: ${currentWord.aspect}]`, cls: "qcard-badge-aspect-custom" });
+                  }
+                }
+
+                // Level CEFR nếu có
+                if (currentWord.level) {
+                  badges.push({ text: `[${currentWord.level.trim().toUpperCase()}]`, cls: "qcard-badge-level" });
+                }
+
+                // TẦNG 2: CẤU TRÚC NGỮ PHÁP (STRUCTURES)
+                let structList = [];
+                if (Array.isArray(currentWord.structures) && currentWord.structures.length > 0) {
+                  structList = currentWord.structures.map(s => {
+                    if (typeof s === "string") return s.trim();
+                    if (s && typeof s === "object") {
+                      const text = s.structure || s.ru || s.text || s.pattern || "";
+                      const meaning = s.vi || s.meaning || s.translation || "";
+                      return meaning ? `${text} (${meaning})` : text;
+                    }
+                    return "";
+                  }).filter(Boolean);
+                } else if (typeof currentWord.structures === "string" && currentWord.structures.trim()) {
+                  structList = [currentWord.structures.trim()];
+                } else if (currentWord.collocation || currentWord.verb_obj || currentWord.gov) {
+                  const fallbackStruct = [currentWord.collocation, currentWord.verb_obj, currentWord.gov].filter(Boolean).join(" · ");
+                  if (fallbackStruct) structList = [fallbackStruct];
+                }
+
+                // TẦNG 3: VÍ DỤ NGỮ CẢNH (EXAMPLES)
+                let exList = [];
+                if (Array.isArray(currentWord.examples) && currentWord.examples.length > 0) {
+                  exList = currentWord.examples.map(ex => {
+                    if (typeof ex === "string") return { ru: ex.trim(), vi: "" };
+                    if (ex && typeof ex === "object") {
+                      return {
+                        ru: (ex.stress || ex.ru || ex.text || "").trim(),
+                        vi: (ex.vi || ex.translation || "").trim()
+                      };
+                    }
+                    return null;
+                  }).filter(x => x && x.ru);
+                }
+                if (exList.length === 0 && currentWord.ex) {
+                  exList.push({
+                    ru: (currentWord.ex_stress || currentWord.ex).trim(),
+                    vi: (currentWord.ex_vi || "").trim()
+                  });
+                }
+                const firstEx = exList[0] || null;
+                const remainingEx = exList.slice(1);
+
+                // TẦNG 4: ĐỒNG/TRÁI NGHĨA & LƯU Ý (SYNONYMS, ANTONYMS, NOTES)
+                let syn = "";
+                if (Array.isArray(currentWord.synonyms) && currentWord.synonyms.length > 0) {
+                  syn = currentWord.synonyms.map(s => typeof s === "string" ? s : (s.ru || s.word || "")).filter(Boolean).join(", ");
+                } else if (currentWord.syn) {
+                  syn = currentWord.syn.trim();
+                }
+
+                let ant = "";
+                if (Array.isArray(currentWord.antonyms) && currentWord.antonyms.length > 0) {
+                  ant = currentWord.antonyms.map(a => typeof a === "string" ? a : (a.ru || a.word || "")).filter(Boolean).join(", ");
+                } else if (currentWord.ant) {
+                  ant = currentWord.ant.trim();
+                }
+
+                const notes = (currentWord.notes || currentWord.note || "").trim();
+                const hasSynAnt = Boolean(syn || ant);
+
+                const qIcon = (name, size = 13) => (window.RusiIcons ? RusiIcons.get(name, { size }) : "");
+
                 return `
-                  <div class="qcard-details-grid">
-                    ${currentWord.collocation ? `
-                      <div class="qcard-detail-item">
-                        <span class="qcard-detail-label">Cụm từ:</span>
-                        <span class="qcard-detail-val ru">${esc(currentWord.collocation)}</span>
-                      </div>
-                    ` : ""}
-                    ${structStr ? `
-                      <div class="qcard-detail-item">
-                        <span class="qcard-detail-label">Cấu trúc / Quản cách:</span>
-                        <span class="qcard-detail-val ru">${esc(structStr)}</span>
-                      </div>
-                    ` : ""}
-                    ${currentWord.syn ? `
-                      <div class="qcard-detail-item">
-                        <span class="qcard-detail-label">Đồng nghĩa:</span>
-                        <span class="qcard-detail-val ru">${esc(currentWord.syn)}</span>
-                      </div>
-                    ` : ""}
-                    ${currentWord.ant ? `
-                      <div class="qcard-detail-item">
-                        <span class="qcard-detail-label">Trái nghĩa:</span>
-                        <span class="qcard-detail-val ru">${esc(currentWord.ant)}</span>
-                      </div>
-                    ` : ""}
-                    ${currentWord.note ? `
-                      <div class="qcard-detail-item">
-                        <span class="qcard-detail-label">Ghi chú:</span>
-                        <span class="qcard-detail-val">${esc(currentWord.note)}</span>
+                  <!-- TẦNG 1: BẢN CHẤT CỐT LÕI & TỪ LOẠI -->
+                  <div class="qcard-tier-core">
+                    <div class="qcard-meaning">${esc(viMeaning)}</div>
+                    ${badges.length > 0 ? `
+                      <div class="qcard-badges-row">
+                        ${badges.map(b => `<span class="qcard-badge ${b.cls}">${esc(b.text)}</span>`).join("")}
                       </div>
                     ` : ""}
                   </div>
+
+                  <!-- TẦNG 2: CẤU TRÚC NGỮ PHÁP & CHÍNH TẢ -->
+                  ${structList.length > 0 ? `
+                    <div class="qcard-tier-structures">
+                      <div class="qcard-tier-label">${qIcon("bookmark", 13)} Cấu trúc / Quản cách</div>
+                      <div class="qcard-struct-list">
+                        ${structList.map(st => `
+                          <div class="qcard-struct-item ru">
+                            <span class="qcard-struct-bullet">▸</span>
+                            <span class="qcard-struct-text">${esc(st)}</span>
+                          </div>
+                        `).join("")}
+                      </div>
+                    </div>
+                  ` : ""}
+
+                  <!-- TẦNG 3: NGỮ CẢNH & VÍ DỤ THỰC TẾ -->
+                  ${firstEx ? `
+                    <div class="qcard-tier-examples">
+                      <div class="qcard-tier-label">${qIcon("lightbulb", 13)} Ví dụ ngữ cảnh</div>
+                      <div class="qcard-ex-primary">
+                        <div class="qcard-ex-ru ru">${esc(firstEx.ru)}</div>
+                        ${firstEx.vi ? `<div class="qcard-ex-vi">${esc(firstEx.vi)}</div>` : ""}
+                      </div>
+                      ${remainingEx.length > 0 ? `
+                        <button type="button" class="qcard-btn-more-ex" id="qMoreExToggle" data-expanded="false" data-count="${remainingEx.length}">
+                          <span class="qcard-more-ex-text">+ Xem thêm ${remainingEx.length} ví dụ khác ▾</span>
+                        </button>
+                        <div class="qcard-more-ex-list hidden" id="qMoreExList">
+                          ${remainingEx.map(item => `
+                            <div class="qcard-more-ex-item">
+                              <div class="qcard-ex-ru ru">${esc(item.ru)}</div>
+                              ${item.vi ? `<div class="qcard-ex-vi">${esc(item.vi)}</div>` : ""}
+                            </div>
+                          `).join("")}
+                        </div>
+                      ` : ""}
+                    </div>
+                  ` : ""}
+
+                  <!-- TẦNG 4: TỪ ĐỒNG NGHĨA, TRÁI NGHĨA & LƯU Ý -->
+                  ${(hasSynAnt || notes) ? `
+                    <div class="qcard-tier-extras">
+                      ${hasSynAnt ? `
+                        <div class="qcard-syn-ant-row">
+                          ${syn ? `<span class="qcard-syn-item"><b>Syn:</b> <span class="ru">${esc(syn)}</span></span>` : ""}
+                          ${syn && ant ? `<span class="qcard-syn-sep">|</span>` : ""}
+                          ${ant ? `<span class="qcard-ant-item"><b>Ant:</b> <span class="ru">${esc(ant)}</span></span>` : ""}
+                        </div>
+                      ` : ""}
+                      ${notes ? `
+                        <div class="qcard-note-callout">
+                          <span class="qcard-note-icon">${qIcon("info", 13)}</span>
+                          <div class="qcard-note-text">${esc(notes)}</div>
+                        </div>
+                      ` : ""}
+                    </div>
+                  ` : ""}
                 `;
               })()}
             </div>
@@ -1045,6 +1196,24 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     if (ajFront) ajFront.onclick = addJarCurrent;
     const ajBack = pane.querySelector("#qAddJarBack");
     if (ajBack) ajBack.onclick = addJarCurrent;
+
+    // Toggle mở rộng / thu gọn ví dụ phụ ở mặt sau
+    const moreExBtn = pane.querySelector("#qMoreExToggle");
+    if (moreExBtn) {
+      moreExBtn.onclick = (e) => {
+        e.stopPropagation();
+        const moreBox = pane.querySelector("#qMoreExList");
+        if (!moreBox) return;
+        const isExp = moreExBtn.dataset.expanded === "true";
+        moreExBtn.dataset.expanded = isExp ? "false" : "true";
+        moreBox.classList.toggle("hidden", isExp);
+        const textSpan = moreExBtn.querySelector(".qcard-more-ex-text");
+        const remainingCount = Number(moreExBtn.dataset.count || 1);
+        if (textSpan) {
+          textSpan.textContent = isExp ? `+ Xem thêm ${remainingCount} ví dụ khác ▾` : `Thu gọn ví dụ ▴`;
+        }
+      };
+    }
   };
 
   // Keyboard shortcut listener for Flashcards & List Preview (Spec 1, Dòng 50 & 64)
