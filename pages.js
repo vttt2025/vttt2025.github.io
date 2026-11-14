@@ -922,38 +922,38 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 }
 
                 if (posLabel) {
-                  badges.push({ text: `[${posLabel}]`, cls: "qcard-badge-pos" });
+                  badges.push({ text: posLabel, cls: "pos" });
                 }
 
                 // Thuộc tính ngữ pháp: Danh từ có Giống (đực/cái/trung/đực-cái)
                 if (isNoun || gRaw) {
                   if (gRaw.includes("м./ж") || gRaw.includes("m/f") || gRaw.includes("общ") || posRaw.includes("м./ж")) {
-                    badges.push({ text: "[Giống đực/cái (м./ж.)]", cls: "qcard-badge-gender-mf" });
+                    badges.push({ text: "Giống đực/cái (м./ж.)", cls: "gender-mf" });
                   } else if (gRaw.includes("ср") || gRaw === "с" || gRaw === "n" || gRaw.includes("neut") || gRaw.includes("trung") || posRaw.includes("ср")) {
-                    badges.push({ text: "[Giống trung (ср.р)]", cls: "qcard-badge-gender-n" });
+                    badges.push({ text: "Giống trung (ср.р)", cls: "gender-n" });
                   } else if (gRaw.includes("ж") || gRaw === "f" || gRaw.includes("fem") || gRaw.includes("cái") || posRaw.includes("ж.")) {
-                    badges.push({ text: "[Giống cái (ж.р)]", cls: "qcard-badge-gender-f" });
+                    badges.push({ text: "Giống cái (ж.р)", cls: "gender-f" });
                   } else if (gRaw.includes("м") || gRaw === "m" || gRaw.includes("masc") || gRaw.includes("đực") || posRaw.includes("м.")) {
-                    badges.push({ text: "[Giống đực (м.р)]", cls: "qcard-badge-gender-m" });
+                    badges.push({ text: "Giống đực (м.р)", cls: "gender-m" });
                   }
                 }
 
                 // Thuộc tính ngữ pháp: Động từ có Thể (Hoàn thành / Chưa hoàn thành)
                 if (isVerb || aspRaw) {
                   if (aspRaw.includes("нсв/св") || aspRaw.includes("двувид")) {
-                    badges.push({ text: "[Lưỡng thể (НСВ/СВ)]", cls: "qcard-badge-aspect-both" });
+                    badges.push({ text: "Lưỡng thể (НСВ/СВ)", cls: "aspect-both" });
                   } else if (aspRaw.includes("нсв") || aspRaw.includes("impf") || aspRaw.includes("ipfv") || aspRaw.includes("chưa")) {
-                    badges.push({ text: "[Thể chưa hoàn thành (НСВ)]", cls: "qcard-badge-aspect-ipfv" });
+                    badges.push({ text: "Chưa hoàn thành (НСВ)", cls: "aspect-ipfv" });
                   } else if (aspRaw.includes("св") || aspRaw.includes("pf") || aspRaw.includes("hoàn thành")) {
-                    badges.push({ text: "[Thể hoàn thành (СВ)]", cls: "qcard-badge-aspect-pf" });
+                    badges.push({ text: "Hoàn thành (СВ)", cls: "aspect-pf" });
                   } else if (currentWord.aspect) {
-                    badges.push({ text: `[Thể: ${currentWord.aspect}]`, cls: "qcard-badge-aspect-custom" });
+                    badges.push({ text: `Thể: ${currentWord.aspect}`, cls: "aspect-custom" });
                   }
                 }
 
                 // Level CEFR nếu có
                 if (currentWord.level) {
-                  badges.push({ text: `[${currentWord.level.trim().toUpperCase()}]`, cls: "qcard-badge-level" });
+                  badges.push({ text: currentWord.level.trim().toUpperCase(), cls: "level" });
                 }
 
                 // TẦNG 2: CẤU TRÚC NGỮ PHÁP (STRUCTURES)
@@ -1016,42 +1016,34 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 const notes = (currentWord.notes || currentWord.note || "").trim();
                 const hasSynAnt = Boolean(syn || ant);
 
-                const qIcon = (name, size = 13) => (window.RusiIcons ? RusiIcons.get(name, { size }) : "");
-
                 return `
                   <!-- TẦNG 1: BẢN CHẤT CỐT LÕI & TỪ LOẠI -->
                   <div class="qcard-tier-core">
                     <div class="qcard-meaning">${esc(viMeaning)}</div>
                     ${badges.length > 0 ? `
                       <div class="qcard-badges-row">
-                        ${badges.map(b => `<span class="qcard-badge ${b.cls}">${esc(b.text)}</span>`).join("")}
+                        ${badges.map(b => `<span class="qcard-pill ${b.cls}">${esc(b.text)}</span>`).join("")}
                       </div>
                     ` : ""}
                   </div>
 
-                  <!-- TẦNG 2: CẤU TRÚC NGỮ PHÁP & CHÍNH TẢ -->
+                  <!-- TẦNG 2: CẤU TRÚC NGỮ PHÁP (STRUCTURES) -->
                   ${structList.length > 0 ? `
-                    <div class="qcard-tier-structures">
-                      <div class="qcard-tier-label">${qIcon("bookmark", 13)} Cấu trúc / Quản cách</div>
-                      <div class="qcard-struct-list">
-                        ${structList.map(st => `
-                          <div class="qcard-struct-item ru">
-                            <span class="qcard-struct-bullet">▸</span>
-                            <span class="qcard-struct-text">${esc(st)}</span>
-                          </div>
-                        `).join("")}
-                      </div>
+                    <div class="qcard-struct-chips">
+                      ${structList.map(st => `
+                        <div class="qcard-struct-chip ru">
+                          <span class="qcard-chip-dot"></span>
+                          <span class="qcard-struct-text">${esc(st)}</span>
+                        </div>
+                      `).join("")}
                     </div>
                   ` : ""}
 
                   <!-- TẦNG 3: NGỮ CẢNH & VÍ DỤ THỰC TẾ -->
                   ${firstEx ? `
-                    <div class="qcard-tier-examples">
-                      <div class="qcard-tier-label">${qIcon("lightbulb", 13)} Ví dụ ngữ cảnh</div>
-                      <div class="qcard-ex-primary">
-                        <div class="qcard-ex-ru ru">${esc(firstEx.ru)}</div>
-                        ${firstEx.vi ? `<div class="qcard-ex-vi">${esc(firstEx.vi)}</div>` : ""}
-                      </div>
+                    <div class="qcard-example-card">
+                      <div class="qcard-ex-ru ru">${esc(firstEx.ru)}</div>
+                      ${firstEx.vi ? `<div class="qcard-ex-vi">${esc(firstEx.vi)}</div>` : ""}
                       ${remainingEx.length > 0 ? `
                         <button type="button" class="qcard-btn-more-ex" id="qMoreExToggle" data-expanded="false" data-count="${remainingEx.length}">
                           <span class="qcard-more-ex-text">+ Xem thêm ${remainingEx.length} ví dụ khác ▾</span>
@@ -1070,18 +1062,18 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
                   <!-- TẦNG 4: TỪ ĐỒNG NGHĨA, TRÁI NGHĨA & LƯU Ý -->
                   ${(hasSynAnt || notes) ? `
-                    <div class="qcard-tier-extras">
+                    <div class="qcard-footer-meta">
                       ${hasSynAnt ? `
-                        <div class="qcard-syn-ant-row">
-                          ${syn ? `<span class="qcard-syn-item"><b>Syn:</b> <span class="ru">${esc(syn)}</span></span>` : ""}
-                          ${syn && ant ? `<span class="qcard-syn-sep">|</span>` : ""}
-                          ${ant ? `<span class="qcard-ant-item"><b>Ant:</b> <span class="ru">${esc(ant)}</span></span>` : ""}
+                        <div class="qcard-meta-syn-ant">
+                          ${syn ? `<span><span class="meta-label">Syn:</span> <span class="ru">${esc(syn)}</span></span>` : ""}
+                          ${syn && ant ? `<span class="meta-sep">·</span>` : ""}
+                          ${ant ? `<span><span class="meta-label">Ant:</span> <span class="ru">${esc(ant)}</span></span>` : ""}
                         </div>
                       ` : ""}
                       ${notes ? `
-                        <div class="qcard-note-callout">
-                          <span class="qcard-note-icon">${qIcon("info", 13)}</span>
-                          <div class="qcard-note-text">${esc(notes)}</div>
+                        <div class="qcard-meta-note">
+                          <span class="note-bullet">💡</span>
+                          <span class="note-content">${esc(notes)}</span>
                         </div>
                       ` : ""}
                     </div>

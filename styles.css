@@ -25436,18 +25436,18 @@ body.has-bottom-bar .rusika-floating-widget {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: 100%;
 }
 
 .quizlet-card-back .qcard-meaning {
   text-align: center !important;
-  font-size: clamp(1.4rem, 2.7vw, 1.88rem) !important;
-  font-weight: 850 !important;
+  font-size: clamp(1.45rem, 3vw, 1.95rem) !important;
+  font-weight: 800 !important;
   color: var(--primary, #1757a6) !important;
   line-height: 1.25 !important;
   margin: 0 !important;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
 }
 
 [data-theme="dark"] .quizlet-card-back .qcard-meaning {
@@ -25460,230 +25460,211 @@ body.has-bottom-bar .rusika-floating-widget {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  margin-top: 2px;
 }
 
-.qcard-badge {
+/* PILL BADGE THIẾT KẾ HIỆN ĐẠI (MINIMALIST PILL CHIP) */
+.qcard-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.78rem;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: 6px;
+  font-size: 0.76rem;
+  font-weight: 650;
+  padding: 3px 10px;
+  border-radius: 999px;
   letter-spacing: 0.01em;
-  line-height: 1.25;
+  line-height: 1.3;
   box-sizing: border-box;
+  white-space: nowrap;
 }
 
 /* Từ loại chung (POS) */
-.qcard-badge-pos {
-  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+.qcard-pill.pos {
+  background: color-mix(in srgb, var(--primary) 8%, var(--surface));
   color: var(--primary, #1757a6);
-  border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 18%, transparent);
 }
 
-/* Giống đực: Xanh dương */
-.qcard-badge-gender-m {
-  background: rgba(37, 99, 235, 0.1);
+/* Giống đực: Xanh dương nhã */
+.qcard-pill.gender-m {
+  background: rgba(37, 99, 235, 0.08);
   color: #1d4ed8;
-  border: 1px solid rgba(37, 99, 235, 0.28);
+  border: 1px solid rgba(37, 99, 235, 0.2);
 }
 
-/* Giống cái: Hồng / Đỏ mềm */
-.qcard-badge-gender-f {
-  background: rgba(225, 29, 72, 0.09);
+/* Giống cái: Hồng / Đỏ hoa hồng dịu */
+.qcard-pill.gender-f {
+  background: rgba(225, 29, 72, 0.07);
   color: #be123c;
-  border: 1px solid rgba(225, 29, 72, 0.25);
+  border: 1px solid rgba(225, 29, 72, 0.18);
 }
 
-/* Giống trung: Xanh lá */
-.qcard-badge-gender-n {
-  background: rgba(22, 163, 74, 0.1);
-  color: #15803d;
-  border: 1px solid rgba(22, 163, 74, 0.28);
+/* Giống trung: Xanh ngọc lục bảo */
+.qcard-pill.gender-n {
+  background: rgba(16, 185, 129, 0.08);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
-/* Giống đực/cái */
-.qcard-badge-gender-mf {
-  background: rgba(147, 51, 234, 0.1);
+/* Giống đực/cái: Tím */
+.qcard-pill.gender-mf {
+  background: rgba(147, 51, 234, 0.08);
   color: #7e22ce;
-  border: 1px solid rgba(147, 51, 234, 0.25);
+  border: 1px solid rgba(147, 51, 234, 0.2);
 }
 
 /* Thể chưa hoàn thành (НСВ): Cam ấm */
-.qcard-badge-aspect-ipfv {
-  background: rgba(217, 119, 6, 0.1);
+.qcard-pill.aspect-ipfv {
+  background: rgba(245, 158, 11, 0.09);
   color: #b45309;
-  border: 1px solid rgba(217, 119, 6, 0.28);
+  border: 1px solid rgba(245, 158, 11, 0.22);
 }
 
-/* Thể hoàn thành (СВ): Xanh ngọc / Teal */
-.qcard-badge-aspect-pf {
-  background: rgba(13, 148, 136, 0.1);
+/* Thể hoàn thành (СВ): Xanh teal */
+.qcard-pill.aspect-pf {
+  background: rgba(13, 148, 136, 0.09);
   color: #0f766e;
-  border: 1px solid rgba(13, 148, 136, 0.28);
+  border: 1px solid rgba(13, 148, 136, 0.22);
 }
 
 /* Thể đối ứng / khác */
-.qcard-badge-aspect-both,
-.qcard-badge-aspect-custom {
-  background: rgba(99, 102, 241, 0.1);
+.qcard-pill.aspect-both,
+.qcard-pill.aspect-custom {
+  background: rgba(99, 102, 241, 0.08);
   color: #4f46e5;
-  border: 1px solid rgba(99, 102, 241, 0.25);
+  border: 1px solid rgba(99, 102, 241, 0.2);
 }
 
 /* Level CEFR */
-.qcard-badge-level {
-  background: rgba(15, 23, 42, 0.06);
-  color: var(--text);
+.qcard-pill.level {
+  background: var(--surface-hover, rgba(0, 0, 0, 0.04));
+  color: var(--muted, #64748b);
   border: 1px solid var(--border);
-  font-weight: 800;
-  font-size: 0.74rem;
+  font-weight: 750;
+  font-size: 0.72rem;
 }
 
-[data-theme="dark"] .qcard-badge-pos {
-  background: rgba(59, 130, 246, 0.15);
+[data-theme="dark"] .qcard-pill.pos {
+  background: rgba(59, 130, 246, 0.12);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+[data-theme="dark"] .qcard-pill.gender-m {
+  background: rgba(59, 130, 246, 0.14);
   color: #93c5fd;
   border-color: rgba(59, 130, 246, 0.3);
 }
 
-[data-theme="dark"] .qcard-badge-gender-m {
-  background: rgba(59, 130, 246, 0.18);
-  color: #93c5fd;
-  border-color: rgba(59, 130, 246, 0.35);
-}
-
-[data-theme="dark"] .qcard-badge-gender-f {
-  background: rgba(244, 63, 94, 0.18);
+[data-theme="dark"] .qcard-pill.gender-f {
+  background: rgba(244, 63, 94, 0.14);
   color: #fda4af;
-  border-color: rgba(244, 63, 94, 0.35);
+  border-color: rgba(244, 63, 94, 0.3);
 }
 
-[data-theme="dark"] .qcard-badge-gender-n {
-  background: rgba(34, 197, 94, 0.18);
+[data-theme="dark"] .qcard-pill.gender-n {
+  background: rgba(34, 197, 94, 0.14);
   color: #86efac;
-  border-color: rgba(34, 197, 94, 0.35);
+  border-color: rgba(34, 197, 94, 0.3);
 }
 
-[data-theme="dark"] .qcard-badge-aspect-ipfv {
-  background: rgba(245, 158, 11, 0.18);
+[data-theme="dark"] .qcard-pill.aspect-ipfv {
+  background: rgba(245, 158, 11, 0.14);
   color: #fcd34d;
-  border-color: rgba(245, 158, 11, 0.35);
+  border-color: rgba(245, 158, 11, 0.3);
 }
 
-[data-theme="dark"] .qcard-badge-aspect-pf {
-  background: rgba(20, 184, 166, 0.18);
+[data-theme="dark"] .qcard-pill.aspect-pf {
+  background: rgba(20, 184, 166, 0.14);
   color: #5eead4;
-  border-color: rgba(20, 184, 166, 0.35);
+  border-color: rgba(20, 184, 166, 0.3);
 }
 
-/* TẦNG 2: CẤU TRÚC NGỮ PHÁP & CHÍNH TẢ (STRUCTURES) */
-.qcard-tier-structures {
+/* TẦNG 2: CẤU TRÚC NGỮ PHÁP (STRUCTURES) — DẠNG CHIP TINH TẾ */
+.qcard-struct-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 2px 0;
   width: 100%;
-  max-width: 540px;
-  margin: 0 auto;
+}
+
+.qcard-struct-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background: color-mix(in srgb, var(--primary) 3.5%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--primary) 14%, var(--border));
-  border-radius: 12px;
-  padding: 8px 13px;
-  text-align: left;
+  border: 1px dashed color-mix(in srgb, var(--primary) 22%, var(--border));
+  padding: 4px 11px;
+  border-radius: 8px;
+  font-size: 0.84rem;
+  color: var(--text);
+  font-weight: 550;
   box-sizing: border-box;
 }
 
-[data-theme="dark"] .qcard-tier-structures {
+[data-theme="dark"] .qcard-struct-chip {
   background: rgba(255, 255, 255, 0.035);
-  border-color: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.14);
 }
 
-.qcard-tier-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.72rem;
-  font-weight: 750;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 5px;
-}
-
-.qcard-struct-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.qcard-struct-item {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  font-size: 0.88rem;
-  color: var(--text);
-  line-height: 1.35;
-}
-
-.qcard-struct-bullet {
-  color: var(--primary, #1757a6);
-  font-size: 0.75rem;
+.qcard-chip-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--primary, #1757a6);
   flex-shrink: 0;
 }
 
 .qcard-struct-text {
-  font-weight: 600;
   font-family: var(--font-ru, inherit);
 }
 
-/* TẦNG 3: NGỮ CẢNH & VÍ DỤ THỰC TẾ (EXAMPLES) */
-.qcard-tier-examples {
+/* TẦNG 3: VÍ DỤ NGỮ CẢNH (EXAMPLES) — CARD ĐƠN GIẢN, TRANG NHÃ */
+.qcard-example-card {
   width: 100%;
   max-width: 540px;
   margin: 0 auto;
-  background: rgba(23, 87, 166, 0.04);
-  border: 1px solid rgba(23, 87, 166, 0.12);
-  border-radius: 12px;
-  padding: 10px 14px;
+  background: color-mix(in srgb, var(--primary) 2.5%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--primary) 10%, var(--border));
+  border-radius: 14px;
+  padding: 12px 16px;
   text-align: left;
   box-sizing: border-box;
-}
-
-[data-theme="dark"] .qcard-tier-examples {
-  background: rgba(255, 255, 255, 0.035);
-  border-color: rgba(255, 255, 255, 0.09);
-}
-
-.qcard-ex-primary {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 4px;
+}
+
+[data-theme="dark"] .qcard-example-card {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .qcard-ex-ru {
-  font-size: 0.93rem;
-  font-weight: 650;
+  font-size: 0.98rem;
+  font-weight: 600;
   color: var(--text);
-  line-height: 1.4;
+  line-height: 1.45;
   font-family: var(--font-ru, inherit);
 }
 
 .qcard-ex-vi {
-  font-size: 0.85rem;
+  font-size: 0.86rem;
   color: var(--muted);
-  font-style: italic;
-  line-height: 1.35;
+  line-height: 1.38;
 }
 
 .qcard-btn-more-ex {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
+  align-self: flex-start;
   background: none;
   border: none;
   padding: 4px 0 0 0;
-  margin-top: 5px;
+  margin-top: 4px;
   color: var(--primary, #1757a6);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 650;
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -25697,10 +25678,10 @@ body.has-bottom-bar .rusika-floating-widget {
 .qcard-more-ex-list {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  margin-top: 7px;
-  padding-top: 7px;
-  border-top: 1px dashed rgba(23, 87, 166, 0.16);
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed color-mix(in srgb, var(--primary) 15%, var(--border));
 }
 
 .qcard-more-ex-list.hidden {
@@ -25713,19 +25694,19 @@ body.has-bottom-bar .rusika-floating-widget {
   gap: 2px;
 }
 
-/* TẦNG 4: TỪ ĐỒNG NGHĨA, TRÁI NGHĨA & LƯU Ý */
-.qcard-tier-extras {
+/* TẦNG 4: MỞ RỘNG (SYNONYMS, ANTONYMS, NOTES) — NHẸ NHÀNG, KHÔNG RỐI */
+.qcard-footer-meta {
   width: 100%;
   max-width: 540px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  text-align: left;
+  gap: 6px;
+  text-align: center;
   box-sizing: border-box;
 }
 
-.qcard-syn-ant-row {
+.qcard-meta-syn-ant {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -25733,54 +25714,37 @@ body.has-bottom-bar .rusika-floating-widget {
   gap: 8px;
   font-size: 0.8rem;
   color: var(--muted);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 5px 12px;
-  text-align: center;
 }
 
-.qcard-syn-item b,
-.qcard-ant-item b {
+.meta-label {
+  font-weight: 700;
   color: var(--text);
-  font-weight: 750;
-  margin-right: 3px;
+  margin-right: 2px;
 }
 
-.qcard-syn-sep {
+.meta-sep {
   color: var(--border);
   font-weight: 300;
 }
 
-.qcard-note-callout {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  background: color-mix(in srgb, #f59e0b 8%, var(--surface));
-  border: 1px solid color-mix(in srgb, #f59e0b 24%, var(--border));
-  border-radius: 10px;
-  padding: 7px 11px;
-  font-size: 0.81rem;
-  color: var(--text);
-  line-height: 1.35;
-  box-sizing: border-box;
-}
-
-.qcard-note-icon {
-  color: #d97706;
-  flex-shrink: 0;
+.qcard-meta-note {
   display: inline-flex;
-  margin-top: 1px;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.35;
+  text-align: center;
 }
 
-.qcard-note-text {
-  flex: 1;
-  min-width: 0;
+.note-bullet {
+  font-size: 0.82rem;
+  flex-shrink: 0;
 }
 
-[data-theme="dark"] .qcard-note-callout {
-  background: rgba(245, 158, 11, 0.08);
-  border-color: rgba(245, 158, 11, 0.22);
+.note-content {
+  color: var(--muted);
 }
 
 @media (max-width: 640px) {
@@ -25792,21 +25756,22 @@ body.has-bottom-bar .rusika-floating-widget {
     font-size: 1.32rem !important;
   }
 
-  .qcard-badge {
-    font-size: 0.74rem;
-    padding: 2px 7px;
+  .qcard-pill {
+    font-size: 0.72rem;
+    padding: 2px 8px;
   }
 
-  .qcard-struct-item {
-    font-size: 0.84rem;
+  .qcard-struct-chip {
+    font-size: 0.8rem;
+    padding: 3px 9px;
   }
 
   .qcard-ex-ru {
-    font-size: 0.88rem;
+    font-size: 0.92rem;
   }
 
   .qcard-ex-vi {
-    font-size: 0.81rem;
+    font-size: 0.82rem;
   }
 }
 
