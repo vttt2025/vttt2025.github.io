@@ -8699,7 +8699,7 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
   }
 
   function initTheme() {
-    const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+    const savedTheme = localStorage.getItem(THEME_KEY) || "light";
     document.documentElement.setAttribute("data-theme", savedTheme);
 
     const toggleBtn = document.getElementById("btnToggleTheme");
