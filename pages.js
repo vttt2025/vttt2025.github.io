@@ -10034,7 +10034,7 @@ function initWritingPage() {
         });
       });
 
-      panel.querySelector(".btn-submit").onclick = () => {
+      panel.querySelector(".btn-submit").onclick = async () => {
         if (t.is_pro_only && !Monetization.isPro()) {
           Monetization.showProGateModal("Nội dung dành cho PRO", "Bài viết này yêu cầu gói PRO để mở khóa AI Rusika chấm chi tiết theo chuẩn ТРКИ.");
           return;
@@ -10056,67 +10056,106 @@ function initWritingPage() {
           return;
         }
 
-        const wordsArr = text.split(/\s+/).filter(Boolean);
-        const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
-        const uniqueWords = new Set(wordsArr.map(w => w.toLowerCase().replace(/[^а-яё]/gi, "")));
-
-        // 1. Tiêu chí Ngữ pháp (Грамматика - max 25)
-        let grammarScore = 18;
-        if (latinChars.length === 0) grammarScore += 2;
-        if (sentences.length >= 2) grammarScore += 2;
-        const hasCapitalization = sentences.every(s => /^[А-ЯЁ«"]/.test(s));
-        if (hasCapitalization) grammarScore += 1;
-        const hasVerbs = wordsArr.some(w => /(?:ет|ут|ют|ит|ат|ят|ал|ала|али|ть|ся|сь)$/i.test(w));
-        if (hasVerbs) grammarScore += 2;
-        grammarScore = Math.max(12, Math.min(25, grammarScore));
-
-        // 2. Tiêu chí Vốn từ (Лексика - max 25)
-        let lexisScore = 17;
-        const lexicalDiversity = wordsArr.length > 0 ? (uniqueWords.size / wordsArr.length) : 1;
-        if (lexicalDiversity >= 0.65) lexisScore += 3;
-        else if (lexicalDiversity >= 0.5) lexisScore += 1;
-        const usedHints = words.filter(hw => {
-          const wRu = (typeof hw === "object" && hw ? (hw.ru || hw.word) : String(hw)).toLowerCase().replace(/[^а-яё]/gi, "");
-          return wRu && text.toLowerCase().includes(wRu);
-        });
-        lexisScore += Math.min(4, usedHints.length);
-        if (wordsArr.some(w => w.length >= 7)) lexisScore += 1;
-        lexisScore = Math.max(12, Math.min(25, lexisScore));
-
-        // 3. Tiêu chí Bố cục & Liên kết (Структура - max 25)
-        let structureScore = 18;
-        const connectors = ["и", "а", "но", "потому что", "поэтому", "когда", "если", "чтобы", "также", "потом", "затем", "так как"];
-        const foundConnectors = connectors.filter(c => text.toLowerCase().includes(c));
-        structureScore += Math.min(4, foundConnectors.length);
-        if (sentences.length >= 3) structureScore += 2;
-        structureScore = Math.max(12, Math.min(25, structureScore));
-
-        // 4. Tiêu chí Nội dung & Yêu cầu đề bài (Содержание - max 25)
-        let contentScore = 18;
-        const lengthRatio = count / minWords(t);
-        if (lengthRatio >= 1.25) contentScore += 4;
-        else if (lengthRatio >= 1.0) contentScore += 2;
-        if (sentences.length >= 3) contentScore += 2;
-        contentScore = Math.max(12, Math.min(25, contentScore));
-
-        const scores = [grammarScore, lexisScore, structureScore, contentScore];
-        const total = scores.reduce((sum, score) => sum + score, 0);
-
-        let feedbackComment = `Bài viết đạt độ dài <b>${count} từ</b> với <b>${sentences.length} câu</b> hoàn chỉnh. `;
-        if (usedHints.length > 0) {
-          feedbackComment += `Bạn đã áp dụng thành công <b>${usedHints.length} từ vựng gợi ý</b> của bài. `;
-        }
-        if (foundConnectors.length > 0) {
-          feedbackComment += `Khả năng liên kết câu tốt với các từ nối: <i>«${foundConnectors.slice(0, 3).join(", ")}»</i>. `;
-        }
-        if (latinChars.length > 0) {
-          feedbackComment += `<br><span style="color:var(--secondary)">Lưu ý: Có xuất hiện một số ký tự Latinh trong bài, hãy kiểm tra lại bàn phím nhé.</span>`;
-        } else {
-          feedbackComment += `Chính tả Cyrillic chuẩn xác. Tiếp tục duy trì phong độ nhé!`;
-        }
-
         const scoreBox = panel.querySelector(".ai-score-box");
-        scoreBox.classList.remove("hidden");
+        const submitBtn = panel.querySelector(".btn-submit");
+
+        // Hiển thị trạng thái đang phân tích với hiệu ứng loading
+        if (scoreBox) {
+          scoreBox.classList.remove("hidden");
+          scoreBox.innerHTML = `
+            <div class="writing-score-result ai-review-loading">
+              <div class="rusi-ai-spinner"></div>
+              <div style="font-weight:700;color:var(--text);font-size:1.05rem;">Mèo Rusika AI đang đọc và chấm bài viết...</div>
+              <div style="font-size:0.88rem;color:var(--muted);margin-top:2px;">Đang phân tích biến cách (падежи), giống số và vốn từ vựng bằng Groq Qwen 27B</div>
+            </div>
+          `;
+          scoreBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        }
+        if (submitBtn) submitBtn.disabled = true;
+
+        let total = 0;
+        let scores = [0, 0, 0, 0];
+        let feedbackComment = "";
+
+        // Ưu tiên gọi Groq AI (Qwen 3.8 27B) chấm bài chuyên sâu
+        if (window.RusiAI && typeof RusiAI.reviewWriting === "function") {
+          try {
+            const aiRes = await RusiAI.reviewWriting({
+              text,
+              level: t.level || currentLevel,
+              taskTitle: t.title || t.ru,
+              minWords: minWords(t)
+            });
+            if (aiRes && aiRes.success) {
+              total = aiRes.total;
+              scores = [aiRes.grammar, aiRes.lexis, aiRes.structure, aiRes.content];
+              feedbackComment = aiRes.feedback;
+            }
+          } catch (aiErr) {
+            console.warn("Groq AI lỗi kết nối, chuyển sang bộ chấm cục bộ:", aiErr);
+          }
+        }
+
+        // Dự phòng cục bộ (Offline Fallback Rubric)
+        if (!total) {
+          const wordsArr = text.split(/\s+/).filter(Boolean);
+          const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
+          const uniqueWords = new Set(wordsArr.map(w => w.toLowerCase().replace(/[^а-яё]/gi, "")));
+
+          let grammarScore = 18;
+          if (latinChars.length === 0) grammarScore += 2;
+          if (sentences.length >= 2) grammarScore += 2;
+          const hasCapitalization = sentences.every(s => /^[А-ЯЁ«"]/.test(s));
+          if (hasCapitalization) grammarScore += 1;
+          const hasVerbs = wordsArr.some(w => /(?:ет|ут|ют|ит|ат|ят|ал|ала|али|ть|ся|сь)$/i.test(w));
+          if (hasVerbs) grammarScore += 2;
+          grammarScore = Math.max(12, Math.min(25, grammarScore));
+
+          let lexisScore = 17;
+          const lexicalDiversity = wordsArr.length > 0 ? (uniqueWords.size / wordsArr.length) : 1;
+          if (lexicalDiversity >= 0.65) lexisScore += 3;
+          else if (lexicalDiversity >= 0.5) lexisScore += 1;
+          const usedHints = words.filter(hw => {
+            const wRu = (typeof hw === "object" && hw ? (hw.ru || hw.word) : String(hw)).toLowerCase().replace(/[^а-яё]/gi, "");
+            return wRu && text.toLowerCase().includes(wRu);
+          });
+          lexisScore += Math.min(4, usedHints.length);
+          if (wordsArr.some(w => w.length >= 7)) lexisScore += 1;
+          lexisScore = Math.max(12, Math.min(25, lexisScore));
+
+          let structureScore = 18;
+          const connectors = ["и", "а", "но", "потому что", "поэтому", "когда", "если", "чтобы", "также", "потом", "затем", "так как"];
+          const foundConnectors = connectors.filter(c => text.toLowerCase().includes(c));
+          structureScore += Math.min(4, foundConnectors.length);
+          if (sentences.length >= 3) structureScore += 2;
+          structureScore = Math.max(12, Math.min(25, structureScore));
+
+          let contentScore = 18;
+          const lengthRatio = count / minWords(t);
+          if (lengthRatio >= 1.25) contentScore += 4;
+          else if (lengthRatio >= 1.0) contentScore += 2;
+          if (sentences.length >= 3) contentScore += 2;
+          contentScore = Math.max(12, Math.min(25, contentScore));
+
+          scores = [grammarScore, lexisScore, structureScore, contentScore];
+          total = scores.reduce((sum, score) => sum + score, 0);
+
+          feedbackComment = `Bài viết đạt độ dài <b>${count} từ</b> với <b>${sentences.length} câu</b> hoàn chỉnh. `;
+          if (usedHints.length > 0) {
+            feedbackComment += `Bạn đã áp dụng thành công <b>${usedHints.length} từ vựng gợi ý</b> của bài. `;
+          }
+          if (foundConnectors.length > 0) {
+            feedbackComment += `Khả năng liên kết câu tốt với các từ nối: <i>«${foundConnectors.slice(0, 3).join(", ")}»</i>. `;
+          }
+          if (latinChars.length > 0) {
+            feedbackComment += `<br><span style="color:var(--secondary)">Lưu ý: Có xuất hiện một số ký tự Latinh trong bài, hãy kiểm tra lại bàn phím nhé.</span>`;
+          } else {
+            feedbackComment += `Chính tả Cyrillic chuẩn xác. Tiếp tục duy trì phong độ nhé!`;
+          }
+        }
+
+        if (submitBtn) submitBtn.disabled = false;
+
         scoreBox.innerHTML = `
           <div class="writing-score-result">
             <div class="writing-score-summary">
@@ -10136,7 +10175,7 @@ function initWritingPage() {
                 </div>
               `).join("")}
             </div>
-            <div class="writing-score-feedback">${icon("cat-mascot", 18)} <span><b>Nhận xét từ Mèo Rusika:</b> ${feedbackComment}</span></div>
+            <div class="writing-score-feedback">${icon("cat-mascot", 18)} <span><b>Nhận xét từ Mèo Rusika AI:</b> ${feedbackComment}</span></div>
           </div>
         `;
         revealVocab();
