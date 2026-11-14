@@ -31098,19 +31098,39 @@ body.index-personalized #indexUserProgressHost {
 }
 
 #indexUserProgressHost .index-metric-icon {
-  color: var(--primary);
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 11px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+
+#indexUserProgressHost .index-metric-card:hover .index-metric-icon {
+  transform: scale(1.06);
 }
 
 #indexUserProgressHost .stat-streak .index-metric-icon {
-  color: #b96808;
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+}
+
+#indexUserProgressHost .stat-xp .index-metric-icon {
+  background: rgba(23, 87, 166, 0.12);
+  color: #1757a6;
 }
 
 #indexUserProgressHost .stat-mastered .index-metric-icon {
-  color: #087a55;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+#indexUserProgressHost .stat-due .index-metric-icon {
+  background: rgba(225, 29, 72, 0.1);
+  color: #e11d48;
 }
 
 #indexUserProgressHost .index-metric-info {
@@ -31467,6 +31487,26 @@ body.index-personalized #indexUserProgressHost {
   background: #192536;
 }
 
+[data-theme="dark"] #indexUserProgressHost .stat-streak .index-metric-icon {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+[data-theme="dark"] #indexUserProgressHost .stat-xp .index-metric-icon {
+  background: rgba(96, 165, 250, 0.2);
+  color: #60a5fa;
+}
+
+[data-theme="dark"] #indexUserProgressHost .stat-mastered .index-metric-icon {
+  background: rgba(52, 211, 153, 0.2);
+  color: #34d399;
+}
+
+[data-theme="dark"] #indexUserProgressHost .stat-due .index-metric-icon {
+  background: rgba(244, 63, 94, 0.2);
+  color: #fb7185;
+}
+
 [data-theme="dark"] #indexUserProgressHost .index-progress-focus-card {
   background: #14243a;
 }
@@ -31541,12 +31581,89 @@ body.index-personalized #indexUserProgressHost {
   }
 
   #indexUserProgressHost .index-progress-metrics {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    padding: 8px;
+    border-radius: 16px;
   }
 
   #indexUserProgressHost .index-metric-card {
-    min-height: 62px;
-    padding: 11px 14px;
+    min-height: 64px;
+    padding: 10px 11px;
+    gap: 9px;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--text) 2.5%, var(--surface));
+    border: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
+    box-shadow: 0 1px 3px rgba(16, 42, 76, 0.02);
+  }
+
+  #indexUserProgressHost .index-metric-icon {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    border-radius: 9px;
+  }
+
+  #indexUserProgressHost .index-metric-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  #indexUserProgressHost .index-metric-num {
+    font-size: 1.15rem;
+    line-height: 1.15;
+  }
+
+  #indexUserProgressHost .index-metric-num small {
+    font-size: 0.7rem;
+  }
+
+  #indexUserProgressHost .index-metric-label {
+    font-size: 0.72rem;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  [data-theme="dark"] #indexUserProgressHost .index-metric-card {
+    background: #182232;
+    border-color: rgba(255, 255, 255, 0.07);
+  }
+
+  @media (max-width: 360px) {
+    #indexUserProgressHost .index-progress-metrics {
+      gap: 6px;
+      padding: 6px;
+    }
+
+    #indexUserProgressHost .index-metric-card {
+      min-height: 58px;
+      padding: 8px 8px;
+      gap: 7px;
+      border-radius: 10px;
+    }
+
+    #indexUserProgressHost .index-metric-icon {
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      border-radius: 8px;
+    }
+
+    #indexUserProgressHost .index-metric-icon svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    #indexUserProgressHost .index-metric-num {
+      font-size: 1.02rem;
+    }
+
+    #indexUserProgressHost .index-metric-label {
+      font-size: 0.68rem;
+    }
   }
 
   #indexUserProgressHost .index-progress-focus-card {
