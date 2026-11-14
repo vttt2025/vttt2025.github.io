@@ -71,6 +71,19 @@ Mỗi khi thực hiện bất kỳ thay đổi nào liên quan đến giao diệ
 
 ---
 
+## 🛡️ NGUYÊN TẮC BẢO MẬT WEB CHUẨN CLOUDFLARE (SECURITY AUDIT SKILL)
+
+Mỗi khi xây dựng, tinh chỉnh logic, tạo mới API endpoint, xử lý dữ liệu người dùng hoặc kiểm tra mã nguồn, trợ lý AI **BẮT BUỘC** phải tuân thủ và kích hoạt các quy tắc bảo mật từ bộ kỹ năng của Cloudflare:
+- **Vị trí skill:** [.agents/skills/security-audit/SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/security-audit/SKILL.md)
+- **Quy tắc rules:** [.agents/rules/security-audit.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/rules/security-audit.md)
+- **Các tiêu chuẩn bắt buộc:**
+  1. *Ranh giới tin cậy (Trust Boundary & Input Validation):* Mọi dữ liệu từ người dùng, URL query, hash, `localStorage` hay `postMessage` đều là không tin cậy. Phải được escape (`esc()`) hoặc validate chặt chẽ trước khi render vào DOM để loại bỏ triệt để XSS/DOM-XSS.
+  2. *Xác thực & Phân quyền (Auth & Access Control):* Quyền truy cập nội dung nhạy cảm hoặc ghi dữ liệu bắt buộc phải được bảo vệ bởi phiên xác thực và RLS (Row Level Security). Ngăn chặn tuyệt đối lỗ hổng IDOR/BOLA.
+  3. *Bảo vệ khóa bí mật (Secret Isolation):* Không hardcode service keys, private tokens hay credentials bí mật vào client-side code hay repository công khai.
+  4. *Sửa lỗi tối thiểu & có kiểm chứng (Smallest Effective Fix):* Áp dụng giải pháp sửa lỗi bảo mật tối thiểu, chính xác tại gốc rễ vấn đề, không gây ảnh hưởng đến trải nghiệm người dùng.
+
+---
+
 ## 🎨 QUY TẮC THIẾT KẾ GIAO DIỆN CHẤT LƯỢNG CAO (ANTI-SLOP & HIGH-CRAFT DESIGN)
 
 Mỗi khi thiết kế mới, tinh chỉnh, thẩm định hoặc làm đẹp giao diện người dùng (UI/UX), bắt buộc kích hoạt và áp dụng nguyên lý từ 2 bộ kỹ năng:
@@ -101,3 +114,5 @@ Mỗi khi thiết kế mới, tinh chỉnh, thẩm định hoặc làm đẹp gi
 - Bảng kiểm tra: [mobile-tablet-checklist.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/responsive-design/references/mobile-tablet-checklist.md)
 - Ponytail Skill: [ponytail/SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/ponytail/SKILL.md)
 - Ponytail Review: [ponytail-review/SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/ponytail-review/SKILL.md)
+- Security Audit Skill: [security-audit/SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/security-audit/SKILL.md)
+- Quy tắc bảo mật Cloudflare: [security-audit.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/rules/security-audit.md)
