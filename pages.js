@@ -2389,7 +2389,7 @@ function initVocabPage() {
         desc: j.desc || j.description || "",
         icon: j.icon || "archive-jar",
         wordsCount: jarWords.length || j.word_count || 0,
-        is_pro_only: Boolean(j.is_pro_only || j.is_pro || j.is_vip || (j.level === "B2" && j.id !== "jar_travel") || j.id === "jar_bank" || j.id === "jar_hospital" || j.id === "jar_dekanat"),
+        is_pro_only: Boolean(j.is_pro_only || j.is_pro || j.is_vip),
         words: jarWords,
         article: j.article || null,
         raw: j
@@ -3588,7 +3588,7 @@ const showTopicArticle = (jarId) => {
     }
 
     // Kiểm tra quyền truy cập PRO
-    const isProJar = Boolean(jar.is_pro_only || jar.is_vip || (jar.level === "B2" && jar.id !== "jar_travel") || jar.id === "jar_bank" || jar.id === "jar_hospital" || jar.id === "jar_dekanat");
+    const isProJar = Boolean(jar.is_pro_only || jar.is_pro || jar.is_vip);
     if (isProJar && !Monetization.isPro()) {
       Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng nâng cao và ôn tập không giới hạn.");
       return;
@@ -4612,7 +4612,7 @@ function initListeningPage() {
       const isDone = currentMode === "comprehension"
         ? (Progress.doneList("listenDone").includes(l.id + "_comp") || Progress.doneList("listenDone").includes(l.id + "_check") || Progress.doneList("listenDone").includes(l.id + "_video"))
         : (Array.isArray(l.dictation) && l.dictation.length > 0 && l.dictation.every((_, i) => Progress.doneList("listenDone").includes(l.id + "_dict_" + i)));
-      const isPro = l.is_pro_only || l.level === "B1" || l.level === "B2";
+      const isPro = Boolean(l.is_pro_only || l.is_pro);
       const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
       const qCount = (l.questions && l.questions.length) ? l.questions.length : (l.lines && l.lines.length) ? l.lines.length : 4;
       const dictCount = (l.dictation && l.dictation.length) || 0;
@@ -4684,7 +4684,7 @@ function initListeningPage() {
       if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent(id || ""))) return;
       const lesson = all.find((x) => x.id === id);
       if (!lesson) return;
-      const isPro = lesson.is_pro_only || lesson.level === "B1" || lesson.level === "B2";
+      const isPro = Boolean(lesson.is_pro_only || lesson.is_pro);
       if (isPro && !Monetization.isPro()) {
         Monetization.showProGateModal(
           "Nội dung nghe dành cho PRO",
@@ -8131,7 +8131,7 @@ function initSpeakingPage() {
     } else {
       gridHost.innerHTML = pageItems.map((s, idx) => {
         const isDone = Progress.doneList("speakDone").includes(s.id);
-        const isPro = s.is_pro_only || s.level === "B1" || s.level === "B2";
+        const isPro = Boolean(s.is_pro_only || s.is_pro);
         const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
         const indexStr = String(idx + 1).padStart(2, "0");
         const russianCategory = `ГОВОРЕНИЕ · ${s.level}`;
@@ -8184,7 +8184,7 @@ function initSpeakingPage() {
           const id = btn.dataset.speakId;
           const s = all.find(x => x.id === id);
           if (!s) return;
-          const isPro = s.is_pro_only || s.level === "B1" || s.level === "B2";
+          const isPro = Boolean(s.is_pro_only || s.is_pro);
           if (isPro && !Monetization.isPro()) {
             Monetization.showProGateModal("Nội dung luyện nói dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn.");
             return;
@@ -8199,7 +8199,7 @@ function initSpeakingPage() {
           const id = card.dataset.speakId;
           const s = all.find(x => x.id === id);
           if (!s) return;
-          const isPro = s.is_pro_only || s.level === "B1" || s.level === "B2";
+          const isPro = Boolean(s.is_pro_only || s.is_pro);
           if (isPro && !Monetization.isPro()) {
             Monetization.showProGateModal("Nội dung luyện nói dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn.");
             return;
@@ -9714,7 +9714,7 @@ function initWritingPage() {
   };
 
   const canOpen = (task) => {
-    const isPro = task.is_pro_only || task.level === "B1" || task.level === "B2";
+    const isPro = Boolean(task.is_pro_only || task.is_pro);
     if (isPro && !Monetization.isPro()) {
       Monetization.showProGateModal(
         "Đề luyện viết dành cho PRO",
@@ -9762,7 +9762,7 @@ function initWritingPage() {
     grid.innerHTML = topics.map((topic) => {
       const done = topic.tasks.filter((task) => Progress.doneList("writeDone").includes(task.id)).length;
       const first = topic.tasks[0];
-      const pro = topic.tasks.some((task) => task.is_pro_only || task.level === "B1" || task.level === "B2");
+      const pro = topic.tasks.some((task) => Boolean(task.is_pro_only || task.is_pro));
       const isUnlocked = !pro || (typeof Monetization !== "undefined" && Monetization.isPro());
       const isAllDone = done === topic.tasks.length && topic.tasks.length > 0;
       const actionLabel = isAllDone ? "Đã hoàn thành" : (currentMode === "picture" ? "Vào tả tranh" : "Vào luyện dịch");
@@ -10630,6 +10630,11 @@ function initMockTestPage() {
         }
         const found = bank.find(t => t.id === targetId || t.code === targetId);
         if (found) {
+          const isPro = Boolean(found.is_pro_only || found.is_pro);
+          if (isPro && typeof Monetization !== "undefined" && !Monetization.isPro()) {
+            Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
+            return true;
+          }
           openSubtestPickerModal(found);
           return true;
         }
@@ -10897,7 +10902,7 @@ function initMockTestPage() {
     } else {
       gridHost.innerHTML = pageItems.map((t, idx) => {
         const isDone = Progress.doneList("trkiDone").includes(t.id);
-        const isPro = t.is_pro_only || t.level === "B1" || t.level === "B2";
+        const isPro = Boolean(t.is_pro_only || t.is_pro);
         const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
         const qCount = t.questionsCount || (t.questions ? t.questions.length : (t.parts ? t.parts.reduce((a, b) => a + (b.questions ? b.questions.length : 0), 0) : 34));
         const durMin = Math.round((t.durationSeconds || (t.durationMin ? t.durationMin * 60 : 2700)) / 60);
@@ -10956,7 +10961,7 @@ function initMockTestPage() {
           const id = btn.dataset.trkiId;
           const test = bank.find(x => x.id === id);
           if (!test) return;
-          const isPro = test.is_pro_only || test.level === "B1" || test.level === "B2";
+          const isPro = Boolean(test.is_pro_only || test.is_pro);
           if (isPro && !Monetization.isPro()) {
             Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
             return;
@@ -10972,7 +10977,7 @@ function initMockTestPage() {
           const id = card.dataset.trkiId;
           const test = bank.find(x => x.id === id);
           if (!test) return;
-          const isPro = test.is_pro_only || test.level === "B1" || test.level === "B2";
+          const isPro = Boolean(test.is_pro_only || test.is_pro);
           if (isPro && !Monetization.isPro()) {
             Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
             return;
