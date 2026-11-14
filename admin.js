@@ -1028,6 +1028,17 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         },
         { key: "levelName", label: "Tên hiển thị trình độ", type: "text", defaultValue: "Sơ cấp A1" },
         {
+          key: "speaking_mode",
+          label: "Chế độ luyện nói",
+          type: "select",
+          options: [
+            { v: "shadowing", l: "Shadowing – Nghe và nói nhại theo Video/Mẫu câu" },
+            { v: "reflex", l: "Luyện phản xạ – Hội thoại tình huống & phản xạ" }
+          ],
+          defaultValue: "shadowing",
+          required: true
+        },
+        {
           key: "category",
           label: "Mã phân loại Shadowing",
           type: "select",
@@ -6561,6 +6572,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             level_name: doc.levelName || doc.level_name || ("Sơ cấp " + (doc.level || "A1")),
             category: doc.category || (ytId ? "shadowing" : "basic"),
             category_name: doc.categoryName || doc.category_name || (ytId ? "Luyện nói Shadowing qua Video" : "Giao tiếp cơ bản"),
+            speaking_mode: doc.speaking_mode || doc.speakingMode || (doc.category === "speech_studio" || doc.category === "reflex" ? "reflex" : "shadowing"),
             phoneme_target: doc.phonemeTarget || doc.phoneme_target || "",
             icon: doc.icon || (ytId ? "youtube" : "mic-speaking"),
             is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
@@ -6624,6 +6636,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             levelName: row.level_name || ("Sơ cấp " + (row.level || "A1")),
             category: row.category || (ytId ? "shadowing_youtube" : "basic"),
             categoryName: row.category_name || (ytId ? "Shadowing qua phim hoạt hình" : "Giao tiếp cơ bản"),
+            speaking_mode: row.speaking_mode || (row.category === "speech_studio" || row.category === "reflex" ? "reflex" : "shadowing"),
             phonemeTarget: row.phoneme_target || "",
             sentence_ru: row.sentence_ru || "",
             sort_order: typeof row.sort_order === "number" ? row.sort_order : 10,

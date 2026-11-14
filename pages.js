@@ -8031,6 +8031,29 @@ function initSpeakingPage() {
     }
   }
 
+  const LEVELS = [
+    ["A1", "Sơ cấp"],
+    ["A2", "Cơ bản"],
+    ["B1", "Trung cấp"],
+    ["B2", "Trung cấp cao"],
+    ["C1", "Cao cấp"],
+    ["C2", "Thành thạo"]
+  ];
+
+  const MODE_INFO = {
+    shadowing: {
+      title: "Shadowing – Nghe và nói nhại",
+      subtitle: "Nghe người bản xứ nói, nhại lại ngữ điệu và AI nhận diện âm vị sửa lỗi phát âm",
+      icon: "mic-speaking"
+    },
+    reflex: {
+      title: "Luyện phản xạ",
+      subtitle: "Hội thoại tình huống đời sống, phỏng vấn và phản xạ giao tiếp tự nhiên",
+      icon: "zap-xp"
+    }
+  };
+
+  let currentMode = "shadowing";
   let currentLevel = "A1";
   let currentPage = 1;
   const PAGE_SIZE = 6;
@@ -8043,6 +8066,16 @@ function initSpeakingPage() {
     return [];
   };
 
+  const matchesSpeakingMode = (s, mode) => {
+    const sm = (s.speaking_mode || s.mode || "").toLowerCase();
+    if (sm) return sm === mode;
+    const cat = (s.category || "").toLowerCase();
+    if (mode === "reflex") {
+      return cat === "speech_studio" || cat === "reflex" || cat === "conversation";
+    }
+    return cat === "shadowing" || (!cat && cat !== "speech_studio" && cat !== "reflex" && cat !== "conversation");
+  };
+
   const checkUrlSet = () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -8052,7 +8085,13 @@ function initSpeakingPage() {
         const all = getSpeakingSets();
         const found = all.find(s => s.id === targetId || s.code === targetId);
         if (found) {
-          openSpeakingWorkspace(found);
+          if (matchesSpeakingMode(found, "reflex")) {
+            currentMode = "reflex";
+          } else {
+            currentMode = "shadowing";
+          }
+          currentLevel = found.level || currentLevel;
+          openSpeakingWorkspace(found, currentMode);
           return true;
         }
       }
@@ -8080,38 +8119,43 @@ function initSpeakingPage() {
   };
   loadCloudSpeaking();
 
+  const filteredSets = () => {
+    const all = getSpeakingSets();
+    return all.filter((s) => {
+      if (s.level !== currentLevel) return false;
+      return matchesSpeakingMode(s, currentMode);
+    });
+  };
+
   const renderSpeakingCards = () => {
     const gridHost = el("#spCardsGrid");
     if (!gridHost) return;
 
     const all = getSpeakingSets();
-    const countA1 = all.filter(s => s.level === "A1").length;
-    const countA2 = all.filter(s => s.level === "A2").length;
-    const countB1 = all.filter(s => s.level === "B1").length;
-    const countB2 = all.filter(s => s.level === "B2").length;
-    const countC1 = all.filter(s => s.level === "C1").length;
-    const countC2 = all.filter(s => s.level === "C2").length;
 
-    // Cập nhật số lượng trên các nút cấp độ
-    const cA1 = el("#spCountA1"); if (cA1) cA1.textContent = countA1;
-    const cA2 = el("#spCountA2"); if (cA2) cA2.textContent = countA2;
-    const cB1 = el("#spCountB1"); if (cB1) cB1.textContent = countB1;
-    const cB2 = el("#spCountB2"); if (cB2) cB2.textContent = countB2;
-    const cC1 = el("#spCountC1"); if (cC1) cC1.textContent = countC1;
-    const cC2 = el("#spCountC2"); if (cC2) cC2.textContent = countC2;
+    // Cập nhật trạng thái active của 2 thẻ chọn Mode
+    host.querySelectorAll(".speaking-mode-card").forEach((button) => {
+      const active = button.dataset.mode === currentMode;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
 
-    // Update active class on level tabs
-    host.querySelectorAll(".level-tab").forEach(b => {
+    // Cập nhật số lượng bài học theo Mode hiện tại trên từng tab cấp độ
+    LEVELS.forEach(([level]) => {
+      const count = all.filter((s) => s.level === level && matchesSpeakingMode(s, currentMode)).length;
+      const countNode = host.querySelector(`[data-speaking-count="${level}"]`);
+      if (countNode) countNode.textContent = count;
+    });
+
+    // Cập nhật trạng thái active của các tab cấp độ
+    host.querySelectorAll(".speaking-level-tab").forEach((b) => {
       const isActive = b.dataset.level === currentLevel;
       b.classList.toggle("level-tab-active", isActive);
+      b.classList.toggle("active", isActive);
       b.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
-    const filtered = all.filter(s => s.level === currentLevel);
-
-    const doneCount = filtered.filter(s => Progress.doneList("speakDone").includes(s.id)).length;
-    const totalCount = filtered.length;
-    const pct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+    const filtered = filteredSets();
 
     const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
     if (currentPage > totalPages) currentPage = totalPages;
@@ -8123,91 +8167,91 @@ function initSpeakingPage() {
     if (filtered.length === 0) {
       gridHost.innerHTML = `
         <div class="writing-empty-state speaking-empty-state">
-          <span class="writing-empty-icon speaking-empty-icon">${icon("mic-speaking", 34)}</span>
-          <h3>Chưa có bài nói cho cấp độ này</h3>
-          <p>Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
+          <span class="writing-empty-icon speaking-empty-icon">${icon(MODE_INFO[currentMode].icon, 34)}</span>
+          <h3>Chưa có bài ${currentMode === "shadowing" ? "Shadowing" : "luyện phản xạ"} ở cấp ${currentLevel}</h3>
+          <p>Hãy chọn một cấp độ khác để tiếp tục luyện tập.</p>
         </div>
       `;
-    } else {
-      gridHost.innerHTML = pageItems.map((s, idx) => {
-        const isDone = Progress.doneList("speakDone").includes(s.id);
-        const isPro = Boolean(s.is_pro_only || s.is_pro);
-        const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
-        const indexStr = String(idx + 1).padStart(2, "0");
-        const russianCategory = `ГОВОРЕНИЕ · ${s.level}`;
-
-        return `
-          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-speak-id="${s.id}">
-            <div class="dau-card-header">
-              <div class="dau-card-icon" style="background:rgba(234,88,12,0.08);color:#ea580c">
-                ${icon(s.icon || "mic-speaking", 24)}
-              </div>
-              <div class="dau-card-header-main">
-                <div class="dau-card-title-row">
-                  <h3 class="dau-card-ru">${esc(s.title)}</h3>
-                  ${isDone ? `
-                    <span class="topic-status topic-status-completed" style="flex-shrink:0">
-                      ${icon("check", 12)} Hoàn thành
-                    </span>
-                  ` : isPro ? `
-                    <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
-                  ` : ""}
-                </div>
-                <div class="dau-card-subinfo">
-                  <span>${s.level}</span>
-                  <span class="dau-card-sep">•</span>
-                  <span class="dau-card-count">${(s.items || s.sentences || (s.raw_data && s.raw_data.items) || []).length} câu</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
-              <div class="topic-footer-actions">
-                ${isPro && !isUnlocked ? `
-                  <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
-                    ${icon("lock-pro", 16)}
-                  </span>
-                ` : `
-                  <button type="button" class="btn-speak-action topic-text-btn" data-speak-id="${s.id}" title="Luyện nói ngay">
-                    Luyện nói ngay ${icon("arrow-right", 14)}
-                  </button>
-                `}
-              </div>
-            </div>
-          </article>
-        `;
-      }).join("");
-
-      gridHost.querySelectorAll(".btn-speak-action, .btn-speak-circle").forEach(btn => {
-        btn.onclick = (e) => {
-          e.stopPropagation();
-          const id = btn.dataset.speakId;
-          const s = all.find(x => x.id === id);
-          if (!s) return;
-          const isPro = Boolean(s.is_pro_only || s.is_pro);
-          if (isPro && !Monetization.isPro()) {
-            Monetization.showProGateModal("Nội dung luyện nói dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn.");
-            return;
-          }
-          openSpeakingWorkspace(s);
-        };
-      });
-
-      gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
-        card.onclick = (e) => {
-          if (e.target.closest("button")) return;
-          const id = card.dataset.speakId;
-          const s = all.find(x => x.id === id);
-          if (!s) return;
-          const isPro = Boolean(s.is_pro_only || s.is_pro);
-          if (isPro && !Monetization.isPro()) {
-            Monetization.showProGateModal("Nội dung luyện nói dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn.");
-            return;
-          }
-          openSpeakingWorkspace(s);
-        };
-      });
+      const pagEl = el("#spPagination");
+      if (pagEl) pagEl.innerHTML = "";
+      return;
     }
+
+    gridHost.innerHTML = pageItems.map((s) => {
+      const isDone = Progress.doneList("speakDone").includes(s.id);
+      const isPro = Boolean(s.is_pro_only || s.is_pro);
+      const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
+      const sentenceCount = (s.items || s.sentences || (s.raw_data && s.raw_data.items) || []).length;
+      const countLabel = `${sentenceCount} câu ${currentMode === "shadowing" ? "shadowing" : "phản xạ"}`;
+      const actionLabel = isDone ? "Đã hoàn thành" : (currentMode === "shadowing" ? "Vào luyện Shadowing" : "Vào luyện phản xạ");
+      const iconKey = currentMode === "reflex" ? "zap-xp" : (s.icon || "mic-speaking");
+
+      return `
+        <article class="dau-card dau-card-compact speaking-topic-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-speak-id="${s.id}">
+          <div class="dau-card-header">
+            <div class="dau-card-icon" style="background:rgba(234,88,12,0.08);color:#ea580c">
+              ${icon(iconKey, 24)}
+            </div>
+            <div class="dau-card-header-main">
+              <div class="dau-card-title-row">
+                <h3 class="dau-card-ru" title="${esc(s.title)}">${esc(s.title)}</h3>
+                ${isDone ? `
+                  <span class="topic-status topic-status-completed" style="flex-shrink:0">
+                    ${icon("check", 12)} Hoàn thành
+                  </span>
+                ` : isPro ? `
+                  <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
+                ` : ""}
+              </div>
+              <div class="dau-card-subinfo">
+                <span>${s.level}</span>
+                <span class="dau-card-sep">•</span>
+                <span class="dau-card-count">${countLabel}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
+            <div class="topic-footer-actions">
+              ${isPro && !isUnlocked ? `
+                <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
+                  ${icon("lock-pro", 16) || icon("lock", 16)}
+                </span>
+              ` : `
+                <button type="button" class="btn-speak-action topic-text-btn" data-speak-id="${s.id}" title="${actionLabel}">
+                  ${actionLabel} ${icon("arrow-right", 14)}
+                </button>
+              `}
+            </div>
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    const openLesson = (id) => {
+      const s = all.find(x => x.id === id);
+      if (!s) return;
+      const isPro = Boolean(s.is_pro_only || s.is_pro);
+      if (isPro && !Monetization.isPro()) {
+        Monetization.showProGateModal("Nội dung luyện nói dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn.");
+        return;
+      }
+      openSpeakingWorkspace(s, currentMode);
+    };
+
+    gridHost.querySelectorAll(".btn-speak-action").forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        openLesson(btn.dataset.speakId);
+      };
+    });
+
+    gridHost.querySelectorAll(".speaking-topic-card").forEach(card => {
+      card.onclick = (e) => {
+        if (e.target.closest("button")) return;
+        openLesson(card.dataset.speakId);
+      };
+    });
 
     renderDauPagination(el("#spPagination"), currentPage, totalPages, (newPage) => {
       currentPage = newPage;
@@ -8216,80 +8260,77 @@ function initSpeakingPage() {
   };
 
   const renderHub = () => {
-    const all = getSpeakingSets();
-    const countA1 = all.filter(s => s.level === "A1").length;
-    const countA2 = all.filter(s => s.level === "A2").length;
-    const countB1 = all.filter(s => s.level === "B1").length;
-    const countB2 = all.filter(s => s.level === "B2").length;
-
-    let section = host.querySelector("#spSection");
-    if (!section) {
-      host.innerHTML = `
-        <section class="vocabulary-section rusi-topic-section" id="spSection">
-          <div class="vocabulary-inner">
-            <div class="vocabulary-heading">
-              <div class="page-title-box">
-                <h1 class="page-main-hero-title">
-                  Luyện nói Shadowing<br />
-                  <span>Shadowing, AI chấm điểm, phân tích phát âm</span>
-                </h1>
-              </div>
-            </div>
-
-            <div class="level-tabs" role="tablist" aria-label="Chọn cấp độ nói" id="spLevelTabs">
-              <button class="level-tab ${currentLevel === "A1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A1">
-                <span class="level-code">A1</span>
-                <small>Sơ cấp</small>
-                <span class="level-tab-count" id="spCountA1">${countA1}</span>
-              </button>
-              <button class="level-tab ${currentLevel === "A2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A2">
-                <span class="level-code">A2</span>
-                <small>Cơ bản</small>
-                <span class="level-tab-count" id="spCountA2">${countA2}</span>
-              </button>
-              <button class="level-tab ${currentLevel === "B1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B1">
-                <span class="level-code">B1</span>
-                <small>Trung cấp</small>
-                <span class="level-tab-count" id="spCountB1">${countB1}</span>
-              </button>
-              <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
-                <span class="level-code">B2</span>
-                <small>Trung cấp cao</small>
-                <span class="level-tab-count" id="spCountB2">${countB2}</span>
-              </button>
-              <button class="level-tab ${currentLevel === "C1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C1">
-                <span class="level-code">C1</span>
-                <small>Cao cấp</small>
-                <span class="level-tab-count" id="spCountC1">0</span>
-              </button>
-              <button class="level-tab ${currentLevel === "C2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C2">
-                <span class="level-code">C2</span>
-                <small>Thành thạo</small>
-                <span class="level-tab-count" id="spCountC2">0</span>
-              </button>
-            </div>
-
-            <div class="topic-grid" id="spCardsGrid"></div>
-            <div class="dau-pagination" id="spPagination"></div>
-          </div>
-        </section>
-      `;
-
-      // Level tabs
-      host.querySelectorAll(".level-tab").forEach(btn => {
-        btn.onclick = () => {
-          currentLevel = btn.dataset.level;
-          currentPage = 1;
-          renderSpeakingCards();
-        };
-      });
-    }
-
     document.body.classList.remove("in-workspace");
+    host.innerHTML = `
+      <section class="writing-hub listening-hub speaking-hub" id="speakingHub">
+        <header class="writing-hub-header listening-hub-header speaking-hub-header">
+          <h1>Chọn cách bạn muốn luyện nói</h1>
+          <p>Rèn luyện phát âm chuẩn bản xứ qua phương pháp Shadowing và phản xạ giao tiếp thực tế.</p>
+        </header>
+
+        <div class="writing-mode-grid listening-mode-grid speaking-mode-grid" aria-label="Chọn dạng luyện nói">
+          ${Object.entries(MODE_INFO).map(([key, info]) => `
+            <button type="button" class="writing-mode-card listening-mode-card speaking-mode-card ${key === currentMode ? "active" : ""}" data-mode="${key}" aria-pressed="${key === currentMode}">
+              <span class="writing-mode-icon listening-mode-icon speaking-mode-icon">${icon(info.icon, 28)}</span>
+              <span class="writing-mode-copy listening-mode-copy speaking-mode-copy">
+                <strong>${info.title}</strong>
+                <small>${info.subtitle}</small>
+              </span>
+              <span class="writing-mode-arrow listening-mode-arrow">${icon("arrow-right", 18)}</span>
+            </button>
+          `).join("")}
+        </div>
+
+        <div class="level-tabs writing-level-tabs listening-level-tabs speaking-level-tabs" role="tablist" aria-label="Lọc bài nói theo cấp độ" id="spLevelTabs">
+          ${LEVELS.map(([level, label]) => `
+            <button type="button" class="level-tab writing-level-tab listening-level-tab speaking-level-tab ${level === currentLevel ? "level-tab-active active" : ""}" data-level="${level}" role="tab" aria-selected="${level === currentLevel ? "true" : "false"}">
+              <span class="level-code">${level}</span>
+              <small>${label}</small>
+              <span class="level-tab-count" data-speaking-count="${level}">0</span>
+            </button>
+          `).join("")}
+        </div>
+
+        <div class="writing-topic-grid listening-topic-grid speaking-topic-grid" id="spCardsGrid"></div>
+        <div class="dau-pagination" id="spPagination"></div>
+      </section>
+    `;
+
+    // Click đổi mode
+    host.querySelectorAll(".speaking-mode-card").forEach((button) => {
+      button.onclick = () => {
+        const newMode = button.dataset.mode;
+        if (newMode === currentMode) return;
+        currentMode = newMode;
+        currentPage = 1;
+
+        // Tự động chuyển level nếu level hiện tại không có bài của mode mới
+        const all = getSpeakingSets();
+        const hasCurrentLevel = all.some((s) => s.level === currentLevel && matchesSpeakingMode(s, currentMode));
+        if (!hasCurrentLevel) {
+          const firstLevelWithLessons = LEVELS.find(([lvl]) => all.some((s) => s.level === lvl && matchesSpeakingMode(s, currentMode)));
+          if (firstLevelWithLessons) {
+            currentLevel = firstLevelWithLessons[0];
+          }
+        }
+
+        renderSpeakingCards();
+      };
+    });
+
+    // Click tab cấp độ
+    host.querySelectorAll(".speaking-level-tab").forEach((btn) => {
+      btn.onclick = () => {
+        currentLevel = btn.dataset.level;
+        currentPage = 1;
+        renderSpeakingCards();
+      };
+    });
+
     renderSpeakingCards();
   };
 
-const openSpeakingWorkspace = (set) => {
+const openSpeakingWorkspace = (set, mode = currentMode) => {
     if (typeof window.requireAuth === "function" && !window.requireAuth("speaking.html?set=" + encodeURIComponent((set && (set.id || set.code)) || ""))) return;
     document.body.classList.add("in-workspace");
     const todayKey = "speak_today_" + new Date().toDateString();
@@ -10610,6 +10651,30 @@ function initWritingPage() {
 function initMockTestPage() {
   const host = el("#testHost");
   if (!host) return;
+  const icon = (name, size = 18) => (window.RusiIcons ? RusiIcons.get(name, { size }) : "");
+
+  const LEVELS = [
+    ["A1", "ТЭУ"],
+    ["A2", "ТБУ"],
+    ["B1", "TRKI-1"],
+    ["B2", "TRKI-2"],
+    ["C1", "TRKI-3"],
+    ["C2", "TRKI-4"]
+  ];
+
+  const MODE_INFO = {
+    practice: {
+      title: "Luyện tập",
+      subtitle: "Ôn tập từng phần, làm bài linh hoạt không áp lực thời gian và xem giải thích chi tiết",
+      icon: "target"
+    },
+    exam: {
+      title: "Luyện thi",
+      subtitle: "Mô phỏng phòng thi thật chuẩn ТРКИ, bấm giờ thực tế và chấm điểm nghiêm ngặt",
+      icon: "graduation-cap"
+    }
+  };
+
   const cachedTests = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("tests:all") : null;
   const localBank = (typeof TRKI_BANK !== "undefined" && Array.isArray(TRKI_BANK)) ? TRKI_BANK : ((typeof window !== "undefined" && Array.isArray(window.TRKI_BANK)) ? window.TRKI_BANK : []);
   let bank = (cachedTests && cachedTests.length) ? cachedTests : localBank;
@@ -10620,7 +10685,7 @@ function initMockTestPage() {
 
   let currentTest = bank[0] || null;
   let activePartId = null; // null = thi full toan bo de; hoac "gram", "reading", "listening"
-  let examMode = "exam"; // "exam" (Luyện thi) | "practice" (Luyện tập)
+  let examMode = "practice"; // "practice" (Luyện tập) | "exam" (Luyện thi)
   let answers = {};
   let flagged = {};
   let timeLeft = 0;
@@ -10633,6 +10698,10 @@ function initMockTestPage() {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const targetId = urlParams.get("exam") || urlParams.get("test") || urlParams.get("id");
+      const urlMode = urlParams.get("mode");
+      if (urlMode === "exam" || urlMode === "practice") {
+        examMode = urlMode;
+      }
       if (targetId) {
         if (typeof window !== "undefined" && typeof window.requireAuth === "function") {
           if (!window.requireAuth()) return true;
@@ -10644,7 +10713,7 @@ function initMockTestPage() {
             Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
             return true;
           }
-          openSubtestPickerModal(found);
+          openSubtestPickerModal(found, examMode);
           return true;
         }
       }
@@ -10676,7 +10745,7 @@ function initMockTestPage() {
 
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
-  const openSubtestPickerModal = (test) => {
+  const openSubtestPickerModal = (test, preferredMode = examMode) => {
     const testId = (test && (test.id || test.code)) || "";
     if (typeof window.requireAuth === "function" && !window.requireAuth("mock-test.html?exam=" + encodeURIComponent(testId))) return;
     let modal = document.getElementById("trkiSubtestModal");
@@ -10688,7 +10757,7 @@ function initMockTestPage() {
     }
 
     const totalQ = test.parts ? test.parts.reduce((acc, p) => acc + (p.questions ? p.questions.length : 0), 0) : 34;
-    let currentModalMode = "exam"; // "exam" (Luyện thi) | "practice" (Luyện tập)
+    let currentModalMode = preferredMode || examMode || "practice";
     const allPartIds = (test.parts || []).map(p => p.id);
     let selectedPartIds = new Set(allPartIds); // Mặc định chọn tất cả các Part (Full Test)
 
@@ -10696,20 +10765,20 @@ function initMockTestPage() {
     modal.innerHTML = `
       <div class="trki-modal-card">
         <button type="button" class="trki-modal-close" id="btnCloseSubtestModal" title="Đóng cửa sổ" aria-label="Đóng cửa sổ">
-          ${window.RusiIcons ? RusiIcons.get("x", { size: 16 }) : "✕"}
+          ${icon("x", 16) || "✕"}
         </button>
 
         <div class="trki-modal-header">
           <h3 class="trki-modal-title">${esc(test.title)}</h3>
         </div>
 
-        <!-- 2 HÌNH THỨC: LUYỆN THI VÀ LUYỆN TẬP -->
+        <!-- 2 HÌNH THỨC: LUYỆN TẬP VÀ LUYỆN THI -->
         <div class="trki-modal-tabs" role="tablist">
-          <button type="button" class="trki-modal-tab active" data-mode="exam" role="tab" aria-selected="true">
-            ${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 16 }) : ""} Luyện thi
+          <button type="button" class="trki-modal-tab ${currentModalMode === "practice" ? "active" : ""}" data-mode="practice" role="tab" aria-selected="${currentModalMode === "practice" ? "true" : "false"}">
+            ${icon("target", 16)} Luyện tập
           </button>
-          <button type="button" class="trki-modal-tab" data-mode="practice" role="tab" aria-selected="false">
-            ${window.RusiIcons ? RusiIcons.get("target", { size: 16 }) : ""} Luyện tập
+          <button type="button" class="trki-modal-tab ${currentModalMode === "exam" ? "active" : ""}" data-mode="exam" role="tab" aria-selected="${currentModalMode === "exam" ? "true" : "false"}">
+            ${icon("graduation-cap", 16)} Luyện thi
           </button>
         </div>
 
@@ -10775,7 +10844,7 @@ function initMockTestPage() {
 
       const allPartsTitle = modal.querySelector("#trkiAllPartsTitle");
       if (allPartsTitle) {
-        allPartsTitle.textContent = (currentModalMode === "exam") ? "Full Test" : "Chọn tất cả các 5 Part";
+        allPartsTitle.textContent = (currentModalMode === "exam") ? "Full Test (Đầy đủ cả đề)" : "Chọn tất cả các Part";
       }
 
       modal.querySelectorAll(".trki-modal-tab").forEach(tab => {
@@ -10787,11 +10856,13 @@ function initMockTestPage() {
       const btnStart = modal.querySelector("#btnStartTrkiAction");
       if (btnStart) {
         btnStart.disabled = (selectedCount === 0);
+        const actionPrefix = currentModalMode === "exam" ? "Bắt đầu làm bài thi" : "Bắt đầu luyện tập";
         btnStart.textContent = (selectedCount === 0)
-          ? "Bắt đầu (Chọn ít nhất 1 Part) →"
-          : `Bắt đầu (${selectedCount} Part) →`;
+          ? `${actionPrefix} (Chọn ít nhất 1 Part) →`
+          : `${actionPrefix} (${selectedCount} Part) →`;
       }
     };
+    updateModalState();
 
     const btnClose = modal.querySelector("#btnCloseSubtestModal");
     if (btnClose) btnClose.onclick = () => closeModal();
@@ -10869,25 +10940,25 @@ function initMockTestPage() {
     const gridHost = el("#trkiCardsGrid");
     if (!gridHost) return;
 
-    const countA1 = bank.filter(t => t.level === "A1").length;
-    const countA2 = bank.filter(t => t.level === "A2").length;
-    const countB1 = bank.filter(t => t.level === "B1").length;
-    const countB2 = bank.filter(t => t.level === "B2").length;
-    const countC1 = bank.filter(t => t.level === "C1").length;
-    const countC2 = bank.filter(t => t.level === "C2").length;
+    // Cập nhật trạng thái active của 2 thẻ chọn Mode
+    host.querySelectorAll(".trki-mode-card").forEach((button) => {
+      const active = button.dataset.mode === examMode;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
 
     // Cập nhật số lượng trên các nút cấp độ
-    const cA1 = el("#trkiCountA1"); if (cA1) cA1.textContent = countA1;
-    const cA2 = el("#trkiCountA2"); if (cA2) cA2.textContent = countA2;
-    const cB1 = el("#trkiCountB1"); if (cB1) cB1.textContent = countB1;
-    const cB2 = el("#trkiCountB2"); if (cB2) cB2.textContent = countB2;
-    const cC1 = el("#trkiCountC1"); if (cC1) cC1.textContent = countC1;
-    const cC2 = el("#trkiCountC2"); if (cC2) cC2.textContent = countC2;
+    LEVELS.forEach(([level]) => {
+      const count = bank.filter(t => t.level === level).length;
+      const countNode = host.querySelector(`[data-trki-count="${level}"]`);
+      if (countNode) countNode.textContent = count;
+    });
 
     // Update active class on level tabs
-    host.querySelectorAll(".level-tab").forEach(b => {
+    host.querySelectorAll(".trki-level-tab").forEach(b => {
       const isActive = b.dataset.level === currentLevel;
       b.classList.toggle("level-tab-active", isActive);
+      b.classList.toggle("active", isActive);
       b.setAttribute("aria-selected", isActive ? "true" : "false");
     });
 
@@ -10903,46 +10974,47 @@ function initMockTestPage() {
     if (filtered.length === 0) {
       gridHost.innerHTML = `
         <div class="writing-empty-state trki-empty-state topic-empty-state">
-          <span class="writing-empty-icon trki-empty-icon">${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 34 }) : ""}</span>
-          <h3>Chưa có đề thi cho cấp độ này</h3>
+          <span class="writing-empty-icon trki-empty-icon">${icon(MODE_INFO[examMode].icon, 34)}</span>
+          <h3>Chưa có đề ${MODE_INFO[examMode].title.toLowerCase()} cho cấp độ ${currentLevel}</h3>
           <p>Vui lòng chọn cấp độ khác để tiếp tục học tập.</p>
         </div>
       `;
+      const pagEl = el("#trkiPagination");
+      if (pagEl) pagEl.innerHTML = "";
     } else {
-      gridHost.innerHTML = pageItems.map((t, idx) => {
+      gridHost.innerHTML = pageItems.map((t) => {
         const isDone = Progress.doneList("trkiDone").includes(t.id);
         const isPro = Boolean(t.is_pro_only || t.is_pro);
         const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
         const qCount = t.questionsCount || (t.questions ? t.questions.length : (t.parts ? t.parts.reduce((a, b) => a + (b.questions ? b.questions.length : 0), 0) : 34));
         const durMin = Math.round((t.durationSeconds || (t.durationMin ? t.durationMin * 60 : 2700)) / 60);
+        const cleanTitle = (t.title || "").replace(/\s*\([^)]*\)/g, "").trim();
+        const countLabel = examMode === "practice" ? `${qCount} câu hỏi · Luyện tập tự do` : `${qCount} câu hỏi · ${durMin} phút`;
+        const actionLabel = isDone ? "Đã hoàn thành" : (examMode === "practice" ? "Vào luyện tập" : "Vào luyện thi");
+        const iconKey = examMode === "practice" ? "target" : (t.icon || "graduation-cap");
 
         return `
-          <article class="dau-card dau-card-compact ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-trki-id="${t.id}" tabindex="0">
+          <article class="dau-card dau-card-compact trki-topic-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-trki-id="${t.id}" tabindex="0">
             <div class="dau-card-header">
               <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
-                ${window.RusiIcons ? RusiIcons.get(t.icon || "award-badge", { size: 24 }) : ""}
+                ${icon(iconKey, 24)}
               </div>
               <div class="dau-card-header-main">
-                ${(() => {
-                  const cleanTitle = (t.title || "").replace(/\s*\([^)]*\)/g, "").trim();
-                  return `
-                    <div class="dau-card-title-row">
-                      <h3 class="dau-card-ru" title="${esc(cleanTitle)}">${esc(cleanTitle)}</h3>
-                      ${isDone ? `
-                        <span class="topic-status topic-status-completed" style="flex-shrink:0">
-                          ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
-                        </span>
-                      ` : isPro ? `
-                        <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
-                      ` : ""}
-                    </div>
-                    <div class="dau-card-subinfo">
-                      <span>${t.level}</span>
-                      <span class="dau-card-sep">•</span>
-                      <span class="dau-card-count">${qCount} câu hỏi · ${durMin} phút</span>
-                    </div>
-                  `;
-                })()}
+                <div class="dau-card-title-row">
+                  <h3 class="dau-card-ru" title="${esc(cleanTitle)}">${esc(cleanTitle)}</h3>
+                  ${isDone ? `
+                    <span class="topic-status topic-status-completed" style="flex-shrink:0">
+                      ${icon("check", 12)} Hoàn thành
+                    </span>
+                  ` : isPro ? `
+                    <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
+                  ` : ""}
+                </div>
+                <div class="dau-card-subinfo">
+                  <span>${t.level}</span>
+                  <span class="dau-card-sep">•</span>
+                  <span class="dau-card-count">${countLabel}</span>
+                </div>
               </div>
             </div>
 
@@ -10950,11 +11022,11 @@ function initMockTestPage() {
               <div class="topic-footer-actions">
                 ${isPro && !isUnlocked ? `
                   <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
-                    ${window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : ""}
+                    ${icon("lock-pro", 16) || icon("lock", 16)}
                   </span>
                 ` : `
-                  <button type="button" class="btn-trki-action topic-text-btn" data-trki-id="${t.id}" title="Vào thi ngay">
-                    Vào thi ngay ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 14 }) : ""}
+                  <button type="button" class="btn-trki-action topic-text-btn" data-trki-id="${t.id}" title="${actionLabel}">
+                    ${actionLabel} ${icon("arrow-right", 14)}
                   </button>
                 `}
               </div>
@@ -10963,35 +11035,35 @@ function initMockTestPage() {
         `;
       }).join("");
 
-      // Action: Click "Vào thi ngay" or circle button opens Subtest Picker Modal
+      // Action: Click "Vào luyện tập / Vào luyện thi" or card
+      const openExam = (id) => {
+        const test = bank.find(x => x.id === id);
+        if (!test) return;
+        const isPro = Boolean(test.is_pro_only || test.is_pro);
+        if (isPro && !Monetization.isPro()) {
+          Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
+          return;
+        }
+        openSubtestPickerModal(test, examMode);
+      };
+
       gridHost.querySelectorAll(".btn-trki-action, .btn-trki-circle").forEach(btn => {
         btn.onclick = (e) => {
           e.stopPropagation();
-          const id = btn.dataset.trkiId;
-          const test = bank.find(x => x.id === id);
-          if (!test) return;
-          const isPro = Boolean(test.is_pro_only || test.is_pro);
-          if (isPro && !Monetization.isPro()) {
-            Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
-            return;
-          }
-          openSubtestPickerModal(test);
+          openExam(btn.dataset.trkiId);
         };
       });
 
-      // Action: Click card body opens Subtest Picker Modal
       gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
         card.onclick = (e) => {
           if (e.target.closest("button") || e.target.closest("a")) return;
-          const id = card.dataset.trkiId;
-          const test = bank.find(x => x.id === id);
-          if (!test) return;
-          const isPro = Boolean(test.is_pro_only || test.is_pro);
-          if (isPro && !Monetization.isPro()) {
-            Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
-            return;
+          openExam(card.dataset.trkiId);
+        };
+        card.onkeydown = (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openExam(card.dataset.trkiId);
           }
-          openSubtestPickerModal(test);
         };
       });
     }
@@ -11012,76 +11084,62 @@ function initMockTestPage() {
       document.removeEventListener("visibilitychange", visibilityHandler);
       visibilityHandler = null;
     }
-
-    const countA1 = bank.filter(t => t.level === "A1").length;
-    const countA2 = bank.filter(t => t.level === "A2").length;
-    const countB1 = bank.filter(t => t.level === "B1").length;
-    const countB2 = bank.filter(t => t.level === "B2").length;
-
-    let section = host.querySelector("#trkiSection");
-    if (!section) {
-      host.innerHTML = `
-        <section class="vocabulary-section rusi-topic-section" id="trkiSection">
-          <div class="vocabulary-inner">
-            <div class="vocabulary-heading">
-              <div class="page-title-box">
-                <h1 class="page-main-hero-title">
-                  Thi thử TRKI<br />
-                  <span>Mô phỏng đề thi A1, A2, B1, B2, C1, C2 chuẩn CEFR</span>
-                </h1>
-              </div>
-            </div>
-
-            <div class="level-tabs" role="tablist" aria-label="Chọn cấp độ thi TRKI" id="trkiLevelTabs">
-              <button class="level-tab ${currentLevel === "A1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A1">
-                <span class="level-code">A1</span>
-                <small>ТЭУ</small>
-                <span class="level-tab-count" id="trkiCountA1">${countA1}</span>
-              </button>
-              <button class="level-tab ${currentLevel === "A2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="A2">
-                <span class="level-code">A2</span>
-                <small>ТБУ</small>
-                <span class="level-tab-count" id="trkiCountA2">${countA2}</span>
-              </button>
-              <button class="level-tab ${currentLevel === "B1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B1">
-                <span class="level-code">B1</span>
-                <small>TRKI-1</small>
-                <span class="level-tab-count" id="trkiCountB1">${countB1}</span>
-              </button>
-              <button class="level-tab ${currentLevel === "B2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="B2">
-                <span class="level-code">B2</span>
-                <small>TRKI-2</small>
-                <span class="level-tab-count" id="trkiCountB2">${countB2}</span>
-              </button>
-              <button class="level-tab ${currentLevel === "C1" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C1">
-                <span class="level-code">C1</span>
-                <small>Cao cấp</small>
-                <span class="level-tab-count" id="trkiCountC1">0</span>
-              </button>
-              <button class="level-tab ${currentLevel === "C2" ? "level-tab-active" : ""}" type="button" role="tab" data-level="C2">
-                <span class="level-code">C2</span>
-                <small>Thành thạo</small>
-                <span class="level-tab-count" id="trkiCountC2">0</span>
-              </button>
-            </div>
-
-            <div class="topic-grid" id="trkiCardsGrid" style="margin-top:24px"></div>
-            <div class="dau-pagination" id="trkiPagination"></div>
-          </div>
-        </section>
-      `;
-
-      // Level tabs
-      host.querySelectorAll(".level-tab").forEach(btn => {
-        btn.onclick = () => {
-          currentLevel = btn.dataset.level;
-          currentPage = 1;
-          renderTrkiCards();
-        };
-      });
-    }
-
     document.body.classList.remove("in-workspace");
+
+    host.innerHTML = `
+      <section class="writing-hub listening-hub trki-hub" id="trkiHub">
+        <header class="writing-hub-header listening-hub-header trki-hub-header">
+          <h1>Chọn cách bạn muốn ôn luyện TRKI</h1>
+          <p>Ôn tập từng kỹ năng với chế độ Luyện tập hoặc thử sức với phòng thi Luyện thi chuẩn quốc tế ТРКИ.</p>
+        </header>
+
+        <div class="writing-mode-grid listening-mode-grid trki-mode-grid" aria-label="Chọn hình thức ôn luyện TRKI">
+          ${Object.entries(MODE_INFO).map(([key, info]) => `
+            <button type="button" class="writing-mode-card listening-mode-card trki-mode-card ${key === examMode ? "active" : ""}" data-mode="${key}" aria-pressed="${key === examMode}">
+              <span class="writing-mode-icon listening-mode-icon trki-mode-icon">${icon(info.icon, 28)}</span>
+              <span class="writing-mode-copy listening-mode-copy trki-mode-copy">
+                <strong>${info.title}</strong>
+                <small>${info.subtitle}</small>
+              </span>
+              <span class="writing-mode-arrow listening-mode-arrow">${icon("arrow-right", 18)}</span>
+            </button>
+          `).join("")}
+        </div>
+
+        <div class="level-tabs writing-level-tabs listening-level-tabs trki-level-tabs" role="tablist" aria-label="Lọc đề thi theo cấp độ" id="trkiLevelTabs">
+          ${LEVELS.map(([level, label]) => `
+            <button type="button" class="level-tab writing-level-tab listening-level-tab trki-level-tab ${level === currentLevel ? "level-tab-active active" : ""}" data-level="${level}" role="tab" aria-selected="${level === currentLevel ? "true" : "false"}">
+              <span class="level-code">${level}</span>
+              <small>${label}</small>
+              <span class="level-tab-count" data-trki-count="${level}">0</span>
+            </button>
+          `).join("")}
+        </div>
+
+        <div class="writing-topic-grid listening-topic-grid trki-topic-grid" id="trkiCardsGrid" style="margin-top:24px"></div>
+        <div class="dau-pagination" id="trkiPagination"></div>
+      </section>
+    `;
+
+    // Click đổi mode Luyện tập / Luyện thi
+    host.querySelectorAll(".trki-mode-card").forEach((button) => {
+      button.onclick = () => {
+        const newMode = button.dataset.mode;
+        if (newMode === examMode) return;
+        examMode = newMode;
+        renderTrkiCards();
+      };
+    });
+
+    // Click tab cấp độ
+    host.querySelectorAll(".trki-level-tab").forEach((btn) => {
+      btn.onclick = () => {
+        currentLevel = btn.dataset.level;
+        currentPage = 1;
+        renderTrkiCards();
+      };
+    });
+
     renderTrkiCards();
   };
 

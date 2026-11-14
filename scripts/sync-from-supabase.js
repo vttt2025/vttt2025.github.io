@@ -2,19 +2,22 @@
  * scripts/sync-from-supabase.js
  * 
  * Kéo 100% dữ liệu thực từ Supabase Cloud PostgreSQL:
- * - vocab_jars + jar_items + vocabularies (10 lọ & 500 từ)
- * - topic_articles (10 bài chuyên đề)
+ * - vocab_jars + jar_items + vocabularies (32 lọ & 1500 từ vựng hệ thống)
+ * - vocabularies (toàn bộ 2222 từ vựng từ điển một nguồn)
+ * - topic_articles (33 bài chuyên đề đọc hiểu)
+ * - vocab_lessons (22 bài học từ vựng)
  * - listening_lessons + listening_topics + listening_lesson_vocab (7 bài nghe)
- * - speaking_lessons (28 bài luyện nói)
+ * - speaking_lessons (28 bài luyện nói Shadowing)
  * - writing_tasks + writing_task_vocab (11 đề tả tranh)
  * - writing_topics (6 đề tự do)
- * - trki_tests (6 đề thi TRKI)
+ * - trki_tests (66 đề thi TRKI)
+ * - trki_question_bank (3867 câu hỏi TRKI - phân trang đầy đủ)
  * - shop_products (7 sản phẩm)
  * - packages (3 gói học PRO)
- * - grammar_lessons (5 bài ngữ pháp)
+ * - grammar_lessons (27 bài ngữ pháp)
  * - blog_posts (3 bài cẩm nang)
  * 
- * Xoá sạch toàn bộ dữ liệu mock cũ và ghi lại data.js chuẩn xác 100%.
+ * Xoá sạch toàn bộ dữ liệu mock cũ và ghi lại data/supabase-backup.json và data.js chuẩn xác 100%.
  */
 
 const fs = require('fs');
@@ -51,6 +54,34 @@ async function api(config, queryPath) {
   return res.json();
 }
 
+/** Tự động phân trang PostgREST (tránh giới hạn ngầm 1000 dòng) */
+async function apiAll(config, queryPath, pageSize = 1000) {
+  let all = [];
+  let offset = 0;
+  const sep = queryPath.includes('?') ? '&' : '?';
+  while (true) {
+    const chunk = await api(config, `${queryPath}${sep}limit=${pageSize}&offset=${offset}`);
+    if (!Array.isArray(chunk) || chunk.length === 0) break;
+    all.push(...chunk);
+    if (chunk.length < pageSize) break;
+    offset += pageSize;
+  }
+  return all;
+}
+
+function safeWriteFile(filePath, content) {
+  const fd = fs.openSync(filePath, 'w');
+  const buffer = Buffer.from(content, 'utf8');
+  const chunkSize = 1024 * 1024; // 1MB chunks
+  let offset = 0;
+  while (offset < buffer.length) {
+    const bytesToWrite = Math.min(chunkSize, buffer.length - offset);
+    fs.writeSync(fd, buffer, offset, bytesToWrite);
+    offset += bytesToWrite;
+  }
+  fs.closeSync(fd);
+}
+
 function sanitizeWord(w) {
   if (!w) return null;
   const ex0 = (Array.isArray(w.examples) && w.examples[0]) ? w.examples[0] : null;
@@ -85,13 +116,13 @@ function sanitizeWord(w) {
 
 async function main() {
   console.log('========================================================================');
-  console.log('RUSI TRKI: KÉO DỮ LIỆU ĐỘC QUYỀN TỪ SUPABASE & XOÁ SẠCH DỮ LIỆU MOCK CŨ');
+  console.log('RUSI TRKI: KÉO 100% DỮ LIỆU TỪ SUPABASE & XOÁ SẠCH DỮ LIỆU CŨ');
   console.log('========================================================================\n');
 
   const config = getSupabaseConfig();
   console.log(`Endpoint: ${config.url}`);
 
-  // 1. Tải Lọ từ vựng kèm 500 từ vựng và bài đọc chủ đề
+  // 1. Tải Lọ từ vựng kèm 1500 từ vựng và bài đọc chủ đề
   process.stdout.write('1. Tải vocab_jars + jar_items + vocabularies + topic_articles... ');
   const rawJars = await api(config, 'vocab_jars?select=id,code,name,level,icon,word_count,is_system,is_pro,jar_items(position,vocabularies(*))&is_system=eq.true&order=created_at.asc');
   const rawArticles = await api(config, 'topic_articles?select=*');
@@ -143,12 +174,38 @@ async function main() {
       article: article
     };
   });
-  console.log(`✓ ${formattedJars.length} lọ (${formattedJars.reduce((a, c) => a + c.words.length, 0)} từ)`);
+  console.log(`✓ ${formattedJars.length} lọ (${formattedJars.reduce((a, c) => a + c.words.length, 0)} từ vựng)`);
 
   const topicArticlesObj = {};
-  formattedJars.forEach(j => {
-    if (j.article) topicArticlesObj[j.code] = j.article;
+  rawArticles.forEach(art => {
+    topicArticlesObj[art.id] = {
+      id: art.id,
+      title: art.title,
+      level: art.level || 'A1',
+      intro: art.intro || '',
+      desc: art.intro || '',
+      culturalTip: art.cultural_tip || '',
+      cultural_tip: art.cultural_tip || '',
+      audio_url: art.audio_url || '',
+      actionChains: Array.isArray(art.action_chains) ? art.action_chains : [],
+      action_chains: Array.isArray(art.action_chains) ? art.action_chains : [],
+      dialogues: Array.isArray(art.dialogues) ? art.dialogues : [],
+      grammarNotes: Array.isArray(art.grammar_notes) ? art.grammar_notes : [],
+      grammar_notes: Array.isArray(art.grammar_notes) ? art.grammar_notes : [],
+      content_md: art.content_md || ''
+    };
   });
+
+  // 1b. Tải toàn bộ kho từ vựng vocabularies (phân trang không giới hạn)
+  process.stdout.write('1b. Tải toàn bộ bảng vocabularies (2222 từ vựng)... ');
+  const rawAllVocabularies = await apiAll(config, 'vocabularies?select=*&order=word_normalized.asc');
+  const allVocabularies = rawAllVocabularies.map(sanitizeWord).filter(Boolean);
+  console.log(`✓ ${allVocabularies.length} từ`);
+
+  // 1c. Tải bài học từ vựng ngữ cảnh vocab_lessons
+  process.stdout.write('1c. Tải vocab_lessons... ');
+  const rawVocabLessons = await api(config, 'vocab_lessons?select=*&order=created_at.asc');
+  console.log(`✓ ${rawVocabLessons.length} bài`);
 
   // 2. Tải bài luyện nghe
   process.stdout.write('2. Tải listening_lessons... ');
@@ -210,6 +267,7 @@ async function main() {
       level_name: row.level_name || (row.level === 'B2' ? 'Nâng cao B2' : row.level === 'B1' ? 'Trung cấp B1' : row.level === 'A2' ? 'Cơ bản A2' : 'Sơ cấp A1'),
       category: row.category || 'shadowing',
       category_name: row.category_name || 'Luyện nói Shadowing',
+      speaking_mode: row.speaking_mode || (row.category === 'speech_studio' || row.category === 'reflex' ? 'reflex' : 'shadowing'),
       description: row.description || '',
       phonemeTarget: row.phoneme_target || '',
       icon: row.icon || (ytId ? 'youtube' : 'mic-speaking'),
@@ -344,28 +402,28 @@ async function main() {
   });
   console.log(`✓ ${formattedTests.length} đề thi`);
 
-  // 5b. Tải ngân hàng câu hỏi TRKI cốt lõi (trki_question_bank)
-  process.stdout.write('5b. Tải trki_question_bank... ');
-  const rawQuestionBank = await api(config, 'trki_question_bank?select=*&order=level.asc,sub_test.asc,order_index.asc');
+  // 5b. Tải TOÀN BỘ ngân hàng câu hỏi TRKI cốt lõi (phân trang không giới hạn)
+  process.stdout.write('5b. Tải trki_question_bank (toàn bộ ngân hàng câu hỏi)... ');
+  const rawQuestionBank = await apiAll(config, 'trki_question_bank?select=*&order=level.asc,sub_test.asc,order_index.asc');
   console.log(`✓ ${rawQuestionBank.length} câu hỏi`);
 
-  // 6. Tải sản phẩm shop
+  // 6. Tải sản phẩm shop (sắp xếp theo price_minor)
   process.stdout.write('6. Tải shop_products... ');
-  const rawShop = await api(config, 'shop_products?select=*&order=price.asc');
+  const rawShop = await api(config, 'shop_products?select=*&order=price_minor.asc');
   const formattedShop = rawShop.map(p => {
-    const price = p.price_vnd || p.price || 50000;
+    const price = p.price_vnd || p.price_minor || p.price || 50000;
     return {
       id: p.code || p.id,
       code: p.code || p.id,
       name: p.name || p.title,
       title: p.title || p.name,
       category: p.category || 'sach',
-      category_name: p.category_name || (p.category === 'banh_keo' ? 'Bánh kẹo Nga' : 'Giáo trình & Sách Nga'),
+      category_name: p.category_name || (p.category === 'banh_keo' ? 'Bánh kẹo Nga' : (p.category === 'my_pham' ? 'Mỹ phẩm Siberia' : 'Quà lưu niệm Nga')),
       price: Number(price),
       price_vnd: Number(price),
       original_price: p.original_price ? Number(p.original_price) : 0,
-      image_url: p.image_url || p.image || '',
-      image: p.image_url || p.image || '',
+      image_url: p.image_url || p.image || (Array.isArray(p.image_urls) ? p.image_urls[0] : ''),
+      image: p.image_url || p.image || (Array.isArray(p.image_urls) ? p.image_urls[0] : ''),
       stock: typeof p.stock === 'number' ? p.stock : 50,
       badge: p.badge || '',
       description: p.description || '',
@@ -438,13 +496,15 @@ async function main() {
   }));
   console.log(`✓ ${formattedBlog.length} bài`);
 
-  // 10. Ghi backup JSON
+  // 10. Ghi backup JSON toàn diện sạch sẽ
   const backupData = {
     pulled_at: new Date().toISOString(),
     source_url: config.url,
     tables: {
       vocab_jars: formattedJars,
+      vocabularies: allVocabularies,
       topic_articles: rawArticles,
+      vocab_lessons: rawVocabLessons,
       listening_lessons: formattedListening,
       speaking_lessons: formattedSpeaking,
       writing_tasks: formattedWritingTasks,
@@ -459,7 +519,7 @@ async function main() {
   };
 
   const backupPath = path.join(__dirname, '..', 'data', 'supabase-backup.json');
-  fs.writeFileSync(backupPath, JSON.stringify(backupData, null, 2), 'utf8');
+  safeWriteFile(backupPath, JSON.stringify(backupData, null, 2));
   console.log('\n✓ Đã lưu file backup sạch: data/supabase-backup.json');
 
   // 11. XÂY DỰNG FILE data.js HOÀN TOÀN MỚI — 100% SUPABASE, KHÔNG CHỨA DỮ LIỆU CŨ/MOCK
@@ -470,8 +530,10 @@ async function main() {
  * Thời gian đồng bộ: ${new Date().toISOString()}
  * ============================================================================
  * Toàn bộ dữ liệu dưới đây được ánh xạ trực tiếp từ các bảng Supabase Cloud:
- * - VOCAB_JARS (${formattedJars.length} lọ & ${formattedJars.reduce((a, c) => a + c.words.length, 0)} từ vựng)
+ * - VOCAB_JARS (${formattedJars.length} lọ & ${formattedJars.reduce((a, c) => a + c.words.length, 0)} từ vựng hệ thống)
+ * - VOCABULARIES (${allVocabularies.length} từ vựng từ điển một nguồn)
  * - TOPIC_ARTICLES (${Object.keys(topicArticlesObj).length} bài đọc chủ đề chuyên sâu)
+ * - VOCAB_LESSONS (${rawVocabLessons.length} bài học ngữ cảnh theo chủ đề)
  * - LISTENING_LESSONS (${formattedListening.length} bài luyện nghe CEFR)
  * - SPEAKING_SETS (${formattedSpeaking.length} bài luyện nói Shadowing)
  * - WRITING_TASKS (${formattedWritingTasks.length} đề viết tả tranh chuẩn TRKI)
@@ -487,7 +549,11 @@ async function main() {
 
 const VOCAB_JARS = ${JSON.stringify(formattedJars, null, 2)};
 
+const VOCABULARIES = ${JSON.stringify(allVocabularies, null, 2)};
+
 const TOPIC_ARTICLES = ${JSON.stringify(topicArticlesObj, null, 2)};
+
+const VOCAB_LESSONS = ${JSON.stringify(rawVocabLessons, null, 2)};
 
 const LISTENING_LESSONS = ${JSON.stringify(formattedListening, null, 2)};
 
@@ -512,7 +578,9 @@ const BLOG_POSTS = ${JSON.stringify(formattedBlog, null, 2)};
 // Phơi bày ra phạm vi toàn cục window
 if (typeof window !== "undefined") {
   window.VOCAB_JARS = VOCAB_JARS;
+  window.VOCABULARIES = VOCABULARIES;
   window.TOPIC_ARTICLES = TOPIC_ARTICLES;
+  window.VOCAB_LESSONS = VOCAB_LESSONS;
   window.LISTENING_LESSONS = LISTENING_LESSONS;
   window.SPEAKING_SETS = SPEAKING_SETS;
   window.WRITING_TASKS = WRITING_TASKS;
@@ -526,7 +594,9 @@ if (typeof window !== "undefined") {
 
   window.DATA = {
     vocabJars: VOCAB_JARS,
+    vocabularies: VOCABULARIES,
     topicArticles: TOPIC_ARTICLES,
+    vocabLessons: VOCAB_LESSONS,
     listeningLessons: LISTENING_LESSONS,
     speakingSets: SPEAKING_SETS,
     writingTasks: WRITING_TASKS,
@@ -540,7 +610,6 @@ if (typeof window !== "undefined") {
   };
 
   // Khai báo mảng rỗng an toàn cho các phân hệ cũ (tránh lỗi tham chiếu nếu có)
-  window.VOCAB_LESSONS = [];
   window.WRITING_SUBMISSIONS = [];
   window.TRKI_SUBMISSIONS = [];
   window.SHOP_ORDERS = [];
@@ -548,7 +617,7 @@ if (typeof window !== "undefined") {
 `;
 
   const dataJsPath = path.join(__dirname, '..', 'data.js');
-  fs.writeFileSync(dataJsPath, dataJsContent, 'utf8');
+  safeWriteFile(dataJsPath, dataJsContent);
   console.log(`✓ Đã tạo mới file data.js sạch (100% Supabase, đã loại bỏ toàn bộ dữ liệu mock cũ)!`);
   console.log('========================================================================\n');
 }
