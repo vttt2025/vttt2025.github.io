@@ -1,4 +1,4 @@
-# RUSI TRKI — Workspace Guidelines & Rules
+# RUSI TRKI — Workspace Agent Guidelines & Rules
 
 ## 🛑 QUY TẮC BẤT KHẢ XÂM PHẠM: KHÔNG TỰ Ý SỬA NỘI DUNG ĐÃ ĐẶT TRÊN WEB
 
@@ -28,7 +28,7 @@ Mỗi khi viết code, refactor hoặc sửa lỗi kỹ thuật, trợ lý AI **
 
 ---
 
-## 📱 QUY TẮC BẤT KHẢ XÂM PHẠM: RESPONSIVE CHO MOBILE, TABLET & XỬ LÝ TRÀN VIỀN ("MORE...")
+## 📱 QUY TẮC BẮT BUỘC: RESPONSIVE CHO MOBILE, TABLET & XỬ LÝ TRÀN VIỀN ("MORE...")
 
 Mỗi khi thực hiện bất kỳ thay đổi nào liên quan đến giao diện người dùng (HTML, CSS, JavaScript trong `pages.js`, `app.js`, `styles.css`, hoặc các file `.html`), trợ lý AI **BẮT BUỘC** phải tuân thủ và kích hoạt các quy tắc sau:
 

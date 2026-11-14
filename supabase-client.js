@@ -1257,14 +1257,20 @@
           var sb = getClient();
           if (!sb) return null;
           try {
-            var res = await sb.from("grammar_lessons").select("*").order("id", { ascending: true });
+            var res = await sb.from("grammar_lessons").select("*").order("order_index", { ascending: true });
             if (res.error || !res.data) return null;
             return res.data.map(function (row) {
               return {
                 id: row.id,
+                code: row.code || row.id,
                 title: row.title,
-                vi: row.vi || "",
-                topic: row.topic || "",
+                level: row.level || "A1",
+                category: row.category || row.topic || "",
+                summary: row.summary || "",
+                content_md: row.content_md || "",
+                order_index: row.order_index || 0,
+                vi: row.vi || row.title,
+                topic: row.topic || row.category || "",
                 rules: Array.isArray(row.rules) ? row.rules : [],
                 table: row.table_data || {},
                 questions: Array.isArray(row.questions) ? row.questions : []
@@ -1300,10 +1306,10 @@
                 badge: row.badge || "",
                 title: row.title,
                 desc: row.description || "",
-                price: Number(row.price),
+                price: Number(row.price_vnd || row.price || row.price_minor || 0),
                 priceOld: row.price_old ? Number(row.price_old) : undefined,
                 popular: Boolean(row.popular),
-                features: Array.isArray(row.feature_list) ? row.feature_list : (row.features && row.features.list) || []
+                features: Array.isArray(row.features) ? row.features : (Array.isArray(row.feature_list) ? row.feature_list : (row.features && row.features.list) || [])
               });
             });
             return list;

@@ -6,11 +6,14 @@ import { fileURLToPath } from 'url';
 
 // Collections
 import { TrkiTests } from './collections/TrkiTests';
+import { TrkiQuestionBank } from './collections/TrkiQuestionBank';
+import { Vocabularies } from './collections/Vocabularies';
 import { VocabJars } from './collections/VocabJars';
+import { GrammarLessons } from './collections/GrammarLessons';
+import { TopicArticles } from './collections/TopicArticles';
 import { ListeningLessons } from './collections/ListeningLessons';
 import { SpeakingSets } from './collections/SpeakingSets';
 import { WritingTasks } from './collections/WritingTasks';
-import { VocabLessons } from './collections/VocabLessons';
 import { ShopProducts } from './collections/ShopProducts';
 import { Packages } from './collections/Packages';
 import { BlogPosts } from './collections/BlogPosts';
@@ -34,11 +37,14 @@ export default buildConfig({
   },
   collections: [
     TrkiTests,
+    TrkiQuestionBank,
+    Vocabularies,
     VocabJars,
+    GrammarLessons,
+    TopicArticles,
     ListeningLessons,
     SpeakingSets,
     WritingTasks,
-    VocabLessons,
     ShopProducts,
     Packages,
     BlogPosts,

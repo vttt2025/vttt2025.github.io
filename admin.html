@@ -67,7 +67,7 @@
           Đăng nhập bằng tài khoản Google
         </button>
 
-        <button class="p-btn p-btn-ghost p-btn-sm" id="btnDevBypass" type="button" style="color:var(--p-text-muted);font-size:12px;margin-top:6px" title="Dành cho môi trường phát triển offline cục bộ">
+        <button class="p-btn p-btn-ghost p-btn-sm" id="btnDevBypass" type="button" style="color:var(--p-text-muted);font-size:12px;margin-top:6px;display:none" title="Dành cho môi trường phát triển offline cục bộ">
           <i data-rusi-icon="zap-xp" data-size="14"></i> Chế độ Cục bộ (Local Dev Preview)
         </button>
       </div>
@@ -112,7 +112,7 @@
         <button class="p-btn p-btn-secondary" id="btnSwitchAccount" type="button">
           <i data-rusi-icon="log-out" data-size="16"></i> Đăng xuất &amp; Đổi tài khoản khác
         </button>
-        <button class="p-btn p-btn-ghost p-btn-sm" id="btnDevBypass2" type="button" style="color:var(--p-text-muted);font-size:12px">
+        <button class="p-btn p-btn-ghost p-btn-sm" id="btnDevBypass2" type="button" style="color:var(--p-text-muted);font-size:12px;display:none">
           <i data-rusi-icon="zap-xp" data-size="14"></i> Mở bằng Chế độ Cục bộ (Local Dev)
         </button>
       </div>
@@ -267,13 +267,11 @@
         <input type="text" class="p-input" id="sbUrlInput" value="https://nrhtdwjihnlaxrbitmcf.supabase.co" readonly style="font-family:var(--p-font-mono);font-size:12.5px" />
       </div>
 
-      <div class="p-form-group">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <label class="p-label" style="margin:0;font-weight:700;color:var(--p-primary)">Supabase Service Role Key (Bypass RLS — Khuyên dùng):</label>
-          <a href="https://supabase.com/dashboard/project/nrhtdwjihnlaxrbitmcf/settings/api" target="_blank" style="font-size:12px;color:var(--p-primary);text-decoration:none">Lấy key trên Dashboard ↗</a>
+      <div style="background:var(--p-surface-elevated);border:1px solid var(--p-border);border-radius:var(--p-radius);padding:12px;margin-bottom:14px;font-size:12px;color:var(--p-text-muted);line-height:1.5">
+        <div style="font-weight:700;color:var(--p-primary);display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <i data-rusi-icon="shield-anti-cheat" data-size="14"></i> Xác thực Quản trị viên chuẩn hóa (RLS Protected)
         </div>
-        <textarea class="p-textarea" id="sbServiceKeyInput" rows="2" placeholder="Dán service_role key vào đây (eyJhbGciOi...) để có toàn quyền Thêm/Sửa/Xóa dữ liệu đám mây" style="font-family:var(--p-font-mono);font-size:12px"></textarea>
-        <div style="font-size:11.5px;color:var(--p-text-muted);margin-top:4px">Khoá bí mật quản trị cho phép Admin CMS đẩy dữ liệu trực tiếp lên tất cả các bảng mà không bị chặn bởi RLS.</div>
+        Hệ thống sử dụng phiên đăng nhập Quản trị viên (Google/Email) đã được gán vai trò <code>academic_admin</code> hoặc <code>super_admin</code> kết hợp với Anon Key. Bạn không cần và không nên lưu Service Role Key vào trình duyệt để bảo đảm an toàn dữ liệu.
       </div>
 
       <div class="p-form-group">

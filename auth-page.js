@@ -190,7 +190,7 @@
       if (window.Auth) window.Auth.user = null;
     }
 
-    // Lắng nghe sự kiện đăng nhập từ Firebase Auth
+    // Lắng nghe sự kiện đăng nhập từ Supabase Auth
     if (window.Auth && typeof window.Auth.onChange === "function") {
       window.Auth.onChange((u) => {
         if (u && !isGuestUser(u)) {

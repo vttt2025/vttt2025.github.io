@@ -191,7 +191,7 @@
         parts: JSON.parse(JSON.stringify(SAMPLE_TRKI_PARTS))
       }),
       fields: [
-        { key: "id", label: "Mã đề thi (ID duy nhất / Code)", type: "text", required: true, help: "Ví dụ: trki_a1, trki_b1_de1" },
+        { key: "id", label: "Mã đề thi (ID duy nhất / Code)", type: "text", required: true, help: "Ví dụ: trki_zlat_a1_elem, trki_zlat_a2_t1, trki_custom_01" },
         { key: "title", label: "Tiêu đề đề thi", type: "text", required: true },
         {
           key: "level",
@@ -242,6 +242,164 @@
           options: [
             { v: "true", l: "Công khai (Published)" },
             { v: "false", l: "Lưu nháp (Draft)" }
+          ],
+          defaultValue: "true"
+        }
+      ]
+    },
+
+    TRKI_QUESTION_BANK: {
+      slug: "TRKI_QUESTION_BANK",
+      group: "study",
+      label: "Ngân hàng 1870+ Câu hỏi TRKI",
+      singular: "Câu hỏi TRKI",
+      icon: "help-circle",
+      webUrl: "mock-test.html",
+      source: () => (window.TRKI_QUESTION_BANK || []),
+      desc: "Ngân hàng 1870+ câu hỏi trắc nghiệm TRKI các cấp độ A1, A2, B1, B2 theo từng mã đề Zlatoust và chuyên đề ngữ pháp/đọc hiểu/nghe hiểu.",
+      createDefault: () => ({
+        id: generateUUID(),
+        code: "TRKI_Q_" + Date.now().toString().slice(-4),
+        test_code: "trki_zlat_a1_elem",
+        level: "A1",
+        sub_test: "lexis_grammar",
+        part_number: 1,
+        question_type: "multiple_choice",
+        order_index: 1,
+        prompt: "Анна читает ___ (книга).",
+        options: ["книгу", "книги", "книге"],
+        correct_index: 0,
+        correct_answer: "книгу",
+        explanation: "Động từ читать đi với Cách 4 (Винительный падеж) chỉ đối tượng trực tiếp: читает книгу.",
+        topic: "Cách 4 đối tượng trực tiếp",
+        difficulty: 2,
+        points: 1.0,
+        is_published: true,
+        is_pro_only: false
+      }),
+      fields: [
+        { key: "id", label: "Mã UUID câu hỏi", type: "text", required: true, help: "UUID chuẩn RFC 4122" },
+        { key: "code", label: "Mã định danh câu hỏi (Code)", type: "text", required: true, help: "Ví dụ: A1_ELEM_Q001, B1_TEST7_Q053" },
+        {
+          key: "test_code",
+          label: "Thuộc Đề thi TRKI (Test Code - Bảng trki_tests)",
+          type: "select",
+          dynamicOptions: "TRKI_BANK",
+          help: "Chọn đề thi cha trực thuộc trong ngân hàng đề thi TRKI",
+          options: [
+            { v: "trki_zlat_a1_elem", l: "A1 Elem — 100 câu (Zlatoust)" },
+            { v: "trki_zlat_a2_t1", l: "A2 Test 1 — 75 câu (Zlatoust)" },
+            { v: "trki_zlat_a2_t2", l: "A2 Test 2 — 70 câu (Zlatoust)" },
+            { v: "trki_zlat_a2_t3", l: "A2 Test 3 — 160 câu (Zlatoust)" },
+            { v: "trki_zlat_a2_t4", l: "A2 Test 4 — 80 câu (Zlatoust)" },
+            { v: "trki_zlat_a2_t5", l: "A2 Test 5 — 100 câu (Zlatoust)" },
+            { v: "trki_zlat_a2_t6", l: "A2 Test 6 — 100 câu (Zlatoust)" },
+            { v: "trki_zlat_a2_t7", l: "A2 Test 7 — 100 câu (Zlatoust)" },
+            { v: "trki_zlat_b1_t1", l: "B1 Test 1 — 100 câu (Zlatoust)" },
+            { v: "trki_zlat_b1_t2", l: "B1 Test 2 — 100 câu (Zlatoust)" },
+            { v: "trki_zlat_b1_t3", l: "B1 Test 3 — 75 câu (Zlatoust)" },
+            { v: "trki_zlat_b1_t4", l: "B1 Test 4 — 85 câu (Zlatoust)" },
+            { v: "trki_zlat_b1_t5", l: "B1 Test 5 — 60 câu (Zlatoust)" },
+            { v: "trki_zlat_b1_t6", l: "B1 Test 6 — 80 câu (Zlatoust)" },
+            { v: "trki_zlat_b1_t7", l: "B1 Test 7 — 55 câu (Zlatoust)" },
+            { v: "trki_zlat_b1_t8", l: "B1 Test 8 — 90 câu (Zlatoust)" },
+            { v: "trki_zlat_b1_t9", l: "B1 Test 9 — 70 câu (Zlatoust)" },
+            { v: "trki_zlat_b1_t10", l: "B1 Test 10 — 110 câu (Zlatoust)" },
+            { v: "trki_zlat_b1_t11", l: "B1 Test 11 — 130 câu (Zlatoust)" },
+            { v: "trki_zlat_b1_t12", l: "B1 Test 12 — 130 câu (Zlatoust)" }
+          ],
+          defaultValue: "trki_zlat_a1_elem"
+        },
+        {
+          key: "level",
+          label: "Cấp độ CEFR",
+          type: "select",
+          options: [
+            { v: "A1", l: "A1 — Sơ cấp" },
+            { v: "A2", l: "A2 — Cơ bản" },
+            { v: "B1", l: "B1 — Trung cấp 1" },
+            { v: "B2", l: "B2 — Trung cấp 2" }
+          ],
+          defaultValue: "A1"
+        },
+        {
+          key: "sub_test",
+          label: "Phân hệ bài thi",
+          type: "select",
+          options: [
+            { v: "lexis_grammar", l: "Từ vựng & Ngữ pháp (Лексика и Грамматика)" },
+            { v: "reading", l: "Đọc hiểu (Чтение)" },
+            { v: "listening", l: "Nghe hiểu (Аудирование)" },
+            { v: "writing", l: "Viết (Письмо)" },
+            { v: "speaking", l: "Nói (Говорение)" }
+          ],
+          defaultValue: "lexis_grammar"
+        },
+        { key: "order_index", label: "Thứ tự câu hỏi trong đề (Số thứ tự)", type: "number", defaultValue: 1 },
+        { key: "prompt", label: "Nội dung câu hỏi / Câu khuyết", type: "textarea", rows: 3, required: true, placeholder: "Ví dụ: Вы умеете читать ... ?" },
+        { key: "options", label: "Các phương án lựa chọn (mỗi dòng 1 phương án)", type: "list-lines", required: true, placeholder: "русский язык\nпо-русски\nрусский" },
+        {
+          key: "correct_index",
+          label: "Vị trí đáp án đúng (Bắt đầu từ 0)",
+          type: "select",
+          options: [
+            { v: 0, l: "Phương án 1 (Dòng 1)" },
+            { v: 1, l: "Phương án 2 (Dòng 2)" },
+            { v: 2, l: "Phương án 3 (Dòng 3)" },
+            { v: 3, l: "Phương án 4 (Dòng 4)" }
+          ],
+          defaultValue: 0
+        },
+        { key: "correct_answer", label: "Từ/câu đáp án đúng", type: "text", placeholder: "Ví dụ: по-русски" },
+        { key: "explanation", label: "Giải thích đáp án & Căn cứ ngữ pháp", type: "textarea", rows: 3, placeholder: "Ví dụ: Động từ читать đi với trạng từ chỉ ngôn ngữ по-русски." },
+        { key: "topic", label: "Chuyên điểm ngữ pháp / Chủ đề", type: "text", placeholder: "Ví dụ: Đại từ quan hệ, Biến cách Cách 2, Thể động từ..." },
+        {
+          key: "grammar_case",
+          label: "Cách ngữ pháp liên quan",
+          type: "select",
+          options: [
+            { v: "", l: "— Không áp dụng —" },
+            { v: "C1", l: "Cách 1 (Danh cách — Именительный)" },
+            { v: "C2", l: "Cách 2 (Sinh cách — Родительный)" },
+            { v: "C3", l: "Cách 3 (Dữ cách — Дательный)" },
+            { v: "C4", l: "Cách 4 (Đối cách — Винительный)" },
+            { v: "C5", l: "Cách 5 (Tạo cách — Творительный)" },
+            { v: "C6", l: "Cách 6 (Giới cách — Предложный)" }
+          ],
+          defaultValue: ""
+        },
+        {
+          key: "difficulty",
+          label: "Độ khó câu hỏi (1 - 5 sao)",
+          type: "select",
+          options: [
+            { v: 1, l: "⭐ Cực kỳ dễ (Cơ bản nhận biết)" },
+            { v: 2, l: "⭐⭐ Dễ (Hiểu & điền trực tiếp)" },
+            { v: 3, l: "⭐⭐⭐ Trung bình (Tiêu chuẩn đề thi)" },
+            { v: 4, l: "⭐⭐⭐⭐ Khá (Bẫy ngữ pháp, biến cách)" },
+            { v: 5, l: "⭐⭐⭐⭐⭐ Khó (Ngoại lệ, văn phong bản xứ)" }
+          ],
+          defaultValue: 3
+        },
+        { key: "passage", label: "Đoạn văn đọc hiểu (Nếu câu hỏi thuộc bài đọc)", type: "textarea", rows: 4 },
+        { key: "audio_url", label: "URL File âm thanh (Nếu câu hỏi thuộc bài nghe)", type: "text", placeholder: "https://...supabase.co/storage/v1/object/public/trki-audio/..." },
+        {
+          key: "is_pro_only",
+          label: "Quyền truy cập",
+          type: "select",
+          options: [
+            { v: "false", l: "Miễn phí (Free)" },
+            { v: "true", l: "Khóa VIP PRO" }
+          ],
+          defaultValue: "false"
+        },
+        {
+          key: "is_published",
+          label: "Trạng thái xuất bản",
+          type: "select",
+          options: [
+            { v: "true", l: "Công khai (Published)" },
+            { v: "false", l: "Bản nháp (Draft)" }
           ],
           defaultValue: "true"
         }
@@ -317,6 +475,13 @@
         { key: "id", label: "Mã từ vựng / UUID", type: "text", required: true, help: "UUID hoặc mã định danh duy nhất (tự động sinh theo chuẩn RFC 4122)" },
         { key: "word_with_stress", label: "Từ tiếng Nga (Có trọng âm)", type: "text", required: true, help: "Ví dụ: студе́нт, кни́га, изуча́ть" },
         { key: "meaning_vi", label: "Nghĩa tiếng Việt", type: "text", required: true },
+        {
+          key: "jar_id",
+          label: "Thuộc Lọ từ vựng (Bảng liên kết jar_items)",
+          type: "select",
+          dynamicOptions: "VOCAB_JARS",
+          help: "Chọn lọ từ vựng nếu muốn gán từ này vào Lọ ôn tập tương ứng"
+        },
         {
           key: "pos",
           label: "Từ loại (Part of Speech)",
@@ -571,6 +736,84 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           type: "markdown",
           required: true,
           help: "Soạn thảo toàn bộ nội dung bài học bằng Markdown: Tiêu đề (#, ##), chuỗi hành động, bảng từ vựng 4 cột, hội thoại, mẹo ghi nhớ (> [!TIP], > [!NOTE], > [!WARNING])."
+        }
+      ]
+    },
+
+    GRAMMAR_LESSONS: {
+      slug: "GRAMMAR_LESSONS",
+      group: "study",
+      label: "Chuyên đề Ngữ pháp (6 Cách)",
+      singular: "Bài giảng Ngữ pháp",
+      icon: "book-open-blog",
+      webUrl: "index.html",
+      source: () => (window.GRAMMAR_LESSONS || []),
+      desc: "Kho 27 chuyên đề ngữ pháp tiếng Nga chuyên sâu chuẩn CEFR A1-B2: Hệ thống 6 Cách, Động từ chuyển động, Cặp thể động từ (НСВ/СВ), Câu phức và Bảng biến cách.",
+      createDefault: () => ({
+        id: "lesson_grammar_" + Date.now().toString().slice(-4),
+        code: "bai_" + Date.now().toString().slice(-4),
+        title: "BÀI HỌC NGỮ PHÁP MỚI",
+        level: "A1",
+        category: "Hệ thống 6 Cách",
+        topic: "Hệ thống 6 Cách",
+        summary: "Tóm tắt mục tiêu bài học và kiến thức trọng tâm cần nắm vững.",
+        content_md: "# BÀI HỌC: TIÊU ĐỀ BÀI HỌC\n\n## 1. Mục tiêu bài học\n- Nắm vững quy tắc biến cách...\n\n## 2. Bảng quy tắc chia đuôi\n\n| Giống | Số ít | Số nhiều |\n|---|---|---|\n| Giống đực | ... | ... |\n\n## 3. Bài tập củng cố\n",
+        order_index: 1,
+        publication_status: "published",
+        access_entitlement: "free"
+      }),
+      fields: [
+        { key: "id", label: "Mã định danh duy nhất (ID)", type: "text", required: true, help: "Ví dụ: lesson_grammar_01, lesson_grammar_09" },
+        { key: "code", label: "Mã bài học (Code)", type: "text", required: true, help: "Ví dụ: bai_01, bai_09" },
+        { key: "title", label: "Tiêu đề bài học tiếng Nga & Việt", type: "text", required: true, placeholder: "BÀI 09: CÁCH 2 (РОДИТЕЛЬНЫЙ ПАДЕЖ) – SINH CÁCH" },
+        {
+          key: "level",
+          label: "Cấp độ ngữ pháp chuẩn",
+          type: "select",
+          options: [
+            { v: "A1", l: "A1 — Sơ cấp (Bảng chữ cái, Cách 1, Cách 6 cơ bản)" },
+            { v: "A2", l: "A2 — Cơ bản (6 Cách số ít, Động từ chuyển động không tiền tố)" },
+            { v: "B1", l: "B1 — Trung cấp (6 Cách số nhiều, Thể động từ НСВ/СВ, Tiền tố chuyển động)" },
+            { v: "B2", l: "B2 — Nâng cao (Phân từ, Phụ gia phân từ, Câu phức)" }
+          ],
+          defaultValue: "A1"
+        },
+        {
+          key: "category",
+          label: "Nhóm chuyên đề ngữ pháp",
+          type: "select",
+          options: [
+            { v: "Hệ thống 6 Cách", l: "Hệ thống 6 Cách (Падежи русского языка)" },
+            { v: "Động từ chuyển động", l: "Động từ chuyển động (Глаголы движения)" },
+            { v: "Thể động từ", l: "Thể động từ (Виды глаголов НСВ / СВ)" },
+            { v: "Cú pháp & Câu phức", l: "Cú pháp & Câu phức (Сложное предложение)" },
+            { v: "Phân từ & Trạng từ", l: "Phân từ & Trạng từ (Причастия и деепричастия)" },
+            { v: "Ngữ pháp tổng quan", l: "Ngữ pháp tổng quan & Phát âm" }
+          ],
+          defaultValue: "Hệ thống 6 Cách"
+        },
+        { key: "summary", label: "Tóm tắt ngắn / Mục tiêu bài học", type: "textarea", rows: 3, placeholder: "Tóm tắt các chức năng ngữ pháp và quy tắc cốt lõi..." },
+        { key: "content_md", label: "Nội dung bài học chuyên sâu (Markdown WYSIWYG)", type: "markdown", required: true, help: "Biên tập trực quan với tiêu đề, bảng, Mermaid flowcharts, code blocks và bài tập." },
+        { key: "order_index", label: "Thứ tự sắp xếp bài giảng", type: "number", defaultValue: 1 },
+        {
+          key: "access_entitlement",
+          label: "Quyền truy cập bài giảng",
+          type: "select",
+          options: [
+            { v: "free", l: "Miễn phí (Free cho mọi học viên)" },
+            { v: "pro", l: "Chuyên sâu PRO (Chỉ học viên VIP)" }
+          ],
+          defaultValue: "free"
+        },
+        {
+          key: "publication_status",
+          label: "Trạng thái xuất bản",
+          type: "select",
+          options: [
+            { v: "published", l: "Đã xuất bản (Published)" },
+            { v: "draft", l: "Bản nháp (Draft)" }
+          ],
+          defaultValue: "published"
         }
       ]
     },
@@ -1362,6 +1605,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     localStorage.setItem(STORE_KEY, JSON.stringify(store));
   }
 
+  const OBSOLETE_MOCK_TEST_IDS = new Set(["trki_a1", "trki_gram_a1a2", "trki_a2", "trki_reading_b1", "trki_b1", "trki_b2"]);
+
   function getMergedList(slug) {
     const col = COLLECTIONS[slug];
     if (!col) return [];
@@ -1373,6 +1618,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     const map = new Map();
     original.forEach((it) => {
       const key = it.id || it.slug || it.title;
+      if (slug === "TRKI_BANK" && OBSOLETE_MOCK_TEST_IDS.has(key)) return;
       if (key && !deletedSet.has(key)) {
         map.set(key, { ...it, __source: "original" });
       }
@@ -1382,6 +1628,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       const clone = { ...it };
       delete clone.__admin;
       const key = clone.id || clone.slug || clone.title;
+      if (slug === "TRKI_BANK" && OBSOLETE_MOCK_TEST_IDS.has(key)) return;
       if (key && !deletedSet.has(key)) {
         map.set(key, { ...clone, __source: "admin" });
       }
@@ -1504,10 +1751,20 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     if (State.currentRoute === "editor" && State.currentSlug) {
       const col = COLLECTIONS[State.currentSlug];
       if (State.isCreating) {
-        State.currentDraft = col.createDefault ? col.createDefault() : { id: "item_" + Date.now().toString().slice(-4), title: "Mục mới" };
+        State.currentDraft = (col && col.createDefault) ? col.createDefault() : { id: "item_" + Date.now().toString().slice(-4), title: "Mục mới" };
       } else {
-        const item = getMergedList(State.currentSlug).find((it) => (it.id || it.slug || it.title) === State.currentDocId);
-        State.currentDraft = item ? JSON.parse(JSON.stringify(stripSource(item))) : (col.createDefault ? col.createDefault() : {});
+        const targetId = String(State.currentDocId || "").trim();
+        const item = getMergedList(State.currentSlug).find((it) => {
+          if (!it) return false;
+          const k1 = it.id != null ? String(it.id).trim() : "";
+          const k2 = it.slug != null ? String(it.slug).trim() : "";
+          const k3 = it.code != null ? String(it.code).trim() : "";
+          const k4 = it.title != null ? String(it.title).trim() : "";
+          const k5 = it.uuid != null ? String(it.uuid).trim() : "";
+          const k6 = it.word_with_stress != null ? String(it.word_with_stress).trim() : "";
+          return k1 === targetId || k2 === targetId || k3 === targetId || k4 === targetId || k5 === targetId || k6 === targetId;
+        });
+        State.currentDraft = item ? JSON.parse(JSON.stringify(stripSource(item))) : ((col && col.createDefault) ? col.createDefault() : {});
       }
     } else {
       State.currentDraft = null;
@@ -1846,6 +2103,11 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         item.name,
         item.ru,
         item.vi,
+        item.test_code,
+        item.prompt,
+        item.explanation,
+        item.topic,
+        item.summary,
         item.categoryName,
         item.category,
         item.youtubeId,
@@ -1921,6 +2183,11 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         } else if (slug === "SHOP_PRODUCTS") {
           const pVnd = it.price_vnd || it.price;
           subText = `${pVnd ? Number(pVnd).toLocaleString("vi-VN") + " đ" : "Miễn phí"} • Kho: ${it.stock != null ? it.stock : 50} sp • ${it.category_name || it.category || ""}`;
+        } else if (slug === "TRKI_QUESTION_BANK") {
+          const ansText = it.correct_answer || (Array.isArray(it.options) && it.options[it.correct_index]) || "";
+          subText = `Đề: ${it.test_code || "—"} • ${it.sub_test || "grammar"} • ĐA: [${it.correct_index != null ? it.correct_index : "—"}] ${ansText} • ${it.topic || it.prompt ? (it.prompt.slice(0, 45) + "...") : ""}`;
+        } else if (slug === "GRAMMAR_LESSONS") {
+          subText = `Chuyên đề: ${it.category || it.topic || "Ngữ pháp"} • Cấp độ: ${it.level || "A1"} • Thứ tự: #${it.order_index || 1}`;
         } else if (slug === "PACKAGES") {
           const pVnd = it.price_vnd || it.price;
           subText = `${pVnd ? Number(pVnd).toLocaleString("vi-VN") + " đ" : "Liên hệ"} • ${it.duration_days ? it.duration_days + " ngày" : "Trọn đời"} • ${(it.features || []).length} quyền lợi`;
@@ -2148,7 +2415,21 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
   function renderDocumentEditor(container, slug) {
     const col = COLLECTIONS[slug];
-    if (!col || !State.currentDraft) return;
+    if (!col) {
+      container.innerHTML = `<div style="padding:40px;text-align:center">Collection không tồn tại. <a href="#dashboard">Quay lại Dashboard</a></div>`;
+      return;
+    }
+    if (!State.currentDraft) {
+      container.innerHTML = `
+        <div style="padding:48px 20px;text-align:center">
+          <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+          <div style="font-size:16px;font-weight:600;margin-bottom:6px">Không tìm thấy bản ghi dữ liệu</div>
+          <div style="color:var(--p-text-muted);font-size:13px;margin-bottom:16px">Mã bản ghi: <code>${esc(State.currentDocId || "")}</code></div>
+          <a class="p-btn p-btn-secondary" href="#collection/${escAttr(slug)}">Quay lại danh sách</a>
+        </div>
+      `;
+      return;
+    }
 
     const draft = State.currentDraft;
 
@@ -2218,6 +2499,26 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
               v: t.id || t.code,
               code: t.code,
               l: `[${t.level || "A1"}] ${t.title || t.code}`
+            }))
+          ];
+        } else if (f.dynamicOptions === "TRKI_BANK" || (f.key === "test_code" && slug === "TRKI_QUESTION_BANK")) {
+          const tests = getMergedList("TRKI_BANK");
+          optsList = [
+            { v: "", l: "-- Chọn Đề thi TRKI cha liên quan (Bảng trki_tests) --" },
+            ...tests.map(t => ({
+              v: t.code || t.id,
+              code: t.code || t.id,
+              l: `[${t.level || "A1"}] ${t.title || t.code || t.id}`
+            }))
+          ];
+        } else if (f.dynamicOptions === "VOCAB_JARS" || f.key === "jar_id") {
+          const jars = getMergedList("VOCAB_JARS");
+          optsList = [
+            { v: "", l: "-- Không thuộc lọ nào (Chỉ lưu trong Kho từ điển) --" },
+            ...jars.map(j => ({
+              v: j.uuid || j.id || j.code,
+              code: j.code,
+              l: `[${j.level || "A1"}] ${j.name || j.title || j.code}`
             }))
           ];
         }
@@ -2755,16 +3056,34 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           `;
         }
 
+        let uploadBtn = "";
+        const isMediaField = (f.key === "audio_url" || f.key === "audioUrl" || f.key === "image_url" || f.key === "image" || f.key === "cover_url" || f.key === "cover" || f.key === "avatar_url");
+        if (isMediaField) {
+          uploadBtn = `
+            <div style="margin-top:6px;display:flex;align-items:center;gap:8px">
+              <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.triggerMediaUpload('${escAttr(f.key)}')" style="font-size:11.5px;padding:4px 10px">
+                ${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 13 }) : "☁️"} Tải file lên Supabase Storage
+              </button>
+              <span id="uploadStatus_${escAttr(f.key)}" style="font-size:11px;color:var(--p-text-muted)"></span>
+            </div>
+          `;
+        }
+
         formFieldsHtml += `
           <div class="p-field-row">
             <label class="p-label">${esc(f.label)} ${f.required ? '<span class="p-label-req">*</span>' : ""}</label>
             <input type="${f.type === "number" ? "number" : "text"}" class="p-input live-draft-field" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}" value="${escAttr(val)}" ${isIdDisabled ? "readonly style='background:var(--p-surface-hover);cursor:not-allowed'" : ""} />
             ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
+            ${uploadBtn}
             ${mediaPreview}
           </div>
         `;
       }
     });
+
+    const structureHtml = (typeof renderActiveStructureBuilder === "function")
+      ? renderActiveStructureBuilder(slug, draft)
+      : "";
 
     if ((slug === "TOPIC_ARTICLES" || !structureHtml) && State.activeEditorTab === "structure") {
       State.activeEditorTab = "content";
@@ -5519,7 +5838,14 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             <div style="font-weight:700;font-size:15px;color:var(--p-text)">Danh sách từ vựng trong lọ (${wordList.length} từ)</div>
             <div style="font-size:12px;color:var(--p-text-muted)">Các từ vựng cốt lõi liên kết trong lọ, tự động đồng bộ sang bảng jar_items &amp; vocabularies</div>
           </div>
-          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addVocabJarWord()">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm từ vào lọ</button>
+          <div style="display:flex;gap:8px">
+            <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.openVocabPickerModal()" style="font-size:12px;padding:6px 12px">
+              ${window.RusiIcons ? RusiIcons.get("search-icon", { size: 14 }) : "🔍"} Chọn từ có sẵn từ Kho từ vựng (2000+ từ)
+            </button>
+            <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addVocabJarWord()" style="font-size:12px;padding:6px 12px">
+              ${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm từ mới vào lọ
+            </button>
+          </div>
         </div>
         <div class="payload-array-items">
           ${rowsHtml || '<div style="padding:28px;text-align:center;color:var(--p-text-muted);border:1px dashed var(--p-border-subtle);border-radius:8px">Lọ từ chưa có từ vựng nào. Bấm "+ Thêm từ vào lọ" để thêm.</div>'}
@@ -5562,6 +5888,109 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     if (field === "vi") {
       item.meaning_vi = val;
     }
+  };
+
+  window.openVocabPickerModal = function () {
+    const existing = document.getElementById("vocabPickerModal");
+    if (existing) existing.remove();
+
+    const vocabList = getMergedList("VOCABULARIES");
+    const modal = document.createElement("div");
+    modal.id = "vocabPickerModal";
+    modal.className = "payload-modal-backdrop";
+    modal.style.cssText = "display:flex;align-items:center;justify-content:center;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;backdrop-filter:blur(4px);";
+
+    modal.innerHTML = `
+      <div class="payload-modal" style="width:90%;max-width:680px;max-height:85vh;display:flex;flex-direction:column;background:var(--p-surface-elevated,#fff);border-radius:12px;box-shadow:0 20px 40px rgba(0,0,0,0.3);border:1px solid var(--p-border-subtle,#e5e7eb);overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--p-border-subtle,#e5e7eb)">
+          <div>
+            <div style="font-weight:700;font-size:16px;color:var(--p-text,#1f2937)">Chọn từ vựng từ Kho từ điển toàn hệ thống</div>
+            <div style="font-size:12px;color:var(--p-text-muted,#6b7280)">Kho từ điển hiện có ${vocabList.length} từ. Gõ để tìm kiếm nhanh và gán vào Lọ.</div>
+          </div>
+          <button type="button" class="p-btn-icon" onclick="document.getElementById('vocabPickerModal').remove()" style="font-size:18px">✕</button>
+        </div>
+        <div style="padding:12px 20px;border-bottom:1px solid var(--p-border-subtle,#e5e7eb);background:var(--p-surface-subtle,#f9fafb)">
+          <input type="text" id="vocabPickerSearchInput" class="p-input" placeholder="Nhập từ tiếng Nga hoặc nghĩa tiếng Việt để tìm..." style="font-size:14px;padding:8px 12px" />
+        </div>
+        <div id="vocabPickerResults" style="flex:1;overflow-y:auto;padding:10px 20px;max-height:480px">
+          <!-- Rendered items -->
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    const input = document.getElementById("vocabPickerSearchInput");
+    const resultsContainer = document.getElementById("vocabPickerResults");
+
+    const renderResults = (query = "") => {
+      const q = query.toLowerCase().trim();
+      const currentWordsInJar = new Set((State.currentDraft.words || []).map(w => w.id || w.ru || w.word_with_stress));
+      const filtered = vocabList.filter(v => {
+        if (!q) return true;
+        const ru = (v.word_with_stress || v.ru || "").toLowerCase();
+        const vi = (v.meaning_vi || v.vi || "").toLowerCase();
+        return ru.includes(q) || vi.includes(q);
+      }).slice(0, 30);
+
+      if (filtered.length === 0) {
+        resultsContainer.innerHTML = `<div style="padding:40px;text-align:center;color:var(--p-text-muted,#6b7280)">Không tìm thấy từ nào phù hợp với "${esc(q)}".</div>`;
+        return;
+      }
+
+      resultsContainer.innerHTML = filtered.map(v => {
+        const ru = v.word_with_stress || v.ru || "";
+        const vi = v.meaning_vi || v.vi || "";
+        const alreadyInJar = currentWordsInJar.has(v.id) || currentWordsInJar.has(ru);
+        return `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;margin-bottom:6px;border-radius:8px;border:1px solid var(--p-border-subtle,#e5e7eb);background:var(--p-surface,#fff);transition:background 0.15s">
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-weight:700;font-size:14.5px;color:var(--p-text,#1f2937)">${esc(ru)}</span>
+                ${v.pos ? `<span style="font-size:11px;color:var(--p-text-muted,#6b7280)">[${esc(v.pos)}]</span>` : ""}
+                ${v.level ? `<span class="p-pill p-pill-info" style="font-size:10px">${esc(v.level)}</span>` : ""}
+              </div>
+              <div style="font-size:12.5px;color:var(--p-text-muted,#4b5563);margin-top:2px">${esc(vi)}</div>
+            </div>
+            <div>
+              ${alreadyInJar
+                ? `<span style="font-size:11.5px;color:var(--p-success,#10b981);font-weight:600">✓ Đã có trong lọ</span>`
+                : `<button type="button" class="p-btn p-btn-secondary p-btn-sm" style="font-size:11.5px;padding:4px 10px" onclick="window.pickVocabIntoJar('${escAttr(v.id)}')">+ Chọn từ này</button>`
+              }
+            </div>
+          </div>
+        `;
+      }).join("");
+    };
+
+    input.oninput = (e) => renderResults(e.target.value);
+    renderResults();
+    input.focus();
+  };
+
+  window.pickVocabIntoJar = function (vocabId) {
+    const vocabList = getMergedList("VOCABULARIES");
+    const v = vocabList.find(x => x.id === vocabId);
+    if (!v || !State.currentDraft) return;
+
+    State.currentDraft.words = Array.isArray(State.currentDraft.words) ? State.currentDraft.words : [];
+    State.currentDraft.words.push({
+      id: v.id || generateUUID(),
+      word_with_stress: v.word_with_stress || v.ru || "",
+      ru: v.word_with_stress || v.ru || "",
+      meaning_vi: v.meaning_vi || v.vi || "",
+      vi: v.meaning_vi || v.vi || "",
+      pos: v.pos || "сущ.",
+      level: v.level || State.currentDraft.level || "A1",
+      ex: (Array.isArray(v.examples) && v.examples[0]) ? (v.examples[0].ru || "") : "",
+      ex_vi: (Array.isArray(v.examples) && v.examples[0]) ? (v.examples[0].vi || "") : ""
+    });
+
+    const modal = document.getElementById("vocabPickerModal");
+    if (modal) modal.remove();
+
+    refreshStructureTab();
+    toast(`Đã thêm từ "${v.word_with_stress || v.ru}" vào lọ!`, "success");
   };
 
   // --- Speaking Sets Builder ---
@@ -5718,6 +6147,78 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         }
       },
 
+      TRKI_QUESTION_BANK: {
+        table: "trki_question_bank",
+        conflict: "id",
+        deleteCol: "id",
+        label: "Ngân hàng câu hỏi TRKI",
+        idKey: (doc) => doc.id || doc.code,
+        toRow: (doc) => {
+          const qId = (doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID();
+          doc.id = qId;
+          const opts = Array.isArray(doc.options)
+            ? doc.options
+            : (typeof doc.options === "string" ? doc.options.split("\n").map(s => s.trim()).filter(Boolean) : []);
+          const correctIdx = Number(doc.correct_index != null ? doc.correct_index : 0);
+          const correctAns = doc.correct_answer || (opts[correctIdx] || "");
+          const orderIdx = Number(doc.order_index != null ? doc.order_index : (doc.question_number != null ? doc.question_number : 1));
+          return {
+            id: qId,
+            code: doc.code || ("TRKI_Q_" + Date.now().toString().slice(-4)),
+            test_code: doc.test_code || "",
+            test_id: doc.test_code || doc.test_id || null,
+            level: doc.level || "A1",
+            sub_test: doc.sub_test || doc.sub_test_type || "lexis_grammar",
+            part_number: Number(doc.part_number) || 1,
+            question_type: doc.question_type || "multiple_choice",
+            order_index: orderIdx,
+            prompt: doc.prompt || "",
+            prompt_vi: doc.prompt_vi || null,
+            passage: doc.passage || doc.reading_text || null,
+            audio_url: doc.audio_url || null,
+            image_url: doc.image_url || null,
+            options: opts,
+            correct_index: correctIdx,
+            correct_answer: correctAns,
+            explanation: doc.explanation || null,
+            topic: doc.topic || null,
+            grammar_case: doc.grammar_case || null,
+            difficulty: Number(doc.difficulty) || 2,
+            points: Number(doc.points) || 1.0,
+            is_published: Boolean(doc.is_published === undefined ? (doc.is_active !== undefined ? doc.is_active : true) : (doc.is_published === true || doc.is_published === "true")),
+            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
+            updated_at: new Date().toISOString()
+          };
+        },
+        fromRow: (row) => ({
+          id: row.id,
+          uuid: row.id,
+          code: row.code || row.id,
+          test_code: row.test_code || "",
+          test_id: row.test_id || row.test_code || "",
+          level: row.level || "A1",
+          sub_test: row.sub_test || "lexis_grammar",
+          part_number: Number(row.part_number) || 1,
+          question_type: row.question_type || "multiple_choice",
+          order_index: Number(row.order_index) || 1,
+          prompt: row.prompt || "",
+          prompt_vi: row.prompt_vi || "",
+          passage: row.passage || "",
+          audio_url: row.audio_url || "",
+          image_url: row.image_url || "",
+          options: Array.isArray(row.options) ? row.options : [],
+          correct_index: row.correct_index != null ? Number(row.correct_index) : 0,
+          correct_answer: row.correct_answer || "",
+          explanation: row.explanation || "",
+          topic: row.topic || "",
+          grammar_case: row.grammar_case || "",
+          difficulty: Number(row.difficulty) || 2,
+          points: Number(row.points) || 1.0,
+          is_published: row.is_published !== undefined ? Boolean(row.is_published) : true,
+          is_pro_only: Boolean(row.is_pro_only)
+        })
+      },
+
       VOCABULARIES: {
         table: "vocabularies",
         conflict: "id",
@@ -5748,6 +6249,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         fromRow: (row) => ({
           id: row.id,
           uuid: row.id,
+          jar_id: (Array.isArray(row.jar_items) && row.jar_items[0] && row.jar_items[0].jar_id) ? row.jar_items[0].jar_id : "",
           word_with_stress: row.word_with_stress,
           ru: row.word_with_stress,
           word_normalized: row.word_normalized,
@@ -5791,20 +6293,46 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             updated_at: new Date().toISOString()
           };
         },
-        fromRow: (row) => ({
-          id: row.code || row.id,
-          uuid: row.id,
-          code: row.code || row.id,
-          name: row.name || row.jar_name || "Lọ từ vựng",
-          jar_name: row.jar_name || row.name || "Lọ từ vựng",
-          level: row.level || "A1",
-          levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
-          desc: "Lọ từ vựng chủ đề",
-          icon: row.icon || "archive-jar",
-          is_pro_only: Boolean(row.is_pro),
-          word_count: Number(row.word_count) || 0,
-          words: Array.isArray(row.words) ? row.words : []
-        })
+        fromRow: (row) => {
+          let wordsArr = Array.isArray(row.words) ? row.words : [];
+          if ((!wordsArr || wordsArr.length === 0) && Array.isArray(row.jar_items)) {
+            wordsArr = row.jar_items
+              .slice()
+              .sort((a, b) => (Number(a.position) || 0) - (Number(b.position) || 0))
+              .map(item => {
+                const v = item.vocabularies || item.vocabulary || item;
+                return {
+                  id: v.id || item.vocab_id,
+                  ru: v.word_with_stress || v.ru || v.word || "",
+                  word_with_stress: v.word_with_stress || v.ru || "",
+                  vi: v.meaning_vi || v.vi || "",
+                  meaning_vi: v.meaning_vi || v.vi || "",
+                  pos: v.pos || "сущ.",
+                  level: v.level || row.level || "A1",
+                  notes: v.notes || "",
+                  gender: v.gender || null,
+                  aspect: v.aspect || null,
+                  audio_url: v.audio_url || null,
+                  structures: v.structures || [],
+                  examples: v.examples || []
+                };
+              });
+          }
+          return {
+            id: row.code || row.id,
+            uuid: row.id,
+            code: row.code || row.id,
+            name: row.name || row.jar_name || "Lọ từ vựng",
+            jar_name: row.jar_name || row.name || "Lọ từ vựng",
+            level: row.level || "A1",
+            levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
+            desc: "Lọ từ vựng chủ đề",
+            icon: row.icon || "archive-jar",
+            is_pro_only: Boolean(row.is_pro),
+            word_count: wordsArr.length || Number(row.word_count) || 0,
+            words: wordsArr
+          };
+        }
       },
 
       TOPIC_ARTICLES: {
@@ -5875,6 +6403,46 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             dialogues: normDia,
             grammarNotes: Array.isArray(row.grammar_notes) ? row.grammar_notes : (Array.isArray(art.grammarNotes) ? art.grammarNotes : []),
             actionChains: Array.isArray(row.action_chains) ? row.action_chains : (Array.isArray(art.actionChains) ? art.actionChains : [])
+          };
+        }
+      },
+
+      GRAMMAR_LESSONS: {
+        table: "grammar_lessons",
+        conflict: "id",
+        deleteCol: "id",
+        label: "Bài học ngữ pháp",
+        idKey: (doc) => doc.id,
+        toRow: (doc) => {
+          const gId = (doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID();
+          doc.id = gId;
+          const mdContent = doc.content_md != null ? doc.content_md : (doc.content != null ? doc.content : (doc.content_markdown || ""));
+          return {
+            id: gId,
+            level: doc.level || "A1",
+            title: doc.title || "Bài học ngữ pháp",
+            topic: doc.topic || "Ngữ pháp căn bản",
+            summary: doc.summary || "",
+            content_md: mdContent,
+            sort_order: Number(doc.sort_order) || 1,
+            is_published: Boolean(doc.is_published === undefined ? true : (doc.is_published === true || doc.is_published === "true")),
+            updated_at: new Date().toISOString()
+          };
+        },
+        fromRow: (row) => {
+          const mdContent = row.content_md || row.content || "";
+          return {
+            id: row.id,
+            uuid: row.id,
+            level: row.level || "A1",
+            title: row.title || "Bài học ngữ pháp",
+            topic: row.topic || "",
+            summary: row.summary || "",
+            content_md: mdContent,
+            content: mdContent,
+            content_markdown: mdContent,
+            sort_order: Number(row.sort_order) || 1,
+            is_published: row.is_published !== undefined ? Boolean(row.is_published) : true
           };
         }
       },
@@ -6487,12 +7055,29 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
               if (wordsToUpsert.length > 0) {
                 await sb.from("vocabularies").upsert(wordsToUpsert, { onConflict: "id" });
               }
+              // Đồng bộ sạch bảng liên kết jar_items: xóa toàn bộ cũ của jarId và ghi lại danh sách mới
+              await sb.from("jar_items").delete().eq("jar_id", jarId);
               if (itemsToInsert.length > 0) {
-                await sb.from("jar_items").upsert(itemsToInsert, { onConflict: "jar_id,vocab_id" });
+                await sb.from("jar_items").insert(itemsToInsert);
               }
             }
           } catch (e) {
             console.warn("[SupabaseSyncEngine] Đồng bộ jar_items cảnh báo:", e);
+          }
+        }
+
+        if (slug === "VOCABULARIES" && doc.jar_id && isValidUUID(doc.jar_id)) {
+          try {
+            const vId = (data && data[0] && data[0].id) || row.id;
+            if (vId && isValidUUID(vId)) {
+              await sb.from("jar_items").upsert({
+                jar_id: doc.jar_id,
+                vocab_id: vId,
+                position: 999
+              }, { onConflict: "jar_id,vocab_id" });
+            }
+          } catch (e) {
+            console.warn("[SupabaseSyncEngine] Gán jar_items cảnh báo:", e);
           }
         }
 
@@ -6598,6 +7183,35 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       return { ok: totalErrors === 0, totalSuccess, totalErrors, results };
     },
 
+    async fetchAllTableRows(sb, table, select = "*", pageSize = 1000) {
+      let allRows = [];
+      let page = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const from = page * pageSize;
+        const to = from + pageSize - 1;
+        const { data, error } = await sb
+          .from(table)
+          .select(select)
+          .range(from, to);
+        if (error) {
+          console.warn(`[SupabaseSyncEngine] Lỗi phân trang bảng ${table} (offset ${from}):`, error.message);
+          throw error;
+        }
+        if (Array.isArray(data) && data.length > 0) {
+          allRows.push(...data);
+          if (data.length < pageSize) {
+            hasMore = false;
+          } else {
+            page++;
+          }
+        } else {
+          hasMore = false;
+        }
+      }
+      return allRows;
+    },
+
     async pullAllCollections(onProgress) {
       const sb = this.getClient();
       if (!sb) return { ok: false, message: "Supabase client chưa sẵn sàng." };
@@ -6615,11 +7229,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         }
 
         try {
-          const { data, error } = await sb.from(mapping.table).select("*");
-          if (error) {
-            console.warn(`[SupabaseSyncEngine] Lỗi pull bảng ${mapping.table}:`, error.message);
-            continue;
-          }
+          let selectQuery = "*";
+          if (slug === "VOCAB_JARS") selectQuery = "*, jar_items(position, vocabularies(*))";
+          else if (slug === "VOCABULARIES") selectQuery = "*, jar_items(jar_id)";
+          const data = await this.fetchAllTableRows(sb, mapping.table, selectQuery);
 
           if (Array.isArray(data) && data.length > 0) {
             store[slug] = store[slug] || [];
@@ -6668,6 +7281,79 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     }
   };
   window.SupabaseSyncEngine = SupabaseSyncEngine;
+
+  window.triggerMediaUpload = function (fieldKey) {
+    const sb = window.SupabaseSyncEngine && window.SupabaseSyncEngine.getClient ? window.SupabaseSyncEngine.getClient() : null;
+    if (!sb) {
+      toast("Supabase client chưa sẵn sàng. Vui lòng kiểm tra kết nối API.", "error");
+      return;
+    }
+
+    const isAudio = fieldKey.toLowerCase().includes("audio");
+    const isCover = fieldKey.toLowerCase().includes("cover");
+    let bucket = "writing-images";
+    if (isAudio) {
+      bucket = "listening-audio";
+    } else if (isCover) {
+      bucket = "blog-covers";
+    } else if (State.currentSlug === "SHOP_PRODUCTS") {
+      bucket = "product-images";
+    }
+
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = isAudio ? "audio/*,.mp3,.wav,.ogg,.m4a" : "image/*,.jpg,.jpeg,.png,.webp,.svg";
+    fileInput.style.display = "none";
+    document.body.appendChild(fileInput);
+
+    fileInput.onchange = async () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) {
+        if (fileInput.parentNode) fileInput.parentNode.removeChild(fileInput);
+        return;
+      }
+
+      toast(`Đang tải file lên bucket "${bucket}"...`, "info");
+      try {
+        const cleanName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+        const filePath = `${Date.now()}_${cleanName}`;
+        const { data: uploadData, error: uploadError } = await sb.storage.from(bucket).upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true
+        });
+
+        if (uploadError) {
+          console.error("[Storage Upload Error]:", uploadError);
+          toast("Lỗi tải lên: " + uploadError.message, "error");
+          return;
+        }
+
+        const { data: urlData } = sb.storage.from(bucket).getPublicUrl(filePath);
+        const publicUrl = urlData ? urlData.publicUrl : "";
+
+        if (publicUrl) {
+          if (State.currentDraft) {
+            State.currentDraft[fieldKey] = publicUrl;
+          }
+          const targetInp = document.querySelector(`input[name="${fieldKey}"], input[data-key="${fieldKey}"]`);
+          if (targetInp) {
+            targetInp.value = publicUrl;
+            targetInp.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+          toast("✓ Đã tải file lên thành công!", "success");
+        }
+      } catch (err) {
+        console.error("[Storage Upload Exception]:", err);
+        toast("Ngoại lệ khi upload: " + err.message, "error");
+      } finally {
+        if (fileInput.parentNode) {
+          fileInput.parentNode.removeChild(fileInput);
+        }
+      }
+    };
+
+    fileInput.click();
+  };
 
   // =========================================================================
   // 10. SAVE, DELETE, CLONE & BULK ACTIONS
@@ -6732,6 +7418,12 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           State.currentDraft[k] = inp.type === "number" ? Number(inp.value) : inp.value;
         }
       });
+      document.querySelectorAll(".live-draft-field-lines").forEach((inp) => {
+        const k = inp.getAttribute("data-key") || inp.name;
+        if (k) {
+          State.currentDraft[k] = inp.value.split("\n").map((s) => s.trim()).filter(Boolean);
+        }
+      });
       // Nếu có canvas Notion trực quan, đồng bộ canvas sang markdown trước khi lưu
       const canvasEl = document.querySelector(".notion-canvas");
       if (canvasEl && typeof window.domToMarkdown === "function") {
@@ -6786,6 +7478,29 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     if (slug === "VOCABULARIES") {
       if (!data.id || !isValidUUID(data.id)) {
         data.id = (data.uuid && isValidUUID(data.uuid)) ? data.uuid : generateUUID();
+      }
+    }
+
+    if (slug === "TRKI_QUESTION_BANK") {
+      if (!data.id || !isValidUUID(data.id)) {
+        data.id = (data.uuid && isValidUUID(data.uuid)) ? data.uuid : generateUUID();
+      }
+      const opts = Array.isArray(data.options)
+        ? data.options
+        : (typeof data.options === "string" ? data.options.split("\n").map(s => s.trim()).filter(Boolean) : []);
+      data.options = opts;
+      const cIdx = Number(data.correct_index != null ? data.correct_index : 0);
+      if (opts[cIdx]) {
+        data.correct_answer = opts[cIdx];
+      }
+      if (!data.code) {
+        data.code = "TRKI_Q_" + Date.now().toString().slice(-4);
+      }
+      if (!data.sub_test) {
+        data.sub_test = "lexis_grammar";
+      }
+      if (data.order_index == null) {
+        data.order_index = 1;
       }
     }
 
@@ -7774,16 +8489,15 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     reader.onload = () => {
       try {
         let text = String(reader.result).trim();
-        let obj;
-        if (/^[\[{]/.test(text.replace(/^\s*\/\/.*$/gm, "").trim())) {
-          obj = JSON.parse(text.replace(/^\s*\/\/.*$/gm, ""));
-        } else {
-          const fn = new Function(text + `\n;return { ${COLLECTION_KEYS.join(", ")} };`);
-          obj = fn();
+        let cleaned = text.replace(/^\s*\/\/.*$/gm, "").trim();
+        if (cleaned.startsWith("const ") || cleaned.startsWith("var ") || cleaned.startsWith("let ") || cleaned.startsWith("window.")) {
+          const jsonMatch = cleaned.match(/=\s*([\[{][\s\S]*);?\s*$/);
+          if (jsonMatch) cleaned = jsonMatch[1].trim();
         }
+        const obj = JSON.parse(cleaned);
         importToStore(obj);
       } catch (err) {
-        toast("File không hợp lệ: " + err.message);
+        toast("File không hợp lệ hoặc sai định dạng JSON: " + err.message, "error");
       }
       e.target.value = "";
     };
@@ -7857,15 +8571,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     const saveBtn = document.getElementById("btnSaveSbKey");
     if (saveBtn) {
       saveBtn.onclick = () => {
-        const sVal = (serviceInp?.value || "").trim();
+        // Tự động dọn dẹp khóa service_role khỏi LocalStorage trình duyệt để bảo vệ an toàn
+        localStorage.removeItem("trki_sb_service_key");
+
         const aVal = (anonInp?.value || "").trim();
-
-        if (sVal) {
-          localStorage.setItem("trki_sb_service_key", sVal);
-        } else {
-          localStorage.removeItem("trki_sb_service_key");
-        }
-
         if (aVal) {
           if (window.SUPABASE_CONFIG) window.SUPABASE_CONFIG.anonKey = aVal;
           localStorage.setItem("trki_sb_anon_key", aVal);
@@ -7893,40 +8602,23 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     const copySqlBtn = document.getElementById("btnCopyFixSql");
     if (copySqlBtn) {
       copySqlBtn.onclick = () => {
-        const sql = `-- RUSI TRKI: CẤP TOÀN QUYỀN ĐỌC GHI CHO CMS
-GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated, service_role;
+        const sql = `-- RUSI TRKI: CẤP QUYỀN QUẢN TRỊ VIÊN AN TOÀN (CHUẨN BẢO MẬT RLS)
+-- Thay thế YOUR_EMAIL bằng email quản trị viên của bạn:
+UPDATE public.profiles 
+SET role = 'super_admin', updated_at = now() 
+WHERE email = 'YOUR_EMAIL';
 
-ALTER TABLE IF EXISTS public.trki_tests DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.vocabularies DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.vocab_jars DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.jar_items DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.topic_articles DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.listening_lessons DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.speaking_lessons DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.writing_tasks DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.writing_topics DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.grammar_lessons DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.packages DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.shop_products DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.blog_posts DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.vocab_lessons DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.writing_submissions DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.trki_submissions DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.orders DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.user_progress DISABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS public.user_vocab_progress DISABLE ROW LEVEL SECURITY;`;
+-- Đảm bảo quyền kiểm tra Admin:
+GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
 
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(sql).then(() => {
-            toast("Đã sao chép SQL mở quyền! Dán vào Supabase SQL Editor và bấm RUN.");
+            toast("Đã sao chép SQL cấp quyền Quản trị! Dán vào Supabase SQL Editor và bấm RUN.");
           }).catch(() => {
-            prompt("Sao chép mã SQL mở quyền Supabase:", sql);
+            prompt("Sao chép mã SQL cấp quyền Supabase:", sql);
           });
         } else {
-          prompt("Sao chép mã SQL mở quyền Supabase:", sql);
+          prompt("Sao chép mã SQL cấp quyền Supabase:", sql);
         }
       };
     }
@@ -7952,11 +8644,9 @@ ALTER TABLE IF EXISTS public.user_vocab_progress DISABLE ROW LEVEL SECURITY;`;
     if (!sb) {
       badge.textContent = "Chưa có Key";
       badge.className = "p-pill p-pill-warning";
-      msg.textContent = "Vui lòng nhập Service Role Key hoặc Anon Key từ Supabase Dashboard.";
+      msg.textContent = "Vui lòng nhập Anon Key từ Supabase Dashboard.";
       return;
     }
-
-    const hasServiceKey = Boolean(localStorage.getItem("trki_sb_service_key"));
 
     try {
       const startTime = Date.now();
@@ -7970,15 +8660,9 @@ ALTER TABLE IF EXISTS public.user_vocab_progress DISABLE ROW LEVEL SECURITY;`;
         return;
       }
 
-      if (hasServiceKey) {
-        badge.textContent = `Admin Sẵn Sàng (${latency}ms)`;
-        badge.className = "p-pill p-pill-success";
-        msg.textContent = "Đang dùng Service Role Key: Toàn quyền Thêm / Sửa / Xóa không bị RLS chặn.";
-      } else {
-        badge.textContent = `Anon Key Kết Nối (${latency}ms)`;
-        badge.className = "p-pill p-pill-info";
-        msg.textContent = "Kết nối tốt. Nếu đẩy bị lỗi phân quyền 401, hãy dán Service Role Key hoặc bấm 'Sao chép SQL' để mở quyền ghi.";
-      }
+      badge.textContent = `Kết nối tốt (${latency}ms)`;
+      badge.className = "p-pill p-pill-success";
+      msg.textContent = "Kết nối Supabase thành công. Quyền đọc/ghi được kiểm soát an toàn bởi tài khoản Quản trị & Row Level Security (RLS).";
     } catch (e) {
       badge.textContent = "Lỗi ngoại lệ";
       badge.className = "p-pill p-pill-danger";
@@ -8041,6 +8725,15 @@ ALTER TABLE IF EXISTS public.user_vocab_progress DISABLE ROW LEVEL SECURITY;`;
     "tuadenzettt@gmail.com"
   ];
 
+  function isLocalEnvironment() {
+    try {
+      const host = window.location.hostname;
+      return host === "localhost" || host === "127.0.0.1" || host === "::1" || window.location.protocol === "file:";
+    } catch (_) {
+      return false;
+    }
+  }
+
   function isUserAdmin(user) {
     if (!user) return false;
     const role = String(user.role || "").toLowerCase().trim();
@@ -8048,13 +8741,6 @@ ALTER TABLE IF EXISTS public.user_vocab_progress DISABLE ROW LEVEL SECURITY;`;
 
     const email = String(user.email || "").toLowerCase().trim();
     if (email && DEFAULT_ADMIN_EMAILS.includes(email)) return true;
-
-    try {
-      const extra = JSON.parse(localStorage.getItem("rusi_admin_emails") || "[]");
-      if (Array.isArray(extra) && extra.map((e) => String(e).toLowerCase().trim()).includes(email)) {
-        return true;
-      }
-    } catch (_) {}
 
     return false;
   }
@@ -8136,7 +8822,7 @@ ALTER TABLE IF EXISTS public.user_vocab_progress DISABLE ROW LEVEL SECURITY;`;
     const deniedGate = document.getElementById("deniedGate");
     const appEl = document.getElementById("payloadApp");
 
-    const isDevMode = localStorage.getItem(DEV_MODE_KEY) === "true";
+    const isDevMode = isLocalEnvironment() && localStorage.getItem(DEV_MODE_KEY) === "true";
 
     if (isDevMode) {
       if (loginGate) loginGate.style.display = "none";
@@ -8338,16 +9024,27 @@ ALTER TABLE IF EXISTS public.user_vocab_progress DISABLE ROW LEVEL SECURITY;`;
       };
     }
 
-    // Nút Dev Mode Bypass (cục bộ)
-    const onDevBypass = () => {
-      localStorage.setItem(DEV_MODE_KEY, "true");
-      toast("Đã kích hoạt chế độ Quản trị Cục bộ (Local Dev)!");
-      applyAuthState(true);
-    };
+    // Nút Dev Mode Bypass (chỉ hiển thị và hoạt động trên môi trường cục bộ localhost)
     const dev1 = document.getElementById("btnDevBypass");
-    if (dev1) dev1.onclick = onDevBypass;
     const dev2 = document.getElementById("btnDevBypass2");
-    if (dev2) dev2.onclick = onDevBypass;
+    if (isLocalEnvironment()) {
+      const onDevBypass = () => {
+        localStorage.setItem(DEV_MODE_KEY, "true");
+        toast("Đã kích hoạt chế độ Quản trị Cục bộ (Local Dev)!");
+        applyAuthState(true);
+      };
+      if (dev1) {
+        dev1.style.display = "";
+        dev1.onclick = onDevBypass;
+      }
+      if (dev2) {
+        dev2.style.display = "";
+        dev2.onclick = onDevBypass;
+      }
+    } else {
+      if (dev1) dev1.style.display = "none";
+      if (dev2) dev2.style.display = "none";
+    }
 
     // Supabase Cloud Buttons
     const pushSb = document.getElementById("btnPushAllToSb");
@@ -8452,4 +9149,10 @@ ALTER TABLE IF EXISTS public.user_vocab_progress DISABLE ROW LEVEL SECURITY;`;
 
   window.openSupabaseModal = openSupabaseModal;
   window.openLivePreview = openLivePreview;
+  window.getMergedList = getMergedList;
+  window.COLLECTIONS = COLLECTIONS;
+  window.State = State;
+  window.SupabaseSyncEngine = SupabaseSyncEngine;
+  window.handleRoute = handleRoute;
+  window.renderActiveStructureBuilder = renderActiveStructureBuilder;
 })();

@@ -10331,20 +10331,82 @@ function initWritingPage() {
           return;
         }
 
-        const scores = [
-          Math.min(25, Math.floor(19 + Math.random() * 6)),
-          Math.min(25, Math.floor(20 + Math.random() * 5)),
-          Math.min(25, Math.floor(19 + Math.random() * 6)),
-          Math.min(25, Math.floor(21 + Math.random() * 4))
-        ];
+        // --- ĐÁNH GIÁ CHUẨN XÁC THEO 4 TIÊU CHÍ CEFR CHO BÀI VIẾT TIẾNG NGA ---
+        const cyrillicRegex = /[\u0400-\u04FF]/g;
+        const cyrillicChars = text.match(cyrillicRegex) || [];
+        const latinChars = text.match(/[a-zA-Z]/g) || [];
+
+        if (cyrillicChars.length < 10) {
+          toast("Bài viết cần được viết bằng tiếng Nga (ký tự Cyrillic). Hãy sử dụng bàn phím ảo bên trên!");
+          return;
+        }
+
+        const wordsArr = text.split(/\s+/).filter(Boolean);
+        const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
+        const uniqueWords = new Set(wordsArr.map(w => w.toLowerCase().replace(/[^а-яё]/gi, "")));
+
+        // 1. Tiêu chí Ngữ pháp (Грамматика - max 25)
+        let grammarScore = 18;
+        if (latinChars.length === 0) grammarScore += 2;
+        if (sentences.length >= 2) grammarScore += 2;
+        const hasCapitalization = sentences.every(s => /^[А-ЯЁ«"]/.test(s));
+        if (hasCapitalization) grammarScore += 1;
+        const hasVerbs = wordsArr.some(w => /(?:ет|ут|ют|ит|ат|ят|ал|ала|али|ть|ся|сь)$/i.test(w));
+        if (hasVerbs) grammarScore += 2;
+        grammarScore = Math.max(12, Math.min(25, grammarScore));
+
+        // 2. Tiêu chí Vốn từ (Лексика - max 25)
+        let lexisScore = 17;
+        const lexicalDiversity = wordsArr.length > 0 ? (uniqueWords.size / wordsArr.length) : 1;
+        if (lexicalDiversity >= 0.65) lexisScore += 3;
+        else if (lexicalDiversity >= 0.5) lexisScore += 1;
+        const usedHints = words.filter(hw => {
+          const wRu = (typeof hw === "object" && hw ? (hw.ru || hw.word) : String(hw)).toLowerCase().replace(/[^а-яё]/gi, "");
+          return wRu && text.toLowerCase().includes(wRu);
+        });
+        lexisScore += Math.min(4, usedHints.length);
+        if (wordsArr.some(w => w.length >= 7)) lexisScore += 1;
+        lexisScore = Math.max(12, Math.min(25, lexisScore));
+
+        // 3. Tiêu chí Bố cục & Liên kết (Структура - max 25)
+        let structureScore = 18;
+        const connectors = ["и", "а", "но", "потому что", "поэтому", "когда", "если", "чтобы", "также", "потом", "затем", "так как"];
+        const foundConnectors = connectors.filter(c => text.toLowerCase().includes(c));
+        structureScore += Math.min(4, foundConnectors.length);
+        if (sentences.length >= 3) structureScore += 2;
+        structureScore = Math.max(12, Math.min(25, structureScore));
+
+        // 4. Tiêu chí Nội dung & Yêu cầu đề bài (Содержание - max 25)
+        let contentScore = 18;
+        const lengthRatio = count / minWords(t);
+        if (lengthRatio >= 1.25) contentScore += 4;
+        else if (lengthRatio >= 1.0) contentScore += 2;
+        if (sentences.length >= 3) contentScore += 2;
+        contentScore = Math.max(12, Math.min(25, contentScore));
+
+        const scores = [grammarScore, lexisScore, structureScore, contentScore];
         const total = scores.reduce((sum, score) => sum + score, 0);
+
+        let feedbackComment = `Bài viết đạt độ dài <b>${count} từ</b> với <b>${sentences.length} câu</b> hoàn chỉnh. `;
+        if (usedHints.length > 0) {
+          feedbackComment += `Bạn đã áp dụng thành công <b>${usedHints.length} từ vựng gợi ý</b> của bài. `;
+        }
+        if (foundConnectors.length > 0) {
+          feedbackComment += `Khả năng liên kết câu tốt với các từ nối: <i>«${foundConnectors.slice(0, 3).join(", ")}»</i>. `;
+        }
+        if (latinChars.length > 0) {
+          feedbackComment += `<br><span style="color:var(--secondary)">Lưu ý: Có xuất hiện một số ký tự Latinh trong bài, hãy kiểm tra lại bàn phím nhé.</span>`;
+        } else {
+          feedbackComment += `Chính tả Cyrillic chuẩn xác. Tiếp tục duy trì phong độ nhé!`;
+        }
+
         const scoreBox = panel.querySelector(".ai-score-box");
         scoreBox.classList.remove("hidden");
         scoreBox.innerHTML = `
           <div class="writing-score-result">
             <div class="writing-score-summary">
               <span class="writing-score-icon">${icon("award-badge", 24)}</span>
-              <div><span>KẾT QUẢ CHẤM BÀI</span><strong>${total}/100 · ${total >= 66 ? "ĐẠT" : "CẦN CỐ GẮNG"}</strong></div>
+              <div><span>KẾT QUẢ CHẤM BÀI CEFR</span><strong>${total}/100 · ${total >= 66 ? "ĐẠT (СДАНО)" : "CẦN CỐ GẮNG"}</strong></div>
             </div>
             <div class="scorecard-4c">
               ${[
@@ -10359,13 +10421,13 @@ function initWritingPage() {
                 </div>
               `).join("")}
             </div>
-            <div class="writing-score-feedback">${icon("cat-mascot", 18)} <span><b>Nhận xét từ Mèo Rusika:</b> Bài viết của bạn bám sát yêu cầu đề bài ${esc(t.title)}, câu văn diễn đạt rõ ràng. Bạn đã dùng tốt vốn từ chỉ hoạt động thực tế. Tiếp tục phát huy nhé!</span></div>
+            <div class="writing-score-feedback">${icon("cat-mascot", 18)} <span><b>Nhận xét từ Mèo Rusika:</b> ${feedbackComment}</span></div>
           </div>
         `;
         revealVocab();
         if (!Progress.doneList("writeDone").includes(t.id)) Progress.addXp(20);
         Progress.markDone("writeDone", t.id);
-        toast("AI Rusika đã chấm xong bài viết của bạn (+20 XP)!");
+        toast("AI Rusika đã phân tích và chấm xong bài viết (+20 XP)!");
         scoreBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
       };
 
@@ -10624,9 +10686,12 @@ function initMockTestPage() {
     if (btnStart) {
       btnStart.onclick = () => {
         if (selectedPartIds.size === 0) return;
-        closeModal();
+        // Hiện loading state khi fetch câu hỏi từ ngân hàng
+        btnStart.disabled = true;
+        btnStart.textContent = "Đang tải câu hỏi...";
         const selectedList = Array.from(selectedPartIds);
         const partParam = (selectedList.length === allPartIds.length) ? null : selectedList;
+        closeModal();
         startTest(test, partParam, currentModalMode);
       };
     }
@@ -10881,7 +10946,44 @@ function initMockTestPage() {
     return "trki_exam_" + currentTest.id + "_" + pKey + "_" + examMode;
   };
 
-  const startTest = (test = null, partId = null, mode = "exam") => {
+  // Hàm chuẩn hoá options: đảm bảo luôn trả về array dù DB lưu string hay array
+  const normalizeOptions = (opts) => {
+    if (Array.isArray(opts)) return opts;
+    if (typeof opts === "string" && opts.trim()) return opts.trim().split(/\s{2,}|\t|\n/).map(s => s.trim()).filter(Boolean);
+    return [];
+  };
+
+  // Fetch câu hỏi từ trki_question_bank và merge vào parts của test (Bug #1 fix)
+  const loadQBankIntoTest = async (test) => {
+    if (!test || !test.code) return;
+    if (!window.RusiSupabase || !window.RusiSupabase.isReady()) return;
+    try {
+      const rows = await window.RusiSupabase.questionBank.getByTest(test.code);
+      if (!rows || !rows.length) return;
+      // Map từ schema trki_question_bank → format {q, options, a, ex, topic} dùng trong renderQuestionBlock
+      const mapped = rows
+        .sort((x, y) => (x.order_index || 0) - (y.order_index || 0))
+        .map(r => ({
+          q: r.prompt || r.question_text || "",
+          options: normalizeOptions(r.options),
+          a: typeof r.correct_index === "number" ? r.correct_index : 0,
+          ex: r.explanation || "",
+          topic: r.topic || ""
+        }))
+        .filter(r => r.q && r.options.length >= 2);
+      if (!mapped.length) return;
+      // Đảm bảo test.parts tồn tại dạng array, merge câu vào part đầu (lexis_grammar)
+      if (!Array.isArray(test.parts) || !test.parts.length) {
+        test.parts = [{ id: "gram", name: "Лексика и грамматика", vi: "Từ vựng và ngữ pháp", durationMin: 60, questions: mapped }];
+      } else {
+        test.parts[0].questions = mapped;
+      }
+    } catch (e) {
+      console.warn("[TRKI] Không tải được câu hỏi từ ngân hàng:", e);
+    }
+  };
+
+  const startTest = async (test = null, partId = null, mode = "exam") => {
     if (test) currentTest = test;
     activePartId = partId;
     examMode = mode || "exam";
@@ -10892,6 +10994,11 @@ function initMockTestPage() {
 
     const modal = document.getElementById("trkiSubtestModal");
     if (modal) modal.remove();
+
+    // Bug #1 fix: Nạp câu hỏi từ trki_question_bank nếu test có code trki_zlat_*
+    if (currentTest && currentTest.code && currentTest.code.startsWith("trki_zlat")) {
+      await loadQBankIntoTest(currentTest);
+    }
 
     const selectedPartList = getExamPartList();
     const isSubset = Boolean(selectedPartList && selectedPartList.length > 0 && selectedPartList.length < (currentTest.parts || []).length);
@@ -11019,6 +11126,24 @@ function initMockTestPage() {
       return;
     }
 
+    // Kiểm tra có câu hỏi không (Bug #1 guard)
+    const totalQCheck = currentTest.parts.reduce((acc, p) => acc + ((p && p.questions) ? p.questions.length : 0), 0);
+    if (totalQCheck === 0) {
+      host.innerHTML = `
+        <div style="padding:60px 24px;text-align:center;max-width:480px;margin:0 auto">
+          <div style="font-size:48px;margin-bottom:16px">📭</div>
+          <h3 style="margin-bottom:8px">Chưa có câu hỏi cho đề thi này</h3>
+          <p style="color:var(--muted);margin-bottom:20px">Ngân hàng câu hỏi đang được cập nhật. Vui lòng thử lại sau ít phút.</p>
+          <button class="btn btn-primary" id="btnBackFromEmpty">← Quay lại danh sách đề</button>
+        </div>
+      `;
+      document.body.classList.remove("in-workspace");
+      started = false;
+      const btn = host.querySelector("#btnBackFromEmpty");
+      if (btn) btn.onclick = () => renderHub();
+      return;
+    }
+
     const isPractice = (examMode === "practice");
     const selectedPartList = getExamPartList();
     const isSubset = Boolean(selectedPartList && selectedPartList.length > 0 && selectedPartList.length < (currentTest.parts || []).length);
@@ -11051,7 +11176,7 @@ function initMockTestPage() {
           </div>
           <p class="q-text"><span class="ru">${esc(q.q)}</span></p>
           <div class="options">
-            ${q.options.map((opt, oi) => {
+            ${normalizeOptions(q.options).map((opt, oi) => {
               let optClass = "option ru";
               if (isPractice && hasAnswered) {
                 if (oi === q.a) optClass += " correct";
