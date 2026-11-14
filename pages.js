@@ -10031,13 +10031,15 @@ function initWritingPage() {
                     <span class="writing-btn-text writing-btn-text-compact">Chấm AI</span>
                   </button>
                   <div class="writing-quota-pill" id="writingAiQuotaBadge" title="Hạn mức chấm điểm AI hôm nay (tự động làm mới mỗi ngày)">
-                    <span class="writing-quota-dot"></span>
+                    <span class="writing-quota-icon">${icon("zap-xp", 15)}</span>
                     <span id="writingAiQuotaText">
                       <span class="quota-full-txt">Đang kiểm tra...</span>
                       <span class="quota-compact-txt">...</span>
                     </span>
                   </div>
                 </div>
+
+                <div class="writing-bar-divider" aria-hidden="true"></div>
 
                 <div class="writing-bar-right">
                   <button type="button" class="btn btn-outline btn-model" title="Bài mẫu TRKI" aria-label="Bài mẫu TRKI">
@@ -10237,42 +10239,53 @@ function initWritingPage() {
 
       // --- CẬP NHẬT HIỂN THỊ HẠN MỨC CHẤM AI TRÊN SUPABASE (3 lượt/ngày Free, 20 lượt/ngày PRO) ---
       const updateQuotaDisplay = async () => {
+        const quotaBadge = panel.querySelector("#writingAiQuotaBadge");
         const quotaText = panel.querySelector("#writingAiQuotaText");
-        const quotaDot = panel.querySelector(".writing-quota-dot");
         if (!quotaText) return;
         const curUser = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
         const isPro = typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : Boolean(curUser?.is_pro);
         if (!curUser) {
           quotaText.innerHTML = `<span class="quota-full-txt" style="color:var(--muted)">Đăng nhập nhận 3 lượt AI/ngày</span><span class="quota-compact-txt" style="color:var(--muted)">3 lượt</span>`;
-          if (quotaDot) quotaDot.className = "writing-quota-dot is-off";
+          if (quotaBadge) {
+            quotaBadge.classList.remove("is-active", "is-empty");
+            quotaBadge.classList.add("is-off");
+          }
           return;
         }
         if (window.RusiSupabase?.aiQuota?.get) {
           try {
             const q = await window.RusiSupabase.aiQuota.get(curUser.id || curUser.uid, isPro);
             const isZero = q.remaining <= 0;
-            if (quotaDot) {
-              quotaDot.className = "writing-quota-dot " + (isZero ? "is-empty" : "is-active");
+            if (quotaBadge) {
+              quotaBadge.classList.remove("is-off");
+              quotaBadge.classList.toggle("is-empty", isZero);
+              quotaBadge.classList.toggle("is-active", !isZero);
             }
             const tierBadge = isPro
               ? '<span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">PRO</span>'
               : '<span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">Free</span>';
-            quotaText.innerHTML = `<span class="quota-full-txt">Còn <b>${q.remaining}/${q.max_limit}</b> lượt</span><span class="quota-compact-txt"><b>${q.remaining}/${q.max_limit}</b></span> ${tierBadge}`;
+            quotaText.innerHTML = `<span class="quota-full-txt">Còn <b>${q.remaining}/${q.max_limit}</b> lượt ${tierBadge}</span><span class="quota-compact-txt"><b>${q.remaining}/${q.max_limit}</b></span>`;
           } catch (_) {
-            if (quotaDot) quotaDot.className = "writing-quota-dot is-active";
+            if (quotaBadge) {
+              quotaBadge.classList.remove("is-off", "is-empty");
+              quotaBadge.classList.add("is-active");
+            }
             const remaining = isPro ? 20 : 3;
             const tierBadge = isPro
               ? '<span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">PRO</span>'
               : '<span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">Free</span>';
-            quotaText.innerHTML = `<span class="quota-full-txt">Còn <b>${remaining}</b> lượt</span><span class="quota-compact-txt"><b>${remaining}</b></span> ${tierBadge}`;
+            quotaText.innerHTML = `<span class="quota-full-txt">Còn <b>${remaining}</b> lượt ${tierBadge}</span><span class="quota-compact-txt"><b>${remaining}</b></span>`;
           }
         } else {
-          if (quotaDot) quotaDot.className = "writing-quota-dot is-active";
+          if (quotaBadge) {
+            quotaBadge.classList.remove("is-off", "is-empty");
+            quotaBadge.classList.add("is-active");
+          }
           const remaining = isPro ? 20 : 3;
           const tierBadge = isPro
             ? '<span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">PRO</span>'
             : '<span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">Free</span>';
-          quotaText.innerHTML = `<span class="quota-full-txt">Còn <b>${remaining}</b> lượt</span><span class="quota-compact-txt"><b>${remaining}</b></span> ${tierBadge}`;
+          quotaText.innerHTML = `<span class="quota-full-txt">Còn <b>${remaining}</b> lượt ${tierBadge}</span><span class="quota-compact-txt"><b>${remaining}</b></span>`;
         }
       };
       updateQuotaDisplay();
