@@ -29459,7 +29459,7 @@ body.has-bottom-bar .rusika-floating-widget {
     padding: 12px 14px;
     gap: 12px;
   }
-  .sp-result-right {
+  .sp-speech-result-bar .sp-result-right {
     justify-content: space-between;
     width: 100%;
     border-top: 1px solid var(--border);
@@ -31490,6 +31490,26 @@ body.index-personalized #indexUserProgressHost {
   color: var(--primary);
 }
 
+@media (max-width: 680px) {
+  .rusi-ai-review-card {
+    padding: 16px 14px;
+    border-radius: 14px;
+    margin-top: 16px;
+    gap: 14px;
+  }
+  .rusi-ai-eval-header {
+    gap: 12px;
+    padding-bottom: 12px;
+  }
+  .rusi-ai-score-cluster {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .rusi-ai-chips-wrap {
+    width: 100%;
+  }
+}
+
 
 /* =====================================================================
    2. THẺ VOICE MEMO TỐI GIẢN (SLIM AUDIO CAPSULE, APPLE/TELEGRAM AESTHETIC)
@@ -31651,10 +31671,13 @@ body.index-personalized #indexUserProgressHost {
 
 /* Bên phải: Điểm số & Các nút icon tròn tinh gọn */
 .sp-voice-memo-widget .sp-result-right {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
+  width: auto;
+  border-top: none;
+  padding-top: 0;
 }
 
 .sp-voice-memo-widget .sp-score-badge,
@@ -31731,13 +31754,86 @@ body.index-personalized #indexUserProgressHost {
 }
 
 /* Đảm bảo responsive tối giản không bị vỡ layout trên mobile */
-@media (max-width: 480px) {
+@media (max-width: 680px) {
   .sp-voice-memo-widget {
-    padding: 5px 10px;
-    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 16px;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    min-height: auto;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin-top: 10px;
+  }
+  .sp-voice-memo-widget .sp-vm-left {
+    order: 1;
+    flex-shrink: 0;
+  }
+  .sp-voice-memo-widget .sp-result-right {
+    order: 2;
+    margin-left: auto;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+    width: auto !important;
+    border-top: none !important;
+    padding-top: 0 !important;
+    justify-content: flex-end !important;
+  }
+  .sp-voice-memo-widget .sp-vm-center {
+    order: 3;
+    width: 100%;
+    min-width: 0;
+    flex: 0 0 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    padding-top: 6px;
+  }
+  .sp-voice-memo-widget .sp-user-transcript-text {
+    white-space: normal !important;
+    word-break: break-word;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    max-height: 5em;
+    overflow-y: auto;
+  }
+  .sp-voice-memo-widget .sp-vm-audio-track {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
   }
   .sp-voice-memo-widget .sp-vm-waveform {
     display: none !important;
+  }
+  .sp-voice-memo-widget .sp-score-badge,
+  .sp-voice-memo-widget .sp-score-pill {
+    min-width: 34px;
+    padding: 2px 7px;
+    font-size: 0.76rem;
+  }
+  .sp-voice-memo-widget .sp-vm-btn-icon {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sp-voice-memo-widget {
+    padding: 8px 10px;
+    gap: 6px 8px;
+    border-radius: 14px;
+  }
+  .sp-voice-memo-widget .sp-vm-play-btn,
+  .sp-voice-memo-widget .sp-rec-live-indicator {
+    width: 30px;
+    height: 30px;
+  }
+  .sp-voice-memo-widget .sp-user-transcript-text {
+    font-size: 0.88rem;
   }
 }
 
@@ -31990,6 +32086,38 @@ body.index-personalized #indexUserProgressHost {
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 6px;
+}
+
+@media (max-width: 680px) {
+  .trki-hero-eval-card {
+    padding: 18px 16px;
+    border-radius: 14px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .trki-hero-eval-left {
+    min-width: 0;
+    width: 100%;
+  }
+  .trki-hero-eval-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .trki-score-display {
+    align-items: flex-start;
+  }
+  .trki-score-num {
+    font-size: 2.5rem;
+  }
+  .trki-result-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  .trki-result-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* Question Review Cards */
@@ -32258,4 +32386,19 @@ body.index-personalized #indexUserProgressHost {
   color: var(--muted);
   margin-top: 4px;
   font-style: italic;
+}
+
+@media (max-width: 680px) {
+  .voc-progress-modal-box {
+    padding: 16px 14px;
+    border-radius: 16px;
+    width: 96%;
+  }
+  .voc-pmodal-tab {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+  .voc-pmodal-row {
+    padding: 10px 12px;
+  }
 }
