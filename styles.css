@@ -30684,32 +30684,54 @@ body.index-personalized #indexUserProgressHost {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 24px;
-  padding: 20px 22px;
-  background: color-mix(in srgb, var(--primary) 7%, var(--surface));
-  border-radius: 14px;
+  padding: 22px 24px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, var(--surface)) 0%, color-mix(in srgb, var(--primary) 4%, var(--surface)) 100%);
+  border: 1.5px solid color-mix(in srgb, var(--primary) 32%, var(--border));
+  border-radius: 16px;
+  box-shadow: 0 6px 20px rgba(23, 87, 166, 0.08);
+  position: relative;
+  overflow: hidden;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+#indexUserProgressHost .index-progress-focus-card:hover {
+  box-shadow: 0 8px 28px rgba(23, 87, 166, 0.12);
 }
 
 #indexUserProgressHost .index-progress-focus-card.is-due {
-  background: #fff7e8;
+  background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%);
+  border: 1.5px solid #f59e0b;
+  box-shadow: 0 6px 24px rgba(245, 158, 11, 0.15);
+}
+
+#indexUserProgressHost .index-progress-focus-card.is-due:hover {
+  box-shadow: 0 10px 30px rgba(245, 158, 11, 0.22);
 }
 
 #indexUserProgressHost .index-focus-lead {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
   min-width: 0;
 }
 
 #indexUserProgressHost .index-focus-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--primary) 15%, var(--surface));
   color: var(--primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 20%, transparent);
 }
 
 #indexUserProgressHost .is-due .index-focus-icon-box {
-  color: #a95f08;
+  background: #fef3c7;
+  color: #b45309;
+  box-shadow: 0 3px 12px rgba(245, 158, 11, 0.25);
 }
 
 #indexUserProgressHost .index-focus-text {
@@ -30719,22 +30741,28 @@ body.index-personalized #indexUserProgressHost {
 #indexUserProgressHost .index-focus-tag {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  margin-bottom: 4px;
+  gap: 6px;
+  margin-bottom: 6px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--primary) 14%, transparent);
   color: var(--primary);
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 #indexUserProgressHost .is-due .index-focus-tag {
-  color: #945207;
+  background: #fde68a;
+  color: #92400e;
 }
 
 #indexUserProgressHost .index-focus-title {
   display: block;
   color: var(--text);
-  font-size: 1rem;
-  font-weight: 720;
+  font-size: 1.12rem;
+  font-weight: 800;
   line-height: 1.35;
   letter-spacing: -0.015em;
 }
@@ -30742,28 +30770,41 @@ body.index-personalized #indexUserProgressHost {
 #indexUserProgressHost .index-focus-desc {
   margin: 4px 0 0;
   color: var(--muted);
-  font-size: 0.84rem;
+  font-size: 0.88rem;
   line-height: 1.5;
 }
 
 #indexUserProgressHost .index-focus-cta-btn {
   min-height: 44px;
-  padding: 0 17px;
-  border-radius: 10px;
+  padding: 0 20px;
+  border-radius: 12px;
   background: var(--primary);
   color: #fff !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 0.84rem;
-  font-weight: 700;
+  font-size: 0.88rem;
+  font-weight: 800;
   white-space: nowrap;
-  transition: background-color 160ms ease, transform 160ms ease;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--primary) 35%, transparent);
+  transition: background-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+#indexUserProgressHost .index-progress-focus-card.is-due .index-focus-cta-btn {
+  background: #d97706;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.35);
 }
 
 #indexUserProgressHost .index-focus-cta-btn:hover {
   background: var(--primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--primary) 45%, transparent);
+}
+
+#indexUserProgressHost .index-progress-focus-card.is-due .index-focus-cta-btn:hover {
+  background: #b45309;
+  box-shadow: 0 6px 18px rgba(180, 83, 9, 0.45);
 }
 
 #indexUserProgressHost .index-focus-cta-btn:active {
@@ -31379,4 +31420,600 @@ body.index-personalized #indexUserProgressHost {
     padding: 18px 16px;
     border-radius: 12px;
   }
+}
+
+
+/* ============================================================================
+ * RUSI UI ENHANCEMENTS: AI REVIEW, UNIFIED VOICE MEMO, WIDE TEST RESULT
+ * ============================================================================ */
+
+/* 1. GIAO DIỆN NHẬN XÉT AI HIỆN ĐẠI & TINH TẾ (WRITING AI REVIEW) */
+.rusi-ai-review-card {
+  margin-top: 20px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 4px 24px rgba(16, 42, 76, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  transition: all 0.2s ease;
+}
+
+.rusi-ai-score-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 22px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(22, 163, 74, 0.02) 100%);
+  border: 1.5px solid rgba(22, 163, 74, 0.25);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rusi-ai-score-banner.is-retry {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(220, 38, 38, 0.02) 100%);
+  border-color: rgba(220, 38, 38, 0.25);
+}
+
+.rusi-ai-score-main {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.rusi-ai-score-num {
+  font-size: 2.2rem;
+  font-weight: 850;
+  line-height: 1;
+  color: var(--green, #16a34a);
+  letter-spacing: -0.02em;
+}
+
+.rusi-ai-score-banner.is-retry .rusi-ai-score-num {
+  color: var(--red, #dc2626);
+}
+
+.rusi-ai-score-num small {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-left: 2px;
+}
+
+.rusi-ai-score-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rusi-ai-score-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.84rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  padding: 4px 10px;
+  border-radius: 99px;
+  width: fit-content;
+}
+
+.badge-pass {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.badge-retry {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.rusi-ai-score-level {
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.rusi-ai-score-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.rusi-ai-criteria-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .rusi-ai-criteria-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .rusi-ai-criteria-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rusi-crit-card {
+  background: color-mix(in srgb, var(--primary) 3%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rusi-crit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rusi-crit-name {
+  font-size: 0.85rem;
+  color: var(--text);
+}
+
+.rusi-crit-name small {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.rusi-crit-score {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.rusi-crit-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.rusi-crit-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+
+.fill-good {
+  background: var(--green, #16a34a);
+}
+
+.fill-mid {
+  background: var(--amber, #f59e0b);
+}
+
+.rusi-ai-feedback-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+
+.rusi-ai-fb-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.92rem;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+
+.rusi-ai-fb-content {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.rusi-ai-fb-content p {
+  margin: 0 0 10px;
+}
+
+.rusi-ai-fb-content p:last-child {
+  margin-bottom: 0;
+}
+
+.rusi-ai-fb-content b {
+  color: var(--primary);
+}
+
+/* 2. THẺ VOICE MEMO THỐNG NHẤT CHO PHẦN LUYỆN NÓI (SPEAKING UNIFIED WIDGET) */
+.sp-unified-voice-memo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 3px 16px rgba(16, 42, 76, 0.05);
+  margin-top: 14px;
+  transition: all 0.2s ease;
+  min-height: 64px;
+  box-sizing: border-box;
+}
+
+.sp-uvm-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sp-uvm-play-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, background 0.15s ease;
+  box-shadow: 0 2px 10px rgba(23, 87, 166, 0.25);
+}
+
+.sp-uvm-play-btn:hover {
+  transform: scale(1.05);
+  background: var(--primary-dark);
+}
+
+.sp-uvm-play-btn.is-recording {
+  background: #dc2626;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.2);
+  animation: spPulse 1.2s infinite;
+}
+
+.sp-uvm-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sp-uvm-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.sp-uvm-meta .sp-result-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  display: inline-block;
+}
+
+.sp-uvm-meta .sp-result-dot.is-listening {
+  background: #dc2626;
+  animation: spPulse 1s infinite;
+}
+
+.sp-uvm-transcript {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.sp-uvm-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.sp-uvm-del-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sp-uvm-del-btn:hover {
+  background: rgba(220, 38, 38, 0.08);
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+@media (max-width: 640px) {
+  .sp-unified-voice-memo {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .sp-uvm-right {
+    justify-content: flex-end;
+  }
+}
+
+/* 3. KHUNG KẾT QUẢ THI THỬ TRKI RỘNG BẰNG DAU-WORKSPACE-BACK-BAR (WIDE MINIMALIST TEST RESULTS) */
+.trki-modern-result-wrap {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px 24px 80px;
+  box-sizing: border-box;
+}
+
+.trki-modern-hero-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 28px 32px;
+  box-shadow: 0 4px 24px rgba(16, 42, 76, 0.05);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.trki-modern-hero-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.trki-modern-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  width: fit-content;
+}
+
+.trki-modern-hero-title {
+  font-size: 1.45rem;
+  font-weight: 850;
+  color: var(--text);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.trki-modern-hero-desc {
+  font-size: 0.92rem;
+  color: var(--muted);
+  margin: 0;
+  max-width: 680px;
+  line-height: 1.55;
+}
+
+.trki-modern-score-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.trki-modern-score-val {
+  font-size: 2.8rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--primary);
+}
+
+.trki-modern-score-box.is-pass .trki-modern-score-val {
+  color: var(--green, #16a34a);
+}
+
+.trki-modern-score-box.is-fail .trki-modern-score-val {
+  color: var(--red, #dc2626);
+}
+
+.trki-modern-score-sub {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.trki-modern-section-title {
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 28px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .trki-modern-hero-card {
+    padding: 20px 18px;
+  }
+  .trki-modern-score-box {
+    align-items: flex-start;
+  }
+  .trki-modern-score-val {
+    font-size: 2.2rem;
+  }
+}
+
+
+/* 4. MODAL DANH SÁCH TỪ VỰNG TIẾN ĐỘ */
+.voc-progress-modal-box {
+  text-align: left;
+  max-width: 680px;
+  width: 95%;
+  padding: 24px;
+  border-radius: 20px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  box-shadow: 0 16px 40px rgba(16, 42, 76, 0.12);
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.voc-progress-modal-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 2px solid var(--border);
+  margin-bottom: 16px;
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.voc-pmodal-tab {
+  background: transparent;
+  border: none;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.15s ease;
+}
+
+.voc-pmodal-tab:hover {
+  color: var(--text);
+  background: rgba(23, 87, 166, 0.04);
+}
+
+.voc-pmodal-tab.active {
+  font-weight: 800;
+}
+
+.voc-pmodal-tab[data-tab="mastered"].active {
+  color: var(--green, #16a34a);
+}
+
+.voc-pmodal-tab[data-tab="due"].active {
+  color: var(--amber, #f59e0b);
+}
+
+.voc-pmodal-tab[data-tab="new"].active {
+  color: var(--primary, #1757a6);
+}
+
+.voc-pmodal-tab-indicator {
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.voc-pmodal-tab[data-tab="mastered"] .voc-pmodal-tab-indicator {
+  background: var(--green, #16a34a);
+}
+
+.voc-pmodal-tab[data-tab="due"] .voc-pmodal-tab-indicator {
+  background: var(--amber, #f59e0b);
+}
+
+.voc-pmodal-tab[data-tab="new"] .voc-pmodal-tab-indicator {
+  background: var(--primary, #1757a6);
+}
+
+.voc-pmodal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.voc-pmodal-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(16, 42, 76, 0.05);
+  border-color: rgba(23, 87, 166, 0.3);
+}
+
+.voc-pmodal-word {
+  font-size: 1.08rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.voc-pmodal-word:hover {
+  color: var(--primary);
+}
+
+.voc-pmodal-pos {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.voc-pmodal-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(23, 87, 166, 0.08);
+  color: var(--primary);
+}
+
+.voc-pmodal-vi {
+  font-size: 0.92rem;
+  color: var(--text);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+.voc-pmodal-ex {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 4px;
+  font-style: italic;
 }

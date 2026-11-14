@@ -44,65 +44,115 @@ const getDiffDays = (dayStr1, dayStr2) => {
   return Math.round(Math.abs(t1 - t2) / 86400000);
 };
 
+// ============================================================================
+// HỆ THỐNG QUY TẮC ĐIỂM KINH NGHIỆM CHUẨN TOÀN DỰ ÁN (RUSI XP SYSTEM)
+// ============================================================================
+const RUSI_XP_RULES = {
+  VOCAB_CARD_REVIEW: 10,
+  VOCAB_QUIZ_PASS: 15,
+  LISTENING_QUIZ_PASS: 15,
+  LISTENING_DICTATION_PASS: 20,
+  SPEAKING_ITEM_PASS: 10,
+  SPEAKING_TOPIC_PASS: 25,
+  WRITING_SUBMIT: 15,
+  WRITING_PASS_BONUS: 15, // Đạt chuẩn >= 66% được thưởng thêm 15 XP (Tổng 30 XP)
+  TRKI_SUBTEST_PASS: 20,
+  TRKI_FULL_PASS: 50,
+  STUDY_5MIN_DAILY: 10
+};
+window.RUSI_XP_RULES = RUSI_XP_RULES;
+
 const Progress = {
   /**
-   * Cộng XP và cập nhật chuỗi Streak ngày học (XP-Gated Streak & Timezone Safeguard - Spec Mục 8.12).
-   * YÊU CẦU BẮT BUỘC: Học viên phải hoàn thành bài học/test mới được cộng XP.
-   * Chỗ tính ngày: PHẢI CÓ XP phát sinh trong ngày thì mới tính ngày đó vào chuỗi Streak!
+   * Xác nhận chuỗi Streak ngày học (XP-Gated Streak & 5-Min Rule).
+   * Yêu cầu: Đã hoàn thành 1 bài luyện bất kỳ HOẶC học liên tục >= 5 phút trong ngày.
    */
-  addXp(n) {
-    if (!n || n <= 0) return;
-    const xp = STORE.get("xp", 0) + n;
-    STORE.set("xp", xp);
-
-    // Tính ngày Streak theo ngày địa phương chuẩn
+  validateTodayStreak(reason = "activity") {
     const todayStr = getLocalDateString();
-    const lastXpDayStr = STORE.get("lastXpDay", "");
+    const lastValidDay = STORE.get("lastStreakDay", STORE.get("lastXpDay", ""));
     let currentStreak = STORE.get("streak", 0);
 
-    if (lastXpDayStr !== todayStr) {
-      if (!lastXpDayStr) {
+    if (lastValidDay !== todayStr) {
+      if (!lastValidDay) {
         currentStreak = 1;
       } else {
-        const diffDays = getDiffDays(todayStr, lastXpDayStr);
+        const diffDays = getDiffDays(todayStr, lastValidDay);
         if (diffDays === 1) {
-          currentStreak += 1; // Học liên tiếp ngày kế tiếp
+          currentStreak += 1;
         } else if (diffDays > 1) {
-          currentStreak = 1; // Bắt đầu chuỗi mới sau khi đứt chuỗi
+          currentStreak = 1;
         }
       }
       STORE.set("streak", currentStreak);
+      STORE.set("lastStreakDay", todayStr);
       STORE.set("lastXpDay", todayStr);
       STORE.set("lastDay", todayStr);
-    }
-
-    updateHeaderChips();
-    toast(`+${n} XP!`);
-
-    // Đồng bộ cập nhật thẻ Tiến độ trang chủ nếu đang mở
-    const user = (window.Auth && window.Auth.user) || STORE.get("auth_user", null);
-    if (user && typeof renderIndexProgressIfLoggedIn === "function") {
-      renderIndexProgressIfLoggedIn(user);
-    }
-
-    const isUUID = window.Auth && window.Auth.user && window.Auth.user.uid &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(window.Auth.user.uid);
-    if (window.RusiSupabase && window.RusiSupabase.isReady() && isUUID) {
-      window.RusiSupabase.profile.syncGamification(window.Auth.user.uid, currentStreak, xp).catch(() => {});
+      updateHeaderChips();
+      this.syncToCloud();
     }
   },
 
   /**
-   * Kiểm tra chuỗi Streak khi mở web (Boot - Spec Mục 8.12).
-   * Tuyệt đối KHÔNG tự ý tăng ngày nếu hôm nay chưa có XP.
-   * Nếu bỏ bẫng >= 1 ngày (diffDays > 1), reset streak về 0 để tránh hiển thị ảo.
+   * Cộng XP chuẩn hoá và đồng bộ Streak, đám mây Supabase
    */
+  addXp(n, meta = null) {
+    if (!n || n <= 0) return;
+    const xp = STORE.get("xp", 0) + n;
+    STORE.set("xp", xp);
+
+    // Kích hoạt tính ngày cho Streak
+    this.validateTodayStreak((meta && meta.skill_type) || "xp");
+
+    updateHeaderChips();
+    toast(`+${n} XP!`);
+
+    // Ghi nhận nhật ký luyện tập lên Supabase
+    const logData = meta ? { ...meta, xp_earned: n } : null;
+    this.syncToCloud(logData);
+
+    // Bắn sự kiện cập nhật tiến độ thời gian thực cho các trang đang mở
+    window.dispatchEvent(new CustomEvent("trki:progress-updated", { detail: { xp, streak: STORE.get("streak", 0) } }));
+  },
+
+  /**
+   * Đánh dấu hoàn thành bài học, phân môn và lưu log lên Supabase
+   */
+  markDone(kind, id, meta = null) {
+    const done = STORE.get(kind, []);
+    if (!done.includes(id)) {
+      done.push(id);
+      STORE.set(kind, done);
+    }
+
+    // Hoàn thành 1 bài luyện -> đủ điều kiện có thêm streak ngày hôm nay
+    this.validateTodayStreak("activity_" + kind);
+
+    const logData = {
+      skill_type: kind === "listenDone" ? "listening"
+                : kind === "speakDone" ? "speaking"
+                : kind === "writeDone" ? "writing"
+                : kind === "trkiDone" ? "trki"
+                : kind === "vocabDone" ? "vocab" : "practice",
+      item_id: String(id),
+      item_title: meta && meta.title ? String(meta.title) : String(id),
+      score: meta && typeof meta.score === "number" ? meta.score : null,
+      xp_earned: meta && typeof meta.xp === "number" ? meta.xp : 0,
+      details: meta || {}
+    };
+    this.syncToCloud(logData);
+    window.dispatchEvent(new CustomEvent("trki:progress-updated"));
+  },
+
+  doneList(kind) {
+    return STORE.get(kind, []);
+  },
+
   checkStreakStatus() {
     const todayStr = getLocalDateString();
-    const lastXpDayStr = STORE.get("lastXpDay", STORE.get("lastDay", ""));
+    const lastValidDay = STORE.get("lastStreakDay", STORE.get("lastXpDay", STORE.get("lastDay", "")));
 
-    if (lastXpDayStr && lastXpDayStr !== todayStr) {
-      const diffDays = getDiffDays(todayStr, lastXpDayStr);
+    if (lastValidDay && lastValidDay !== todayStr) {
+      const diffDays = getDiffDays(todayStr, lastValidDay);
       if (diffDays > 1) {
         STORE.set("streak", 0);
       }
@@ -114,15 +164,83 @@ const Progress = {
     this.checkStreakStatus();
   },
 
-  markDone(kind, id) {
-    const done = STORE.get(kind, []);
-    if (!done.includes(id)) {
-      done.push(id);
-      STORE.set(kind, done);
+  /**
+   * Đồng bộ tiến độ 2 chiều với Supabase
+   */
+  async syncToCloud(practiceLog = null) {
+    const user = (window.Auth && window.Auth.user) || STORE.get("auth_user", null);
+    const userId = user && (user.uid || user.id);
+    const isUUID = userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
+
+    if (window.RusiSupabase && window.RusiSupabase.isReady() && isUUID) {
+      const streak = STORE.get("streak", 0);
+      const xp = STORE.get("xp", 0);
+      const doneList = {
+        listenDone: STORE.get("listenDone", []),
+        speakDone: STORE.get("speakDone", []),
+        writeDone: STORE.get("writeDone", []),
+        trkiDone: STORE.get("trkiDone", []),
+        vocabDone: STORE.get("vocabDone", [])
+      };
+      const vocabStats = (typeof window.getSynchronizedVocabStats === "function") ? window.getSynchronizedVocabStats() : {};
+
+      // 1. Lưu hồ sơ tổng hợp vào user_progress
+      if (window.RusiSupabase.userProgress && typeof window.RusiSupabase.userProgress.save === "function") {
+        window.RusiSupabase.userProgress.save(userId, {
+          xp_total: xp,
+          streak_count: streak,
+          last_study_date: getLocalDateString(),
+          vocab_stats: vocabStats,
+          done_list: doneList
+        }).catch(() => {});
+      }
+
+      // 2. Ghi nhật ký chi tiết vào practice_logs
+      if (practiceLog && window.RusiSupabase.userProgress && typeof window.RusiSupabase.userProgress.logPractice === "function") {
+        window.RusiSupabase.userProgress.logPractice(userId, practiceLog).catch(() => {});
+      }
+
+      // 3. Đồng bộ gamification vào profiles
+      if (window.RusiSupabase.profile && typeof window.RusiSupabase.profile.syncGamification === "function") {
+        window.RusiSupabase.profile.syncGamification(userId, streak, xp).catch(() => {});
+      }
     }
   },
-  doneList(kind) {
-    return STORE.get(kind, []);
+
+  async syncFromCloud() {
+    const user = (window.Auth && window.Auth.user) || STORE.get("auth_user", null);
+    const userId = user && (user.uid || user.id);
+    const isUUID = userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
+
+    if (window.RusiSupabase && window.RusiSupabase.isReady() && isUUID && window.RusiSupabase.userProgress) {
+      try {
+        const remote = await window.RusiSupabase.userProgress.get(userId);
+        if (remote) {
+          if (typeof remote.xp_total === "number" && remote.xp_total > STORE.get("xp", 0)) {
+            STORE.set("xp", remote.xp_total);
+          }
+          if (typeof remote.streak_count === "number" && remote.streak_count > STORE.get("streak", 0)) {
+            STORE.set("streak", remote.streak_count);
+          }
+          if (remote.last_study_date) {
+            STORE.set("lastStreakDay", remote.last_study_date);
+            STORE.set("lastXpDay", remote.last_study_date);
+          }
+          if (remote.done_list && typeof remote.done_list === "object") {
+            ["listenDone", "speakDone", "writeDone", "trkiDone", "vocabDone"].forEach(k => {
+              const localList = STORE.get(k, []);
+              const remoteList = Array.isArray(remote.done_list[k]) ? remote.done_list[k] : [];
+              const merged = Array.from(new Set([...localList, ...remoteList]));
+              STORE.set(k, merged);
+            });
+          }
+          updateHeaderChips();
+          window.dispatchEvent(new CustomEvent("trki:progress-updated"));
+        }
+      } catch (err) {
+        console.warn("[RusiSupabase] Lỗi đồng bộ tiến độ từ cloud:", err);
+      }
+    }
   }
 };
 
@@ -2319,6 +2437,13 @@ function bindAuthToHeader() {
     if (typeof window.renderPricingGrid === "function") {
       window.renderPricingGrid();
     }
+    if (u && typeof Progress !== "undefined" && typeof Progress.syncFromCloud === "function") {
+      Progress.syncFromCloud().then(() => {
+        if (typeof renderIndexProgressIfLoggedIn === "function") {
+          renderIndexProgressIfLoggedIn(u);
+        }
+      });
+    }
   });
 
   // Lắng nghe sự kiện cập nhật trạng thái PRO
@@ -2329,6 +2454,41 @@ function bindAuthToHeader() {
     }
   });
 }
+
+// ============================================================================
+// HỆ THỐNG ĐO THỜI GIAN HỌC CHUYÊN CẦN (5 PHÚT / NGÀY -> TÍNH 1 STREAK & XP)
+// ============================================================================
+(function initDailyStudyTimer() {
+  if (typeof window === "undefined") return;
+  const STUDY_PAGES = ["vocabulary", "listening", "speaking", "writing", "mock-test"];
+  const page = document.body ? document.body.dataset.page : "";
+  const isStudyPage = STUDY_PAGES.some(p => page === p || (window.location && window.location.pathname.includes(p)));
+  if (!isStudyPage) return;
+
+  const todayStr = (typeof getLocalDateString === "function") ? getLocalDateString() : new Date().toISOString().split("T")[0];
+  const timeKey = "study_secs_" + todayStr;
+  let activeSecs = (typeof STORE !== "undefined") ? STORE.get(timeKey, 0) : 0;
+  const creditedKey = "study_5min_credited_" + todayStr;
+
+  setInterval(() => {
+    if (document.visibilityState !== "visible") return;
+    activeSecs += 5;
+    if (typeof STORE !== "undefined") STORE.set(timeKey, activeSecs);
+
+    if (activeSecs >= 300 && typeof STORE !== "undefined" && !STORE.get(creditedKey, false)) {
+      STORE.set(creditedKey, true);
+      if (typeof Progress !== "undefined") {
+        Progress.addXp(10, {
+          skill_type: "study_session",
+          item_id: "daily_5min",
+          item_title: "Chuyên cần 5 phút luyện tập hôm nay",
+          duration_seconds: activeSecs
+        });
+        toast("🔥 Bạn đã học tập chăm chỉ đủ 5 phút hôm nay! Chuỗi Streak +1 (+10 XP)!");
+      }
+    }
+  }, 5000);
+})();
 
 function renderFooter() {
   const host = document.getElementById("app-footer");

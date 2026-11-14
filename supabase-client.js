@@ -1441,7 +1441,65 @@
     },
 
     /* =========================================================================
-     * 12. SUPABASE AUTH
+     * 12. TIẾN ĐỘ & NHẬT KÝ LUYỆN TẬP TOÀN DIỆN (USER PROGRESS & PRACTICE LOGS)
+     * ========================================================================= */
+    userProgress: {
+      get: async function (userId) {
+        var sb = getClient();
+        if (!sb || !userId || !isValidUUID(userId)) return null;
+        try {
+          var res = await sb.from("user_progress").select("*").eq("user_id", userId).maybeSingle();
+          return res.data || null;
+        } catch (_) {
+          return null;
+        }
+      },
+
+      save: async function (userId, data) {
+        var sb = getClient();
+        if (!sb || !userId || !isValidUUID(userId)) return false;
+        try {
+          var row = {
+            user_id: userId,
+            xp_total: Number(data.xp || data.xp_total) || 0,
+            streak_count: Number(data.streak || data.streak_count) || 0,
+            last_study_date: data.last_study_date || (new Date().toISOString().split("T")[0]),
+            vocab_stats: data.vocab_stats || {},
+            done_list: data.done_list || {},
+            updated_at: new Date().toISOString()
+          };
+          var res = await sb.from("user_progress").upsert(row);
+          return !res.error;
+        } catch (_) {
+          return false;
+        }
+      },
+
+      logPractice: async function (userId, logData) {
+        var sb = getClient();
+        if (!sb || !userId || !isValidUUID(userId)) return false;
+        try {
+          var payload = {
+            user_id: userId,
+            skill_type: logData.skill_type || "general",
+            item_id: String(logData.item_id || ""),
+            item_title: String(logData.item_title || ""),
+            score: typeof logData.score === "number" ? logData.score : null,
+            duration_seconds: Number(logData.duration_seconds) || 0,
+            xp_earned: Number(logData.xp_earned) || 0,
+            details: logData.details || {},
+            created_at: new Date().toISOString()
+          };
+          var res = await sb.from("practice_logs").insert(payload);
+          return !res.error;
+        } catch (_) {
+          return false;
+        }
+      }
+    },
+
+    /* =========================================================================
+     * 13. SUPABASE AUTH
      * ========================================================================= */
     auth: {
       signInGoogle: async function (redirectTo) {

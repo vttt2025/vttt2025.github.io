@@ -1665,6 +1665,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         }
       }
       if (typeof STORE !== "undefined") STORE.set("vocab_mastered_words", list);
+      if (typeof Progress !== "undefined" && typeof Progress.syncToCloud === "function") {
+        Progress.syncToCloud();
+      }
       window.dispatchEvent(new CustomEvent("trki:progress-updated"));
       return isMastered;
     };
@@ -2823,45 +2826,45 @@ function initVocabPage() {
       }
 
       modal.innerHTML = `
-        <div class="anticheat-modal-box voc-progress-modal-box" style="text-align:left;max-width:680px;width:95%;padding:22px 24px;border-top:5px solid var(--primary);max-height:88vh;display:flex;flex-direction:column;box-sizing:border-box">
+        <div class="anticheat-modal-box voc-progress-modal-box">
           <!-- HEADER -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
-            <div style="display:flex;align-items:center;gap:10px">
-              <span style="width:36px;height:36px;border-radius:10px;background:var(--primary-soft,#e3effc);color:var(--primary,#1757a6);display:grid;place-items:center;font-size:1.1rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-shrink:0">
+            <div style="display:flex;align-items:center;gap:12px">
+              <span style="width:40px;height:40px;border-radius:12px;background:var(--primary-soft,#e3effc);color:var(--primary,#1757a6);display:grid;place-items:center">
                 ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 20 }) : "📚"}
               </span>
               <div>
                 <h3 style="margin:0;font-size:1.15rem;font-weight:800;color:var(--text)">Danh Sách Từ Vựng Tiến Độ</h3>
-                <span style="font-size:0.8rem;color:var(--muted)">Xem và quản lý các từ vựng theo trạng thái học tập</span>
+                <span style="font-size:0.8rem;color:var(--muted)">Đồng bộ thời gian thực với tài khoản & SRS Cloud</span>
               </div>
             </div>
             <button type="button" id="closeProgressModal" class="btn btn-soft" style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;padding:0;cursor:pointer" title="Đóng">${window.RusiIcons ? RusiIcons.get("x", { size: 18 }) : "✕"}</button>
           </div>
 
-          <!-- TABS THEO LEVEL-TAB STYLE (PHẲNG, GẠCH CHÂN KHI ACTIVE) -->
-          <div class="voc-progress-modal-tabs" style="display:flex;align-items:center;gap:6px;border-bottom:2px solid var(--border,#d2e0f0);margin-bottom:14px;flex-shrink:0">
-            <button type="button" class="voc-pmodal-tab ${currentTab === "mastered" ? "active" : ""}" data-tab="mastered" style="background:transparent;border:none;padding:10px 14px;cursor:pointer;font-size:0.88rem;font-weight:${currentTab === "mastered" ? "800" : "600"};color:${currentTab === "mastered" ? "var(--green,#16a34a)" : "var(--muted)"};position:relative;display:inline-flex;align-items:center;gap:6px">
+          <!-- TABS THEO LEVEL-TAB STYLE -->
+          <div class="voc-progress-modal-tabs">
+            <button type="button" class="voc-pmodal-tab ${currentTab === "mastered" ? "active" : ""}" data-tab="mastered">
               ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : "✓"} Đã thuộc (${masteredList.length})
-              ${currentTab === "mastered" ? `<span style="position:absolute;bottom:-2px;left:0;right:0;height:3px;background:var(--green,#16a34a);border-radius:2px"></span>` : ""}
+              ${currentTab === "mastered" ? '<span class="voc-pmodal-tab-indicator"></span>' : ""}
             </button>
-            <button type="button" class="voc-pmodal-tab ${currentTab === "due" ? "active" : ""}" data-tab="due" style="background:transparent;border:none;padding:10px 14px;cursor:pointer;font-size:0.88rem;font-weight:${currentTab === "due" ? "800" : "600"};color:${currentTab === "due" ? "var(--amber,#f59e0b)" : "var(--muted)"};position:relative;display:inline-flex;align-items:center;gap:6px">
+            <button type="button" class="voc-pmodal-tab ${currentTab === "due" ? "active" : ""}" data-tab="due">
               ${window.RusiIcons ? RusiIcons.get("clock-time", { size: 16 }) : "⏰"} Cần ôn (${dueList.length})
-              ${currentTab === "due" ? `<span style="position:absolute;bottom:-2px;left:0;right:0;height:3px;background:var(--amber,#f59e0b);border-radius:2px"></span>` : ""}
+              ${currentTab === "due" ? '<span class="voc-pmodal-tab-indicator"></span>' : ""}
             </button>
-            <button type="button" class="voc-pmodal-tab ${currentTab === "new" ? "active" : ""}" data-tab="new" style="background:transparent;border:none;padding:10px 14px;cursor:pointer;font-size:0.88rem;font-weight:${currentTab === "new" ? "800" : "600"};color:${currentTab === "new" ? "var(--primary,#1757a6)" : "var(--muted)"};position:relative;display:inline-flex;align-items:center;gap:6px">
+            <button type="button" class="voc-pmodal-tab ${currentTab === "new" ? "active" : ""}" data-tab="new">
               ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "✨"} Từ mới (${newList.length})
-              ${currentTab === "new" ? `<span style="position:absolute;bottom:-2px;left:0;right:0;height:3px;background:var(--primary,#1757a6);border-radius:2px"></span>` : ""}
+              ${currentTab === "new" ? '<span class="voc-pmodal-tab-indicator"></span>' : ""}
             </button>
           </div>
 
           <!-- SEARCH BAR -->
-          <div style="position:relative;margin-bottom:12px;flex-shrink:0">
-            <input type="text" id="vocProgressSearchInput" placeholder="Tìm kiếm từ tiếng Nga hoặc nghĩa tiếng Việt..." value="${searchTxt}" style="width:100%;padding:9px 14px;border:1px solid var(--border);border-radius:10px;font-size:0.9rem;box-sizing:border-box;background:var(--bg);color:var(--text)" />
-            ${searchTxt ? `<button type="button" id="vocProgressSearchClear" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--muted)">×</button>` : ""}
+          <div style="position:relative;margin-bottom:14px;flex-shrink:0">
+            <input type="text" id="vocProgressSearchInput" placeholder="Tìm kiếm từ tiếng Nga hoặc nghĩa tiếng Việt..." value="${searchTxt}" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:0.9rem;box-sizing:border-box;background:var(--bg);color:var(--text)" />
+            ${searchTxt ? `<button type="button" id="vocProgressSearchClear" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--muted)">×</button>` : ""}
           </div>
 
           <!-- LIST CONTAINER -->
-          <div class="voc-progress-words-list" style="flex:1 1 auto;overflow-y:auto;padding-right:4px;display:flex;flex-direction:column;gap:8px">
+          <div class="voc-progress-words-list" style="flex:1 1 auto;overflow-y:auto;padding-right:4px;display:flex;flex-direction:column;gap:10px">
             ${activeList.length === 0 ? `
               <div style="text-align:center;padding:36px 16px;color:var(--muted)">
                 <div style="margin-bottom:12px;color:var(--primary);display:flex;justify-content:center">
@@ -2877,20 +2880,20 @@ function initVocabPage() {
             ` : activeList.map((w, idx) => {
               const displayWord = w.stress || w.ru;
               return `
-                <div class="voc-pmodal-row" style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;background:rgba(23,87,166,0.03);border:1px solid var(--border);border-radius:10px;transition:background 0.15s ease">
+                <div class="voc-pmodal-row">
                   <div style="flex:1;min-width:0">
                     <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
-                      <strong class="ru" style="font-size:1.05rem;color:var(--text);cursor:pointer" data-speak-ru="${w.ru}" title="Nhấn để nghe phát âm">${displayWord}</strong>
-                      ${w.pos ? `<span style="font-size:0.8rem;font-style:italic;color:var(--muted)">(${(window.formatRussianGrammar ? window.formatRussianGrammar(w.pos, null, w.gender) : w.pos)})</span>` : ""}
-                      ${w.jarTitle ? `<span class="dau-badge" style="font-size:0.68rem;padding:1px 6px;border-radius:4px;background:var(--primary-soft,#e3effc);color:var(--primary,#1757a6)">${w.jarTitle}</span>` : ""}
+                      <strong class="ru voc-pmodal-word" data-speak-ru="${w.ru}" title="Nhấn để nghe phát âm">${displayWord}</strong>
+                      ${w.pos ? `<span class="voc-pmodal-pos">(${(window.formatRussianGrammar ? window.formatRussianGrammar(w.pos, null, w.gender) : w.pos)})</span>` : ""}
+                      ${w.jarTitle ? `<span class="voc-pmodal-tag">${w.jarTitle}</span>` : ""}
                     </div>
-                    <div style="font-size:0.9rem;color:var(--text);margin-top:2px">${w.vi || ""}</div>
-                    ${w.ex ? `<div class="ru" style="font-size:0.82rem;color:var(--muted);margin-top:3px;font-style:italic">${esc(stripQuotes(w.ex))}</div>` : ""}
+                    <div class="voc-pmodal-vi">${w.vi || ""}</div>
+                    ${w.ex ? `<div class="ru voc-pmodal-ex">${esc(stripQuotes(w.ex))}</div>` : ""}
                   </div>
 
-                  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-                    <button type="button" class="btn btn-soft btn-sm btn-pmodal-speak" data-ru="${w.ru}" style="width:34px;height:34px;padding:0;border-radius:8px;display:grid;place-items:center;cursor:pointer" title="Nghe phát âm">
-                      ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 15 }) : "🔊"}
+                  <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+                    <button type="button" class="btn btn-soft btn-sm btn-pmodal-speak" data-ru="${w.ru}" style="width:36px;height:36px;padding:0;border-radius:10px;display:grid;place-items:center;cursor:pointer" title="Nghe phát âm">
+                      ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : "🔊"}
                     </button>
                     ${currentTab === "mastered" ? `
                       <button type="button" class="btn btn-soft btn-sm btn-pmodal-unmaster" data-ru="${w.ru}" style="padding:6px 10px;font-size:0.8rem;border-radius:8px;color:var(--muted);cursor:pointer" title="Bỏ khỏi danh sách đã thuộc để tiếp tục ôn tập">
@@ -2969,6 +2972,9 @@ function initVocabPage() {
           if (typeof STORE !== "undefined") STORE.set("vocab_mastered_words", list);
           if (typeof SRS !== "undefined" && typeof SRS.unmarkMastered === "function") {
             SRS.unmarkMastered(normRu);
+          }
+          if (typeof Progress !== "undefined" && typeof Progress.syncToCloud === "function") {
+            Progress.syncToCloud();
           }
           if (typeof toast === "function") toast(`Đã hủy trạng thái thuộc của «${ru}»`);
           window.dispatchEvent(new CustomEvent("trki:progress-updated"));
@@ -8204,10 +8210,10 @@ const openSpeakingWorkspace = (set) => {
         try { activeVmAudio.pause(); } catch (_) {}
         activeVmAudio = null;
       }
-      const widget = el("#spVoiceMemoWidget");
-      if (widget) widget.classList.remove("is-playing");
+      const playBtn = el("#btnVmPlay");
+      if (playBtn) playBtn.classList.remove("is-playing");
       const iconWrap = el("#spVmPlayIcon");
-      if (iconWrap) iconWrap.innerHTML = icon("play", 16);
+      if (iconWrap) iconWrap.innerHTML = icon("play", 18);
     };
 
     const playVoiceMemo = (idx) => {
@@ -8225,10 +8231,10 @@ const openSpeakingWorkspace = (set) => {
       const audio = new Audio(memo.url);
       activeVmAudio = audio;
 
-      const widget = el("#spVoiceMemoWidget");
-      if (widget) widget.classList.add("is-playing");
+      const playBtn = el("#btnVmPlay");
+      if (playBtn) playBtn.classList.add("is-playing");
       const iconWrap = el("#spVmPlayIcon");
-      if (iconWrap) iconWrap.innerHTML = icon("pause", 16);
+      if (iconWrap) iconWrap.innerHTML = icon("pause", 18);
 
       audio.onended = () => {
         stopActiveVmAudio();
@@ -8241,16 +8247,24 @@ const openSpeakingWorkspace = (set) => {
     };
 
     const renderVoiceMemoUI = (idx) => {
-      const widget = el("#spVoiceMemoWidget");
-      if (!widget) return;
+      const bar = el("#spSpeechResultBar");
+      const playBtn = el("#btnVmPlay");
+      const delBtn = el("#btnVmDelete");
+      const durEl = el("#spVmDuration");
       const memo = userVoiceMemos[idx];
       if (memo && memo.url) {
-        widget.style.display = "flex";
-        const durEl = el("#spVmDuration");
-        if (durEl) durEl.textContent = formatVmTime(memo.duration || 0);
+        if (bar) bar.style.display = "flex";
+        if (playBtn) playBtn.style.display = "grid";
+        if (delBtn) delBtn.style.display = "grid";
+        if (durEl) {
+          durEl.style.display = "inline-block";
+          durEl.textContent = formatVmTime(memo.duration || 0);
+        }
         stopActiveVmAudio();
       } else {
-        widget.style.display = "none";
+        if (playBtn) playBtn.style.display = "none";
+        if (delBtn) delBtn.style.display = "none";
+        if (durEl) durEl.style.display = "none";
         stopActiveVmAudio();
       }
     };
@@ -8375,16 +8389,22 @@ const openSpeakingWorkspace = (set) => {
               <div class="sp-vi-translation" id="spTargetVi" title="Nhấn phím T để ẩn/hiện dịch"></div>
             </div>
 
-            <!-- THANH KẾT QUẢ THU ÂM TỐI GIẢN & HIỆN ĐẠI -->
-            <div class="sp-speech-result-bar" id="spSpeechResultBar" style="display:none;">
-              <div class="sp-result-left">
-                <div class="sp-result-meta">
-                  <span class="sp-result-dot" id="spResultDot"></span>
-                  <span class="sp-result-caption" id="spResultStatusLbl">Giọng của bạn</span>
+            <!-- THẺ VOICE MEMO THỐNG NHẤT (GHI ÂM + KẾT QUẢ + PHÁT LẠI) -->
+            <div class="sp-unified-voice-memo" id="spSpeechResultBar" style="display:none;">
+              <div class="sp-uvm-left">
+                <button type="button" class="sp-uvm-play-btn" id="btnVmPlay" style="display:none;" title="Nghe lại giọng nói của bạn" aria-label="Nghe lại giọng nói">
+                  <span id="spVmPlayIcon">${icon("play", 18)}</span>
+                </button>
+                <div class="sp-uvm-info">
+                  <div class="sp-uvm-meta" id="spResultMeta">
+                    <span class="sp-result-dot" id="spResultDot"></span>
+                    <span class="sp-result-caption" id="spResultStatusLbl">Giọng của bạn</span>
+                    <span class="sp-vm-duration" id="spVmDuration" style="display:none;margin-left:auto;">00:00</span>
+                  </div>
+                  <div class="sp-user-transcript-text" id="spUserTranscriptText">Đang lắng nghe... Hãy nói câu tiếng Nga</div>
                 </div>
-                <div class="sp-user-transcript-text" id="spUserTranscriptText">Đang lắng nghe... Hãy nói câu tiếng Nga</div>
               </div>
-              <div class="sp-result-right">
+              <div class="sp-result-right sp-uvm-right">
                 <div class="sp-score-pill" id="spResultScoreWrap">
                   <span class="sp-score-num" id="spResultScoreVal">--</span>
                   <span class="sp-score-sep" id="spScoreSep">•</span>
@@ -8394,49 +8414,10 @@ const openSpeakingWorkspace = (set) => {
                   ${icon("rotate-ccw", 14)}
                   <span>Nói lại</span>
                 </button>
+                <button type="button" class="sp-uvm-del-btn" id="btnVmDelete" style="display:none;" title="Xóa bản ghi âm này" aria-label="Xóa">
+                  ${icon("trash-2", 15)}
+                </button>
                 <div class="score-ring" id="spScoreRing" style="display:none;" title="Độ chính xác">--</div>
-              </div>
-            </div>
-
-            <!-- WIDGET VOICE MEMO FIGMA: BẢN GHI ÂM & PHÁT LẠI GIỌNG NÓI HỌC VIÊN -->
-            <div class="sp-voice-memo-widget" id="spVoiceMemoWidget" style="display:none;">
-              <div class="sp-vm-left">
-                <button type="button" class="sp-vm-play-btn" id="btnVmPlay" title="Nghe lại giọng nói của bạn" aria-label="Nghe lại giọng nói">
-                  <span id="spVmPlayIcon">${icon("play", 16)}</span>
-                </button>
-                <div class="sp-vm-info">
-                  <div class="sp-vm-title">
-                    <span class="sp-vm-label">Voice Memo</span>
-                    <span class="sp-vm-dot">•</span>
-                    <span class="sp-vm-duration" id="spVmDuration">00:00</span>
-                  </div>
-                  <div class="sp-vm-waveform" id="spVmWaveform">
-                    <span class="sp-vm-bar" style="--h: 30%"></span>
-                    <span class="sp-vm-bar" style="--h: 60%"></span>
-                    <span class="sp-vm-bar" style="--h: 90%"></span>
-                    <span class="sp-vm-bar" style="--h: 45%"></span>
-                    <span class="sp-vm-bar" style="--h: 75%"></span>
-                    <span class="sp-vm-bar" style="--h: 100%"></span>
-                    <span class="sp-vm-bar" style="--h: 55%"></span>
-                    <span class="sp-vm-bar" style="--h: 80%"></span>
-                    <span class="sp-vm-bar" style="--h: 40%"></span>
-                    <span class="sp-vm-bar" style="--h: 70%"></span>
-                    <span class="sp-vm-bar" style="--h: 95%"></span>
-                    <span class="sp-vm-bar" style="--h: 50%"></span>
-                    <span class="sp-vm-bar" style="--h: 85%"></span>
-                    <span class="sp-vm-bar" style="--h: 65%"></span>
-                    <span class="sp-vm-bar" style="--h: 35%"></span>
-                    <span class="sp-vm-bar" style="--h: 70%"></span>
-                  </div>
-                </div>
-              </div>
-              <div class="sp-vm-actions">
-                <button type="button" class="sp-vm-action-btn" id="btnVmCompare" title="Nghe phát âm chuẩn của người bản xứ để đối chiếu">
-                  ${icon("volume-high", 14)} <span>Đối chiếu mẫu</span>
-                </button>
-                <button type="button" class="sp-vm-action-btn sp-vm-del" id="btnVmDelete" title="Xóa bản ghi âm này" aria-label="Xóa">
-                  ${icon("trash-2", 14)}
-                </button>
               </div>
             </div>
 
@@ -9807,10 +9788,6 @@ function initWritingPage() {
 
             <section class="writing-practice-panel" data-writing-task="${esc(t.id)}">
               ${taskMode(t) === "picture" ? `
-                <figure class="writing-prompt-figure">
-                  <img src="${esc(taskImage(t))}" alt="${esc(t.title)}" />
-                </figure>
-
                 <div class="writing-prompt-box">
                   <div class="writing-prompt-copy">
                     <span class="writing-section-label">Đề bài</span>
@@ -9818,6 +9795,10 @@ function initWritingPage() {
                     ${t.vi ? `<p>${esc(t.vi)}</p>` : ""}
                   </div>
                 </div>
+
+                <figure class="writing-prompt-figure">
+                  <img src="${esc(taskImage(t))}" alt="${esc(t.title)}" />
+                </figure>
               ` : `
                 <!-- DẠNG LUYỆN DỊCH: THIẾT KẾ TỐI GIẢN HIỆN ĐẠI, KHÔNG LỒNG KHỐI BÊN TRONG -->
                 <div class="writing-translation-card">
@@ -10156,32 +10137,72 @@ function initWritingPage() {
 
         if (submitBtn) submitBtn.disabled = false;
 
+        const isPassed = total >= 66;
         scoreBox.innerHTML = `
-          <div class="writing-score-result">
-            <div class="writing-score-summary">
-              <span class="writing-score-icon">${icon("award-badge", 24)}</span>
-              <div><span>KẾT QUẢ CHẤM BÀI CEFR</span><strong>${total}/100 · ${total >= 66 ? "ĐẠT (СДАНО)" : "CẦN CỐ GẮNG"}</strong></div>
+          <div class="rusi-ai-review-card">
+            <div class="rusi-ai-score-banner ${isPassed ? "" : "is-retry"}">
+              <div class="rusi-ai-score-main">
+                <div class="rusi-ai-score-num">${total}<small>/100</small></div>
+                <div class="rusi-ai-score-meta">
+                  <span class="rusi-ai-score-badge ${isPassed ? "badge-pass" : "badge-retry"}">
+                    ${icon(isPassed ? "check-circle-correct" : "alert-triangle", 16)} ${isPassed ? "ĐẠT (СДАНО)" : "CẦN CỐ GẮNG"}
+                  </span>
+                  <span class="rusi-ai-score-level">Đánh giá theo khung khảo thí ТРКИ / CEFR</span>
+                </div>
+              </div>
+              <div class="rusi-ai-score-tag">
+                ${icon("award-badge", 18)} Điểm chuẩn đạt: 66/100
+              </div>
             </div>
-            <div class="scorecard-4c">
+
+            <div class="rusi-ai-criteria-grid">
               ${[
-                ["Грамматика", "Ngữ pháp"],
-                ["Лексика", "Vốn từ"],
-                ["Структура", "Bố cục"],
-                ["Содержание", "Nội dung"]
-              ].map((label, index) => `
-                <div class="sc-item">
-                  <div class="sc-title">${label[0]}<small>${label[1]}</small></div>
-                  <div class="sc-score">${scores[index]}/25</div>
+                ["Грамматика", "Ngữ pháp", scores[0]],
+                ["Лексика", "Vốn từ", scores[1]],
+                ["Структура", "Bố cục", scores[2]],
+                ["Содержание", "Nội dung", scores[3]]
+              ].map(([ruLbl, viLbl, sc]) => `
+                <div class="rusi-crit-card">
+                  <div class="rusi-crit-head">
+                    <div class="rusi-crit-name"><b>${ruLbl}</b> <small>(${viLbl})</small></div>
+                    <div class="rusi-crit-score">${sc}/25</div>
+                  </div>
+                  <div class="rusi-crit-bar">
+                    <div class="rusi-crit-fill ${sc >= 17 ? 'fill-good' : 'fill-mid'}" style="width:${Math.round((sc / 25) * 100)}%"></div>
+                  </div>
                 </div>
               `).join("")}
             </div>
-            <div class="writing-score-feedback">${icon("cat-mascot", 18)} <span><b>Nhận xét từ Mèo Rusika AI:</b> ${feedbackComment}</span></div>
+
+            <div class="rusi-ai-feedback-box">
+              <div class="rusi-ai-fb-header">
+                ${icon("cat-mascot", 20)} <b>Nhận xét chi tiết từ Trợ lý AI Rusika:</b>
+              </div>
+              <div class="rusi-ai-fb-content">
+                ${feedbackComment}
+              </div>
+            </div>
           </div>
         `;
         revealVocab();
-        if (!Progress.doneList("writeDone").includes(t.id)) Progress.addXp(20);
-        Progress.markDone("writeDone", t.id);
-        toast("AI Rusika đã phân tích và chấm xong bài viết (+20 XP)!");
+        const earnedXp = isPassed
+          ? ((typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.WRITING_SUBMIT : 15) + (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.WRITING_PASS_BONUS : 15))
+          : (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.WRITING_SUBMIT : 15);
+        if (typeof Progress !== "undefined") {
+          Progress.addXp(earnedXp, {
+            title: `Bài viết: ${t.title || t.id}`,
+            skill_type: "writing",
+            item_id: t.id,
+            score: total
+          });
+          Progress.markDone("writeDone", t.id, {
+            skill_type: "writing",
+            item_id: t.id,
+            score: total,
+            xp_earned: earnedXp
+          });
+        }
+        toast(`AI Rusika đã phân tích và chấm xong bài viết (+${earnedXp} XP)!`);
         scoreBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
       };
 
@@ -11538,6 +11559,8 @@ function initMockTestPage() {
     let statusBadgeText = `НЕ СДАНО (CHƯA ĐẠT · Chuẩn ≥ ${requiredPassPct}%)`;
     let statusDesc = "Theo chuẩn ТРКИ, bạn cần đạt tối thiểu 66% để đạt yêu cầu. Hãy rà soát lại các câu sai bên dưới để ôn luyện bổ sung.";
 
+    const pKeyStr = isSubset ? selectedPartList.join("-") : "full";
+
     if (allSubtestsPassed) {
       examStatus = "pass";
       statusBadgeText = isSubset
@@ -11546,17 +11569,47 @@ function initMockTestPage() {
       statusDesc = isSubset
         ? `Chúc mừng! Bạn đã hoàn thành tốt các phân môn đã chọn với tỷ lệ đạt ${pct}%. Bạn có thể tiếp tục luyện các phần khác hoặc thi toàn diện!`
         : `Chúc mừng! Bạn đã vượt qua tất cả các phân môn khảo thí với điểm số ≥ 66% theo chuẩn quốc gia Liên bang Nga.`;
-      Progress.addXp(isSubset ? 15 : 30);
-      if (!isSubset) {
-        Progress.markDone("trkiDone", currentTest.id);
+      const testXp = isSubset
+        ? (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.TRKI_SUBTEST : 20)
+        : (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.TRKI_FULL_PASS : 50);
+      if (typeof Progress !== "undefined") {
+        Progress.addXp(testXp, {
+          title: `Khảo thí: ${currentTest.title}`,
+          skill_type: "mock-test",
+          item_id: currentTest.id + "_" + pKeyStr,
+          score: pct
+        });
+        Progress.markDone(isSubset ? "trkiSubDone" : "trkiDone", currentTest.id + (isSubset ? "_" + pKeyStr : ""), {
+          skill_type: "mock-test",
+          item_id: currentTest.id + "_" + pKeyStr,
+          score: pct,
+          xp_earned: testXp
+        });
       }
     } else if (singleRetakeEligible) {
       examStatus = "retake";
       statusBadgeText = `BẢO LƯU KẾT QUẢ · ĐƯỢC THI LẠI 1 PHÂN MÔN`;
       statusDesc = `Theo quy chế TRKI chính thức, bạn đạt chuẩn ${detail.length - 1}/${detail.length} phân môn và phân môn "${failedParts[0].part.vi}" đạt ${failedParts[0].pct}% (ngưỡng 60%-65%). Bạn đủ điều kiện bảo lưu và chỉ phải thi lại riêng phân môn này!`;
+      if (typeof Progress !== "undefined") {
+        Progress.syncToCloud({
+          skill_type: "mock-test",
+          item_id: currentTest.id + "_" + pKeyStr,
+          item_title: `Khảo thí (Bảo lưu): ${currentTest.title}`,
+          score: pct,
+          xp_earned: 0
+        });
+      }
+    } else {
+      if (typeof Progress !== "undefined") {
+        Progress.syncToCloud({
+          skill_type: "mock-test",
+          item_id: currentTest.id + "_" + pKeyStr,
+          item_title: `Khảo thí: ${currentTest.title}`,
+          score: pct,
+          xp_earned: 0
+        });
+      }
     }
-
-    const pKeyStr = isSubset ? selectedPartList.join("-") : "full";
     const bestKey = "bestTest_" + currentTest.id + "_" + pKeyStr;
     const best = Math.max(pct, STORE.get(bestKey, 0));
     STORE.set(bestKey, best);
@@ -11574,29 +11627,25 @@ function initMockTestPage() {
         <button class="btn btn-primary btn-sm dau-top-btn" id="btnRetryTop" title="Thi lại">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 15 }) : ""} <span class="btn-text">Thi lại</span></button>
       </div>
 
-      <div class="workspace" style="padding:28px 20px;max-width:1100px;margin:0 auto">
-        <!-- OFFICIAL CERTIFICATE BANNER -->
-        <div class="trki-cert-box">
-          <div class="trki-cert-decor-top">
-            ${window.RusiIcons ? RusiIcons.get("award-badge", { size: 32 }) : ""}
-          </div>
-          <h2 class="trki-cert-title">
-            ${isSubset ? `KẾT QUẢ ÔN LUYỆN: ${esc(activeParts.map(p => p.vi).join(" · "))}` : `KẾT QUẢ KHẢO THÍ CHỨNG CHỈ TIẾNG NGA QUỐC TẾ ТРКИ`}
-          </h2>
-          <div class="trki-cert-subtitle">
-            ${isSubset ? `${esc(currentTest.title)} · TRÌNH ĐỘ ${esc(currentTest.level)}` : `ГОСУДАРСТВЕННЫЙ СЕРТИФИКАЦИОННЫЙ ОТЧЁТ · TRÌNH ĐỘ ${esc(currentTest.level)}`}
-          </div>
-
-          <div class="trki-cert-score-main">${correct}/${total} CÂU ĐÚNG · ${pct}%</div>
-
-          <div>
-            <span class="trki-cert-badge ${examStatus}">
-              ${window.RusiIcons ? RusiIcons.get(examStatus === "pass" ? "check-circle" : examStatus === "retake" ? "flag" : "shield-anti-cheat", { size: 18 }) : ""}
+      <div class="trki-modern-result-wrap">
+        <!-- MODERN RESULT HERO CARD (KHUNG RỘNG CĂN ĐỀU VỚI DAU-WORKSPACE-BACK-BAR) -->
+        <div class="trki-modern-hero-card">
+          <div class="trki-modern-hero-main">
+            <span class="trki-modern-hero-badge ${examStatus === 'pass' ? 'badge-pass' : 'badge-retry'}">
+              ${window.RusiIcons ? RusiIcons.get(examStatus === "pass" ? "check-circle-correct" : "alert-triangle", { size: 16 }) : ""}
               ${statusBadgeText}
             </span>
+            <h2 class="trki-modern-hero-title">
+              ${isSubset ? `Kết quả ôn luyện: ${esc(activeParts.map(p => p.vi).join(" · "))}` : `Kết quả khảo thí chứng chỉ tiếng Nga quốc tế ТРКИ`}
+            </h2>
+            <p class="trki-modern-hero-desc">
+              ${esc(currentTest.title)} · Trình độ ${esc(currentTest.level)} · ${statusDesc}
+            </p>
           </div>
-
-          <p class="trki-cert-meta">${statusDesc}</p>
+          <div class="trki-modern-score-box ${examStatus === 'pass' ? 'is-pass' : 'is-fail'}">
+            <div class="trki-modern-score-val">${pct}%</div>
+            <div class="trki-modern-score-sub">${correct}/${total} câu đúng</div>
+          </div>
         </div>
 
         <h3 style="margin:24px 0 14px;display:flex;align-items:center;gap:8px;font-size:1.15rem;color:var(--russia-navy)">

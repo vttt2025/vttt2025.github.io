@@ -536,6 +536,9 @@ const SRS = {
   /** Lưu state. */
   saveState(state) {
     STORE.set("srs", state);
+    if (typeof Progress !== "undefined" && typeof Progress.syncToCloud === "function") {
+      Progress.syncToCloud();
+    }
   },
 
   /**
