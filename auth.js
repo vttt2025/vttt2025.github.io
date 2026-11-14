@@ -245,5 +245,32 @@
   };
 
   window.Auth = Auth;
+
+  function isUserLoggedIn() {
+    const user = (Auth && Auth.user) || (getStore().get("auth_user", null));
+    if (!user) return false;
+    // Guest không được tính là tài khoản đã đăng nhập thành công
+    if (user.provider === "guest" || (typeof user.uid === "string" && user.uid.startsWith("guest_"))) {
+      return false;
+    }
+    return Boolean(user.uid || user.id || user.email);
+  }
+
+  function requireAuth(redirectTarget) {
+    if (isUserLoggedIn()) return true;
+    let target = redirectTarget;
+    if (!target) {
+      const pageName = window.location.pathname.split("/").pop() || "index.html";
+      target = pageName + window.location.search + window.location.hash;
+    }
+    window.location.href = `login.html?redirect=${encodeURIComponent(target)}`;
+    return false;
+  }
+
+  Auth.isLoggedIn = isUserLoggedIn;
+  Auth.requireAuth = requireAuth;
+  window.isUserLoggedIn = isUserLoggedIn;
+  window.requireAuth = requireAuth;
+
   Auth.isReady();
 })();

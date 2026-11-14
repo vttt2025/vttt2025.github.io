@@ -230,6 +230,7 @@ function getQuizletDistractors(currentWord, allWords, count = 3) {
 }
 
 window.openAddToJarModal = function(wordData) {
+  if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html")) return;
   if (!wordData) return;
   if (typeof wordData === "string") {
     wordData = { ru: wordData };
@@ -559,6 +560,7 @@ window.openAddToJarModal = function(wordData) {
 window.openAddJarModal = window.openAddToJarModal;
 
 function openAddWordToJarModal(jarId, onSuccess) {
+  if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?jar=" + encodeURIComponent(jarId || ""))) return;
   let m = document.getElementById("addWordToJarModal");
   if (m) m.remove();
   m = document.createElement("div");
@@ -2090,6 +2092,7 @@ function initVocabPage() {
   window.exitSrsToVocab = showMainLayout;
 
   const showSrsWorkspace = () => {
+    if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?srs=1")) return;
     // Thu thập danh sách từ cần ôn tập theo Spaced Repetition (ưu tiên từ due / đang học)
     let reviewWords = [];
     const allJars = getVocabJars();
@@ -2665,6 +2668,7 @@ function initVocabPage() {
       btnCreateTop.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
+        if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html")) return;
         openCreateJarModal();
       };
     }
@@ -3022,6 +3026,7 @@ function initVocabPage() {
   };
 
   const openCreateJarModal = () => {
+    if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html")) return;
     let m = document.getElementById("createJarModal");
     if (!m) {
       m = document.createElement("div");
@@ -3093,6 +3098,7 @@ function initVocabPage() {
     }
 
     const doSave = () => {
+      if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html")) return;
       const name = (inputName ? inputName.value : "").trim();
       if (!name) {
         toast("Vui lòng nhập tên lọ từ vựng");
@@ -3127,6 +3133,7 @@ function initVocabPage() {
   };
 
 const showTopicArticle = (jarId) => {
+    if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?topic=" + encodeURIComponent(jarId || ""))) return;
     // 1. Kiểm tra bản nháp xem trước thời gian thực từ CMS (sessionStorage / localStorage)
     let previewDraft = null;
     try {
@@ -3419,6 +3426,7 @@ const showTopicArticle = (jarId) => {
   };
 
   const showJarDetail = (jarId, initialMode = "list") => {
+    if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?jar=" + encodeURIComponent(jarId || ""))) return;
     window.currentActiveJarId = jarId;
     const customJars = STORE.get("custom_jars", []);
     const baseJars = (cloudJars && cloudJars.length)
@@ -3739,13 +3747,18 @@ const showTopicArticle = (jarId) => {
   const targetMode = urlParams.get("mode");
 
   if (targetTopic) {
+    if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?topic=" + encodeURIComponent(targetTopic))) return;
     if (targetMode === "jar") {
       showJarDetail(targetTopic);
     } else {
       showTopicArticle(targetTopic);
     }
   } else if (targetJar) {
+    if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?jar=" + encodeURIComponent(targetJar))) return;
     showJarDetail(targetJar);
+  } else if (urlParams.get("srs")) {
+    if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?srs=1")) return;
+    showSrsWorkspace();
   } else {
     renderVocabHub();
   }
@@ -4531,6 +4544,7 @@ function initListeningPage() {
 
     const openLesson = (card) => {
       const id = card.dataset.listenId;
+      if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent(id || ""))) return;
       const lesson = all.find((x) => x.id === id);
       if (!lesson) return;
       const isPro = lesson.is_pro_only || lesson.level === "B1" || lesson.level === "B2";
@@ -5751,6 +5765,7 @@ function initListeningPage() {
    * Bố cục 3/7: 3 phần menu câu hỏi bên trái, 7 phần phát audio & trắc nghiệm
    * ===================================================================== */
   const openComprehensionWorkspace = (lesson) => {
+    if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent((lesson && lesson.id) || ""))) return;
     currentLesson = lesson;
     document.body.classList.add("in-workspace");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -6630,6 +6645,7 @@ function initListeningPage() {
 
 
   const openDictationWorkspace = (lesson) => {
+    if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent((lesson && lesson.id) || ""))) return;
     currentLesson = lesson;
     document.body.classList.add("in-workspace");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -7839,7 +7855,27 @@ function initListeningPage() {
     });
   };
 
-  renderHub();
+  const checkUrlLesson = () => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetId = urlParams.get("id") || urlParams.get("lesson");
+      if (targetId) {
+        if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent(targetId))) return true;
+        const all = typeof getLessons === "function" ? getLessons() : [];
+        const found = all.find(l => l.id === targetId || l.code === targetId);
+        if (found) {
+          if (currentMode === "dictation") openDictationWorkspace(found);
+          else openComprehensionWorkspace(found);
+          return true;
+        }
+      }
+    } catch (_) {}
+    return false;
+  };
+
+  if (!checkUrlLesson()) {
+    renderHub();
+  }
 }
 
 
@@ -7875,6 +7911,7 @@ function initSpeakingPage() {
       const urlParams = new URLSearchParams(window.location.search);
       const targetId = urlParams.get("set");
       if (targetId) {
+        if (typeof window.requireAuth === "function" && !window.requireAuth("speaking.html?set=" + encodeURIComponent(targetId))) return true;
         const all = getSpeakingSets();
         const found = all.find(s => s.id === targetId || s.code === targetId);
         if (found) {
@@ -8116,6 +8153,7 @@ function initSpeakingPage() {
   };
 
 const openSpeakingWorkspace = (set) => {
+    if (typeof window.requireAuth === "function" && !window.requireAuth("speaking.html?set=" + encodeURIComponent((set && (set.id || set.code)) || ""))) return;
     document.body.classList.add("in-workspace");
     const todayKey = "speak_today_" + new Date().toDateString();
     const attemptsToday = STORE.get(todayKey, 0);
@@ -8176,6 +8214,76 @@ const openSpeakingWorkspace = (set) => {
     let autoAdvance = false;
     let isSidebarHidden = false;
     let recognitionInstance = null;
+
+    // Quản lý Voice Memo (MediaRecorder & Audio playback theo chuẩn Widget Figma)
+    let mediaRecorder = null;
+    let voiceAudioChunks = [];
+    let voiceStream = null;
+    let voiceStartTime = 0;
+    const userVoiceMemos = {}; // idx -> { url, duration, blob }
+    let activeVmAudio = null;
+
+    const formatVmTime = (sec) => {
+      const m = Math.floor(sec / 60);
+      const s = Math.floor(sec % 60);
+      return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    };
+
+    const stopActiveVmAudio = () => {
+      if (activeVmAudio) {
+        try { activeVmAudio.pause(); } catch (_) {}
+        activeVmAudio = null;
+      }
+      const widget = el("#spVoiceMemoWidget");
+      if (widget) widget.classList.remove("is-playing");
+      const iconWrap = el("#spVmPlayIcon");
+      if (iconWrap) iconWrap.innerHTML = icon("play", 16);
+    };
+
+    const playVoiceMemo = (idx) => {
+      const memo = userVoiceMemos[idx];
+      if (!memo || !memo.url) return;
+
+      if (activeVmAudio) {
+        stopActiveVmAudio();
+        return;
+      }
+
+      stopVideoSegment();
+      stopAudio();
+
+      const audio = new Audio(memo.url);
+      activeVmAudio = audio;
+
+      const widget = el("#spVoiceMemoWidget");
+      if (widget) widget.classList.add("is-playing");
+      const iconWrap = el("#spVmPlayIcon");
+      if (iconWrap) iconWrap.innerHTML = icon("pause", 16);
+
+      audio.onended = () => {
+        stopActiveVmAudio();
+      };
+      audio.onerror = () => {
+        stopActiveVmAudio();
+        toast("Không thể phát lại bản ghi âm.");
+      };
+      audio.play().catch(() => stopActiveVmAudio());
+    };
+
+    const renderVoiceMemoUI = (idx) => {
+      const widget = el("#spVoiceMemoWidget");
+      if (!widget) return;
+      const memo = userVoiceMemos[idx];
+      if (memo && memo.url) {
+        widget.style.display = "flex";
+        const durEl = el("#spVmDuration");
+        if (durEl) durEl.textContent = formatVmTime(memo.duration || 0);
+        stopActiveVmAudio();
+      } else {
+        widget.style.display = "none";
+        stopActiveVmAudio();
+      }
+    };
 
     // Helper: Tính điểm hoàn thành và trung bình (Completion-Only)
     const getStats = () => {
@@ -8317,6 +8425,48 @@ const openSpeakingWorkspace = (set) => {
                   <span>Nói lại</span>
                 </button>
                 <div class="score-ring" id="spScoreRing" style="display:none;" title="Độ chính xác">--</div>
+              </div>
+            </div>
+
+            <!-- WIDGET VOICE MEMO FIGMA: BẢN GHI ÂM & PHÁT LẠI GIỌNG NÓI HỌC VIÊN -->
+            <div class="sp-voice-memo-widget" id="spVoiceMemoWidget" style="display:none;">
+              <div class="sp-vm-left">
+                <button type="button" class="sp-vm-play-btn" id="btnVmPlay" title="Nghe lại giọng nói của bạn" aria-label="Nghe lại giọng nói">
+                  <span id="spVmPlayIcon">${icon("play", 16)}</span>
+                </button>
+                <div class="sp-vm-info">
+                  <div class="sp-vm-title">
+                    <span class="sp-vm-label">Voice Memo</span>
+                    <span class="sp-vm-dot">•</span>
+                    <span class="sp-vm-duration" id="spVmDuration">00:00</span>
+                  </div>
+                  <div class="sp-vm-waveform" id="spVmWaveform">
+                    <span class="sp-vm-bar" style="--h: 30%"></span>
+                    <span class="sp-vm-bar" style="--h: 60%"></span>
+                    <span class="sp-vm-bar" style="--h: 90%"></span>
+                    <span class="sp-vm-bar" style="--h: 45%"></span>
+                    <span class="sp-vm-bar" style="--h: 75%"></span>
+                    <span class="sp-vm-bar" style="--h: 100%"></span>
+                    <span class="sp-vm-bar" style="--h: 55%"></span>
+                    <span class="sp-vm-bar" style="--h: 80%"></span>
+                    <span class="sp-vm-bar" style="--h: 40%"></span>
+                    <span class="sp-vm-bar" style="--h: 70%"></span>
+                    <span class="sp-vm-bar" style="--h: 95%"></span>
+                    <span class="sp-vm-bar" style="--h: 50%"></span>
+                    <span class="sp-vm-bar" style="--h: 85%"></span>
+                    <span class="sp-vm-bar" style="--h: 65%"></span>
+                    <span class="sp-vm-bar" style="--h: 35%"></span>
+                    <span class="sp-vm-bar" style="--h: 70%"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="sp-vm-actions">
+                <button type="button" class="sp-vm-action-btn" id="btnVmCompare" title="Nghe phát âm chuẩn của người bản xứ để đối chiếu">
+                  ${icon("volume-high", 14)} <span>Đối chiếu mẫu</span>
+                </button>
+                <button type="button" class="sp-vm-action-btn sp-vm-del" id="btnVmDelete" title="Xóa bản ghi âm này" aria-label="Xóa">
+                  ${icon("trash-2", 14)}
+                </button>
               </div>
             </div>
 
@@ -8731,6 +8881,9 @@ const openSpeakingWorkspace = (set) => {
       });
       const activeBtn = el(`#spPlayItem_${idx}`);
       if (activeBtn) activeBtn.scrollIntoView({ behavior: "smooth", block: "nearest" });
+
+      // Cập nhật trạng thái Voice Memo của câu hiện hành
+      renderVoiceMemoUI(idx);
     };
 
     // Thu âm Speech Recognition và AI chấm điểm
@@ -8772,10 +8925,52 @@ const openSpeakingWorkspace = (set) => {
 
       stopVideoSegment();
       stopAudio();
+      stopActiveVmAudio();
       clearSilenceTimer();
       isRecording = true;
       accumulatedTranscript = "";
       lastHeardText = "";
+
+      // Thu âm thực tế bằng MediaRecorder (Figma Voice Memo)
+      if (typeof navigator !== "undefined" && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+            if (!isRecording) {
+              stream.getTracks().forEach(t => t.stop());
+              return;
+            }
+            voiceStream = stream;
+            voiceAudioChunks = [];
+            voiceStartTime = Date.now();
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = (e) => {
+              if (e.data && e.data.size > 0) voiceAudioChunks.push(e.data);
+            };
+            mediaRecorder.onstop = () => {
+              const mime = (mediaRecorder && mediaRecorder.mimeType) ? mediaRecorder.mimeType : "audio/webm";
+              const blob = new Blob(voiceAudioChunks, { type: mime });
+              const durSec = Math.max(1, Math.round((Date.now() - voiceStartTime) / 1000));
+              if (blob.size > 500) {
+                if (userVoiceMemos[currentSentenceIdx]) {
+                  try { URL.revokeObjectURL(userVoiceMemos[currentSentenceIdx].url); } catch (_) {}
+                }
+                const url = URL.createObjectURL(blob);
+                userVoiceMemos[currentSentenceIdx] = { url, duration: durSec, blob };
+                renderVoiceMemoUI(currentSentenceIdx);
+              }
+              if (voiceStream) {
+                voiceStream.getTracks().forEach(t => t.stop());
+                voiceStream = null;
+              }
+            };
+            mediaRecorder.start(200);
+          }).catch((err) => {
+            console.warn("[VoiceMemo] Mic access error:", err);
+          });
+        } catch (err) {
+          console.warn("[VoiceMemo] MediaRecorder error:", err);
+        }
+      }
 
       const btnMic = el("#btnRecordMic");
       if (btnMic) btnMic.classList.add("is-recording");
@@ -8885,7 +9080,7 @@ const openSpeakingWorkspace = (set) => {
 
     const stopRecording = () => {
       clearSilenceTimer();
-      if (!isRecording && !recognitionInstance) return;
+      if (!isRecording && !recognitionInstance && (!mediaRecorder || mediaRecorder.state === "inactive")) return;
       isRecording = false;
 
       const btnMic = el("#btnRecordMic");
@@ -8894,6 +9089,10 @@ const openSpeakingWorkspace = (set) => {
       if (recognitionInstance) {
         try { recognitionInstance.stop(); } catch (e) {}
         recognitionInstance = null;
+      }
+
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        try { mediaRecorder.stop(); } catch (e) {}
       }
 
       const statusLbl = el("#spResultStatusLbl");
@@ -9053,6 +9252,17 @@ const openSpeakingWorkspace = (set) => {
     el("#btnBackSpList").onclick = () => {
       stopAudio();
       stopRecording();
+      stopActiveVmAudio();
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        try { mediaRecorder.stop(); } catch (_) {}
+      }
+      if (voiceStream) {
+        voiceStream.getTracks().forEach(t => t.stop());
+        voiceStream = null;
+      }
+      Object.values(userVoiceMemos).forEach(m => {
+        try { URL.revokeObjectURL(m.url); } catch (_) {}
+      });
       document.removeEventListener("keydown", onWorkspaceKeydown);
       document.body.classList.remove("in-workspace");
       if (typeof window !== "undefined" && window.history && window.history.replaceState) {
@@ -9098,6 +9308,27 @@ const openSpeakingWorkspace = (set) => {
 
     // Feedback action buttons
     if (el("#btnFeedbackRetry")) el("#btnFeedbackRetry").onclick = startRecording;
+
+    // Đăng ký các nút tương tác trên Widget Voice Memo Figma
+    const btnVmPlay = el("#btnVmPlay");
+    if (btnVmPlay) {
+      btnVmPlay.onclick = () => playVoiceMemo(currentSentenceIdx);
+    }
+    const btnVmCompare = el("#btnVmCompare");
+    if (btnVmCompare) {
+      btnVmCompare.onclick = () => playCurrentSentence(false);
+    }
+    const btnVmDelete = el("#btnVmDelete");
+    if (btnVmDelete) {
+      btnVmDelete.onclick = () => {
+        if (userVoiceMemos[currentSentenceIdx]) {
+          try { URL.revokeObjectURL(userVoiceMemos[currentSentenceIdx].url); } catch (_) {}
+          delete userVoiceMemos[currentSentenceIdx];
+          renderVoiceMemoUI(currentSentenceIdx);
+          toast("Đã xóa bản ghi âm.");
+        }
+      };
+    }
 
     // Nhấp vào câu tiếng Nga để phát âm mẫu hoặc nghe video câu đó
     const ruSentenceEl = el("#spTargetRu");
@@ -9938,6 +10169,7 @@ function initWritingPage() {
     }).join("");
 
     const openTopic = (card) => {
+      if (typeof window.requireAuth === "function" && !window.requireAuth("writing.html?topic=" + encodeURIComponent(card.dataset.topic || ""))) return;
       const topic = topics.find((item) => item.key === card.dataset.topic);
       if (!topic || !topic.tasks.length || !canOpen(topic.tasks[0])) return;
       openWorkspace(topic, topic.tasks[0]);
@@ -10035,6 +10267,7 @@ function initWritingPage() {
   };
 
   const openWorkspace = (topic, initialTask) => {
+    if (typeof window.requireAuth === "function" && !window.requireAuth("writing.html?topic=" + encodeURIComponent((topic && (topic.key || topic.id || topic.title)) || ""))) return;
     document.body.classList.add("in-workspace");
     let currentTask = initialTask;
 
@@ -10502,6 +10735,24 @@ function initMockTestPage() {
   let tabSwitches = 0;
   let visibilityHandler = null;
 
+  const checkUrlExam = () => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetId = urlParams.get("exam") || urlParams.get("test") || urlParams.get("id");
+      if (targetId) {
+        if (typeof window !== "undefined" && typeof window.requireAuth === "function") {
+          if (!window.requireAuth()) return true;
+        }
+        const found = bank.find(t => t.id === targetId || t.code === targetId);
+        if (found) {
+          openSubtestPickerModal(found);
+          return true;
+        }
+      }
+    } catch (_) {}
+    return false;
+  };
+
   const loadCloudTests = async () => {
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
       try {
@@ -10527,6 +10778,8 @@ function initMockTestPage() {
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const openSubtestPickerModal = (test) => {
+    const testId = (test && (test.id || test.code)) || "";
+    if (typeof window.requireAuth === "function" && !window.requireAuth("mock-test.html?exam=" + encodeURIComponent(testId))) return;
     let modal = document.getElementById("trkiSubtestModal");
     if (!modal) {
       modal = document.createElement("div");
@@ -12725,6 +12978,21 @@ function initIndexPage() {
   };
 
   initTestimonialCarousel();
+
+  // YÊU CẦU: Bắt buộc đăng nhập khi click vào các bài luyện/khóa học tại trang chủ
+  document.querySelectorAll(".course-btn, a[href='mock-test.html']").forEach(link => {
+    link.addEventListener("click", (e) => {
+      if (typeof window.isUserLoggedIn === "function" && !window.isUserLoggedIn()) {
+        e.preventDefault();
+        const targetHref = link.getAttribute("href") || "mock-test.html";
+        if (typeof window.requireAuth === "function") {
+          window.requireAuth(targetHref);
+        } else {
+          window.location.href = "login.html?redirect=" + encodeURIComponent(targetHref);
+        }
+      }
+    });
+  });
 }
 
 /* =====================================================================

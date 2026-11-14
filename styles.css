@@ -7983,30 +7983,31 @@ body.rusika-chat-open .rusika-floating-widget {
 .testimonial-card-wrap {
   max-width: 860px;
   margin: 0 auto;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  padding: 44px 44px 34px;
-  box-shadow: 0 4px 20px rgba(16, 42, 76, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
   box-sizing: border-box;
   position: relative;
 }
 @media (max-width: 768px) {
   .testimonial-card-wrap {
-    padding: 28px 18px 22px;
-    border-radius: 18px;
-    margin: 0 8px;
+    padding: 0;
+    border-radius: 0;
+    margin: 0 auto;
   }
 }
 .testimonial-quote-badge {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: rgba(197, 34, 51, 0.08);
-  color: #c52233;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(23, 87, 166, 0.06);
+  color: var(--primary, #1757a6);
   display: grid;
   place-items: center;
-  margin: 0 auto 16px;
+  margin: 0 auto 14px;
+  transition: all 0.25s ease;
 }
 .testimonial-slider {
   overflow: hidden;
@@ -8050,10 +8051,10 @@ body.rusika-chat-open .rusika-floating-widget {
 }
 .testimonial blockquote {
   letter-spacing: normal;
-  max-width: 720px;
-  margin: 12px auto 22px;
+  max-width: 760px;
+  margin: 12px auto 26px;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  font-size: clamp(16px, 1.7vw, 19.5px);
+  font-size: clamp(17px, 1.9vw, 21px);
   line-height: 1.72;
   font-weight: 500;
   color: var(--text);
@@ -8128,9 +8129,9 @@ body.rusika-chat-open .rusika-floating-widget {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  margin-top: 26px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
+  margin-top: 28px;
+  padding-top: 0;
+  border-top: none;
 }
 .testimonial-arrow {
   width: 38px;
@@ -29240,6 +29241,203 @@ body.has-bottom-bar .rusika-floating-widget {
 
 .sp-result-retry-btn:active {
   transform: translateY(0);
+}
+
+/* ==========================================================================
+   FIGMA VOICE MEMO WIDGET COMPONENT (CHUYÊN MỤC LUYỆN NÓI SHADOWING)
+   ========================================================================== */
+.sp-voice-memo-widget {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 16px;
+  border-radius: 9999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+  margin-top: 10px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: spResultSlideIn 0.25s ease-out;
+}
+
+[data-theme="dark"] .sp-voice-memo-widget {
+  background: #151d2c;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+.sp-vm-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sp-vm-play-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(197, 34, 51, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.sp-vm-play-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 4px 12px rgba(197, 34, 51, 0.38);
+}
+
+.sp-vm-play-btn:active {
+  transform: scale(0.96);
+}
+
+.sp-voice-memo-widget.is-playing .sp-vm-play-btn {
+  background: #10b981;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+}
+
+.sp-vm-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.sp-vm-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+
+.sp-vm-label {
+  color: var(--primary);
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+}
+
+.sp-vm-dot {
+  opacity: 0.35;
+}
+
+.sp-vm-duration {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+/* Sóng âm thanh động chuẩn Figma */
+.sp-vm-waveform {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 18px;
+  padding: 0 2px;
+}
+
+.sp-vm-bar {
+  display: inline-block;
+  width: 3px;
+  min-width: 3px;
+  height: var(--h, 40%);
+  background: var(--border);
+  border-radius: 9999px;
+  transition: height 0.15s ease, background 0.2s ease;
+}
+
+.sp-voice-memo-widget.is-playing .sp-vm-bar {
+  background: var(--primary);
+  animation: spVmWavePulse 0.9s infinite ease-in-out alternate;
+}
+
+.sp-voice-memo-widget.is-playing .sp-vm-bar:nth-child(2n) {
+  animation-delay: 0.15s;
+}
+.sp-voice-memo-widget.is-playing .sp-vm-bar:nth-child(3n) {
+  animation-delay: 0.3s;
+}
+.sp-voice-memo-widget.is-playing .sp-vm-bar:nth-child(4n) {
+  animation-delay: 0.45s;
+}
+
+@keyframes spVmWavePulse {
+  0% { transform: scaleY(0.4); }
+  100% { transform: scaleY(1.3); }
+}
+
+.sp-vm-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.sp-vm-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sp-vm-action-btn:hover {
+  background: var(--surface);
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.sp-vm-action-btn.sp-vm-del {
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.sp-vm-action-btn.sp-vm-del:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ef4444;
+}
+
+@media (max-width: 640px) {
+  .sp-voice-memo-widget {
+    flex-direction: column;
+    align-items: stretch;
+    border-radius: 16px;
+    padding: 12px 14px;
+    gap: 12px;
+  }
+  .sp-vm-actions {
+    justify-content: flex-end;
+  }
 }
 
 
