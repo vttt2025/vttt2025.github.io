@@ -15919,22 +15919,20 @@ body[data-page="writing"].in-workspace main.container {
 }
 
 /* =====================================================================
- * THANH THAO TÁC LUYỆN VIẾT & HẠN MỨC AI TỐI GIẢN, HIỆN ĐẠI (UNIFIED ACTION BAR)
+ * THANH THAO TÁC LUYỆN VIẾT & HẠN MỨC AI TỐI GIẢN (SEAMLESS EDITOR TOOLBAR)
  * ===================================================================== */
 .writing-primary-actions.writing-action-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: nowrap;
-  gap: 8px;
-  margin-top: 14px;
-  padding: 6px 10px;
-  height: 48px;
-  min-height: 48px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(16, 42, 76, 0.04);
+  gap: 10px;
+  margin-top: 10px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
   box-sizing: border-box;
   white-space: nowrap;
   overflow: visible;
@@ -15942,71 +15940,71 @@ body[data-page="writing"].in-workspace main.container {
 
 .writing-bar-left,
 .writing-bar-right {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   flex-shrink: 0;
   white-space: nowrap;
 }
 
 .writing-bar-divider {
-  width: 1px;
-  height: 20px;
-  background: var(--border);
-  flex-shrink: 0;
-  margin: 0 2px;
+  display: none;
 }
 
-/* Nút Chấm AI chính: Gradient xanh Navy hiện đại, cao cấp */
+/* Nút Chấm AI chính: Màu Navy thương hiệu phẳng, cao cấp, không gradient bóng bẩy */
 .writing-primary-actions .btn-primary.btn-submit {
-  height: 34px;
-  min-height: 34px;
-  padding: 0 12px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 14px;
   border-radius: 8px;
-  font-size: 0.82rem;
-  font-weight: 700;
+  font-size: 0.84rem;
+  font-weight: 650;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  background: var(--primary, #1757a6);
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 0 2px 6px rgba(29, 78, 216, 0.22);
-  transition: all 0.18s ease;
+  border: 1px solid transparent;
+  box-shadow: 0 1px 2px rgba(16, 42, 76, 0.08);
+  transition: all 0.16s ease;
   cursor: pointer;
   flex-shrink: 0;
   white-space: nowrap;
 }
 
 .writing-primary-actions .btn-primary.btn-submit:hover {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3);
+  background: color-mix(in srgb, var(--primary) 88%, #000);
+  box-shadow: 0 2px 6px rgba(16, 42, 76, 0.16);
+  transform: translateY(-0.5px);
+}
+
+.writing-primary-actions .btn-primary.btn-submit:active {
+  transform: translateY(0);
 }
 
 .writing-primary-actions .btn-primary.btn-submit:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-/* Viên thuốc hạn mức AI tinh tế, chuẩn 1 dòng duy nhất */
+/* Viên thuốc hạn mức AI: Nền surface trang nhã đồng bộ, không chọi màu */
 .writing-quota-pill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 34px;
-  padding: 0 9px;
-  background: rgba(245, 158, 11, 0.08);
-  border: 1px solid rgba(245, 158, 11, 0.24);
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
   box-sizing: border-box;
-  transition: all 0.18s ease;
+  transition: all 0.16s ease;
   user-select: none;
   flex-shrink: 0;
   white-space: nowrap;
@@ -16016,13 +16014,14 @@ body[data-page="writing"].in-workspace main.container {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #f59e0b;
+  color: #d97706;
   flex-shrink: 0;
 }
 
 .writing-quota-pill.is-empty {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.24);
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #dc2626;
 }
 
 .writing-quota-pill.is-empty .writing-quota-icon {
@@ -16030,8 +16029,9 @@ body[data-page="writing"].in-workspace main.container {
 }
 
 .writing-quota-pill.is-off {
-  background: rgba(148, 163, 184, 0.08);
+  background: var(--surface);
   border-color: var(--border);
+  color: var(--muted);
 }
 
 .writing-quota-pill.is-off .writing-quota-icon {
@@ -16040,21 +16040,24 @@ body[data-page="writing"].in-workspace main.container {
 
 .writing-quota-pill b {
   color: var(--text);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .writing-quota-pill .quota-txt {
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
 
-/* Các nút công cụ phụ bên phải */
+/* Các nút công cụ phụ bên phải: Outline tinh gọn, thanh thoát */
 .writing-primary-actions .btn-outline {
-  height: 34px;
-  min-height: 34px;
-  padding: 0 10px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 11px;
   border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 650;
+  font-size: 0.82rem;
+  font-weight: 550;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -16062,7 +16065,8 @@ body[data-page="writing"].in-workspace main.container {
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
-  transition: all 0.18s ease;
+  box-shadow: 0 1px 2px rgba(16, 42, 76, 0.04);
+  transition: all 0.16s ease;
   cursor: pointer;
   position: relative;
   flex-shrink: 0;
@@ -16070,16 +16074,17 @@ body[data-page="writing"].in-workspace main.container {
 }
 
 .writing-primary-actions .btn-outline:hover {
-  background: color-mix(in srgb, var(--primary) 6%, var(--surface));
+  background: color-mix(in srgb, var(--primary) 5%, var(--surface));
   border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
   color: var(--primary);
-  transform: translateY(-1px);
+  transform: translateY(-0.5px);
 }
 
 .writing-primary-actions .btn-outline.active {
-  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
   border-color: var(--primary);
   color: var(--primary);
+  font-weight: 650;
 }
 
 .writing-btn-icon-wrap {
@@ -16091,12 +16096,12 @@ body[data-page="writing"].in-workspace main.container {
 
 .writing-vocab-pill-count {
   font-size: 0.68rem;
-  font-weight: 750;
+  font-weight: 700;
   padding: 1px 5px;
   border-radius: 99px;
-  background: color-mix(in srgb, var(--primary) 15%, var(--surface));
+  background: color-mix(in srgb, var(--primary) 12%, var(--surface));
   color: var(--primary);
-  line-height: 1.1;
+  line-height: 1.15;
   margin-left: 2px;
 }
 
@@ -16353,15 +16358,19 @@ body[data-page="writing"].in-workspace main.container {
     padding: 14px;
   }
 
-  /* Thanh thao tác luyện viết dạng Compact trên tablet (<= 1024px) */
+  /* Thanh thao tác luyện viết phẳng trên tablet (<= 1024px) */
   .writing-primary-actions.writing-action-bar {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     flex-wrap: nowrap;
-    gap: 6px;
-    padding: 6px 10px;
+    gap: 8px;
+    padding: 0;
+    margin-top: 10px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
     overflow: visible;
   }
 
@@ -16374,25 +16383,25 @@ body[data-page="writing"].in-workspace main.container {
   }
 
   .writing-primary-actions .btn-primary.btn-submit {
-    height: 34px;
-    min-height: 34px;
-    padding: 0 11px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 12px;
     gap: 6px;
     font-size: 0.82rem;
   }
 
   .writing-quota-pill {
-    height: 34px;
-    padding: 0 8px;
+    height: 36px;
+    padding: 0 9px;
     font-size: 0.78rem;
     gap: 5px;
     white-space: nowrap;
   }
 
   .writing-bar-right .btn-outline {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
     padding: 0;
     border-radius: 8px;
     display: inline-flex;
@@ -16405,17 +16414,17 @@ body[data-page="writing"].in-workspace main.container {
     display: none !important;
   }
 
-  /* Badge đếm số từ gợi ý nằm gọn bên trong nút 34x34px, không tràn sang nút bên cạnh */
+  /* Badge đếm số từ gợi ý nằm gọn bên trong nút 36x36px */
   .writing-vocab-pill-count {
     display: inline-flex !important;
     position: absolute;
-    top: -2px;
-    right: -2px;
-    min-width: 14px;
-    height: 14px;
+    top: -3px;
+    right: -3px;
+    min-width: 15px;
+    height: 15px;
     padding: 0 3px;
     border-radius: 999px;
-    background: var(--primary, #1d4ed8);
+    background: var(--primary, #1757a6);
     color: #ffffff;
     font-size: 9px;
     font-weight: 800;
@@ -16613,16 +16622,19 @@ body[data-page="writing"].in-workspace main.container {
     border-right: 0;
   }
 
-  /* Bố cục thanh thao tác viết dạng Icon Dock sang trọng trên mobile (<= 768px) */
+  /* Bố cục thanh thao tác viết phẳng trên mobile (<= 768px) */
   .writing-primary-actions.writing-action-bar {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     flex-wrap: nowrap;
-    gap: 5px;
-    padding: 5px 8px;
-    border-radius: 10px;
+    gap: 6px;
+    padding: 0;
+    margin-top: 10px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
     overflow: visible;
   }
 
@@ -16635,29 +16647,24 @@ body[data-page="writing"].in-workspace main.container {
   }
 
   .writing-bar-divider {
-    display: block;
-    width: 1px;
-    height: 18px;
-    background: var(--border);
-    margin: 0 1px;
-    flex-shrink: 0;
+    display: none;
   }
 
-  /* Nút Chấm AI giữ chữ "Chấm AI" gọn đẹp, height 34px */
+  /* Nút Chấm AI giữ chữ "Chấm AI" gọn đẹp, height 36px */
   .writing-primary-actions .btn-primary.btn-submit {
-    height: 34px;
-    min-height: 34px;
-    padding: 0 10px;
+    height: 36px;
+    min-height: 36px;
+    padding: 0 11px;
     border-radius: 8px;
     font-size: 0.8rem;
     gap: 5px;
     flex-shrink: 0;
   }
 
-  /* Hạn mức AI tinh gọn dạng pill chuẩn 34px, 1 dòng duy nhất */
+  /* Hạn mức AI tinh gọn dạng pill chuẩn 36px, 1 dòng duy nhất */
   .writing-quota-pill {
-    height: 34px;
-    padding: 0 7px;
+    height: 36px;
+    padding: 0 8px;
     font-size: 0.76rem;
     gap: 4px;
     border-radius: 8px;
@@ -16665,11 +16672,11 @@ body[data-page="writing"].in-workspace main.container {
     flex-shrink: 0;
   }
 
-  /* Các nút công cụ phụ 34x34px */
+  /* Các nút công cụ phụ 36x36px */
   .writing-bar-right .btn-outline {
-    width: 34px;
-    height: 34px;
-    min-width: 34px;
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
     padding: 0;
     border-radius: 8px;
     display: inline-flex;
@@ -16726,8 +16733,9 @@ body[data-page="writing"].in-workspace main.container {
   }
 
   .writing-primary-actions.writing-action-bar {
-    padding: 4px 6px;
+    padding: 0;
     gap: 4px;
+    margin-top: 8px;
   }
 
   .writing-bar-left,
@@ -16736,8 +16744,8 @@ body[data-page="writing"].in-workspace main.container {
   }
 
   .writing-primary-actions .btn-primary.btn-submit {
-    height: 32px;
-    min-height: 32px;
+    height: 34px;
+    min-height: 34px;
     padding: 0 8px;
     font-size: 0.78rem;
     gap: 4px;
@@ -16745,7 +16753,7 @@ body[data-page="writing"].in-workspace main.container {
   }
 
   .writing-quota-pill {
-    height: 32px;
+    height: 34px;
     padding: 0 6px;
     font-size: 0.72rem;
     gap: 3px;
@@ -16753,9 +16761,9 @@ body[data-page="writing"].in-workspace main.container {
   }
 
   .writing-bar-right .btn-outline {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
     border-radius: 7px;
   }
 
@@ -16777,18 +16785,19 @@ body[data-page="writing"].in-workspace main.container {
 
 @media (max-width: 360px) {
   .writing-primary-actions.writing-action-bar {
-    padding: 4px;
+    padding: 0;
     gap: 3px;
+    margin-top: 6px;
   }
   .writing-bar-left,
   .writing-bar-right {
     gap: 3px;
   }
   .writing-primary-actions .btn-primary.btn-submit {
-    width: 32px;
-    min-width: 32px;
-    height: 32px;
-    min-height: 32px;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px;
     padding: 0;
     border-radius: 7px;
   }
@@ -16796,14 +16805,14 @@ body[data-page="writing"].in-workspace main.container {
     display: none !important;
   }
   .writing-bar-right .btn-outline {
-    width: 32px;
-    min-width: 32px;
-    height: 32px;
-    min-height: 32px;
+    width: 34px;
+    min-width: 34px;
+    height: 34px;
+    min-height: 34px;
     border-radius: 7px;
   }
   .writing-quota-pill {
-    height: 32px;
+    height: 34px;
     padding: 0 5px;
     font-size: 0.7rem;
     border-radius: 7px;
