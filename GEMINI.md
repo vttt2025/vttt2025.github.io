@@ -28,6 +28,21 @@ Mỗi khi viết code, refactor hoặc sửa lỗi kỹ thuật, trợ lý AI **
 
 ---
 
+## 🧘 NGUYÊN TẮC PONYTAIL (LAZY SENIOR DEVELOPER - DIETRICH GEBERT)
+
+- **Vị trí skill:** [.agents/skills/ponytail/SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/ponytail/SKILL.md)
+- **Quy tắc rules:** [.agents/rules/ponytail.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/rules/ponytail.md)
+- **Triết lý cốt lõi:** *"The best code is the code you never wrote."* (Đoạn code tuyệt vời nhất là đoạn code không bao giờ phải viết).
+- **Thang đánh giá giải pháp tối thiểu (Smallest Complete Change):**
+  1. *Tính năng có thực sự cần tồn tại?* Loại bỏ ngay các tùy chọn, cấu hình thừa thãi người dùng không yêu cầu.
+  2. *Đã có sẵn trong codebase?* Tái sử dụng helper, component, service hiện có theo đúng quy chuẩn dự án.
+  3. *Có sẵn trong Web Platform / Standard Library?* Ưu tiên tính năng chuẩn native của trình duyệt.
+  4. *Đã có trong dependency hiện tại?* Dùng thư viện đã cài, tuyệt đối không cài thêm thư viện mới chỉ vì vài dòng code.
+  5. *Có thể viết thành 1 dòng code dễ hiểu?* Ưu tiên giải pháp ngắn gọn, trực diện nhất.
+  6. *Luôn kiểm tra tác động toàn diện:* Kiểm tra mọi hàm gọi liên quan (callers), test suite, dữ liệu người dùng trước khi kết thúc.
+
+---
+
 ## 📱 QUY TẮC BẮT BUỘC: RESPONSIVE CHO MOBILE, TABLET & XỬ LÝ TRÀN VIỀN ("MORE...")
 
 Mỗi khi thực hiện bất kỳ thay đổi nào liên quan đến giao diện người dùng (HTML, CSS, JavaScript trong `pages.js`, `app.js`, `styles.css`, hoặc các file `.html`), trợ lý AI **BẮT BUỘC** phải tuân thủ và kích hoạt các quy tắc sau:
@@ -84,3 +99,5 @@ Mỗi khi thiết kế mới, tinh chỉnh, thẩm định hoặc làm đẹp gi
 - Taste Skill: [taste-skill/SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/taste-skill/SKILL.md)
 - Mẫu code UI: [overflow-patterns.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/responsive-design/references/overflow-patterns.md)
 - Bảng kiểm tra: [mobile-tablet-checklist.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/responsive-design/references/mobile-tablet-checklist.md)
+- Ponytail Skill: [ponytail/SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/ponytail/SKILL.md)
+- Ponytail Review: [ponytail-review/SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/ponytail-review/SKILL.md)
