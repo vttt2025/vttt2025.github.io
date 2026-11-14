@@ -58,32 +58,45 @@
      * Tự động ưu tiên gọi qua Supabase Edge Function để bảo mật API Key trên GitHub Pages.
      */
     async reviewWriting({ text, level = "A1", taskTitle = "", minWords = 20 }) {
-      // 1. ƯU TIÊN HÀNG ĐẦU: Gọi qua Supabase Edge Function an toàn (Bảo vệ API Key tuyệt đối)
-      const supabase = window.rusiSupabase || (typeof window.getSupabaseClient === "function" ? window.getSupabaseClient() : null);
-      if (supabase && supabase.functions && typeof supabase.functions.invoke === "function") {
-        try {
-          const { data, error } = await supabase.functions.invoke("ai-review", {
-            body: { text, level, taskTitle, minWords }
-          });
+      // 1. ƯU TIÊN HÀNG ĐẦU: Gọi trực tiếp Supabase Edge Function an toàn (Bảo vệ API Key tuyệt đối)
+      try {
+        const config = (typeof window !== "undefined" && window.SUPABASE_CONFIG) ? window.SUPABASE_CONFIG : {};
+        const edgeUrl = (config.url ? config.url.replace(/\/$/, "") : "https://nrhtdwjihnlaxrbitmcf.supabase.co") + "/functions/v1/ai-review";
+        const anonKey = config.anonKey || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaHRkd2ppaG5sYXhyYml0bWNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1ODk5MjgsImV4cCI6MjEwODE2NTkyOH0.qMGTYhVyoyht7jrBCSN2VczeqShmsBedC-Qdg_C5-FI";
 
-          if (!error && data && data.success) {
+        const res = await fetch(edgeUrl, {
+          method: "POST",
+          headers: {
+            "apikey": anonKey,
+            "Authorization": `Bearer ${anonKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ text, level, taskTitle, minWords })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success) {
             return {
               success: true,
-              total: Number(data.total) || 75,
-              grammar: Number(data.grammar) || 18,
-              lexis: Number(data.lexis) || 18,
-              structure: Number(data.structure) || 18,
-              content: Number(data.content) || 18,
+              total: Number(data.total) || 0,
+              grammar: Number(data.grammar) || 0,
+              lexis: Number(data.lexis) || 0,
+              structure: Number(data.structure) || 0,
+              content: Number(data.content) || 0,
               passed: data.passed !== undefined ? Boolean(data.passed) : (Number(data.total) >= 66),
-              feedback: data.feedback || "Bài viết hoàn thành tốt."
+              feedback: data.feedback || "Bài viết đã được AI phân tích."
             };
           }
-        } catch (edgeErr) {
-          console.warn("Supabase Edge Function chưa khả dụng hoặc đang cập nhật, chuyển sang chế độ dự phòng:", edgeErr);
+        } else {
+          console.warn("[RusiAI] Edge Function trả về HTTP status:", res.status);
         }
+      } catch (edgeErr) {
+        console.warn("[RusiAI] Không thể kết nối Supabase Edge Function:", edgeErr);
       }
 
-      // 2. DỰ PHÒNG: Gọi trực tiếp Groq AI (nếu chưa kích hoạt Edge Function)
+      // 2. DỰ PHÒNG: Gọi trực tiếp Groq AI (nếu có lưu API Key riêng)
+      if (GROQ_CONFIG.apiKey) {
       const systemPrompt = `Bạn là trợ lý AI chuyên gia tiếng Nga và luyện thi TRKI của RUSI TRKI.
 Nhiệm vụ của bạn là đọc bài làm tiếng Nga của học viên và đánh giá công tâm, chi tiết theo 4 tiêu chí CEFR (Thang điểm 100).
 Bạn PHẢI trả về ĐÚNG ĐỊNH DẠNG JSON sau (không dùng markdown code block, chỉ chuỗi JSON):
@@ -134,7 +147,10 @@ Bài làm của học viên:
         };
       }
     }
-  };
+
+    return null;
+  }
+};
 
   window.RusiAI = RusiAI;
 })();

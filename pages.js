@@ -10083,7 +10083,7 @@ function initWritingPage() {
             const aiRes = await RusiAI.reviewWriting({
               text,
               level: t.level || currentLevel,
-              taskTitle: t.title || t.ru,
+              taskTitle: (t.title || "") + (t.prompt ? " - " + t.prompt : (t.prompt_text ? " - " + t.prompt_text : "")),
               minWords: minWords(t)
             });
             if (aiRes && aiRes.success) {
@@ -10746,10 +10746,11 @@ function initMockTestPage() {
         }))
         .filter(r => r.q && r.options.length >= 2);
       if (!mapped.length) return;
-      // Đảm bảo test.parts tồn tại dạng array, merge câu vào part đầu (lexis_grammar)
+      // Đảm bảo test.parts tồn tại dạng array, chỉ nạp khi test chưa có câu hỏi hoặc DB đầy đủ hơn
+      const existingCount = (test.parts && test.parts[0] && Array.isArray(test.parts[0].questions)) ? test.parts[0].questions.length : 0;
       if (!Array.isArray(test.parts) || !test.parts.length) {
         test.parts = [{ id: "gram", name: "Лексика и грамматика", vi: "Từ vựng và ngữ pháp", durationMin: 60, questions: mapped }];
-      } else {
+      } else if (existingCount === 0 || mapped.length >= existingCount) {
         test.parts[0].questions = mapped;
       }
     } catch (e) {
