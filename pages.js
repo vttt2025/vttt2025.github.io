@@ -9861,30 +9861,33 @@ function initWritingPage() {
                 <span>${icon("check-circle-correct", 14)} Tự động lưu trên trình duyệt</span>
               </div>
 
-              <div class="writing-primary-actions">
-                <button type="button" class="btn btn-primary btn-submit" title="Nhận xét AI" aria-label="Nhận xét AI">
-                  ${icon("bot-rusika", 18)} <span class="writing-btn-text">Nhận xét</span>
-                </button>
-                <button type="button" class="btn btn-outline btn-model" title="Bài mẫu TRKI" aria-label="Bài mẫu TRKI">
-                  ${icon("eye", 18)} <span class="writing-btn-text">Bài mẫu</span>
-                </button>
-                ${tips.length ? `
-                  <button type="button" class="btn btn-outline btn-writing-hint" id="writingHintToggle" aria-expanded="false" aria-controls="writingHints" title="Hiển thị câu hỏi gợi ý" aria-label="Gợi ý">
-                    ${icon("help-circle", 18)} <span class="writing-btn-text">Gợi ý</span>
+              <!-- THANH THAO TÁC LUYỆN VIẾT & HẠN MỨC AI TỐI GIẢN, HIỆN ĐẠI -->
+              <div class="writing-primary-actions writing-action-bar">
+                <div class="writing-bar-left">
+                  <button type="button" class="btn btn-primary btn-submit" title="Nhận xét AI" aria-label="Nhận xét AI">
+                    ${icon("bot-rusika", 17)} <span class="writing-btn-text">Nhận xét AI</span>
                   </button>
-                ` : ""}
-                ${words.length ? `
-                  <button type="button" class="btn btn-outline btn-writing-vocab" id="btnWritingVocabToggle" title="Xem từ vựng gợi ý (${words.length})" aria-label="Từ vựng gợi ý">
-                    ${icon("archive-jar", 18)} <span class="writing-btn-text">Từ vựng (${words.length})</span>
-                  </button>
-                ` : ""}
-              </div>
+                  <div class="writing-quota-pill" id="writingAiQuotaBadge" title="Hạn mức chấm điểm AI hôm nay (tự động làm mới mỗi ngày)">
+                    <span class="writing-quota-dot"></span>
+                    <span id="writingAiQuotaText">Đang kiểm tra...</span>
+                  </div>
+                </div>
 
-              <!-- HẠN MỨC CHẤM ĐIỂM AI (3 lượt/ngày Free, 20 lượt/ngày PRO) -->
-              <div class="writing-ai-quota-wrap" id="writingAiQuotaBadge">
-                <span class="writing-ai-quota-pill">
-                  ${icon("bot-rusika", 13)} Lượt chấm AI hôm nay: <span id="writingAiQuotaText">Đang kiểm tra...</span>
-                </span>
+                <div class="writing-bar-right">
+                  <button type="button" class="btn btn-outline btn-model" title="Bài mẫu TRKI" aria-label="Bài mẫu TRKI">
+                    ${icon("eye", 16)} <span class="writing-btn-text">Bài mẫu</span>
+                  </button>
+                  ${tips.length ? `
+                    <button type="button" class="btn btn-outline btn-writing-hint" id="writingHintToggle" aria-expanded="false" aria-controls="writingHints" title="Hiển thị câu hỏi gợi ý" aria-label="Gợi ý">
+                      ${icon("help-circle", 16)} <span class="writing-btn-text">Gợi ý</span>
+                    </button>
+                  ` : ""}
+                  ${words.length ? `
+                    <button type="button" class="btn btn-outline btn-writing-vocab" id="btnWritingVocabToggle" title="Xem từ vựng gợi ý (${words.length})" aria-label="Từ vựng gợi ý">
+                      ${icon("archive-jar", 16)} <span class="writing-btn-text">Từ vựng (${words.length})</span>
+                    </button>
+                  ` : ""}
+                </div>
               </div>
 
               <div class="ai-score-box hidden"></div>
@@ -10065,22 +10068,30 @@ function initWritingPage() {
       // --- CẬP NHẬT HIỂN THỊ HẠN MỨC CHẤM AI TRÊN SUPABASE (3 lượt/ngày Free, 20 lượt/ngày PRO) ---
       const updateQuotaDisplay = async () => {
         const quotaText = panel.querySelector("#writingAiQuotaText");
+        const quotaDot = panel.querySelector(".writing-quota-dot");
         if (!quotaText) return;
         const curUser = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
         const isPro = typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : Boolean(curUser?.is_pro);
         if (!curUser) {
-          quotaText.innerHTML = `<span style="color:var(--muted)">Đăng nhập để nhận 3 lượt AI/ngày</span>`;
+          quotaText.innerHTML = `<span style="color:var(--muted)">Đăng nhập nhận 3 lượt AI/ngày</span>`;
+          if (quotaDot) quotaDot.className = "writing-quota-dot is-off";
           return;
         }
         if (window.RusiSupabase?.aiQuota?.get) {
           try {
             const q = await window.RusiSupabase.aiQuota.get(curUser.id || curUser.uid, isPro);
+            const isZero = q.remaining <= 0;
+            if (quotaDot) {
+              quotaDot.className = "writing-quota-dot " + (isZero ? "is-empty" : "is-active");
+            }
             quotaText.innerHTML = `Còn <b>${q.remaining}/${q.max_limit}</b> lượt ${isPro ? '<span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">PRO</span>' : '<span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">Free</span>'}`;
           } catch (_) {
-            quotaText.textContent = isPro ? "Còn 20 lượt/ngày (PRO)" : "Còn 3 lượt/ngày (Free)";
+            if (quotaDot) quotaDot.className = "writing-quota-dot is-active";
+            quotaText.innerHTML = isPro ? `Còn <b>20</b> lượt <span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">PRO</span>` : `Còn <b>3</b> lượt <span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">Free</span>`;
           }
         } else {
-          quotaText.textContent = isPro ? "Còn 20 lượt/ngày (PRO)" : "Còn 3 lượt/ngày (Free)";
+          if (quotaDot) quotaDot.className = "writing-quota-dot is-active";
+          quotaText.innerHTML = isPro ? `Còn <b>20</b> lượt <span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">PRO</span>` : `Còn <b>3</b> lượt <span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 5px;margin-left:4px">Free</span>`;
         }
       };
       updateQuotaDisplay();

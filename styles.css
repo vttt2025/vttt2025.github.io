@@ -15883,82 +15883,140 @@ body[data-page="writing"].in-workspace main.container {
   color: var(--green);
 }
 
-.writing-primary-actions {
+/* =====================================================================
+ * THANH THAO TÁC LUYỆN VIẾT & HẠN MỨC AI TỐI GIẢN, HIỆN ĐẠI (UNIFIED ACTION BAR)
+ * ===================================================================== */
+.writing-primary-actions.writing-action-bar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 8px 10px;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-top: 14px;
+  padding: 10px 14px;
+  background: color-mix(in srgb, var(--primary) 2%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 14px);
+  box-shadow: 0 2px 10px rgba(16, 42, 76, 0.03);
+  box-sizing: border-box;
 }
 
-.writing-primary-actions .btn {
-  min-height: 42px;
-  padding: 8px 16px;
+.writing-bar-left,
+.writing-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Nút Nhận xét AI chính: Tone xanh Navy sang trọng */
+.writing-primary-actions .btn-primary.btn-submit {
+  min-height: 40px;
+  height: 40px;
+  padding: 0 18px;
   border-radius: 10px;
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 750;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  transition: all 0.18s ease;
-  box-sizing: border-box;
-}
-
-.writing-primary-actions .btn-primary.btn-submit {
-  background: #c52233;
+  background: var(--primary, #1757a6);
   color: #ffffff;
   border: 1px solid transparent;
-  box-shadow: 0 2px 6px rgba(197, 34, 51, 0.2);
+  box-shadow: 0 2px 8px rgba(23, 87, 166, 0.22);
+  transition: all 0.18s ease;
+  cursor: pointer;
 }
 
 .writing-primary-actions .btn-primary.btn-submit:hover {
-  background: #991b2b;
+  background: #114280;
   transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(197, 34, 51, 0.28);
+  box-shadow: 0 4px 12px rgba(23, 87, 166, 0.32);
 }
 
+.writing-primary-actions .btn-primary.btn-submit:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Viên thuốc hạn mức AI tinh tế đồng bộ */
+.writing-quota-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  box-sizing: border-box;
+  transition: border-color 0.18s ease;
+}
+
+.writing-quota-pill:hover {
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+}
+
+.writing-quota-pill b {
+  color: var(--primary);
+  font-weight: 800;
+}
+
+.writing-quota-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green, #16a34a);
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.2);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.writing-quota-dot.is-empty {
+  background: var(--red, #dc2626);
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+}
+
+.writing-quota-dot.is-off {
+  background: var(--muted);
+  box-shadow: none;
+}
+
+/* Các nút công cụ phụ */
 .writing-primary-actions .btn-outline {
+  min-height: 40px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 0.86rem;
+  font-weight: 650;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   background: var(--surface);
   color: var(--text);
   border: 1px solid var(--border);
+  transition: all 0.18s ease;
+  cursor: pointer;
 }
 
 .writing-primary-actions .btn-outline:hover {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  color: var(--text);
+  background: color-mix(in srgb, var(--primary) 5%, var(--surface));
+  border-color: color-mix(in srgb, var(--primary) 40%, var(--border));
+  color: var(--primary);
   transform: translateY(-1px);
 }
 
 .writing-primary-actions .btn-outline.active {
-  background: rgba(23, 87, 166, 0.08);
-  border-color: #1757a6;
-  color: #1757a6;
-}
-
-.writing-ai-quota-wrap {
-  display: flex;
-  align-items: center;
-  margin-top: 10px;
-}
-
-.writing-ai-quota-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.82rem;
-  color: var(--muted);
-  background: color-mix(in srgb, var(--primary) 3.5%, var(--surface));
-  border: 1px solid var(--border);
-  padding: 4px 12px;
-  border-radius: 99px;
-  font-weight: 500;
-}
-
-.writing-ai-quota-pill b {
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  border-color: var(--primary);
   color: var(--primary);
-  font-weight: 750;
 }
 
 .writing-score-result,
@@ -16400,6 +16458,56 @@ body[data-page="writing"].in-workspace main.container {
   .scorecard-4c .sc-item:nth-child(2) {
     border-right: 0;
   }
+
+  /* Bố cục thanh thao tác viết trên tablet & mobile (<= 768px) */
+  .writing-primary-actions.writing-action-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .writing-bar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .writing-bar-left .btn-primary.btn-submit {
+    flex: 1 1 auto;
+    min-height: 44px;
+    height: 44px;
+    font-size: 0.88rem;
+    justify-content: center;
+  }
+
+  .writing-bar-left .writing-quota-pill {
+    flex: 0 0 auto;
+    height: 44px;
+    padding: 0 10px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .writing-bar-right {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    width: 100%;
+  }
+
+  .writing-bar-right .btn-outline {
+    width: 100%;
+    min-width: 0;
+    min-height: 40px;
+    height: 40px;
+    padding: 0 6px;
+    font-size: 0.82rem;
+    justify-content: center;
+    flex: none;
+    text-align: center;
+  }
 }
 
 @media (max-width: 480px) {
@@ -16443,25 +16551,26 @@ body[data-page="writing"].in-workspace main.container {
     display: none;
   }
 
-  .writing-primary-actions {
-    display: flex;
-    flex-wrap: wrap;
+  .writing-primary-actions.writing-action-bar {
+    padding: 8px 10px;
     gap: 8px;
-    margin-top: 12px;
   }
 
-  .writing-primary-actions .btn {
-    flex: 1 1 calc(50% - 6px);
-    width: auto;
-    min-width: 0;
-    min-height: 44px;
-    padding: 8px 10px;
-    font-size: 0.82rem;
-    gap: 6px;
-    border-radius: 9px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+  .writing-bar-left .btn-primary.btn-submit {
+    font-size: 0.84rem;
+    padding: 0 10px;
+  }
+
+  .writing-bar-left .writing-quota-pill {
+    padding: 0 8px;
+    font-size: 0.76rem;
+    gap: 5px;
+  }
+
+  .writing-bar-right .btn-outline {
+    padding: 0 4px;
+    font-size: 0.78rem;
+    gap: 4px;
   }
 
   .writing-primary-actions .writing-btn-text {
