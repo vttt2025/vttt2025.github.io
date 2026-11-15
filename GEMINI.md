@@ -104,7 +104,33 @@ Mỗi khi thiết kế mới, tinh chỉnh, thẩm định hoặc làm đẹp gi
 
 ---
 
+## ⚡ HỆ THỐNG TỐI ƯU HÓA HARNESS ECC (EVERYTHING CLAUDE CODE - AFFAAN MUSTAFA)
+
+Mỗi khi xử lý bất kỳ yêu cầu nào (mỗi lần yêu cầu - per-request), trợ lý AI **BẮT BUỘC** phải kích hoạt và tuân thủ chu trình vận hành chuẩn của ECC:
+- **Kho lưu trữ:** [https://github.com/affaan-m/ecc](https://github.com/affaan-m/ecc)
+- **Vị trí skill:** [.agents/skills/ecc/SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/ecc/SKILL.md)
+- **Quy tắc rules:** [.agents/rules/ecc.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/rules/ecc.md)
+- **Chu trình vận hành cốt lõi (Core ECC Cycle):**
+  1. **Research & Reuse First:**
+     * Trước khi code bất kỳ tính năng mới nào, phải tìm kiếm trong codebase các helper, pattern, biến CSS hiện có hoặc tiêu chuẩn nền tảng Web; ưu tiên tái sử dụng hơn là viết mới.
+  2. **Plan -> Implement -> Review -> Verify (Chu trình 4 bước chuẩn):**
+     * **Plan (Lập kế hoạch):** Xác định phạm vi ảnh hưởng, đánh giá phụ thuộc và rủi ro trước khi can thiệp mã nguồn.
+     * **Implement (Triển khai chính xác):** Giữ tính bất biến (*Immutability* - tạo bản sao mới, không mutate ngầm đối tượng), hàm nhỏ gọn (<50 dòng), tệp tin tập trung (<800 dòng).
+     * **Review (Tự kiểm duyệt):** Đóng vai trò `ecc:code-reviewer` và `ecc:security-reviewer`: kiểm tra ranh giới dữ liệu, escape XSS (`esc()`), kiểm tra chính sách bảo mật, không hardcode khóa API.
+     * **Verify (Thẩm định định hướng mục tiêu):** Kiểm tra cú pháp (`node -c`), kiểm tra sai khác (`git diff`), thẩm định logic, đảm bảo không nuốt lỗi âm thầm (*Fail loudly* với thông báo lỗi rõ ràng).
+  3. **Tư duy Đặc vụ Chuyên trách (Specialized Agent Perspectives):**
+     * Tự động kích hoạt góc nhìn chuyên trách của ECC trong từng bước:
+       - *ecc:planner:* Lên kế hoạch cấu trúc, chia nhỏ giai đoạn trước khi chỉnh sửa lớn.
+       - *ecc:code-reviewer:* Thẩm định chất lượng mã, độ tinh gọn sau mỗi lần sửa.
+       - *ecc:security-reviewer:* Kiểm toán an toàn dữ liệu, chống rò rỉ credential và XSS/IDOR.
+       - *ecc:performance-optimizer:* Đảm bảo tối ưu hóa egress, DOM payload và tốc độ render.
+       - *ecc:a11y-architect:* Bảo đảm chuẩn ngữ nghĩa HTML và khả năng tiếp cận WCAG.
+
+---
+
 📖 **Tài liệu hướng dẫn & kỹ năng workspace:**
+- ECC Harness Optimization: [ecc/SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/ecc/SKILL.md)
+- Quy tắc ECC chuẩn: [ecc.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/rules/ecc.md)
 - Andrej Karpathy Skills: [andrej-karpathy-skills/SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/andrej-karpathy-skills/SKILL.md)
 - Ví dụ thực tế Karpathy: [andrej-karpathy-skills/EXAMPLES.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/andrej-karpathy-skills/EXAMPLES.md)
 - Responsive Skill: [responsive-design/SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/responsive-design/SKILL.md)

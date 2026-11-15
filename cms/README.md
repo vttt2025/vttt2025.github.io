@@ -13,7 +13,7 @@ Hệ thống quản trị định nghĩa đầy đủ 10 Collections và 1 Globa
 3. **`ListeningLessons`**: 4 Part bài luyện nghe CEFR và Shadowing Studio có phụ đề song ngữ.
 4. **`SpeakingSets`**: Kho mẫu câu luyện nói phản xạ có AI chấm âm vị.
 5. **`WritingTasks`**: Đề bài luyện viết Письмо theo chuẩn TRKI kèm từ khóa và bài mẫu.
-6. **`VocabLessons`**: Series video hoạt hình «Хочу в Россию».
+6. **`VocabLessons`**: Series video hoạt hình “Хочу в Россию”.
 7. **`ShopProducts`**: Sản phẩm shop bánh kẹo, mỹ phẩm Nga và dịch vụ du học.
 8. **`Packages`**: Bảng giá và quyền lợi các gói hội viên PRO.
 9. **`BlogPosts`**: Cẩm nang du học, ký túc xá, thủ tục visa và học bổng Nga.

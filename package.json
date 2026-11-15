@@ -1,0 +1,19 @@
+{
+  "name": "rusitrki",
+  "version": "2.0.0",
+  "description": "Nền tảng luyện thi chứng chỉ tiếng Nga quốc tế ТРКИ và học tiếng Nga toàn diện",
+  "scripts": {
+    "auto-audio": "node scripts/auto_fill_vocab_audio.js",
+    "sync-audio": "node scripts/auto_fill_vocab_audio.js",
+    "sync": "node scripts/sync-from-supabase.js",
+    "test": "node -c app.js && node -c pages.js && node -c admin.js"
+  },
+  "keywords": [
+    "russian",
+    "trki",
+    "vocabulary",
+    "education"
+  ],
+  "author": "RUSI TRKI",
+  "license": "ISC"
+}

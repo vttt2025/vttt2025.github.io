@@ -6,7 +6,7 @@
   width: 100%;
 }
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
 *,
 *::before,
@@ -18,6 +18,7 @@
 }
 
 :root {
+  --font-ru: 'PT Sans', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
   --bg: #eef4fb; /* Russian Winter Cool Blue - sắc xanh mùa đông Nga */
   --header-bg: rgba(238, 244, 251, 0.88);
   --surface: #ffffff;
@@ -98,9 +99,15 @@ button {
   max-width: 860px;
 }
 
-.ru {
-  font-family: "Segoe UI", "PT Sans", "Arial", sans-serif;
+.ru, [lang="ru"], .cyrillic-stress {
+  font-family: var(--font-ru, 'PT Sans', 'Segoe UI', sans-serif);
   direction: ltr;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1, "mark" 1, "mkmk" 1;
+  font-variant-ligatures: common-ligatures contextual;
+  letter-spacing: 0;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ============ Buttons ============ */
@@ -11226,11 +11233,12 @@ img, video, iframe {
 }
 
 .qcard-word {
+  font-family: var(--font-ru, 'PT Sans', sans-serif);
   font-size: 2.25rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text);
-  line-height: 1.25;
-  letter-spacing: -0.01em;
+  line-height: 1.35;
+  letter-spacing: 0;
 }
 
 .qcard-meaning {
@@ -11256,7 +11264,7 @@ img, video, iframe {
 }
 
 .qcard-ex-vi {
-  font-size: 0.85rem;
+  font-size: 0.80rem;
   color: var(--muted);
   margin-top: 2px;
 }
@@ -11500,9 +11508,12 @@ img, video, iframe {
 }
 
 .learn-q-word {
+  font-family: var(--font-ru, 'PT Sans', sans-serif);
   font-size: 2rem;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--text);
+  line-height: 1.35;
+  letter-spacing: 0;
   margin-bottom: 6px;
 }
 
@@ -14592,10 +14603,12 @@ img, video, iframe {
 }
 
 .dau-row-ru {
+  font-family: var(--font-ru, 'PT Sans', sans-serif);
   font-size: 1.22rem;
   font-weight: 700;
   color: var(--text);
-  line-height: 1.3;
+  line-height: 1.35;
+  letter-spacing: 0;
 }
 
 .dau-row-note {
@@ -14756,10 +14769,13 @@ body.in-workspace .quizlet-card {
   height: auto !important;
 }
 
+.qcard-word.ru,
 body.in-workspace .qcard-word.ru {
+  font-family: var(--font-ru, 'PT Sans', sans-serif) !important;
   font-size: clamp(2.1rem, 4.6vw, 2.85rem) !important;
-  font-weight: 800;
-  letter-spacing: -0.015em;
+  font-weight: 700;
+  letter-spacing: 0 !important;
+  line-height: 1.35 !important;
 }
 
 body.in-workspace .qcard-meaning {
@@ -19696,6 +19712,10 @@ body[data-page="upgrade"] main.container {
   margin-bottom: 30px;
 }
 
+.topic-article-hero > :last-child {
+  margin-bottom: 0 !important;
+}
+
 .topic-article-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -19712,7 +19732,7 @@ body[data-page="upgrade"] main.container {
 }
 
 .topic-article-title {
-  font-size: 28px;
+  font-size: clamp(2rem, 3.2vw, 2.35rem);
   font-weight: 800;
   color: #0f1f38;
   margin: 0 0 12px 0;
@@ -19723,8 +19743,12 @@ body[data-page="upgrade"] main.container {
   font-size: 15px;
   color: #475569;
   line-height: 1.6;
+  text-align: justify;
+  text-justify: inter-word;
   margin: 0 0 16px 0;
-  max-width: 850px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .topic-article-meta-row {
@@ -20068,7 +20092,8 @@ body[data-page="upgrade"] main.container {
     border-radius: 14px;
   }
   .topic-article-title {
-    font-size: 22px;
+    font-size: clamp(1.45rem, 5.2vw, 1.75rem);
+    line-height: 1.28;
   }
   .topic-article-footer-cta {
     flex-direction: column;
@@ -21192,8 +21217,8 @@ html, body {
   }
 }
 
-/* Bảng dữ liệu có thanh cuộn ngang mượt mà kèm gradient mask */
-@media (max-width: 768px) {
+/* Bảng dữ liệu có thanh cuộn ngang mượt mà trên Mobile & Tablet, hiển thị 100% rõ ràng không che mờ nội dung */
+@media (max-width: 1024px) {
   .comparison-table-wrap,
   .topic-vocab-table-wrapper,
   .table-responsive,
@@ -21201,8 +21226,8 @@ html, body {
     position: relative !important;
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch !important;
-    -webkit-mask-image: linear-gradient(to right, #000 85%, transparent 100%);
-    mask-image: linear-gradient(to right, #000 85%, transparent 100%);
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
     border-radius: 12px !important;
   }
 }
@@ -22286,9 +22311,11 @@ body.has-bottom-bar .rusika-floating-widget {
 }
 
 .qcard-word {
+  font-family: var(--font-ru, 'PT Sans', sans-serif) !important;
   font-size: clamp(2rem, 4.2vw, 2.6rem) !important;
   word-break: break-word !important;
-  line-height: 1.25 !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0 !important;
 }
 
 .qcard-note-pill {
@@ -25252,9 +25279,11 @@ body.has-bottom-bar .rusika-floating-widget {
 }
 
 .quizlet-card-front .qcard-word {
+  font-family: var(--font-ru, 'PT Sans', sans-serif) !important;
   font-size: clamp(2rem, 4vw, 2.85rem) !important;
-  font-weight: 800 !important;
-  line-height: 1.25 !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  letter-spacing: 0 !important;
   text-align: center !important;
   color: var(--text, #0f1f38) !important;
 }
@@ -25495,7 +25524,7 @@ body.has-bottom-bar .rusika-floating-widget {
   font-family: var(--font-ru, inherit);
 }
 
-/* TẦNG 3: VÍ DỤ NGỮ CẢNH (EXAMPLES) — CARD ĐƠN GIẢN, TRANG NHÃ */
+/* TẦNG 3: VÍ DỤ NGỮ CẢNH (EXAMPLES) — CARD ĐƠN GIẢN, TRANG NHÃ, CĂN GIỮA */
 .qcard-example-card {
   width: 100%;
   max-width: 540px;
@@ -25504,10 +25533,11 @@ body.has-bottom-bar .rusika-floating-widget {
   border: 1px solid color-mix(in srgb, var(--primary) 10%, var(--border));
   border-radius: 14px;
   padding: 12px 16px;
-  text-align: left;
+  text-align: center;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 4px;
 }
 
@@ -25522,16 +25552,20 @@ body.has-bottom-bar .rusika-floating-widget {
   color: var(--text);
   line-height: 1.45;
   font-family: var(--font-ru, inherit);
+  text-align: center;
+  width: 100%;
 }
 
 .qcard-ex-vi {
-  font-size: 0.86rem;
+  font-size: 0.80rem;
   color: var(--muted);
   line-height: 1.38;
+  text-align: center;
+  width: 100%;
 }
 
 .qcard-btn-more-ex {
-  align-self: flex-start;
+  align-self: center;
   background: none;
   border: none;
   padding: 4px 0 0 0;
@@ -25552,6 +25586,8 @@ body.has-bottom-bar .rusika-floating-widget {
 .qcard-more-ex-list {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  width: 100%;
   gap: 8px;
   margin-top: 8px;
   padding-top: 8px;
@@ -25565,6 +25601,9 @@ body.has-bottom-bar .rusika-floating-widget {
 .qcard-more-ex-item {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
   gap: 2px;
 }
 
@@ -25645,7 +25684,7 @@ body.has-bottom-bar .rusika-floating-widget {
   }
 
   .qcard-ex-vi {
-    font-size: 0.82rem;
+    font-size: 0.75rem;
   }
 }
 
@@ -30323,8 +30362,8 @@ body.index-personalized {
 }
 
 body.index-personalized main {
-  min-height: calc(100vh - var(--header-height, 68px));
-  padding: 44px 0 64px;
+  min-height: auto;
+  padding: 36px 0 32px;
 }
 
 html.index-personalized main > :not(#indexUserProgressHost),
@@ -30334,7 +30373,7 @@ body.index-personalized main > :not(#indexUserProgressHost) {
 
 body.index-personalized #app-footer {
   display: block !important;
-  margin-top: auto !important;
+  margin-top: 40px !important;
   width: 100% !important;
 }
 
@@ -30360,10 +30399,10 @@ body.index-personalized #indexUserProgressHost {
 
 /* Progress header: elegant vertical hierarchy with eyebrow badge, bold welcome heading, and balanced layout */
 #indexUserProgressHost .index-progress-head {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  align-items: center;
-  gap: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
 }
 
 #indexUserProgressHost .index-progress-head-left {
@@ -30742,54 +30781,96 @@ body.index-personalized #indexUserProgressHost {
 
 #indexUserProgressHost .index-skills-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
 }
 
 #indexUserProgressHost .index-skill-card {
-  min-height: 152px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto 1fr auto;
-  gap: 11px 16px;
-  padding: 18px;
-  background: var(--surface);
-  border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
-  border-radius: 14px;
+  grid-column: span 2;
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, var(--surface)) 0%, color-mix(in srgb, var(--primary) 4%, var(--surface)) 100%);
+  border: 1.5px solid color-mix(in srgb, var(--primary) 32%, var(--border));
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(23, 87, 166, 0.06);
   color: inherit;
-  transition: background-color 160ms ease, border-color 160ms ease;
+  text-decoration: none;
+  box-sizing: border-box;
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease;
 }
 
 #indexUserProgressHost .index-skill-card:hover {
-  background: color-mix(in srgb, var(--primary) 3%, var(--surface));
-  border-color: color-mix(in srgb, var(--primary) 28%, transparent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(23, 87, 166, 0.12);
+  border-color: color-mix(in srgb, var(--primary) 50%, var(--border));
 }
 
-#indexUserProgressHost .index-skill-card.needs-attention {
-  border-color: rgba(185, 104, 8, 0.25);
+/* Hàng 2 trên máy tính: 2 thẻ (Luyện viết & Thi TRKI) chia đều 50% */
+#indexUserProgressHost .index-skills-grid > .index-skill-card:nth-child(4),
+#indexUserProgressHost .index-skills-grid > .index-skill-card:nth-child(5) {
+  grid-column: span 3;
 }
 
 #indexUserProgressHost .index-skill-card-top {
-  grid-column: 1 / -1;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 13px;
+  width: 100%;
 }
 
 #indexUserProgressHost .index-skill-icon-bubble {
+  width: auto;
+  height: auto;
+  min-width: 32px;
+  background: transparent;
+  border: none;
   color: var(--primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  transition: transform 160ms ease, color 160ms ease;
+}
+
+#indexUserProgressHost .index-skill-icon-bubble svg {
+  width: 30px;
+  height: 30px;
+}
+
+#indexUserProgressHost .index-skill-card:hover .index-skill-icon-bubble {
+  transform: scale(1.08);
+}
+
+#indexUserProgressHost .index-skill-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+}
+
+#indexUserProgressHost .index-skill-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+#indexUserProgressHost .index-skill-title {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.02rem;
+  font-weight: 750;
+  line-height: 1.25;
 }
 
 #indexUserProgressHost .index-skill-status-badge {
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-size: 0.67rem;
-  font-weight: 700;
-  white-space: nowrap;
+  display: none !important;
 }
 
 #indexUserProgressHost .status-active {
@@ -30802,47 +30883,22 @@ body.index-personalized #indexUserProgressHost {
   color: #945207;
 }
 
-#indexUserProgressHost .index-skill-card-body {
-  grid-column: 1;
-  min-width: 0;
-}
-
-#indexUserProgressHost .index-skill-title {
-  margin: 0;
-  color: var(--text);
-  font-size: 0.98rem;
-  font-weight: 720;
-  line-height: 1.3;
-}
-
 #indexUserProgressHost .index-skill-count {
-  margin: 6px 0 3px;
-  color: var(--text);
+  margin: 0;
+  color: color-mix(in srgb, var(--text) 78%, transparent);
   font-size: 0.84rem;
-  font-weight: 650;
-  line-height: 1.4;
+  font-weight: 600;
+  line-height: 1.35;
   font-variant-numeric: tabular-nums;
 }
 
-#indexUserProgressHost .index-skill-note {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.77rem;
-  line-height: 1.45;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
 #indexUserProgressHost .index-skill-card-footer {
-  grid-column: 2;
-  grid-row: 2 / 4;
-  align-self: end;
-  min-height: 44px;
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 7px;
+  justify-content: space-between;
+  width: 100%;
+  padding-top: 4px;
+  border-top: none;
   color: var(--primary);
   font-size: 0.8rem;
   font-weight: 700;
@@ -30857,9 +30913,25 @@ body.index-personalized #indexUserProgressHost {
   transform: translateX(3px);
 }
 
-#indexUserProgressHost .index-skills-grid > .index-skill-card:nth-child(5) {
-  grid-column: 1 / -1;
-  min-height: 132px;
+@media (max-width: 900px) {
+  #indexUserProgressHost .index-skills-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  #indexUserProgressHost .index-skill-card {
+    grid-column: span 1 !important;
+    min-height: 96px !important;
+    padding: 12px 13px !important;
+  }
+
+  #indexUserProgressHost .index-skills-grid > .index-skill-card:nth-child(4) {
+    grid-column: span 1 !important;
+  }
+
+  #indexUserProgressHost .index-skills-grid > .index-skill-card:nth-child(5) {
+    grid-column: 1 / -1 !important;
+  }
 }
 
 [data-theme="dark"] #indexUserProgressHost .index-progress-title,
@@ -30877,21 +30949,35 @@ body.index-personalized #indexUserProgressHost {
 [data-theme="dark"] #indexUserProgressHost .index-metric-num small,
 [data-theme="dark"] #indexUserProgressHost .index-metric-label,
 [data-theme="dark"] #indexUserProgressHost .index-focus-desc,
-[data-theme="dark"] #indexUserProgressHost .index-skills-caption,
-[data-theme="dark"] #indexUserProgressHost .index-skill-note {
+[data-theme="dark"] #indexUserProgressHost .index-skills-caption {
   color: #9aa9bc;
 }
 
 [data-theme="dark"] #indexUserProgressHost .index-progress-level-box,
-[data-theme="dark"] #indexUserProgressHost .index-progress-metrics,
-[data-theme="dark"] #indexUserProgressHost .index-skill-card {
+[data-theme="dark"] #indexUserProgressHost .index-progress-metrics {
   background: #151f2e;
   border-color: rgba(255, 255, 255, 0.1);
 }
 
-[data-theme="dark"] #indexUserProgressHost .index-metric-card:hover,
-[data-theme="dark"] #indexUserProgressHost .index-skill-card:hover {
+[data-theme="dark"] #indexUserProgressHost .index-metric-card:hover {
   background: #192536;
+}
+
+[data-theme="dark"] #indexUserProgressHost .index-skill-card {
+  background: #14243a;
+  border: 1.5px solid rgba(96, 165, 250, 0.28);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+[data-theme="dark"] #indexUserProgressHost .index-skill-card:hover {
+  background: #182c46;
+  border-color: rgba(96, 165, 250, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] #indexUserProgressHost .index-skill-card-footer {
+  border-top: none;
+  color: #60a5fa;
 }
 
 [data-theme="dark"] #indexUserProgressHost .stat-streak .index-metric-icon {
@@ -30932,6 +31018,12 @@ body.index-personalized #indexUserProgressHost {
   color: #fbbf24;
 }
 
+[data-theme="dark"] #indexUserProgressHost .index-skill-icon-bubble {
+  background: transparent;
+  border: none;
+  color: #60a5fa;
+}
+
 [data-theme="dark"] #indexUserProgressHost .index-progress-badge {
   background: rgba(96, 165, 250, 0.12);
   border-color: rgba(96, 165, 250, 0.25);
@@ -30954,19 +31046,21 @@ body.index-personalized #indexUserProgressHost {
   }
 
   #indexUserProgressHost .index-progress-head {
-    grid-template-columns: minmax(0, 1fr) 270px;
-    gap: 24px;
-    align-items: center;
-  }
-
-  #indexUserProgressHost .index-progress-metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 }
 
 @media (max-width: 767.98px) {
   body.index-personalized main {
-    padding: 24px 0 40px;
+    min-height: auto;
+    padding: 20px 0 24px;
+  }
+
+  body.index-personalized #app-footer {
+    margin-top: 24px !important;
   }
 
   #indexUserProgressHost {
@@ -30978,9 +31072,10 @@ body.index-personalized #indexUserProgressHost {
   }
 
   #indexUserProgressHost .index-progress-head {
-    grid-template-columns: 1fr;
-    align-items: stretch;
-    gap: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
   }
 
   #indexUserProgressHost .index-progress-head-left {
@@ -30990,19 +31085,19 @@ body.index-personalized #indexUserProgressHost {
   #indexUserProgressHost .index-progress-metrics {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-    padding: 8px;
+    gap: 6px 12px;
+    padding: 12px 14px;
     border-radius: 16px;
   }
 
   #indexUserProgressHost .index-metric-card {
-    min-height: 64px;
-    padding: 10px 11px;
-    gap: 9px;
-    border-radius: 12px;
-    background: color-mix(in srgb, var(--text) 2.5%, var(--surface));
-    border: 1px solid color-mix(in srgb, var(--text) 6%, transparent);
-    box-shadow: 0 1px 3px rgba(16, 42, 76, 0.02);
+    min-height: 56px;
+    padding: 8px 6px;
+    gap: 10px;
+    border-radius: 8px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
   #indexUserProgressHost .index-metric-icon {
@@ -31035,21 +31130,24 @@ body.index-personalized #indexUserProgressHost {
   }
 
   [data-theme="dark"] #indexUserProgressHost .index-metric-card {
-    background: #182232;
-    border-color: rgba(255, 255, 255, 0.07);
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
   }
 
   @media (max-width: 360px) {
     #indexUserProgressHost .index-progress-metrics {
-      gap: 6px;
-      padding: 6px;
+      gap: 4px 8px;
+      padding: 10px 10px;
     }
 
     #indexUserProgressHost .index-metric-card {
-      min-height: 58px;
-      padding: 8px 8px;
+      min-height: 50px;
+      padding: 6px 4px;
       gap: 7px;
-      border-radius: 10px;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
     }
 
     #indexUserProgressHost .index-metric-icon {
@@ -31094,11 +31192,22 @@ body.index-personalized #indexUserProgressHost {
   }
 
   #indexUserProgressHost .index-skills-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  #indexUserProgressHost .index-skill-card {
+    grid-column: span 1;
+    min-height: 94px;
+    padding: 11px 12px;
+  }
+
+  #indexUserProgressHost .index-skills-grid > .index-skill-card:nth-child(4) {
+    grid-column: span 1;
   }
 
   #indexUserProgressHost .index-skills-grid > .index-skill-card:nth-child(5) {
-    grid-column: auto;
+    grid-column: 1 / -1;
   }
 }
 
@@ -31116,19 +31225,52 @@ body.index-personalized #indexUserProgressHost {
     flex-direction: column;
   }
 
+  #indexUserProgressHost .index-skills-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
   #indexUserProgressHost .index-skill-card {
-    grid-template-columns: 1fr;
-    min-height: 166px;
+    padding: 10px 10px !important;
+    min-height: 88px !important;
+    border-radius: 12px !important;
+    gap: 8px !important;
   }
 
-  #indexUserProgressHost .index-skill-card-body,
-  #indexUserProgressHost .index-skill-card-footer {
-    grid-column: 1;
+  #indexUserProgressHost .index-skill-card-top {
+    gap: 9px !important;
+  }
+
+  #indexUserProgressHost .index-skill-icon-bubble {
+    width: auto !important;
+    height: auto !important;
+    min-width: auto !important;
+    background: transparent !important;
+    border-radius: 0 !important;
+  }
+
+  #indexUserProgressHost .index-skill-icon-bubble svg {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  #indexUserProgressHost .index-skill-title-row {
+    flex-wrap: wrap !important;
+    gap: 3px !important;
+  }
+
+  #indexUserProgressHost .index-skill-title {
+    font-size: 0.90rem !important;
+  }
+
+  #indexUserProgressHost .index-skill-count {
+    font-size: 0.76rem !important;
   }
 
   #indexUserProgressHost .index-skill-card-footer {
-    grid-row: auto;
-    align-self: end;
+    padding-top: 2px !important;
+    border-top: none !important;
+    font-size: 0.74rem !important;
   }
 }
 
@@ -31152,7 +31294,7 @@ body.index-personalized #indexUserProgressHost {
 }
 
 .rusi-md-rendered .rusi-md-h1 {
-  font-size: 1.95rem;
+  font-size: 1.75rem;
   font-weight: 800;
   color: #0f172a;
   margin: 36px 0 16px;
@@ -31160,7 +31302,7 @@ body.index-personalized #indexUserProgressHost {
 }
 
 .rusi-md-rendered .rusi-md-h2 {
-  font-size: 1.55rem;
+  font-size: 1.45rem;
   font-weight: 800;
   color: #0f172a;
   margin: 32px 0 14px;
@@ -31170,7 +31312,7 @@ body.index-personalized #indexUserProgressHost {
 }
 
 .rusi-md-rendered .rusi-md-h3 {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: #0f172a;
   margin: 24px 0 10px;
@@ -31397,13 +31539,13 @@ body.index-personalized #indexUserProgressHost {
     line-height: 1.75;
   }
   .rusi-md-rendered .rusi-md-h1 {
-    font-size: 1.6rem;
-  }
-  .rusi-md-rendered .rusi-md-h2 {
     font-size: 1.35rem;
   }
+  .rusi-md-rendered .rusi-md-h2 {
+    font-size: 1.2rem;
+  }
   .rusi-md-rendered .rusi-md-h3 {
-    font-size: 1.15rem;
+    font-size: 1.05rem;
   }
   .topic-article-markdown-body {
     padding: 18px 16px;

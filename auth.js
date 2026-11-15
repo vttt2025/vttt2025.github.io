@@ -236,14 +236,90 @@
     },
 
     async signOut() {
+      // 1. Đồng bộ tiến trình lần cuối lên Supabase trước khi đăng xuất
+      try {
+        if (typeof Progress !== "undefined" && typeof Progress.syncToCloud === "function") {
+          await Progress.syncToCloud();
+        }
+      } catch (_) {}
+
+      // 2. Đăng xuất phiên Supabase
       const client = getClient();
-      if (client) await client.auth.signOut();
+      if (client) {
+        try {
+          await client.auth.signOut();
+        } catch (e) {
+          console.warn("[Auth] Lỗi Supabase signOut:", e);
+        }
+      }
+
+      // 3. Xóa sạch 100% toàn bộ dữ liệu cá nhân của người dùng trên trình duyệt
+      clearBrowserUserData();
+
       this.user = null;
-      getStore().set("auth_user", null);
       this._emit(null);
     }
   };
 
+  /**
+   * Xóa sạch toàn bộ dữ liệu người dùng trên trình duyệt (localStorage, sessionStorage, in-memory)
+   * Đảm bảo tính riêng tư, bảo mật tuyệt đối, chống rò rỉ tiến trình học sang tài khoản khác.
+   */
+  function clearBrowserUserData() {
+    try {
+      const preserveKeys = new Set([
+        "data-theme", "rusi_theme", "theme",
+        "trki_sb_anon_key", "trki_sb_service_key", "rusi_supabase_anon_key"
+      ]);
+
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        if (preserveKeys.has(key)) continue;
+
+        if (
+          key.startsWith("trki_") ||
+          key.startsWith("rusi_cache:") ||
+          key.startsWith("sb-") ||
+          key.startsWith("supabase.auth.") ||
+          key === "auth_user" ||
+          key === "auth_redirect" ||
+          key === "rusi_groq_api_key" ||
+          key === "rusi_live_preview_draft"
+        ) {
+          keysToRemove.push(key);
+        }
+      }
+
+      keysToRemove.forEach((k) => {
+        try { localStorage.removeItem(k); } catch (_) {}
+      });
+
+      try {
+        sessionStorage.clear();
+      } catch (_) {}
+
+      if (typeof window !== "undefined") {
+        if (window.STORE && typeof window.STORE.set === "function") {
+          window.STORE.set("auth_user", null);
+          window.STORE.set("xp", 0);
+          window.STORE.set("streak", 0);
+          window.STORE.set("listenDone", []);
+          window.STORE.set("speakDone", []);
+          window.STORE.set("writeDone", []);
+          window.STORE.set("trkiDone", []);
+          window.STORE.set("vocabDone", []);
+          window.STORE.set("custom_jars", []);
+        }
+      }
+      console.log("[Auth] Đã xóa sạch 100% dữ liệu người dùng trên trình duyệt sau khi đăng xuất.");
+    } catch (e) {
+      console.warn("[Auth] Lỗi khi xóa dữ liệu trình duyệt:", e);
+    }
+  }
+
+  Auth.clearLocalData = clearBrowserUserData;
   window.Auth = Auth;
 
   function isUserLoggedIn() {

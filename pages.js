@@ -145,12 +145,113 @@ function playQuizletSound(type) {
       gain.connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 0.12);
+    } else if (type === "victory" || type === "fanfare") {
+      const notes = [
+        { freq: 523.25, time: 0, dur: 0.16, vol: 0.15 },
+        { freq: 659.25, time: 0.12, dur: 0.16, vol: 0.15 },
+        { freq: 783.99, time: 0.24, dur: 0.18, vol: 0.18 },
+        { freq: 1046.50, time: 0.38, dur: 0.65, vol: 0.22 },
+        { freq: 1318.51, time: 0.44, dur: 0.55, vol: 0.15 }
+      ];
+      notes.forEach((n) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "triangle";
+        const t = now + n.time;
+        osc.frequency.setValueAtTime(n.freq, t);
+        gain.gain.setValueAtTime(n.vol, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + n.dur);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + n.dur);
+      });
     }
   } catch (e) {
     // Non-fatal if browser limits audio context
   }
 }
 window.playQuizletSound = playQuizletSound;
+
+function rusiConfetti(options = {}) {
+  try {
+    const old = document.getElementById("rusiConfettiCanvas");
+    if (old) old.remove();
+
+    const canvas = document.createElement("canvas");
+    canvas.id = "rusiConfettiCanvas";
+    canvas.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999999;";
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const width = (canvas.width = window.innerWidth);
+    const height = (canvas.height = window.innerHeight);
+
+    const colors = ["#1757a6", "#c52233", "#f59e0b", "#10b981", "#8b5cf6", "#ec4899", "#38bdf8"];
+    const count = options.count || 85;
+    const particles = [];
+
+    for (let i = 0; i < count; i++) {
+      const fromLeft = i % 2 === 0;
+      particles.push({
+        x: fromLeft ? width * 0.15 + (Math.random() * 60 - 30) : width * 0.85 + (Math.random() * 60 - 30),
+        y: height * 0.9,
+        vx: fromLeft ? (Math.random() * 9 + 4) : -(Math.random() * 9 + 4),
+        vy: -(Math.random() * 15 + 10),
+        w: Math.random() * 8 + 6,
+        h: Math.random() * 6 + 4,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotation: Math.random() * 360,
+        rotationSpeed: (Math.random() - 0.5) * 12,
+        wobble: Math.random() * 10,
+        wobbleSpeed: Math.random() * 0.12 + 0.05,
+        opacity: 1
+      });
+    }
+
+    const startTime = performance.now();
+    const duration = options.duration || 3200;
+
+    function render(now) {
+      const elapsed = now - startTime;
+      if (elapsed >= duration) {
+        canvas.remove();
+        return;
+      }
+
+      ctx.clearRect(0, 0, width, height);
+      const fadeProgress = elapsed / duration;
+      const globalAlpha = fadeProgress > 0.65 ? (1 - (fadeProgress - 0.65) / 0.35) : 1;
+
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.36; // trọng lực rơi
+        p.vx *= 0.985; // lực cản không khí
+        p.rotation += p.rotationSpeed;
+        p.wobble += p.wobbleSpeed;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.scale(Math.cos(p.wobble), 1);
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = Math.max(0, globalAlpha * p.opacity);
+        ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        ctx.restore();
+      });
+
+      requestAnimationFrame(render);
+    }
+
+    requestAnimationFrame(render);
+  } catch (err) {
+    // Graceful fallback nếu trình duyệt không hỗ trợ canvas
+  }
+}
+window.rusiConfetti = rusiConfetti;
 
 function getQuizletStarred() {
   return (typeof STORE !== "undefined") ? STORE.get("quizlet_starred", []) : [];
@@ -438,7 +539,7 @@ window.openAddToJarModal = function(wordData) {
 
     newGroup.style.display = "none";
     newName.value = "";
-    if (typeof toast === "function") toast(`Đã tạo lọ «${createdName}» thành công!`);
+    if (typeof toast === "function") toast(`Đã tạo lọ “${createdName}” thành công!`);
     return true;
   };
 
@@ -510,10 +611,10 @@ window.openAddToJarModal = function(wordData) {
 
     if (existingIdx >= 0) {
       jar.words[existingIdx] = Object.assign({}, jar.words[existingIdx], wordPayload);
-      if (typeof toast === "function") toast(`Đã cập nhật từ «${ru}» trong lọ «${jar.name}»!`);
+      if (typeof toast === "function") toast(`Đã cập nhật từ “${ru}” trong lọ “${jar.name}”!`);
     } else {
       jar.words.push(wordPayload);
-      if (typeof toast === "function") toast(`Đã lưu «${ru}» vào «${jar.name}» thành công!`);
+      if (typeof toast === "function") toast(`Đã lưu “${ru}” vào “${jar.name}” thành công!`);
     }
 
     if (typeof STORE !== "undefined") {
@@ -669,10 +770,10 @@ function openAddWordToJarModal(jarId, onSuccess) {
 
     if (existingIdx >= 0) {
       jar.words[existingIdx] = Object.assign({}, jar.words[existingIdx], wordPayload);
-      if (typeof toast === "function") toast(`Đã cập nhật từ «${ru}» trong lọ «${jar.name}»!`);
+      if (typeof toast === "function") toast(`Đã cập nhật từ “${ru}” trong lọ “${jar.name}”!`);
     } else {
       jar.words.push(wordPayload);
-      if (typeof toast === "function") toast(`Đã thêm từ «${ru}» vào lọ «${jar.name}» thành công!`);
+      if (typeof toast === "function") toast(`Đã thêm từ “${ru}” vào lọ “${jar.name}” thành công!`);
     }
 
     if (typeof STORE !== "undefined") {
@@ -716,12 +817,22 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     return "";
   };
 
-  const words = (rawWords || []).map((w, idx) => ({
+  // Khử từ vựng trùng lặp trong lọ nếu có
+  const seenWordKeys = new Set();
+  const uniqueRawWords = [];
+  (rawWords || []).forEach((w) => {
+    const k = ((w && (w.ru || w.word_normalized)) || "").trim().toLowerCase();
+    if (k && seenWordKeys.has(k)) return;
+    if (k) seenWordKeys.add(k);
+    uniqueRawWords.push(w);
+  });
+
+  const words = uniqueRawWords.map((w, idx) => ({
     id: w.id || w.vocab_id || "w-" + idx,
     ru: (w.ru || "").trim(),
     stress: (w.stress || w.ru || "").trim(),
     vi: (w.vi || w.meaning || "").trim(),
-    note: (w.note || w.notes || w.pos || w.trans || "").trim(),
+    note: (w.note || w.notes || w.trans || "").trim(),
     notes: (w.notes || w.note || "").trim(),
     pos: (w.pos || "").trim(),
     gender: (w.gender || "").trim(),
@@ -754,10 +865,11 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
   }
 
   const initialMode = (options && options.initialMode) ? options.initialMode : "list";
+  const hasTopbarModes = Boolean(document.querySelector("#dauTopbarModes .quizlet-mode-btn"));
 
   container.innerHTML = `
     <div class="quizlet-suite">
-      <div class="quizlet-mode-bar">
+      <div class="quizlet-mode-bar" ${hasTopbarModes ? 'style="display:none"' : ''}>
         <button type="button" class="quizlet-mode-btn ${initialMode === "list" ? "active" : ""}" data-mode="list">
           ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 16 }) : ""} <span class="btn-text">Danh sách từ (${words.length})</span>
         </button>
@@ -833,11 +945,76 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
   let fFlipped = false;
   let fShuffled = false;
   let fStarredOnly = false;
+  let fCompleted = false;
   let fAutoAudio = (typeof STORE !== "undefined") ? STORE.get("quizlet_auto_audio", true) : true;
 
   const renderFlashcardMode = () => {
     const pane = panes.flashcard;
     if (!pane) return;
+
+    if (fCompleted) {
+      const starred = getQuizletStarred().map(s => s.toLowerCase());
+      const starredInJar = fActiveWords.filter(w => starred.includes(w.ru.toLowerCase())).length;
+
+      pane.innerHTML = `
+        <div class="quizlet-progress-bar">
+          <div class="quizlet-progress-fill" style="width:100%"></div>
+        </div>
+
+        <div class="quizlet-summary-box" style="margin-top:24px;padding:36px 24px">
+          <div class="quizlet-summary-trophy" style="color:#f59e0b;font-size:4.2rem;margin-bottom:14px">
+            ${window.RusiIcons ? RusiIcons.get("trophy-reward", { size: 68 }) : "🏆"}
+          </div>
+          <h2 style="margin:0 0 10px;font-size:1.85rem;color:var(--text, #0f1f38)">Chúc mừng bạn đã hoàn thành!</h2>
+          <p style="color:var(--muted);font-size:1.08rem;margin:0 0 20px;line-height:1.55">
+            Bạn đã học xong toàn bộ <b>${fActiveWords.length}</b> thẻ từ vựng trong lọ này.
+          </p>
+
+          <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;background:rgba(22,163,74,0.1);border:1px solid rgba(22,163,74,0.25);border-radius:999px;color:#16a34a;font-weight:700;font-size:0.95rem;margin-bottom:28px">
+            ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "⚡"} +15 XP Hoàn thành Thẻ ghi nhớ
+          </div>
+
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+            <button type="button" class="btn btn-primary" id="btnFlashRestart">
+              ${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 16 }) : ""} Học lại từ đầu
+            </button>
+            ${starredInJar > 0 ? `
+              <button type="button" class="btn btn-outline" id="btnFlashReviewStarred">
+                ${window.RusiIcons ? RusiIcons.get("star", { size: 16 }) : "⭐"} Ôn ${starredInJar} từ khó đã gắn sao
+              </button>
+            ` : ""}
+            <button type="button" class="btn btn-soft" id="btnFlashToMatch">
+              ${window.RusiIcons ? RusiIcons.get("puzzle-match", { size: 16 }) : ""} Ghép thẻ
+            </button>
+            <button type="button" class="btn btn-soft" id="btnFlashToList">
+              ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 16 }) : ""} Danh sách từ
+            </button>
+          </div>
+        </div>
+      `;
+
+      pane.querySelector("#btnFlashRestart").onclick = () => {
+        fIdx = 0;
+        fCompleted = false;
+        fFlipped = false;
+        renderFlashcardMode();
+      };
+
+      const btnStar = pane.querySelector("#btnFlashReviewStarred");
+      if (btnStar) {
+        btnStar.onclick = () => {
+          fStarredOnly = true;
+          fIdx = 0;
+          fCompleted = false;
+          fFlipped = false;
+          renderFlashcardMode();
+        };
+      }
+
+      pane.querySelector("#btnFlashToMatch").onclick = () => switchMode("match");
+      pane.querySelector("#btnFlashToList").onclick = () => switchMode("list");
+      return;
+    }
 
     if (fStarredOnly) {
       const starred = getQuizletStarred().map(s => s.toLowerCase());
@@ -974,6 +1151,8 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                   const fallbackStruct = [currentWord.collocation, currentWord.verb_obj, currentWord.gov].filter(Boolean).join(" · ");
                   if (fallbackStruct) structList = [fallbackStruct];
                 }
+                // Khử trùng lặp giữa các cấu trúc
+                structList = Array.from(new Set(structList.map(s => (s || "").trim()))).filter(Boolean);
 
                 // TẦNG 3: VÍ DỤ NGỮ CẢNH (EXAMPLES)
                 let exList = [];
@@ -1013,7 +1192,19 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                   ant = currentWord.ant.trim();
                 }
 
-                const notes = (currentWord.notes || currentWord.note || "").trim();
+                // Khử trùng lặp ghi chú nếu nội dung trùng với từ loại đã hiển thị ở Tầng 1
+                const rawNotes = (currentWord.notes || currentWord.note || "").trim();
+                const posClean = (currentWord.pos || "").trim().toLowerCase();
+                const wordTypeClean = (getWordType(currentWord) || "").trim().toLowerCase();
+                const posLabelClean = (posLabel || "").trim().toLowerCase();
+                const isNoteRedundant = rawNotes && (
+                  rawNotes.toLowerCase() === posClean ||
+                  rawNotes.toLowerCase() === posLabelClean ||
+                  (posLabelClean && posLabelClean.includes(rawNotes.toLowerCase())) ||
+                  (wordTypeClean && wordTypeClean.includes(rawNotes.toLowerCase())) ||
+                  rawNotes.toLowerCase() === (currentWord.gender || "").trim().toLowerCase()
+                );
+                const notes = isNoteRedundant ? "" : rawNotes;
                 const hasSynAnt = Boolean(syn || ant);
 
                 return `
@@ -1091,7 +1282,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         <div class="quizlet-nav-wrap" style="margin:0 auto;display:inline-flex;align-items:center;justify-content:center;gap:18px">
           <button type="button" class="quizlet-nav-btn" id="qNavPrev" title="Thẻ trước (Phím ←)">${window.RusiIcons ? RusiIcons.get("chevron-left", { size: 22 }) : "‹"}</button>
           <div class="quizlet-counter" style="font-weight:700;font-size:1.15rem;min-width:80px;text-align:center">${fIdx + 1} / ${fActiveWords.length}</div>
-          <button type="button" class="quizlet-nav-btn" id="qNavNext" title="Thẻ sau (Phím →)">${window.RusiIcons ? RusiIcons.get("chevron-right", { size: 22 }) : "›"}</button>
+          <button type="button" class="quizlet-nav-btn" id="qNavNext" title="${fIdx === fActiveWords.length - 1 ? 'Hoàn thành lượt học' : 'Thẻ sau (Phím →)'}">${fIdx === fActiveWords.length - 1 ? (window.RusiIcons ? RusiIcons.get("check", { size: 22 }) : "✓") : (window.RusiIcons ? RusiIcons.get("chevron-right", { size: 22 }) : "›")}</button>
         </div>
       </div>
 
@@ -1121,18 +1312,57 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       playQuizletSound("flip");
     };
 
+    // Hàm hiển thị màn hình hoàn thành chúc mừng kèm pháo giấy & âm thanh
+    const showFlashcardCompletion = () => {
+      fCompleted = true;
+      const today = new Date().toDateString();
+      const sessKey = "flash_done_" + jarId + "_" + today;
+      if (!STORE.get(sessKey, false)) {
+        STORE.set(sessKey, true);
+        STORE.set("flash_rev_" + jarId, []);
+        if (typeof Progress !== "undefined") {
+          Progress.markDone("vocabDone", jarId);
+          Progress.addXp(15);
+        }
+      }
+
+      playQuizletSound("victory");
+      if (typeof window.rusiConfetti === "function") {
+        window.rusiConfetti();
+      }
+
+      renderFlashcardMode();
+    };
+
     // Navigation
     const nextCard = () => {
-      fIdx = (fIdx + 1) % fActiveWords.length;
+      if (fIdx >= fActiveWords.length - 1) {
+        showFlashcardCompletion();
+        return;
+      }
+      fIdx++;
       fFlipped = false;
       renderFlashcardMode();
-      if (fAutoAudio) speak(fActiveWords[fIdx].ru);
+      if (fAutoAudio) {
+        if (typeof playWordAudio === "function") playWordAudio(fActiveWords[fIdx]);
+        else speak(fActiveWords[fIdx].ru);
+      }
     };
     const prevCard = () => {
+      if (fCompleted) {
+        fCompleted = false;
+        fIdx = fActiveWords.length - 1;
+        fFlipped = false;
+        renderFlashcardMode();
+        return;
+      }
       fIdx = (fIdx - 1 + fActiveWords.length) % fActiveWords.length;
       fFlipped = false;
       renderFlashcardMode();
-      if (fAutoAudio) speak(fActiveWords[fIdx].ru);
+      if (fAutoAudio) {
+        if (typeof playWordAudio === "function") playWordAudio(fActiveWords[fIdx]);
+        else speak(fActiveWords[fIdx].ru);
+      }
     };
 
     pane.querySelector("#qNavNext").onclick = nextCard;
@@ -1167,7 +1397,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             }
           }
         }
-        playQuizletSound(rating === "again" ? "wrong" : "correct");
+        if (fIdx < fActiveWords.length - 1) {
+          playQuizletSound(rating === "again" ? "wrong" : "correct");
+        }
         nextCard();
       };
     });
@@ -1176,7 +1408,8 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     // Audio
     pane.querySelector("#qAudioFront").onclick = (e) => {
       e.stopPropagation();
-      speak(currentWord.ru);
+      if (typeof playWordAudio === "function") playWordAudio(currentWord);
+      else speak(currentWord.ru);
     };
 
     // Add to jar
@@ -1355,7 +1588,10 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       </div>
     `;
 
-    pane.querySelector("#btnLearnAudio").onclick = () => speak(currentWord.ru);
+    pane.querySelector("#btnLearnAudio").onclick = () => {
+      if (typeof playWordAudio === "function") playWordAudio(currentWord);
+      else speak(currentWord.ru);
+    };
 
     const checkAnswer = (chosenOpt, btnElem) => {
       if (answered) return;
@@ -1491,7 +1727,10 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     const inp = pane.querySelector("#writeInput");
     inp.focus();
 
-    pane.querySelector("#btnWriteSpeak").onclick = () => speak(currentWord.ru);
+    pane.querySelector("#btnWriteSpeak").onclick = () => {
+      if (typeof playWordAudio === "function") playWordAudio(currentWord);
+      else speak(currentWord.ru);
+    };
 
     // Cyrillic keys insert
     pane.querySelectorAll(".cyrillic-key").forEach(kBtn => {
@@ -1876,8 +2115,29 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               const structStr = (Array.isArray(w.structures) && w.structures.length)
                 ? w.structures.map(s => typeof s === "string" ? s : (s && (s.structure || s.ru || s.text) || "")).filter(Boolean).join(" · ")
                 : (w.verb_obj || w.gov || "");
-              const hasNote = Boolean(w.note && w.note !== getWordType(w) && w.note !== w.pos);
-              const hasExtras = Boolean(w.collocation || structStr || w.syn || w.ant || hasNote);
+
+              // Khử trùng lặp giữa Cụm từ và Cấu trúc
+              const collClean = (w.collocation || "").trim();
+              const structClean = (structStr || "").trim();
+              const isCollDuplicate = collClean && structClean && (
+                collClean.toLowerCase() === structClean.toLowerCase() ||
+                structClean.toLowerCase().includes(collClean.toLowerCase())
+              );
+              const showCollocation = collClean && !isCollDuplicate;
+              const showStruct = Boolean(structClean);
+
+              // Khử trùng lặp Ghi chú nếu nội dung trùng với từ loại ở Cột 1
+              const noteClean = (w.note || "").trim();
+              const wordTypeStr = (getWordType(w) || "").trim().toLowerCase();
+              const posClean = (w.pos || "").trim().toLowerCase();
+              const isNoteSameAsType = noteClean && (
+                noteClean.toLowerCase() === posClean ||
+                noteClean.toLowerCase() === wordTypeStr ||
+                (wordTypeStr && wordTypeStr.includes(noteClean.toLowerCase())) ||
+                (posClean && posClean.includes(noteClean.toLowerCase()))
+              );
+              const hasNote = Boolean(noteClean && !isNoteSameAsType);
+              const hasExtras = Boolean(showCollocation || showStruct || w.syn || w.ant || hasNote);
 
               return `
                 <div class="dau-vocab-row-card ${isMastered ? "mastered" : ""}" data-ru="${esc(w.ru)}" data-idx="${idx}">
@@ -1904,16 +2164,16 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                       ` : ""}
                       ${hasExtras ? `
                         <div class="dau-row-expanded-details" style="display:block">
-                          ${w.collocation ? `
+                          ${showCollocation ? `
                             <div class="dau-row-extra-line">
                               <span class="dau-row-extra-label">Cụm từ:</span>
-                              <span class="dau-row-extra-val ru">${esc(w.collocation)}</span>
+                              <span class="dau-row-extra-val ru">${esc(collClean)}</span>
                             </div>
                           ` : ""}
-                          ${structStr ? `
+                          ${showStruct ? `
                             <div class="dau-row-extra-line">
                               <span class="dau-row-extra-label">Cấu trúc / Quản cách:</span>
-                              <span class="dau-row-extra-val ru">${esc(structStr)}</span>
+                              <span class="dau-row-extra-val ru">${esc(structClean)}</span>
                             </div>
                           ` : ""}
                           ${w.syn ? `
@@ -1940,7 +2200,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
                     <!-- CỘT 3 (PHẢI): BỘ NÚT HÀNH ĐỘNG (AUDIO, ĐÃ THUỘC, TRA CÁCH CHIA, LƯU LỌ) -->
                     <div class="dau-row-col-actions">
-                      <button type="button" class="dau-action-icon-btn btn-speak-item" data-ru="${esc(w.ru)}" title="Phát âm tiếng Nga (icon volume-high)">
+                      <button type="button" class="dau-action-icon-btn btn-speak-item" data-ru="${esc(w.ru)}" data-audio="${esc(w.audio_url || w.audio || '')}" title="Phát âm tiếng Nga (icon volume-high)">
                         ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""}
                       </button>
                       <button type="button" class="dau-action-icon-btn btn-master-item ${isMastered ? "mastered" : ""}" data-ru="${esc(w.ru)}" title="${isMastered ? "Đã thuộc (Nhấn để hủy)" : "Đánh dấu đã thuộc"}">
@@ -1982,7 +2242,10 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         btn.onclick = (e) => {
           e.stopPropagation();
           const curWord = previewWords[previewIdx];
-          if (curWord) speak(curWord.ru);
+          if (curWord) {
+            if (typeof playWordAudio === "function") playWordAudio(curWord);
+            else speak(curWord.ru);
+          }
         };
       });
 
@@ -2144,7 +2407,11 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         b.onclick = (e) => {
           e.stopPropagation();
           b.classList.add("playing");
-          speak(b.dataset.ru);
+          if (typeof playWordAudio === "function") {
+            playWordAudio(b.dataset.ru, b.dataset.audio);
+          } else {
+            speak(b.dataset.ru);
+          }
           setTimeout(() => b.classList.remove("playing"), 1000);
         };
       });
@@ -2188,7 +2455,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           b.onclick = (e) => {
             e.stopPropagation();
             const wordRu = b.dataset.ru;
-            if (confirm(`Bạn có chắc muốn xóa từ «${wordRu}» khỏi lọ này không?`)) {
+            if (confirm(`Bạn có chắc muốn xóa từ “${wordRu}” khỏi lọ này không?`)) {
               let jars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
               const target = jars.find(j => j.id === jarId);
               if (target && target.words) {
@@ -2197,7 +2464,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
                   window.RusiSupabase.jars.save(window.Auth.user.uid, target).catch(() => {});
                 }
-                toast(`Đã xóa từ «${wordRu}» khỏi lọ!`);
+                toast(`Đã xóa từ “${wordRu}” khỏi lọ!`);
                 words = target.words;
                 previewWords = [...words];
                 if (onWordListChange) onWordListChange(currentMode);
@@ -2373,11 +2640,20 @@ function initVocabPage() {
     // Loại bỏ toàn bộ lọ từ cá nhân khỏi danh sách bài học theo cấp độ (A1, A2...)
     const systemJars = baseJars.filter(j => j.is_system !== false && !String(j.id).startsWith("custom-"));
     const jars = systemJars.map(j => {
-      const jarWords = (j.words && j.words.length)
+      const rawJarWords = (j.words && j.words.length)
         ? j.words
         : ((typeof VOCAB_JARS !== "undefined" && Array.isArray(VOCAB_JARS))
           ? ((VOCAB_JARS.find(x => x.id === j.id || x.code === j.id || x.id === j.code || x.code === j.code) || {}).words || [])
           : []);
+      // Khử từ vựng trùng lặp bên trong lọ nếu có
+      const seenW = new Set();
+      const jarWords = [];
+      rawJarWords.forEach(w => {
+        const k = ((w && (w.ru || w.word_normalized)) || "").trim().toLowerCase();
+        if (k && seenW.has(k)) return;
+        if (k) seenW.add(k);
+        jarWords.push(w);
+      });
       return {
         id: j.id,
         code: j.code || j.id,
@@ -2837,14 +3113,14 @@ function initVocabPage() {
         btn.onclick = () => {
           const jId = btn.dataset.jarId;
           const jName = btn.dataset.jarName || "lọ từ này";
-          if (confirm(`Bạn có chắc muốn xóa lọ «${jName}» không?`)) {
+          if (confirm(`Bạn có chắc muốn xóa lọ “${jName}” không?`)) {
             let jars = STORE.get("custom_jars", []);
             jars = jars.filter(j => j.id !== jId);
             STORE.set("custom_jars", jars);
             if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
               window.RusiSupabase.jars.delete(window.Auth.user.uid, jId).catch(() => {});
             }
-            toast(`Đã xóa lọ «${jName}»`);
+            toast(`Đã xóa lọ “${jName}”`);
             renderVocabCards();
           }
         };
@@ -3053,7 +3329,7 @@ function initVocabPage() {
                   </div>
 
                   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-                    <button type="button" class="btn btn-soft btn-sm btn-pmodal-speak" data-ru="${w.ru}" style="width:36px;height:36px;padding:0;border-radius:10px;display:grid;place-items:center;cursor:pointer" title="Nghe phát âm">
+                    <button type="button" class="btn btn-soft btn-sm btn-pmodal-speak" data-ru="${w.ru}" data-audio="${esc(w.audio_url || w.audio || '')}" style="width:36px;height:36px;padding:0;border-radius:10px;display:grid;place-items:center;cursor:pointer" title="Nghe phát âm">
                       ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : "🔊"}
                     </button>
                     ${currentTab === "mastered" ? `
@@ -3115,8 +3391,10 @@ function initVocabPage() {
         el.onclick = (e) => {
           e.stopPropagation();
           const ru = el.dataset.speakRu || el.dataset.ru;
+          const audio = el.dataset.audio || "";
           if (ru) {
-            if (typeof speak === "function") speak(ru);
+            if (typeof playWordAudio === "function") playWordAudio(ru, audio);
+            else if (typeof speak === "function") speak(ru);
             else if (window.TTS && window.TTS.speakRu) window.TTS.speakRu(ru);
           }
         };
@@ -3137,7 +3415,7 @@ function initVocabPage() {
           if (typeof Progress !== "undefined" && typeof Progress.syncToCloud === "function") {
             Progress.syncToCloud();
           }
-          if (typeof toast === "function") toast(`Đã hủy trạng thái thuộc của «${ru}»`);
+          if (typeof toast === "function") toast(`Đã hủy trạng thái thuộc của “${ru}”`);
           window.dispatchEvent(new CustomEvent("trki:progress-updated"));
           renderModalContent();
         };
@@ -3157,7 +3435,7 @@ function initVocabPage() {
           const ru = btn.dataset.ru;
           if (ru && typeof SRS !== "undefined" && SRS.addToQueue) {
             SRS.addToQueue(ru);
-            if (typeof toast === "function") toast(`Đã đưa «${ru}» vào hàng đợi ôn tập!`);
+            if (typeof toast === "function") toast(`Đã đưa “${ru}” vào hàng đợi ôn tập!`);
             window.dispatchEvent(new CustomEvent("trki:progress-updated"));
             renderModalContent();
           }
@@ -3487,16 +3765,8 @@ const showTopicArticle = (jarId) => {
         ` : ""}
 
         <header class="topic-article-hero">
-          <span class="topic-article-eyebrow">
-            ${window.RusiIcons ? RusiIcons.get("book-open", { size: 14 }) : ""} BÀI HỌC CHỦ ĐỀ · ${jar.level} (${levelLabel})
-          </span>
-          <h1 class="topic-article-title">${esc(jar.name)}</h1>
+          <h1 class="topic-article-title">Bài học chủ đề: ${esc(jar.name)}</h1>
           ${jar.desc ? `<p class="topic-article-desc">${esc(jar.desc)}</p>` : ""}
-          <div class="topic-article-meta-row">
-            <span>${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} ${words.length} từ vựng cốt lõi</span>
-            <span>${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} 15–20 phút học</span>
-            <span>${window.RusiIcons ? RusiIcons.get("award", { size: 14 }) : ""} Chuẩn TRKI ${jar.level}</span>
-          </div>
         </header>
 
         <!-- NỘI DUNG BÀI HỌC CHÍNH PHỤ THUỘC VÀO CONTENT.MD MARKDOWN -->
@@ -3509,7 +3779,7 @@ const showTopicArticle = (jarId) => {
           <div class="topic-article-footer-cta-info">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
               <span style="color:var(--russia-blue, #1757a6)">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 24 }) : ""}</span>
-              <h3 style="margin:0;font-size:1.15rem;color:#0f1f38">Lọ từ vựng «${esc(jar.name)}»</h3>
+              <h3 style="margin:0;font-size:1.15rem;color:#0f1f38">Lọ từ vựng “${esc(jar.name)}”</h3>
             </div>
             <p>Đã sẵn sàng ghi nhớ bền vững ${words.length} từ vựng với mô hình Lọ Từ Vựng và Flashcard Spaced Repetition?</p>
           </div>
@@ -3585,6 +3855,19 @@ const showTopicArticle = (jarId) => {
         const localMatch = VOCAB_JARS.find(j => j.id === jar.id || j.code === jar.id || j.id === jar.code || j.code === jar.code);
         if (localMatch && Array.isArray(localMatch.words)) jar.words = localMatch.words;
       }
+    }
+
+    // Khử từ vựng trùng lặp bên trong lọ nếu có
+    if (Array.isArray(jar.words) && jar.words.length > 0) {
+      const seenW = new Set();
+      const dedupWords = [];
+      jar.words.forEach(w => {
+        const k = ((w && (w.ru || w.word_normalized)) || "").trim().toLowerCase();
+        if (k && seenW.has(k)) return;
+        if (k) seenW.add(k);
+        dedupWords.push(w);
+      });
+      jar.words = dedupWords;
     }
 
     // Kiểm tra quyền truy cập PRO
@@ -3663,14 +3946,14 @@ const showTopicArticle = (jarId) => {
         const btnDel = el("#btnDeleteCustomJar");
         if (btnDel) {
           btnDel.onclick = () => {
-            if (confirm(`Bạn có chắc muốn xóa lọ «${jar.name}» không?`)) {
+            if (confirm(`Bạn có chắc muốn xóa lọ “${jar.name}” không?`)) {
               let jars = STORE.get("custom_jars", []);
               jars = jars.filter(j => j.id !== jar.id);
               STORE.set("custom_jars", jars);
               if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
                 window.RusiSupabase.jars.delete(window.Auth.user.uid, jar.id).catch(() => {});
               }
-              toast(`Đã xóa lọ «${jar.name}» thành công!`);
+              toast(`Đã xóa lọ “${jar.name}” thành công!`);
               showMainLayout();
             }
           };
@@ -5813,7 +6096,7 @@ function initListeningPage() {
       { ru: "двери", vi: "cửa tàu, cửa ra vào", pos: "сущ. мн.", stress: "две́ри" },
       { ru: "закрываться", vi: "đóng lại", pos: "гл.", stress: "закрыва́ются" }
     ],
-    "Следующая станция — «Театральная».": [
+    "Следующая станция — “Театральная”.": [
       { ru: "следующий", vi: "tiếp theo, kế tiếp", pos: "прил.", stress: "сле́дующий" },
       { ru: "станция", vi: "nhà ga tàu điện", pos: "сущ.", stress: "ста́нция" }
     ],
@@ -7050,7 +7333,7 @@ function initListeningPage() {
       targetInput.classList.add("is-correct");
       targetInput.classList.remove("is-wrong");
       targetInput.readOnly = true;
-      toast(`Gợi ý: «${expected}»`);
+      toast(`Gợi ý: “${expected}”`);
 
       const remaining = Array.from(flow.querySelectorAll(".lis-dict-word-input:not(.is-correct)"));
       if (remaining.length === 0) {
@@ -7407,9 +7690,9 @@ function initListeningPage() {
       while (i < tokens.length) {
         const token = tokens[i];
 
-        // 1. Dấu mở (prefix) như «, (, [
+        // 1. Dấu mở (prefix) như «, “, (, [
         let prefixHtml = "";
-        if (!token.isWord && /^[«(\["]+$/.test(token.text)) {
+        if (!token.isWord && /^[«“(\["]+$/.test(token.text)) {
           prefixHtml = `<span class="lis-dict-punct lis-dict-punct-prefix">${esc(token.text)}</span>`;
           i++;
           if (i >= tokens.length) {
@@ -7451,9 +7734,9 @@ function initListeningPage() {
           `;
         }
 
-        // 2. Dấu đóng (suffix) như .,!?;:»)]... bám sát từ trước đó, không bị tách dòng
+        // 2. Dấu đóng (suffix) như .,!?;:», ”)]... bám sát từ trước đó, không bị tách dòng
         let suffixHtml = "";
-        while (i + 1 < tokens.length && !tokens[i + 1].isWord && /^[.,!?;:»\)'"]+$/.test(tokens[i + 1].text)) {
+        while (i + 1 < tokens.length && !tokens[i + 1].isWord && /^[.,!?;:»”\)'"]+$/.test(tokens[i + 1].text)) {
           suffixHtml += `<span class="lis-dict-punct lis-dict-punct-suffix">${esc(tokens[i + 1].text)}</span>`;
           i++;
         }
@@ -7927,7 +8210,7 @@ function initListeningPage() {
               note: b.dataset.pos || ""
             });
           } else if (typeof toast === "function") {
-            toast(`Đã chọn lưu từ «${b.dataset.ru}» vào Lọ từ vựng`);
+            toast(`Đã chọn lưu từ “${b.dataset.ru}” vào Lọ từ vựng`);
           }
         };
       });
@@ -8830,7 +9113,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
         } else if (matched && matched.status === "missing") {
           return `<span class="sp-target-word sp-word-wrong" style="opacity:0.75;text-decoration:underline dashed;" title="Chưa nhận diện được từ này">${esc(tok)}</span>`;
         } else if (matched && matched.status === "wrong") {
-          const tip = matched.heard ? `Nhận diện: «${matched.heard}»` : "Cần phát âm rõ ràng hơn";
+          const tip = matched.heard ? `Nhận diện: “${matched.heard}”` : "Cần phát âm rõ ràng hơn";
           return `<span class="sp-target-word sp-word-wrong" title="${esc(tip)}">${esc(tok)}</span>`;
         } else {
           return `<span class="sp-target-word" style="opacity:0.8;" title="Chưa phát âm">${esc(tok)}</span>`;
@@ -10469,7 +10752,7 @@ function initWritingPage() {
             let grammarScore = 18;
             if (latinChars.length === 0) grammarScore += 2;
             if (sentences.length >= 2) grammarScore += 2;
-            const hasCapitalization = sentences.every(s => /^[А-ЯЁ«"]/.test(s));
+            const hasCapitalization = sentences.every(s => /^[А-ЯЁ«“"]/.test(s));
             if (hasCapitalization) grammarScore += 1;
             const hasVerbs = wordsArr.some(w => /(?:ет|ут|ют|ит|ат|ят|ал|ала|али|ть|ся|сь)$/i.test(w));
             if (hasVerbs) grammarScore += 2;
@@ -10524,7 +10807,7 @@ function initWritingPage() {
               if (modelMatches >= 3 || usedHints.length >= 2) {
                 feedbackComment = `Bài viết bám sát bối cảnh bức tranh (${count} từ, ${sentences.length} câu). Bạn đã quan sát tốt các nhân vật và vận dụng thành công <b>${usedHints.length} từ vựng gợi ý</b> của tranh. Tiếp tục trau chuốt thêm biến cách để bài viết hoàn hảo hơn nhé!`;
               } else {
-                feedbackComment = `Bài viết đạt độ dài (${count} từ) nhưng chưa miêu tả sát các chi tiết nhân vật/hành động trong bức tranh so với bài mẫu. Hãy quan sát kỹ tranh và xem phần <b>«Bài mẫu»</b> để học cách miêu tả sinh động hơn nhé!`;
+                feedbackComment = `Bài viết đạt độ dài (${count} từ) nhưng chưa miêu tả sát các chi tiết nhân vật/hành động trong bức tranh so với bài mẫu. Hãy quan sát kỹ tranh và xem phần <b>“Bài mẫu”</b> để học cách miêu tả sinh động hơn nhé!`;
               }
             } else {
               feedbackComment = `Bài viết hoàn thành tốt yêu cầu luyện dịch (${count} từ, ${sentences.length} câu hoàn chỉnh). Khả năng diễn đạt và liên kết câu mạch lạc.`;
@@ -12269,7 +12552,7 @@ function initShopPage() {
           cart.push({ id: item.id, title: item.title, price: item.price, image: item.image, qty: 1 });
         }
         saveCart();
-        toast(`Đã thêm «${item.title.substring(0, 24)}...» vào giỏ hàng`);
+        toast(`Đã thêm “${item.title.substring(0, 24)}...” vào giỏ hàng`);
       };
     });
 
@@ -12995,7 +13278,7 @@ function initUpgradePage() {
                 <td class="col-pro"><b>Kho 100+ Lọ từ chuyên ngành</b> (Y khoa, Kỹ thuật, Kinh tế, KTX, Du học Nga)</td>
               </tr>
               <tr>
-                <td class="col-feature"><b>Series hoạt hình «Хочу в Россию»</b></td>
+                <td class="col-feature"><b>Series hoạt hình “Хочу в Россию”</b></td>
                 <td class="col-free">2 tập xem thử</td>
                 <td class="col-pro"><b>Trọn bộ các tập độc quyền</b> kèm kịch bản hội thoại và bài tập trắc nghiệm</td>
               </tr>

@@ -180,6 +180,7 @@ const Progress = {
         speakDone: STORE.get("speakDone", []),
         writeDone: STORE.get("writeDone", []),
         trkiDone: STORE.get("trkiDone", []),
+        trkiSubDone: STORE.get("trkiSubDone", []),
         vocabDone: STORE.get("vocabDone", [])
       };
       const vocabStats = (typeof window.getSynchronizedVocabStats === "function") ? window.getSynchronizedVocabStats() : {};
@@ -227,7 +228,7 @@ const Progress = {
             STORE.set("lastXpDay", remote.last_study_date);
           }
           if (remote.done_list && typeof remote.done_list === "object") {
-            ["listenDone", "speakDone", "writeDone", "trkiDone", "vocabDone"].forEach(k => {
+            ["listenDone", "speakDone", "writeDone", "trkiDone", "trkiSubDone", "vocabDone"].forEach(k => {
               const localList = STORE.get(k, []);
               const remoteList = Array.isArray(remote.done_list[k]) ? remote.done_list[k] : [];
               const merged = Array.from(new Set([...localList, ...remoteList]));
@@ -339,11 +340,11 @@ const MascotRusika = {
 
   getQuote() {
     const quotes = [
-      "«Повторение — мать учения!» (Ôn tập là mẹ của sự học thành công!)",
+      "“Повторение — мать учения!” (Ôn tập là mẹ của sự học thành công!)",
       "Hôm nay bạn đã ôn tập các từ trong Lọ từ vựng chưa nào?",
       "Luyện phát âm câu nói mỗi ngày để ngữ điệu mềm mại chuẩn người Moskva nhé!",
       "Chứng chỉ ТРКИ không hề khó khi bạn luyện đề đều đặn với Rusika!",
-      "«Терпение и труд всё перетрут» (Có công mài sắt, có ngày nên kim)!",
+      "“Терпение и труд всё перетрут” (Có công mài sắt, có ngày nên kim)!",
       "Mỗi ngày một chút, tiếng Nga sẽ trở thành người bạn thân của bạn!"
     ];
     return quotes[Math.floor(Math.random() * quotes.length)];
@@ -497,7 +498,7 @@ const MascotRusika = {
               <span class="bubble-streak">${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 14 }) : ""} Chuỗi học: <b>${streak} ngày</b></span>
             </div>
             <div class="rusika-bubble-message">
-              «Привет! Mình là Rusi AI. Hôm nay bạn muốn luyện từ vựng, nghe 4 Part CEFR hay sửa phát âm cùng mình? Nhấn vào đây để trò chuyện nhé! 🐾»
+              “Привет! Mình là Rusi AI. Hôm nay bạn muốn luyện từ vựng, nghe 4 Part CEFR hay sửa phát âm cùng mình? Nhấn vào đây để trò chuyện nhé! 🐾”
             </div>
 
             <!-- GỢI Ý CÂU HỎI TRỰC QUAN -->
@@ -800,12 +801,12 @@ const MascotRusika = {
     if (/trki|đề thi|thi thử|chứng chỉ|torfl/i.test(query)) {
       return {
         title: "Cẩm nang Đề thi TRKI chuẩn quốc tế",
-        text: "Hệ thống chứng chỉ TRKI (TORFL) gồm các cấp độ từ A1 đến B2:\n• <b>TRKI A1 (Элементарный)</b>: Yêu cầu ~780 từ vựng, giao tiếp sinh hoạt và xã hội căn bản.\n• <b>TRKI A2 (Базовый)</b>: ~1.300 từ vựng, chuẩn đủ điều kiện học khoa dự bị tại các trường ĐH Nga.\n• <b>TRKI B1 (Первый)</b>: ~2.300 từ vựng, điều kiện bắt buộc nhập học Đại học chính quy tại LB Nga.\n• <b>TRKI B2 (Второй)</b>: ~10.000 từ vựng, chuẩn tốt nghiệp cử nhân và thạc sĩ tại Nga.\n\n👉 Điểm đạt là <b>66%</b> trên mỗi bài thi con. Hãy vào mục <b>«Thi thử TRKI»</b> trên website để làm quen với ngân hàng đề thi chuẩn nhé!"
+        text: "Hệ thống chứng chỉ TRKI (TORFL) gồm các cấp độ từ A1 đến B2:\n• <b>TRKI A1 (Элементарный)</b>: Yêu cầu ~780 từ vựng, giao tiếp sinh hoạt và xã hội căn bản.\n• <b>TRKI A2 (Базовый)</b>: ~1.300 từ vựng, chuẩn đủ điều kiện học khoa dự bị tại các trường ĐH Nga.\n• <b>TRKI B1 (Первый)</b>: ~2.300 từ vựng, điều kiện bắt buộc nhập học Đại học chính quy tại LB Nga.\n• <b>TRKI B2 (Второй)</b>: ~10.000 từ vựng, chuẩn tốt nghiệp cử nhân và thạc sĩ tại Nga.\n\n👉 Điểm đạt là <b>66%</b> trên mỗi bài thi con. Hãy vào mục <b>“Thi thử TRKI”</b> trên website để làm quen với ngân hàng đề thi chuẩn nhé!"
       };
     } else if (/phát âm|trọng âm|ударение|đọc/i.test(query)) {
       return {
         title: "Quy tắc Phát âm & Trọng âm tiếng Nga",
-        text: "Trọng âm (Ударение) là linh hồn của phát âm tiếng Nga:\n1. <b>Biến âm chữ О</b>: Khi có trọng âm phát âm rõ [O]. Khi không mang trọng âm giảm thành âm [A] ngắn (vd: молоко đọc là [mə-la-kó]).\n2. <b>Biến âm chữ Е/Я</b>: Khi không mang trọng âm phát âm nhẹ gần như âm [I] (vd: река đọc là [ri-ká]).\n3. <b>Âm câm & biến đổi cuối từ</b>: Các phụ âm vang (звонкие: б, в, г, д, ж, з) đứng cuối từ sẽ bị vô thanh hóa (г -> к, д -> т, б -> п, vd: хлеб đọc là [khlep]).\n\n👉 Hãy vào mục <b>«Luyện nói & AI Rusika»</b> để Rusika trực tiếp sửa lỗi phát âm cho bạn nhé!"
+        text: "Trọng âm (Ударение) là linh hồn của phát âm tiếng Nga:\n1. <b>Biến âm chữ О</b>: Khi có trọng âm phát âm rõ [O]. Khi không mang trọng âm giảm thành âm [A] ngắn (vd: молоко đọc là [mə-la-kó]).\n2. <b>Biến âm chữ Е/Я</b>: Khi không mang trọng âm phát âm nhẹ gần như âm [I] (vd: река đọc là [ri-ká]).\n3. <b>Âm câm & biến đổi cuối từ</b>: Các phụ âm vang (звонкие: б, в, г, д, ж, з) đứng cuối từ sẽ bị vô thanh hóa (г -> к, д -> т, б -> п, vd: хлеб đọc là [khlep]).\n\n👉 Hãy vào mục <b>“Luyện nói & AI Rusika”</b> để Rusika trực tiếp sửa lỗi phát âm cho bạn nhé!"
       };
     } else if (/chia động từ|động từ|ngôi|спряжение/i.test(query)) {
       return {
@@ -1501,12 +1502,106 @@ function pickVoice(lang) {
   return best;
 }
 
-function speak(text, lang = null, rate = 0.9) {
+let _wordAudioLookupCache = null;
+let _currentNativeAudio = null;
+
+function getWordAudioUrl(word) {
+  if (!word || typeof word !== "string") return "";
+  if (!_wordAudioLookupCache) {
+    _wordAudioLookupCache = new Map();
+    const cleanFn = (s) => (s || "").replace(/[\u0300-\u036f́̀]/g, "").replace(/[«»""''„“]/g, "").replace(/^[(\[]|[)\]]$/g, "").trim().toLowerCase();
+
+    if (typeof VOCAB_JARS !== "undefined" && Array.isArray(VOCAB_JARS)) {
+      VOCAB_JARS.forEach((jar) => {
+        (jar.words || []).forEach((w) => {
+          const audio = w.audio_url || w.audio;
+          if (audio) {
+            const key = cleanFn(w.word_normalized || w.ru || w.word_with_stress);
+            if (key && !_wordAudioLookupCache.has(key)) _wordAudioLookupCache.set(key, audio);
+          }
+        });
+      });
+    }
+
+    if (typeof VOCABULARIES !== "undefined" && Array.isArray(VOCABULARIES)) {
+      VOCABULARIES.forEach((v) => {
+        const audio = v.audio_url || v.audio;
+        if (audio) {
+          const key = cleanFn(v.word_normalized || v.ru || v.word_with_stress);
+          if (key && !_wordAudioLookupCache.has(key)) _wordAudioLookupCache.set(key, audio);
+        }
+      });
+    }
+  }
+
+  const cleanKey = (word || "").replace(/[\u0300-\u036f́̀]/g, "").replace(/[«»""''„“]/g, "").replace(/^[(\[]|[)\]]$/g, "").trim().toLowerCase();
+  return _wordAudioLookupCache.get(cleanKey) || "";
+}
+
+function playWordAudio(wordOrRu, maybeAudioUrl = "", options = {}) {
+  let ru = "";
+  let audioUrl = maybeAudioUrl || "";
+
+  if (typeof wordOrRu === "object" && wordOrRu !== null) {
+    ru = wordOrRu.ru || wordOrRu.word_normalized || wordOrRu.word_with_stress || "";
+    audioUrl = audioUrl || wordOrRu.audio_url || wordOrRu.audio || "";
+  } else if (typeof wordOrRu === "string") {
+    ru = wordOrRu;
+  }
+
+  if (!audioUrl) {
+    audioUrl = getWordAudioUrl(ru);
+  }
+
+  if (audioUrl) {
+    try {
+      if (_currentNativeAudio) {
+        _currentNativeAudio.pause();
+        _currentNativeAudio.currentTime = 0;
+      }
+      const audio = new Audio(audioUrl);
+      _currentNativeAudio = audio;
+      if (options.playbackRate) audio.playbackRate = options.playbackRate;
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Fallback to Web Speech API
+          speak(ru, "ru-RU", options.rate || 0.9, false);
+        });
+      }
+      return audio;
+    } catch (e) {
+      speak(ru, "ru-RU", options.rate || 0.9, false);
+      return null;
+    }
+  }
+
+  speak(ru, "ru-RU", options.rate || 0.9, false);
+  return null;
+}
+
+function speak(text, lang = null, rate = 0.9, checkNativeWord = true) {
   if (typeof window === "undefined" || !("speechSynthesis" in window) || !window.speechSynthesis) {
     toast("Trình duyệt không hỗ trợ đọc — hãy dùng Chrome/Edge.");
     return;
   }
   const l = lang || detectLang(text);
+
+  // If Russian and checkNativeWord is true, check if it's a known vocabulary word with native MP3
+  if (checkNativeWord && (l === "ru-RU" || l === "ru") && text && typeof text === "string" && text.length < 50 && !text.includes("\n")) {
+    const nativeAudio = getWordAudioUrl(text);
+    if (nativeAudio) {
+      playWordAudio(text, nativeAudio, { playbackRate: rate, rate: rate });
+      return;
+    }
+  }
+
+  if (_currentNativeAudio) {
+    _currentNativeAudio.pause();
+    _currentNativeAudio.currentTime = 0;
+  }
+
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = l;
@@ -1519,6 +1614,13 @@ function speak(text, lang = null, rate = 0.9) {
 /** Nghe phát âm chậm — dùng trong modal chi tiết từ. */
 function speakSlow(text, lang = null) {
   speak(text, lang, 0.5);
+}
+
+if (typeof window !== "undefined") {
+  window.speak = speak;
+  window.speakSlow = speakSlow;
+  window.playWordAudio = playWordAudio;
+  window.getWordAudioUrl = getWordAudioUrl;
 }
 
 // Một số trình duyệt nạp danh sách giọng bất đồng bộ — nạp sớm để chọn được giọng tốt.
@@ -2106,10 +2208,17 @@ function renderUserArea() {
 
   const signOutBtn = host.querySelector("#btnSignOut");
   if (signOutBtn) {
-    signOutBtn.addEventListener("click", () => {
+    signOutBtn.addEventListener("click", async () => {
       if (dropdown) dropdown.classList.remove("open");
-      STORE.set("auth_user", null);
-      if (window.Auth) window.Auth.signOut();
+      try {
+        if (window.Auth && typeof window.Auth.signOut === "function") {
+          await window.Auth.signOut();
+        }
+      } catch (e) {
+        console.error("[Auth] Lỗi đăng xuất:", e);
+      }
+      // Tải lại trang chủ ở trạng thái khách hoàn toàn trắng sạch
+      window.location.href = "index.html";
     });
   }
 }
@@ -2202,8 +2311,63 @@ function renderIndexProgressIfLoggedIn(user) {
   const stats = getSynchronizedVocabStats();
   const xp = (typeof STORE !== "undefined") ? STORE.get("xp", 0) : 0;
 
-  // Tránh re-render trùng lặp gây nhấp nháy/giật màn hình khi tải lại trang
-  const currentKey = `${user.uid || user.id || user.email}_${stats.streak}_${xp}_${stats.mastered}_${stats.dueCount}_${stats.newCount}`;
+  // 1. Dữ liệu thực tế kỹ năng Từ vựng
+  const completedJars = (typeof Progress !== "undefined" && Progress.doneList) ? Progress.doneList("vocabDone").length : 0;
+
+  // 2. Dữ liệu thực tế kỹ năng Luyện nghe
+  const listenItems = (typeof Progress !== "undefined" && Progress.doneList) ? Progress.doneList("listenDone") : [];
+  const uniqueListenLessons = new Set();
+  listenItems.forEach(k => {
+    const base = String(k).split("_")[0];
+    if (base) uniqueListenLessons.add(base);
+  });
+  const listenCount = listenItems.length;
+  const listenLessonsCount = uniqueListenLessons.size;
+
+  // 3. Dữ liệu thực tế kỹ năng Luyện nói (cả bài hoàn thành & số câu luyện đạt chuẩn >= 70%)
+  const speakDoneSets = (typeof Progress !== "undefined" && Progress.doneList) ? Progress.doneList("speakDone") : [];
+  let speakPassedSentences = 0;
+  let speakTotalSentences = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("trki_speak_") && !k.includes("completed")) {
+        const val = JSON.parse(localStorage.getItem(k));
+        if (typeof val === "number") {
+          speakTotalSentences++;
+          if (val >= 70) speakPassedSentences++;
+        }
+      }
+    }
+  } catch (_) {}
+  const speakHasActivity = speakDoneSets.length > 0 || speakTotalSentences > 0;
+
+  // 4. Dữ liệu thực tế kỹ năng Luyện viết (cả bài AI đã chấm & bài đang viết dở)
+  const writeDoneTasks = (typeof Progress !== "undefined" && Progress.doneList) ? Progress.doneList("writeDone") : [];
+  let writeDraftCount = 0;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("trki_write_") && !k.startsWith("trki_writeDone")) {
+        const val = JSON.parse(localStorage.getItem(k));
+        if (typeof val === "string" && val.trim().length >= 10) {
+          writeDraftCount++;
+        }
+      }
+    }
+  } catch (_) {}
+  const writeHasActivity = writeDoneTasks.length > 0 || writeDraftCount > 0;
+
+  // 5. Dữ liệu thực tế Thi TRKI (cả đề thi đầy đủ & bài thi phân môn, điểm thi cao nhất)
+  const trkiDoneFull = (typeof Progress !== "undefined" && Progress.doneList) ? Progress.doneList("trkiDone") : [];
+  const trkiDoneSub = (typeof Progress !== "undefined" && Progress.doneList) ? Progress.doneList("trkiSubDone") : [];
+  const allTrkiKeys = new Set([...trkiDoneFull, ...trkiDoneSub]);
+  const trkiCount = allTrkiKeys.size;
+  const bestTest = (typeof STORE !== "undefined") ? STORE.get("bestTest", null) : null;
+  const trkiHasActivity = trkiCount > 0 || bestTest !== null;
+
+  // Tránh re-render trùng lặp gây nhấp nháy, nhưng đảm bảo cập nhật ngay khi có bất kỳ dữ liệu thực tế nào thay đổi
+  const currentKey = `${user.uid || user.id || user.email}_${stats.streak}_${xp}_${stats.mastered}_${stats.dueCount}_${stats.newCount}_${listenCount}_${speakDoneSets.length}_${speakPassedSentences}_${writeDoneTasks.length}_${writeDraftCount}_${trkiCount}_${bestTest}_${completedJars}`;
   if (host.dataset.renderedKey === currentKey && host.firstElementChild) {
     host.style.display = "";
     return;
@@ -2215,26 +2379,17 @@ function renderIndexProgressIfLoggedIn(user) {
     : { level: 1, shortTitle: "Mèo con", nextXp: 100, percent: 0 };
   const icon = (name, size = 18) => window.RusiIcons ? RusiIcons.get(name, { size }) : "";
   const xpTarget = levelInfo.nextXp ? `${xp} / ${levelInfo.nextXp} XP` : `${xp} XP`;
-  const doneCount = (key) => {
-    const value = (typeof Progress !== "undefined" && Progress.doneList) ? Progress.doneList(key) : [];
-    return Array.isArray(value) ? value.length : 0;
-  };
-  const learning = {
-    listening: doneCount("listenDone"),
-    speaking: doneCount("speakDone"),
-    writing: doneCount("writeDone"),
-    trki: doneCount("trkiDone")
-  };
-  const bestTest = (typeof STORE !== "undefined") ? STORE.get("bestTest", null) : null;
 
   const skills = [
     {
       icon: "archive-jar",
       title: "Từ vựng",
-      count: `${stats.mastered} từ đã thuộc`,
+      count: stats.mastered > 0
+        ? `${stats.mastered} từ đã thuộc${completedJars > 0 ? ` (${completedJars} lọ xong)` : ""}`
+        : (completedJars > 0 ? `${completedJars} lọ từ đã hoàn thành` : `${stats.newCount || 10} từ mới sẵn sàng`),
       note: stats.dueCount > 0
         ? `${stats.dueCount} từ đã đến hạn ôn tập`
-        : `${stats.newCount} từ mới sẵn sàng để học`,
+        : (stats.newCount > 0 ? `${stats.newCount} từ mới sẵn sàng để học` : "Đã duy trì lịch ôn Spaced Repetition"),
       href: "vocabulary.html",
       action: "Học từ vựng",
       attention: stats.dueCount > 0
@@ -2242,93 +2397,57 @@ function renderIndexProgressIfLoggedIn(user) {
     {
       icon: "headphones",
       title: "Luyện nghe",
-      count: `${learning.listening} hoạt động đã hoàn thành`,
-      note: learning.listening > 0 ? "Tiếp tục luyện nghe hiểu và chép chính tả" : "Chưa bắt đầu luyện nghe",
+      count: listenCount > 0
+        ? (listenLessonsCount > 0 ? `${listenLessonsCount} bài học (${listenCount} lượt xong)` : `${listenCount} hoạt động đã hoàn thành`)
+        : "Chưa bắt đầu luyện nghe",
+      note: listenCount > 0 ? "Tiếp tục luyện nghe hiểu và chép chính tả" : "Bắt đầu với bài luyện nghe video & chép chính tả",
       href: "listening.html",
       action: "Luyện nghe",
-      attention: learning.listening === 0
+      attention: listenCount === 0
     },
     {
       icon: "mic-speaking",
       title: "Luyện nói",
-      count: `${learning.speaking} lượt luyện đạt yêu cầu`,
-      note: learning.speaking > 0 ? "Tiếp tục luyện phát âm và phản xạ" : "Chưa bắt đầu luyện nói",
+      count: speakDoneSets.length > 0
+        ? `${speakDoneSets.length} bài hoàn thành${speakPassedSentences > 0 ? ` (${speakPassedSentences} câu đạt chuẩn)` : ""}`
+        : (speakPassedSentences > 0 ? `${speakPassedSentences} câu luyện đạt chuẩn` : (speakTotalSentences > 0 ? `${speakTotalSentences} câu đã thử sức` : "Chưa bắt đầu luyện nói")),
+      note: speakHasActivity ? "Tiếp tục luyện phát âm và phản xạ nói" : "Bắt đầu bài luyện phát âm AI & Shadowing",
       href: "speaking.html",
       action: "Luyện nói",
-      attention: learning.speaking === 0
+      attention: !speakHasActivity
     },
     {
       icon: "pen-tool",
       title: "Luyện viết",
-      count: `${learning.writing} bài đã hoàn thành`,
-      note: learning.writing > 0 ? "Tiếp tục bài viết theo cấp độ hiện tại" : "Chưa bắt đầu luyện viết",
+      count: writeDoneTasks.length > 0
+        ? `${writeDoneTasks.length} bài AI đã chấm điểm`
+        : (writeDraftCount > 0 ? `${writeDraftCount} bài đang viết dở` : "Chưa có bài viết"),
+      note: writeDoneTasks.length > 0
+        ? "Tiếp tục viết bài theo cấp độ hiện tại"
+        : (writeDraftCount > 0 ? "Đang có bản nháp chưa gửi, tiếp tục hoàn thiện" : "Chọn đề viết theo cấp độ để bắt đầu"),
       href: "writing.html",
       action: "Luyện viết",
-      attention: learning.writing === 0
+      attention: !writeHasActivity
     },
     {
       icon: "graduation-cap",
       title: "Thi TRKI",
-      count: `${learning.trki} đề đã hoàn thành`,
-      note: bestTest === null ? "Chưa có kết quả thi thử" : `Điểm tốt nhất: ${bestTest}%`,
+      count: trkiCount > 0
+        ? `${trkiCount} đề & bài thi đã nộp`
+        : (bestTest !== null ? `Đã thi thử (Điểm: ${bestTest}%)` : "Chưa có kết quả thi thử"),
+      note: bestTest !== null ? `Điểm tốt nhất: ${bestTest}%` : (trkiCount > 0 ? "Đã nộp bài khảo thí TRKI" : "Làm đề thi thử để đánh giá năng lực TRKI"),
       href: "mock-test.html",
       action: "Luyện thi",
-      attention: learning.trki === 0
+      attention: !trkiHasActivity
     }
   ];
-
-  let focus = {
-    title: "Tiếp tục duy trì nhịp học",
-    desc: "Chọn một kỹ năng bên dưới để tiếp tục lộ trình cá nhân.",
-    href: "vocabulary.html",
-    action: "Tiếp tục học"
-  };
-  if (stats.dueCount > 0) {
-    focus = {
-      title: "Ưu tiên ôn lại từ vựng",
-      desc: `${stats.dueCount} từ đã đến hạn ôn tập theo lịch Spaced Repetition.`,
-      href: "vocabulary.html",
-      action: "Ôn từ đến hạn"
-    };
-  } else {
-    const unstarted = skills.find((item) => item.attention);
-    if (unstarted) {
-      focus = {
-        title: `Bổ sung kỹ năng ${unstarted.title.toLowerCase()}`,
-        desc: unstarted.note,
-        href: unstarted.href,
-        action: unstarted.action
-      };
-    }
-  }
-
-  const levelPercent = Math.min(100, Math.max(0, Number(levelInfo.percent) || 0));
 
   host.style.display = "";
   host.innerHTML = `
     <div class="index-progress-wrapper" id="progress">
       <div class="index-progress-head">
-        <div class="index-progress-head-left">
-          <div class="index-progress-badge">
-            <span class="index-progress-pulse-dot" aria-hidden="true"></span>
-            <span>Tiến độ học tập</span>
-          </div>
-          <h2 class="index-progress-title">Chào mừng trở lại, <span class="index-user-name">${esc(userName)}</span>!</h2>
-          <p class="index-progress-desc">Theo dõi toàn bộ quá trình học và biết nội dung cần ưu tiên tiếp theo.</p>
-        </div>
-
-        <div class="index-progress-level-box">
-          <div class="index-level-meta">
-            <span class="index-level-chip">
-              ${icon("crown-vip", 14)}
-              <span>Cấp ${levelInfo.level} · ${esc(levelInfo.shortTitle)}</span>
-            </span>
-            <strong class="index-level-xp-val">${xpTarget}</strong>
-          </div>
-          <div class="index-level-track" role="progressbar" aria-label="Tiến độ cấp độ" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${levelPercent}">
-            <span class="index-level-fill" style="width:${levelPercent}%"></span>
-          </div>
-        </div>
+        <h2 class="index-progress-title">Chào mừng trở lại, <span class="index-user-name">${esc(userName)}</span>!</h2>
+        <p class="index-progress-desc">Theo dõi toàn bộ quá trình học và biết nội dung cần ưu tiên tiếp theo.</p>
       </div>
 
       <div class="index-progress-metrics">
@@ -2365,26 +2484,6 @@ function renderIndexProgressIfLoggedIn(user) {
         </div>
       </div>
 
-      <div class="index-progress-focus-card ${stats.dueCount > 0 ? "is-due" : ""}">
-        <div class="index-focus-lead">
-          <div class="index-focus-icon-box">
-            ${icon("target", 22)}
-          </div>
-          <div class="index-focus-text">
-            <div class="index-focus-tag">
-              ${icon("sparkles-clean", 13)}
-              <span>Ưu tiên hôm nay</span>
-            </div>
-            <strong class="index-focus-title">${focus.title}</strong>
-            <p class="index-focus-desc">${focus.desc}</p>
-          </div>
-        </div>
-        <a class="index-focus-cta-btn" href="${focus.href}">
-          <span>${focus.action}</span>
-          ${icon("arrow-right", 16)}
-        </a>
-      </div>
-
       <div class="index-skills-section">
         <div class="index-skills-head">
           <h3 class="index-skills-heading">Tiến độ theo kỹ năng</h3>
@@ -2393,18 +2492,13 @@ function renderIndexProgressIfLoggedIn(user) {
 
         <div class="index-skills-grid">
           ${skills.map((skill) => `
-            <a class="index-skill-card ${skill.attention ? "needs-attention" : ""}" href="${skill.href}">
+            <a class="index-skill-card" href="${skill.href}">
               <div class="index-skill-card-top">
-                <span class="index-skill-icon-bubble">${icon(skill.icon, 20)}</span>
-                ${skill.attention
-                  ? `<span class="index-skill-status-badge status-attention">Cần chú ý</span>`
-                  : `<span class="index-skill-status-badge status-active">Đang duy trì</span>`
-                }
-              </div>
-              <div class="index-skill-card-body">
-                <h4 class="index-skill-title">${skill.title}</h4>
-                <div class="index-skill-count">${skill.count}</div>
-                <p class="index-skill-note">${skill.note}</p>
+                <div class="index-skill-icon-bubble">${icon(skill.icon, 30)}</div>
+                <div class="index-skill-meta">
+                  <h4 class="index-skill-title">${skill.title}</h4>
+                  <div class="index-skill-count">${skill.count}</div>
+                </div>
               </div>
               <div class="index-skill-card-footer">
                 <span class="index-skill-action-text">${skill.action}</span>
@@ -2938,8 +3032,8 @@ const RusiMarkdown = {
       .replace(/~~(.*?)~~/g, '<del>$1</del>')
       // Inline code: `code`
       .replace(/`([^`]+)`/g, '<code class="rusi-md-inline-code">$1</code>')
-      // Russian quotes: «text»
-      .replace(/«(.*?)»/g, '<span class="rusi-quote-highlight">«$1»</span>');
+      // Quotes: “text” or «text»
+      .replace(/[«“](.*?)[»”]/g, '<span class="rusi-quote-highlight">“$1”</span>');
   },
 
   escapeHtml(str) {

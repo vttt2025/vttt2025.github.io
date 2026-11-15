@@ -178,21 +178,29 @@
       desc: "Ngân hàng đề thi chuẩn TRKI A1, A2, B1, B2 với 5 phần thi: Từ vựng & Ngữ pháp, Đọc hiểu, Nghe hiểu (Audio Supabase), Viết tự luận, Nói theo tình huống.",
       createDefault: () => ({
         id: "trki_de_" + Date.now().toString().slice(-4),
+        code: "trki_de_" + Date.now().toString().slice(-4),
         title: "Đề thi TRKI Mới",
         level: "A1",
+        level_name: "Sơ cấp A1 (ТЭУ)",
         levelName: "Sơ cấp A1 (ТЭУ)",
         sub_test_type: "full",
         category: "full",
+        category_name: "Đề thi toàn diện (5 phần)",
         categoryName: "Đề thi toàn diện (5 phần)",
         test_mode: "practice",
+        duration_min: 45,
+        duration_minutes: 45,
         durationMin: 45,
+        pass_percent: 66,
+        passing_score: 66,
         passPercent: 66,
         is_pro_only: false,
         is_published: true,
         parts: JSON.parse(JSON.stringify(SAMPLE_TRKI_PARTS))
       }),
       fields: [
-        { key: "id", label: "Mã đề thi (ID duy nhất / Code)", type: "text", required: true, help: "Ví dụ: trki_zlat_a1_elem, trki_zlat_a2_t1, trki_custom_01" },
+        { key: "id", label: "Mã đề thi (ID duy nhất)", type: "text", required: true, help: "UUID hoặc mã định danh duy nhất (ví dụ: trki_zlat_a1_elem)" },
+        { key: "code", label: "Mã đề thi (code định danh)", type: "text", required: true, help: "Ví dụ: trki_zlat_a1_elem, trki_zlat_a2_t1, trki_custom_01" },
         { key: "title", label: "Tiêu đề đề thi", type: "text", required: true },
         {
           key: "level",
@@ -208,10 +216,10 @@
           ],
           defaultValue: "A1"
         },
-        { key: "levelName", label: "Tên cấp độ hiển thị", type: "text", defaultValue: "Sơ cấp A1 (ТЭУ)" },
+        { key: "level_name", label: "Tên cấp độ hiển thị (level_name)", type: "text", defaultValue: "Sơ cấp A1 (ТЭУ)" },
         {
           key: "sub_test_type",
-          label: "Phân hệ thi (Sub-test)",
+          label: "Phân hệ thi (sub_test_type)",
           type: "select",
           options: [
             { v: "full", l: "Đề thi toàn diện (Full TRKI 3-5 phần)" },
@@ -223,10 +231,11 @@
           ],
           defaultValue: "full"
         },
-        { key: "categoryName", label: "Tên phân loại đề", type: "text", defaultValue: "Đề thi toàn diện (3 phần)" },
+        { key: "category", label: "Mã chuyên mục (category)", type: "text", defaultValue: "full" },
+        { key: "category_name", label: "Tên phân loại đề (category_name)", type: "text", defaultValue: "Đề thi toàn diện (5 phần)" },
         {
           key: "test_mode",
-          label: "Chế độ thi (Test Mode)",
+          label: "Chế độ thi (test_mode)",
           type: "select",
           options: [
             { v: "practice", l: "Luyện tập (Tự do theo chuyên đề / từng phần lẻ)" },
@@ -234,8 +243,8 @@
           ],
           defaultValue: "practice"
         },
-        { key: "durationMin", label: "Thời gian làm bài (phút)", type: "number", defaultValue: 45 },
-        { key: "passPercent", label: "Điểm chuẩn đạt (%)", type: "number", defaultValue: 66 },
+        { key: "duration_min", label: "Thời gian làm bài (phút — duration_min)", type: "number", defaultValue: 45 },
+        { key: "pass_percent", label: "Điểm chuẩn đạt (% — pass_percent)", type: "number", defaultValue: 66 },
         {
           key: "is_pro_only",
           label: "Quyền truy cập",
@@ -272,18 +281,25 @@
         id: generateUUID(),
         code: "TRKI_Q_" + Date.now().toString().slice(-4),
         test_code: "trki_zlat_a1_elem",
+        test_id: "trki_zlat_a1_elem",
         level: "A1",
         sub_test: "lexis_grammar",
         part_number: 1,
         question_type: "multiple_choice",
         order_index: 1,
         prompt: "Анна читает ___ (книга).",
+        prompt_vi: "Anna đang đọc sách.",
         options: ["книгу", "книги", "книге"],
         correct_index: 0,
         correct_answer: "книгу",
         explanation: "Động từ читать đi với Cách 4 (Винительный падеж) chỉ đối tượng trực tiếp: читает книгу.",
         topic: "Cách 4 đối tượng trực tiếp",
+        grammar_case: "C4",
         difficulty: 2,
+        passage: "",
+        audio_url: "",
+        image_url: "",
+        tags: ["Cách 4", "Động từ"],
         points: 1.0,
         is_published: true,
         is_pro_only: false
@@ -321,6 +337,7 @@
           ],
           defaultValue: "trki_zlat_a1_elem"
         },
+        { key: "test_id", label: "Mã Test ID liên kết (test_id)", type: "text", placeholder: "Ví dụ: trki_zlat_a1_elem" },
         {
           key: "level",
           label: "Cấp độ CEFR",
@@ -346,8 +363,22 @@
           ],
           defaultValue: "lexis_grammar"
         },
+        { key: "part_number", label: "Phần thi trong đề (Part 1 - 5)", type: "number", defaultValue: 1, help: "Part 1: Ngữ pháp; Part 2: Đọc; Part 3: Nghe; Part 4: Viết; Part 5: Nói" },
+        {
+          key: "question_type",
+          label: "Dạng câu hỏi (Question Type)",
+          type: "select",
+          options: [
+            { v: "multiple_choice", l: "Trắc nghiệm chọn 1 trong 4 (Multiple Choice)" },
+            { v: "fill_in", l: "Điền từ vào chỗ trống (Fill in)" },
+            { v: "matching", l: "Nối cặp từ / câu (Matching)" },
+            { v: "true_false", l: "Đúng / Sai (True / False)" }
+          ],
+          defaultValue: "multiple_choice"
+        },
         { key: "order_index", label: "Thứ tự câu hỏi trong đề (Số thứ tự)", type: "number", defaultValue: 1 },
         { key: "prompt", label: "Nội dung câu hỏi / Câu khuyết", type: "textarea", rows: 3, required: true, placeholder: "Ví dụ: Вы умеете читать ... ?" },
+        { key: "prompt_vi", label: "Dịch nghĩa tiếng Việt câu hỏi (prompt_vi)", type: "text", placeholder: "Ví dụ: Bạn có biết đọc... không?" },
         { key: "options", label: "Các phương án lựa chọn (mỗi dòng 1 phương án)", type: "list-lines", required: true, placeholder: "русский язык\nпо-русски\nрусский" },
         {
           key: "correct_index",
@@ -392,8 +423,11 @@
           ],
           defaultValue: 3
         },
+        { key: "points", label: "Điểm số của câu hỏi (points)", type: "number", defaultValue: 1.0 },
         { key: "passage", label: "Đoạn văn đọc hiểu (Nếu câu hỏi thuộc bài đọc)", type: "textarea", rows: 4 },
         { key: "audio_url", label: "URL File âm thanh (Nếu câu hỏi thuộc bài nghe)", type: "text", placeholder: "https://...supabase.co/storage/v1/object/public/trki-audio/..." },
+        { key: "image_url", label: "URL Ảnh đề bài minh họa (image_url)", type: "text", placeholder: "https://...supabase.co/storage/v1/object/public/trki-images/..." },
+        { key: "tags", label: "Thẻ chuyên đề (tags — mỗi dòng 1 thẻ)", type: "list-lines", placeholder: "Cách 4\nĐộng từ" },
         {
           key: "is_pro_only",
           label: "Quyền truy cập",
@@ -427,7 +461,6 @@
       source: () => {
         if (Array.isArray(window.VOCABULARIES) && window.VOCABULARIES.length > 0) return window.VOCABULARIES;
         if (Array.isArray(window.VOCABULARIES_DATA) && window.VOCABULARIES_DATA.length > 0) return window.VOCABULARIES_DATA;
-        // Trích xuất tự động từ window.VOCAB_JARS làm nguồn dữ liệu dự phòng an toàn
         const map = new Map();
         (window.VOCAB_JARS || []).forEach((j) => {
           (j.words || []).forEach((w) => {
@@ -471,6 +504,7 @@
         meaning_ru: "учащийся вуза",
         level: "A1",
         gender: "м.",
+        aspect: "",
         transcription: "stʊˈdʲent",
         notes: "Danh từ đực, biến đổi đuôi phụ âm cứng.",
         audio_url: "",
@@ -485,6 +519,7 @@
       fields: [
         { key: "id", label: "Mã từ vựng / UUID", type: "text", required: true, help: "UUID hoặc mã định danh duy nhất (tự động sinh theo chuẩn RFC 4122)" },
         { key: "word_with_stress", label: "Từ tiếng Nga (Có trọng âm)", type: "text", required: true, help: "Ví dụ: студе́нт, кни́га, изуча́ть" },
+        { key: "word_normalized", label: "Từ chuẩn hóa (Không dấu trọng âm)", type: "text", placeholder: "Ví dụ: студент" },
         { key: "meaning_vi", label: "Nghĩa tiếng Việt", type: "text", required: true },
         {
           key: "jar_id",
@@ -560,6 +595,9 @@
         { key: "transcription", label: "Phiên âm quốc tế IPA", type: "text", placeholder: "stʊˈdʲent" },
         { key: "meaning_ru", label: "Giải nghĩa bằng tiếng Nga", type: "text" },
         { key: "audio_url", label: "URL Audio phát âm chuẩn", type: "text", placeholder: "https://..." },
+        { key: "structures", label: "Cấu trúc ngữ pháp đi kèm (mỗi dòng 1 cấu trúc)", type: "list-lines", placeholder: "читать что? (В.п.)\nучиться где? (П.п.)" },
+        { key: "synonyms", label: "Từ đồng nghĩa (synonyms — mỗi dòng 1 từ)", type: "list-lines" },
+        { key: "antonyms", label: "Từ trái nghĩa (antonyms — mỗi dòng 1 từ)", type: "list-lines" },
         { key: "notes", label: "Ghi chú ngữ pháp & cách dùng", type: "textarea", rows: 2 },
         {
           key: "publication_status",
@@ -595,7 +633,11 @@
           color: "#102a4c",
           desc: "Từ vựng sinh hoạt và giao tiếp sống còn.",
           icon: "archive-jar",
+          is_system: true,
+          is_pro: false,
           is_pro_only: false,
+          word_count: 2,
+          owner_id: "",
           publication_status: "published",
           words: [
             { id: generateUUID(), ru: "сло́во", vi: "từ ngữ", note: "сущ. ср. (оно)", ex: "Русское слово." },
@@ -604,7 +646,8 @@
         };
       },
       fields: [
-        { key: "id", label: "Mã lọ (Code ID duy nhất)", type: "text", required: true, help: "Ví dụ: jar_auchan, jar_chemodan" },
+        { key: "id", label: "Mã lọ (ID duy nhất)", type: "text", required: true, help: "Ví dụ: jar_auchan, jar_chemodan" },
+        { key: "code", label: "Mã Code định danh lọ (code)", type: "text", required: true, help: "Ví dụ: jar_auchan, jar_chemodan" },
         { key: "name", label: "Tên lọ từ vựng", type: "text", required: true },
         {
           key: "level",
@@ -623,10 +666,32 @@
         { key: "levelName", label: "Tên hiển thị cấp độ", type: "text", defaultValue: "Sơ cấp A1" },
         { key: "color", label: "Mã màu chủ đề (Hex)", type: "text", defaultValue: "#102a4c" },
         { key: "icon", label: "Mã Icon Lucide", type: "text", defaultValue: "archive-jar" },
+        { key: "word_count", label: "Số lượng từ vựng trong lọ (word_count)", type: "number", defaultValue: 0 },
+        {
+          key: "is_system",
+          label: "Lọ hệ thống hay cá nhân (is_system)",
+          type: "select",
+          options: [
+            { v: "true", l: "Lọ hệ thống (Chính thức)" },
+            { v: "false", l: "Lọ học viên tự tạo" }
+          ],
+          defaultValue: "true"
+        },
+        { key: "owner_id", label: "ID Học viên sở hữu (owner_id - nếu là lọ cá nhân)", type: "text", placeholder: "UUID học viên hoặc để trống nếu là lọ hệ thống" },
         { key: "desc", label: "Mô tả ngữ cảnh sử dụng & mục tiêu", type: "textarea", rows: 3 },
         {
+          key: "is_pro",
+          label: "Khóa VIP PRO (is_pro)",
+          type: "select",
+          options: [
+            { v: "false", l: "Miễn phí (Free)" },
+            { v: "true", l: "Chỉ dành cho PRO" }
+          ],
+          defaultValue: "false"
+        },
+        {
           key: "is_pro_only",
-          label: "Quyền truy cập",
+          label: "Quyền truy cập (is_pro_only)",
           type: "select",
           options: [
             { v: "false", l: "Miễn phí (Free)" },
@@ -668,10 +733,14 @@
             content: mdContent,
             content_md: mdContent,
             content_markdown: mdContent,
-            audioUrl: item.audioUrl || item.audio_url || "",
+            audio_url: item.audio_url || item.audioUrl || "",
+            audioUrl: item.audio_url || item.audioUrl || "",
+            cultural_tip: item.cultural_tip || item.culturalTip || "",
             culturalTip: item.cultural_tip || item.culturalTip || "",
             dialogues: Array.isArray(item.dialogues) ? item.dialogues : [],
+            grammar_notes: Array.isArray(item.grammar_notes) ? item.grammar_notes : (Array.isArray(item.grammarNotes) ? item.grammarNotes : []),
             grammarNotes: Array.isArray(item.grammarNotes) ? item.grammarNotes : (Array.isArray(item.grammar_notes) ? item.grammar_notes : []),
+            action_chains: Array.isArray(item.action_chains) ? item.action_chains : (Array.isArray(item.actionChains) ? item.actionChains : []),
             actionChains: Array.isArray(item.actionChains) ? item.actionChains : (Array.isArray(item.action_chains) ? item.action_chains : [])
           };
         });
@@ -681,7 +750,10 @@
         title: "Bài học chủ đề mới",
         level: "A1",
         intro: "Giới thiệu bối cảnh thực tế đời sống sinh viên và giao tiếp tại Nga...",
+        audio_url: "",
         audioUrl: "",
+        cultural_tip: "",
+        culturalTip: "",
         content_md: `# Bài học: Giao tiếp & Đời sống thực tế tại Nga
 
 ## I. Bối cảnh & Tình huống giao tiếp
@@ -710,7 +782,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
 - Ví dụ: \`Мы изучаем русский язык.\` (Chúng tôi học tiếng Nga.)
 
 > [!TIP]
-> Sử dụng các cụm từ trong ngoặc kép «...» để ghi nhớ các cụm thành ngữ hoặc quán ngữ phổ biến!
+> Sử dụng các cụm từ trong ngoặc kép “...” để ghi nhớ các cụm thành ngữ hoặc quán ngữ phổ biến!
 
 > [!WARNING]
 > Cẩn thận phân biệt giữa động từ chưa hoàn thành thể (НСВ) và hoàn thành thể (СВ).
@@ -740,7 +812,8 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           defaultValue: "A1"
         },
         { key: "intro", label: "Đoạn văn tóm tắt bối cảnh (Intro)", type: "textarea", rows: 2, help: "Tùy chọn. Nếu để trống, hệ thống sẽ tự động lấy đoạn mở đầu của bài viết." },
-        { key: "audioUrl", label: "URL File âm thanh (tùy chọn)", type: "text", placeholder: "https://..." },
+        { key: "audio_url", label: "URL File âm thanh (audio_url)", type: "text", placeholder: "https://..." },
+        { key: "cultural_tip", label: "Mẹo văn hóa Nga (cultural_tip)", type: "textarea", rows: 2, placeholder: "Ghi chú văn hóa, tập quán ứng xử tại Nga..." },
         {
           key: "content_md",
           label: "Nội dung bài học chuyên sâu (.md Markdown)",
@@ -764,19 +837,26 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         id: "lesson_grammar_" + Date.now().toString().slice(-4),
         code: "bai_" + Date.now().toString().slice(-4),
         title: "BÀI HỌC NGỮ PHÁP MỚI",
+        vi: "Bài học ngữ pháp mới",
         level: "A1",
         category: "Hệ thống 6 Cách",
         topic: "Hệ thống 6 Cách",
         summary: "Tóm tắt mục tiêu bài học và kiến thức trọng tâm cần nắm vững.",
         content_md: "# BÀI HỌC: TIÊU ĐỀ BÀI HỌC\n\n## 1. Mục tiêu bài học\n- Nắm vững quy tắc biến cách...\n\n## 2. Bảng quy tắc chia đuôi\n\n| Giống | Số ít | Số nhiều |\n|---|---|---|\n| Giống đực | ... | ... |\n\n## 3. Bài tập củng cố\n",
         order_index: 1,
+        access_entitlement: "free",
+        rules: ["Quy tắc ngữ pháp cơ bản..."],
+        examples: ["Ví dụ câu minh họa..."],
+        table_data: [],
+        questions: [],
         publication_status: "published",
         is_pro_only: false
       }),
       fields: [
         { key: "id", label: "Mã định danh duy nhất (ID)", type: "text", required: true, help: "Ví dụ: lesson_grammar_01, lesson_grammar_09" },
         { key: "code", label: "Mã bài học (Code)", type: "text", required: true, help: "Ví dụ: bai_01, bai_09" },
-        { key: "title", label: "Tiêu đề bài học tiếng Nga & Việt", type: "text", required: true, placeholder: "BÀI 09: CÁCH 2 (РОДИТЕЛЬНЫЙ ПАДЕЖ) – SINH CÁCH" },
+        { key: "title", label: "Tiêu đề bài học tiếng Nga", type: "text", required: true, placeholder: "BÀI 09: CÁCH 2 (РОДИТЕЛЬНЫЙ ПАДЕЖ) – SINH CÁCH" },
+        { key: "vi", label: "Tiêu đề tiếng Việt của bài học (vi)", type: "text", placeholder: "Ví dụ: Cách 2 (Sinh cách) – Ý nghĩa và cách dùng" },
         {
           key: "level",
           label: "Cấp độ ngữ pháp chuẩn",
@@ -803,12 +883,25 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           ],
           defaultValue: "Hệ thống 6 Cách"
         },
+        { key: "topic", label: "Chủ đề phân môn ngữ pháp (topic)", type: "text", defaultValue: "Hệ thống 6 Cách" },
         { key: "summary", label: "Tóm tắt ngắn / Mục tiêu bài học", type: "textarea", rows: 3, placeholder: "Tóm tắt các chức năng ngữ pháp và quy tắc cốt lõi..." },
         { key: "content_md", label: "Nội dung bài học chuyên sâu (Markdown WYSIWYG)", type: "markdown", required: true, help: "Biên tập trực quan với tiêu đề, bảng, Mermaid flowcharts, code blocks và bài tập." },
+        { key: "rules", label: "Quy tắc ngữ pháp cốt lõi (rules — mỗi dòng 1 quy tắc)", type: "list-lines", rows: 3 },
+        { key: "examples", label: "Ví dụ câu minh họa (examples — mỗi dòng 1 câu)", type: "list-lines", rows: 3 },
         { key: "order_index", label: "Thứ tự sắp xếp bài giảng", type: "number", defaultValue: 1 },
         {
+          key: "access_entitlement",
+          label: "Phân quyền truy cập (access_entitlement)",
+          type: "select",
+          options: [
+            { v: "free", l: "Miễn phí (Free cho mọi học viên)" },
+            { v: "pro", l: "Chuyên sâu PRO (Chỉ học viên VIP)" }
+          ],
+          defaultValue: "free"
+        },
+        {
           key: "is_pro_only",
-          label: "Quyền truy cập bài giảng",
+          label: "Quyền truy cập bài giảng (is_pro_only)",
           type: "select",
           options: [
             { v: "false", l: "Miễn phí (Free cho mọi học viên)" },
@@ -854,6 +947,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         };
       },
       fields: [
+        { key: "id", label: "Mã UUID / ID chủ đề", type: "text", help: "UUID hoặc ID duy nhất của chủ đề nghe" },
         { key: "code", label: "Mã chủ đề (Code duy nhất)", type: "text", required: true, help: "Ví dụ: topic-lis-a1-airport, topic-lis-a1-shop" },
         { key: "title", label: "Tên chủ đề nghe", type: "text", required: true, placeholder: "Ví dụ: Ở sân bay (В аэропорту)" },
         {
@@ -904,11 +998,22 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           title: "Bài nghe mới",
           vi: "Tiêu đề tiếng Việt",
           level: "A1",
+          level_name: "Sơ cấp A1",
           levelName: "Sơ cấp A1",
           category: "comprehension",
+          category_name: "Nghe hiểu",
           categoryName: "Nghe hiểu",
+          part_type: "comprehension",
+          part_number: 1,
           audio_url: "",
+          youtube_id: "",
+          video_youtube_id: "",
           duration_seconds: 30,
+          est_minutes: 10,
+          lesson_type: "audio",
+          transcript_ru: "",
+          translation_vi: "",
+          access_entitlement: "free",
           sort_order: 1,
           is_pro_only: false,
           lines: [
@@ -920,6 +1025,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         };
       },
       fields: [
+        { key: "id", label: "Mã UUID bài nghe (id)", type: "text", help: "UUID hoặc ID duy nhất của bài luyện nghe" },
         { key: "code", label: "Mã bài nghe (Code duy nhất)", type: "text", required: true, help: "Ví dụ: lis-airport, lis-shop, lis-cafe" },
         {
           key: "topic_id",
@@ -942,9 +1048,22 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           ],
           defaultValue: "A1"
         },
+        { key: "level_name", label: "Tên cấp độ hiển thị (level_name)", type: "text", defaultValue: "Sơ cấp A1" },
+        {
+          key: "part_type",
+          label: "Loại phân môn nghe (part_type)",
+          type: "select",
+          options: [
+            { v: "comprehension", l: "Nghe hiểu toàn diện (Comprehension)" },
+            { v: "dictation", l: "Nghe chép chính tả (Dictation)" },
+            { v: "dialogue", l: "Hội thoại đối đáp tình huống" }
+          ],
+          defaultValue: "comprehension"
+        },
+        { key: "part_number", label: "Phần số trong bài (part_number)", type: "number", defaultValue: 1 },
         {
           key: "category",
-          label: "Phân loại chế độ",
+          label: "Phân loại chế độ (category)",
           type: "select",
           options: [
             { v: "comprehension", l: "Nghe hiểu toàn diện (Comprehension)" },
@@ -952,6 +1071,18 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
             { v: "dialogue", l: "Hội thoại đối đáp tình huống ngắn" }
           ],
           defaultValue: "comprehension"
+        },
+        { key: "category_name", label: "Tên phân loại hiển thị (category_name)", type: "text", defaultValue: "Nghe hiểu" },
+        {
+          key: "lesson_type",
+          label: "Dạng bài học (lesson_type)",
+          type: "select",
+          options: [
+            { v: "audio", l: "Audio MP3 chuẩn" },
+            { v: "video", l: "Video nhúng" },
+            { v: "youtube", l: "YouTube Video" }
+          ],
+          defaultValue: "audio"
         },
         {
           key: "audio_url",
@@ -962,10 +1093,23 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         },
         { key: "youtube_id", label: "Mã YouTube Video ID (tùy chọn)", type: "text", placeholder: "Ví dụ: 5KOKztPa1yI", help: "Dành cho bài nghe có video minh họa trên YouTube" },
         { key: "duration_seconds", label: "Thời lượng Audio (giây)", type: "number", defaultValue: 30 },
+        { key: "est_minutes", label: "Thời gian ước tính làm bài (phút — est_minutes)", type: "number", defaultValue: 10 },
+        { key: "transcript_ru", label: "Toàn văn lời thoại tiếng Nga (transcript_ru)", type: "textarea", rows: 3, placeholder: "Toàn bộ bài nghe bằng tiếng Nga..." },
+        { key: "translation_vi", label: "Bản dịch tiếng Việt toàn bài (translation_vi)", type: "textarea", rows: 3, placeholder: "Bản dịch nghĩa tiếng Việt đầy đủ..." },
         { key: "sort_order", label: "Thứ tự sắp xếp", type: "number", defaultValue: 1 },
         {
+          key: "access_entitlement",
+          label: "Quyền truy cập (access_entitlement)",
+          type: "select",
+          options: [
+            { v: "free", l: "Miễn phí (Free)" },
+            { v: "pro", l: "Khóa VIP PRO" }
+          ],
+          defaultValue: "free"
+        },
+        {
           key: "is_pro_only",
-          label: "Quyền truy cập",
+          label: "Quyền truy cập (is_pro_only)",
           type: "select",
           options: [
             { v: "false", l: "Miễn phí (Free cho mọi học viên)" },
@@ -993,13 +1137,21 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           uuid: generateUUID(),
           title: "Bài luyện nói Shadowing mới",
           level: "A1",
+          level_name: "Sơ cấp A1",
           levelName: "Sơ cấp A1",
           category: "shadowing_youtube",
+          category_name: "Shadowing qua phim hoạt hình",
           categoryName: "Shadowing qua phim hoạt hình",
+          speaking_mode: "shadowing",
           sentence_ru: "Привет! Как тебя зовут?",
+          phoneme_target: "Luyện ngữ điệu kể chuyện, trọng âm từ và ngắt nhịp tự nhiên",
           phonemeTarget: "Luyện ngữ điệu kể chuyện, trọng âm từ và ngắt nhịp tự nhiên",
+          youtube_id: "",
           youtubeId: "",
+          youtube_url: "",
           video_url: "",
+          video_sample_url: "",
+          description: "Luyện phát âm và phản xạ ngữ điệu tự nhiên qua video hoạt hình",
           icon: "youtube",
           is_pro_only: false,
           sort_order: 10,
@@ -1022,7 +1174,8 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         };
       },
       fields: [
-        { key: "id", label: "Mã bài luyện nói (Code / Slug)", type: "text", required: true, help: "Ví dụ: YT_SPEAKING_5KOKztPa1yI, sp_basic_01" },
+        { key: "id", label: "Mã bài luyện nói (ID duy nhất)", type: "text", required: true, help: "Ví dụ: YT_SPEAKING_5KOKztPa1yI, sp_basic_01" },
+        { key: "code", label: "Mã Code định danh (code)", type: "text", help: "Mã định danh duy nhất (ví dụ: sp_basic_01, YT_SPEAKING_5KOKztPa1yI)" },
         { key: "title", label: "Tên bài luyện nói", type: "text", required: true, placeholder: "Ví dụ: Цып-Цып: Знакомство — Làm quen" },
         {
           key: "level",
@@ -1037,10 +1190,10 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           ],
           defaultValue: "A1"
         },
-        { key: "levelName", label: "Tên hiển thị trình độ", type: "text", defaultValue: "Sơ cấp A1" },
+        { key: "level_name", label: "Tên hiển thị trình độ (level_name)", type: "text", defaultValue: "Sơ cấp A1" },
         {
           key: "speaking_mode",
-          label: "Chế độ luyện nói",
+          label: "Chế độ luyện nói (speaking_mode)",
           type: "select",
           options: [
             { v: "shadowing", l: "Shadowing – Nghe và nói nhại theo Video/Mẫu câu" },
@@ -1051,7 +1204,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         },
         {
           key: "category",
-          label: "Mã phân loại Shadowing",
+          label: "Mã phân loại Shadowing (category)",
           type: "select",
           options: [
             { v: "shadowing_youtube", l: "Shadowing qua phim / YouTube (Khuyên dùng)" },
@@ -1062,12 +1215,14 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           ],
           defaultValue: "shadowing_youtube"
         },
-        { key: "categoryName", label: "Tên nhóm giao tiếp", type: "text", defaultValue: "Shadowing qua phim hoạt hình" },
-        { key: "youtubeId", label: "YouTube Video ID (cho Shadowing)", type: "text", placeholder: "Ví dụ: 5KOKztPa1yI (11 ký tự sau watch?v=)" },
-        { key: "video_url", label: "URL Video mẫu trực tiếp / Embed (tùy chọn)", type: "text", placeholder: "https://www.youtube.com/embed/..." },
+        { key: "category_name", label: "Tên nhóm giao tiếp (category_name)", type: "text", defaultValue: "Shadowing qua phim hoạt hình" },
+        { key: "youtube_id", label: "YouTube Video ID (youtube_id)", type: "text", placeholder: "Ví dụ: 5KOKztPa1yI (11 ký tự sau watch?v=)" },
+        { key: "youtube_url", label: "URL Video YouTube đầy đủ (youtube_url)", type: "text", placeholder: "https://www.youtube.com/watch?v=5KOKztPa1yI" },
+        { key: "video_sample_url", label: "URL Video mẫu nhúng / Embed (video_sample_url)", type: "text", placeholder: "https://www.youtube.com/embed/5KOKztPa1yI" },
+        { key: "description", label: "Mô tả bài luyện nói (description)", type: "textarea", rows: 2, placeholder: "Mô tả mục tiêu luyện tập và ngữ cảnh đối thoại..." },
         { key: "sentence_ru", label: "Câu thoại tiêu biểu (trích đoạn hiển thị trên thẻ)", type: "text", placeholder: "Ví dụ: Привет! Как тебя зовут?" },
-        { key: "phonemeTarget", label: "Mục tiêu âm vị / Trọng âm cần chú ý", type: "text", defaultValue: "Ngữ điệu kể chuyện, trọng âm từ và ngắt nhịp tự nhiên" },
-        { key: "sort_order", label: "Thứ tự sắp xếp (Sort Order)", type: "number", defaultValue: 10 },
+        { key: "phoneme_target", label: "Mục tiêu âm vị / Trọng âm cần chú ý (phoneme_target)", type: "text", defaultValue: "Ngữ điệu kể chuyện, trọng âm từ và ngắt nhịp tự nhiên" },
+        { key: "sort_order", label: "Thứ tự sắp xếp (sort_order)", type: "number", defaultValue: 10 },
         { key: "icon", label: "Mã Icon Lucide", type: "text", defaultValue: "youtube" },
         {
           key: "is_pro_only",
@@ -1103,19 +1258,25 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           level_name: "Sơ cấp A1",
           task_type: "picture_desc",
           category: "daily",
+          category_name: "Sinh hoạt thường nhật",
           image_url: "",
           prompt: "Посмотрите на фотографию и подробно опишите, что вы видите.",
+          prompt_text: "Посмотрите на фотографию и подробно опишите, что вы видите.",
+          source_text: "",
           model_answer: "Вот семья. Утром они завтракают на кухне...",
+          sample_essay: "Вот семья. Утром они завтракают на кухне...",
           min_words: 30,
+          suggested_words: ["семья", "завтракать", "кухня", "утром"],
           tips: ["Sử dụng cách 1 cho chủ ngữ", "Dùng cách 6 chỉ nơi chốn: в/на + giới cách"],
           ai_prompt: "Hãy đóng vai giám khảo TRKI chấm điểm bài viết tiếng Nga của học viên theo 4 tiêu chí TRKI...",
-          suggested_words: ["семья", "завтракать", "кухня", "утром"],
+          access_entitlement: "free",
           sort_order: 1,
           is_pro_only: false,
           publication_status: "published"
         };
       },
       fields: [
+        { key: "id", label: "Mã UUID bài viết (id)", type: "text", help: "Mã định danh duy nhất UUID RFC 4122" },
         { key: "code", label: "Mã bài viết (Code duy nhất)", type: "text", required: true, help: "Ví dụ: pic_a1_01, trans_a1_01" },
         {
           key: "topic_id",
@@ -1137,6 +1298,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           ],
           defaultValue: "A1"
         },
+        { key: "level_name", label: "Tên cấp độ hiển thị (level_name)", type: "text", defaultValue: "Sơ cấp A1" },
         {
           key: "task_type",
           label: "Loại bài tập viết",
@@ -1147,6 +1309,8 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           ],
           defaultValue: "picture_desc"
         },
+        { key: "category", label: "Mã thể loại (category)", type: "text", defaultValue: "daily" },
+        { key: "category_name", label: "Tên thể loại hiển thị (category_name)", type: "text", defaultValue: "Sinh hoạt thường nhật" },
         {
           key: "image_url",
           label: "URL Ảnh đề bài (Storage bucket 'writing-images')",
@@ -1155,15 +1319,26 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           help: "Ảnh lưu từ Supabase Storage bucket writing-images (dành cho bài Tả tranh)"
         },
         { key: "prompt", label: "Đề bài (tiếng Nga cho tả tranh / tiếng Việt cho luyện dịch)", type: "textarea", required: true, rows: 3 },
-        { key: "model_answer", label: "Bài viết mẫu chuẩn TRKI (Model Essay)", type: "textarea", rows: 4 },
+        { key: "source_text", label: "Đoạn văn gốc cần dịch (source_text — dành cho bài luyện dịch)", type: "textarea", rows: 3, placeholder: "Đoạn văn tiếng Việt hoặc tiếng Nga cần chuyển dịch..." },
+        { key: "model_answer", label: "Bài viết mẫu chuẩn TRKI (model_answer / sample_essay)", type: "textarea", rows: 4 },
         { key: "min_words", label: "Số từ tối thiểu (min_words)", type: "number", defaultValue: 30 },
         { key: "tips", label: "Gợi ý làm bài & định hướng (tips — mỗi dòng 1 gợi ý)", type: "list-lines", rows: 3 },
         { key: "suggested_words", label: "Từ vựng nên dùng (suggested_words — mỗi dòng 1 từ)", type: "list-lines", rows: 3 },
         { key: "ai_prompt", label: "Prompt tiêu chuẩn để AI chấm điểm (Rubric)", type: "textarea", rows: 4, help: "Hướng dẫn rubric TRKI cho trợ lý AI Rusika chấm điểm 4 tiêu chí" },
         { key: "sort_order", label: "Thứ tự sắp xếp", type: "number", defaultValue: 1 },
         {
+          key: "access_entitlement",
+          label: "Quyền truy cập (access_entitlement)",
+          type: "select",
+          options: [
+            { v: "free", l: "Miễn phí (Free)" },
+            { v: "pro", l: "Khóa VIP PRO" }
+          ],
+          defaultValue: "free"
+        },
+        {
           key: "is_pro_only",
-          label: "Quyền truy cập",
+          label: "Quyền truy cập (is_pro_only)",
           type: "select",
           options: [
             { v: "false", l: "Miễn phí (Free cho mọi học viên)" },
@@ -1200,11 +1375,19 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           code: topicCode,
           uuid: generateUUID(),
           title: "Chủ đề viết mới",
+          vi: "Chủ đề viết mới tiếng Việt",
           level: "A1",
           level_name: "Sơ cấp A1",
           type: "picture",
           category: "daily",
           category_name: "Sinh hoạt thường nhật",
+          image_url: "",
+          prompt: "Mô tả bức tranh về cuộc sống gia đình thường nhật tại Nga...",
+          model_answer: "Вот семья. Утром они завтракают на кухне...",
+          tips: ["Quan sát từ tổng thể đến chi tiết", "Sử dụng các giới từ chỉ không gian"],
+          suggested_words: ["семья", "дом", "утро"],
+          min_words: 30,
+          est_minutes: 20,
           description: "Mô tả bối cảnh và định hướng luyện tập cho học viên",
           icon: "timer-clock",
           sort_order: 10,
@@ -1212,8 +1395,10 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         };
       },
       fields: [
+        { key: "id", label: "Mã UUID chủ đề (id)", type: "text", help: "Mã định danh duy nhất UUID RFC 4122" },
         { key: "code", label: "Mã chủ đề (Code ID duy nhất)", type: "text", required: true, help: "Ví dụ: topic_pic_daily_a1, topic_trans_comm_a1" },
-        { key: "title", label: "Tên chủ đề bài viết", type: "text", required: true, placeholder: "Ví dụ: Sinh hoạt thường nhật & Gia đình" },
+        { key: "title", label: "Tên chủ đề bài viết tiếng Nga", type: "text", required: true, placeholder: "Ví dụ: Семья и быт" },
+        { key: "vi", label: "Tên tiếng Việt của chủ đề (vi)", type: "text", placeholder: "Ví dụ: Sinh hoạt thường nhật & Gia đình" },
         {
           key: "level",
           label: "Trình độ chuẩn CEFR",
@@ -1226,6 +1411,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           ],
           defaultValue: "A1"
         },
+        { key: "level_name", label: "Tên hiển thị cấp độ (level_name)", type: "text", defaultValue: "Sơ cấp A1" },
         {
           key: "type",
           label: "Chế độ luyện viết",
@@ -1238,6 +1424,13 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         },
         { key: "category", label: "Mã phân loại danh mục", type: "text", defaultValue: "daily", help: "daily, dorm, travel, shopping, communication..." },
         { key: "category_name", label: "Tên phân loại hiển thị", type: "text", defaultValue: "Sinh hoạt thường nhật" },
+        { key: "image_url", label: "URL Ảnh bìa chủ đề (image_url)", type: "text", placeholder: "https://...supabase.co/storage/v1/object/public/writing-images/..." },
+        { key: "prompt", label: "Đề bài chung / Lời dẫn chủ đề (prompt)", type: "textarea", rows: 3 },
+        { key: "model_answer", label: "Bài viết mẫu đại diện (model_answer)", type: "textarea", rows: 4 },
+        { key: "tips", label: "Mẹo & lời khuyên làm bài (tips — mỗi dòng 1 mẹo)", type: "list-lines", rows: 3 },
+        { key: "suggested_words", label: "Từ vựng gợi ý chủ đề (suggested_words — mỗi dòng 1 từ)", type: "list-lines", rows: 3 },
+        { key: "min_words", label: "Số từ tối thiểu yêu cầu (min_words)", type: "number", defaultValue: 30 },
+        { key: "est_minutes", label: "Thời gian làm bài ước tính (phút — est_minutes)", type: "number", defaultValue: 20 },
         { key: "description", label: "Mô tả ngữ cảnh chủ đề", type: "textarea", rows: 3 },
         { key: "icon", label: "Mã Icon Lucide", type: "text", defaultValue: "timer-clock" },
         { key: "sort_order", label: "Thứ tự sắp xếp", type: "number", defaultValue: 10 },
@@ -1271,24 +1464,34 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           code: prodCode,
           uuid: generateUUID(),
           category: "banh_keo",
+          category_name: "Bánh kẹo Nga",
           categoryName: "Bánh kẹo Nga",
           product_type: "physical",
           title: "Bánh kẹo Nga nhập khẩu mới",
+          name: "Bánh kẹo Nga nhập khẩu mới",
           desc: "Sản phẩm chính hãng nội địa Nga thơm ngon, hạn sử dụng mới nhất.",
+          description: "Sản phẩm chính hãng nội địa Nga thơm ngon, hạn sử dụng mới nhất.",
           price: 55000,
+          price_vnd: 55000,
           priceOld: 70000,
+          original_price: 70000,
+          currency: "VND",
           stock: 100,
           image: "https://images.unsplash.com/photo-1548907040-4baa42d10919?auto=format&fit=crop&w=600&q=80",
+          image_url: "https://images.unsplash.com/photo-1548907040-4baa42d10919?auto=format&fit=crop&w=600&q=80",
+          image_urls: ["https://images.unsplash.com/photo-1548907040-4baa42d10919?auto=format&fit=crop&w=600&q=80"],
           badge: "Mới",
           status: "published"
         };
       },
       fields: [
-        { key: "id", label: "Mã SKU / Code sản phẩm", type: "text", required: true, help: "Ví dụ: prod_alenka, prod_tea, prod_book_a1" },
+        { key: "id", label: "Mã SKU / ID sản phẩm", type: "text", required: true, help: "Ví dụ: prod_alenka, prod_tea, prod_book_a1" },
+        { key: "code", label: "Mã Code định danh sản phẩm (code)", type: "text", required: true, help: "Ví dụ: prod_alenka, prod_tea, prod_book_a1" },
         { key: "title", label: "Tên sản phẩm / dịch vụ", type: "text", required: true },
+        { key: "name", label: "Tên sản phẩm tiếng Nga / Việt (name)", type: "text" },
         {
           key: "category",
-          label: "Ngành hàng",
+          label: "Ngành hàng (category)",
           type: "select",
           options: [
             { v: "banh_keo", l: "Bánh kẹo & Thực phẩm Nga" },
@@ -1299,10 +1502,10 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           ],
           defaultValue: "banh_keo"
         },
-        { key: "categoryName", label: "Tên ngành hàng hiển thị", type: "text", defaultValue: "Bánh kẹo Nga" },
+        { key: "category_name", label: "Tên ngành hàng hiển thị (category_name)", type: "text", defaultValue: "Bánh kẹo Nga" },
         {
           key: "product_type",
-          label: "Loại sản phẩm",
+          label: "Loại sản phẩm (product_type)",
           type: "select",
           options: [
             { v: "physical", l: "Hàng vật lý (Giao tận nhà)" },
@@ -1311,15 +1514,18 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           ],
           defaultValue: "physical"
         },
-        { key: "price", label: "Giá bán (VNĐ)", type: "number", required: true },
-        { key: "priceOld", label: "Giá gốc niêm yết (VNĐ)", type: "number" },
-        { key: "stock", label: "Số lượng tồn kho", type: "number", defaultValue: 100 },
-        { key: "image", label: "URL ảnh sản phẩm", type: "text" },
-        { key: "badge", label: "Huy hiệu (Bán chạy / Mới / Hot / Giảm giá)", type: "text" },
-        { key: "desc", label: "Mô tả sản phẩm", type: "textarea", rows: 3 },
+        { key: "price_vnd", label: "Giá bán VNĐ (price_vnd)", type: "number", required: true, defaultValue: 55000 },
+        { key: "price", label: "Giá bán phụ (price)", type: "number", defaultValue: 55000 },
+        { key: "original_price", label: "Giá gốc niêm yết (original_price)", type: "number", defaultValue: 70000 },
+        { key: "stock", label: "Số lượng tồn kho (stock)", type: "number", defaultValue: 100 },
+        { key: "image_url", label: "URL ảnh chính sản phẩm (image_url)", type: "text" },
+        { key: "image", label: "URL ảnh phụ (image)", type: "text" },
+        { key: "image_urls", label: "Album ảnh gallery (image_urls — mỗi dòng 1 URL)", type: "list-lines", rows: 3 },
+        { key: "badge", label: "Huy hiệu (badge)", type: "text" },
+        { key: "description", label: "Mô tả sản phẩm (description)", type: "textarea", rows: 3 },
         {
           key: "status",
-          label: "Trạng thái bán",
+          label: "Trạng thái bán (status)",
           type: "select",
           options: [
             { v: "published", l: "Đang mở bán (Published)" },
@@ -1345,9 +1551,14 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         name: "Gói Trải Nghiệm 3 Tháng",
         badge: "3 THÁNG",
         months: 3,
+        duration_months: 3,
+        duration_days: 90,
         desc: "Dành cho người mới bắt đầu tiếp cận tiếng Nga và chuẩn bị thi A1.",
+        description: "Dành cho người mới bắt đầu tiếp cận tiếng Nga và chuẩn bị thi A1.",
         price: 199000,
+        price_vnd: 199000,
         priceOld: 390000,
+        price_old: 390000,
         popular: false,
         is_lifetime: false,
         status: "published",
@@ -1360,14 +1571,17 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
       }),
       fields: [
         { key: "id", label: "Mã gói cước (pro_3m, pro_6m, pro_1y, pro_vip)", type: "text", required: true },
-        { key: "title", label: "Tên gói cước", type: "text", required: true },
-        { key: "badge", label: "Huy hiệu thời hạn", type: "text", defaultValue: "6 THÁNG" },
-        { key: "months", label: "Thời hạn (số tháng)", type: "number", defaultValue: 6 },
-        { key: "price", label: "Giá ưu đãi (VNĐ)", type: "number", required: true },
-        { key: "priceOld", label: "Giá gốc niêm yết (VNĐ)", type: "number" },
+        { key: "title", label: "Tiêu đề gói cước (title)", type: "text", required: true },
+        { key: "name", label: "Tên gói cước tiếng Nga / Việt (name)", type: "text" },
+        { key: "badge", label: "Huy hiệu thời hạn (badge)", type: "text", defaultValue: "6 THÁNG" },
+        { key: "duration_months", label: "Thời hạn gói theo tháng (duration_months)", type: "number", defaultValue: 6 },
+        { key: "duration_days", label: "Thời hạn gói theo ngày (duration_days)", type: "number", defaultValue: 180 },
+        { key: "price_vnd", label: "Giá ưu đãi VNĐ (price_vnd)", type: "number", required: true, defaultValue: 199000 },
+        { key: "price", label: "Giá ưu đãi phụ (price)", type: "number", defaultValue: 199000 },
+        { key: "price_old", label: "Giá gốc niêm yết VNĐ (price_old)", type: "number", defaultValue: 390000 },
         {
           key: "popular",
-          label: "Đánh dấu gói Nổi bật nhất",
+          label: "Đánh dấu gói Nổi bật nhất (popular)",
           type: "select",
           options: [
             { v: "false", l: "Gói tiêu chuẩn" },
@@ -1377,7 +1591,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         },
         {
           key: "is_lifetime",
-          label: "Gói Trọn Đời (Lifetime)",
+          label: "Gói Trọn Đời (is_lifetime)",
           type: "select",
           options: [
             { v: "false", l: "Có thời hạn" },
@@ -1395,7 +1609,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           ],
           defaultValue: "published"
         },
-        { key: "desc", label: "Mô tả mục tiêu phù hợp", type: "textarea", rows: 3 }
+        { key: "description", label: "Mô tả chi tiết gói học (description)", type: "textarea", rows: 3 }
       ]
     },
 
@@ -1414,24 +1628,34 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           id: ordCode,
           order_code: ordCode,
           uuid: generateUUID(),
+          user_id: "",
           userEmail: "",
           packageId: "pro_6m",
+          package_id: "pro_6m",
           packageName: "Gói Luyện Thi 6 Tháng",
           amount: 299000,
           paymentMethod: "VietQR",
+          payment_method: "VIETQR",
           status: "pending",
+          shipping_address: "",
+          casso_trans_id: "",
+          paid_at: "",
+          expires_at: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
           createdAt: new Date().toISOString()
         };
       },
       fields: [
-        { key: "id", label: "Mã đơn hàng / Order Code", type: "text", required: true },
+        { key: "id", label: "Mã đơn hàng / ID", type: "text", required: true },
+        { key: "order_code", label: "Mã đơn hàng chuẩn (order_code)", type: "text", required: true, help: "Ví dụ: ORD-123456" },
+        { key: "user_id", label: "Mã UUID học viên (user_id)", type: "text", placeholder: "UUID tài khoản học viên" },
+        { key: "package_id", label: "Mã gói cước / Sản phẩm mua (package_id)", type: "text", defaultValue: "pro_6m" },
+        { key: "packageId", label: "Mã gói phụ (packageId)", type: "text", defaultValue: "pro_6m" },
         { key: "userEmail", label: "Email học viên", type: "text", required: true },
-        { key: "packageId", label: "Mã gói / Mã sách", type: "text", required: true },
         { key: "packageName", label: "Tên gói cước", type: "text", required: true },
         { key: "amount", label: "Số tiền thanh toán (VNĐ)", type: "number", required: true },
         {
-          key: "paymentMethod",
-          label: "Phương thức thanh toán",
+          key: "payment_method",
+          label: "Phương thức thanh toán (payment_method)",
           type: "select",
           options: [
             { v: "VIETQR", l: "VietQR Chuyển khoản" },
@@ -1451,6 +1675,10 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           ],
           defaultValue: "pending"
         },
+        { key: "shipping_address", label: "Địa chỉ giao hàng (shipping_address - nếu mua sách/bánh kẹo)", type: "text", placeholder: "Địa chỉ nhận sách, quà..." },
+        { key: "casso_trans_id", label: "Mã giao dịch Casso / Bank (casso_trans_id)", type: "text", placeholder: "Mã giao dịch ngân hàng" },
+        { key: "paid_at", label: "Thời điểm thanh toán thành công (paid_at)", type: "text", placeholder: "ISO 8601 timestamp" },
+        { key: "expires_at", label: "Thời hạn đơn hàng (expires_at)", type: "text", placeholder: "ISO 8601 timestamp" },
         { key: "createdAt", label: "Thời gian tạo đơn", type: "text" }
       ]
     },
@@ -1468,6 +1696,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         const slugCode = "bai-viet-moi-" + Date.now().toString().slice(-4);
         return {
           id: slugCode,
+          code: slugCode,
           slug: slugCode,
           uuid: generateUUID(),
           title: "Bài viết cẩm nang mới",
@@ -1476,6 +1705,8 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           author: "Ban Biên Tập RUSI TRKI",
           cover_url: "assets/red-square.jpg",
           summary: "Tóm tắt ngắn gọn nội dung bài viết về kinh nghiệm học tập và đời sống tại Nga.",
+          tags: ["Du học Nga", "Học bổng"],
+          published_at: new Date().toISOString(),
           publication_status: "published",
           content_md: `# Tiêu đề bài viết cẩm nang du học
 
@@ -1487,7 +1718,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
 ## 2. Các bước chuẩn bị then chốt
 - **Hồ sơ học tập**: Bảng điểm dịch công chứng và hợp pháp hóa lãnh sự.
-- **Chứng chỉ ngoại ngữ**: Chuẩn bị thi chứng chỉ quốc tế «ТРКИ».
+- **Chứng chỉ ngoại ngữ**: Chuẩn bị thi chứng chỉ quốc tế “ТРКИ”.
 - **Hành lý & Đời sống**: Chuẩn bị trang phục mùa đông và đồ dùng sinh hoạt.
 
 | Hạng mục | Thời gian chuẩn bị | Lưu ý quan trọng |
@@ -1502,6 +1733,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         };
       },
       fields: [
+        { key: "id", label: "Mã UUID bài viết (id)", type: "text", help: "UUID hoặc ID định danh duy nhất của bài viết" },
+        { key: "code", label: "Mã code định danh ngắn (code)", type: "text", help: "Mã ngắn bài viết (thường trùng slug)" },
         { key: "slug", label: "Slug URL bài viết", type: "text", required: true, help: "Ví dụ: kinh-nghiem-xin-hoc-bong-nga" },
         { key: "title", label: "Tiêu đề bài viết", type: "text", required: true },
         {
@@ -1519,6 +1752,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         },
         { key: "author", label: "Tác giả bài viết", type: "text", defaultValue: "Ban Biên Tập RUSI TRKI" },
         { key: "cover_url", label: "URL Ảnh bìa (Cover Image)", type: "text", defaultValue: "assets/red-square.jpg" },
+        { key: "tags", label: "Thẻ chuyên đề (tags — mỗi dòng 1 thẻ)", type: "list-lines", placeholder: "Du học Nga\nHọc bổng" },
+        { key: "published_at", label: "Thời điểm xuất bản (published_at)", type: "text", placeholder: "ISO 8601 timestamp" },
         { key: "summary", label: "Tóm tắt bài viết hiển thị ngoài danh sách", type: "textarea", rows: 3 },
         { key: "content_md", label: "Nội dung bài viết chi tiết (.md Markdown)", type: "markdown", required: true, help: "Hỗ trợ tiêu đề (#, ##), danh sách, bảng biểu, trích dẫn (>), code block và callout (> [!TIP])." },
         {
@@ -2823,7 +3058,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                       </div>
                       <div class="notion-stress-section-sub">DẤU CÂU THOẠI &amp; NGOẶC</div>
                       <div class="notion-stress-punct-row">
-                        <button type="button" class="notion-stress-punct" data-action="ru-quote" title="Ngoặc kép tiếng Nga">« » <span>Ngoặc kép</span></button>
+                        <button type="button" class="notion-stress-punct" data-action="ru-quote" title="Dấu ngoặc kép">“ ” <span>Ngoặc kép</span></button>
                         <button type="button" class="notion-stress-punct" data-ru-char="—" title="Gạch ngang thoại tiếng Nga">— <span>Gạch thoại</span></button>
                       </div>
                     </div>
@@ -3081,8 +3316,14 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         let uploadBtn = "";
         const isMediaField = (f.key === "audio_url" || f.key === "audioUrl" || f.key === "image_url" || f.key === "image" || f.key === "cover_url" || f.key === "cover" || f.key === "avatar_url");
         if (isMediaField) {
+          const isAudio = (f.key === "audio_url" || f.key === "audioUrl");
           uploadBtn = `
-            <div style="margin-top:6px;display:flex;align-items:center;gap:8px">
+            <div style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              ${isAudio ? `
+                <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.autoFetchVocabAudio('${escAttr(f.key)}')" style="font-size:11.5px;padding:4px 10px;background:#059669;color:#fff;border-color:#059669" title="Tự động tìm kiếm bản thu bản xứ hoặc sinh AI đọc phát âm chuẩn">
+                  ⚡ Tự động tìm &amp; sinh Audio (AI/Wikimedia)
+                </button>
+              ` : ""}
               <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.triggerMediaUpload('${escAttr(f.key)}')" style="font-size:11.5px;padding:4px 10px">
                 ${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 13 }) : "☁️"} Tải file lên Supabase Storage
               </button>
@@ -4261,7 +4502,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
 | **изуча́ть** | глаг. нсв | học tập, nghiên cứu | Мы изуча́ем ру́сский язы́к. *(Chúng tôi học tiếng Nga.)* |
 
 > [!TIP]
-> Sử dụng các cụm từ trong ngoặc kép «...» để ghi nhớ các quán ngữ phổ biến!
+> Sử dụng các cụm từ trong ngoặc kép “...” để ghi nhớ các quán ngữ phổ biến!
 
 ## IV. Điểm ngữ pháp trọng tâm & Bẫy kỳ thi
 1. **Quy tắc sử dụng:**
@@ -4272,7 +4513,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
 > Cẩn thận phân biệt giữa động từ chưa hoàn thành thể (НСВ) và hoàn thành thể (СВ).
 
 ## V. Lời khuyên văn hóa (Культурный совет)
-Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nhớ xưng hô bằng họ tên đệm (Имя và Отчество) và dùng đại từ «Вы».
+Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nhớ xưng hô bằng họ tên đệm (Имя và Отчество) và dùng đại từ “Вы”.
 `;
           const templateHtml = (window.RusiMarkdown && typeof window.RusiMarkdown.render === "function")
             ? window.RusiMarkdown.render(templateMd)
@@ -4345,7 +4586,7 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
           else if (act === "mark") rep = `<mark>${sel}</mark>`;
           else if (act === "code-inline") rep = `\`${sel}\``;
           else if (act === "link") rep = `[${sel}](https://rusitrki.com)`;
-          else if (act === "ru-quote") rep = `«${sel}»`;
+          else if (act === "ru-quote") rep = `“${sel}”`;
           else if (act === "align-center") rep = `<div align="center">\n${sel}\n</div>`;
           else if (act === "align-right") rep = `<div align="right">\n${sel}\n</div>`;
           else if (act === "align-left") rep = `<div align="left">\n${sel}\n</div>`;
@@ -4377,9 +4618,9 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
         } else if (act === "ru-quote") {
           const sel = window.getSelection();
           if (sel && sel.toString()) {
-            document.execCommand("insertText", false, `«${sel.toString()}»`);
+            document.execCommand("insertText", false, `“${sel.toString()}”`);
           } else {
-            document.execCommand("insertText", false, "«»");
+            document.execCommand("insertText", false, "“”");
           }
         } else if (act === "clear-format") {
           document.execCommand("removeFormat");
@@ -6254,6 +6495,12 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const w = String(doc.word_with_stress || doc.ru || doc.word || "").trim();
           const vId = (doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID();
           doc.id = vId;
+          let resolvedAudio = doc.audio_url || doc.audioUrl || null;
+          if (!resolvedAudio && typeof VOCABULARIES !== "undefined" && Array.isArray(VOCABULARIES)) {
+            const clean = (doc.word_normalized || w).replace(/[\u0300-\u036f\u0301\u0300]/g, "").trim().toLowerCase();
+            const found = VOCABULARIES.find(item => (item.word_normalized || item.word_with_stress || "").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase() === clean);
+            if (found && found.audio_url) resolvedAudio = found.audio_url;
+          }
           return {
             id: vId,
             word_with_stress: w || "сло́во",
@@ -6267,7 +6514,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             examples: Array.isArray(doc.examples) ? doc.examples : (doc.ex ? [{ ru: doc.ex, vi: doc.ex_vi || "" }] : []),
             synonyms: Array.isArray(doc.synonyms) ? doc.synonyms : [],
             antonyms: Array.isArray(doc.antonyms) ? doc.antonyms : [],
-            audio_url: doc.audio_url || doc.audioUrl || null,
+            audio_url: resolvedAudio,
             updated_at: new Date().toISOString()
           };
         },
@@ -6444,14 +6691,22 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const mdContent = doc.content_md != null ? doc.content_md : (doc.content != null ? doc.content : (doc.content_markdown || ""));
           return {
             id: gId,
-            level: doc.level || "A1",
+            code: String(doc.code || doc.id || ("grammar_" + Date.now().toString().slice(-4))).trim(),
             title: doc.title || "Bài học ngữ pháp",
-            topic: doc.topic || "Ngữ pháp căn bản",
+            vi: doc.vi || doc.title_vi || "",
+            level: doc.level || "A1",
+            category: doc.category || "Hệ thống 6 Cách",
+            topic: doc.topic || doc.category || "Hệ thống 6 Cách",
             summary: doc.summary || "",
             content_md: mdContent,
-            sort_order: Number(doc.sort_order) || 1,
-            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
-            is_published: Boolean(doc.is_published === undefined ? true : (doc.is_published === true || doc.is_published === "true")),
+            order_index: Number(doc.order_index != null ? doc.order_index : doc.sort_order) || 1,
+            publication_status: doc.publication_status || (doc.is_published === false ? "draft" : "published"),
+            access_entitlement: doc.access_entitlement || (doc.is_pro_only ? "pro" : "free"),
+            rules: Array.isArray(doc.rules) ? doc.rules : (typeof doc.rules === "string" ? doc.rules.split("\n").map(s => s.trim()).filter(Boolean) : []),
+            examples: Array.isArray(doc.examples) ? doc.examples : (typeof doc.examples === "string" ? doc.examples.split("\n").map(s => s.trim()).filter(Boolean) : []),
+            table_data: Array.isArray(doc.table_data) ? doc.table_data : (typeof doc.table_data === "object" && doc.table_data !== null ? doc.table_data : []),
+            questions: Array.isArray(doc.questions) ? doc.questions : [],
+            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true" || doc.access_entitlement === "pro"),
             updated_at: new Date().toISOString()
           };
         },
@@ -6460,16 +6715,26 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           return {
             id: row.id,
             uuid: row.id,
+            code: row.code || row.id,
             level: row.level || "A1",
             title: row.title || "Bài học ngữ pháp",
-            topic: row.topic || "",
+            vi: row.vi || "",
+            category: row.category || "Hệ thống 6 Cách",
+            topic: row.topic || row.category || "",
             summary: row.summary || "",
             content_md: mdContent,
             content: mdContent,
             content_markdown: mdContent,
-            sort_order: Number(row.sort_order) || 1,
-            is_pro_only: Boolean(row.is_pro_only),
-            is_published: row.is_published !== undefined ? Boolean(row.is_published) : true
+            order_index: Number(row.order_index) || 1,
+            sort_order: Number(row.order_index) || 1,
+            publication_status: row.publication_status || "published",
+            access_entitlement: row.access_entitlement || (row.is_pro_only ? "pro" : "free"),
+            rules: Array.isArray(row.rules) ? row.rules : [],
+            examples: Array.isArray(row.examples) ? row.examples : [],
+            table_data: Array.isArray(row.table_data) ? row.table_data : [],
+            questions: Array.isArray(row.questions) ? row.questions : [],
+            is_pro_only: Boolean(row.is_pro_only || row.access_entitlement === "pro"),
+            is_published: row.publication_status !== "draft"
           };
         }
       },
@@ -6738,15 +7003,25 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         toRow: (doc) => {
           const wtUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
           doc.uuid = wtUuid;
+          const tipsArr = Array.isArray(doc.tips) ? doc.tips : (typeof doc.tips === "string" ? doc.tips.split("\n").map(s => s.trim()).filter(Boolean) : []);
+          const wordsArr = Array.isArray(doc.suggested_words) ? doc.suggested_words : (typeof doc.suggested_words === "string" ? doc.suggested_words.split("\n").map(s => s.trim()).filter(Boolean) : []);
           return {
             id: wtUuid,
             code: String(doc.code || doc.id || "").trim(),
             title: doc.title || "Chủ đề viết",
+            vi: doc.vi || "",
             level: doc.level || "A1",
             level_name: doc.level_name || doc.levelName || ("Sơ cấp " + (doc.level || "A1")),
             type: doc.type || "picture",
             category: doc.category || "daily",
             category_name: doc.category_name || doc.categoryName || "Sinh hoạt thường nhật",
+            image_url: doc.image_url || null,
+            prompt: doc.prompt || "",
+            model_answer: doc.model_answer || "",
+            tips: tipsArr,
+            suggested_words: wordsArr,
+            min_words: Number(doc.min_words) || 30,
+            est_minutes: Number(doc.est_minutes) || 20,
             description: doc.description || "",
             icon: doc.icon || "timer-clock",
             sort_order: Number(doc.sort_order) || 0,
@@ -6759,6 +7034,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           uuid: row.id,
           code: row.code || row.id,
           title: row.title || "",
+          vi: row.vi || "",
           level: row.level || "A1",
           level_name: row.level_name || "",
           levelName: row.level_name || "",
@@ -6766,6 +7042,13 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           category: row.category || "daily",
           category_name: row.category_name || "Sinh hoạt",
           categoryName: row.category_name || "Sinh hoạt",
+          image_url: row.image_url || "",
+          prompt: row.prompt || "",
+          model_answer: row.model_answer || "",
+          tips: Array.isArray(row.tips) ? row.tips : [],
+          suggested_words: Array.isArray(row.suggested_words) ? row.suggested_words : [],
+          min_words: Number(row.min_words) || 30,
+          est_minutes: Number(row.est_minutes) || 20,
           description: row.description || "",
           icon: row.icon || "timer-clock",
           sort_order: Number(row.sort_order) || 0,
@@ -6971,16 +7254,20 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const ordCode = String(doc.order_code || doc.id || ("ORD-" + Date.now().toString().slice(-6))).trim();
           const ordUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
           doc.uuid = ordUuid;
+          const uId = (doc.user_id && isValidUUID(doc.user_id)) ? doc.user_id : ((doc.userId && isValidUUID(doc.userId)) ? doc.userId : null);
           return {
             id: ordUuid,
             order_code: ordCode,
-            user_id: (doc.userId && isValidUUID(doc.userId)) ? doc.userId : null,
+            user_id: uId,
             package_id: doc.packageId || doc.package_id || "",
             amount: Number(doc.amount) || 0,
             amount_minor: (Number(doc.amount) || 0) * 100,
             currency: "VND",
             payment_method: String(doc.paymentMethod || doc.payment_method || "VIETQR").toUpperCase(),
             status: String(doc.status || "pending").toLowerCase(),
+            shipping_address: doc.shipping_address || null,
+            casso_trans_id: doc.casso_trans_id || null,
+            paid_at: doc.paid_at ? new Date(doc.paid_at).toISOString() : null,
             expires_at: doc.expires_at || new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
             updated_at: new Date().toISOString()
           };
@@ -6990,12 +7277,19 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           uuid: row.id,
           order_code: row.order_code || row.id,
           userId: row.user_id || "",
+          user_id: row.user_id || "",
           userEmail: row.customer_email || "",
           packageId: row.package_id || "",
+          package_id: row.package_id || "",
           packageName: row.package_id || "",
           amount: Number(row.amount || (row.amount_minor ? row.amount_minor / 100 : 0)) || 0,
           paymentMethod: row.payment_method || "VIETQR",
+          payment_method: row.payment_method || "VIETQR",
           status: String(row.status || "pending").toLowerCase(),
+          shipping_address: row.shipping_address || "",
+          casso_trans_id: row.casso_trans_id || "",
+          paid_at: row.paid_at || "",
+          expires_at: row.expires_at || "",
           createdAt: row.created_at || ""
         })
       }
@@ -7062,6 +7356,12 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
                 if (!w) continue;
                 const wId = (w.id && isValidUUID(w.id)) ? w.id : generateUUID();
                 w.id = wId;
+                let wAudio = w.audio_url || w.audio || null;
+                if (!wAudio && typeof VOCABULARIES !== "undefined" && Array.isArray(VOCABULARIES)) {
+                  const clean = String(w.stress || w.word_with_stress || w.ru || "").replace(/[\u0300-\u036f\u0301\u0300]/g, "").trim().toLowerCase();
+                  const found = VOCABULARIES.find(item => (item.word_normalized || item.word_with_stress || "").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase() === clean);
+                  if (found && found.audio_url) wAudio = found.audio_url;
+                }
                 wordsToUpsert.push({
                   id: wId,
                   word_with_stress: w.stress || w.word_with_stress || w.ru || "сло́во",
@@ -7073,6 +7373,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
                   notes: w.notes || w.note || null,
                   structures: Array.isArray(w.structures) ? w.structures : [],
                   examples: Array.isArray(w.examples) ? w.examples : (w.ex ? [{ ru: w.ex, vi: w.ex_vi || "" }] : []),
+                  audio_url: wAudio,
                   updated_at: new Date().toISOString()
                 });
                 itemsToInsert.push({
@@ -7382,6 +7683,96 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     };
 
     fileInput.click();
+  };
+
+  window.autoFetchVocabAudio = async function (fieldKey = "audio_url") {
+    const statusEl = document.getElementById("uploadStatus_" + fieldKey);
+    const targetInp = document.querySelector(`input[name="${fieldKey}"], input[data-key="${fieldKey}"]`);
+
+    const wordInp = document.querySelector('input[name="word_with_stress"], input[data-key="word_with_stress"], input[name="ru"], input[name="word"], input[name="prompt"]');
+    const rawWord = (wordInp ? wordInp.value : "") || (State.currentDraft ? (State.currentDraft.word_with_stress || State.currentDraft.ru || State.currentDraft.prompt || "") : "");
+
+    if (!rawWord || !rawWord.trim()) {
+      toast("Vui lòng nhập Từ tiếng Nga trước khi lấy Audio!", "warning");
+      return;
+    }
+
+    const cleanWord = rawWord
+      .replace(/[\u0300-\u036f\u0301\u0300]/g, "")
+      .replace(/[«»""''„“]/g, "")
+      .replace(/^[(\[]|[)\]]$/g, "")
+      .trim()
+      .toLowerCase();
+
+    if (statusEl) statusEl.innerHTML = `<span style="color:var(--p-primary,#0039A6)">🔍 Đang tìm audio cho: <b>${esc(cleanWord)}</b>...</span>`;
+
+    let foundUrl = "";
+
+    // 1. Tra trong VOCABULARIES đã nạp
+    if (typeof VOCABULARIES !== "undefined" && Array.isArray(VOCABULARIES)) {
+      const v = VOCABULARIES.find(item => {
+        const w = (item.word_normalized || item.word_with_stress || "").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+        return w === cleanWord;
+      });
+      if (v && v.audio_url) foundUrl = v.audio_url;
+    }
+
+    // 2. Tra cứu Wikimedia Commons API trực tiếp
+    if (!foundUrl) {
+      try {
+        const titles = encodeURIComponent(`File:Ru-${cleanWord}.ogg|File:Ru-${cleanWord.charAt(0).toUpperCase() + cleanWord.slice(1)}.ogg`);
+        const res = await fetch(`https://commons.wikimedia.org/w/api.php?action=query&titles=${titles}&redirects=1&prop=imageinfo&iiprop=url&format=json&origin=*`);
+        if (res.ok) {
+          const data = await res.json();
+          const pages = data.query ? data.query.pages : {};
+          for (const pid in pages) {
+            if (pid === "-1") continue;
+            const page = pages[pid];
+            if (page.imageinfo && page.imageinfo[0] && page.imageinfo[0].url) {
+              const orig = page.imageinfo[0].url;
+              const fn = page.title.replace("File:", "").replace(/ /g, "_");
+              if (orig.endsWith(".ogg")) {
+                const base = orig.replace("https://upload.wikimedia.org/wikipedia/commons/", "https://upload.wikimedia.org/wikipedia/commons/transcoded/");
+                foundUrl = `${base.split("?")[0]}/${encodeURIComponent(fn)}.mp3`;
+              } else {
+                foundUrl = orig.split("?")[0];
+              }
+              break;
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 3. Tra cứu trong bucket vocab-audio (kho AI Neural Voice đã sinh trên Supabase Storage)
+    if (!foundUrl) {
+      const hex = Array.from(new TextEncoder().encode(cleanWord)).map(b => b.toString(16).padStart(2, "0")).join("");
+      const storageUrl = `https://nrhtdwjihnlaxrbitmcf.supabase.co/storage/v1/object/public/vocab-audio/ru_ai_${hex}.mp3`;
+      try {
+        const headRes = await fetch(storageUrl, { method: "HEAD" });
+        if (headRes.ok) foundUrl = storageUrl;
+      } catch (_) {}
+    }
+
+    if (foundUrl) {
+      if (targetInp) {
+        targetInp.value = foundUrl;
+        targetInp.dispatchEvent(new Event("input", { bubbles: true }));
+        targetInp.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      if (State.currentDraft) {
+        State.currentDraft[fieldKey] = foundUrl;
+      }
+      if (statusEl) statusEl.innerHTML = `<span style="color:#059669;font-weight:600">✓ Đã gắn audio thành công!</span>`;
+      toast(`✓ Đã tự động gắn audio chuẩn cho "${cleanWord}"!`, "success");
+      try {
+        const audio = new Audio(foundUrl);
+        audio.play().catch(() => {});
+      } catch (_) {}
+    } else {
+      if (statusEl) statusEl.innerHTML = `<span style="color:#d97706">⚠️ Chưa có file mp3 sẵn. Khi học, AI SpeechSynthesis sẽ tự động phát âm từ này!</span>`;
+      toast(`Hệ thống sẽ dùng AI SpeechSynthesis đọc phát âm khi học viên làm bài.`, "info");
+    }
   };
 
   // =========================================================================

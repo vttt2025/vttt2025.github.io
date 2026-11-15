@@ -172,14 +172,14 @@
 * **Thuật toán Đo Độ Lệch Từ (Word Error Rate - WER) & Bóc Tách Lỗi Âm Vị**:
   - Tích hợp Web Speech API (`SpeechRecognition` / `webkitSpeechRecognition`) với ngôn ngữ mục tiêu `ru-RU`, kích hoạt nhận diện tạm thời (`interimResults: true`) và dự phòng tối đa 3 phương án nhận dạng âm học (`maxAlternatives: 3`).
   - Tự động ngắt thu âm an toàn: Bộ đếm thời gian im lặng 8 giây (`silenceTimer`) tự động dừng thu âm nếu học viên chưa phát âm; bộ đệm 2.5 giây (`stopTimer`) tự động xử lý kết quả khi dứt câu.
-  - **Chuẩn hóa chuỗi âm học tiếng Nga**: Loại bỏ dấu trọng âm kết hợp Unicode (`\u0301`), chuẩn hóa chữ cái `ё` thành `е`, loại bỏ toàn bộ dấu câu ngữ pháp (`.,!?;:«»"'-()`) trước khi so khớp.
+  - **Chuẩn hóa chuỗi âm học tiếng Nga**: Loại bỏ dấu trọng âm kết hợp Unicode (`\u0301`), chuẩn hóa chữ cái `ё` thành `е`, loại bỏ toàn bộ dấu câu ngữ pháp (`.,!?;:“”"'-()`) trước khi so khớp.
   - **Thuật toán Ma trận Quy hoạch động Levenshtein (Token-level WER)**:
     * Tính toán ma trận khoảng cách hiệu chỉnh giữa mảng từ chuẩn $R = \{r_1, \dots, r_n\}$ và mảng từ học viên nói $H = \{h_1, \dots, h_m\}$.
     * Độ chính xác phát âm:
       $$\text{Accuracy} = \max\left(0, \min\left(100, \operatorname{round}\left(\left(1 - \frac{\text{Tổng lỗi hiệu chỉnh}}{n}\right) \times 100\right)\right)\right)$$
     * Thuật toán truy vết ngược (Backtracking) xếp loại từng từ vào 4 trạng thái:
       1. `correct`: Phát âm chuẩn xác $\rightarrow$ Tô màu xanh ngọc (`.sp-word-correct`).
-      2. `wrong`: Phát âm sai lệch hoặc lẫn lộn $\rightarrow$ Tô màu đỏ gạch (`.sp-word-wrong`), đính kèm tooltip hiển thị từ nhận diện được: `Nhận diện: «...»`.
+      2. `wrong`: Phát âm sai lệch hoặc lẫn lộn $\rightarrow$ Tô màu đỏ gạch (`.sp-word-wrong`), đính kèm tooltip hiển thị từ nhận diện được: `Nhận diện: “...”`.
       3. `missing`: Bị nuốt âm hoặc bỏ quên từ $\rightarrow$ Gạch chân nét đứt mờ kèm tooltip: `Chưa nhận diện được từ này`.
       4. `extra`: Từ nói thừa ngoài câu mục tiêu.
 * **Hạn Mức Thực Hành, Bản Quyền PRO & Gamification**:
