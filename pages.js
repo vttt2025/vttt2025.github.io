@@ -2634,6 +2634,14 @@ function initVocabPage() {
   };
   loadCloudJars();
 
+  if (window.RusiDataLoader && !RusiDataLoader.isLoaded("VOCAB_JARS")) {
+    RusiDataLoader.loadMultiple(["VOCAB_JARS", "TOPIC_ARTICLES"]).then(() => {
+      if (!document.body.classList.contains("in-workspace")) {
+        renderVocabCards();
+      }
+    });
+  }
+
   const getVocabJars = () => {
     const customJars = STORE.get("custom_jars", []);
     const baseJars = (cloudJars && cloudJars.length) ? cloudJars : ((typeof VOCAB_JARS !== "undefined" && Array.isArray(VOCAB_JARS)) ? VOCAB_JARS : []);
@@ -8402,6 +8410,16 @@ function initSpeakingPage() {
   };
   loadCloudSpeaking();
 
+  if (window.RusiDataLoader && !RusiDataLoader.isLoaded("SPEAKING_SETS")) {
+    RusiDataLoader.load("SPEAKING_SETS").then(() => {
+      if (!document.body.classList.contains("in-workspace")) {
+        if (!checkUrlSet()) {
+          renderSpeakingCards();
+        }
+      }
+    });
+  }
+
   const filteredSets = () => {
     const all = getSpeakingSets();
     return all.filter((s) => {
@@ -11053,6 +11071,20 @@ function initMockTestPage() {
     }
   };
   loadCloudTests();
+
+  if (window.RusiDataLoader && !RusiDataLoader.isLoaded("TRKI_BANK")) {
+    RusiDataLoader.load("TRKI_BANK").then((loaded) => {
+      if (loaded && loaded.length && (!bank || !bank.length)) {
+        bank = loaded;
+        if (!currentTest || !bank.some(t => t.id === currentTest.id)) {
+          currentTest = bank[0];
+        }
+        if (!document.body.classList.contains("in-workspace")) {
+          renderTrkiCards();
+        }
+      }
+    });
+  }
 
   const fmt = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 

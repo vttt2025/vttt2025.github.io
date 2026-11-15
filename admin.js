@@ -2004,6 +2004,14 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     State.selectedRows.clear();
     State.currentPage = 1;
 
+    // Tự động nạp module theo nhu cầu nếu chưa có trong bộ nhớ (On-demand Lazy Loading)
+    if (State.currentSlug && window.RusiDataLoader && typeof window.RusiDataLoader.isLoaded === "function" && !window.RusiDataLoader.isLoaded(State.currentSlug)) {
+      window.RusiDataLoader.load(State.currentSlug).then(() => {
+        handleRoute();
+      });
+      return;
+    }
+
     // Initialize or load draft buffer
     if (State.currentRoute === "editor" && State.currentSlug) {
       const col = COLLECTIONS[State.currentSlug];
@@ -9559,6 +9567,10 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
 
     window.addEventListener("hashchange", handleRoute);
     handleRoute();
+
+    if (window.RusiDataLoader && typeof window.RusiDataLoader.prefetchIdle === "function") {
+      window.RusiDataLoader.prefetchIdle();
+    }
   }
 
   if (document.readyState === "loading") {

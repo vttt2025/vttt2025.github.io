@@ -1075,3 +1075,9 @@ Thư viện `rusi-icons.js` được nhúng tại thẻ `<head>` trên tất c�
 
 7. **Đồng Bộ Giao Diện & Mascot AI Rusika**:
    Trợ lý AI Mascot Rusika nổi (`#rusikaFloatingWidget`) tự động kích hoạt trên tất cả các trang bài học qua `bootApp()`. Popover Pomodoro mini tích hợp chân Header đóng chéo tự động với menu tài khoản.
+
+8. **Kiến Trúc Modular Data & Động Cơ 0-Egress IndexedDB Cache**:
+   - Dữ liệu nguyên khối 17.4MB đã được phân tách vĩnh viễn thành 14 tệp JSON độc lập tại `data/modules/*.json`.
+   - `data.js` chỉ giữ phần core siêu nhẹ (~550KB, gzip ~90KB) và động cơ `window.RusiDataLoader`.
+   - Mọi trang tự động nạp theo nhu cầu qua `RusiDataLoader.prepareForCurrentPage()` và lưu trữ vĩnh viễn vào IndexedDB (`rusi_offline_db`) của máy học viên.
+   - Tuyệt đối không gửi các truy vấn nặng quét toàn bộ bảng về Supabase trên mỗi lượt tải trang để bảo vệ 100% hạn mức 5GB Egress hàng tháng của Supabase.

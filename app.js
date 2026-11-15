@@ -2691,24 +2691,30 @@ function quizEngine(container, questions, { onFinish } = {}) {
 let _appBooted = false;
 let _pageInited = false;
 
-function triggerPageInit() {
+async function triggerPageInit() {
   if (_pageInited) return;
   if (typeof window.initPage === "function") {
     _pageInited = true;
     try {
+      if (window.RusiDataLoader && typeof window.RusiDataLoader.prepareForCurrentPage === "function") {
+        await window.RusiDataLoader.prepareForCurrentPage();
+      }
       window.initPage();
     } catch (err) {
       console.error("[App] Lỗi khi thực thi initPage():", err);
     }
   } else {
     let retries = 0;
-    const retryTimer = setInterval(() => {
+    const retryTimer = setInterval(async () => {
       retries++;
       if (typeof window.initPage === "function") {
         clearInterval(retryTimer);
         if (!_pageInited) {
           _pageInited = true;
           try {
+            if (window.RusiDataLoader && typeof window.RusiDataLoader.prepareForCurrentPage === "function") {
+              await window.RusiDataLoader.prepareForCurrentPage();
+            }
             window.initPage();
           } catch (err) {
             console.error("[App] Lỗi khi thực thi initPage() (retry):", err);
@@ -2781,27 +2787,19 @@ window.bootApp = bootApp;
  * giúp người học chuyển trang tức thì (0ms) mà không cần tải lại mạng.
  */
 function warmBrowserCache() {
-  if (typeof window === "undefined" || !window.RusiSupabase) return;
-  const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 600));
+  if (typeof window === "undefined") return;
+  const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1000));
   idle(() => {
     try {
-      if (window.RusiSupabase.jars && typeof window.RusiSupabase.jars.getSystemJars === "function") {
-        window.RusiSupabase.jars.getSystemJars().catch(() => {});
+      // 1. Tải trước ngầm các module tĩnh vào IndexedDB trình duyệt (0-Egress Supabase)
+      if (window.RusiDataLoader && typeof window.RusiDataLoader.prefetchIdle === "function") {
+        window.RusiDataLoader.prefetchIdle();
       }
-      if (window.RusiSupabase.listening && typeof window.RusiSupabase.listening.getAll === "function") {
-        window.RusiSupabase.listening.getAll().catch(() => {});
-      }
-      if (window.RusiSupabase.speaking && typeof window.RusiSupabase.speaking.getAll === "function") {
-        window.RusiSupabase.speaking.getAll().catch(() => {});
-      }
-      if (window.RusiSupabase.writing && typeof window.RusiSupabase.writing.getAll === "function") {
-        window.RusiSupabase.writing.getAll().catch(() => {});
-      }
-      if (window.RusiSupabase.tests && typeof window.RusiSupabase.tests.getPublished === "function") {
-        window.RusiSupabase.tests.getPublished().catch(() => {});
-      }
-      if (window.RusiSupabase.packages && typeof window.RusiSupabase.packages.getAll === "function") {
-        window.RusiSupabase.packages.getAll().catch(() => {});
+      // 2. Chỉ làm ấm bảng nhẹ từ Supabase nếu client đã khởi tạo
+      if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
+        if (window.RusiSupabase.packages && typeof window.RusiSupabase.packages.getAll === "function") {
+          window.RusiSupabase.packages.getAll().catch(() => {});
+        }
       }
     } catch (_) {}
   });

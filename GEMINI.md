@@ -128,6 +128,28 @@ Mỗi khi xử lý bất kỳ yêu cầu nào (mỗi lần yêu cầu - per-requ
 
 ---
 
+## 🚀 QUY TẮC BẮT BUỘC: TỐI GIẢN EGRESS & KIẾN TRÚC DỮ LIỆU MODULAR (0-EGRESS INDEXEDDB ENGINE)
+
+Mọi thay đổi liên quan đến dữ liệu, gọi API, cấu trúc tệp hoặc nạp tài nguyên **BẮT BUỘC** phải tuân thủ nghiêm ngặt các nguyên tắc sau trong mỗi yêu cầu:
+
+1. **Tuyệt đối không tái tạo tệp dữ liệu nguyên khối nặng (Monolithic JS Blob):**
+   * Không bao giờ được nhồi nhét lại dữ liệu lớn (đề thi, ngân hàng câu hỏi, từ điển hàng nghìn từ, bài luyện nói...) vào chung một tệp JavaScript như `data.js` cũ.
+   * Toàn bộ dữ liệu lớn bắt buộc phải nằm ở các tệp JSON độc lập theo phân hệ trong thư mục `data/modules/*.json` (`vocab_jars.json`, `trki_bank.json`, `trki_questions.json`, `speaking_sets.json`...).
+   * Tệp [data.js](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/data.js) chỉ lưu dữ liệu nhẹ cốt lõi (<500KB) và động cơ nạp `RusiDataLoader`.
+2. **Quy trình nạp 3 tầng theo nhu cầu (On-Demand Lazy Loading & IndexedDB Cache):**
+   * Mọi trang chỉ được phép nạp đúng module dữ liệu phục vụ trực tiếp cho trang đó thông qua `RusiDataLoader.prepareForCurrentPage()` hoặc `RusiDataLoader.load(moduleKey)`.
+   * **Quy trình nạp bắt buộc:** Kiểm tra RAM (0ms) $\rightarrow$ Đọc IndexedDB (`rusi_offline_db`) trên máy học viên (0ms, 0 byte Egress) $\rightarrow$ Tải file JSON tĩnh từ CDN.
+   * Tuyệt đối bảo đảm từ lần truy cập thứ hai trở đi, việc chuyển trang và học tập đạt **chuẩn 0-Byte Network Egress**.
+3. **Bảo vệ tuyệt đối Quota 5GB của Supabase (Zero Egress Leaks):**
+   * Dữ liệu tĩnh bài học, đề thi, từ điển phục vụ học tập phải được phân phối qua CDN tĩnh (GitHub Pages / Cloudflare) và nạp ngầm qua `RusiDataLoader.prefetchIdle()`.
+   * **Nghiêm cấm** việc viết code tự động query quét toàn bộ bảng (`select("*")` trên hàng nghìn bản ghi) về Supabase khi tải trang hoặc trong các hàm warmup để tránh cạn kiệt 5GB Egress hàng tháng.
+   * Supabase Cloud chỉ dùng đúng công năng cốt lõi: Xác thực tài khoản (Auth), lưu tiến độ người dùng (Streak, XP, SRS flashcard state, đơn hàng) và chấm thi server-side qua RPC.
+4. **Bảo mật bản quyền nội dung & Zero-Answer Leak:**
+   * Các bài thi thử TRKI không được để lộ trường đáp án đúng (`correct_option`, `answer_key`) ở phía client. Việc chấm điểm thi mô phỏng luôn thông qua RPC server-side `rusi_grade_trki_exam` đối chiếu với bảng riêng tư.
+   * Khóa/giới hạn các nội dung trả phí PRO bằng `Monetization.isPro()` và RLS ở cấp cơ sở dữ liệu.
+
+---
+
 📖 **Tài liệu hướng dẫn & kỹ năng workspace:**
 - ECC Harness Optimization: [ecc/SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/ecc/SKILL.md)
 - Quy tắc ECC chuẩn: [ecc.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/rules/ecc.md)

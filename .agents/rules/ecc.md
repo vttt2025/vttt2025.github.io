@@ -53,5 +53,5 @@
 - **`ecc:planner`:** Automatically analyze complexity, outline the smallest complete change, and anticipate breaking changes before editing.
 - **`ecc:code-reviewer`:** Inspect code immediately after writing: ensure idiomatic style, eliminate code smells (deep nesting > 4 levels, magic numbers), keep files maintainable (<800 lines).
 - **`ecc:security-reviewer`:** Validate input boundaries, ensure XSS escaping via `esc()`, verify RLS protection on Supabase queries, enforce zero-secret policy.
-- **`ecc:performance-optimizer`:** Minimize egress traffic, eliminate unnecessary re-renders, optimize asset sizes and caching.
+- **`ecc:performance-optimizer`:** Enforce 0-Egress architecture (split heavy collections into `data/modules/*.json`, leverage IndexedDB offline-first cache via `RusiDataLoader`, never fetch full-table dumps on page load), minimize DOM payloads, eliminate unnecessary re-renders, optimize asset sizes and caching.
 - **`ecc:a11y-architect`:** Ensure accessible HTML semantics, keyboard navigation, clear ARIA labels, and WCAG-compliant color contrast.
