@@ -69,7 +69,7 @@
    * ========================================================================= */
   var DEFAULT_CACHE_TTL_MS = 15 * 60 * 1000; // 15 phút
   var _memoryCache = new Map();
-  var CACHE_PREFIX = "rusi_sb_cache_v6:";
+  var CACHE_PREFIX = "rusi_sb_cache_v7:";
 
   var RusiCache = {
     get: function (key) {

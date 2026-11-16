@@ -234,15 +234,22 @@
 ## 2. NÂNG CẤP HỘI VIÊN & CỔNG THANH TOÁN VIETQR 2.0
 
 ### 2.1. Danh Mục Các Gói Cước Hội Viên (Subscription Tiers):
-1. **Gói 6 Tháng (`pro_6m`)**:
-   * *Phạm vi đặc quyền*: Mở khóa toàn bộ ngân hàng đề thi ТРКИ cấp độ A1 – A2; mở khóa kho luyện nghe 4 Part; không giới hạn số lượng Lọ từ vựng cá nhân (`custom_jars`).
-   * *Phù hợp*: Học viên mới bắt đầu hoặc người ôn thi gấp lấy chứng chỉ Sơ cấp / Cơ bản.
-2. **Gói 1 Năm (`pro_1y`) — [Nhãn: Phổ Biến Nhất]**:
-   * *Phạm vi đặc quyền*: Mở khóa toàn bộ kho tài liệu và đề thi từ A1 đến B2; mở khóa tính năng AI chấm bài tự luận Luyện Viết theo 4 tiêu chí CEFR; AI chấm điểm Shadowing Luyện Nói và phân tích chi tiết âm vị.
-   * *Biểu tượng nhãn*: Huy hiệu nổi bật đi kèm icon `sparkles-clean` (`RusiIcons.get('sparkles-clean', { size: 14 })`), không dùng raw emoji `🔥`.
-3. **Gói Trọn Đời (`pro_vip`) — [Nhãn: VIP Quyền Năng]**:
-   * *Phạm vi đặc quyền*: Toàn quyền truy cập vĩnh viễn mọi tính năng học tập hiện tại và tương lai (A1 – C2); tặng kèm phần quà lưu niệm chuyển phát từ Nga; tặng voucher ưu đãi dịch vụ tư vấn hồ sơ du học và dịch thuật công chứng tư pháp.
-   * *Biểu tượng nhãn*: Huy hiệu hoàng gia đi kèm icon `crown-vip` (`RusiIcons.get('crown-vip', { size: 14 })`), không dùng raw emoji `💎`.
+1. **Gói 1 Tháng (`pro_1m`) — [Nhãn: Nước Rút]**:
+   * *Phạm vi đặc quyền*: Mở khóa toàn bộ 74 đề thi ТРКИ A1 – B2; bấm giờ thi thật & chấm điểm tự động; xem đáp án & giải thích 6 cách chi tiết; AI nhận diện phát âm cơ bản.
+   * *Phù hợp*: Học viên còn 2–4 tuần nữa vào phòng thi thật, cần cày đề cấp tốc để quen áp lực phòng thi. Giá: 399.000 VNĐ (Gốc: 590.000 VNĐ, ~13.300đ/ngày).
+2. **Gói 3 Tháng (`pro_3m`) — [Nhãn: Phổ Biến Nhất]**:
+   * *Phạm vi đặc quyền*: Tất cả quyền lợi gói 1 Tháng + Không giới hạn tạo Lọ từ vựng cá nhân; mở khóa trọn bộ kho Luyện nghe 4 Part CEFR; Luyện nói Shadowing cùng AI toàn bộ 28 bài; biểu đồ radar phân tích điểm mạnh / yếu.
+   * *Biểu tượng nhãn*: Huy hiệu nổi bật đi kèm icon `sparkles-clean` (`RusiIcons.get('sparkles-clean', { size: 14 })`). Giá: 899.000 VNĐ (Gốc: 1.450.000 VNĐ, ~300.000đ/tháng - Tiết kiệm 25%).
+3. **Gói 1 Năm (`pro_1y`) — [Nhãn: Giá Trị Cao Nhất]**:
+   * *Phạm vi đặc quyền*: Tất cả quyền lợi gói 3 Tháng + AI Rusika chấm bài Viết tự luận (Письмо) không giới hạn; kho 100+ Lọ từ vựng chuyên ngành (Y khoa, Kỹ thuật, Kinh tế); tặng bộ cẩm nang sinh tồn du học Nga; ưu tiên hỗ trợ học thuật 1-1.
+   * *Biểu tượng nhãn*: Huy hiệu hoàng gia đi kèm icon `crown-vip` (`RusiIcons.get('crown-vip', { size: 14 })`). Giá: 1.899.000 VNĐ (Gốc: 3.500.000 VNĐ, ~158.000đ/tháng - Tiết kiệm 60%).
+
+* **Chiến Lược Mỏ Neo Giá & Hiệu Ứng Chim Mồi (Decoy Effect)**:
+  | Gói cước | Giá bán | Giá niêm yết | Chi phí tương đương | Tâm lý học chuyển đổi (Conversion Psychology) |
+  | :--- | :---: | :---: | :---: | :--- |
+  | **Gói 1 Tháng (`pro_1m`)** | **399.000đ** | `590.000đ` | ~13.300đ / ngày | Mỏ neo giá cấp bách, học viên sắp thi tự quyết định nhanh không cần đắn đo. |
+  | **Gói 3 Tháng (`pro_3m`)** | **899.000đ** | `1.450.000đ` | ~300.000đ / tháng | **Gói chủ lực (Sweet Spot)**: Thấy rõ mua 3 tháng rẻ hơn mua lẻ 300k, chiếm 50–60% đơn hàng. |
+  | **Gói 1 Năm (`pro_1y`)** | **1.899.000đ** | `3.500.000đ` | ~158.000đ / tháng | Lựa chọn tối ưu cho phụ huynh đầu tư suốt 1 năm dự bị (Подфак) chỉ ~5k/ngày. |
 
 ---
 
@@ -403,7 +410,7 @@ Trung tâm quản trị nội dung được thiết kế theo chuẩn giao diệ
      * `VOCABULARIES` (Từ điển & Kho từ vựng): Kho 5.000+ từ vựng tiếng Nga toàn diện có trọng âm Unicode, từ loại, dạng biến cách và nghĩa song ngữ.
      * `VOCAB_LESSONS` (Hành động đời sống): Bài học ngữ cảnh chuỗi hành động.
   2. **Nhóm Thương mại & Tăng trưởng (`group: "commerce"`)**:
-     * `PACKAGES` (Gói cước hội viên PRO): Cấu hình các gói `pro_6m`, `pro_1y`, `pro_vip` và quyền lợi.
+     * `PACKAGES` (Gói cước hội viên PRO): Cấu hình các gói `pro_1m`, `pro_3m`, `pro_1y` và quyền lợi.
      * `SHOP_PRODUCTS` (Sản phẩm & Khóa học Shop): Danh mục hàng Nga nội địa, dịch vụ tư vấn và thông số kỹ thuật.
      * `ORDERS` (Đơn hàng & Giao dịch): Giám sát mã đơn VietQR, trạng thái thanh toán và kích hoạt gói bản quyền.
      * `BLOG_POSTS` (Cẩm nang Blog & SEO): Quản trị bài viết Blog, biên tập Markdown và tối ưu SEO metadata.
@@ -546,7 +553,7 @@ Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gia
 | **IV. Khảo thí TRKI Bảo mật** | `public.trki_tests` | Đề thi trắc nghiệm A1–C2 (CHỈ chứa câu hỏi, KHÔNG có đáp án) | `id` (TEXT) | Độc lập |
 | | `private.exam_answer_keys` | **Bảng riêng tư giấu đáp án đúng & giải thích (Zero-Leak)** | `exam_id` (TEXT) | FK `trki_tests(id)` ON DELETE CASCADE |
 | | `public.trki_submissions` | Lịch sử nộp bài thi thử, điểm số từng phân môn & kết quả đỗ/trượt | `id` (UUID) | FK `profiles(id)`, FK `trki_tests(id)` |
-| **V. Giao dịch & Thương mại** | `public.packages` | Danh mục gói cước hội viên PRO (`pro_6m`, `pro_1y`, `pro_vip`) | `id` (TEXT) | Độc lập |
+| **V. Giao dịch & Thương mại** | `public.packages` | Danh mục gói cước hội viên PRO (`pro_1m`, `pro_3m`, `pro_1y`) | `id` (TEXT) | Độc lập |
 | | `public.orders` | Đơn hàng VietQR, mã giao dịch Casso, trạng thái kích hoạt PRO | `id` (UUID) | FK `profiles(id)`, FK `packages(id)` |
 | | `public.shop_products` | Sản phẩm hàng Nga nội địa, dịch vụ tư vấn du học & công cụ | `id` (TEXT) | Độc lập |
 | **VI. Blog & Cẩm nang** | `public.blog_posts` | Bài viết cẩm nang du học, KTX, đời sống Nga (Markdown GFM) | `id` (TEXT) | Độc lập |
@@ -841,10 +848,10 @@ Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gia
 #### Phân hệ 5: Kinh Doanh, Đơn Hàng & Hội Viên PRO
 
 18. **`public.packages`**:
-    - `id TEXT PRIMARY KEY CHECK (id IN ('pro_6m', 'pro_1y', 'pro_vip'))`: Mã định danh 3 gói cước chuẩn.
-    - `name TEXT NOT NULL`: Tên gói (Gói 6 Tháng, Gói 1 Năm, Gói Trọn Đời).
+    - `id TEXT PRIMARY KEY CHECK (id IN ('pro_1m', 'pro_3m', 'pro_1y'))`: Mã định danh 3 gói cước chuẩn.
+    - `name TEXT NOT NULL`: Tên gói (Gói 1 Tháng, Gói 3 Tháng, Gói 1 Năm).
     - `price_vnd BIGINT NOT NULL`: Giá tiền tính bằng Việt Nam Đồng (VND).
-    - `duration_months INT`: Thời lượng gói (6, 12; NULL nếu là trọn đời).
+    - `duration_months INT`: Thời lượng gói (1, 3, 12).
     - `is_lifetime BOOLEAN NOT NULL DEFAULT false`: Đánh dấu gói Vĩnh viễn.
     - `badge TEXT`: Nhãn nổi bật (ví dụ: "Phổ Biến Nhất", "VIP Quyền Năng").
     - `features JSONB NOT NULL DEFAULT '[]'::jsonb`: Mảng các quyền lợi đặc quyền.
@@ -921,7 +928,7 @@ Mọi thao tác can thiệp vào tài chính, bản quyền PRO, điểm số v�
    - **Mục đích**: Tự động đối soát và kích hoạt quyền hội viên PRO qua Webhook ngân hàng / Casso.
    - **Quy trình xử lý**:
      * Tìm đơn hàng `orders` có mã `order_code` ở trạng thái `pending`.
-     * Đọc thông tin gói từ `packages`, xác định ngày hết hạn `pro_expires_at` (thời hạn 6/12 tháng hoặc `NULL` nếu là gói trọn đời `pro_vip`).
+     * Đọc thông tin gói từ `packages`, xác định ngày hết hạn `pro_expires_at` (thời hạn 1, 3 hoặc 12 tháng).
      * Cập nhật đơn hàng: `status = 'paid'`, lưu `casso_trans_id`, `paid_at = NOW()`.
      * Nâng cấp hồ sơ học viên: `profiles.is_pro = true`, `profiles.pro_expires_at = v_expires`.
    - **Trả về**: `{ success: true, user_id, expires_at }`.
@@ -1058,7 +1065,7 @@ Thư viện `rusi-icons.js` được nhúng tại thẻ `<head>` trên tất c�
    Mọi trang (`vocabulary.html`, `listening.html`, `speaking.html`, `writing.html`, `mock-test.html`, `blog.html`, `shop.html`, `product-detail.html`) luôn có cơ chế fallback tự động về hằng số dữ liệu chuẩn trong `data.js` kết hợp bộ nhớ đệm `STORE` khi mạng chập chờn hoặc Supabase chưa phản hồi. Tuyệt đối không bao giờ để xảy ra tình trạng màn hình trắng.
 
 2. **Đồng Bộ Phiên Bản Cache-Busting Thống Nhất**:
-   100% 16 tệp HTML đồng bộ gọi cùng phiên bản cache-busting mới nhất (`styles.css?v=9.5`, `pages.js?v=9.5`, `app.js?v=8.5`, `data.js?v=8.0`, `rusi-icons.js?v=5.0`). Mọi thay đổi mã nguồn phải tự động tăng query parameter để Cloudflare và trình duyệt cập nhật tài nguyên lập tức.
+   100% 16 tệp HTML đồng bộ gọi cùng phiên bản cache-busting mới nhất (`styles.css?v=10.3`, `pages.js?v=10.2`, `app.js?v=8.9`, `data.js?v=10.0`, `rusi-icons.js?v=5.0`, `supabase-client.js?v=7.7`). Mọi thay đổi mã nguồn phải tự động tăng query parameter để Cloudflare và trình duyệt cập nhật tài nguyên lập tức.
 
 3. **Phòng Thi TRKI Zero-Answer Leak & Server-Side Grading**:
    Đề thi công khai tuyệt đối không chứa đáp án đúng. Mọi bài thi thử TRKI đều chấm điểm tập trung tại server qua RPC `rusi_grade_trki_exam` đối chiếu với `private.exam_answer_keys`.
@@ -1081,3 +1088,63 @@ Thư viện `rusi-icons.js` được nhúng tại thẻ `<head>` trên tất c�
    - `data.js` chỉ giữ phần core siêu nhẹ (~550KB, gzip ~90KB) và động cơ `window.RusiDataLoader`.
    - Mọi trang tự động nạp theo nhu cầu qua `RusiDataLoader.prepareForCurrentPage()` và lưu trữ vĩnh viễn vào IndexedDB (`rusi_offline_db`) của máy học viên.
    - Tuyệt đối không gửi các truy vấn nặng quét toàn bộ bảng về Supabase trên mỗi lượt tải trang để bảo vệ 100% hạn mức 5GB Egress hàng tháng của Supabase.
+
+---
+
+## 11. BÁO CÁO NGHIÊN CỨU THỊ TRƯỜNG, ĐỊNH VỊ CHIẾN LƯỢC & TÍNH KHẢ THI 10 NĂM (2026 – 2036)
+
+> **Tầm nhìn chiến lược**: 10 năm (2026 – 2036)  
+> **Mô hình định vị**: Niche EdTech Platform (Đại dương xanh trong ngách hẹp giá trị cao, biên lợi nhuận ròng > 90%).
+
+### 11.1. Kết Luận Tính Khả Thi & Sức Sống 10 Năm (Chỉ Số Thẩm Định: 8.8 / 10)
+1. **Bảo chứng vĩnh cửu từ Hiệp định nhà nước**:
+   - Chính phủ Liên bang Nga duy trì đều đặn **1.000 suất học bổng toàn phần/năm** cho công dân Việt Nam đi đào tạo cử nhân, kỹ sư, thạc sĩ, tiến sĩ. Đây là quốc gia cấp lượng học bổng diện hiệp định lớn nhất cho Việt Nam.
+   - Các ngành trọng điểm chiến lược: 59 chỉ tiêu đại học ngành *Thiết kế, vận hành và kỹ thuật Nhà máy điện hạt nhân* (Đề án 1012), công nghệ hàng không vũ trụ, kỹ thuật quân sự, mật mã, an ninh mạng và dầu khí (Vietsovpetro / Zarubezhneft).
+2. **Nhu cầu bắt buộc mang tính sống còn (Compulsory Demand)**:
+   - Du học sinh sang Nga bắt buộc học 1 năm dự bị tiếng (Подфак). Nếu không thi đỗ chứng chỉ TRKI-1 (B1), học viên sẽ **bị buộc thôi học về nước**. Nhu cầu luyện thi có tính sinh tử, tạo ra tỷ lệ sẵn sàng chi trả (willingness-to-pay) cực cao.
+3. **Thị trường ngách phòng thủ (Defensive Niche)**:
+   - Không bị bão hòa hoặc cạnh tranh khốc liệt như tiếng Anh (IELTS) hay tiếng Trung (HSK). Rào cản gia nhập tự nhiên rất cao: ngữ pháp 6 Cách phức tạp và hệ thống khảo thí TRKI chuẩn hóa đòi hỏi chuyên môn sâu.
+
+### 11.2. Chân Dung 5 Nhóm Khách Hàng Mục Tiêu
+1. **Du học sinh diện Hiệp định & Tự túc (1.000 – 1.500 người/năm)**: Nhu cầu cày đề thi TRKI-1 (B1) cấp tốc để vào chuyên ngành; khả năng chi trả cao từ sinh hoạt phí học bổng.
+2. **Học viên Khối Lực lượng vũ trang (Quân đội, Công an, Cơ yếu)**: Đào tạo chỉ huy tham mưu và kỹ thuật tại các học viện Nga; kỷ luật học tập nghiêm ngặt, ngân sách ổn định.
+3. **Học sinh chuyên THPT & Sinh viên Ngoại ngữ (Chuyên Ngữ, Ams, ULIS, HANU)**: Cần chứng chỉ TRKI để tuyển thẳng đại học hoặc đạt chuẩn đầu ra tốt nghiệp.
+4. **Kỹ sư Dầu khí, Điện hạt nhân, Chuyên gia kỹ thuật**: Đào tạo chuyên gia vận hành dự án quốc gia; thu nhập cao, cần tiếng Nga kỹ thuật chuyên ngành.
+5. **Cộng đồng người Việt tại Nga (~80.000 người)**: Nhu cầu chứng chỉ tiếng Nga cơ bản (ТЭУ/ТБУ) để hoàn thiện hồ sơ định cư (RVP, VNZh, Quốc tịch).
+
+### 11.3. Phân Tích Ma Trận Cạnh Tranh (Blue Ocean vs Competitors)
+* **Duolingo / Busuu / Babbel**: Chỉ dạy từ vựng giao tiếp sơ cấp; hoàn toàn bất lực trước ngữ pháp 6 Cách, biến thể động từ (CB/NCB), động từ chuyển động và **hoàn toàn không có bài thi TRKI**.
+* **Trung tâm truyền thống offline**: Học phí đắt đỏ (4.000.000đ – 7.000.000đ / khóa); vẫn dùng phương pháp photo đề giấy Zlatoust chấm tay thủ công; giới hạn địa lý (chỉ có tại Hà Nội / TP.HCM).
+* **RUSI TRKI giải quyết triệt để**: Nền tảng học và thi trực tuyến chuẩn CBT 24/7, AI chấm phát âm và viết tự luận, ngân hàng 74 đề thi thật với mức phí chỉ bằng 1/5 so với trung tâm.
+
+### 11.4. Điểm Đáng Tiền Nhất Của Nền Tảng (The Ultimate Killer Feature & Moat)
+> 🏆 **PHÒNG KHẢO THÍ TRỰC TUYẾN TRKI CHUẨN CBT VỚI 74 ĐỀ THI THẬT, 3.867 CÂU HỎI & CHẤM ĐIỂM SERVER-SIDE CHI TIẾT 5 SUBTEST.**
+- **Bản quyền & Công sức số hóa khổng lồ**: 74 đề thi chuẩn hóa phân môn (Ngữ pháp - Từ vựng, Đọc hiểu, Nghe hiểu, Viết, Nói) được gắn nhãn độ khó và giải thích ngữ pháp 6 cách chi tiết.
+- **Bảo mật tuyệt đối (Zero-Answer Leak)**: Đáp án được bảo vệ tại server qua RPC `rusi_grade_trki_exam`, học viên không thể "soi" đáp án trước qua DevTools.
+- **Giá trị kinh tế thay thế**: Tiết kiệm hàng triệu đồng mua sách photo từ Nga và chi phí thuê gia sư chấm đề (200k – 500k/đề).
+
+### 11.5. Mô Hình Kinh Doanh & Ma Trận Định Giá Tối Ưu (1T – 3T – 1N)
+1. **Gói 1 Tháng (`pro_1m`) — 399.000 VNĐ** *(Gốc: 590.000 VNĐ)*:
+   - *Định vị*: Gói Nước Rút Mùa Thi dành cho học viên ôn thi cấp tốc 2–4 tuần trước kỳ thi thật.
+   - *Mỏ neo tâm lý*: Đóng vai trò mỏ neo giá giúp gói 3 Tháng trở thành lựa chọn tự nhiên (No-brainer choice).
+2. **Gói 3 Tháng (`pro_3m`) — 899.000 VNĐ** *(Gốc: 1.450.000 VNĐ) — [Phổ Biến Nhất]*:
+   - *Định vị*: Gói Bứt Phá Mục Tiêu tương đương ~300.000đ/tháng (tiết kiệm 25%); trọn vẹn 1 lộ trình tăng bậc trình độ (A1→A2 hoặc A2→B1).
+   - *Tỷ trọng kỳ vọng*: Chiếm 50% – 60% tổng lượng đơn hàng.
+3. **Gói 1 Năm (`pro_1y`) — 1.899.000 VNĐ** *(Gốc: 3.500.000 VNĐ) — [Giá Trị Cao Nhất]*:
+   - *Định vị*: Gói Toàn Diện Du Học & Podfak tương đương ~158.000đ/tháng (tiết kiệm 60%); mở khóa AI chấm viết tự luận không giới hạn và kho từ vựng chuyên ngành.
+- **Đơn vị kinh tế (Unit Economics)**:
+  - Doanh thu dự kiến (500 học viên/năm): $\approx \mathbf{474.500.000 \text{ VNĐ} - \mathbf{620.000.000 \text{ VNĐ / năm}}}$.
+  - Chi phí vận hành hạ tầng: Gần như 0 VNĐ nhờ động cơ 0-Egress IndexedDB + CDN tĩnh.
+  - Tỷ suất lợi nhuận ròng: **> 90%**.
+
+### 11.6. Lộ Trình Phát Triển Chiến Lược 3 Giai Đoạn (2026 – 2036)
+1. **Giai đoạn 1 (2026 – 2027) — Thống trị Ngách Khảo Thí TRKI CBT**:
+   - Đóng đinh nhận thức thương hiệu là "Nền tảng luyện thi TRKI số 1 tại Việt Nam".
+   - Tập trung vào các hội du học sinh Nga, trường chuyên ngữ THPT và đại học.
+2. **Giai đoạn 2 (2028 – 2030) — Mở rộng Hệ sinh thái Du học & Giá trị gia tăng**:
+   - Tích hợp dịch vụ tư vấn hồ sơ học bổng hiệp định, dịch thuật công chứng tư pháp, hướng dẫn visa/vé máy bay.
+   - Phân phối tài liệu số tiếng Nga chuyên ngành qua chuyên mục Shop.
+3. **Giai đoạn 3 (2031 – 2036) — Nền tảng Tri thức tiếng Nga & Đối tác Khảo thí Toàn diện**:
+   - Mở rộng ngân hàng đề thi TRKI thiếu nhi (TRKI Dety) và tiếng Nga thương mại / du lịch.
+   - Trở thành đối tác khảo thí mô phỏng trực tuyến tin cậy của các cơ quan đào tạo và đại học.
+

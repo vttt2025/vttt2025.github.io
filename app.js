@@ -953,52 +953,53 @@ const Monetization = {
     } else {
       raw = [
       {
-        id: "pro_6m",
-        badge: "6 THÁNG",
-        title: "Gói Bứt Phá 6 Tháng",
-        desc: "Phù hợp cho học viên ôn thi cấp tốc chuẩn bị du học hoặc thi chứng chỉ ТЭУ/ТБУ.",
-        price: 299000,
+        id: "pro_1m",
+        badge: "NƯỚC RÚT",
+        title: "Gói Nước Rút 1 Tháng",
+        desc: "Phù hợp cho học viên còn 2–4 tuần nữa vào phòng thi thật, cần cày đề cấp tốc để quen áp lực phòng thi.",
+        price: 399000,
         priceOld: 590000,
         popular: false,
         features: [
-          "Mở khóa toàn bộ ngân hàng đề thi ТРКИ A1, A2",
-          "Đáp án giải thích ngữ pháp chi tiết từng câu",
-          "Luyện nghe 4 Part CEFR không giới hạn",
-          "Tạo không giới hạn Lọ từ vựng cá nhân",
-          "Phát hiện & sửa lỗi phát âm AI"
+          "Mở khóa toàn bộ 74 đề thi TRKI A1–B2",
+          "Bấm giờ phòng thi thật & chấm điểm tự động",
+          "Đáp án & giải thích ngữ pháp 6 cách chi tiết",
+          "AI nhận diện & chấm điểm phát âm cơ bản",
+          "Đồng bộ tiến độ học tập trên mọi thiết bị"
+        ]
+      },
+      {
+        id: "pro_3m",
+        badge: "PHỔ BIẾN NHẤT",
+        title: "Gói Bứt Phá 3 Tháng",
+        desc: "Chu kỳ vàng hoàn thành 1 cấp độ (A1→A2 hoặc A2→B1), sinh viên ôn thi học phần và săn học bổng Nga.",
+        price: 899000,
+        priceOld: 1450000,
+        popular: true,
+        features: [
+          "Tất cả quyền lợi của gói 1 Tháng",
+          "Không giới hạn tạo Lọ từ vựng cá nhân",
+          "Mở khóa trọn bộ kho Luyện nghe 4 Part CEFR",
+          "Luyện nói Shadowing cùng AI toàn bộ 28 bài",
+          "Biểu đồ radar phân tích điểm mạnh / điểm yếu từng kỹ năng",
+          "Tiết kiệm 25% chi phí so với mua lẻ từng tháng"
         ]
       },
       {
         id: "pro_1y",
-        badge: "1 NĂM",
-        title: "Gói Chuyên Nghiệp 1 Năm",
-        desc: "Lựa chọn hàng đầu cho sinh viên chuẩn bị sang Nga học dự bị và đại học.",
-        price: 499000,
-        priceOld: 990000,
-        popular: true,
-        features: [
-          "Mở khóa TOÀN BỘ ngân hàng đề thi ТРКИ A1, A2, B1, B2",
-          "Phân tích chuyên sâu đề thi & dự đoán điểm đỗ",
-          "Chấm bài tự luận Viết (Письмо) có nhận xét của giảng viên",
-          "Kho 100+ Lọ từ vựng chuyên ngành (Y khoa, Kỹ thuật, Kinh tế)",
-          "Ưu tiên hỗ trợ hồ sơ học bổng Du học Nga",
-          "Hỗ trợ 1-1 qua nhóm Zalo VIP"
-        ]
-      },
-      {
-        id: "pro_vip",
-        badge: "TRỌN ĐỜI",
-        title: "Gói VIP Trọn Đời",
-        desc: "Đồng hành trọn vẹn suốt 4-6 năm học tập và sinh sống tại Liên bang Nga.",
-        price: 899000,
-        priceOld: 1800000,
+        badge: "GIÁ TRỊ CAO NHẤT",
+        title: "Gói Toàn Diện 1 Năm",
+        desc: "Đồng hành trọn vẹn 1 năm Khoa dự bị (Подфак) tại Nga hoặc cả năm học chuyên ngành đại học.",
+        price: 1899000,
+        priceOld: 3500000,
         popular: false,
         features: [
-          "Tất cả quyền lợi của gói 1 Năm vĩnh viễn",
-          "Cập nhật miễn phí đề thi ТРКИ mới nhất mỗi năm",
-          "Tặng Voucher 500k khi đặt dịch vụ du học & visa Nga",
-          "Tặng Hộp quà Nga đặc biệt (Socola Alenka + Trà Ivan-chay)",
-          "Cố vấn học thuật trực tiếp định kỳ"
+          "Tất cả quyền lợi của gói 3 Tháng",
+          "AI Rusika chấm bài Viết tự luận (Письмо) không giới hạn",
+          "Kho 100+ Lọ từ vựng chuyên ngành (Y khoa, Kỹ thuật, Kinh tế)",
+          "Tặng bộ cẩm nang sinh tồn & kinh nghiệm du học Nga",
+          "Ưu tiên hỗ trợ kỹ thuật và học thuật 1-1",
+          "Tiết kiệm tới 60% chi phí (~158.000đ / tháng)"
         ]
       }
     ];
@@ -1110,13 +1111,13 @@ const Monetization = {
   /**
    * Mở Modal Thanh Toán VietQR 2.0 Chuẩn Hiện Nay:
    * - Hiển thị tài khoản người dùng thụ hưởng
-   * - Hỗ trợ Tabs chuyển đổi linh hoạt 3 gói cước (6 Tháng / 1 Năm / Trọn Đời)
+   * - Hỗ trợ Tabs chuyển đổi linh hoạt 3 gói cước (1 Tháng / 3 Tháng / 1 Năm)
    * - Sinh mã QR và cú pháp định danh theo tài khoản
    * - Bộ đếm ngược 15:00
    * - Sao chép 1-chạm thông minh
    * - Kích hoạt tự động kèm hiệu ứng chúc mừng (Confetti)
    */
-  openUpgradeModal(pkgId = "pro_1y") {
+  openUpgradeModal(pkgId = "pro_3m") {
     const user = this.getCurrentUser();
     // Chuẩn hiện nay: Nâng cấp yêu cầu phiên đăng nhập để gắn quyền PRO
     if (!user) {
@@ -1125,7 +1126,7 @@ const Monetization = {
     }
 
     const pkgs = this.getPackages();
-    let normId = (pkgId || "pro_1y").toLowerCase();
+    let normId = (pkgId || "pro_3m").toLowerCase();
     let currentPkg = pkgs.find((p) => (p.id || "").toLowerCase() === normId) || pkgs[1] || pkgs[0];
 
     // Tạo mã đơn có gắn nhận diện học viên
@@ -1182,7 +1183,7 @@ const Monetization = {
                 <span class="vietqr-pkg-tab-title">${esc(p.title)}</span>
                 <span class="vietqr-pkg-tab-price">${p.price.toLocaleString("vi-VN")} đ</span>
               </div>
-              ${p.popular ? `<span class="vietqr-pkg-tab-hot">Phổ biến</span>` : (p.id === "pro_vip" ? `<span class="vietqr-pkg-tab-hot vip">VIP</span>` : "")}
+              ${p.popular ? `<span class="vietqr-pkg-tab-hot">Phổ biến</span>` : (p.id === "pro_1y" ? `<span class="vietqr-pkg-tab-hot vip">Giá trị nhất</span>` : "")}
             </button>`;
           }).join("")}
         </div>
@@ -1423,14 +1424,14 @@ const Monetization = {
           </ul>
         </div>
 
-        ${!proInfo.isLifetime ? `
+        ${(proInfo.pkgId !== "pro_1y") ? `
           <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px">
             <div>
-              <div style="font-weight:800;font-size:0.86rem;color:#166534">Nâng cấp lên VIP Trọn Đời?</div>
-              <div style="font-size:0.78rem;color:#15803D">Đồng hành trọn vẹn suốt thời gian du học Nga với giá ưu đãi.</div>
+              <div style="font-weight:800;font-size:0.86rem;color:#166534">Nâng cấp lên Gói Toàn Diện 1 Năm?</div>
+              <div style="font-size:0.78rem;color:#15803D">Đồng hành trọn vẹn suốt 1 năm Khoa dự bị (Подфак) với ưu đãi tiết kiệm 60%.</div>
             </div>
             <button class="btn btn-sm btn-primary" id="btnExtendLifetime" style="background:#059669;border-color:#059669;white-space:nowrap">
-              ${window.RusiIcons ? RusiIcons.get("gem", { size: 16 }) : ""} Nâng cấp Trọn Đời
+              ${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 16 }) : ""} Nâng cấp 1 Năm
             </button>
           </div>
         ` : ""}
@@ -1447,7 +1448,7 @@ const Monetization = {
     if (extendBtn) {
       extendBtn.onclick = () => {
         modal.remove();
-        Monetization.openUpgradeModal("pro_vip");
+        Monetization.openUpgradeModal("pro_1y");
       };
     }
   }

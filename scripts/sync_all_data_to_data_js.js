@@ -166,85 +166,8 @@ const shopProducts = (backup.tables.shop_products || []).map(p => {
 });
 console.log('Formatted SHOP_PRODUCTS:', shopProducts.length);
 
-// 7. PACKAGES (packages - Lấy theo chuẩn live web app.js)
-const packages = [
-  {
-    id: "pro_6m",
-    code: "pro_6m",
-    badge: "6 THÁNG",
-    name: "Gói Bứt Phá 6 Tháng",
-    title: "Gói Bứt Phá 6 Tháng",
-    desc: "Phù hợp cho học viên ôn thi cấp tốc chuẩn bị du học hoặc thi chứng chỉ ТЭУ/ТБУ.",
-    description: "Phù hợp cho học viên ôn thi cấp tốc chuẩn bị du học hoặc thi chứng chỉ ТЭУ/ТБУ.",
-    price: 299000,
-    price_vnd: 299000,
-    priceOld: 590000,
-    price_old: 590000,
-    duration_months: 6,
-    duration_days: 180,
-    is_lifetime: false,
-    popular: false,
-    is_popular: false,
-    features: [
-      "Mở khóa toàn bộ ngân hàng đề thi ТРКИ A1, A2",
-      "Đáp án giải thích ngữ pháp chi tiết từng câu",
-      "Luyện nghe 4 Part CEFR không giới hạn",
-      "Tạo không giới hạn Lọ từ vựng cá nhân",
-      "Phát hiện & sửa lỗi phát âm AI"
-    ]
-  },
-  {
-    id: "pro_1y",
-    code: "pro_1y",
-    badge: "1 NĂM",
-    name: "Gói Chuyên Nghiệp 1 Năm",
-    title: "Gói Chuyên Nghiệp 1 Năm",
-    desc: "Lựa chọn hàng đầu cho sinh viên chuẩn bị sang Nga học dự bị và đại học.",
-    description: "Lựa chọn hàng đầu cho sinh viên chuẩn bị sang Nga học dự bị và đại học.",
-    price: 499000,
-    price_vnd: 499000,
-    priceOld: 990000,
-    price_old: 990000,
-    duration_months: 12,
-    duration_days: 365,
-    is_lifetime: false,
-    popular: true,
-    is_popular: true,
-    features: [
-      "Mở khóa TOÀN BỘ ngân hàng đề thi ТРКИ A1, A2, B1, B2",
-      "Phân tích chuyên sâu đề thi & dự đoán điểm đỗ",
-      "Chấm bài tự luận Viết (Письмо) có nhận xét của giảng viên",
-      "Kho 100+ Lọ từ vựng chuyên ngành (Y khoa, Kỹ thuật, Kinh tế)",
-      "Ưu tiên hỗ trợ hồ sơ học bổng Du học Nga",
-      "Hỗ trợ 1-1 qua nhóm Zalo VIP"
-    ]
-  },
-  {
-    id: "pro_vip",
-    code: "pro_vip",
-    badge: "TRỌN ĐỜI",
-    name: "Gói VIP Trọn Đời",
-    title: "Gói VIP Trọn Đời",
-    desc: "Đồng hành trọn vẹn suốt 4-6 năm học tập và sinh sống tại Liên bang Nga.",
-    description: "Đồng hành trọn vẹn suốt 4-6 năm học tập và sinh sống tại Liên bang Nga.",
-    price: 899000,
-    price_vnd: 899000,
-    priceOld: 1800000,
-    price_old: 1800000,
-    duration_months: null,
-    duration_days: null,
-    is_lifetime: true,
-    popular: false,
-    is_popular: false,
-    features: [
-      "Tất cả quyền lợi của gói 1 Năm vĩnh viễn",
-      "Cập nhật miễn phí đề thi ТРКИ mới nhất mỗi năm",
-      "Trợ lý AI Rusika sửa bài viết không giới hạn",
-      "Tặng tài khoản thành viên VIP cộng đồng Du học Nga",
-      "Bảo hành kích hoạt trọn đời tài khoản"
-    ]
-  }
-];
+// 7. PACKAGES (packages - Lấy theo chuẩn live web data/modules/packages.json)
+const packages = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/modules/packages.json'), 'utf8'));
 console.log('Formatted PACKAGES:', packages.length);
 
 // 8. VOCABULARIES (500 words)

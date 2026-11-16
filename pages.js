@@ -12827,7 +12827,7 @@ function initIndexPage() {
 
       return `
       <div class="pricing-card ${pkg.popular ? "popular" : ""} ${isCurrentPlan ? "is-current" : ""}">
-        ${isCurrentPlan ? `<div class="pricing-current-badge">GÓI ĐANG DÙNG</div>` : (pkg.popular ? `<div class="pricing-popular-badge">PHỔ BIẾN NHẤT</div>` : "")}
+        ${isCurrentPlan ? `<div class="pricing-current-badge">GÓI ĐANG DÙNG</div>` : (pkg.popular ? `<div class="pricing-popular-badge" style="display:inline-flex;align-items:center;gap:5px">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 13 }) : ""} PHỔ BIẾN NHẤT</div>` : (pkg.id === "pro_1y" ? `<div class="pricing-popular-badge" style="background:linear-gradient(135deg, #10b981, #059669);display:inline-flex;align-items:center;gap:5px">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} GIÁ TRỊ CAO NHẤT</div>` : ""))}
         <div class="pricing-card-head">
           <span class="pricing-badge">${esc(pkg.badge || "PRO")}</span>
           <h3 class="pricing-title">${esc(pkg.title)}</h3>
@@ -13235,7 +13235,7 @@ function initUpgradePage() {
           const isCurrent = isPro && proInfo && (pkg.id || "").toLowerCase() === (proInfo.pkgId || "").toLowerCase();
           return `
           <div class="pricing-card ${pkg.popular ? "popular" : ""} ${isCurrent ? "is-current" : ""}">
-            ${isCurrent ? `<div class="pricing-current-badge">GÓI ĐANG DÙNG</div>` : (pkg.popular ? `<div class="pricing-popular-badge" style="display:inline-flex;align-items:center;gap:5px">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 13 }) : ""} PHỔ BIẾN NHẤT</div>` : (pkg.id === "pro_vip" ? `<div class="pricing-popular-badge" style="background:linear-gradient(135deg, #d97706, #b45309);display:inline-flex;align-items:center;gap:5px">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} VIP QUYỀN NĂNG</div>` : ""))}
+            ${isCurrent ? `<div class="pricing-current-badge">GÓI ĐANG DÙNG</div>` : (pkg.popular ? `<div class="pricing-popular-badge" style="display:inline-flex;align-items:center;gap:5px">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 13 }) : ""} PHỔ BIẾN NHẤT</div>` : (pkg.id === "pro_1y" ? `<div class="pricing-popular-badge" style="background:linear-gradient(135deg, #10b981, #059669);display:inline-flex;align-items:center;gap:5px">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} GIÁ TRỊ CAO NHẤT</div>` : "")) }
             <div class="pricing-card-head">
               <span class="pricing-badge">${esc(pkg.badge || "PRO")}</span>
               <h3 class="pricing-title">${esc(pkg.title)}</h3>
@@ -13357,7 +13357,7 @@ function initUpgradePage() {
             <span class="step-num step-card-num">01</span>
             <div class="step-icon">${window.RusiIcons ? RusiIcons.get("target", { size: 28 }) : ""}</div>
             <div class="step-title">Chọn Gói Cước</div>
-            <div class="step-desc">Chọn gói 6 Tháng, 1 Năm hoặc Trọn Đời phù hợp nhất với mục tiêu học tập của bạn.</div>
+            <div class="step-desc">Chọn gói 1 Tháng, 3 Tháng hoặc 1 Năm phù hợp nhất với mục tiêu học tập của bạn.</div>
           </div>
           <div class="step-card">
             <span class="step-num step-card-num">02</span>
@@ -13425,11 +13425,11 @@ function initUpgradePage() {
           </div>
           <div class="faq-item">
             <button type="button">
-              <span>Gói VIP Trọn Đời có thời hạn như thế nào?</span>
+              <span>Nên chọn gói 1 Tháng, 3 Tháng hay 1 Năm?</span>
               <i>+</i>
             </button>
             <div class="faq-answer">
-              <p>Gói VIP Trọn Đời không có ngày hết hạn. Bạn sở hữu quyền truy cập vĩnh viễn vào tất cả đề thi hiện tại cũng như toàn bộ đề thi mới được cập nhật hàng năm, kèm theo Hộp quà Nga đặc biệt và Voucher 500k du học Nga.</p>
+              <p>• <b>Gói 1 Tháng (399.000đ)</b>: Phù hợp nhất cho học viên ôn thi nước rút trong 2–4 tuần trước ngày thi thật.<br/>• <b>Gói 3 Tháng (899.000đ - Tiết kiệm 25%)</b>: Lựa chọn phổ biến nhất để hoàn thành trọn vẹn 1 cấp độ (A1→A2 hoặc A2→B1) hoặc ôn thi học phần đại học.<br/>• <b>Gói 1 Năm (1.899.000đ - Tiết kiệm 60%)</b>: Đồng hành trọn vẹn 1 năm Khoa dự bị (Подфак) tại Nga hoặc cả năm học chuyên ngành đại học, hỗ trợ chấm bài viết luận AI không giới hạn.</p>
             </div>
           </div>
           <div class="faq-item">
