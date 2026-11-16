@@ -32724,3 +32724,412 @@ body.index-personalized #indexUserProgressHost {
     gap: 10px !important;
   }
 }
+
+/* =====================================================================
+   BÀI TEST XẾP LỚP TRKI 0Đ (DIAGNOSTIC PLACEMENT TEST) & CBT ENHANCEMENTS
+   ===================================================================== */
+.diagnostic-banner-section {
+  padding: 20px 0 40px;
+}
+.diagnostic-banner-card {
+  background: linear-gradient(135deg, rgba(23, 87, 166, 0.08) 0%, rgba(217, 119, 6, 0.08) 100%), var(--surface);
+  border: 1.5px solid rgba(23, 87, 166, 0.22);
+  border-radius: 20px;
+  padding: 36px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  box-shadow: 0 10px 30px rgba(16, 42, 76, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+.diagnostic-banner-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--secondary), #10b981);
+}
+.diagnostic-banner-content {
+  flex: 1;
+  max-width: 680px;
+}
+.diagnostic-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--secondary);
+  background: rgba(217, 119, 6, 0.12);
+  padding: 4px 10px;
+  border-radius: 20px;
+  margin-bottom: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.diagnostic-title {
+  font-size: 1.85rem;
+  font-weight: 850;
+  color: var(--text);
+  margin-bottom: 12px;
+  line-height: 1.25;
+}
+.diagnostic-desc {
+  font-size: 0.98rem;
+  color: var(--muted);
+  line-height: 1.65;
+  margin-bottom: 18px;
+}
+.diagnostic-badges-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.diag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--primary);
+  background: rgba(23, 87, 166, 0.08);
+  padding: 6px 12px;
+  border-radius: 10px;
+}
+.diagnostic-banner-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.btn-launch-diagnostic {
+  padding: 14px 28px !important;
+  font-size: 1.02rem !important;
+  font-weight: 800 !important;
+  white-space: nowrap;
+  box-shadow: 0 6px 20px rgba(23, 87, 166, 0.3) !important;
+}
+.diag-action-note {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* Diagnostic Modal */
+.diagnostic-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(6px);
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  animation: diagFadeIn 0.2s ease forwards;
+}
+@keyframes diagFadeIn {
+  to { opacity: 1; }
+}
+.diagnostic-modal-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  max-width: 680px;
+  width: 100%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+.diag-modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg);
+}
+.diag-modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.diag-modal-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.diag-timer-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  font-size: 0.86rem;
+  color: var(--secondary);
+  background: rgba(217, 119, 6, 0.1);
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+.diag-modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--muted);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+.diag-modal-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text);
+}
+.diag-progress-bar-wrap {
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  position: relative;
+}
+.diag-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  transition: width 0.25s ease;
+}
+.diag-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+.diag-q-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.diag-q-badge {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: var(--primary);
+  background: var(--primary-soft);
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+.diag-q-text {
+  font-size: 1.22rem;
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--text);
+  margin-bottom: 20px;
+}
+.diag-options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.diag-option-btn {
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  text-align: left;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.15s ease;
+}
+.diag-option-btn:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  transform: translateX(3px);
+}
+.diag-option-btn.selected {
+  border-color: var(--primary);
+  background: rgba(23, 87, 166, 0.1);
+  color: var(--primary);
+  font-weight: 750;
+}
+.diag-option-num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.diag-option-btn.selected .diag-option-num {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.diag-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* Diagnostic Result Card */
+.diag-result-box {
+  text-align: center;
+  padding: 10px 0;
+}
+.diag-result-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  margin-bottom: 12px;
+}
+.diag-result-level {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.diag-result-score {
+  font-size: 1.05rem;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+.diag-analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+.diag-analysis-item {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.diag-analysis-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.diag-analysis-bar {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+.diag-analysis-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 3px;
+}
+.diag-analysis-pct {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text);
+}
+.diag-recommend-box {
+  background: linear-gradient(135deg, rgba(23, 87, 166, 0.05), rgba(217, 119, 6, 0.05));
+  border: 1px dashed rgba(23, 87, 166, 0.3);
+  border-radius: 14px;
+  padding: 16px 20px;
+  text-align: left;
+  margin-bottom: 24px;
+  font-size: 0.94rem;
+  line-height: 1.6;
+}
+.diag-result-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* CBT Exam Room Enhancements */
+.cbt-palette-filter-row {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  padding: 4px 0 10px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.cbt-filter-pill {
+  padding: 4px 9px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+.cbt-filter-pill:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.cbt-filter-pill.active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+body.cbt-fullscreen-mode {
+  background: #f8fafc;
+}
+[data-theme="dark"] body.cbt-fullscreen-mode {
+  background: #0f172a;
+}
+.palette-btn.cbt-filtered-out {
+  display: none !important;
+}
+
+@media (max-width: 768px) {
+  .diagnostic-banner-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 26px 22px;
+    gap: 20px;
+  }
+  .diagnostic-title {
+    font-size: 1.45rem;
+  }
+  .btn-launch-diagnostic {
+    width: 100%;
+    justify-content: center;
+  }
+  .diag-analysis-grid {
+    grid-template-columns: 1fr;
+  }
+  .diag-result-actions {
+    grid-template-columns: 1fr;
+  }
+}
+

@@ -11587,6 +11587,9 @@ function initMockTestPage() {
           ${isPractice ? `<span class="topic-status topic-status-level" style="margin-left:8px;font-size:10px">Luyện tập</span>` : ''}
         </div>
         <div class="dau-workspace-controls" style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0">
+          <button class="btn btn-outline btn-sm dau-top-btn" id="btnToggleFullScreen" type="button" title="Bật/Tắt chế độ toàn màn hình phòng thi (CBT Full-screen)">
+            ${window.RusiIcons ? RusiIcons.get("maximize", { size: 14 }) : ""} <span class="btn-text">Toàn màn hình</span>
+          </button>
           ${isPractice ? `
             <div class="dau-exam-timer" style="font-weight:700;font-size:0.92rem;color:var(--primary);display:inline-flex;align-items:center;gap:5px">
               ${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 15 }) : ""} <span>Luyện tập tự do</span>
@@ -11773,6 +11776,13 @@ function initMockTestPage() {
             </div>
           `}
 
+          <div class="cbt-palette-filter-row" role="tablist" aria-label="Lọc trạng thái câu hỏi">
+            <button type="button" class="cbt-filter-pill active" data-palette-filter="all">Tất cả (${totalQuestions})</button>
+            <button type="button" class="cbt-filter-pill" data-palette-filter="done">Đã làm (<span id="countDoneFilter">${totalAnswered}</span>)</button>
+            <button type="button" class="cbt-filter-pill" data-palette-filter="undone">Chưa làm (<span id="countUndoneFilter">${totalQuestions - totalAnswered}</span>)</button>
+            <button type="button" class="cbt-filter-pill" data-palette-filter="flagged">Đặt cờ (<span id="countFlagFilter">${Object.keys(flagged).filter(k => flagged[k]).length}</span>)</button>
+          </div>
+
           <div class="question-palette-grid">
     `;
 
@@ -11897,6 +11907,7 @@ function initMockTestPage() {
         if (pBtn) {
           pBtn.classList.toggle("flagged", flagged[id]);
         }
+        refreshPaletteCounts();
       };
     });
 
@@ -11967,8 +11978,67 @@ function initMockTestPage() {
         const ansCount = Object.keys(answers).length;
         const countDisplay = el("#answeredCount");
         if (countDisplay) countDisplay.textContent = `${ansCount}/${totalQuestions}`;
+        refreshPaletteCounts();
       });
     });
+
+    // Chế độ Toàn màn hình CBT Full-Screen Mode
+    const btnFs = host.querySelector("#btnToggleFullScreen");
+    if (btnFs) {
+      btnFs.onclick = () => {
+        if (!document.fullscreenElement) {
+          if (document.documentElement.requestFullscreen) {
+            document.documentElement.requestFullscreen().catch(() => {});
+          }
+          document.body.classList.add("cbt-fullscreen-mode");
+          btnFs.innerHTML = `${window.RusiIcons ? RusiIcons.get("minimize", { size: 14 }) : ""} <span class="btn-text">Thu nhỏ</span>`;
+        } else {
+          if (document.exitFullscreen) {
+            document.exitFullscreen().catch(() => {});
+          }
+          document.body.classList.remove("cbt-fullscreen-mode");
+          btnFs.innerHTML = `${window.RusiIcons ? RusiIcons.get("maximize", { size: 14 }) : ""} <span class="btn-text">Toàn màn hình</span>`;
+        }
+      };
+    }
+
+    // Bộ lọc trạng thái bảng câu hỏi (All, Done, Undone, Flagged)
+    let currentPaletteFilter = "all";
+    const applyPaletteFilter = (filter) => {
+      currentPaletteFilter = filter;
+      host.querySelectorAll(".cbt-filter-pill").forEach(p => {
+        p.classList.toggle("active", p.dataset.paletteFilter === filter);
+      });
+      host.querySelectorAll(".palette-btn[data-jump]").forEach(b => {
+        const isDone = b.classList.contains("done") || b.classList.contains("done-correct") || b.classList.contains("done-wrong");
+        const isFlag = b.classList.contains("flagged");
+        let show = true;
+        if (filter === "done") show = isDone;
+        else if (filter === "undone") show = !isDone;
+        else if (filter === "flagged") show = isFlag;
+        b.classList.toggle("cbt-filtered-out", !show);
+      });
+    };
+    host.querySelectorAll(".cbt-filter-pill").forEach(pill => {
+      pill.onclick = () => applyPaletteFilter(pill.dataset.paletteFilter);
+    });
+
+    const refreshPaletteCounts = () => {
+      const ansCount = Object.keys(answers).length;
+      const countDisplay = el("#answeredCount");
+      if (countDisplay) countDisplay.textContent = `${ansCount}/${totalQuestions}`;
+      const doneFilter = el("#countDoneFilter");
+      if (doneFilter) doneFilter.textContent = ansCount;
+      const undoneFilter = el("#countUndoneFilter");
+      if (undoneFilter) undoneFilter.textContent = Math.max(0, totalQuestions - ansCount);
+      const flagCount = Object.keys(flagged).filter(k => flagged[k]).length;
+      const flagFilter = el("#countFlagFilter");
+      if (flagFilter) flagFilter.textContent = flagCount;
+      if (currentPaletteFilter !== "all") {
+        applyPaletteFilter(currentPaletteFilter);
+      }
+    };
+    refreshPaletteCounts();
 
     host.querySelectorAll("[data-jump]").forEach((pBtn) => {
       pBtn.onclick = () => {
@@ -12065,9 +12135,84 @@ function initMockTestPage() {
       };
     }
 
-    el("#submitTest").onclick = submit;
+    const openSubmitConfirmModal = () => {
+      const answeredCount = Object.keys(answers).length;
+      const unDoneCount = Math.max(0, totalQuestions - answeredCount);
+      const flagCount = Object.keys(flagged).filter(k => flagged[k]).length;
+
+      let modal = document.getElementById("cbtSubmitModal");
+      if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "cbtSubmitModal";
+        modal.className = "anticheat-modal";
+        document.body.appendChild(modal);
+      }
+
+      modal.innerHTML = `
+        <div class="anticheat-modal-box" style="border-top-color:var(--secondary);max-width:440px">
+          <div style="margin-bottom:12px;color:var(--secondary)">
+            ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 48 }) : ""}
+          </div>
+          <h3 style="font-size:1.3rem;font-weight:800;color:var(--text);margin-bottom:8px">XÁC NHẬN NỘP BÀI THI</h3>
+          <p style="color:var(--muted);font-size:0.92rem;margin-bottom:18px">
+            Vui lòng kiểm tra lại tiến độ làm bài trước khi kết thúc phiên thi khảo thí CBT.
+          </p>
+          
+          <div style="background:var(--bg);border-radius:12px;padding:14px 18px;margin-bottom:20px;text-align:left;border:1px solid var(--border)">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.92rem">
+              <span>Tổng số câu hỏi:</span>
+              <b>${totalQuestions} câu</b>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.92rem;color:var(--green)">
+              <span>Đã hoàn thành:</span>
+              <b>${answeredCount} câu</b>
+            </div>
+            ${unDoneCount > 0 ? `
+              <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:0.92rem;color:var(--red)">
+                <span>Chưa trả lời:</span>
+                <b>${unDoneCount} câu ⚠️</b>
+              </div>
+            ` : ""}
+            ${flagCount > 0 ? `
+              <div style="display:flex;justify-content:space-between;font-size:0.92rem;color:#b45309">
+                <span>Đang gắn cờ xem lại:</span>
+                <b>${flagCount} câu 🚩</b>
+              </div>
+            ` : ""}
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:10px">
+            <button type="button" class="btn btn-outline" id="btnCancelSubmit" style="height:44px;font-weight:700">
+              Tiếp tục làm bài
+            </button>
+            <button type="button" class="btn btn-primary" id="btnConfirmSubmit" style="height:44px;font-weight:800;background:var(--secondary);border-color:var(--secondary)">
+              Nộp bài ngay
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.getElementById("btnCancelSubmit").onclick = () => modal.remove();
+      document.getElementById("btnConfirmSubmit").onclick = () => {
+        modal.remove();
+        submit();
+      };
+    };
+
+    const submitBtn = el("#submitTest");
+    if (submitBtn) {
+      submitBtn.onclick = () => {
+        if (examMode === "exam") openSubmitConfirmModal();
+        else submit();
+      };
+    }
     const topSub = el("#btnSubmitTop");
-    if (topSub) topSub.onclick = submit;
+    if (topSub) {
+      topSub.onclick = () => {
+        if (examMode === "exam") openSubmitConfirmModal();
+        else submit();
+      };
+    }
   };
 
   const submit = () => {
@@ -12762,6 +12907,361 @@ function initShopPage() {
 }
 
 /* =====================================================================
+ * BÀI KIỂM TRA XẾP LỚP TRKI 0Đ (DIAGNOSTIC PLACEMENT TEST)
+ * ===================================================================== */
+const DIAGNOSTIC_QUESTIONS = [
+  {
+    level: "A1",
+    cat: "cases",
+    catName: "Ngữ pháp 6 Cách",
+    q: "Где ты живёшь? — Я живу в ... (Россия).",
+    options: ["России", "Россию", "Россией", "Россия"],
+    a: 0,
+    ex: "Danh từ giống cái kết thúc bằng -ия khi ở Cách 6 (vị trí với giới từ в) biến đổi đuôi thành -ии (в России)."
+  },
+  {
+    level: "A1",
+    cat: "cases",
+    catName: "Ngữ pháp 6 Cách",
+    q: "Куダ ты идёшь? — Я иду в ... (библиотека).",
+    options: ["библиотеку", "библиотеке", "библиотеки", "библиотекой"],
+    a: 0,
+    ex: "Chỉ phương hướng di chuyển (Куда) dùng giới từ в/на + Cách 4. Danh từ giống cái -а biến thành -у (в библиотеку)."
+  },
+  {
+    level: "A1",
+    cat: "verbs",
+    catName: "Động từ & Thể",
+    q: "Мой старший брат хорошо ... по-русски.",
+    options: ["говорит", "говорят", "говорить", "говорю"],
+    a: 0,
+    ex: "Chủ ngữ là ngôi thứ 3 số ít (он / мой брат), động từ nhóm 2 говорить chia thành говорит."
+  },
+  {
+    level: "A1",
+    cat: "cases",
+    catName: "Ngữ pháp 6 Cách",
+    q: "Вчера в аудитории было два ...",
+    options: ["студента", "студент", "студентов", "студенту"],
+    a: 0,
+    ex: "Sau các số đếm 2, 3, 4 (два, три, четыре), danh từ đi kèm chia ở dạng Cách 2 số ít (два студента)."
+  },
+  {
+    level: "A1",
+    cat: "vocab",
+    catName: "Từ vựng & Đại từ",
+    q: "Это ... новая тетрадь? — Да, моя.",
+    options: ["твоя", "твой", "твоё", "твои"],
+    a: 0,
+    ex: "Тетрадь là danh từ giống cái (đuôi -дь), do đó đại từ sở hữu phải dùng dạng giống cái (твоя тетрадь)."
+  },
+  {
+    level: "A2",
+    cat: "cases",
+    catName: "Ngữ pháp 6 Cách",
+    q: "Извините, сейчас у меня нет ... (время).",
+    options: ["времени", "время", "временем", "времена"],
+    a: 0,
+    ex: "Sau cấu trúc phủ định sở hữu 'У меня нет...' bắt buộc danh từ chia ở Cách 2. Danh từ trung tính đặc biệt время có dạng Cách 2 là времени."
+  },
+  {
+    level: "A2",
+    cat: "cases",
+    catName: "Ngữ pháp 6 Cách",
+    q: "Антон часто звонит своей ... (мама).",
+    options: ["маме", "маму", "мамой", "мамы"],
+    a: 0,
+    ex: "Động từ звонить đòi hỏi bổ ngữ chỉ người nhận cuộc gọi ở Cách 3 (Dative). Danh từ giống cái мама đổi thành маме."
+  },
+  {
+    level: "A2",
+    cat: "verbs",
+    catName: "Động từ & Thể",
+    q: "Вчера весь вечер Анна ... интересную статью.",
+    options: ["читала", "прочитала", "прочитать", "читает"],
+    a: 0,
+    ex: "Cụm từ 'весь вечер' (cả buổi tối) chỉ một quá trình kéo dài trong quá khứ, bắt buộc dùng thể Chưa hoàn thành (читала)."
+  },
+  {
+    level: "A2",
+    cat: "motion",
+    catName: "Động từ chuyển động",
+    q: "Каждое утро дети ... в школу пешком.",
+    options: ["ходят", "идут", "пошли", "ездили"],
+    a: 0,
+    ex: "Hành động đi bộ diễn ra lặp lại thường xuyên (каждое утро) hai chiều dùng động từ chuyển động vô định hướng ходить (ходят)."
+  },
+  {
+    level: "A2",
+    cat: "cases",
+    catName: "Ngữ pháp 6 Cách",
+    q: "Я всегда пью крепкий кофе с ... (молоко).",
+    options: ["молоком", "молоко", "молока", "молоке"],
+    a: 0,
+    ex: "Giới từ с (với / kèm theo) đòi hỏi danh từ đi kèm chia ở Cách 5 (Instrumental). Danh từ giống trung молоко biến thành молоком."
+  },
+  {
+    level: "B1",
+    cat: "motion",
+    catName: "Động từ chuyển động",
+    q: "Поезд из Санкт-Петербурга ровно в 10 часов ... на главный вокзал.",
+    options: ["прибыл", "убыл", "пробыл", "перебыл"],
+    a: 0,
+    ex: "Hành động chuyển động đến nơi kết thúc hành trình dùng tiền tố при- (прибыть trên tàu xe / прибыл)."
+  },
+  {
+    level: "B1",
+    cat: "verbs",
+    catName: "Động từ & Thể",
+    q: "Я наконец ... эту сложную курсовую работу за три дня.",
+    options: ["написал", "писал", "напишу", "дописывал"],
+    a: 0,
+    ex: "Từ 'наконец' (cuối cùng thì) và giới từ 'за три дня' (trong vòng 3 ngày) biểu thị hành động đạt được kết quả trọn vẹn, phải dùng thể Hoàn thành quá khứ (написал)."
+  },
+  {
+    level: "B1",
+    cat: "cases",
+    catName: "Ngữ pháp 6 Cách",
+    q: "Преподаватель, ... мы встретили в библиотеке, преподаёт историю.",
+    options: ["которого", "который", "которому", "которым"],
+    a: 0,
+    ex: "Đại từ quan hệ который thay thế cho danh từ chỉ người sống (преподаватель) làm tân ngữ trực tiếp cho встретили, chia theo Cách 4 giống đực sinh vật (= Cách 2: которого)."
+  },
+  {
+    level: "B1",
+    cat: "vocab",
+    catName: "Giới từ & Cú pháp",
+    q: "Экскурсию в Петергоф отменили из-за ... (плохая погода).",
+    options: ["плохой погоды", "плохую погоду", "плохой погоде", "плохой погодой"],
+    a: 0,
+    ex: "Giới từ nguyên nhân tiêu cực из-за (do/bởi vì) luôn đòi hỏi danh từ và tính từ đi kèm chia ở Cách 2 (из-за плохой погоды)."
+  },
+  {
+    level: "B1",
+    cat: "verbs",
+    catName: "Động từ & Thể",
+    q: "Если бы у меня ... свободное время, я бы поехал на Байкал.",
+    options: ["было", "будет", "есть", "была"],
+    a: 0,
+    ex: "Trong mệnh đề giả định với liên từ 'Если бы', động từ luôn chia ở thời quá khứ. Chủ ngữ là время (danh từ giống trung) nên dùng было."
+  }
+];
+
+window.openDiagnosticTestModal = function () {
+  let modal = document.getElementById("diagTestModal");
+  if (!modal) {
+    modal = document.createElement("div");
+    modal.id = "diagTestModal";
+    modal.className = "diagnostic-modal-overlay";
+    document.body.appendChild(modal);
+  }
+
+  let currentIdx = 0;
+  let userAnswers = {};
+  let totalTime = 15 * 60;
+  let timerId = null;
+
+  const closeDiagModal = () => {
+    if (timerId) clearInterval(timerId);
+    modal.remove();
+  };
+
+  const renderQuestion = () => {
+    const q = DIAGNOSTIC_QUESTIONS[currentIdx];
+    const totalQ = DIAGNOSTIC_QUESTIONS.length;
+    const answeredCount = Object.keys(userAnswers).length;
+    const pctProgress = Math.round(((currentIdx + 1) / totalQ) * 100);
+
+    const m = Math.floor(totalTime / 60).toString().padStart(2, "0");
+    const s = (totalTime % 60).toString().padStart(2, "0");
+
+    modal.innerHTML = `
+      <div class="diagnostic-modal-card">
+        <div class="diag-modal-header">
+          <div class="diag-modal-title-wrap">
+            <span class="diag-modal-title">Kiểm Tra Xếp Lớp TRKI (Câu ${currentIdx + 1}/${totalQ})</span>
+            <span class="diag-timer-chip" id="diagTimerDisplay">
+              ${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} ${m}:${s}
+            </span>
+          </div>
+          <button class="diag-modal-close" id="btnCloseDiag" type="button" title="Đóng">&times;</button>
+        </div>
+        <div class="diag-progress-bar-wrap">
+          <div class="diag-progress-bar-fill" style="width:${pctProgress}%"></div>
+        </div>
+        <div class="diag-modal-body">
+          <div class="diag-q-meta">
+            <span class="diag-q-badge">${esc(q.catName)} · Cấp độ ${esc(q.level)}</span>
+            <span style="font-size:0.8rem;color:var(--muted)">Đã làm ${answeredCount}/${totalQ} câu</span>
+          </div>
+          <div class="diag-q-text ru">${esc(q.q)}</div>
+          <div class="diag-options-grid">
+            ${q.options.map((opt, oi) => {
+              const isSelected = userAnswers[currentIdx] === oi;
+              return `
+              <button type="button" class="diag-option-btn ${isSelected ? "selected" : ""}" data-opt-idx="${oi}">
+                <span class="diag-option-num">${String.fromCharCode(65 + oi)}</span>
+                <span class="ru">${esc(opt)}</span>
+              </button>`;
+            }).join("")}
+          </div>
+        </div>
+        <div class="diag-modal-footer">
+          <button type="button" class="btn btn-outline" id="btnDiagPrev" ${currentIdx === 0 ? "disabled" : ""} style="padding:10px 18px">
+            ← Câu trước
+          </button>
+          ${currentIdx < totalQ - 1 ? `
+            <button type="button" class="btn btn-primary" id="btnDiagNext" style="padding:10px 22px">
+              Câu tiếp theo →
+            </button>
+          ` : `
+            <button type="button" class="btn btn-primary" id="btnDiagSubmit" style="padding:10px 22px;background:var(--secondary);border-color:var(--secondary)">
+              ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} Hoàn thành & Nhận kết quả
+            </button>
+          `}
+        </div>
+      </div>
+    `;
+
+    document.getElementById("btnCloseDiag").onclick = closeDiagModal;
+    const prevBtn = document.getElementById("btnDiagPrev");
+    if (prevBtn) {
+      prevBtn.onclick = () => {
+        if (currentIdx > 0) {
+          currentIdx--;
+          renderQuestion();
+        }
+      };
+    }
+    const nextBtn = document.getElementById("btnDiagNext");
+    if (nextBtn) {
+      nextBtn.onclick = () => {
+        if (currentIdx < totalQ - 1) {
+          currentIdx++;
+          renderQuestion();
+        }
+      };
+    }
+    const submitBtn = document.getElementById("btnDiagSubmit");
+    if (submitBtn) {
+      submitBtn.onclick = renderResult;
+    }
+
+    modal.querySelectorAll(".diag-option-btn").forEach((b) => {
+      b.onclick = () => {
+        const oi = parseInt(b.dataset.optIdx, 10);
+        userAnswers[currentIdx] = oi;
+        renderQuestion();
+      };
+    });
+  };
+
+  const renderResult = () => {
+    if (timerId) clearInterval(timerId);
+
+    let totalCorrect = 0;
+    const catStats = {
+      cases: { name: "Ngữ pháp 6 Cách", correct: 0, total: 0 },
+      verbs: { name: "Động từ & Thể CB/NCB", correct: 0, total: 0 },
+      motion: { name: "Động từ chuyển động & Cú pháp", correct: 0, total: 0 }
+    };
+
+    DIAGNOSTIC_QUESTIONS.forEach((q, idx) => {
+      const userChoice = userAnswers[idx];
+      const isCorrect = userChoice === q.a;
+      if (isCorrect) totalCorrect++;
+
+      const groupKey = (q.cat === "motion" || q.cat === "vocab") ? "motion" : (q.cat === "verbs" ? "verbs" : "cases");
+      catStats[groupKey].total++;
+      if (isCorrect) catStats[groupKey].correct++;
+    });
+
+    const totalQ = DIAGNOSTIC_QUESTIONS.length;
+    const pct = Math.round((totalCorrect / totalQ) * 100);
+
+    let estLevel = "A1 (Sơ Cấp)";
+    let estBadge = "Khởi động nền tảng";
+    let estDesc = "Bạn đang ở giai đoạn làm quen và tích lũy ngữ pháp cơ bản. Đề xuất: Tập trung làm chủ 6 Cách và từ vựng đời sống A1.";
+
+    if (totalCorrect >= 12) {
+      estLevel = "B1 (Trung Cấp)";
+      estBadge = "Đủ chuẩn Du học Nga";
+      estDesc = "Xuất sắc! Bạn nắm rất vững cấu trúc ngữ pháp và có vốn từ tốt. Bạn đã sẵn sàng để chinh phục chứng chỉ quốc tế ТРКИ-1 (B1).";
+    } else if (totalCorrect >= 6) {
+      estLevel = "A2 (Cơ Bản)";
+      estBadge = "Đang bứt phá mục tiêu";
+      estDesc = "Khá tốt! Bạn đã có nền tảng ngữ pháp vững vàng, cần cải thiện thêm thể hoàn thành/chưa hoàn thành và động từ chuyển động có tiền tố.";
+    }
+
+    modal.innerHTML = `
+      <div class="diagnostic-modal-card">
+        <div class="diag-modal-header">
+          <div class="diag-modal-title-wrap">
+            <span class="diag-modal-title">Báo Cáo Đánh Giá Năng Lực Tiếng Nga</span>
+          </div>
+          <button class="diag-modal-close" id="btnCloseDiag" type="button" title="Đóng">&times;</button>
+        </div>
+        <div class="diag-modal-body">
+          <div class="diag-result-box">
+            <span class="diag-result-badge">
+              ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} ${estBadge}
+            </span>
+            <div class="diag-result-level">Trình Độ Dự Đoán: ${estLevel}</div>
+            <div class="diag-result-score">Kết quả đạt: <b>${totalCorrect}/${totalQ} câu đúng (${pct}%)</b></div>
+
+            <div class="diag-analysis-grid">
+              ${Object.values(catStats).map(c => {
+                const cPct = c.total > 0 ? Math.round((c.correct / c.total) * 100) : 0;
+                return `
+                <div class="diag-analysis-item">
+                  <div class="diag-analysis-name">${esc(c.name)}</div>
+                  <div class="diag-analysis-pct">${c.correct}/${c.total} câu (${cPct}%)</div>
+                  <div class="diag-analysis-bar">
+                    <div class="diag-analysis-fill" style="width:${cPct}%;background:${cPct >= 70 ? 'var(--green)' : cPct >= 40 ? 'var(--secondary)' : 'var(--red)'}"></div>
+                  </div>
+                </div>`;
+              }).join("")}
+            </div>
+
+            <div class="diag-recommend-box">
+              <strong style="color:var(--primary)">Chẩn đoán chuyên môn:</strong>
+              <p style="margin:4px 0 0 0">${estDesc}</p>
+            </div>
+
+            <div class="diag-result-actions">
+              <a class="btn btn-outline" href="mock-test.html" style="text-decoration:none;padding:12px;font-weight:700">
+                ${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 16 }) : ""} Vào phòng thi thử TRKI
+              </a>
+              <a class="btn btn-primary" href="upgrade.html" style="text-decoration:none;padding:12px;font-weight:800;background:var(--secondary);border-color:var(--secondary)">
+                ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Mở khóa 74 đề thi thật PRO
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("btnCloseDiag").onclick = closeDiagModal;
+  };
+
+  renderQuestion();
+
+  timerId = setInterval(() => {
+    totalTime--;
+    const tEl = document.getElementById("diagTimerDisplay");
+    if (tEl) {
+      const m = Math.floor(totalTime / 60).toString().padStart(2, "0");
+      const s = (totalTime % 60).toString().padStart(2, "0");
+      tEl.innerHTML = `${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} ${m}:${s}`;
+    }
+    if (totalTime <= 0) {
+      clearInterval(timerId);
+      renderResult();
+    }
+  }, 1000);
+};
+
+/* =====================================================================
  * TRANG CHỦ: TIẾN ĐỘ, MASCOT RUSIKA & BẢNG GÓI CƯỚC PRO VIETQR
  * ===================================================================== */
 function initIndexPage() {
@@ -12773,6 +13273,16 @@ function initIndexPage() {
   if (el("#pwVocab")) el("#pwVocab").textContent = `${vocabDone}/${(window.VOCAB_JARS || []).length}`;
   const best = STORE.get("bestTest", null);
   if (el("#pwBest")) el("#pwBest").textContent = best === null ? "—" : best + "%";
+
+  // Kích hoạt Bài test xếp lớp TRKI 0đ (Diagnostic Placement Test)
+  const diagBtn = el("#btnOpenDiagnosticModal");
+  if (diagBtn) {
+    diagBtn.onclick = () => {
+      if (typeof window.openDiagnosticTestModal === "function") {
+        window.openDiagnosticTestModal();
+      }
+    };
+  }
 
   // Nút bong bóng chat nổi Mascot Rusika ở góc dưới bên phải màn hình
   if (typeof MascotRusika !== "undefined") {
