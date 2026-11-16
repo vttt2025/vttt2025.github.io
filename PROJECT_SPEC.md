@@ -995,6 +995,12 @@ Mọi thao tác can thiệp vào tài chính, bản quyền PRO, điểm số v�
     - **Completion-Only XP**: Chỉ cộng XP khi hoàn thành trọn vẹn phiên học (Flashcard Lọ: `+15 XP`; Shadowing $\ge 70\%$: `+10 XP`; Nghe hiểu $\ge 60\%$: `+20 XP`; Thi TRKI: `+30 XP`; Tả tranh: `+20 XP`).
     - **Streak theo múi giờ cục bộ**: Một ngày chỉ được tính vào Streak khi có phát sinh XP thực tế. Tính khoảng cách `diffDays` dựa trên mốc ngày 00:00:00 UTC của timezone tài khoản (`diffDays = 1` tăng streak, `diffDays > 1` reset về 0).
 
+13. **Quy Chuẩn Typography & Dấu Ngoặc Kép Thống Nhất (Curly Double Quotes Standard)**:
+    - **Bắt buộc sử dụng cặp dấu ngoặc kép cong “Nội dung”**: Dấu mở `“` (U+201C) và dấu đóng `”` (U+201D) trên toàn bộ hệ thống giao diện, bài viết, câu ví dụ, hội thoại và đề thi.
+    - **Tuyệt đối KHÔNG sử dụng dấu ngoặc kép kiểu Pháp `«Nội dung»` (Guillemets `«` và `»`)**: Toàn bộ dữ liệu hiển thị trong cơ sở dữ liệu Supabase, các tệp module JSON (`data/modules/*.json`), và tệp sao lưu dữ liệu phải được chuẩn hóa 100% về cặp dấu `“...”`.
+    - **Cơ chế phòng thủ trong xử lý chuỗi (Defensive Sanitization)**: Các hàm chuẩn hóa ký tự (`cleanToken`, `stripHtml`, `norm` trong `pages.js`, `app.js`, `admin.js`) vẫn duy trì nhận diện `«` và `»` trong regex để dọn dẹp hoặc chuyển đổi an toàn khi học viên sao chép văn bản từ nguồn ngoài dán vào hệ thống.
+    - **Trình quản trị CMS & Đồng bộ dữ liệu**: Mọi luồng nhập liệu bài học mới, nhập phụ đề, hoặc đồng bộ hai chiều giữa Supabase và client phải tự động chuẩn hóa các ký tự `«` và `»` thành `“` và `”` trước khi ghi vào kho lưu trữ.
+
 ---
 
 ## 9. QUY CHUẨN VECTOR ICON LUCIDE 24px (LUCIDE DESIGN SYSTEM)
@@ -1089,6 +1095,11 @@ Thư viện `rusi-icons.js` được nhúng tại thẻ `<head>` trên tất c�
    - Mọi trang tự động nạp theo nhu cầu qua `RusiDataLoader.prepareForCurrentPage()` và lưu trữ vĩnh viễn vào IndexedDB (`rusi_offline_db`) của máy học viên.
    - Tuyệt đối không gửi các truy vấn nặng quét toàn bộ bảng về Supabase trên mỗi lượt tải trang để bảo vệ 100% hạn mức 5GB Egress hàng tháng của Supabase.
 
+9. **Chuẩn Hóa Typography & Zero Guillemets Baseline**:
+   - 100% dữ liệu trong cơ sở dữ liệu Supabase Cloud, tệp sao lưu `data/supabase-backup.json`, 14 tệp module `data/modules/*.json`, và tệp từ điển `data/dict-ru-vi.json` đã loại bỏ hoàn toàn các ký tự `«` và `»`.
+   - Toàn bộ trích dẫn và hội thoại hiển thị thống nhất bằng cặp dấu ngoặc kép cong `“Nội dung”` (U+201C / U+201D).
+   - Duy trì quy trình kiểm định đối soát định kỳ và kiểm tra tự động trước mỗi lần release nhằm bảo đảm chỉ số guillemets tồn dư luôn bằng 0.
+
 ---
 
 ## 11. BÁO CÁO NGHIÊN CỨU THỊ TRƯỜNG, ĐỊNH VỊ CHIẾN LƯỢC & TÍNH KHẢ THI 10 NĂM (2026 – 2036)
@@ -1147,4 +1158,28 @@ Thư viện `rusi-icons.js` được nhúng tại thẻ `<head>` trên tất c�
 3. **Giai đoạn 3 (2031 – 2036) — Nền tảng Tri thức tiếng Nga & Đối tác Khảo thí Toàn diện**:
    - Mở rộng ngân hàng đề thi TRKI thiếu nhi (TRKI Dety) và tiếng Nga thương mại / du lịch.
    - Trở thành đối tác khảo thí mô phỏng trực tuyến tin cậy của các cơ quan đào tạo và đại học.
+
+### 11.7. Tác Động Của AI Hiện Nay & 4 Lớp Hào Lũy Phòng Thủ Bền Vững (AI Defensive Moat)
+* **Bối cảnh phát triển của AI tổng quát (ChatGPT, Claude, Gemini)**:
+  - *Mặt mạnh*: Các mô hình AI tổng quát giải thích ngữ pháp ngắn và dịch thuật câu đơn lẻ rất nhanh.
+  - *Mặt yếu chí tử đối với người học TRKI*:
+    1. **Thiếu tính cấu trúc sư phạm**: Không có lộ trình luyện thi TRKI bài bản từ A1 đến C2; người học tự hỏi chat thì bị ngợp thông tin và thiếu tính liên tục.
+    2. **Không có ngân hàng đề thi chuẩn CBT**: Chatbot không thể mô phỏng phòng thi trắc nghiệm chia đôi màn hình có đồng hồ đếm ngược, phân môn 5 Subtest và tính điểm Pass/Fail theo thang TRKI chuẩn.
+    3. **Ảo giác chia 6 Cách tiếng Nga (Hallucinations)**: Tiếng Nga là ngôn ngữ có tính hình thái học cực kỳ phức tạp (6 cách, giống/số, tiếp đầu ngữ động từ chuyển động, cặp thể CB/NCB). AI tổng quát vẫn thường xuyên chia sai đuôi cách ở các từ hiếm hoặc bối cảnh đa tầng.
+* **4 Lớp Hào Lũy Dữ Liệu & Công Nghệ Bất Khả Xâm Phạm Của RUSI TRKI**:
+  1. **Hào lũy Khảo thí Độc quyền (Proprietary Exam Moat)**: 74 đề thi thật với 3.867 câu hỏi được số hóa chi tiết và giải thích cặn kẽ, đáp án bảo vệ tại server qua RPC `rusi_grade_trki_exam`. Đây là tài sản dữ liệu độc quyền mà các mô hình AI bên ngoài không thể tự tạo ra.
+  2. **Hào lũy Lọ Từ Vựng Ngữ Cảnh (Contextual Action Clusters)**: 5.000 từ vựng gắn liền với chuỗi hành động thực tế, quản cách động từ, ví dụ song ngữ, phát âm bản ngữ và thuật toán lặp lại ngắt quãng SM-2.
+  3. **Hào lũy Shadowing Studio Âm Học Thời Gian Thực (Acoustic WER Studio)**: 24 bài học video hoạt hình Nga kèm timestamp chuẩn xác từng giây, bóc tách lỗi WER âm học từng từ hiển thị màu trực quan ngay trên câu tiếng Nga — điều mà các chatbot văn bản thuần túy hoàn toàn bất lực.
+  4. **Hào lũy Thói Quen Học Tập & Chứng Thực Tiến Độ (Habit & Social Proof)**: Chuỗi ngày Streak, điểm kinh nghiệm XP, bảng xếp hạng và cộng đồng du học sinh Nga tạo ra động lực duy trì việc học mỗi ngày.
+
+### 11.8. Chiến Lược Tối Ưu Hóa Phễu Chuyển Đổi & Tiện Ích Gói Nâng Cấp PRO (Enterprise Conversion Standard)
+* **Quy chuẩn hiển thị & điều hướng gói PRO thống nhất**:
+  - Khối nâng cấp hội viên trên mọi trang webapp (`index.html`, `mock-test.html`, `vocabulary.html`, `speaking.html`, `writing.html`, `shop.html`) phải hiển thị đồng bộ 3 nấc thời hạn: **1 Tháng** (Nước rút mùa thi), **3 Tháng** (Bứt phá mục tiêu — Phổ biến nhất), và **1 Năm** (Toàn diện du học — Tiết kiệm nhất).
+  - Giá bán hiển thị rõ ràng cả giá ưu đãi và giá gốc gạch ngang tạo mỏ neo tâm lý minh bạch.
+* **Quy trình thanh toán VietQR 2.0 ma sát tối thiểu (Zero Friction Checkout)**:
+  - Nút bấm `[Nâng cấp ngay]` kích hoạt tức thì Modal thanh toán VietQR với mã QR động sinh theo đúng số tiền và nội dung chuyển khoản tự động (`RUSIPRO [Username] [Code]`).
+  - Hệ thống tự động sao chép số tài khoản và cú pháp chuyển khoản khi người học chạm vào màn hình trên thiết bị di động.
+  - Tự động kiểm tra trạng thái kích hoạt sau khi học viên bấm nút xác nhận thanh toán, phản hồi Toast thông báo chúc mừng và nâng cấp quyền hạn PRO ngay lập tức.
+* **Đảm bảo tính sẵn sàng cấp doanh nghiệp (Enterprise SLA & 0-Egress Architecture)**:
+  - Toàn bộ tài nguyên bài học và đề thi được phân phối qua CDN tĩnh kết hợp nạp ngầm vào IndexedDB máy học viên, bảo đảm tốc độ tải trang dưới 1 giây và chi phí băng thông máy chủ xấp xỉ 0 đồng ngay cả khi lưu lượng người dùng tăng đột biến.
 
