@@ -1030,6 +1030,7 @@ const Monetization = {
 
     const defaultDesc = "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng B1–B2, đề thi thử ТРКИ chuẩn quốc tế, bài luyện nghe video thực tế, AI chấm bài tự luận và nhận diện phát âm không giới hạn.";
     const descText = customDesc || defaultDesc;
+    const user = this.getCurrentUser();
 
     modal.innerHTML = `
       <div class="vietqr-card pro-gate-card">
@@ -1049,10 +1050,21 @@ const Monetization = {
           <button type="button" class="btn btn-outline pro-gate-btn-dismiss" id="btnProGateDismiss">
             Để sau
           </button>
-          <a href="upgrade.html" class="btn btn-primary pro-gate-btn-upgrade" id="btnProGateUpgrade" style="display:inline-flex;align-items:center;gap:6px">
-            Tìm hiểu gói PRO ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "→"}
-          </a>
+          ${user ? `
+            <button type="button" class="btn btn-primary pro-gate-btn-upgrade" id="btnProGateQuickPay" style="display:inline-flex;align-items:center;gap:6px">
+              ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Kích hoạt qua VietQR ngay
+            </button>
+          ` : `
+            <a href="upgrade.html" class="btn btn-primary pro-gate-btn-upgrade" id="btnProGateUpgrade" style="display:inline-flex;align-items:center;gap:6px">
+              Xem bảng giá & ưu đãi ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : "→"}
+            </a>
+          `}
         </div>
+        ${user ? `
+          <div style="text-align:center;margin-top:12px;font-size:0.86rem">
+            <a href="upgrade.html" style="color:var(--muted);text-decoration:underline">Xem so sánh chi tiết các gói cước →</a>
+          </div>
+        ` : ""}
       </div>
     `;
 
@@ -1067,6 +1079,13 @@ const Monetization = {
 
     document.getElementById("closeProGate").onclick = closeModal;
     document.getElementById("btnProGateDismiss").onclick = closeModal;
+    const quickPayBtn = document.getElementById("btnProGateQuickPay");
+    if (quickPayBtn) {
+      quickPayBtn.onclick = () => {
+        closeModal();
+        Monetization.openUpgradeModal("pro_3m");
+      };
+    }
     modal.onclick = (e) => {
       if (e.target === modal) closeModal();
     };
@@ -1686,7 +1705,8 @@ const NAV_LINKS = [
   ["listening.html", "Nghe"],
   ["speaking.html", "Nói"],
   ["mock-test.html", "TRKI"],
-  ["blog.html", "Blog"]
+  ["blog.html", "Blog"],
+  ["upgrade.html", "Bảng giá"]
 ];
 
 const SEASON_ORDER = ["winter"];
@@ -2616,6 +2636,7 @@ function renderFooter() {
         <a href="speaking.html">Nói</a>
         <a href="mock-test.html">TRKI</a>
         <a href="blog.html">Blog</a>
+        <a href="upgrade.html">Bảng giá PRO</a>
       </div>
       <div class="footer-copyright">
         <small>© 2026 RUSI TRKI. Mọi quyền được bảo lưu.</small>

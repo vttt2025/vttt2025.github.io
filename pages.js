@@ -12787,13 +12787,7 @@ function initIndexPage() {
 
     const user = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
     
-    // YÊU CẦU: Không hiển thị phần nâng cấp tài khoản PRO ở index.html khi KHÔNG đăng nhập
-    if (!user) {
-      if (pricingSection) pricingSection.style.display = "none";
-      pricingHost.innerHTML = "";
-      return;
-    }
-
+    // Luôn hiển thị bảng giá công khai chuẩn EdTech minh bạch
     if (pricingSection) pricingSection.style.display = "block";
 
     const isPro = typeof Monetization !== "undefined" ? Monetization.isPro() : false;
@@ -13157,52 +13151,20 @@ function initUpgradePage() {
     const proInfo = typeof Monetization !== "undefined" ? Monetization.getProInfo() : null;
     const pkgs = typeof Monetization !== "undefined" ? Monetization.getPackages() : (typeof PACKAGES !== "undefined" ? PACKAGES : []);
 
-    // 1. KHI CHƯA ĐĂNG NHẬP: Hiển thị giao diện mời đăng nhập chuẩn
-    if (!user) {
-      host.innerHTML = `
-        <div class="upgrade-hero">
-          <span class="upgrade-kicker">NÂNG CẤP TÀI KHOẢN PRO</span>
-          <h1>Mở Khóa Toàn Bộ Đề Thi TRKI</h1>
-          <p>Trang nâng cấp tài khoản dành cho học viên RusiTRKI. Vui lòng đăng nhập để xem thông tin gói cước và ưu đãi dành riêng cho bạn.</p>
-        </div>
+    // Tạo phần hiển thị trạng thái học viên (User Strip)
+    let userStripHtml = "";
+    if (user) {
+      const initials = (user.name || user.email || "?")
+        .split(/\s+/)
+        .map((s) => s[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase();
+      const avatar = user.photo
+        ? `<img src="${esc(user.photo)}" alt="" referrerpolicy="no-referrer" />`
+        : initials;
 
-        <div class="upgrade-auth-box">
-          <div class="upgrade-auth-icon">${window.RusiIcons ? RusiIcons.get("lock-pro", { size: 36 }) : ""}</div>
-          <h2>Đăng nhập để xem bảng giá & ưu đãi</h2>
-          <p>Để lưu trữ trọn đời kết quả luyện thi, đồng bộ tiến độ trên mọi thiết bị và gắn quyền PRO vào tài khoản chính chủ, vui lòng đăng nhập trước.</p>
-          <div class="upgrade-auth-actions">
-            <a class="btn btn-primary btn-lg" href="login.html?redirect=upgrade.html" style="text-decoration:none">
-              Đăng nhập với Google / Email
-            </a>
-            <a class="btn btn-outline btn-lg" href="signup.html?redirect=upgrade.html" style="text-decoration:none">
-              Đăng ký tài khoản mới
-            </a>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    // 2. KHI ĐÃ ĐĂNG NHẬP: Hiển thị đầy đủ trang Nâng cấp chuẩn DauEnglish
-    const initials = (user.name || user.email || "?")
-      .split(/\s+/)
-      .map((s) => s[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
-    const avatar = user.photo
-      ? `<img src="${esc(user.photo)}" alt="" referrerpolicy="no-referrer" />`
-      : initials;
-
-    host.innerHTML = `
-      <!-- HERO SECTION -->
-      <div class="upgrade-hero">
-        <span class="upgrade-kicker">BẢNG GIÁ DỊCH VỤ & GÓI HỌC VIÊN PRO</span>
-        <h1>Mở Khóa Toàn Diện — Bứt Phá Chứng Chỉ TRKI</h1>
-        <p>Đầu tư thông minh một lần, đồng hành trọn vẹn suốt quá trình luyện thi chứng chỉ ТРКИ và chinh phục học bổng du học Liên bang Nga.</p>
-      </div>
-
-      <!-- USER STRIP -->
+      userStripHtml = `
       <div class="upgrade-user-strip">
         <div class="upgrade-user-info">
           <div class="user-avatar-small">${avatar}</div>
@@ -13219,7 +13181,7 @@ function initUpgradePage() {
 
         ${isPro ? `
           <div class="upgrade-pro-active-box">
-            <span>${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Gói đang dùng: <b>${esc(proInfo ? proInfo.pkgTitle : "PRO VIP")}</b> (${esc((proInfo && proInfo.expiresFormatted) || "Đang kích hoạt")})</span>
+            <span>${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Gói đang dùng: <b>${esc(proInfo ? proInfo.pkgTitle : "PRO")}</b> (${esc((proInfo && proInfo.expiresFormatted) || "Đang kích hoạt")})</span>
             <button class="btn btn-sm btn-outline" id="btnManageUpgradePage" style="white-space:nowrap">Quản lý gói</button>
           </div>
         ` : `
@@ -13227,7 +13189,38 @@ function initUpgradePage() {
             ${window.RusiIcons ? RusiIcons.get("flame-streak", { size: 16 }) : ""} Ưu đãi 50% dành riêng cho tài khoản của bạn hôm nay
           </div>
         `}
+      </div>`;
+    } else {
+      userStripHtml = `
+      <div class="upgrade-user-strip" style="background:linear-gradient(135deg, rgba(37,99,235,0.06), rgba(245,158,11,0.06));border:1px solid rgba(37,99,235,0.15)">
+        <div class="upgrade-user-info">
+          <div class="user-avatar-small" style="background:var(--primary);color:#fff">${window.RusiIcons ? RusiIcons.get("user-avatar-default", { size: 16 }) : "Я"}</div>
+          <div>
+            <div class="upgrade-user-name">
+              <span>Khách vãng lai:</span> <b>Bạn chưa đăng nhập</b>
+            </div>
+            <div class="upgrade-user-tier" style="font-size:0.84rem;color:var(--muted)">
+              Đăng nhập để đồng bộ tiến độ luyện thi và gắn quyền PRO vĩnh viễn vào tài khoản
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <a class="btn btn-sm btn-primary" href="login.html?redirect=upgrade.html" style="text-decoration:none;font-weight:700">Đăng nhập</a>
+          <a class="btn btn-sm btn-outline" href="signup.html?redirect=upgrade.html" style="text-decoration:none">Đăng ký</a>
+        </div>
+      </div>`;
+    }
+
+    host.innerHTML = `
+      <!-- HERO SECTION -->
+      <div class="upgrade-hero">
+        <span class="upgrade-kicker">BẢNG GIÁ DỊCH VỤ & GÓI HỌC VIÊN PRO</span>
+        <h1>Mở Khóa Toàn Diện — Bứt Phá Chứng Chỉ TRKI</h1>
+        <p>Đầu tư thông minh một lần, đồng hành trọn vẹn suốt quá trình luyện thi chứng chỉ ТРКИ và chinh phục học bổng du học Liên bang Nga.</p>
       </div>
+
+      <!-- USER STRIP -->
+      ${userStripHtml}
 
       <!-- PRICING CARDS GRID -->
       <div class="pricing-grid" style="margin-bottom:60px">
@@ -13275,49 +13268,49 @@ function initUpgradePage() {
               <tr>
                 <th class="col-feature">Tính năng / Nội dung học</th>
                 <th class="col-free">Tài khoản FREE</th>
-                <th class="col-pro"><span class="pro-crown">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 16 }) : ""}</span> Gói PRO VIP (Khuyên dùng)</th>
+                <th class="col-pro"><span class="pro-crown">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 16 }) : ""}</span> Đặc Quyền Hội Viên PRO (1T / 3T / 1N)</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td class="col-feature"><b>Ngân hàng đề thi thử TRKI</b></td>
                 <td class="col-free">1 đề thi mẫu Part Ngữ pháp A1/A2</td>
-                <td class="col-pro"><b>TOÀN BỘ</b> ngân hàng đề ТРКИ A1, A2, B1, B2 chuẩn quốc tế</td>
+                <td class="col-pro"><b>TOÀN BỘ 74 đề thi</b> ТРКИ A1, A2, B1, B2 chuẩn quốc tế (Cả 3 gói)</td>
               </tr>
               <tr>
                 <td class="col-feature"><b>Đáp án & Giải thích chi tiết</b></td>
                 <td class="col-free">Chỉ xem số điểm tổng</td>
-                <td class="col-pro"><b>Chi tiết từng câu</b>: Phân tích ngữ pháp, bẫy trắc nghiệm & dẫn chứng</td>
+                <td class="col-pro"><b>Chi tiết từng câu</b>: Phân tích ngữ pháp 6 Cách, bẫy trắc nghiệm & dẫn chứng</td>
               </tr>
               <tr>
                 <td class="col-feature"><b>Luyện nghe 4 Part CEFR</b></td>
                 <td class="col-free">Nghe thử Part 1</td>
-                <td class="col-pro"><b>Trọn bộ Part 1–4</b>, chỉnh tốc độ 0.75x–1.25x & full transcript song ngữ</td>
+                <td class="col-pro"><b>Trọn bộ Part 1–4</b>, chỉnh tốc độ 0.75x–1.25x & full transcript song ngữ (Gói 3T & 1N)</td>
               </tr>
               <tr>
                 <td class="col-feature"><b>AI Chấm phát âm & Luyện nói</b></td>
                 <td class="col-free">Giới hạn 2 lượt thử/ngày</td>
-                <td class="col-pro"><b>Không giới hạn</b> cùng AI Rusika, so sánh âm vị chuẩn bản xứ</td>
+                <td class="col-pro"><b>AI Shadowing chuyên sâu</b>, so sánh âm vị chuẩn bản xứ (Gói 3T & 1N)</td>
               </tr>
               <tr>
                 <td class="col-feature"><b>Luyện viết tự luận (Письмо)</b></td>
                 <td class="col-free">Chấm 1 bài mẫu</td>
-                <td class="col-pro"><b>Không giới hạn</b>, AI chấm 4 tiêu chuẩn TRKI (Ngữ pháp, Từ vựng, Bố cục)</td>
+                <td class="col-pro"><b>AI Rusika chấm không giới hạn</b> 4 tiêu chuẩn TRKI (Đặc quyền gói 1 Năm)</td>
               </tr>
               <tr>
                 <td class="col-feature"><b>Kho Lọ từ vựng Spaced Repetition</b></td>
                 <td class="col-free">2 Lọ từ cơ bản</td>
-                <td class="col-pro"><b>Kho 100+ Lọ từ chuyên ngành</b> (Y khoa, Kỹ thuật, Kinh tế, KTX, Du học Nga)</td>
+                <td class="col-pro"><b>Kho 100+ Lọ từ chuyên ngành</b> (Y khoa, Kỹ thuật, Kinh tế) & Không giới hạn tạo lọ cá nhân</td>
               </tr>
               <tr>
-                <td class="col-feature"><b>Series hoạt hình “Хочу в Россию”</b></td>
-                <td class="col-free">2 tập xem thử</td>
-                <td class="col-pro"><b>Trọn bộ các tập độc quyền</b> kèm kịch bản hội thoại và bài tập trắc nghiệm</td>
+                <td class="col-feature"><b>Khảo thí mô phỏng CBT & Bấm giờ thi thật</b></td>
+                <td class="col-free">Không có đồng hồ áp lực phòng thi</td>
+                <td class="col-pro"><b>Phòng thi CBT chuẩn hóa</b>, đếm ngược tự động, bảo mật chống lộ đáp án (Zero-Answer Leak)</td>
               </tr>
               <tr>
-                <td class="col-feature"><b>Tư vấn Du học Nga</b></td>
+                <td class="col-feature"><b>Tư vấn Du học Nga & Tài liệu</b></td>
                 <td class="col-free"><span style="display:inline-flex;align-items:center;gap:4px;color:#94a3b8">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""} Không hỗ trợ</span></td>
-                <td class="col-pro"><b style="color:#059669;display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""} Ưu tiên hỗ trợ 1-1</b> qua nhóm Zalo VIP cùng cựu du học sinh</td>
+                <td class="col-pro"><b style="color:#059669;display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""} Ưu tiên hỗ trợ 1-1</b>, tặng bộ cẩm nang du học & nhóm hỗ trợ học thuật cựu du học sinh</td>
               </tr>
               <tr>
                 <td class="col-feature"><b>Ghi chú & Note câu hỏi trong đề</b></td>
