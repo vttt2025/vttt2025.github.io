@@ -963,6 +963,7 @@ const Monetization = {
         features: [
           "Mở khóa toàn bộ 74 đề thi TRKI A1–B2",
           "Bấm giờ phòng thi thật & chấm điểm tự động",
+          "Tùy chọn đảo ngẫu nhiên đáp án chống học vẹt",
           "Đáp án & giải thích ngữ pháp 6 cách chi tiết",
           "AI nhận diện & chấm điểm phát âm cơ bản",
           "Đồng bộ tiến độ học tập trên mọi thiết bị"
@@ -978,6 +979,7 @@ const Monetization = {
         popular: true,
         features: [
           "Tất cả quyền lợi của gói 1 Tháng",
+          "Luyện đề thông minh: Tự động đảo ngẫu nhiên đáp án",
           "Không giới hạn tạo Lọ từ vựng cá nhân",
           "Mở khóa trọn bộ kho Luyện nghe 4 Part CEFR",
           "Luyện nói Shadowing cùng AI toàn bộ 28 bài",
@@ -995,6 +997,7 @@ const Monetization = {
         popular: false,
         features: [
           "Tất cả quyền lợi của gói 3 Tháng",
+          "Luyện đề thông minh: Tự động đảo ngẫu nhiên đáp án",
           "AI Rusika chấm bài Viết tự luận (Письмо) không giới hạn",
           "Kho 100+ Lọ từ vựng chuyên ngành (Y khoa, Kỹ thuật, Kinh tế)",
           "Tặng bộ cẩm nang sinh tồn & kinh nghiệm du học Nga",
@@ -1093,7 +1096,7 @@ const Monetization = {
   },
 
   /** Modal nhắc nhở người dùng chưa đăng nhập khi bấm vào tính năng nâng cấp / paywall */
-  showAuthRequiredModal(title = "Nâng cấp tài khoản PRO", reason = "Vui lòng đăng nhập để gắn quyền PRO vào tài khoản và bảo lưu quyền lợi trọn đời.") {
+  showAuthRequiredModal(title = "Nâng cấp tài khoản PRO", reason = "Vui lòng đăng nhập để gắn quyền PRO vào tài khoản và bảo lưu quyền lợi trọn đời.", targetPkg = "") {
     let modal = document.getElementById("authReqModal");
     if (!modal) {
       modal = document.createElement("div");
@@ -1103,7 +1106,12 @@ const Monetization = {
     }
 
     const pageName = window.location.pathname.split("/").pop() || "index.html";
-    const currentRedirect = encodeURIComponent(pageName + window.location.search + window.location.hash);
+    let redirectTarget = pageName + window.location.search + window.location.hash;
+    if (targetPkg) {
+      const sep = redirectTarget.includes("?") ? "&" : "?";
+      redirectTarget = `${redirectTarget}${sep}pkg=${encodeURIComponent(targetPkg)}`;
+    }
+    const currentRedirect = encodeURIComponent(redirectTarget);
 
     modal.innerHTML = `
       <div class="vietqr-card" style="max-width:480px">
@@ -1140,7 +1148,7 @@ const Monetization = {
     const user = this.getCurrentUser();
     // Chuẩn hiện nay: Nâng cấp yêu cầu phiên đăng nhập để gắn quyền PRO
     if (!user) {
-      this.showAuthRequiredModal("Đăng nhập để Nâng cấp PRO", "Để kích hoạt và bảo lưu gói PRO vĩnh viễn trên mọi thiết bị, bạn cần đăng nhập tài khoản trước.");
+      this.showAuthRequiredModal("Đăng nhập để Nâng cấp PRO", "Để kích hoạt và bảo lưu gói PRO vĩnh viễn trên mọi thiết bị, bạn cần đăng nhập tài khoản trước.", pkgId);
       return;
     }
 

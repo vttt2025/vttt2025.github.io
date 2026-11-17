@@ -39,6 +39,7 @@
     "features": [
       "Mở khóa toàn bộ 74 đề thi TRKI A1–B2",
       "Bấm giờ phòng thi thật & chấm điểm tự động",
+      "Tùy chọn đảo ngẫu nhiên đáp án chống học vẹt",
       "Đáp án & giải thích ngữ pháp 6 cách chi tiết",
       "AI nhận diện & chấm điểm phát âm cơ bản",
       "Đồng bộ tiến độ học tập trên mọi thiết bị"
@@ -63,6 +64,7 @@
     "is_popular": false,
     "features": [
       "Tất cả quyền lợi của gói 1 Tháng",
+      "Luyện đề thông minh: Tự động đảo ngẫu nhiên đáp án",
       "Không giới hạn tạo Lọ từ vựng cá nhân",
       "Mở khóa trọn bộ kho Luyện nghe 4 Part CEFR",
       "Luyện nói Shadowing cùng AI toàn bộ 28 bài",
@@ -89,6 +91,7 @@
     "is_popular": false,
     "features": [
       "Tất cả quyền lợi của gói 3 Tháng",
+      "Luyện đề thông minh: Tự động đảo ngẫu nhiên đáp án",
       "AI Rusika chấm bài Viết tự luận (Письмо) không giới hạn",
       "Kho 100+ Lọ từ vựng chuyên ngành (Y khoa, Kỹ thuật, Kinh tế)",
       "Tặng bộ cẩm nang sinh tồn & kinh nghiệm du học Nga",

@@ -1132,6 +1132,7 @@ Thư viện `rusi-icons.js` được nhúng tại thẻ `<head>` trên tất c�
 > 🏆 **PHÒNG KHẢO THÍ TRỰC TUYẾN TRKI CHUẨN CBT VỚI 74 ĐỀ THI THẬT, 3.867 CÂU HỎI & CHẤM ĐIỂM SERVER-SIDE CHI TIẾT 5 SUBTEST.**
 - **Bản quyền & Công sức số hóa khổng lồ**: 74 đề thi chuẩn hóa phân môn (Ngữ pháp - Từ vựng, Đọc hiểu, Nghe hiểu, Viết, Nói) được gắn nhãn độ khó và giải thích ngữ pháp 6 cách chi tiết.
 - **Bảo mật tuyệt đối (Zero-Answer Leak)**: Đáp án được bảo vệ tại server qua RPC `rusi_grade_trki_exam`, học viên không thể "soi" đáp án trước qua DevTools.
+- **Động cơ Luyện đề thông minh (Anti-Memorization Engine)**: Tự động đảo ngẫu nhiên thứ tự các phương án lựa chọn (Shuffle Options) mỗi lần làm bài, chống học vẹt vị trí (nhớ đáp án A/B/C/D), buộc học viên rèn luyện phản xạ đọc hiểu ngữ pháp thực chất.
 - **Giá trị kinh tế thay thế**: Tiết kiệm hàng triệu đồng mua sách photo từ Nga và chi phí thuê gia sư chấm đề (200k – 500k/đề).
 
 ### 11.5. Mô Hình Kinh Doanh & Ma Trận Định Giá Tối Ưu (1T – 3T – 1N)

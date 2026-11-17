@@ -11414,6 +11414,16 @@ function initMockTestPage() {
       flagged = {};
     }
 
+    // Cấu hình tính năng Đáp án ngẫu nhiên (chống học vẹt vị trí khi luyện đề)
+    let shuffleOptionsEnabled = typeof STORE !== "undefined" ? STORE.get("trki_shuffle_options", true) : true;
+    let sessionOptionOrders = {};
+    try {
+      const savedOrders = sessionStorage.getItem(storageKey + "_opt_orders");
+      if (savedOrders) sessionOptionOrders = JSON.parse(savedOrders);
+    } catch(e) {
+      sessionOptionOrders = {};
+    }
+
     renderTestRoom();
 
     if (visibilityHandler) {
@@ -11534,6 +11544,16 @@ function initMockTestPage() {
       const hasAnswered = (userAns !== undefined);
       const isCorrect = hasAnswered && (userAns === q.a);
 
+      const rawOpts = normalizeOptions(q.options);
+      if (!sessionOptionOrders[id] || sessionOptionOrders[id].length !== rawOpts.length) {
+        const indices = rawOpts.map((_, idx) => idx);
+        sessionOptionOrders[id] = shuffleOptionsEnabled ? qShuffleArray(indices) : indices;
+        try {
+          sessionStorage.setItem(storageKey + "_opt_orders", JSON.stringify(sessionOptionOrders));
+        } catch(e) {}
+      }
+      const order = sessionOptionOrders[id] || rawOpts.map((_, idx) => idx);
+
       return `
         <div class="quiz-q" id="qBox_${id}">
           <div class="quiz-q-header">
@@ -11544,7 +11564,8 @@ function initMockTestPage() {
           </div>
           <p class="q-text"><span class="ru">${esc(q.q)}</span></p>
           <div class="options">
-            ${normalizeOptions(q.options).map((opt, oi) => {
+            ${order.map((oi) => {
+              const opt = rawOpts[oi] || "";
               let optClass = "option ru";
               if (isPractice && hasAnswered) {
                 if (oi === q.a) optClass += " correct";
@@ -11587,6 +11608,9 @@ function initMockTestPage() {
           ${isPractice ? `<span class="topic-status topic-status-level" style="margin-left:8px;font-size:10px">Luyện tập</span>` : ''}
         </div>
         <div class="dau-workspace-controls" style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0">
+          <button class="btn btn-outline btn-sm dau-top-btn ${shuffleOptionsEnabled ? 'is-active' : ''}" id="btnToggleShuffleOptions" type="button" title="Đảo ngẫu nhiên thứ tự đáp án (Chống học vẹt vị trí)" style="${shuffleOptionsEnabled ? 'background:rgba(23,87,166,0.08);color:var(--primary);border-color:var(--primary)' : ''}">
+            ${window.RusiIcons ? RusiIcons.get("rotate-ccw", { size: 14 }) : ""} <span class="btn-text">${shuffleOptionsEnabled ? "Đáp án ngẫu nhiên: BẬT" : "Đáp án gốc"}</span>
+          </button>
           <button class="btn btn-outline btn-sm dau-top-btn" id="btnToggleFullScreen" type="button" title="Bật/Tắt chế độ toàn màn hình phòng thi (CBT Full-screen)">
             ${window.RusiIcons ? RusiIcons.get("maximize", { size: 14 }) : ""} <span class="btn-text">Toàn màn hình</span>
           </button>
@@ -11982,6 +12006,22 @@ function initMockTestPage() {
       });
     });
 
+    // Tùy chọn Đảo ngẫu nhiên thứ tự đáp án (Chống học vẹt vị trí khi luyện đề)
+    const btnShuffle = host.querySelector("#btnToggleShuffleOptions");
+    if (btnShuffle) {
+      btnShuffle.onclick = () => {
+        shuffleOptionsEnabled = !shuffleOptionsEnabled;
+        if (typeof STORE !== "undefined") STORE.set("trki_shuffle_options", shuffleOptionsEnabled);
+        sessionOptionOrders = {};
+        const storageKey = getExamStorageKey();
+        try { sessionStorage.removeItem(storageKey + "_opt_orders"); } catch(e) {}
+        if (typeof toast === "function") {
+          toast(shuffleOptionsEnabled ? "Đã BẬT đảo đáp án ngẫu nhiên (chống học vẹt)" : "Đã TẮT đảo đáp án (hiển thị theo thứ tự gốc)");
+        }
+        renderTestRoom();
+      };
+    }
+
     // Chế độ Toàn màn hình CBT Full-Screen Mode
     const btnFs = host.querySelector("#btnToggleFullScreen");
     if (btnFs) {
@@ -12227,6 +12267,7 @@ function initMockTestPage() {
         sessionStorage.removeItem(storageKey + "_endTime");
         sessionStorage.removeItem(storageKey + "_answers");
         sessionStorage.removeItem(storageKey + "_flagged");
+        sessionStorage.removeItem(storageKey + "_opt_orders");
       }
     } catch(e) {}
     if (visibilityHandler) {
@@ -13818,6 +13859,11 @@ function initUpgradePage() {
                 <td class="col-pro"><b>Phòng thi CBT chuẩn hóa</b>, đếm ngược tự động, bảo mật chống lộ đáp án (Zero-Answer Leak)</td>
               </tr>
               <tr>
+                <td class="col-feature"><b>Luyện đề thông minh (Smart CBT Engine)</b></td>
+                <td class="col-free">Thứ tự đáp án cố định (dễ học vẹt vị trí)</td>
+                <td class="col-pro"><b>Tự động đảo ngẫu nhiên đáp án (Shuffle Options)</b> mỗi lần làm bài, chống học vẹt vị trí & rèn luyện phản xạ đọc hiểu ngữ pháp 6 Cách thực chất (Cả 3 gói)</td>
+              </tr>
+              <tr>
                 <td class="col-feature"><b>Tư vấn Du học Nga & Tài liệu</b></td>
                 <td class="col-free"><span style="display:inline-flex;align-items:center;gap:4px;color:#94a3b8">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""} Không hỗ trợ</span></td>
                 <td class="col-pro"><b style="color:#059669;display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""} Ưu tiên hỗ trợ 1-1</b>, tặng bộ cẩm nang du học & nhóm hỗ trợ học thuật cựu du học sinh</td>
@@ -13951,8 +13997,14 @@ function initUpgradePage() {
     // Gắn sự kiện chọn gói cước mở VietQR
     host.querySelectorAll(".btn-select-upgrade").forEach((btn) => {
       btn.onclick = () => {
+        const pkgId = btn.dataset.pkg;
+        const currentUser = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
+        if (!currentUser && typeof Monetization !== "undefined") {
+          Monetization.showAuthRequiredModal("Đăng nhập để Nâng cấp PRO", "Vui lòng đăng nhập để gắn quyền PRO vào tài khoản và bảo lưu quyền lợi trọn đời.", pkgId);
+          return;
+        }
         if (typeof Monetization !== "undefined") {
-          Monetization.openUpgradeModal(btn.dataset.pkg);
+          Monetization.openUpgradeModal(pkgId);
         }
       };
     });
@@ -13987,9 +14039,31 @@ function initUpgradePage() {
 
   render();
 
+  // Tự động mở modal VietQR nếu có query param ?pkg=... sau khi đăng nhập chuyển hướng về
+  const checkAutoOpenPkg = () => {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetPkg = urlParams.get("pkg");
+      const currentUser = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
+      if (targetPkg && currentUser && typeof Monetization !== "undefined") {
+        setTimeout(() => {
+          Monetization.openUpgradeModal(targetPkg);
+          if (window.history && window.history.replaceState) {
+            const cleanUrl = window.location.pathname + (window.location.hash || "");
+            window.history.replaceState({}, document.title, cleanUrl);
+          }
+        }, 350);
+      }
+    } catch (_) {}
+  };
+  checkAutoOpenPkg();
+
   // Lắng nghe sự kiện Auth và PRO để re-render tự động
   if (window.Auth && typeof window.Auth.onChange === "function") {
-    window.Auth.onChange(() => render());
+    window.Auth.onChange(() => {
+      render();
+      checkAutoOpenPkg();
+    });
   }
   window.addEventListener("trki:pro-updated", () => render());
 }
