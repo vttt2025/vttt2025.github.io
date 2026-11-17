@@ -11022,6 +11022,8 @@ function initMockTestPage() {
   let started = false;
   let tabSwitches = 0;
   let visibilityHandler = null;
+  let shuffleOptionsEnabled = typeof STORE !== "undefined" ? STORE.get("trki_shuffle_options", true) : true;
+  let sessionOptionOrders = {};
 
   const checkUrlExam = () => {
     try {
@@ -11032,9 +11034,6 @@ function initMockTestPage() {
         examMode = urlMode;
       }
       if (targetId) {
-        if (typeof window !== "undefined" && typeof window.requireAuth === "function") {
-          if (!window.requireAuth()) return true;
-        }
         const found = bank.find(t => t.id === targetId || t.code === targetId);
         if (found) {
           const isPro = Boolean(found.is_pro_only || found.is_pro);
@@ -11198,9 +11197,8 @@ function initMockTestPage() {
       const openExam = (id) => {
         const test = bank.find(x => x.id === id);
         if (!test) return;
-        if (typeof window.requireAuth === "function" && !window.requireAuth("mock-test.html?exam=" + encodeURIComponent((test.id || test.code) || "") + "&mode=" + examMode)) return;
         const isPro = Boolean(test.is_pro_only || test.is_pro);
-        if (isPro && !Monetization.isPro()) {
+        if (isPro && typeof Monetization !== "undefined" && !Monetization.isPro()) {
           Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
           return;
         }
@@ -11238,6 +11236,7 @@ function initMockTestPage() {
     started = false;
     answers = {};
     flagged = {};
+    sessionOptionOrders = {};
     tabSwitches = 0;
     if (timer) clearInterval(timer);
     if (visibilityHandler) {
@@ -11415,11 +11414,10 @@ function initMockTestPage() {
     }
 
     // Cấu hình tính năng Đáp án ngẫu nhiên (chống học vẹt vị trí khi luyện đề)
-    let shuffleOptionsEnabled = typeof STORE !== "undefined" ? STORE.get("trki_shuffle_options", true) : true;
-    let sessionOptionOrders = {};
+    shuffleOptionsEnabled = typeof STORE !== "undefined" ? STORE.get("trki_shuffle_options", true) : true;
     try {
       const savedOrders = sessionStorage.getItem(storageKey + "_opt_orders");
-      if (savedOrders) sessionOptionOrders = JSON.parse(savedOrders);
+      sessionOptionOrders = savedOrders ? JSON.parse(savedOrders) : {};
     } catch(e) {
       sessionOptionOrders = {};
     }
@@ -11525,6 +11523,7 @@ function initMockTestPage() {
     const isPractice = (examMode === "practice");
     const selectedPartList = getExamPartList();
     const isSubset = Boolean(selectedPartList && selectedPartList.length > 0 && selectedPartList.length < (currentTest.parts || []).length);
+    const storageKey = getExamStorageKey();
 
     const activeParts = isSubset
       ? currentTest.parts.filter(p => selectedPartList.includes(p.id))
@@ -12540,7 +12539,7 @@ function initMockTestPage() {
     return false;
   };
 
-  if (!checkResumeActiveExam()) {
+  if (!checkUrlExam() && !checkResumeActiveExam()) {
     renderHub();
   }
 }
