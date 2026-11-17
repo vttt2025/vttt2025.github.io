@@ -11413,13 +11413,18 @@ function initMockTestPage() {
       flagged = {};
     }
 
-    // Cấu hình tính năng Đáp án ngẫu nhiên (chống học vẹt vị trí khi luyện đề)
-    shuffleOptionsEnabled = typeof STORE !== "undefined" ? STORE.get("trki_shuffle_options", true) : true;
-    try {
-      const savedOrders = sessionStorage.getItem(storageKey + "_opt_orders");
-      sessionOptionOrders = savedOrders ? JSON.parse(savedOrders) : {};
-    } catch(e) {
+    // Cơ chế đáp án ngẫu nhiên mặc định bên trong: tự động xáo trộn vị trí các đáp án mỗi lần luyện hoặc thi
+    const savedAnswers = sessionStorage.getItem(storageKey + "_answers");
+    if (!savedAnswers || Object.keys(answers).length === 0) {
       sessionOptionOrders = {};
+      try { sessionStorage.removeItem(storageKey + "_opt_orders"); } catch(e) {}
+    } else {
+      try {
+        const savedOrders = sessionStorage.getItem(storageKey + "_opt_orders");
+        sessionOptionOrders = savedOrders ? JSON.parse(savedOrders) : {};
+      } catch(e) {
+        sessionOptionOrders = {};
+      }
     }
 
     renderTestRoom();
@@ -11546,7 +11551,7 @@ function initMockTestPage() {
       const rawOpts = normalizeOptions(q.options);
       if (!sessionOptionOrders[id] || sessionOptionOrders[id].length !== rawOpts.length) {
         const indices = rawOpts.map((_, idx) => idx);
-        sessionOptionOrders[id] = shuffleOptionsEnabled ? qShuffleArray(indices) : indices;
+        sessionOptionOrders[id] = (rawOpts.length >= 2) ? qShuffleArray(indices) : indices;
         try {
           sessionStorage.setItem(storageKey + "_opt_orders", JSON.stringify(sessionOptionOrders));
         } catch(e) {}
@@ -11607,9 +11612,6 @@ function initMockTestPage() {
           ${isPractice ? `<span class="topic-status topic-status-level" style="margin-left:8px;font-size:10px">Luyện tập</span>` : ''}
         </div>
         <div class="dau-workspace-controls" style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0">
-          <button class="btn btn-outline btn-sm dau-top-btn ${shuffleOptionsEnabled ? 'is-active' : ''}" id="btnToggleShuffleOptions" type="button" title="Đảo ngẫu nhiên thứ tự đáp án (Chống học vẹt vị trí)" style="${shuffleOptionsEnabled ? 'background:rgba(23,87,166,0.08);color:var(--primary);border-color:var(--primary)' : ''}">
-            ${window.RusiIcons ? RusiIcons.get("rotate-ccw", { size: 14 }) : ""} <span class="btn-text">${shuffleOptionsEnabled ? "Đáp án ngẫu nhiên: BẬT" : "Đáp án gốc"}</span>
-          </button>
           <button class="btn btn-outline btn-sm dau-top-btn" id="btnToggleFullScreen" type="button" title="Bật/Tắt chế độ toàn màn hình phòng thi (CBT Full-screen)">
             ${window.RusiIcons ? RusiIcons.get("maximize", { size: 14 }) : ""} <span class="btn-text">Toàn màn hình</span>
           </button>
@@ -12004,22 +12006,6 @@ function initMockTestPage() {
         refreshPaletteCounts();
       });
     });
-
-    // Tùy chọn Đảo ngẫu nhiên thứ tự đáp án (Chống học vẹt vị trí khi luyện đề)
-    const btnShuffle = host.querySelector("#btnToggleShuffleOptions");
-    if (btnShuffle) {
-      btnShuffle.onclick = () => {
-        shuffleOptionsEnabled = !shuffleOptionsEnabled;
-        if (typeof STORE !== "undefined") STORE.set("trki_shuffle_options", shuffleOptionsEnabled);
-        sessionOptionOrders = {};
-        const storageKey = getExamStorageKey();
-        try { sessionStorage.removeItem(storageKey + "_opt_orders"); } catch(e) {}
-        if (typeof toast === "function") {
-          toast(shuffleOptionsEnabled ? "Đã BẬT đảo đáp án ngẫu nhiên (chống học vẹt)" : "Đã TẮT đảo đáp án (hiển thị theo thứ tự gốc)");
-        }
-        renderTestRoom();
-      };
-    }
 
     // Chế độ Toàn màn hình CBT Full-Screen Mode
     const btnFs = host.querySelector("#btnToggleFullScreen");
