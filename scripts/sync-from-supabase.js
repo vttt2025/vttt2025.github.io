@@ -619,9 +619,37 @@ if (typeof window !== "undefined") {
 }
 `;
 
-  const dataJsPath = path.join(__dirname, '..', 'data.js');
-  safeWriteFile(dataJsPath, dataJsContent);
-  console.log(`✓ Đã tạo mới file data.js sạch (100% Supabase, đã loại bỏ toàn bộ dữ liệu mock cũ)!`);
+  // Xuất 14 module độc lập vào thư mục data/modules/ (Kiến trúc 0-Egress Modular)
+  const modulesDir = path.join(__dirname, '..', 'data', 'modules');
+  if (!fs.existsSync(modulesDir)) fs.mkdirSync(modulesDir, { recursive: true });
+
+  const modules = [
+    { file: 'vocab_jars.json', data: formattedJars },
+    { file: 'vocabularies.json', data: allVocabularies },
+    { file: 'topic_articles.json', data: topicArticlesObj },
+    { file: 'vocab_lessons.json', data: rawVocabLessons },
+    { file: 'listening_lessons.json', data: formattedListening },
+    { file: 'speaking_sets.json', data: formattedSpeaking },
+    { file: 'writing_tasks.json', data: formattedWritingTasks },
+    { file: 'writing_topics.json', data: formattedWritingTopics },
+    { file: 'trki_bank.json', data: formattedTests },
+    { file: 'trki_questions.json', data: rawQuestionBank },
+    { file: 'shop_products.json', data: formattedShop },
+    { file: 'packages.json', data: formattedPackages },
+    { file: 'grammar_lessons.json', data: formattedGrammar },
+    { file: 'blog_posts.json', data: formattedBlog }
+  ];
+
+  modules.forEach(m => {
+    safeWriteFile(path.join(modulesDir, m.file), JSON.stringify(m.data));
+    const size = (fs.statSync(path.join(modulesDir, m.file)).size / 1024).toFixed(1);
+    console.log(`✓ [Module] ${m.file.padEnd(24)}: ${size} KB`);
+  });
+
+  // Tái tạo data.js siêu nhẹ tích hợp RusiDataLoader & IndexedDB Cache
+  console.log('\n[Build] Đang khởi tạo data.js siêu nhẹ với RusiDataLoader...');
+  require('./build_optimized_data_js.js');
+  console.log(`✓ Đã cập nhật data.js siêu nhẹ & 14 modules JSON từ Supabase Cloud!`);
   console.log('========================================================================\n');
 }
 

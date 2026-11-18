@@ -1090,10 +1090,11 @@ Thư viện `rusi-icons.js` được nhúng tại thẻ `<head>` trên tất c�
    Trợ lý AI Mascot Rusika nổi (`#rusikaFloatingWidget`) tự động kích hoạt trên tất cả các trang bài học qua `bootApp()`. Popover Pomodoro mini tích hợp chân Header đóng chéo tự động với menu tài khoản.
 
 8. **Kiến Trúc Modular Data & Động Cơ 0-Egress IndexedDB Cache**:
-   - Dữ liệu nguyên khối 17.4MB đã được phân tách vĩnh viễn thành 14 tệp JSON độc lập tại `data/modules/*.json`.
-   - `data.js` chỉ giữ phần core siêu nhẹ (~550KB, gzip ~90KB) và động cơ `window.RusiDataLoader`.
-   - Mọi trang tự động nạp theo nhu cầu qua `RusiDataLoader.prepareForCurrentPage()` và lưu trữ vĩnh viễn vào IndexedDB (`rusi_offline_db`) của máy học viên.
-   - Tuyệt đối không gửi các truy vấn nặng quét toàn bộ bảng về Supabase trên mỗi lượt tải trang để bảo vệ 100% hạn mức 5GB Egress hàng tháng của Supabase.
+   - Dữ liệu nguyên khối 21.8MB đã được phân tách vĩnh viễn thành 14 tệp JSON độc lập tại `data/modules/*.json` (`vocab_jars.json`, `vocabularies.json`, `topic_articles.json`, `trki_bank.json`, `trki_questions.json`, `speaking_sets.json`...).
+   - `data.js` chỉ giữ phần core siêu nhẹ (~550KB, gzip ~90KB) và động cơ nạp dữ liệu thông minh `window.RusiDataLoader`.
+   - Quy trình nạp 3 tầng theo nhu cầu (On-Demand Lazy Loading): Kiểm tra RAM (0ms) -> Đọc IndexedDB (`rusi_offline_db`) trên máy học viên (0ms, 0 byte Egress) -> Tải file JSON tĩnh từ CDN. Sau lần tải đầu tiên, toàn bộ việc chuyển trang và học tập đạt chuẩn 0-Byte Network Egress.
+   - Script đồng bộ `scripts/sync-from-supabase.js`: Tuyệt đối không nhồi dữ liệu thô vào `data.js`. Khi đồng bộ từ Supabase về, script tự động ghi vào 14 tệp `data/modules/*.json`, tạo backup `data/supabase-backup.json`, và tự động kích hoạt `scripts/build_optimized_data_js.js` để tái tạo `data.js` siêu nhẹ.
+   - Chặn rò rỉ Egress Supabase Cloud: Mọi hàm tải bài học/đề thi tĩnh trong `pages.js` (`loadCloudJars`, `loadCloudListening`, `loadCloudSpeaking`, `loadCloudWriting`, `loadCloudTests`, `loadCloudPosts`, `loadCloudProducts`, `loadCloudPackages`) bắt buộc có guard kiểm tra bộ nhớ RAM/IndexedDB trước. Tuyệt đối không gửi các truy vấn nặng quét toàn bộ bảng (`select("*")`) về Supabase trên mỗi lượt tải trang để bảo vệ 100% hạn mức 5GB Egress hàng tháng của Supabase.
 
 9. **Chuẩn Hóa Typography & Zero Guillemets Baseline**:
    - 100% dữ liệu trong cơ sở dữ liệu Supabase Cloud, tệp sao lưu `data/supabase-backup.json`, 14 tệp module `data/modules/*.json`, và tệp từ điển `data/dict-ru-vi.json` đã loại bỏ hoàn toàn các ký tự `«` và `»`.

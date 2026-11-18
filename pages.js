@@ -2619,6 +2619,8 @@ function initVocabPage() {
   let cloudJars = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("jars:system") : null;
 
   const loadCloudJars = async () => {
+    // 0-Egress rule: Chỉ truy vấn Supabase nếu bộ nhớ RAM/IndexedDB chưa có dữ liệu lọ từ vựng
+    if (window.VOCAB_JARS && window.VOCAB_JARS.length > 0) return;
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
       try {
         const remote = await window.RusiSupabase.jars.getSystemJars();
@@ -4830,6 +4832,8 @@ function initListeningPage() {
   };
 
   const loadCloudListening = async () => {
+    // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có bài nghe trong RAM/IndexedDB
+    if (window.LISTENING_LESSONS && window.LISTENING_LESSONS.length > 0) return;
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
       try {
         const remote = await window.RusiSupabase.listening.getAll();
@@ -8391,6 +8395,8 @@ function initSpeakingPage() {
   };
 
   const loadCloudSpeaking = async () => {
+    // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có bài luyện nói trong RAM/IndexedDB
+    if (window.SPEAKING_SETS && window.SPEAKING_SETS.length > 0) return;
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
       try {
         const remote = await window.RusiSupabase.speaking.getAll();
@@ -10954,6 +10960,8 @@ function initWritingPage() {
   };
 
   const loadCloudWriting = async () => {
+    // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có đề viết trong RAM/IndexedDB
+    if (window.WRITING_TASKS && window.WRITING_TASKS.length > 0) return;
     if (!window.RusiSupabase || !window.RusiSupabase.isReady || !window.RusiSupabase.isReady()) return;
     try {
       const remote = await window.RusiSupabase.writing.getAll();
@@ -11050,6 +11058,8 @@ function initMockTestPage() {
   };
 
   const loadCloudTests = async () => {
+    // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có ngân hàng đề thi trong RAM/IndexedDB
+    if (window.TRKI_BANK && window.TRKI_BANK.length > 0) return;
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
       try {
         const remote = await window.RusiSupabase.tests.getPublished();
@@ -12540,6 +12550,8 @@ function initBlogPage() {
   let cloudPosts = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("blog:all") : null;
 
   const loadCloudPosts = async () => {
+    // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có bài blog trong RAM/IndexedDB
+    if (window.BLOG_POSTS && window.BLOG_POSTS.length > 0) return;
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
       try {
         const remote = await window.RusiSupabase.blog.getAll();
@@ -12658,6 +12670,8 @@ function initShopPage() {
   let cloudProducts = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("shop:all") : null;
 
   const loadCloudProducts = async () => {
+    // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có sản phẩm shop trong RAM/IndexedDB
+    if (window.SHOP_PRODUCTS && window.SHOP_PRODUCTS.length > 0) return;
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
       try {
         const remote = await window.RusiSupabase.shop.getAll();
@@ -13834,6 +13848,8 @@ function initUpgradePage() {
   }
 
   const loadCloudPackages = async () => {
+    // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có gói cước trong RAM/IndexedDB
+    if (window.PACKAGES && window.PACKAGES.length > 0) return;
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
       try {
         const remote = await window.RusiSupabase.packages.getAll();
