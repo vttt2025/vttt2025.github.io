@@ -12937,139 +12937,124 @@ function initShopPage() {
  * ===================================================================== */
 const DIAGNOSTIC_QUESTIONS = [
   {
-    level: "A1",
     cat: "cases",
     catName: "Ngữ pháp 6 Cách",
-    q: "Где ты живёшь? — Я живу в ... (Россия).",
-    options: ["России", "Россию", "Россией", "Россия"],
-    a: 0,
-    ex: "Danh từ giống cái kết thúc bằng -ия khi ở Cách 6 (vị trí với giới từ в) biến đổi đuôi thành -ии (в России)."
+    q: "Где вы сейчас живёте? — Мы живём в ... (Россия).",
+    options: ["Россию", "России", "Россией", "Россия"],
+    a: 1,
+    ex: "Vị trí địa lý ở đâu (Где) đi với giới từ в + Cách 6 (Prepositional). Danh từ giống cái kết thúc bằng -ия biến đổi đuôi thành -ии (в России)."
   },
   {
-    level: "A1",
     cat: "cases",
     catName: "Ngữ pháp 6 Cách",
-    q: "Куダ ты идёшь? — Я иду в ... (библиотека).",
-    options: ["библиотеку", "библиотеке", "библиотеки", "библиотекой"],
-    a: 0,
-    ex: "Chỉ phương hướng di chuyển (Куда) dùng giới từ в/на + Cách 4. Danh từ giống cái -а biến thành -у (в библиотеку)."
+    q: "Куда вы так спешите? — Я спешу в ... (библиотека).",
+    options: ["библиотеке", "библиотекой", "библиотеку", "библиотеки"],
+    a: 2,
+    ex: "Chỉ phương hướng di chuyển đi tới đâu (Куда) dùng giới từ в + Cách 4 (Accusative). Danh từ giống cái đuôi -а đổi thành -у (в библиотеку)."
   },
   {
-    level: "A1",
     cat: "verbs",
     catName: "Động từ & Thể",
-    q: "Мой старший брат хорошо ... по-русски.",
-    options: ["говорит", "говорят", "говорить", "говорю"],
-    a: 0,
-    ex: "Chủ ngữ là ngôi thứ 3 số ít (он / мой брат), động từ nhóm 2 говорить chia thành говорит."
+    q: "Мой старший брат отлично ... по-русски.",
+    options: ["говорят", "говорить", "говорю", "говорит"],
+    a: 3,
+    ex: "Chủ ngữ ngôi thứ 3 số ít (он / мой брат). Động từ nhóm 2 говорить chia ở ngôi он là говорит."
   },
   {
-    level: "A1",
     cat: "cases",
     catName: "Ngữ pháp 6 Cách",
-    q: "Вчера в аудитории было два ...",
+    q: "Вчера на семинаре было три нового ...",
     options: ["студента", "студент", "студентов", "студенту"],
     a: 0,
-    ex: "Sau các số đếm 2, 3, 4 (два, три, четыре), danh từ đi kèm chia ở dạng Cách 2 số ít (два студента)."
+    ex: "Sau các số đếm 2, 3, 4 (два, три, четыре), danh từ đi kèm bắt buộc chia ở dạng Cách 2 số ít (три студента)."
   },
   {
-    level: "A1",
-    cat: "vocab",
-    catName: "Từ vựng & Đại từ",
+    cat: "cases",
+    catName: "Ngữ pháp 6 Cách",
     q: "Это ... новая тетрадь? — Да, моя.",
-    options: ["твоя", "твой", "твоё", "твои"],
-    a: 0,
-    ex: "Тетрадь là danh từ giống cái (đuôi -дь), do đó đại từ sở hữu phải dùng dạng giống cái (твоя тетрадь)."
+    options: ["твой", "твоя", "твоё", "твои"],
+    a: 1,
+    ex: "Тетрадь là danh từ giống cái (đuôi -дь), do đó đại từ sở hữu tương ứng phải dùng dạng giống cái (твоя тетрадь)."
   },
   {
-    level: "A2",
     cat: "cases",
     catName: "Ngữ pháp 6 Cách",
-    q: "Извините, сейчас у меня нет ... (время).",
-    options: ["времени", "время", "временем", "времена"],
-    a: 0,
-    ex: "Sau cấu trúc phủ định sở hữu 'У меня нет...' bắt buộc danh từ chia ở Cách 2. Danh từ trung tính đặc biệt время có dạng Cách 2 là времени."
+    q: "Извините, сейчас у меня совсем нет ... (время).",
+    options: ["время", "временем", "времени", "времена"],
+    a: 2,
+    ex: "Cấu trúc phủ định sở hữu 'У меня нет...' đòi hỏi danh từ ở Cách 2. Danh từ giống trung đặc biệt время biến đổi thành времени."
   },
   {
-    level: "A2",
     cat: "cases",
     catName: "Ngữ pháp 6 Cách",
-    q: "Антон часто звонит своей ... (мама).",
-    options: ["маме", "маму", "мамой", "мамы"],
-    a: 0,
-    ex: "Động từ звонить đòi hỏi bổ ngữ chỉ người nhận cuộc gọi ở Cách 3 (Dative). Danh từ giống cái мама đổi thành маме."
+    q: "Антон регулярно звонит своей пожилой ... (бабушка).",
+    options: ["бабушку", "бабушкой", "бабушки", "бабушке"],
+    a: 3,
+    ex: "Động từ звонить đòi hỏi bổ ngữ chỉ người tiếp nhận ở Cách 3 (Dative). Danh từ giống cái бабушка đổi thành бабушке."
   },
   {
-    level: "A2",
     cat: "verbs",
     catName: "Động từ & Thể",
-    q: "Вчера весь вечер Анна ... интересную статью.",
+    q: "Вчера весь вечер Анна внимательно ... новую книгу.",
     options: ["читала", "прочитала", "прочитать", "читает"],
     a: 0,
-    ex: "Cụm từ 'весь вечер' (cả buổi tối) chỉ một quá trình kéo dài trong quá khứ, bắt buộc dùng thể Chưa hoàn thành (читала)."
+    ex: "Cụm từ 'весь вечер' (cả buổi tối) chỉ quá trình hành động kéo dài trong quá khứ, bắt buộc dùng thể Chưa hoàn thành (читала)."
   },
   {
-    level: "A2",
     cat: "motion",
     catName: "Động từ chuyển động",
     q: "Каждое утро дети ... в школу пешком.",
-    options: ["ходят", "идут", "пошли", "ездили"],
-    a: 0,
-    ex: "Hành động đi bộ diễn ra lặp lại thường xuyên (каждое утро) hai chiều dùng động từ chuyển động vô định hướng ходить (ходят)."
+    options: ["идут", "ходят", "пошли", "ездили"],
+    a: 1,
+    ex: "Hành động đi bộ diễn ra thường xuyên, lặp đi lặp lại hai chiều (каждое утро) dùng động từ chuyển động vô định hướng ходить (ходят)."
   },
   {
-    level: "A2",
     cat: "cases",
     catName: "Ngữ pháp 6 Cách",
-    q: "Я всегда пью крепкий кофе с ... (молоко).",
-    options: ["молоком", "молоко", "молока", "молоке"],
-    a: 0,
-    ex: "Giới từ с (với / kèm theo) đòi hỏi danh từ đi kèm chia ở Cách 5 (Instrumental). Danh từ giống trung молоко biến thành молоком."
+    q: "По утрам я всегда пью крепкий кофе с ... (молоко).",
+    options: ["молоко", "молока", "молоком", "молоке"],
+    a: 2,
+    ex: "Giới từ с (kèm theo, với) đòi hỏi danh từ chia ở Cách 5 (Instrumental). Danh từ giống trung молоко biến thành молоком."
   },
   {
-    level: "B1",
     cat: "motion",
     catName: "Động từ chuyển động",
-    q: "Поезд из Санкт-Петербурга ровно в 10 часов ... на главный вокзал.",
-    options: ["прибыл", "убыл", "пробыл", "перебыл"],
-    a: 0,
-    ex: "Hành động chuyển động đến nơi kết thúc hành trình dùng tiền tố при- (прибыть trên tàu xe / прибыл)."
+    q: "Поезд из Санкт-Петербурга ровно в 10 часов ... на вокзал.",
+    options: ["убыл", "пробыл", "перебыл", "прибыл"],
+    a: 3,
+    ex: "Chuyển động đến nơi đích dùng tiền tố при- (прибыть trên tàu xe / прибыл)."
   },
   {
-    level: "B1",
     cat: "verbs",
     catName: "Động từ & Thể",
-    q: "Я наконец ... эту сложную курсовую работу за три дня.",
-    options: ["написал", "писал", "напишу", "дописывал"],
+    q: "Студент наконец успешно ... сложный тест за 45 минут.",
+    options: ["сдал", "сдавал", "сдаст", "сдавать"],
     a: 0,
-    ex: "Từ 'наконец' (cuối cùng thì) và giới từ 'за три дня' (trong vòng 3 ngày) biểu thị hành động đạt được kết quả trọn vẹn, phải dùng thể Hoàn thành quá khứ (написал)."
+    ex: "Từ 'наконец' (cuối cùng thì) và giới từ 'за 45 минут' (trong vòng 45 phút) thể hiện kết quả hoàn tất trọn vẹn, phải dùng thể Hoàn thành (сдал)."
   },
   {
-    level: "B1",
-    cat: "cases",
-    catName: "Ngữ pháp 6 Cách",
-    q: "Преподаватель, ... мы встретили в библиотеке, преподаёт историю.",
-    options: ["которого", "который", "которому", "которым"],
-    a: 0,
-    ex: "Đại từ quan hệ который thay thế cho danh từ chỉ người sống (преподаватель) làm tân ngữ trực tiếp cho встретили, chia theo Cách 4 giống đực sinh vật (= Cách 2: которого)."
+    cat: "syntax",
+    catName: "Cú pháp & Cấu trúc câu",
+    q: "Врач, ... мы вчера встретили в клинике, очень опытный.",
+    options: ["который", "которого", "которому", "которым"],
+    a: 1,
+    ex: "Đại từ quan hệ который thay thế cho danh từ chỉ người sống (врач) làm tân ngữ trực tiếp cho встретили, chia theo Cách 4 giống đực sinh vật (= Cách 2: которого)."
   },
   {
-    level: "B1",
-    cat: "vocab",
-    catName: "Giới từ & Cú pháp",
+    cat: "syntax",
+    catName: "Cú pháp & Cấu trúc câu",
     q: "Экскурсию в Петергоф отменили из-за ... (плохая погода).",
-    options: ["плохой погоды", "плохую погоду", "плохой погоде", "плохой погодой"],
-    a: 0,
-    ex: "Giới từ nguyên nhân tiêu cực из-за (do/bởi vì) luôn đòi hỏi danh từ và tính từ đi kèm chia ở Cách 2 (из-за плохой погоды)."
+    options: ["плохую погоду", "плохой погоде", "плохой погоды", "плохой погодой"],
+    a: 2,
+    ex: "Giới từ chỉ nguyên nhân tiêu cực из-за (do, bởi vì) luôn đòi hỏi danh từ và tính từ đi kèm chia ở Cách 2 (из-за плохой погоды)."
   },
   {
-    level: "B1",
-    cat: "verbs",
-    catName: "Động từ & Thể",
-    q: "Если бы у меня ... свободное время, я бы поехал на Байкал.",
+    cat: "syntax",
+    catName: "Cú pháp & Cấu trúc câu",
+    q: "Если бы у меня ... возможность, я бы обязательно поехал на Байкал.",
     options: ["было", "будет", "есть", "была"],
-    a: 0,
-    ex: "Trong mệnh đề giả định với liên từ 'Если бы', động từ luôn chia ở thời quá khứ. Chủ ngữ là время (danh từ giống trung) nên dùng было."
+    a: 3,
+    ex: "Trong câu giả định 'Если бы', động từ luôn chia thời quá khứ phù hợp với giống của chủ ngữ. Chủ ngữ возможность là danh từ giống cái (đuôi -ость) nên dùng была."
   }
 ];
 
@@ -13082,7 +13067,6 @@ window.openDiagnosticTestModal = function () {
     document.body.appendChild(modal);
   }
 
-  let currentIdx = 0;
   let userAnswers = {};
   let totalTime = 15 * 60;
   let timerId = null;
@@ -13092,12 +13076,18 @@ window.openDiagnosticTestModal = function () {
     modal.remove();
   };
 
-  const renderQuestion = () => {
-    const q = DIAGNOSTIC_QUESTIONS[currentIdx];
+  const updateProgressStats = () => {
     const totalQ = DIAGNOSTIC_QUESTIONS.length;
     const answeredCount = Object.keys(userAnswers).length;
-    const pctProgress = Math.round(((currentIdx + 1) / totalQ) * 100);
+    const answeredChip = modal.querySelector("#diagAnsweredChip");
+    if (answeredChip) answeredChip.textContent = `Đã làm: ${answeredCount}/${totalQ} câu`;
+    const footerCount = modal.querySelector("#diagFooterCount");
+    if (footerCount) footerCount.textContent = `${answeredCount}/${totalQ}`;
+  };
 
+  const renderExamSheet = () => {
+    const totalQ = DIAGNOSTIC_QUESTIONS.length;
+    const answeredCount = Object.keys(userAnswers).length;
     const m = Math.floor(totalTime / 60).toString().padStart(2, "0");
     const s = (totalTime % 60).toString().padStart(2, "0");
 
@@ -13105,81 +13095,137 @@ window.openDiagnosticTestModal = function () {
       <div class="diagnostic-modal-card">
         <div class="diag-modal-header">
           <div class="diag-modal-title-wrap">
-            <span class="diag-modal-title">Kiểm Tra Xếp Lớp TRKI (Câu ${currentIdx + 1}/${totalQ})</span>
+            <span class="diag-modal-title">Kiểm Tra Trình Độ Tiếng Nga</span>
             <span class="diag-timer-chip" id="diagTimerDisplay">
               ${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} ${m}:${s}
+            </span>
+            <span class="diag-answered-chip" id="diagAnsweredChip" style="font-size:0.8rem;font-weight:700;color:var(--primary);background:var(--primary-soft);padding:3px 8px;border-radius:6px">
+              Đã làm: ${answeredCount}/${totalQ} câu
             </span>
           </div>
           <button class="diag-modal-close" id="btnCloseDiag" type="button" title="Đóng">&times;</button>
         </div>
-        <div class="diag-progress-bar-wrap">
-          <div class="diag-progress-bar-fill" style="width:${pctProgress}%"></div>
+
+        <div class="diag-palette-bar">
+          <span style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-right:6px">Câu hỏi:</span>
+          ${DIAGNOSTIC_QUESTIONS.map((_, idx) => {
+            const isDone = typeof userAnswers[idx] === "number";
+            return `
+            <button type="button" class="diag-palette-pill ${isDone ? "done" : ""}" id="diagPill_${idx}" data-jump-to="${idx}" title="Chuyển đến câu ${idx + 1}">
+              ${idx + 1}
+            </button>`;
+          }).join("")}
         </div>
-        <div class="diag-modal-body">
-          <div class="diag-q-meta">
-            <span class="diag-q-badge">${esc(q.catName)} · Cấp độ ${esc(q.level)}</span>
-            <span style="font-size:0.8rem;color:var(--muted)">Đã làm ${answeredCount}/${totalQ} câu</span>
+
+        <div class="diag-modal-body" id="diagModalBody">
+          <div class="diag-intro-hint" style="background:rgba(23,87,166,0.05);border:1px dashed rgba(23,87,166,0.25);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:0.88rem;color:var(--muted)">
+            <strong style="color:var(--primary)">💡 Hướng dẫn:</strong> Đề thi gồm 15 câu trắc nghiệm phân hóa. Hãy chọn đáp án chính xác nhất cho từng câu. Nhấp vào số câu ở thanh điều hướng để cuộn nhanh đến câu tương ứng.
           </div>
-          <div class="diag-q-text ru">${esc(q.q)}</div>
-          <div class="diag-options-grid">
-            ${q.options.map((opt, oi) => {
-              const isSelected = userAnswers[currentIdx] === oi;
+
+          <div class="diag-test-sheet">
+            ${DIAGNOSTIC_QUESTIONS.map((q, idx) => {
+              const isAnswered = typeof userAnswers[idx] === "number";
               return `
-              <button type="button" class="diag-option-btn ${isSelected ? "selected" : ""}" data-opt-idx="${oi}">
-                <span class="diag-option-num">${String.fromCharCode(65 + oi)}</span>
-                <span class="ru">${esc(opt)}</span>
-              </button>`;
+              <div class="diag-q-card ${isAnswered ? "is-answered" : ""}" id="diagQ_${idx}">
+                <div class="diag-q-meta">
+                  <div>
+                    <span class="diag-q-num">Câu ${idx + 1}/${totalQ}</span>
+                    <span class="diag-q-topic">${esc(q.catName)}</span>
+                  </div>
+                  <span class="diag-q-status" id="diagQStatus_${idx}" style="font-size:0.78rem;font-weight:700;color:${isAnswered ? "var(--green)" : "var(--muted)"}">
+                    ${isAnswered ? "✓ Đã làm" : "Chưa chọn"}
+                  </span>
+                </div>
+                <div class="diag-q-text ru">${esc(q.q)}</div>
+                <div class="diag-options-grid">
+                  ${q.options.map((opt, oi) => {
+                    const isSelected = userAnswers[idx] === oi;
+                    return `
+                    <button type="button" class="diag-option-btn ${isSelected ? "selected" : ""}" data-q-idx="${idx}" data-opt-idx="${oi}">
+                      <span class="diag-option-num">${String.fromCharCode(65 + oi)}</span>
+                      <span class="ru">${esc(opt)}</span>
+                    </button>`;
+                  }).join("")}
+                </div>
+              </div>`;
             }).join("")}
           </div>
         </div>
+
         <div class="diag-modal-footer">
-          <button type="button" class="btn btn-outline" id="btnDiagPrev" ${currentIdx === 0 ? "disabled" : ""} style="padding:10px 18px">
-            ← Câu trước
+          <div style="font-size:0.9rem;font-weight:700;color:var(--muted)">
+            Đã hoàn thành: <b id="diagFooterCount" style="color:var(--primary)">${answeredCount}/${totalQ}</b> câu
+          </div>
+          <button type="button" class="btn btn-primary" id="btnDiagSubmit" style="padding:10px 24px;font-weight:800;background:var(--secondary);border-color:var(--secondary)">
+            ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} Hoàn thành & Nhận kết quả
           </button>
-          ${currentIdx < totalQ - 1 ? `
-            <button type="button" class="btn btn-primary" id="btnDiagNext" style="padding:10px 22px">
-              Câu tiếp theo →
-            </button>
-          ` : `
-            <button type="button" class="btn btn-primary" id="btnDiagSubmit" style="padding:10px 22px;background:var(--secondary);border-color:var(--secondary)">
-              ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} Hoàn thành & Nhận kết quả
-            </button>
-          `}
         </div>
       </div>
     `;
 
     document.getElementById("btnCloseDiag").onclick = closeDiagModal;
-    const prevBtn = document.getElementById("btnDiagPrev");
-    if (prevBtn) {
-      prevBtn.onclick = () => {
-        if (currentIdx > 0) {
-          currentIdx--;
-          renderQuestion();
-        }
-      };
-    }
-    const nextBtn = document.getElementById("btnDiagNext");
-    if (nextBtn) {
-      nextBtn.onclick = () => {
-        if (currentIdx < totalQ - 1) {
-          currentIdx++;
-          renderQuestion();
-        }
-      };
-    }
-    const submitBtn = document.getElementById("btnDiagSubmit");
-    if (submitBtn) {
-      submitBtn.onclick = renderResult;
-    }
 
-    modal.querySelectorAll(".diag-option-btn").forEach((b) => {
-      b.onclick = () => {
-        const oi = parseInt(b.dataset.optIdx, 10);
-        userAnswers[currentIdx] = oi;
-        renderQuestion();
+    // Smooth jump via palette pills
+    modal.querySelectorAll(".diag-palette-pill").forEach(pill => {
+      pill.onclick = () => {
+        const jumpIdx = pill.dataset.jumpTo;
+        const targetQ = modal.querySelector(`#diagQ_${jumpIdx}`);
+        if (targetQ) {
+          targetQ.scrollIntoView({ behavior: "smooth", block: "center" });
+          targetQ.style.borderColor = "var(--primary)";
+          setTimeout(() => {
+            if (typeof userAnswers[jumpIdx] === "number") {
+              targetQ.style.borderColor = "rgba(16, 185, 129, 0.4)";
+            } else {
+              targetQ.style.borderColor = "var(--border)";
+            }
+          }, 800);
+        }
       };
     });
+
+    // Select option handler
+    modal.querySelectorAll(".diag-option-btn").forEach(btn => {
+      btn.onclick = () => {
+        const qIdx = parseInt(btn.dataset.qIdx, 10);
+        const optIdx = parseInt(btn.dataset.optIdx, 10);
+        userAnswers[qIdx] = optIdx;
+
+        // Update card visual
+        const card = modal.querySelector(`#diagQ_${qIdx}`);
+        if (card) {
+          card.classList.add("is-answered");
+          card.querySelectorAll(".diag-option-btn").forEach(b => {
+            const oi = parseInt(b.dataset.optIdx, 10);
+            b.classList.toggle("selected", oi === optIdx);
+          });
+          const statusEl = card.querySelector(`#diagQStatus_${qIdx}`);
+          if (statusEl) {
+            statusEl.textContent = "✓ Đã làm";
+            statusEl.style.color = "var(--green)";
+          }
+        }
+
+        // Update palette pill
+        const pill = modal.querySelector(`#diagPill_${qIdx}`);
+        if (pill) pill.classList.add("done");
+
+        updateProgressStats();
+      };
+    });
+
+    const submitBtn = modal.querySelector("#btnDiagSubmit");
+    if (submitBtn) {
+      submitBtn.onclick = () => {
+        const total = DIAGNOSTIC_QUESTIONS.length;
+        const answered = Object.keys(userAnswers).length;
+        if (answered < total) {
+          const confirmSubmit = window.confirm(`Bạn mới trả lời ${answered}/${total} câu hỏi. Bạn có chắc chắn muốn nộp bài để nhận phân tích kết quả ngay không?`);
+          if (!confirmSubmit) return;
+        }
+        renderResult();
+      };
+    }
   };
 
   const renderResult = () => {
@@ -13188,8 +13234,9 @@ window.openDiagnosticTestModal = function () {
     let totalCorrect = 0;
     const catStats = {
       cases: { name: "Ngữ pháp 6 Cách", correct: 0, total: 0 },
-      verbs: { name: "Động từ & Thể CB/NCB", correct: 0, total: 0 },
-      motion: { name: "Động từ chuyển động & Cú pháp", correct: 0, total: 0 }
+      verbs: { name: "Động từ & Thể", correct: 0, total: 0 },
+      motion: { name: "Động từ chuyển động", correct: 0, total: 0 },
+      syntax: { name: "Cú pháp & Cấu trúc câu", correct: 0, total: 0 }
     };
 
     DIAGNOSTIC_QUESTIONS.forEach((q, idx) => {
@@ -13197,7 +13244,7 @@ window.openDiagnosticTestModal = function () {
       const isCorrect = userChoice === q.a;
       if (isCorrect) totalCorrect++;
 
-      const groupKey = (q.cat === "motion" || q.cat === "vocab") ? "motion" : (q.cat === "verbs" ? "verbs" : "cases");
+      const groupKey = catStats[q.cat] ? q.cat : "cases";
       catStats[groupKey].total++;
       if (isCorrect) catStats[groupKey].correct++;
     });
@@ -13205,19 +13252,76 @@ window.openDiagnosticTestModal = function () {
     const totalQ = DIAGNOSTIC_QUESTIONS.length;
     const pct = Math.round((totalCorrect / totalQ) * 100);
 
+    // Xác định trình độ dự đoán
     let estLevel = "A1 (Sơ Cấp)";
     let estBadge = "Khởi động nền tảng";
-    let estDesc = "Bạn đang ở giai đoạn làm quen và tích lũy ngữ pháp cơ bản. Đề xuất: Tập trung làm chủ 6 Cách và từ vựng đời sống A1.";
+    let estDesc = "Bạn đang ở giai đoạn xây dựng nền tảng ban đầu. Vốn từ và cấu trúc 6 Cách cơ bản cần được rèn luyện thường xuyên hơn.";
 
-    if (totalCorrect >= 12) {
-      estLevel = "B1 (Trung Cấp)";
-      estBadge = "Đủ chuẩn Du học Nga";
-      estDesc = "Xuất sắc! Bạn nắm rất vững cấu trúc ngữ pháp và có vốn từ tốt. Bạn đã sẵn sàng để chinh phục chứng chỉ quốc tế ТРКИ-1 (B1).";
-    } else if (totalCorrect >= 6) {
-      estLevel = "A2 (Cơ Bản)";
-      estBadge = "Đang bứt phá mục tiêu";
-      estDesc = "Khá tốt! Bạn đã có nền tảng ngữ pháp vững vàng, cần cải thiện thêm thể hoàn thành/chưa hoàn thành và động từ chuyển động có tiền tố.";
+    if (totalCorrect >= 13) {
+      estLevel = "B1–B2 (Trung Cấp Vững Vàng)";
+      estBadge = "Đạt chuẩn Du học & Thi TRKI-1";
+      estDesc = "Xuất sắc! Bạn nắm rất vững hệ thống 6 Cách, biến thể động từ phức hợp và cấu trúc câu điều kiện, sẵn sàng chinh phục chứng chỉ TRKI quốc tế.";
+    } else if (totalCorrect >= 8) {
+      estLevel = "A2 (Cơ Bản Đang Bứt Phá)";
+      estBadge = "Tiến độ bứt phá tốt";
+      estDesc = "Khá tốt! Bạn đã làm chủ hầu hết các quy tắc ngữ pháp thường gặp, cần đào sâu thêm tiền tố động từ chuyển động và thể hoàn thành trong quá khứ.";
     }
+
+    // Phân tích điểm mạnh
+    const strengths = [];
+    if (catStats.cases.correct >= 4) {
+      strengths.push("Nắm rất chắc quy tắc biến cách danh từ và chọn đúng giới từ đi kèm trong 6 Cách.");
+    } else if (catStats.cases.correct >= 2) {
+      strengths.push("Nhận diện tương đối tốt các cách cơ bản (Cách 4 chỉ phương hướng, Cách 6 vị trí).");
+    }
+
+    if (catStats.verbs.correct >= 2) {
+      strengths.push("Phân biệt chính xác thể động từ (quá trình kéo dài vs kết quả hoàn thành).");
+    }
+    if (catStats.motion.correct >= 2) {
+      strengths.push("Hiểu rõ cơ chế động từ chuyển động vô định hướng / có định hướng và tiền tố chỉ hướng đến.");
+    }
+    if (catStats.syntax.correct >= 2) {
+      strengths.push("Làm chủ cấu trúc câu phức, đại từ quan hệ который và câu giả định nếu như (если бы).");
+    }
+    if (strengths.length === 0) {
+      strengths.push("Có khả năng tư duy và làm quen nhanh với định dạng câu hỏi trắc nghiệm tiếng Nga chuẩn.");
+    }
+
+    // Phân tích điểm yếu & Lời khuyên cải thiện
+    const weaknesses = [];
+    if (catStats.cases.correct < 4) {
+      weaknesses.push("Cần củng cố: Danh từ biến cách đặc biệt (như thời gian 'времени'), Cách 2 phủ định và số từ đi với danh từ Cách 2 số ít.");
+    }
+    if (catStats.verbs.correct < 2) {
+      weaknesses.push("Cần củng cố: Thể Chưa hoàn thành cho quá trình (весь вечер) so với thể Hoàn thành đạt kết quả trong khoảng thời gian (за 45 минут).");
+    }
+    if (catStats.motion.correct < 2) {
+      weaknesses.push("Cần củng cố: Phân biệt cặp động từ chuyển động ходить / идти và ý nghĩa tiền tố chuyển động (при- đến nơi, у- rời đi).");
+    }
+    if (catStats.syntax.correct < 2) {
+      weaknesses.push("Cần củng cố: Mệnh đề quan hệ với danh từ giống đực sinh vật (который biến thành которого), giới từ nguyên nhân tiêu cực из-за + Cách 2.");
+    }
+    if (weaknesses.length === 0) {
+      weaknesses.push("Tiếp tục duy trì luyện tập đọc báo chí Nga, nghe bản tin thực tế và thử sức với ngân hàng 74 đề thi thật TRKI để giữ vững phong độ.");
+    }
+
+    // Kiểm tra trạng thái đăng nhập
+    const currentUser = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
+    const isLogged = currentUser && !String(currentUser.uid || "").startsWith("guest_");
+
+    // Lưu kết quả vào STORE
+    try {
+      if (typeof STORE !== "undefined") {
+        STORE.set("last_diagnostic_test", {
+          score: totalCorrect,
+          total: totalQ,
+          level: estLevel,
+          pct,
+          timestamp: Date.now()
+        });
+      }
+    } catch(e) {}
 
     modal.innerHTML = `
       <div class="diagnostic-modal-card">
@@ -13232,8 +13336,8 @@ window.openDiagnosticTestModal = function () {
             <span class="diag-result-badge">
               ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} ${estBadge}
             </span>
-            <div class="diag-result-level">Trình Độ Dự Đoán: ${estLevel}</div>
-            <div class="diag-result-score">Kết quả đạt: <b>${totalCorrect}/${totalQ} câu đúng (${pct}%)</b></div>
+            <div class="diag-result-level">${estLevel}</div>
+            <div class="diag-result-score">Kết quả bài làm: <b>${totalCorrect}/${totalQ} câu đúng (${pct}%)</b></div>
 
             <div class="diag-analysis-grid">
               ${Object.values(catStats).map(c => {
@@ -13249,17 +13353,61 @@ window.openDiagnosticTestModal = function () {
               }).join("")}
             </div>
 
-            <div class="diag-recommend-box">
-              <strong style="color:var(--primary)">Chẩn đoán chuyên môn:</strong>
-              <p style="margin:4px 0 0 0">${estDesc}</p>
+            <div class="diag-strengths-box">
+              <strong>${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} Điểm mạnh của bạn:</strong>
+              <ul>
+                ${strengths.map(s => `<li>${esc(s)}</li>`).join("")}
+              </ul>
             </div>
 
-            <div class="diag-result-actions">
-              <a class="btn btn-outline" href="mock-test.html" style="text-decoration:none;padding:12px;font-weight:700">
-                ${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 16 }) : ""} Vào phòng thi thử TRKI
+            <div class="diag-weaknesses-box">
+              <strong>${window.RusiIcons ? RusiIcons.get("alert-circle", { size: 16 }) : ""} Điểm yếu & Cần cải thiện:</strong>
+              <ul>
+                ${weaknesses.map(w => `<li>${esc(w)}</li>`).join("")}
+              </ul>
+            </div>
+
+            <div class="diag-recommend-box">
+              <strong style="color:var(--primary)">Chẩn đoán chuyên môn & Lộ trình đề xuất:</strong>
+              <p style="margin:6px 0 0 0">${estDesc}</p>
+            </div>
+
+            <!-- CTA Mời Đăng Ký / Đăng Nhập -->
+            ${!isLogged ? `
+              <div class="diag-auth-cta-box">
+                <div class="diag-auth-cta-title">🎉 Đăng ký / Đăng nhập để lưu kết quả & nhận lộ trình học</div>
+                <p class="diag-auth-cta-desc">
+                  Lưu trữ kết quả kiểm tra năng lực vào tài khoản của bạn, nhận đề xuất bài học theo chuyên đề điểm yếu và bắt đầu học tập cùng RUSI hoàn toàn miễn phí.
+                </p>
+                <div class="diag-auth-btns-row">
+                  <button type="button" class="btn btn-primary" id="btnDiagRegister" style="padding:12px 24px;font-weight:800;background:var(--primary);border-color:var(--primary)">
+                    ${window.RusiIcons ? RusiIcons.get("user", { size: 16 }) : ""} Đăng ký tài khoản miễn phí
+                  </button>
+                  <button type="button" class="btn btn-outline" id="btnDiagLogin" style="padding:12px 22px;font-weight:700">
+                    ${window.RusiIcons ? RusiIcons.get("log-in", { size: 16 }) : ""} Đăng nhập ngay
+                  </button>
+                </div>
+              </div>
+            ` : `
+              <div class="diag-auth-cta-box" style="background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.3)">
+                <div class="diag-auth-cta-title" style="color:#059669">✓ Đã lưu kết quả vào hồ sơ học tập của bạn!</div>
+                <p class="diag-auth-cta-desc">
+                  Hệ thống đã cập nhật năng lực dự đoán vào tài khoản học viên. Hãy tiếp tục ôn luyện để nâng cao phản xạ!
+                </p>
+                <div class="diag-auth-btns-row">
+                  <a href="mock-test.html" class="btn btn-primary" style="padding:12px 24px;font-weight:800;text-decoration:none">
+                    ${window.RusiIcons ? RusiIcons.get("graduation-cap", { size: 16 }) : ""} Vào phòng thi thử TRKI →
+                  </a>
+                </div>
+              </div>
+            `}
+
+            <div class="diag-result-actions" style="margin-top:16px">
+              <a class="btn btn-outline" href="vocabulary.html" style="text-decoration:none;padding:12px;font-weight:700">
+                ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""} Luyện từ vựng theo chủ đề
               </a>
-              <a class="btn btn-primary" href="upgrade.html" style="text-decoration:none;padding:12px;font-weight:800;background:var(--secondary);border-color:var(--secondary)">
-                ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Mở khóa 74 đề thi thật PRO
+              <a class="btn btn-primary" href="mock-test.html" style="text-decoration:none;padding:12px;font-weight:800;background:var(--secondary);border-color:var(--secondary)">
+                ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Luyện thi TRKI thực chiến
               </a>
             </div>
           </div>
@@ -13268,9 +13416,29 @@ window.openDiagnosticTestModal = function () {
     `;
 
     document.getElementById("btnCloseDiag").onclick = closeDiagModal;
+
+    const btnReg = modal.querySelector("#btnDiagRegister");
+    if (btnReg) {
+      btnReg.onclick = () => {
+        closeDiagModal();
+        if (typeof AuthModal !== "undefined" && typeof AuthModal.open === "function") {
+          AuthModal.open("register");
+        }
+      };
+    }
+
+    const btnLogin = modal.querySelector("#btnDiagLogin");
+    if (btnLogin) {
+      btnLogin.onclick = () => {
+        closeDiagModal();
+        if (typeof AuthModal !== "undefined" && typeof AuthModal.open === "function") {
+          AuthModal.open("login");
+        }
+      };
+    }
   };
 
-  renderQuestion();
+  renderExamSheet();
 
   timerId = setInterval(() => {
     totalTime--;
@@ -13707,10 +13875,9 @@ function initUpgradePage() {
           <div>
             <div class="upgrade-user-name">
               <span>Học viên:</span> <b>${esc(user.name || "Bạn")}</b>
-              <code class="upgrade-user-email">${esc(user.email || "Khách")}</code>
             </div>
             <div class="upgrade-user-tier">
-              Cấp độ tài khoản: ${isPro ? `<span class="user-tier-badge tier-pro">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""} PRO MEMBER (${esc(proInfo ? proInfo.pkgTitle : "Active")})</span>` : `<span class="user-tier-badge tier-free">Học viên Free</span>`}
+              Cấp độ tài khoản: ${isPro ? `<span class="user-tier-badge tier-pro">PRO</span>` : `<span class="user-tier-badge tier-free">Miễn phí</span>`}
             </div>
           </div>
         </div>
@@ -13718,7 +13885,6 @@ function initUpgradePage() {
         ${isPro ? `
           <div class="upgrade-pro-active-box">
             <span>${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Gói đang dùng: <b>${esc(proInfo ? proInfo.pkgTitle : "PRO")}</b> (${esc((proInfo && proInfo.expiresFormatted) || "Đang kích hoạt")})</span>
-            <button class="btn btn-sm btn-outline" id="btnManageUpgradePage" style="white-space:nowrap">Quản lý gói</button>
           </div>
         ` : `
           <div class="upgrade-discount-countdown">
@@ -13793,85 +13959,65 @@ function initUpgradePage() {
       <!-- BẢNG SO SÁNH CHI TIẾT TÍNH NĂNG (CHUẨN DAUENGLISH FREE VS PRO) -->
       <section class="comparison-section">
         <div class="comparison-heading">
-          <span class="section-kicker">SO SÁNH CHI TIẾT</span>
-          <h2>Bảng So Sánh Quyền Lợi: Gói Free vs Gói PRO</h2>
-          <p>Xem toàn bộ danh sách tính năng và sự khác biệt giữa hai tài khoản</p>
+          <span class="section-kicker">SO SÁNH QUYỀN LỢI</span>
+          <h2>So Sánh Gói Miễn Phí & Gói PRO</h2>
+          <p>Tối giản, minh bạch và làm nổi bật giá trị bứt phá của Hội viên PRO</p>
         </div>
 
         <div class="comparison-table-wrap">
           <table class="comparison-table">
             <thead>
               <tr>
-                <th class="col-feature">Tính năng / Nội dung học</th>
-                <th class="col-free">Tài khoản FREE</th>
-                <th class="col-pro"><span class="pro-crown">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 16 }) : ""}</span> Đặc Quyền Hội Viên PRO (1T / 3T / 1N)</th>
+                <th class="col-feature">Nội dung & Tính năng</th>
+                <th class="col-free">Tài khoản Miễn phí</th>
+                <th class="col-pro">
+                  <div class="pro-col-header">
+                    <span class="pro-crown">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""}</span>
+                    <span>Đặc Quyền PRO</span>
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td class="col-feature"><b>Ngân hàng đề thi thử TRKI</b></td>
-                <td class="col-free">1 đề thi mẫu Part Ngữ pháp A1/A2</td>
-                <td class="col-pro"><b>TOÀN BỘ 74 đề thi</b> ТРКИ A1, A2, B1, B2 chuẩn quốc tế (Cả 3 gói)</td>
+                <td class="col-feature"><b>Ngân hàng đề thi TRKI</b></td>
+                <td class="col-free" data-label="Miễn phí">1 đề mẫu A1/A2</td>
+                <td class="col-pro" data-label="Đặc quyền PRO"><b>Toàn bộ 89+ đề thi</b> (6.680+ câu hỏi A1–C2)</td>
               </tr>
               <tr>
                 <td class="col-feature"><b>Đáp án & Giải thích chi tiết</b></td>
-                <td class="col-free">Chỉ xem số điểm tổng</td>
-                <td class="col-pro"><b>Chi tiết từng câu</b>: Phân tích ngữ pháp 6 Cách, bẫy trắc nghiệm & dẫn chứng</td>
+                <td class="col-free" data-label="Miễn phí">Chỉ xem điểm tổng</td>
+                <td class="col-pro" data-label="Đặc quyền PRO"><b>Chi tiết từng câu</b> & ngữ pháp 6 Cách</td>
               </tr>
               <tr>
                 <td class="col-feature"><b>Luyện nghe 4 Part CEFR</b></td>
-                <td class="col-free">Nghe thử Part 1</td>
-                <td class="col-pro"><b>Trọn bộ Part 1–4</b>, chỉnh tốc độ 0.75x–1.25x & full transcript song ngữ (Gói 3T & 1N)</td>
+                <td class="col-free" data-label="Miễn phí">Nghe thử Part 1</td>
+                <td class="col-pro" data-label="Đặc quyền PRO"><b>Trọn bộ 4 Part</b> kèm transcript song ngữ</td>
               </tr>
               <tr>
-                <td class="col-feature"><b>AI Chấm phát âm & Luyện nói</b></td>
-                <td class="col-free">Giới hạn 2 lượt thử/ngày</td>
-                <td class="col-pro"><b>AI Shadowing chuyên sâu</b>, so sánh âm vị chuẩn bản xứ (Gói 3T & 1N)</td>
+                <td class="col-feature"><b>Luyện nói Shadowing cùng AI</b></td>
+                <td class="col-free" data-label="Miễn phí">2 lượt thử/ngày</td>
+                <td class="col-pro" data-label="Đặc quyền PRO"><b>Toàn bộ 28 bài học</b>, AI chấm âm vị bản xứ</td>
               </tr>
               <tr>
-                <td class="col-feature"><b>Luyện viết tự luận (Письмо)</b></td>
-                <td class="col-free">Chấm 1 bài mẫu</td>
-                <td class="col-pro"><b>AI Rusika chấm không giới hạn</b> 4 tiêu chuẩn TRKI (Đặc quyền gói 1 Năm)</td>
+                <td class="col-feature"><b>Chấm bài Viết (Письмо)</b></td>
+                <td class="col-free" data-label="Miễn phí">1 bài mẫu</td>
+                <td class="col-pro" data-label="Đặc quyền PRO"><b>11 đề viết</b>, AI chấm theo 4 chuẩn TRKI</td>
               </tr>
               <tr>
                 <td class="col-feature"><b>Kho Lọ từ vựng Spaced Repetition</b></td>
-                <td class="col-free">2 Lọ từ cơ bản</td>
-                <td class="col-pro"><b>Kho 100+ Lọ từ chuyên ngành</b> (Y khoa, Kỹ thuật, Kinh tế) & Không giới hạn tạo lọ cá nhân</td>
+                <td class="col-free" data-label="Miễn phí">2 lọ cơ bản</td>
+                <td class="col-pro" data-label="Đặc quyền PRO"><b>33 lọ hệ thống</b> (5.000+ từ) & vô hạn lọ cá nhân</td>
               </tr>
               <tr>
-                <td class="col-feature"><b>Khảo thí mô phỏng CBT & Bấm giờ thi thật</b></td>
-                <td class="col-free">Không có đồng hồ áp lực phòng thi</td>
-                <td class="col-pro"><b>Phòng thi CBT chuẩn hóa</b>, đếm ngược tự động, bảo mật chống lộ đáp án (Zero-Answer Leak)</td>
+                <td class="col-feature"><b>Phòng thi CBT & Đảo đề</b></td>
+                <td class="col-free" data-label="Miễn phí">Cố định đáp án</td>
+                <td class="col-pro" data-label="Đặc quyền PRO"><b>Bấm giờ thi thật</b> & tự động đảo đáp án</td>
               </tr>
               <tr>
-                <td class="col-feature"><b>Luyện đề thông minh (Smart CBT Engine)</b></td>
-                <td class="col-free">Thứ tự đáp án cố định (dễ học vẹt vị trí)</td>
-                <td class="col-pro"><b>Tự động đảo ngẫu nhiên đáp án (Shuffle Options)</b> mỗi lần làm bài, chống học vẹt vị trí & rèn luyện phản xạ đọc hiểu ngữ pháp 6 Cách thực chất (Cả 3 gói)</td>
-              </tr>
-              <tr>
-                <td class="col-feature"><b>Tư vấn Du học Nga & Tài liệu</b></td>
-                <td class="col-free"><span style="display:inline-flex;align-items:center;gap:4px;color:#94a3b8">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""} Không hỗ trợ</span></td>
-                <td class="col-pro"><b style="color:#059669;display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""} Ưu tiên hỗ trợ 1-1</b>, tặng bộ cẩm nang du học & nhóm hỗ trợ học thuật cựu du học sinh</td>
-              </tr>
-              <tr>
-                <td class="col-feature"><b>Ghi chú & Note câu hỏi trong đề</b></td>
-                <td class="col-free">Tối đa 10 câu</td>
-                <td class="col-pro"><b>Tối đa 5.000 câu</b> ghi chú cá nhân</td>
-              </tr>
-              <tr>
-                <td class="col-feature"><b>Kho Từ vựng của tôi (Flashcards)</b></td>
-                <td class="col-free">Tối đa 50 từ</td>
-                <td class="col-pro"><b>Tối đa 10.000 từ</b> ôn tập thuật toán ngắt quãng SM-2</td>
-              </tr>
-              <tr>
-                <td class="col-feature"><b>Trải nghiệm học tập & Tốc độ tải</b></td>
-                <td class="col-free">Băng thông tiêu chuẩn</td>
-                <td class="col-pro"><b>100% Không quảng cáo</b>, máy chủ VIP ưu tiên tốc độ cao</td>
-              </tr>
-              <tr>
-                <td class="col-feature"><b>Đồng bộ dữ liệu đa thiết bị</b></td>
-                <td class="col-free">1 thiết bị duy nhất</td>
-                <td class="col-pro"><b>Đồng bộ đám mây trọn đời</b> (Web, Điện thoại, Máy tính bảng)</td>
+                <td class="col-feature"><b>Hỗ trợ học thuật & Tài liệu</b></td>
+                <td class="col-free" data-label="Miễn phí"><span style="color:var(--muted)">Không hỗ trợ</span></td>
+                <td class="col-pro" data-label="Đặc quyền PRO"><b style="color:#059669">✓ Ưu tiên 1-1</b> & Sổ tay du học Nga</td>
               </tr>
             </tbody>
           </table>
@@ -13973,6 +14119,33 @@ function initUpgradePage() {
             </button>
             <div class="faq-answer">
               <p>Đừng lo lắng! Đội ngũ Admin và cựu du học sinh RUSI luôn túc trực hỗ trợ 24/7. Bạn chỉ cần gửi ảnh chụp biên lai qua nhóm Zalo VIP hoặc Fanpage để được kích hoạt thủ công trong 5 phút.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button type="button">
+              <span>Tài khoản PRO có được tự động cập nhật khi có thêm đề thi mới không?</span>
+              <i>+</i>
+            </button>
+            <div class="faq-answer">
+              <p>Có! Trong suốt thời gian hiệu lực của gói, bạn được tự động cập nhật 100% các bộ đề thi mới, bài luyện nói, lọ từ vựng và tính năng nâng cấp của RUSI TRKI mà không phải trả thêm bất kỳ chi phí nào.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button type="button">
+              <span>Người mới bắt đầu học tiếng Nga (A0 - A1) có nên dùng gói PRO không?</span>
+              <i>+</i>
+            </button>
+            <div class="faq-answer">
+              <p>Rất nên! Lộ trình RUSI TRKI phân cấp rõ ràng từ A1 đến B2. Học viên mới sẽ được luyện phát âm Shadowing từ cơ bản, tích lũy từ vựng qua Lọ từ thông minh SM-2 và làm quen cấu trúc đề thi sơ cấp kèm giải thích chi tiết bằng tiếng Việt.</p>
+            </div>
+          </div>
+          <div class="faq-item">
+            <button type="button">
+              <span>Tôi có thể gia hạn hoặc nâng cấp lên gói dài hạn hơn bất kỳ lúc nào không?</span>
+              <i>+</i>
+            </button>
+            <div class="faq-answer">
+              <p>Hoàn toàn được! Bạn có thể gia hạn hoặc nâng cấp gói bất cứ khi nào. Thời hạn còn lại của gói cũ sẽ được hệ thống tự động cộng dồn nối tiếp vào gói mới, bảo lưu toàn vẹn quyền lợi và chuỗi tiến độ học tập của bạn.</p>
             </div>
           </div>
         </div>

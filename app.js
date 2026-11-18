@@ -961,8 +961,8 @@ const Monetization = {
         priceOld: 590000,
         popular: false,
         features: [
-          "Mở khóa toàn bộ 74 đề thi TRKI A1–B2",
-          "Bấm giờ phòng thi thật & chấm điểm tự động",
+          "Mở khóa toàn bộ 91 đề thi TRKI A1–C2 (6.600+ câu hỏi)",
+          "Bấm giờ phòng thi thật & chấm điểm tự động chuẩn CBT",
           "Tùy chọn đảo ngẫu nhiên đáp án chống học vẹt",
           "Đáp án & giải thích ngữ pháp 6 cách chi tiết",
           "AI nhận diện & chấm điểm phát âm cơ bản",
@@ -979,10 +979,10 @@ const Monetization = {
         popular: true,
         features: [
           "Tất cả quyền lợi của gói 1 Tháng",
-          "Luyện đề thông minh: Tự động đảo ngẫu nhiên đáp án",
-          "Không giới hạn tạo Lọ từ vựng cá nhân",
-          "Mở khóa trọn bộ kho Luyện nghe 4 Part CEFR",
-          "Luyện nói Shadowing cùng AI toàn bộ 28 bài",
+          "Luyện nói Shadowing cùng AI toàn bộ 28 bài học",
+          "Kho 33 Lọ từ vựng hệ thống & 5.000+ từ vựng chuẩn TRKI",
+          "Không giới hạn tạo Lọ từ vựng cá nhân (thuật toán SM-2)",
+          "Mở khóa trọn bộ kho Luyện nghe CEFR",
           "Biểu đồ radar phân tích điểm mạnh / điểm yếu từng kỹ năng",
           "Tiết kiệm 25% chi phí so với mua lẻ từng tháng"
         ]
@@ -997,9 +997,8 @@ const Monetization = {
         popular: false,
         features: [
           "Tất cả quyền lợi của gói 3 Tháng",
-          "Luyện đề thông minh: Tự động đảo ngẫu nhiên đáp án",
-          "AI Rusika chấm bài Viết tự luận (Письмо) không giới hạn",
-          "Kho 100+ Lọ từ vựng chuyên ngành (Y khoa, Kỹ thuật, Kinh tế)",
+          "Mở khóa toàn bộ 11 đề Luyện viết tự luận (Письмо) chấm AI không giới hạn",
+          "Đặc quyền kho 5.000+ từ vựng & phân tích ngữ pháp chuyên sâu",
           "Tặng bộ cẩm nang sinh tồn & kinh nghiệm du học Nga",
           "Ưu tiên hỗ trợ kỹ thuật và học thuật 1-1",
           "Tiết kiệm tới 60% chi phí (~158.000đ / tháng)"
@@ -1714,7 +1713,7 @@ const NAV_LINKS = [
   ["speaking.html", "Nói"],
   ["mock-test.html", "TRKI"],
   ["blog.html", "Blog"],
-  ["upgrade.html", "Bảng giá"]
+  ["upgrade.html", "Gói PRO"]
 ];
 
 const SEASON_ORDER = ["winter"];
@@ -2644,7 +2643,7 @@ function renderFooter() {
         <a href="speaking.html">Nói</a>
         <a href="mock-test.html">TRKI</a>
         <a href="blog.html">Blog</a>
-        <a href="upgrade.html">Bảng giá PRO</a>
+        <a href="upgrade.html">Gói PRO</a>
       </div>
       <div class="footer-copyright">
         <small>© 2026 RUSI TRKI. Mọi quyền được bảo lưu.</small>

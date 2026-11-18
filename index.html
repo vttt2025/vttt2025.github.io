@@ -37,7 +37,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=10.3" />
+  <link rel="stylesheet" href="styles.css?v=10.5" />
   <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
 
   <!-- JSON-LD Structured Data: WebSite, EducationalOrganization, FAQPage -->
@@ -168,19 +168,6 @@
               Cách học cùng RUSI
             </a>
           </div>
-
-          <div class="learner-row">
-            <div class="avatars" aria-hidden="true">
-              <span style="background:var(--russia-blue)">AN</span>
-              <span style="background:var(--russia-red)">MI</span>
-              <span style="background:var(--russia-navy)">TH</span>
-              <span>+2k</span>
-            </div>
-            <p>
-              <strong>2.400+ học viên</strong><br />
-              đang ôn luyện mỗi ngày
-            </p>
-          </div>
         </div>
 
         <!-- Floating Composition (Right Side Visual) -->
@@ -243,24 +230,36 @@
       </section>
 
       <!-- ========================================================
-           2. PROOF STRIP (4 Key Metrics)
+           2. BÀI TEST KIỂM TRA TRÌNH ĐỘ TIẾNG NGA 0Đ (THAY THẾ PROOF-STRIP)
            ======================================================== -->
-      <section class="proof-strip">
-        <div>
-          <strong>5+</strong>
-          <span>Năm kinh nghiệm</span>
+      <section class="proof-strip level-test-strip" id="test-trinh-do" aria-label="Kiểm tra trình độ tiếng Nga miễn phí">
+        <div class="level-test-col level-test-main">
+          <span class="level-test-badge">
+            <i data-rusi-icon="sparkles-clean" data-size="14"></i> ĐÁNH GIÁ NĂNG LỰC 0Đ
+          </span>
+          <h2 class="level-test-title">Kiểm tra trình độ tiếng Nga miễn phí</h2>
+          <p class="level-test-sub">15 câu phân hóa chuẩn hóa · 10 phút biết ngay điểm mạnh, điểm yếu & lộ trình cải thiện</p>
         </div>
-        <div>
-          <strong>98%</strong>
-          <span>Hoàn thành lộ trình</span>
+        <div class="level-test-col level-test-perks">
+          <div class="level-test-perk-item">
+            <i data-rusi-icon="check-circle-correct" data-size="16"></i>
+            <span>Chuẩn cấu trúc TRKI A1–B2</span>
+          </div>
+          <div class="level-test-perk-item">
+            <i data-rusi-icon="target" data-size="16"></i>
+            <span>Chỉ rõ lỗ hổng 6 Cách & thể động từ</span>
+          </div>
+          <div class="level-test-perk-item">
+            <i data-rusi-icon="zap-xp" data-size="16"></i>
+            <span>Nhận kết quả phân tích tức thì</span>
+          </div>
         </div>
-        <div>
-          <strong>4.9/5</strong>
-          <span>Điểm đánh giá</span>
-        </div>
-        <div>
-          <strong>24/7</strong>
-          <span>Học mọi lúc mọi nơi</span>
+        <div class="level-test-col level-test-action">
+          <button class="button button-primary btn-launch-diagnostic" id="btnOpenDiagnosticModal" type="button">
+            Kiểm tra ngay
+            <i data-rusi-icon="arrow-right" data-size="16"></i>
+          </button>
+          <small class="level-test-note">100% Miễn phí · Không cần tài khoản trước</small>
         </div>
       </section>
 
@@ -268,35 +267,6 @@
            TIẾN ĐỘ HỌC CỦA BẠN (CHỈ HIỂN THỊ KHI ĐÃ ĐĂNG NHẬP THÀNH CÔNG)
            ======================================================== -->
       <section class="user-progress-dark-strip" id="indexUserProgressHost" style="display:none"></section>
-
-      <!-- ========================================================
-           BÀI TEST XẾP LỚP TRKI 0Đ (DIAGNOSTIC PLACEMENT TEST)
-           ======================================================== -->
-      <section class="diagnostic-banner-section section" id="test-trinh-do" aria-label="Kiểm tra trình độ tiếng Nga miễn phí">
-        <div class="diagnostic-banner-card">
-          <div class="diagnostic-banner-content">
-            <span class="diagnostic-kicker">
-              <i data-rusi-icon="sparkles-clean" data-size="14"></i> ĐỘC QUYỀN MIỄN PHÍ 0Đ
-            </span>
-            <h2 class="diagnostic-title">Bạn Đang Ở Trình Độ Tiếng Nga Nào?</h2>
-            <p class="diagnostic-desc">
-              Chỉ 10–15 phút làm bài trắc nghiệm 15 câu chuẩn hóa quốc tế. Hệ thống tự động phân tích điểm mạnh/yếu 6 Cách, thể động từ và đề xuất lộ trình ôn thi TRKI A1–B2 chính xác nhất cho bạn.
-            </p>
-            <div class="diagnostic-badges-row">
-              <span class="diag-badge"><i data-rusi-icon="timer-clock" data-size="14"></i> 15 câu / 10 phút</span>
-              <span class="diag-badge"><i data-rusi-icon="target" data-size="14"></i> Chuẩn CEFR A1 – B1</span>
-              <span class="diag-badge"><i data-rusi-icon="zap-xp" data-size="14"></i> Nhận kết quả & radar 6 Cách tức thì</span>
-            </div>
-          </div>
-          <div class="diagnostic-banner-action">
-            <button class="button button-primary btn-launch-diagnostic" id="btnOpenDiagnosticModal" type="button">
-              Kiểm tra trình độ 0đ ngay
-              <i data-rusi-icon="arrow-right" data-size="18"></i>
-            </button>
-            <small class="diag-action-note">Không cần thẻ ngân hàng · Đánh giá tự động 24/7</small>
-          </div>
-        </div>
-      </section>
 
       <!-- ========================================================
            3. LEARNING HUB (7 Chuyên Mục theo PROJECT_SPEC.md)
@@ -706,7 +676,7 @@
   <script src="data.js?v=10.0"></script>
   <script src="auth.js?v=8.0"></script>
   <script src="app.js?v=8.9"></script>
-  <script src="pages.js?v=10.4"></script>
+  <script src="pages.js?v=10.5"></script>
   <script>
     function initPage() {
       if (typeof initIndexPage === "function") {

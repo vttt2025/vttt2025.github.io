@@ -6931,6 +6931,131 @@ body.rusika-chat-open .rusika-floating-widget {
   font-size: 11.5px;
 }
 
+/* Level Test Strip (Replaces proof-strip) */
+.proof-strip.level-test-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 28px;
+  padding: 24px 36px;
+  grid-template-columns: none;
+}
+.level-test-col {
+  border: 0 !important;
+  align-items: flex-start !important;
+}
+.level-test-main {
+  flex: 1.2;
+  max-width: 520px;
+}
+.level-test-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  padding: 3px 9px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.level-test-title {
+  font-size: 1.45rem;
+  font-weight: 850;
+  color: #ffffff;
+  margin: 0 0 6px 0;
+  line-height: 1.25;
+}
+.level-test-sub {
+  font-size: 0.92rem;
+  color: #a3b8cc;
+  margin: 0;
+  line-height: 1.5;
+}
+.level-test-perks {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.14) !important;
+  border-right: none !important;
+  padding: 0 0 0 24px !important;
+  flex: 0.9;
+}
+.level-test-perk-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+.level-test-perk-item i {
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+.level-test-action {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px;
+  flex-shrink: 0;
+  border: 0 !important;
+}
+.level-test-action .btn-launch-diagnostic {
+  padding: 13px 26px !important;
+  font-size: 1rem !important;
+  font-weight: 800 !important;
+  white-space: nowrap;
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 20px rgba(23, 87, 166, 0.45) !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+.level-test-action .btn-launch-diagnostic:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(23, 87, 166, 0.6) !important;
+}
+.level-test-note {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+@media (max-width: 992px) {
+  .proof-strip.level-test-strip {
+    flex-wrap: wrap;
+    gap: 20px;
+    padding: 22px 24px;
+  }
+  .level-test-perks {
+    border-left: none !important;
+    padding-left: 0 !important;
+  }
+}
+@media (max-width: 768px) {
+  .proof-strip.level-test-strip {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px 18px;
+    margin: -32px auto 0;
+  }
+  .level-test-title {
+    font-size: 1.25rem;
+  }
+  .level-test-perks {
+    display: none !important;
+  }
+  .level-test-action {
+    width: 100%;
+  }
+  .level-test-action .btn-launch-diagnostic {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
 /* Learning Hub (7 Pillars Grid) */
 .section {
   width: min(100% - 48px, 1200px);
@@ -9133,96 +9258,146 @@ footer > small {
   margin: 0 auto;
 }
 
-/* Bảng so sánh tính năng Free vs PRO (DauEnglish style) */
+/* Bảng so sánh tính năng Free vs PRO — Modern Editorial Matrix */
 .comparison-section {
-  margin: 60px 0;
+  margin: 70px 0 60px 0;
 }
 .comparison-heading {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: 36px;
+}
+.comparison-heading .section-kicker {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #1757a6;
+  background: linear-gradient(135deg, rgba(23, 87, 166, 0.1) 0%, rgba(23, 87, 166, 0.04) 100%);
+  border: 1px solid rgba(23, 87, 166, 0.18);
+  padding: 6px 16px;
+  border-radius: 999px;
+  display: inline-block;
+  margin-bottom: 10px;
 }
 .comparison-heading h2 {
-  font-size: 1.8rem;
+  font-size: 1.85rem;
   font-weight: 800;
-  color: var(--text);
-  margin-bottom: 6px;
+  color: var(--text, #0f1f38);
+  margin-bottom: 8px;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
 }
 .comparison-heading p {
-  color: var(--muted);
-  font-size: 0.95rem;
+  color: var(--muted, #53657a);
+  font-size: 0.96rem;
+  line-height: 1.5;
 }
 .comparison-table-wrap {
-  overflow-x: auto;
-  border-radius: 18px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
-  border: 1px solid var(--border);
-  background: var(--surface);
+  border-radius: 20px;
+  box-shadow: 0 14px 40px -6px rgba(23, 87, 166, 0.09), 0 2px 8px rgba(15, 23, 42, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(23, 87, 166, 0.16);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  overflow: hidden;
 }
 .comparison-table {
   width: 100%;
-  border-collapse: collapse;
-  min-width: 640px;
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: 0.92rem;
+  table-layout: fixed;
 }
 .comparison-table th {
-  padding: 16px 20px;
-  text-align: left;
-  font-weight: 800;
-  border-bottom: 2px solid var(--border);
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(23, 87, 166, 0.14);
 }
 .comparison-table th.col-feature {
-  width: 38%;
-  background: #F8FAFC;
-  color: var(--text);
+  width: 44%;
+  background: rgba(246, 249, 252, 0.85);
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-align: left;
 }
 .comparison-table th.col-free {
-  width: 30%;
-  background: #F1F5F9;
-  color: #475569;
+  width: 25%;
+  background: rgba(241, 245, 249, 0.65);
+  color: #64748b;
+  font-size: 0.92rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
   text-align: center;
+  border-left: 1px solid rgba(23, 87, 166, 0.08);
 }
 .comparison-table th.col-pro {
-  width: 32%;
-  background: linear-gradient(180deg, #FEF3C7 0%, #FFFBEB 100%);
-  color: #92400E;
+  width: 31%;
+  background: linear-gradient(180deg, rgba(23, 87, 166, 0.09) 0%, rgba(23, 87, 166, 0.03) 100%);
   text-align: center;
-  border-left: 2px solid #F59E0B;
-  border-right: 2px solid #F59E0B;
-  position: relative;
+  border-left: 1.5px solid rgba(23, 87, 166, 0.22);
+  border-right: 1.5px solid rgba(23, 87, 166, 0.22);
+  border-bottom: 2px solid #1757a6;
 }
-.comparison-table th.col-pro .pro-crown {
-  font-size: 1.1rem;
-  margin-right: 4px;
+.comparison-table th.col-pro .pro-col-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #1757a6;
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  padding: 5px 14px;
+  border-radius: 999px;
+  box-shadow: 0 3px 10px rgba(23, 87, 166, 0.28);
 }
 .comparison-table td {
-  padding: 14px 20px;
-  border-bottom: 1px solid #E2E8F0;
-  line-height: 1.5;
+  padding: 18px 24px;
+  border-bottom: 1px solid rgba(23, 87, 166, 0.08);
+  line-height: 1.6;
+  vertical-align: middle;
 }
 .comparison-table tr:hover td {
-  background: rgba(0, 57, 166, 0.02);
+  background: rgba(23, 87, 166, 0.025);
 }
 .comparison-table td.col-feature {
   font-weight: 600;
-  color: var(--text);
+  color: #1e293b;
+  letter-spacing: -0.012em;
+}
+.comparison-table td.col-feature b {
+  font-weight: 750;
+  color: #0f172a;
 }
 .comparison-table td.col-free {
   text-align: center;
-  color: #64748B;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 500;
+  background: rgba(248, 250, 252, 0.4);
+  border-left: 1px solid rgba(23, 87, 166, 0.08);
 }
 .comparison-table td.col-pro {
   text-align: center;
-  font-weight: 700;
-  color: var(--text);
-  background: rgba(254, 243, 199, 0.2);
-  border-left: 2px solid #FCD34D;
-  border-right: 2px solid #FCD34D;
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.94rem;
+  letter-spacing: -0.012em;
+  background: rgba(23, 87, 166, 0.025);
+  border-left: 1.5px solid rgba(23, 87, 166, 0.16);
+  border-right: 1.5px solid rgba(23, 87, 166, 0.16);
+}
+.comparison-table td.col-pro b {
+  font-weight: 800;
+  color: #1757a6;
 }
 .comparison-table tr:last-child td {
   border-bottom: none;
 }
 .comparison-table tr:last-child td.col-pro {
-  border-bottom: 2px solid #F59E0B;
+  border-bottom: 1.5px solid rgba(23, 87, 166, 0.16);
 }
 
 /* Quy trình 3 bước kích hoạt */
@@ -9931,17 +10106,178 @@ img, video, iframe {
     padding: 24px 18px;
     border-radius: 18px;
   }
+  /* Chuyển đổi bảng so sánh thành hệ thống thẻ đối chiếu Dual-Column Card chuẩn App cao cấp trên di động */
+  .comparison-section {
+    margin: 40px 0 !important;
+  }
+  .comparison-heading {
+    margin-bottom: 24px !important;
+    padding: 0 8px !important;
+  }
+  .comparison-heading h2 {
+    font-size: 1.5rem !important;
+    letter-spacing: -0.025em !important;
+    line-height: 1.3 !important;
+    margin-bottom: 6px !important;
+  }
+  .comparison-heading p {
+    font-size: 0.92rem !important;
+    line-height: 1.45 !important;
+  }
   .comparison-table-wrap {
-    border-radius: 14px;
-    -webkit-overflow-scrolling: touch;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
   }
   .comparison-table {
-    min-width: 540px;
-    font-size: 0.84rem;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    border: none !important;
   }
-  .comparison-table th,
+  .comparison-table thead {
+    display: none !important;
+  }
+  .comparison-table tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    width: 100% !important;
+  }
+  .comparison-table tr {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-areas: 
+      "feature feature"
+      "free pro" !important;
+    gap: 10px !important;
+    background: #ffffff !important;
+    border: 1px solid rgba(23, 87, 166, 0.16) !important;
+    border-radius: 18px !important;
+    padding: 16px 14px !important;
+    box-shadow: 0 4px 20px -2px rgba(23, 87, 166, 0.07), 0 1px 3px rgba(15, 23, 42, 0.03) !important;
+    box-sizing: border-box !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  }
   .comparison-table td {
-    padding: 10px 12px;
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+  }
+  .comparison-table td.col-feature {
+    grid-area: feature !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+    color: #0f1f38 !important;
+    letter-spacing: -0.015em !important;
+    padding-bottom: 10px !important;
+    border-bottom: 1px solid rgba(23, 87, 166, 0.09) !important;
+    margin-bottom: 4px !important;
+    width: 100% !important;
+  }
+  .comparison-table td.col-feature::before {
+    content: "✦";
+    color: #1757a6;
+    font-size: 0.92rem;
+    font-weight: 900;
+  }
+  .comparison-table td.col-free {
+    grid-area: free !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 12px !important;
+    padding: 10px 11px !important;
+    font-size: 0.83rem !important;
+    font-weight: 500 !important;
+    color: #64748b !important;
+    line-height: 1.45 !important;
+    box-sizing: border-box !important;
+  }
+  .comparison-table td.col-free::before {
+    content: "MIỄN PHÍ";
+    display: inline-block;
+    font-weight: 800;
+    font-size: 0.66rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 6px;
+  }
+  .comparison-table td.col-pro {
+    grid-area: pro !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    background: linear-gradient(145deg, rgba(23, 87, 166, 0.08) 0%, rgba(23, 87, 166, 0.02) 100%) !important;
+    border: 1.5px solid rgba(23, 87, 166, 0.28) !important;
+    border-radius: 12px !important;
+    padding: 10px 11px !important;
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    color: #0f1f38 !important;
+    line-height: 1.45 !important;
+    letter-spacing: -0.01em !important;
+    box-sizing: border-box !important;
+    box-shadow: 0 2px 8px rgba(23, 87, 166, 0.06) !important;
+  }
+  .comparison-table td.col-pro::before {
+    content: "👑 ĐẶC QUYỀN PRO";
+    display: inline-block;
+    font-weight: 800;
+    font-size: 0.67rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #1757a6;
+    margin-bottom: 6px;
+  }
+  .comparison-table td.col-pro b {
+    color: #1757a6 !important;
+    font-weight: 800 !important;
+  }
+  [data-theme="dark"] body[data-page="upgrade"] .comparison-table tr {
+    background: linear-gradient(155deg, rgba(20, 32, 52, 0.95) 0%, rgba(13, 22, 36, 0.98) 100%) !important;
+    border-color: rgba(96, 165, 250, 0.24) !important;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4) !important;
+  }
+  [data-theme="dark"] body[data-page="upgrade"] .comparison-table td.col-feature {
+    color: #f8fafc !important;
+    border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+  }
+  [data-theme="dark"] body[data-page="upgrade"] .comparison-table td.col-feature::before {
+    color: #60a5fa !important;
+  }
+  [data-theme="dark"] body[data-page="upgrade"] .comparison-table td.col-free {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    color: #94a3b8 !important;
+  }
+  [data-theme="dark"] body[data-page="upgrade"] .comparison-table td.col-free::before {
+    color: #64748b !important;
+  }
+  [data-theme="dark"] body[data-page="upgrade"] .comparison-table td.col-pro {
+    background: linear-gradient(145deg, rgba(37, 99, 235, 0.18) 0%, rgba(30, 64, 175, 0.06) 100%) !important;
+    border-color: rgba(96, 165, 250, 0.38) !important;
+    color: #e2e8f0 !important;
+    box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15) !important;
+  }
+  [data-theme="dark"] body[data-page="upgrade"] .comparison-table td.col-pro::before {
+    color: #60a5fa !important;
+  }
+  [data-theme="dark"] body[data-page="upgrade"] .comparison-table td.col-pro b {
+    color: #93c5fd !important;
   }
   .steps-section {
     padding: 28px 16px;
@@ -12631,15 +12967,21 @@ img, video, iframe {
 }
 
 .guide-pillar-card {
-  background: var(--surface);
-  border: 1.5px solid #d2e0f0;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 248, 254, 0.92) 100%);
+  border: 1px solid rgba(23, 87, 166, 0.16);
   border-radius: 20px;
   padding: 36px 32px;
   margin-bottom: 32px;
-  box-shadow: 0 8px 30px rgba(16, 42, 76, 0.05);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 12px 32px -4px rgba(23, 87, 166, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
   position: relative;
   overflow: hidden;
+}
+
+.guide-pillar-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(23, 87, 166, 0.32);
+  box-shadow: 0 18px 42px -4px rgba(23, 87, 166, 0.13), inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 .guide-pillar-card::before {
@@ -18032,15 +18374,7 @@ rusi-icon > svg {
  * ===================================================================== */
 
 /* 1. Global Page Background & Variables matching index.html */
-body[data-page="vocabulary"],
-body[data-page="listening"],
-body[data-page="speaking"],
-body[data-page="writing"],
-body[data-page="mock-test"],
 body[data-page="shop"],
-body[data-page="blog"],
-body[data-page="upgrade"],
-body[data-page="how-to-study"],
 body[data-page="404"] {
   --bg: #eef4fb;
   --surface: #ffffff;
@@ -18057,6 +18391,91 @@ body[data-page="404"] {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+}
+
+/* Atmospheric Layered Background with Optical Depth:
+   Vocabulary, Listening, Speaking, Writing, TRKI Mock-Test, Upgrade, How-to-study & Blog */
+body[data-page="vocabulary"],
+body[data-page="listening"],
+body[data-page="speaking"],
+body[data-page="writing"],
+body[data-page="mock-test"],
+body[data-page="upgrade"],
+body[data-page="how-to-study"],
+body[data-page="blog"] {
+  --bg: #f6f9fc;
+  --surface: #ffffff;
+  --header-bg: rgba(246, 249, 252, 0.88);
+  --border: #d2e0f0;
+  --text: #0f1f38;
+  --muted: #53657a;
+  --nav-link-color: #2c3e55;
+  background-color: #f6f9fc !important;
+  background-image: 
+    radial-gradient(ellipse 85% 45% at 50% -5%, rgba(23, 87, 166, 0.1) 0%, transparent 68%),
+    radial-gradient(ellipse 55% 35% at 92% 14%, rgba(197, 34, 51, 0.045) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 30% at 8% 42%, rgba(23, 87, 166, 0.04) 0%, transparent 50%),
+    linear-gradient(180deg, #f8fafd 0%, #edf3f9 100%) !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+  color: #0f1f38 !important;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+[data-theme="dark"] body[data-page="vocabulary"],
+[data-theme="dark"] body[data-page="listening"],
+[data-theme="dark"] body[data-page="speaking"],
+[data-theme="dark"] body[data-page="writing"],
+[data-theme="dark"] body[data-page="mock-test"],
+[data-theme="dark"] body[data-page="upgrade"],
+[data-theme="dark"] body[data-page="how-to-study"],
+[data-theme="dark"] body[data-page="blog"] {
+  --bg: #0a0f19;
+  --surface: #131d2e;
+  --header-bg: rgba(10, 15, 25, 0.88);
+  --border: rgba(255, 255, 255, 0.1);
+  --text: #f1f5f9;
+  --muted: #94a3b8;
+  --nav-link-color: #cbd5e1;
+  background-color: #0a0f19 !important;
+  background-image: 
+    radial-gradient(ellipse 75% 45% at 50% -5%, rgba(37, 99, 235, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 35% at 90% 15%, rgba(225, 29, 72, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 30% at 10% 45%, rgba(30, 64, 175, 0.08) 0%, transparent 50%),
+    linear-gradient(180deg, #0c1220 0%, #060911 100%) !important;
+  background-attachment: fixed !important;
+  background-repeat: no-repeat !important;
+  color: #f1f5f9 !important;
+}
+
+/* Dark mode surface elevations & frosted glass for Upgrade, Guide & Blog */
+[data-theme="dark"] body[data-page="upgrade"] .pricing-card,
+[data-theme="dark"] body[data-page="upgrade"] .comparison-table-wrap,
+[data-theme="dark"] body[data-page="upgrade"] .upgrade-user-strip,
+[data-theme="dark"] body[data-page="upgrade"] .step-card,
+[data-theme="dark"] body[data-page="how-to-study"] .guide-pillar-card,
+[data-theme="dark"] body[data-page="blog"] .product-card {
+  background: linear-gradient(155deg, rgba(23, 38, 62, 0.8) 0%, rgba(15, 24, 40, 0.9) 100%) !important;
+  border-color: rgba(96, 165, 250, 0.22) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] body[data-page="upgrade"] .pricing-card:hover,
+[data-theme="dark"] body[data-page="how-to-study"] .guide-pillar-card:hover,
+[data-theme="dark"] body[data-page="blog"] .product-card:hover {
+  background: linear-gradient(155deg, rgba(30, 48, 76, 0.9) 0%, rgba(18, 29, 48, 0.98) 100%) !important;
+  border-color: rgba(96, 165, 250, 0.45) !important;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5) !important;
+}
+
+[data-theme="dark"] body[data-page="upgrade"] .pricing-card.popular {
+  background: linear-gradient(165deg, rgba(30, 58, 138, 0.5) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 0 16px 42px -4px rgba(37, 99, 235, 0.3), 0 0 0 1px rgba(59, 130, 246, 0.3) !important;
 }
 
 /* 2. Header Bar across bright pages — đồng bộ chuẩn màu nền & kính mờ index.html */
@@ -18704,8 +19123,8 @@ body[data-page="how-to-study"] .page-hero h1 span,
 
 .topic-card,
 .dau-card {
-  background: #ffffff !important;
-  border: 1.5px solid #d2e0f0 !important;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 247, 253, 0.92) 100%) !important;
+  border: 1px solid rgba(23, 87, 166, 0.16) !important;
   border-radius: 16px !important;
   flex-direction: column !important;
   display: flex !important;
@@ -18717,23 +19136,30 @@ body[data-page="how-to-study"] .page-hero h1 span,
   cursor: pointer;
   position: relative;
   text-align: left;
-  box-shadow: 0 4px 18px rgba(16, 42, 76, 0.05) !important;
+  box-shadow: 0 8px 24px -4px rgba(23, 87, 166, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
   overflow: hidden;
 }
 
 .topic-card:hover,
 .dau-card:hover {
-  transform: translateY(-3px) !important;
-  border-color: rgba(23, 87, 166, 0.4) !important;
-  box-shadow: 0 12px 28px rgba(16, 42, 76, 0.08) !important;
+  transform: translateY(-4px) !important;
+  border-color: #1757a6 !important;
+  box-shadow: 0 16px 36px -4px rgba(23, 87, 166, 0.15), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
   outline: none !important;
+}
+
+[data-theme="dark"] .topic-card,
+[data-theme="dark"] .dau-card {
+  background: linear-gradient(155deg, rgba(23, 38, 62, 0.8) 0%, rgba(15, 24, 40, 0.9) 100%) !important;
+  border-color: rgba(96, 165, 250, 0.22) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 [data-theme="dark"] .topic-card:hover,
 [data-theme="dark"] .dau-card:hover {
-  border-color: rgba(56, 189, 248, 0.35) !important;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35) !important;
-  background: var(--surface) !important;
+  background: linear-gradient(155deg, rgba(30, 48, 76, 0.9) 0%, rgba(18, 29, 48, 0.98) 100%) !important;
+  border-color: rgba(96, 165, 250, 0.45) !important;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5) !important;
 }
 
 .topic-card.topic-completed {
@@ -18741,8 +19167,9 @@ body[data-page="how-to-study"] .page-hero h1 span,
 }
 
 .topic-card.topic-pro {
-  background: linear-gradient(180deg, #ffffff 0%, #fff7ed 100%) !important;
-  border-color: #fed7aa !important;
+  background: linear-gradient(160deg, #ffffff 0%, #fffbf2 100%) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  box-shadow: 0 8px 24px -4px rgba(245, 158, 11, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
 }
 
 .topic-card-top {
@@ -19302,17 +19729,17 @@ body[data-page="blog"] .shop-filters .tab.active {
 }
 
 body[data-page="blog"] .product-card {
-  background: #ffffff !important;
-  border: 1.5px solid #d2e0f0 !important;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.98) 0%, rgba(243, 247, 253, 0.9) 100%) !important;
+  border: 1px solid rgba(23, 87, 166, 0.15) !important;
   border-radius: 18px !important;
-  box-shadow: 0 4px 18px rgba(16, 42, 76, 0.05) !important;
+  box-shadow: 0 8px 24px -4px rgba(23, 87, 166, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
   transition: all 0.25s ease;
 }
 
 body[data-page="blog"] .product-card:hover {
   transform: translateY(-5px) !important;
   border-color: #1757a6 !important;
-  box-shadow: 0 14px 32px rgba(23, 87, 166, 0.12) !important;
+  box-shadow: 0 18px 40px -4px rgba(23, 87, 166, 0.16), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
 }
 
 body[data-page="blog"] .product-badge {
@@ -19431,10 +19858,12 @@ body[data-page="upgrade"] .upgrade-hero p {
 }
 
 body[data-page="upgrade"] .upgrade-user-strip {
-  background: #ffffff !important;
-  border: 1.5px solid #d2e0f0 !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(23, 87, 166, 0.15) !important;
   color: #0f1f38 !important;
-  box-shadow: 0 4px 18px rgba(16, 42, 76, 0.05) !important;
+  box-shadow: 0 8px 25px rgba(16, 42, 76, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
   border-radius: 16px !important;
 }
 
@@ -19476,28 +19905,28 @@ body[data-page="upgrade"] .upgrade-auth-icon {
   color: #d97706 !important;
 }
 
-/* Pricing Cards across Upgrade page & Index page */
+/* Pricing Cards across Upgrade page & Index page with Layered Depth */
 body[data-page="upgrade"] .pricing-card,
 #pricing .pricing-card {
-  background: #ffffff !important;
-  border: 1.5px solid #d2e0f0 !important;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 248, 254, 0.92) 100%) !important;
+  border: 1px solid rgba(23, 87, 166, 0.16) !important;
   color: #0f1f38 !important;
   border-radius: 18px !important;
-  box-shadow: 0 4px 18px rgba(16, 42, 76, 0.05) !important;
+  box-shadow: 0 10px 28px -4px rgba(23, 87, 166, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
 }
 
 body[data-page="upgrade"] .pricing-card:hover,
 #pricing .pricing-card:hover {
   border-color: #1757a6 !important;
   transform: translateY(-5px) !important;
-  box-shadow: 0 14px 35px rgba(23, 87, 166, 0.12) !important;
+  box-shadow: 0 20px 42px -4px rgba(23, 87, 166, 0.18), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
 }
 
 body[data-page="upgrade"] .pricing-card.popular,
 #pricing .pricing-card.popular {
   border: 2px solid #1757a6 !important;
-  background: linear-gradient(180deg, #ffffff 0%, #f4f8fe 100%) !important;
-  box-shadow: 0 10px 30px rgba(23, 87, 166, 0.12) !important;
+  background: linear-gradient(165deg, #ffffff 0%, #eef5fe 100%) !important;
+  box-shadow: 0 16px 40px -4px rgba(23, 87, 166, 0.18), 0 0 0 1px rgba(23, 87, 166, 0.12), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
 }
 
 body[data-page="upgrade"] .pricing-popular-badge,
@@ -19548,58 +19977,102 @@ body[data-page="upgrade"] .pricing-features .chk,
   color: #10b981 !important;
 }
 
-/* Upgrade Comparison Table */
+/* Upgrade Comparison Table Typography */
+body[data-page="upgrade"] .comparison-section {
+  font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+}
+
 body[data-page="upgrade"] .comparison-section h2 {
+  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', 'Inter', sans-serif !important;
   color: #102a4c !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.035em !important;
 }
 
 body[data-page="upgrade"] .comparison-section p {
+  font-family: 'Be Vietnam Pro', 'Inter', sans-serif !important;
   color: #53657a !important;
+  font-size: 1rem !important;
+  font-weight: 450 !important;
 }
 
 body[data-page="upgrade"] .comparison-table-wrap {
-  background: #ffffff !important;
-  border: 1px solid #d2e0f0 !important;
-  box-shadow: 0 8px 25px rgba(16, 42, 76, 0.06) !important;
-  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(23, 87, 166, 0.16) !important;
+  box-shadow: 0 14px 40px -6px rgba(16, 42, 76, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  border-radius: 18px !important;
+}
+
+body[data-page="upgrade"] .comparison-table {
+  letter-spacing: -0.01em !important;
 }
 
 body[data-page="upgrade"] .comparison-table th.col-feature {
-  background: #f8fafc !important;
-  color: #0f1f38 !important;
+  background: rgba(246, 249, 252, 0.85) !important;
+  color: #475569 !important;
+  font-size: 0.82rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
 }
 
 body[data-page="upgrade"] .comparison-table th.col-free {
-  background: #f1f5f9 !important;
-  color: #475569 !important;
+  background: rgba(241, 245, 249, 0.65) !important;
+  color: #64748b !important;
+  font-size: 0.92rem !important;
+  font-weight: 750 !important;
+  letter-spacing: -0.01em !important;
+  border-left: 1px solid rgba(23, 87, 166, 0.08) !important;
 }
 
 body[data-page="upgrade"] .comparison-table th.col-pro {
-  background: linear-gradient(180deg, #fef3c7 0%, #fffbeb 100%) !important;
-  color: #92400e !important;
-  border-left: 2px solid #f59e0b !important;
-  border-right: 2px solid #f59e0b !important;
-  border-bottom: 2px solid #f59e0b !important;
+  background: linear-gradient(180deg, rgba(23, 87, 166, 0.09) 0%, rgba(23, 87, 166, 0.03) 100%) !important;
+  border-left: 1.5px solid rgba(23, 87, 166, 0.22) !important;
+  border-right: 1.5px solid rgba(23, 87, 166, 0.22) !important;
+  border-bottom: 2px solid #1757a6 !important;
 }
 
 body[data-page="upgrade"] .comparison-table td {
-  border-bottom: 1px solid #e2e8f0 !important;
-  color: #334155 !important;
+  border-bottom: 1px solid rgba(23, 87, 166, 0.08) !important;
+  color: #0f1f38 !important;
+  font-size: 0.94rem !important;
+  line-height: 1.6 !important;
 }
 
 body[data-page="upgrade"] .comparison-table td.col-feature {
-  color: #0f1f38 !important;
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.012em !important;
+}
+
+body[data-page="upgrade"] .comparison-table td.col-feature b {
+  color: #0f172a !important;
+  font-weight: 750 !important;
 }
 
 body[data-page="upgrade"] .comparison-table td.col-free {
   color: #64748b !important;
+  font-size: 0.9rem !important;
+  font-weight: 500 !important;
+  background: rgba(248, 250, 252, 0.4) !important;
+  border-left: 1px solid rgba(23, 87, 166, 0.08) !important;
 }
 
 body[data-page="upgrade"] .comparison-table td.col-pro {
   color: #0f1f38 !important;
-  background: rgba(254, 243, 199, 0.2) !important;
-  border-left: 2px solid #fcd34d !important;
-  border-right: 2px solid #fcd34d !important;
+  font-weight: 600 !important;
+  font-size: 0.94rem !important;
+  letter-spacing: -0.012em !important;
+  background: rgba(23, 87, 166, 0.025) !important;
+  border-left: 1.5px solid rgba(23, 87, 166, 0.16) !important;
+  border-right: 1.5px solid rgba(23, 87, 166, 0.16) !important;
+}
+
+body[data-page="upgrade"] .comparison-table td.col-pro b {
+  color: #1757a6 !important;
+  font-weight: 800 !important;
 }
 
 body[data-page="upgrade"] .steps-section {
@@ -19617,10 +20090,11 @@ body[data-page="upgrade"] .steps-section p {
 }
 
 body[data-page="upgrade"] .step-card {
-  background: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(246, 249, 253, 0.9) 100%) !important;
+  border: 1px solid rgba(23, 87, 166, 0.14) !important;
   color: #0f1f38 !important;
   border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(16, 42, 76, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
 }
 
 body[data-page="upgrade"] .step-card h3 {
@@ -30346,19 +30820,33 @@ body.has-bottom-bar .rusika-floating-widget {
   }
 }
 
-/* Index: authenticated personal learning dashboard */
+/* Index: authenticated personal learning dashboard with layered atmospheric depth */
 html.index-personalized,
 html.index-personalized body,
 body.index-personalized {
-  --bg: #f2f5f9;
-  background: #f2f5f9;
+  --bg: #f6f9fc;
+  background-color: #f6f9fc;
+  background-image: 
+    radial-gradient(ellipse 80% 45% at 50% -5%, rgba(23, 87, 166, 0.1) 0%, transparent 68%),
+    radial-gradient(ellipse 55% 35% at 90% 12%, rgba(197, 34, 51, 0.045) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 30% at 10% 40%, rgba(23, 87, 166, 0.035) 0%, transparent 50%),
+    linear-gradient(180deg, #f8fafd 0%, #edf3f9 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 [data-theme="dark"] html.index-personalized,
 [data-theme="dark"] html.index-personalized body,
 [data-theme="dark"] body.index-personalized {
-  --bg: #0c1422;
-  background: #0c1422;
+  --bg: #0a0f19;
+  background-color: #0a0f19;
+  background-image: 
+    radial-gradient(ellipse 75% 45% at 50% -5%, rgba(37, 99, 235, 0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 35% at 90% 15%, rgba(225, 29, 72, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 30% at 10% 45%, rgba(30, 64, 175, 0.08) 0%, transparent 50%),
+    linear-gradient(180deg, #0c1220 0%, #060911 100%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
 }
 
 body.index-personalized main {
@@ -30519,14 +31007,17 @@ body.index-personalized #indexUserProgressHost {
   transition: width 300ms ease;
 }
 
-/* One consolidated metrics band instead of four floating cards. */
+/* One consolidated metrics band with frosted glass & soft elevation */
 #indexUserProgressHost .index-progress-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   padding: 8px;
-  background: var(--surface);
-  border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 18px;
+  box-shadow: 0 10px 25px -4px rgba(23, 87, 166, 0.06), 0 4px 10px -2px rgba(15, 23, 42, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 #indexUserProgressHost .index-metric-card {
@@ -30793,10 +31284,10 @@ body.index-personalized #indexUserProgressHost {
   justify-content: space-between;
   gap: 12px;
   padding: 14px 16px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, var(--surface)) 0%, color-mix(in srgb, var(--primary) 4%, var(--surface)) 100%);
-  border: 1.5px solid color-mix(in srgb, var(--primary) 32%, var(--border));
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.96) 0%, rgba(243, 247, 253, 0.88) 100%);
+  border: 1px solid rgba(23, 87, 166, 0.16);
   border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(23, 87, 166, 0.06);
+  box-shadow: 0 4px 16px -2px rgba(23, 87, 166, 0.06), 0 1px 3px rgba(15, 23, 42, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9);
   color: inherit;
   text-decoration: none;
   box-sizing: border-box;
@@ -30804,9 +31295,10 @@ body.index-personalized #indexUserProgressHost {
 }
 
 #indexUserProgressHost .index-skill-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(23, 87, 166, 0.12);
-  border-color: color-mix(in srgb, var(--primary) 50%, var(--border));
+  transform: translateY(-3px);
+  background: linear-gradient(155deg, #ffffff 0%, rgba(238, 244, 254, 0.95) 100%);
+  box-shadow: 0 12px 28px -4px rgba(23, 87, 166, 0.14), 0 2px 6px rgba(15, 23, 42, 0.04);
+  border-color: rgba(23, 87, 166, 0.38);
 }
 
 /* Hàng 2 trên máy tính: 2 thẻ (Luyện viết & Thi TRKI) chia đều 50% */
@@ -30955,24 +31447,27 @@ body.index-personalized #indexUserProgressHost {
 
 [data-theme="dark"] #indexUserProgressHost .index-progress-level-box,
 [data-theme="dark"] #indexUserProgressHost .index-progress-metrics {
-  background: #151f2e;
-  border-color: rgba(255, 255, 255, 0.1);
+  background: rgba(17, 26, 42, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
 
 [data-theme="dark"] #indexUserProgressHost .index-metric-card:hover {
-  background: #192536;
+  background: rgba(255, 255, 255, 0.04);
 }
 
 [data-theme="dark"] #indexUserProgressHost .index-skill-card {
-  background: #14243a;
-  border: 1.5px solid rgba(96, 165, 250, 0.28);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  background: linear-gradient(155deg, rgba(23, 38, 62, 0.75) 0%, rgba(15, 24, 40, 0.85) 100%);
+  border: 1px solid rgba(96, 165, 250, 0.22);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 [data-theme="dark"] #indexUserProgressHost .index-skill-card:hover {
-  background: #182c46;
+  background: linear-gradient(155deg, rgba(30, 48, 76, 0.85) 0%, rgba(18, 29, 48, 0.95) 100%);
   border-color: rgba(96, 165, 250, 0.45);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
 }
 
 [data-theme="dark"] #indexUserProgressHost .index-skill-card-footer {
@@ -32840,7 +33335,7 @@ body.index-personalized #indexUserProgressHost {
   background: var(--surface);
   border: 1.5px solid var(--border);
   border-radius: 20px;
-  max-width: 680px;
+  max-width: 760px;
   width: 100%;
   max-height: 90vh;
   display: flex;
@@ -33069,6 +33564,125 @@ body.index-personalized #indexUserProgressHost {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+.diag-palette-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 10px 24px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.diag-palette-pill {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 750;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+.diag-palette-pill:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.diag-palette-pill.done {
+  background: rgba(16, 185, 129, 0.14);
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.diag-q-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 20px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.diag-q-card.is-answered {
+  border-color: rgba(16, 185, 129, 0.4);
+}
+.diag-strengths-box {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 14px;
+  padding: 16px 20px;
+  text-align: left;
+  margin-bottom: 16px;
+}
+.diag-strengths-box strong {
+  color: #059669;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.diag-strengths-box ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.diag-weaknesses-box {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 14px;
+  padding: 16px 20px;
+  text-align: left;
+  margin-bottom: 20px;
+}
+.diag-weaknesses-box strong {
+  color: #dc2626;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.diag-weaknesses-box ul {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.diag-auth-cta-box {
+  background: linear-gradient(135deg, rgba(23, 87, 166, 0.08) 0%, rgba(217, 119, 6, 0.08) 100%), var(--surface);
+  border: 1.5px solid rgba(23, 87, 166, 0.25);
+  border-radius: 16px;
+  padding: 20px 24px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.diag-auth-cta-title {
+  font-size: 1.15rem;
+  font-weight: 850;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.diag-auth-cta-desc {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+.diag-auth-btns-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 /* CBT Exam Room Enhancements */
