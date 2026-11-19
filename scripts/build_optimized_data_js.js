@@ -23,7 +23,7 @@ const dataJsContent = `/**
  * ============================================================================
  * RUSI TRKI — CLIENT DATA BRIDGE & SMART LOADER ENGINE
  * Phiên bản tối ưu: Modular Data Chunking + IndexedDB 0-Egress Browser Cache
- * Phiên bản dữ liệu: v10.0 (Cập nhật: 2026-11-15)
+ * Phiên bản dữ liệu: v11.1 (Cập nhật: 2026-11-19)
  * ============================================================================
  * Kiến trúc tối giản Egress & Chống rò rỉ dữ liệu:
  * 1. Dữ liệu cốt lõi nhẹ (<500KB) được nạp trực tiếp tức thì (Zero-Latency).
@@ -83,7 +83,7 @@ const dataJsContent = `/**
   const DB_NAME = 'rusi_offline_db';
   const DB_VERSION = 1;
   const STORE_NAME = 'data_modules';
-  const DATA_VERSION = 'v10.0';
+  const DATA_VERSION = 'v11.1';
 
   let _dbPromise = null;
 
