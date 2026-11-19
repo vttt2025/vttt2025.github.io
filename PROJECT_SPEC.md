@@ -55,9 +55,9 @@
   * **Cấu trúc 2 nút thao tác riêng biệt trên thẻ chủ đề**:
     1. Nút `[Lọ từ vựng]`: Gọi icon `archive-jar`, mở ngay giao diện danh sách chi tiết các từ có trong lọ.
     2. Nút tròn `[→]`: Gọi icon `arrow-right`, Chuyển sang Trang Bài Học Chủ Đề.
-  * **Bố cục Danh sách từ trong Lọ (`.dau-vocab-row-card`)**:
-    - **Giao diện danh sách từ vựng tinh giản tối đa**: Đã loại bỏ hoàn toàn khối `.dau-vocab-preview-box` và thanh công cụ `.dau-vocab-toolbar`. Khi mở danh sách Lọ từ vựng, hệ thống hiển thị trực quan ngay danh sách các thẻ từ vựng hàng ngang (`.dau-vocab-row-card`).
-    - **Hiển thị danh sách thẻ hàng ngang chuẩn (`.dau-vocab-row-card`)**: Bố cục 3 phần trực quan (Trái: Từ tiếng Nga in đậm kèm trọng âm & từ loại; Giữa: Nghĩa tiếng Việt & câu ví dụ song ngữ, cụm động từ, tân ngữ trực tiếp của động từ, đồng nghĩa, trái nghĩa/gần nghĩa, và ghi chú; Phải: Bộ nút hành động phát âm (icon `volume-high`), ✓ đánh dấu đã thuộc, tra cách chia (icon `book-open`), lưu lọ cá nhân (icon `archive-jar`)).
+  * **Bố cục Danh sách từ trong Lọ (`.rusi-vocab-row-card`)**:
+    - **Giao diện danh sách từ vựng tinh giản tối đa**: Đã loại bỏ hoàn toàn khối `.rusi-vocab-preview-box` và thanh công cụ `.rusi-vocab-toolbar`. Khi mở danh sách Lọ từ vựng, hệ thống hiển thị trực quan ngay danh sách các thẻ từ vựng hàng ngang (`.rusi-vocab-row-card`).
+    - **Hiển thị danh sách thẻ hàng ngang chuẩn (`.rusi-vocab-row-card`)**: Bố cục 3 phần trực quan (Trái: Từ tiếng Nga in đậm kèm trọng âm & từ loại; Giữa: Nghĩa tiếng Việt & câu ví dụ song ngữ, cụm động từ, tân ngữ trực tiếp của động từ, đồng nghĩa, trái nghĩa/gần nghĩa, và ghi chú; Phải: Bộ nút hành động phát âm (icon `volume-high`), ✓ đánh dấu đã thuộc, tra cách chia (icon `book-open`), lưu lọ cá nhân (icon `archive-jar`)).
     - **Kích hoạt tức thì**: Khi bấm `[Lọ từ vựng]` trên lọ từ vựng, hệ thống tự động kích hoạt ngay tab danh sách (`initialMode = "list"`) và hiển thị dữ liệu ngay lập tức, không để xảy ra tình trạng trống trắng.
   * Hỗ trợ học viên PRO tự tạo lọ từ vựng cá nhân (`custom_jars`):
     - Nút "Thêm lọ từ vựng mới" (`.voc-user-jar-card-add` và `#btnSidebarCreateJarTop`, `#btnSidebarCreateJarBottom`) mở modal tạo lọ cá nhân `openCreateJarModal()`.
@@ -112,12 +112,12 @@
   - Bảng đối chiếu chi tiết: Hiển thị bảng trực quan: `[Câu gốc có lỗi] ➔ [Câu sửa chuẩn chỉnh] ➔ [Giải thích ngữ pháp chuyên sâu]`. Thưởng +20 XP khi hoàn thành bài nộp và lưu tiến độ vào `writing_submissions`.
 
 ### [Module 3] Luyện Nghe (YouTube Shadowing, Nghe Hiểu & Nghe Chép Chính Tả)
-* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `headphones` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 8 câu`), không hiển thị mô tả, phía dưới nút CTA `[Vào luyện nghe →]`.
+* **Giao diện thẻ tối giản chuẩn mới (`.rusi-card-compact`)**: Nhỏ gọn, icon `headphones` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 8 câu`), không hiển thị mô tả, phía dưới nút CTA `[Vào luyện nghe →]`.
 * **Bố cục Shadowing Studio chuẩn (2 Cột Hiện Đại)**:
   * **Cột trái (Video & Luyện câu trọng tâm)**:
-    - Khung video YouTube 16:9 bo góc mượt mà kèm lớp phủ phụ đề nổi (`.dau-shadow-sub-overlay`) hiển thị song ngữ câu đang chọn.
+    - Khung video YouTube 16:9 bo góc mượt mà kèm lớp phủ phụ đề nổi (`.rusi-shadow-sub-overlay`) hiển thị song ngữ câu đang chọn.
     - Thanh điều khiển tốc độ phát (0.75x, 1.0x, 1.25x) tương tác qua YouTube Iframe API và nút ẩn/hiện dịch nghĩa.
-    - Thẻ luyện câu trung tâm (`.dau-sentence-card`): câu tiếng Nga in to có trọng âm, số lần tự lặp (1×, 2×, 3×), nút phát âm mẫu (icon `volume-high`), nút thu âm (icon `mic-speaking`), sóng âm (.waveform-box), nhận diện giọng nói ru-RU và vòng tròn chấm điểm `% chính xác`. Thưởng +10 XP khi đạt $\ge 70\%$.
+    - Thẻ luyện câu trung tâm (`.rusi-sentence-card`): câu tiếng Nga in to có trọng âm, số lần tự lặp (1×, 2×, 3×), nút phát âm mẫu (icon `volume-high`), nút thu âm (icon `mic-speaking`), sóng âm (.waveform-box), nhận diện giọng nói ru-RU và vòng tròn chấm điểm `% chính xác`. Thưởng +10 XP khi đạt $\ge 70\%$.
     - Bài trắc nghiệm kiểm tra sau video: đo mức nghe hiểu tình huống, phản hồi đúng/sai tức thì, thưởng +20 XP khi đạt $\ge 60\%$.
     - Cột phải: danh sách cuộn dọc toàn bộ câu, tự động cuộn đến câu đang chọn (`scrollIntoView`).
     - Thanh điều khiển cố định đáy (Sticky Bottom Bar): tap target $\ge 44$px gồm Câu trước (icon `arrow-left`), Nghe lại (Space) (icon `volume-high`), Luyện nói (R) (icon `mic-speaking`), Câu tiếp theo (icon `arrow-right`).
@@ -132,7 +132,7 @@
 * **Xử lý kỹ thuật Audio**: Bắt buộc yêu cầu tương tác bấm nút Play từ người học trước khi phát âm thanh nhằm tuân thủ chính sách trình duyệt (chống chặn autoplay). Bổ sung thông báo fallback dùng Google Chrome / Safari cho nhận diện giọng nói.
 
 ### [Module 4] Luyện Nói (Speaking & YouTube Shadowing Studio)
-* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**:
+* **Giao diện thẻ tối giản chuẩn mới (`.rusi-card-compact`)**:
   - Nhỏ gọn, icon `mic-speaking` hoặc `youtube` bên trái phía trên (nền cam nhẹ `rgba(234,88,12,0.08)`, màu `#ea580c`).
   - Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 8 câu` hoặc `A2 | 25 câu`).
   - Huy hiệu trạng thái: `Hoàn thành` (xanh ngọc kèm icon `check`) khi học viên đã đạt điểm trung bình $\ge 70\%$, hoặc nhãn `PRO` (đỏ cam) cho bài học chuyên sâu.
@@ -192,7 +192,7 @@
   - **Đồng bộ Đám mây Supabase (`speaking_lessons`)**: Hỗ trợ Push/Pull dữ liệu 2 chiều với bảng cơ sở dữ liệu `speaking_lessons`, giải quyết xung đột dựa trên trường mã duy nhất `code`.
 
 ### [Module 5] Luyện Thi TRKI (ТРКИ Exam Simulation & Dual-Track CBT)
-* **Giao diện thẻ tối giản chuẩn mới (`.dau-card-compact`)**: Nhỏ gọn, icon `award-badge` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 34 câu`), không hiển thị mô tả, phía dưới 2 nút CTA: `[Chọn phần luyện ▾]` và `[Vào thi Full →]`.
+* **Giao diện thẻ tối giản chuẩn mới (`.rusi-card-compact`)**: Nhỏ gọn, icon `award-badge` bên trái phía trên | Tiêu đề ở phía phải bên trên, dưới tiêu đề là `Mức độ | Số câu` (ví dụ `A1 | 34 câu`), không hiển thị mô tả, phía dưới 2 nút CTA: `[Chọn phần luyện ▾]` và `[Vào thi Full →]`.
 * **Cấp độ chuẩn**: ТЭУ (A1), ТБУ (A2), ТРКИ-1 (B1), ТРКИ-2 (B2), ТРКИ-3 (C1), ТРКИ-4 (C2).
 * **Mô hình Luyện thi 2 Luồng (Dual-Track Assessment)**:
   1. *Luyện theo Phân môn (Субтесты)*: Hỗ trợ modal popup chọn riêng từng phân môn (1. Leksika & Grammatika, 2. Chtenie, 3. Audirovanie) hoặc liên kết sang Viết (`writing.html`) và Nói (`speaking.html`).

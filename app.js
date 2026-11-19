@@ -1054,7 +1054,7 @@ const Monetization = {
           </button>
           ${user ? `
             <button type="button" class="btn btn-primary pro-gate-btn-upgrade" id="btnProGateQuickPay" style="display:inline-flex;align-items:center;gap:6px">
-              ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Kích hoạt qua VietQR ngay
+              ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Kích hoạt ngay
             </button>
           ` : `
             <a href="upgrade.html" class="btn btn-primary pro-gate-btn-upgrade" id="btnProGateUpgrade" style="display:inline-flex;align-items:center;gap:6px">
@@ -1921,6 +1921,7 @@ function renderHeader() {
     }
     if (backdrop) backdrop.classList.remove("is-open");
     document.body.classList.remove("menu-locked");
+    document.documentElement.classList.remove("menu-locked");
   };
 
   const openMobileMenu = () => {
@@ -1939,6 +1940,7 @@ function renderHeader() {
     }
     if (backdrop) backdrop.classList.add("is-open");
     document.body.classList.add("menu-locked");
+    document.documentElement.classList.add("menu-locked");
   };
 
   if (mobileBtn && nav) {
@@ -1955,6 +1957,18 @@ function renderHeader() {
   if (backdrop) {
     backdrop.addEventListener("click", closeMobileMenu);
   }
+
+  // Tự động đóng menu khi bấm phím Escape hoặc xoay màn hình sang desktop
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && nav && nav.classList.contains("nav-open")) {
+      closeMobileMenu();
+    }
+  });
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 960 && nav && nav.classList.contains("nav-open")) {
+      closeMobileMenu();
+    }
+  });
 
   if (nav) {
     nav.addEventListener("click", (e) => {

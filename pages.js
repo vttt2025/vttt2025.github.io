@@ -1,5 +1,5 @@
 
-function dauNormalize(str) {
+function rusiNormalize(str) {
   if (!str) return "";
   return str
     .toString()
@@ -44,7 +44,7 @@ function isValidUUID(str) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str.trim());
 }
 
-function renderDauPagination(containerEl, currentPage, totalPages, onPageChange, options) {
+function renderRusiPagination(containerEl, currentPage, totalPages, onPageChange, options) {
   if (!containerEl) return;
   if (!totalPages || totalPages <= 1 || currentPage >= totalPages) {
     containerEl.innerHTML = "";
@@ -67,13 +67,13 @@ function renderDauPagination(containerEl, currentPage, totalPages, onPageChange,
   const downIcon = window.RusiIcons ? RusiIcons.get("chevron-down", { size: 15 }) : "▾";
 
   containerEl.innerHTML = `
-    <button type="button" class="dau-load-more-btn" aria-label="Xem thêm ${remaining} ${unit}">
+    <button type="button" class="rusi-load-more-btn" aria-label="Xem thêm ${remaining} ${unit}">
       ${downIcon}
       <span>Xem thêm (${remaining} ${unit})</span>
     </button>
   `;
 
-  const btn = containerEl.querySelector(".dau-load-more-btn");
+  const btn = containerEl.querySelector(".rusi-load-more-btn");
   if (btn) {
     btn.onclick = (e) => {
       e.preventDefault();
@@ -865,7 +865,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
   }
 
   const initialMode = (options && options.initialMode) ? options.initialMode : "list";
-  const hasTopbarModes = Boolean(document.querySelector("#dauTopbarModes .quizlet-mode-btn"));
+  const hasTopbarModes = Boolean(document.querySelector("#rusiTopbarModes .quizlet-mode-btn"));
 
   container.innerHTML = `
     <div class="quizlet-suite">
@@ -896,7 +896,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
   let matchTimerInterval = null;
 
   // Lấy các nút chế độ trong top bar (nếu có) và trong container
-  const topbarModeBtns = Array.from(document.querySelectorAll("#dauTopbarModes .quizlet-mode-btn"));
+  const topbarModeBtns = Array.from(document.querySelectorAll("#rusiTopbarModes .quizlet-mode-btn"));
   const innerModeBar = container.querySelector(".quizlet-mode-bar");
   if (topbarModeBtns.length > 0 && innerModeBar) {
     innerModeBar.style.display = "none";
@@ -1446,11 +1446,11 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     const isEditing = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
     if (isEditing) return;
 
-    // Phím Space trong giao diện danh sách từ vựng: lật thẻ xem nhanh (.dau-vocab-preview-box), phím mũi tên chuyển từ
+    // Phím Space trong giao diện danh sách từ vựng: lật thẻ xem nhanh (.rusi-vocab-preview-box), phím mũi tên chuyển từ
     if (currentMode === "list") {
       if (e.code === "Space") {
         e.preventDefault();
-        const pCard = container.querySelector("#dauPreviewCard");
+        const pCard = container.querySelector("#rusiPreviewCard");
         if (pCard) {
           pCard.classList.toggle("flipped");
           playQuizletSound("flip");
@@ -1751,8 +1751,8 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       submitted = true;
 
       const userVal = inp.value.trim();
-      const normUser = dauNormalize(userVal);
-      const normTarget = dauNormalize(currentWord.ru);
+      const normUser = rusiNormalize(userVal);
+      const normTarget = rusiNormalize(currentWord.ru);
       const resBox = pane.querySelector("#writeResult");
 
       if (normUser === normTarget && normUser.length > 0) {
@@ -1943,7 +1943,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             <h3 style="margin:0;display:flex;align-items:center;gap:8px">${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 20 }) : ""} Bài kiểm tra từ vựng: ${esc(jarTitle)}</h3>
             <span style="font-size:0.85rem;color:var(--muted)">Gồm ${questions.length} câu hỏi trắc nghiệm & đúng/sai</span>
           </div>
-          <span class="dau-badge dau-badge-a1">${questions.length} câu</span>
+          <span class="rusi-badge rusi-badge-a1">${questions.length} câu</span>
         </div>
 
         <form id="quizletTestForm">
@@ -2080,12 +2080,12 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       const masteredCount = words.filter(w => masteredList.includes(w.ru.toLowerCase().trim())).length;
 
       // Filter and sort words
-      const qNorm = dauNormalize(searchTxt);
+      const qNorm = rusiNormalize(searchTxt);
       let filtered = words.filter(w => {
         if (filterMode === "starred" && !starredList.includes(w.ru.toLowerCase())) return false;
         if (filterMode === "mastered" && !masteredList.includes(w.ru.toLowerCase().trim())) return false;
         if (!qNorm) return true;
-        const hay = dauNormalize(w.ru + " " + (w.stress || "") + " " + w.vi + " " + (w.note || "") + " " + (w.ex || "") + " " + (w.syn || ""));
+        const hay = rusiNormalize(w.ru + " " + (w.stress || "") + " " + w.vi + " " + (w.note || "") + " " + (w.ex || "") + " " + (w.syn || ""));
         return hay.includes(qNorm);
       });
 
@@ -2099,11 +2099,11 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       const isCurStarred = starredList.includes(curPreviewWord.ru.toLowerCase());
 
       pane.innerHTML = `
-        <div class="dau-vocab-test-container">
-          <!-- WORD ROW CARDS LIST (DauEnglish style với hỗ trợ Click mở rộng chi tiết) -->
-          <div class="dau-vocab-list-wrap" id="dauVocabRowsList">
+        <div class="rusi-vocab-test-container">
+          <!-- WORD ROW CARDS LIST (RUSI style với hỗ trợ Click mở rộng chi tiết) -->
+          <div class="rusi-vocab-list-wrap" id="rusiVocabRowsList">
             ${filtered.length === 0 ? `
-              <div class="dau-vocab-empty">
+              <div class="rusi-vocab-empty">
                 <div style="margin-bottom:8px;color:var(--muted)">${window.RusiIcons ? RusiIcons.get("search-icon", { size: 40 }) : ""}</div>
                 <h4 style="margin:0 0 4px;font-size:1.1rem;color:var(--text)">Không tìm thấy từ vựng</h4>
                 <p style="margin:0;font-size:0.88rem;color:var(--muted)">Thử tìm kiếm với từ khóa khác hoặc xóa bộ lọc.</p>
@@ -2140,58 +2140,58 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               const hasExtras = Boolean(showCollocation || showStruct || w.syn || w.ant || hasNote);
 
               return `
-                <div class="dau-vocab-row-card ${isMastered ? "mastered" : ""}" data-ru="${esc(w.ru)}" data-idx="${idx}">
+                <div class="rusi-vocab-row-card ${isMastered ? "mastered" : ""}" data-ru="${esc(w.ru)}" data-idx="${idx}">
                   <!-- SPEC 1: BỐ CỤC 3 PHẦN TRỰC QUAN -->
-                  <div class="dau-row-main-grid">
+                  <div class="rusi-row-main-grid">
                     <!-- CỘT 1 (TRÁI): TỪ TIẾNG NGA IN ĐẬM KÈM TRỌNG ÂM & TỪ LOẠI -->
-                    <div class="dau-row-col-ru">
-                      <div class="dau-row-ru-header">
-                        <span class="dau-row-ru ru">${esc(displayWord)}</span>
+                    <div class="rusi-row-col-ru">
+                      <div class="rusi-row-ru-header">
+                        <span class="rusi-row-ru ru">${esc(displayWord)}</span>
                       </div>
-                      ${getWordType(w) ? `<div class="dau-row-pos-line">(${esc(getWordType(w))})</div>` : ""}
+                      ${getWordType(w) ? `<div class="rusi-row-pos-line">(${esc(getWordType(w))})</div>` : ""}
                     </div>
 
                     <!-- CỘT 2 (GIỮA): NGHĨA TIẾNG VIỆT & CÂU VÍ DỤ SONG NGỮ, CỤM TỪ, CẤU TRÚC / QUẢN CÁCH, ĐỒNG/TRÁI NGHĨA, GHI CHÚ (HIỂN THỊ ĐẦY ĐỦ TRỰC TIẾP) -->
-                    <div class="dau-row-col-vi">
-                      <div class="dau-row-vi-text">${esc(w.vi)}</div>
+                    <div class="rusi-row-col-vi">
+                      <div class="rusi-row-vi-text">${esc(w.vi)}</div>
                       ${w.ex ? `
-                        <div class="dau-row-ex-wrap">
-                          <div class="dau-row-ex-line">
-                            <span class="dau-row-ex ru">${esc(w.ex)}</span>
+                        <div class="rusi-row-ex-wrap">
+                          <div class="rusi-row-ex-line">
+                            <span class="rusi-row-ex ru">${esc(w.ex)}</span>
                           </div>
-                          ${w.ex_vi ? `<div class="dau-row-ex-vi">${esc(w.ex_vi)}</div>` : ""}
+                          ${w.ex_vi ? `<div class="rusi-row-ex-vi">${esc(w.ex_vi)}</div>` : ""}
                         </div>
                       ` : ""}
                       ${hasExtras ? `
-                        <div class="dau-row-expanded-details" style="display:block">
+                        <div class="rusi-row-expanded-details" style="display:block">
                           ${showCollocation ? `
-                            <div class="dau-row-extra-line">
-                              <span class="dau-row-extra-label">Cụm từ:</span>
-                              <span class="dau-row-extra-val ru">${esc(collClean)}</span>
+                            <div class="rusi-row-extra-line">
+                              <span class="rusi-row-extra-label">Cụm từ:</span>
+                              <span class="rusi-row-extra-val ru">${esc(collClean)}</span>
                             </div>
                           ` : ""}
                           ${showStruct ? `
-                            <div class="dau-row-extra-line">
-                              <span class="dau-row-extra-label">Cấu trúc / Quản cách:</span>
-                              <span class="dau-row-extra-val ru">${esc(structClean)}</span>
+                            <div class="rusi-row-extra-line">
+                              <span class="rusi-row-extra-label">Cấu trúc / Quản cách:</span>
+                              <span class="rusi-row-extra-val ru">${esc(structClean)}</span>
                             </div>
                           ` : ""}
                           ${w.syn ? `
-                            <div class="dau-row-extra-line">
-                              <span class="dau-row-extra-label">Đồng nghĩa:</span>
-                              <span class="dau-row-extra-val ru">${esc(w.syn)}</span>
+                            <div class="rusi-row-extra-line">
+                              <span class="rusi-row-extra-label">Đồng nghĩa:</span>
+                              <span class="rusi-row-extra-val ru">${esc(w.syn)}</span>
                             </div>
                           ` : ""}
                           ${w.ant ? `
-                            <div class="dau-row-extra-line">
-                              <span class="dau-row-extra-label">Trái nghĩa / Gần nghĩa:</span>
-                              <span class="dau-row-extra-val ru">${esc(w.ant)}</span>
+                            <div class="rusi-row-extra-line">
+                              <span class="rusi-row-extra-label">Trái nghĩa / Gần nghĩa:</span>
+                              <span class="rusi-row-extra-val ru">${esc(w.ant)}</span>
                             </div>
                           ` : ""}
                           ${hasNote ? `
-                            <div class="dau-row-extra-line">
-                              <span class="dau-row-extra-label">Ghi chú:</span>
-                              <span class="dau-row-extra-val">${esc(w.note)}</span>
+                            <div class="rusi-row-extra-line">
+                              <span class="rusi-row-extra-label">Ghi chú:</span>
+                              <span class="rusi-row-extra-val">${esc(w.note)}</span>
                             </div>
                           ` : ""}
                         </div>
@@ -2199,18 +2199,18 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                     </div>
 
                     <!-- CỘT 3 (PHẢI): BỘ NÚT HÀNH ĐỘNG (AUDIO, ĐÃ THUỘC, TRA CÁCH CHIA, LƯU LỌ) -->
-                    <div class="dau-row-col-actions">
-                      <button type="button" class="dau-action-icon-btn btn-speak-item" data-ru="${esc(w.ru)}" data-audio="${esc(w.audio_url || w.audio || '')}" title="Phát âm tiếng Nga (icon volume-high)">
+                    <div class="rusi-row-col-actions">
+                      <button type="button" class="rusi-action-icon-btn btn-speak-item" data-ru="${esc(w.ru)}" data-audio="${esc(w.audio_url || w.audio || '')}" title="Phát âm tiếng Nga (icon volume-high)">
                         ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""}
                       </button>
-                      <button type="button" class="dau-action-icon-btn btn-master-item ${isMastered ? "mastered" : ""}" data-ru="${esc(w.ru)}" title="${isMastered ? "Đã thuộc (Nhấn để hủy)" : "Đánh dấu đã thuộc"}">
+                      <button type="button" class="rusi-action-icon-btn btn-master-item ${isMastered ? "mastered" : ""}" data-ru="${esc(w.ru)}" title="${isMastered ? "Đã thuộc (Nhấn để hủy)" : "Đánh dấu đã thuộc"}">
                         ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""}
                       </button>
-                      <button type="button" class="dau-action-icon-btn btn-addjar-item" data-ru="${esc(w.ru)}" data-stress="${esc(w.stress || w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" data-ex="${esc(w.ex || "")}" data-exvi="${esc(w.ex_vi || "")}" title="Lưu vào Lọ cá nhân (icon archive-jar)">
+                      <button type="button" class="rusi-action-icon-btn btn-addjar-item" data-ru="${esc(w.ru)}" data-stress="${esc(w.stress || w.ru)}" data-vi="${esc(w.vi)}" data-note="${esc(w.note || "")}" data-ex="${esc(w.ex || "")}" data-exvi="${esc(w.ex_vi || "")}" title="Lưu vào Lọ cá nhân (icon archive-jar)">
                         ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""}
                       </button>
                       ${isCustomJar ? `
-                        <button type="button" class="dau-action-icon-btn btn-delword-item" style="color:var(--red)" data-ru="${esc(w.ru)}" title="Xóa từ khỏi lọ này">
+                        <button type="button" class="rusi-action-icon-btn btn-delword-item" style="color:var(--red)" data-ru="${esc(w.ru)}" title="Xóa từ khỏi lọ này">
                           ${window.RusiIcons ? RusiIcons.get("trash-2", { size: 16 }) : ""}
                         </button>
                       ` : ""}
@@ -2228,7 +2228,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
     const bindListEvents = () => {
       // Preview card flip
-      const pCard = pane.querySelector("#dauPreviewCard");
+      const pCard = pane.querySelector("#rusiPreviewCard");
       if (pCard) {
         pCard.onclick = (e) => {
           if (e.target.closest("button")) return;
@@ -2238,7 +2238,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       }
 
       // Preview Audio (hỗ trợ nút ở mặt trước, mặt sau và thanh điều khiển)
-      pane.querySelectorAll(".dau-preview-audio-btn, #btnPreviewAudioNav").forEach(btn => {
+      pane.querySelectorAll(".rusi-preview-audio-btn, #btnPreviewAudioNav").forEach(btn => {
         btn.onclick = (e) => {
           e.stopPropagation();
           const curWord = previewWords[previewIdx];
@@ -2366,9 +2366,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       }
 
       // Row card click to preview word in top box (nếu có khung preview trên cùng)
-      const pCardElem = pane.querySelector("#dauPreviewCard");
+      const pCardElem = pane.querySelector("#rusiPreviewCard");
       if (pCardElem) {
-        pane.querySelectorAll(".dau-vocab-row-card").forEach((card) => {
+        pane.querySelectorAll(".rusi-vocab-row-card").forEach((card) => {
           card.onclick = (e) => {
             if (e.target.closest("button") || e.target.closest("a") || e.target.closest("input")) return;
             const ru = card.dataset.ru;
@@ -2395,7 +2395,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               previewIdx = pIdx;
               previewFlipped = false;
               renderListUI();
-              const pBox = pane.querySelector(".dau-vocab-preview-box");
+              const pBox = pane.querySelector(".rusi-vocab-preview-box");
               if (pBox) pBox.scrollIntoView({ behavior: "smooth", block: "start" });
             }
           }
@@ -2566,15 +2566,15 @@ function initVocabPage() {
       detail.classList.remove("hidden");
       detail.innerHTML = `
         <!-- STICKY TOP BACK BAR WITH EMBEDDED MODES (SINGLE LINE) -->
-        <div class="dau-workspace-back-bar dau-quizlet-bar" id="dauQuizletBackBar">
-          <button type="button" class="dau-back-btn" id="btnBackJars" title="Quay lại kho từ vựng" aria-label="Quay lại kho từ vựng">
+        <div class="rusi-workspace-back-bar rusi-quizlet-bar" id="rusiQuizletBackBar">
+          <button type="button" class="rusi-back-btn" id="btnBackJars" title="Quay lại kho từ vựng" aria-label="Quay lại kho từ vựng">
             ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
           </button>
-          <div class="dau-workspace-info">
-            <span class="dau-badge dau-badge-cat">SRS</span>
-            <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 18 }) : ""} Ôn tập (${reviewWords.length} từ)</span>
+          <div class="rusi-workspace-info">
+            <span class="rusi-badge rusi-badge-cat">SRS</span>
+            <span class="rusi-workspace-title">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 18 }) : ""} Ôn tập (${reviewWords.length} từ)</span>
           </div>
-          <div class="quizlet-mode-bar dau-topbar-modes" id="dauTopbarModes">
+          <div class="quizlet-mode-bar rusi-topbar-modes" id="rusiTopbarModes">
             <button type="button" class="quizlet-mode-btn" data-mode="list" title="Danh sách từ (${reviewWords.length})">
               ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 16 }) : ""} <span class="btn-text">Danh sách (${reviewWords.length})</span>
             </button>
@@ -2756,15 +2756,15 @@ function initVocabPage() {
         const isFinished = isDone || (progressPercent === 100 && wordsCount > 0);
 
         return `
-          <!-- GIAO DIỆN THẺ TỐI GIẢN CHUẨN MỚI .dau-card-compact (Đồng bộ toàn hệ thống, không có thanh tiến độ) -->
-          <article class="dau-card dau-card-compact ${isFinished ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-vocab-id="${item.id}" data-kind="jar" data-pro="${isPro}">
-            <div class="dau-card-header">
-              <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
+          <!-- GIAO DIỆN THẺ TỐI GIẢN CHUẨN MỚI .rusi-card-compact (Đồng bộ toàn hệ thống, không có thanh tiến độ) -->
+          <article class="rusi-card rusi-card-compact ${isFinished ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-vocab-id="${item.id}" data-kind="jar" data-pro="${isPro}">
+            <div class="rusi-card-header">
+              <div class="rusi-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
                 ${window.RusiIcons ? RusiIcons.get(item.icon || "archive-jar", { size: 24 }) : ""}
               </div>
-              <div class="dau-card-header-main">
-                <div class="dau-card-title-row">
-                  <h3 class="dau-card-ru">${esc(item.title)}</h3>
+              <div class="rusi-card-header-main">
+                <div class="rusi-card-title-row">
+                  <h3 class="rusi-card-ru">${esc(item.title)}</h3>
                   ${isFinished ? `
                     <span class="topic-status topic-status-completed" style="flex-shrink:0">
                       ${window.RusiIcons ? RusiIcons.get("check", { size: 12 }) : ""} Hoàn thành
@@ -2773,16 +2773,16 @@ function initVocabPage() {
                     <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
                   ` : ""}
                 </div>
-                <div class="dau-card-subinfo">
+                <div class="rusi-card-subinfo">
                   <span>${item.level || currentLevel}</span>
-                  <span class="dau-card-sep">•</span>
-                  <span class="dau-card-count">${wordsCount} từ vựng</span>
+                  <span class="rusi-card-sep">•</span>
+                  <span class="rusi-card-count">${wordsCount} từ vựng</span>
                 </div>
               </div>
             </div>
 
             <!-- CHÂN THẺ -->
-            <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
+            <div class="rusi-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
               <div class="topic-footer-actions">
                 ${isPro && !isUnlocked ? `
                   <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
@@ -2828,7 +2828,7 @@ function initVocabPage() {
         };
       });
 
-      gridHost.querySelectorAll(".dau-card, .topic-card").forEach(card => {
+      gridHost.querySelectorAll(".rusi-card, .topic-card").forEach(card => {
         card.onclick = (e) => {
           if (e.target.closest("button")) return;
           const id = card.dataset.vocabId;
@@ -2842,7 +2842,7 @@ function initVocabPage() {
       });
     }
 
-    renderDauPagination(el("#vocabPagination"), currentPage, totalPages, (newPage) => {
+    renderRusiPagination(el("#vocabPagination"), currentPage, totalPages, (newPage) => {
       currentPage = newPage;
       renderVocabCards();
     }, { remainingCount, unit: "bài" });
@@ -2910,7 +2910,7 @@ function initVocabPage() {
             </div>
 
             <div class="topic-grid" id="vocabCardsGrid"></div>
-            <div class="dau-pagination" id="vocabPagination"></div>
+            <div class="rusi-pagination" id="vocabPagination"></div>
 
             <!-- LỌ TỪ VỰNG CỦA BẠN (SAU THANH TIẾN ĐỘ) -->
             <div id="vocabUserJarsHost"></div>
@@ -3641,7 +3641,7 @@ const showTopicArticle = (jarId) => {
       : (jar.article || (jar.code && articlesMap[jar.code]) || (item.code && articlesMap[item.code]) || articlesMap[jar.id] || null);
 
     const words = jar.words || [];
-    const levelBadgeClass = jar.level === "A2" ? "dau-badge-a2" : jar.level === "B1" ? "dau-badge-b1" : jar.level === "B2" ? "dau-badge-b2" : "dau-badge-a1";
+    const levelBadgeClass = jar.level === "A2" ? "rusi-badge-a2" : jar.level === "B1" ? "rusi-badge-b1" : jar.level === "B2" ? "rusi-badge-b2" : "rusi-badge-a1";
     const levelLabel = jar.level === "A1" ? "Sơ cấp" : jar.level === "A2" ? "Cơ bản" : jar.level === "B1" ? "Trung cấp" : "Trung cấp cao";
     const isUserPro = Boolean(typeof Monetization !== "undefined" && Monetization.isPro && Monetization.isPro());
     const printDate = new Date().toLocaleDateString("vi-VN", { year: "numeric", month: "2-digit", day: "2-digit" });
@@ -3707,17 +3707,17 @@ const showTopicArticle = (jarId) => {
 
     detail.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
-      <div class="dau-workspace-back-bar topic-article-nav-bar no-print">
-        <button type="button" class="dau-back-btn" id="btnBackFromArticle" title="Quay lại danh sách chủ đề" aria-label="Quay lại danh sách chủ đề">
+      <div class="rusi-workspace-back-bar topic-article-nav-bar no-print">
+        <button type="button" class="rusi-back-btn" id="btnBackFromArticle" title="Quay lại danh sách chủ đề" aria-label="Quay lại danh sách chủ đề">
           ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
         </button>
-        <div class="dau-workspace-info">
-          <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(jar.icon || "archive-jar", { size: 20 }) : ""} ${esc(jar.name)}</span>
+        <div class="rusi-workspace-info">
+          <span class="rusi-workspace-title">${window.RusiIcons ? RusiIcons.get(jar.icon || "archive-jar", { size: 20 }) : ""} ${esc(jar.name)}</span>
         </div>
         <div class="topic-article-top-actions">
           <button type="button" class="btn btn-outline btn-sm is-pro-action" id="btnPrintTopicArticle" title="${isUserPro ? "Xuất PDF / In bài học (PRO)" : "Xuất PDF bài học (Dành riêng cho Hội viên PRO)"}">
             ${isUserPro ? (window.RusiIcons ? RusiIcons.get("download", { size: 15 }) : "") : (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 15 }) : "")} <span class="btn-text">Xuất PDF</span>
-            <span class="dau-pro-mini-badge" style="font-size:0.62rem;font-weight:800;background:linear-gradient(135deg,#facc15,#eab308);color:#78350f;padding:1px 5px;border-radius:4px;margin-left:4px">PRO</span>
+            <span class="rusi-pro-mini-badge" style="font-size:0.62rem;font-weight:800;background:linear-gradient(135deg,#facc15,#eab308);color:#78350f;padding:1px 5px;border-radius:4px;margin-left:4px">PRO</span>
           </button>
           <button type="button" class="btn btn-primary btn-sm" id="btnOpenJarFromArticleTop" title="Xem lọ từ vựng (${words.length} từ)">
             ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 15 }) : ""} <span class="btn-text">Xem lọ từ vựng (${words.length} từ)</span>
@@ -3897,16 +3897,16 @@ const showTopicArticle = (jarId) => {
 
       detail.innerHTML = `
         <!-- STICKY TOP BACK BAR WITH EMBEDDED MODES (SINGLE LINE) -->
-        <div class="dau-workspace-back-bar dau-quizlet-bar" id="dauQuizletBackBar">
-          <button type="button" class="dau-back-btn" id="btnBackJars" title="Quay lại kho Lọ từ vựng" aria-label="Quay lại kho Lọ từ vựng">
+        <div class="rusi-workspace-back-bar rusi-quizlet-bar" id="rusiQuizletBackBar">
+          <button type="button" class="rusi-back-btn" id="btnBackJars" title="Quay lại kho Lọ từ vựng" aria-label="Quay lại kho Lọ từ vựng">
             ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
           </button>
-          <div class="dau-workspace-info">
-            <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(jar.icon || "archive-jar", { size: 18 }) : ""} ${esc(jar.name)}</span>
+          <div class="rusi-workspace-info">
+            <span class="rusi-workspace-title">${window.RusiIcons ? RusiIcons.get(jar.icon || "archive-jar", { size: 18 }) : ""} ${esc(jar.name)}</span>
           </div>
 
           <!-- 4 CHẾ ĐỘ HỌC TẬP GOM TRỰC TIẾP VÀO 1 DÒNG TOP BAR DUY NHẤT -->
-          <div class="quizlet-mode-bar dau-topbar-modes" id="dauTopbarModes">
+          <div class="quizlet-mode-bar rusi-topbar-modes" id="rusiTopbarModes">
             <button type="button" class="quizlet-mode-btn ${initialMode === "list" ? "active" : ""}" data-mode="list" title="Danh sách từ (${(jar.words || []).length})">
               ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 16 }) : ""} <span class="btn-text">Danh sách (${(jar.words || []).length})</span>
             </button>
@@ -3920,10 +3920,10 @@ const showTopicArticle = (jarId) => {
               ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} <span class="btn-text">Ghép từ</span>
             </button>
             ${isCustom ? `
-              <button type="button" class="btn btn-outline btn-sm dau-top-btn" id="btnAddWordCustom" title="Thêm từ mới">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"}</button>
-              <button type="button" class="btn btn-soft btn-sm dau-top-btn" id="btnDeleteCustomJar" style="color:var(--red)" title="Xóa lọ này">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""}</button>
+              <button type="button" class="btn btn-outline btn-sm rusi-top-btn" id="btnAddWordCustom" title="Thêm từ mới">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"}</button>
+              <button type="button" class="btn btn-soft btn-sm rusi-top-btn" id="btnDeleteCustomJar" style="color:var(--red)" title="Xóa lọ này">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""}</button>
             ` : `
-              <button type="button" class="btn btn-soft btn-sm dau-top-btn" id="btnViewArticleFromJar" title="Xem bài học chủ đề">${window.RusiIcons ? RusiIcons.get("book-open", { size: 14 }) : ""}</button>
+              <button type="button" class="btn btn-soft btn-sm rusi-top-btn" id="btnViewArticleFromJar" title="Xem bài học chủ đề">${window.RusiIcons ? RusiIcons.get("book-open", { size: 14 }) : ""}</button>
             `}
           </div>
         </div>
@@ -4016,14 +4016,14 @@ const showTopicArticle = (jarId) => {
     const renderLessonView = (activeTab = "video") => {
       detail.innerHTML = `
         <!-- STICKY TOP BACK BAR -->
-        <div class="dau-workspace-back-bar">
-          <button type="button" class="dau-back-btn" id="btnBackLessons" title="Quay lại danh sách từ vựng" aria-label="Quay lại danh sách từ vựng">
+        <div class="rusi-workspace-back-bar">
+          <button type="button" class="rusi-back-btn" id="btnBackLessons" title="Quay lại danh sách từ vựng" aria-label="Quay lại danh sách từ vựng">
             ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
           </button>
-          <div class="dau-workspace-info">
-            <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(found.scene || "book-open-blog", { size: 22 }) : ""} ${esc(found.ru)}</span>
+          <div class="rusi-workspace-info">
+            <span class="rusi-workspace-title">${window.RusiIcons ? RusiIcons.get(found.scene || "book-open-blog", { size: 22 }) : ""} ${esc(found.ru)}</span>
           </div>
-          <span class="dau-workspace-meta" style="font-size:0.85rem;color:var(--muted)">${found.words.length} từ vựng trọng tâm</span>
+          <span class="rusi-workspace-meta" style="font-size:0.85rem;color:var(--muted)">${found.words.length} từ vựng trọng tâm</span>
         </div>
 
         <div class="workspace">
@@ -4932,15 +4932,15 @@ function initListeningPage() {
       const iconSvg = window.RusiIcons ? RusiIcons.get(iconKey, { size: 24 }) : icon("headphones", 24);
 
       return `
-        <!-- GIAO DIỆN THẺ TỐI GIẢN CHUẨN MỚI .dau-card-compact (Đồng bộ từ vựng, dùng 100% SVG RusiIcons) -->
-        <article class="dau-card dau-card-compact listening-topic-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-listen-id="${esc(l.id)}">
-          <div class="dau-card-header">
-            <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
+        <!-- GIAO DIỆN THẺ TỐI GIẢN CHUẨN MỚI .rusi-card-compact (Đồng bộ từ vựng, dùng 100% SVG RusiIcons) -->
+        <article class="rusi-card rusi-card-compact listening-topic-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-listen-id="${esc(l.id)}">
+          <div class="rusi-card-header">
+            <div class="rusi-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
               ${iconSvg}
             </div>
-            <div class="dau-card-header-main">
-              <div class="dau-card-title-row">
-                <h3 class="dau-card-ru" title="${esc(l.title)} · ${esc(l.vi || "")}">${esc(l.title)}</h3>
+            <div class="rusi-card-header-main">
+              <div class="rusi-card-title-row">
+                <h3 class="rusi-card-ru" title="${esc(l.title)} · ${esc(l.vi || "")}">${esc(l.title)}</h3>
                 ${isDone ? `
                   <span class="topic-status topic-status-completed" style="flex-shrink:0">
                     ${icon("check", 12)} Hoàn thành
@@ -4949,15 +4949,15 @@ function initListeningPage() {
                   <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
                 ` : ""}
               </div>
-              <div class="dau-card-subinfo">
+              <div class="rusi-card-subinfo">
                 <span>${l.level}</span>
-                <span class="dau-card-sep">•</span>
-                <span class="dau-card-count">${countLabel}</span>
+                <span class="rusi-card-sep">•</span>
+                <span class="rusi-card-count">${countLabel}</span>
               </div>
             </div>
           </div>
 
-          <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
+          <div class="rusi-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
             <div class="topic-footer-actions">
               ${isPro && !isUnlocked ? `
                 <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
@@ -5079,21 +5079,21 @@ function initListeningPage() {
 
     host.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
-      <div class="dau-workspace-back-bar">
-        <button type="button" class="dau-back-btn" id="btnBackLisList" title="Quay lại danh sách bài nghe" aria-label="Quay lại danh sách bài nghe">
+      <div class="rusi-workspace-back-bar">
+        <button type="button" class="rusi-back-btn" id="btnBackLisList" title="Quay lại danh sách bài nghe" aria-label="Quay lại danh sách bài nghe">
           ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
         </button>
-        <div class="dau-workspace-info">
-          <span class="dau-workspace-title">${window.RusiIcons ? RusiIcons.get(lesson.icon || "headphones", { size: 22 }) : ""} ${esc(lesson.title)}</span>
+        <div class="rusi-workspace-info">
+          <span class="rusi-workspace-title">${window.RusiIcons ? RusiIcons.get(lesson.icon || "headphones", { size: 22 }) : ""} ${esc(lesson.title)}</span>
         </div>
-        <div class="dau-workspace-controls" style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
+        <div class="rusi-workspace-controls" style="display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap">
           <div class="speed-pills">
             <button class="speed-pill ${currentSpeed === 0.75 ? "active" : ""}" data-sp="0.75">0.75x</button>
             <button class="speed-pill ${currentSpeed === 1.0 ? "active" : ""}" data-sp="1.0">1.0x</button>
             <button class="speed-pill ${currentSpeed === 1.25 ? "active" : ""}" data-sp="1.25">1.25x</button>
           </div>
-          <button class="btn btn-outline btn-sm dau-top-btn" id="btnToggleSub" title="${showSub ? "Ẩn dịch nghĩa" : "Hiện dịch nghĩa"}">${window.RusiIcons ? RusiIcons.get("languages", { size: 15 }) : ""} <span class="btn-text">${showSub ? "Ẩn dịch" : "Dịch nghĩa"}</span></button>
-          <button class="btn btn-primary btn-sm dau-top-btn" id="lisPlayAll" title="Nghe toàn bài">${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} <span class="btn-text">Nghe toàn bài</span></button>
+          <button class="btn btn-outline btn-sm rusi-top-btn" id="btnToggleSub" title="${showSub ? "Ẩn dịch nghĩa" : "Hiện dịch nghĩa"}">${window.RusiIcons ? RusiIcons.get("languages", { size: 15 }) : ""} <span class="btn-text">${showSub ? "Ẩn dịch" : "Dịch nghĩa"}</span></button>
+          <button class="btn btn-primary btn-sm rusi-top-btn" id="lisPlayAll" title="Nghe toàn bài">${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} <span class="btn-text">Nghe toàn bài</span></button>
         </div>
       </div>
 
@@ -5125,19 +5125,19 @@ function initListeningPage() {
       const videoSubBtn = host.querySelector("#btnToggleSubTrans");
       if (videoSubBtn) videoSubBtn.innerHTML = showSub ? ((window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : "") + " Ẩn dịch") : ((window.RusiIcons ? RusiIcons.get("eye", { size: 14 }) : "") + " Hiện dịch");
 
-      const subVi = host.querySelector("#dauSubVi");
+      const subVi = host.querySelector("#rusiSubVi");
       if (subVi) {
         subVi.classList.toggle("hidden", !showSub);
         subVi.style.display = showSub ? "" : "none";
       }
 
-      const curVi = host.querySelector("#dauCurVi");
+      const curVi = host.querySelector("#rusiCurVi");
       if (curVi) {
         curVi.classList.toggle("hidden", !showSub);
         curVi.style.display = showSub ? "" : "none";
       }
 
-      host.querySelectorAll(".dau-item-vi").forEach((el) => {
+      host.querySelectorAll(".rusi-item-vi").forEach((el) => {
         el.classList.toggle("hidden", !showSub);
         el.style.display = showSub ? "" : "none";
       });
@@ -5228,9 +5228,9 @@ function initListeningPage() {
 
     // Back button
     el("#btnBackLisList").onclick = () => {
-      if (window._dauShadowKeyHandler) {
-        window.removeEventListener("keydown", window._dauShadowKeyHandler);
-        window._dauShadowKeyHandler = null;
+      if (window._rusiShadowKeyHandler) {
+        window.removeEventListener("keydown", window._rusiShadowKeyHandler);
+        window._rusiShadowKeyHandler = null;
       }
       if (currentSpeakTimer) {
         clearTimeout(currentSpeakTimer);
@@ -5350,7 +5350,7 @@ function initListeningPage() {
       }
     ];
 
-    // State for DauEnglish Shadowing Studio
+    // State for RUSI Shadowing Studio
     let activeSentenceIdx = 0;
     const totalSentences = lesson.lines.length;
     const scores = {};
@@ -5372,15 +5372,15 @@ function initListeningPage() {
     const passedCount = getPassedCount();
     const progressPct = Math.round((passedCount / totalSentences) * 100);
 
-    // Render DauEnglish-style 2-column layout ONCE - video iframe is NEVER re-created on interactions
+    // Render RUSI-style 2-column layout ONCE - video iframe is NEVER re-created on interactions
     mb.innerHTML = `
-      <div class="dau-shadow-studio">
+      <div class="rusi-shadow-studio">
         <!-- 2-COLUMN STUDIO WORKSPACE -->
-        <div class="dau-shadow-grid">
+        <div class="rusi-shadow-grid">
           <!-- LEFT COLUMN: VIDEO + ACTIVE SENTENCE CARD + QUIZ -->
-          <div class="dau-shadow-left-col">
+          <div class="rusi-shadow-left-col">
             <!-- YOUTUBE VIDEO 16:9 CONTAINER WITH SUBTITLE OVERLAY -->
-            <div class="dau-shadow-video-wrap">
+            <div class="rusi-shadow-video-wrap">
               <iframe
                 id="lisYtIframe"
                 src="https://www.youtube-nocookie.com/embed/${ytId}?start=${start}&end=${end}&enablejsapi=1&rel=0&modestbranding=1"
@@ -5389,21 +5389,21 @@ function initListeningPage() {
                 allowfullscreen>
               </iframe>
 
-              <!-- SUBTITLE OVERLAY (DauEnglish style) -->
-              <div class="dau-shadow-sub-overlay" id="dauSubOverlay">
-                <p class="sub-ru ru" id="dauSubRu">${esc(curLine.ru)}</p>
-                <p class="sub-vi ${showSub && curLine.vi ? "" : "hidden"}" id="dauSubVi">${esc(curLine.vi || "")}</p>
+              <!-- SUBTITLE OVERLAY (RUSI style) -->
+              <div class="rusi-shadow-sub-overlay" id="rusiSubOverlay">
+                <p class="sub-ru ru" id="rusiSubRu">${esc(curLine.ru)}</p>
+                <p class="sub-vi ${showSub && curLine.vi ? "" : "hidden"}" id="rusiSubVi">${esc(curLine.vi || "")}</p>
               </div>
             </div>
 
             <!-- VIDEO CONTROLS STRIP -->
-            <div class="dau-video-meta-bar">
-              <div class="dau-meta-left">
-                <span class="dau-meta-pill" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Thời lượng: <b>${durationLabel}</b></span>
-                <span class="dau-meta-pill text-primary">${window.RusiIcons ? RusiIcons.get("target", { size: 14 }) : ""} Giọng Moscow chuẩn</span>
+            <div class="rusi-video-meta-bar">
+              <div class="rusi-meta-left">
+                <span class="rusi-meta-pill" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Thời lượng: <b>${durationLabel}</b></span>
+                <span class="rusi-meta-pill text-primary">${window.RusiIcons ? RusiIcons.get("target", { size: 14 }) : ""} Giọng Moscow chuẩn</span>
               </div>
-              <div class="dau-meta-right">
-                <span class="dau-speed-label">Tốc độ:</span>
+              <div class="rusi-meta-right">
+                <span class="rusi-speed-label">Tốc độ:</span>
                 <div class="speed-pills">
                   <button type="button" class="speed-pill btn-yt-sp ${localSpeed === 0.75 ? "active" : ""}" data-sp="0.75">0.75x</button>
                   <button type="button" class="speed-pill btn-yt-sp ${localSpeed === 1.0 ? "active" : ""}" data-sp="1.0">1.0x</button>
@@ -5416,33 +5416,33 @@ function initListeningPage() {
             </div>
 
             <!-- ACTIVE SENTENCE PRACTICE CARD (SHADOWING HERO) -->
-            <div class="dau-sentence-card" id="dauActiveCard">
-              <div class="dau-sentence-card-head">
+            <div class="rusi-sentence-card" id="rusiActiveCard">
+              <div class="rusi-sentence-card-head">
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                  <span class="dau-badge-sentence" id="dauCurSentenceIdx">Câu 1 / ${totalSentences}</span>
-                  <span class="dau-speaker-pill" id="dauCurSpeaker" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""} ${esc(curLine.who)}</span>
-                  <span id="dauCurScoreBadgeWrap">
+                  <span class="rusi-badge-sentence" id="rusiCurSentenceIdx">Câu 1 / ${totalSentences}</span>
+                  <span class="rusi-speaker-pill" id="rusiCurSpeaker" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""} ${esc(curLine.who)}</span>
+                  <span id="rusiCurScoreBadgeWrap">
                     ${curScore !== undefined ? `
-                      <span class="dau-score-badge ${curScore >= 70 ? "pass" : "retry"}">
+                      <span class="rusi-score-badge ${curScore >= 70 ? "pass" : "retry"}">
                         ${curScore >= 70 ? `Đạt ${curScore}%` : `${curScore}% (luyện lại)`}
                       </span>
                     ` : ""}
                   </span>
                 </div>
                 <div style="display:flex;align-items:center;gap:8px">
-                  <div class="dau-repeat-group" title="Số lần tự lặp khi nghe câu">
+                  <div class="rusi-repeat-group" title="Số lần tự lặp khi nghe câu">
                     <span style="font-size:0.75rem;color:var(--muted);font-weight:600">Lặp:</span>
-                    <button type="button" class="dau-repeat-btn ${repeatCount === 1 ? "active" : ""}" data-rep="1">1×</button>
-                    <button type="button" class="dau-repeat-btn ${repeatCount === 2 ? "active" : ""}" data-rep="2">2×</button>
-                    <button type="button" class="dau-repeat-btn ${repeatCount === 3 ? "active" : ""}" data-rep="3">3×</button>
+                    <button type="button" class="rusi-repeat-btn ${repeatCount === 1 ? "active" : ""}" data-rep="1">1×</button>
+                    <button type="button" class="rusi-repeat-btn ${repeatCount === 2 ? "active" : ""}" data-rep="2">2×</button>
+                    <button type="button" class="rusi-repeat-btn ${repeatCount === 3 ? "active" : ""}" data-rep="3">3×</button>
                   </div>
                 </div>
               </div>
 
               <!-- SENTENCE RUSSIAN & VIETNAMESE TEXT -->
-              <div class="dau-sentence-text-box">
-                <h3 class="dau-active-ru ru" id="dauCurRu">${esc(curLine.ru)}</h3>
-                <p class="dau-active-vi ${showSub && curLine.vi ? "" : "hidden"}" id="dauCurVi">${esc(curLine.vi || "")}</p>
+              <div class="rusi-sentence-text-box">
+                <h3 class="rusi-active-ru ru" id="rusiCurRu">${esc(curLine.ru)}</h3>
+                <p class="rusi-active-vi ${showSub && curLine.vi ? "" : "hidden"}" id="rusiCurVi">${esc(curLine.vi || "")}</p>
               </div>
 
               <!-- WAVEFORM AUDIO BOX -->
@@ -5454,18 +5454,18 @@ function initListeningPage() {
               </div>
 
               <!-- SHADOWING ACTIONS: PLAY AUDIO & MIC BUTTON -->
-              <div class="dau-sentence-actions">
+              <div class="rusi-sentence-actions">
                 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
                   <button type="button" class="btn btn-primary" id="btnPlayActiveLine">
                     <span>${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""} Nghe câu</span>
                   </button>
                   <button type="button" class="mic-btn" id="btnMicActiveLine" title="Bấm để nói và nhận diện chấm điểm (R)">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 20 }) : ""}</button>
-                  <div class="dau-mic-status" id="dauMicStatus">
+                  <div class="rusi-mic-status" id="rusiMicStatus">
                     ${curScore !== undefined ? `Điểm gần nhất: <b>${curScore}%</b>` : `Bấm nút <b>Micro</b> và đọc nhại lại câu tiếng Nga`}
                   </div>
                 </div>
 
-                <div id="dauScoreRingWrap">
+                <div id="rusiScoreRingWrap">
                   ${curScore !== undefined ? `
                     <div class="score-ring ${curScore >= 80 ? "" : curScore >= 50 ? "mid" : "low"}" title="Độ chính xác">${curScore}%</div>
                   ` : ""}
@@ -5473,7 +5473,7 @@ function initListeningPage() {
               </div>
 
               <!-- RECOGNITION HEARD BOX (FEEDBACK) -->
-              <div id="dauHeardFeedback" class="dau-heard-box hidden"></div>
+              <div id="rusiHeardFeedback" class="rusi-heard-box hidden"></div>
             </div>
 
             <!-- VIDEO QUIZ COMPREHENSION (Giữ nguyên vẹn 100% nội dung câu hỏi) -->
@@ -5483,7 +5483,7 @@ function initListeningPage() {
                   <h3 style="margin:0 0 4px;font-size:1.15rem;display:flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("brain", { size: 18 }) : ""} Bài trắc nghiệm kiểm tra sau khi xem video</h3>
                   <p style="margin:0;font-size:0.85rem;color:var(--muted)">Xem kỹ đoạn trích video trên và chọn đáp án đúng nhất cho các câu hỏi sau:</p>
                 </div>
-                <div id="videoQuizScore" class="dau-meta-pill" style="font-weight:700;color:var(--primary)">
+                <div id="videoQuizScore" class="rusi-meta-pill" style="font-weight:700;color:var(--primary)">
                   Tiến độ: 0/${videoQuestions.length} câu
                 </div>
               </div>
@@ -5507,41 +5507,41 @@ function initListeningPage() {
             </div>
           </div>
 
-          <!-- RIGHT COLUMN: SENTENCES LIST (DAUENGLISH SIDE PANEL) -->
-          <div class="dau-shadow-right-col">
-            <div class="dau-side-header">
+          <!-- RIGHT COLUMN: SENTENCES LIST (RUSI SIDE PANEL) -->
+          <div class="rusi-shadow-right-col">
+            <div class="rusi-side-header">
               <div>
                 <h4 style="margin:0;font-size:0.95rem;font-weight:700;display:flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 16 }) : ""} Danh sách câu</h4>
                 <span style="font-size:0.75rem;color:var(--muted)">Bấm câu để luyện ngay</span>
               </div>
-              <div class="dau-side-counter">
-                Đã đạt: <b id="dauSidePassed" class="text-primary">${passedCount}</b>/${totalSentences}
+              <div class="rusi-side-counter">
+                Đã đạt: <b id="rusiSidePassed" class="text-primary">${passedCount}</b>/${totalSentences}
               </div>
             </div>
 
             <!-- MINI PROGRESS BAR -->
-            <div class="dau-side-progress-bar">
-              <div class="dau-side-progress-fill" id="dauProgressFill" style="width: ${progressPct}%"></div>
+            <div class="rusi-side-progress-bar">
+              <div class="rusi-side-progress-fill" id="rusiProgressFill" style="width: ${progressPct}%"></div>
             </div>
 
             <!-- SCROLLABLE SENTENCE LIST -->
-            <div class="dau-sentence-scroll-list" id="dauSentenceList">
+            <div class="rusi-sentence-scroll-list" id="rusiSentenceList">
               ${lesson.lines.map((l, idx) => {
                 const sScore = scores[idx];
                 const isActive = idx === 0;
                 return `
-                  <button type="button" class="dau-sentence-item ${isActive ? "active" : ""}" data-sentence-idx="${idx}">
-                    <div class="dau-item-idx ${isActive ? "active" : ""}">#${idx + 1}</div>
-                    <div class="dau-item-body">
-                      <div class="dau-item-speaker">${esc(l.who)}</div>
-                      <div class="dau-item-ru ru">${esc(l.ru)}</div>
-                      <div class="dau-item-vi ${showSub && l.vi ? "" : "hidden"}">${esc(l.vi || "")}</div>
+                  <button type="button" class="rusi-sentence-item ${isActive ? "active" : ""}" data-sentence-idx="${idx}">
+                    <div class="rusi-item-idx ${isActive ? "active" : ""}">#${idx + 1}</div>
+                    <div class="rusi-item-body">
+                      <div class="rusi-item-speaker">${esc(l.who)}</div>
+                      <div class="rusi-item-ru ru">${esc(l.ru)}</div>
+                      <div class="rusi-item-vi ${showSub && l.vi ? "" : "hidden"}">${esc(l.vi || "")}</div>
                     </div>
-                    <div class="dau-item-status">
+                    <div class="rusi-item-status">
                       ${sScore !== undefined ? `
-                        <span class="dau-mini-score ${sScore >= 70 ? "pass" : "retry"}">${sScore}%</span>
+                        <span class="rusi-mini-score ${sScore >= 70 ? "pass" : "retry"}">${sScore}%</span>
                       ` : `
-                        <span class="dau-mini-play">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""}</span>
+                        <span class="rusi-mini-play">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""}</span>
                       `}
                     </div>
                   </button>
@@ -5551,15 +5551,15 @@ function initListeningPage() {
           </div>
         </div>
 
-        <!-- STICKY BOTTOM TOOLBAR (DauEnglish style) -->
-        <div class="dau-shadow-bottom-bar">
-          <div class="dau-bot-left">
+        <!-- STICKY BOTTOM TOOLBAR (RUSI style) -->
+        <div class="rusi-shadow-bottom-bar">
+          <div class="rusi-bot-left">
             <button type="button" class="btn btn-outline btn-sm" id="btnPrevSentence" disabled>
               ← Câu trước
             </button>
           </div>
 
-          <div class="dau-bot-center">
+          <div class="rusi-bot-center">
             <button type="button" class="btn btn-primary btn-sm" id="btnBottomPlay">
               ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : ""} Nghe lại (Space)
             </button>
@@ -5571,8 +5571,8 @@ function initListeningPage() {
             </button>
           </div>
 
-          <div class="dau-bot-right">
-            <div class="dau-shortcuts-hint">
+          <div class="rusi-bot-right">
+            <div class="rusi-shortcuts-hint">
               <kbd>Space</kbd> Nghe · <kbd>R</kbd> Mic · <kbd>←</kbd> <kbd>→</kbd> Chuyển câu
             </div>
           </div>
@@ -5619,52 +5619,52 @@ function initListeningPage() {
       const curScore = scores[activeSentenceIdx];
 
       // Update active card elements in place without touching iframe
-      const idxEl = mb.querySelector("#dauCurSentenceIdx");
+      const idxEl = mb.querySelector("#rusiCurSentenceIdx");
       if (idxEl) idxEl.textContent = `Câu ${activeSentenceIdx + 1} / ${totalSentences}`;
 
-      const speakerEl = mb.querySelector("#dauCurSpeaker");
+      const speakerEl = mb.querySelector("#rusiCurSpeaker");
       if (speakerEl) speakerEl.innerHTML = (window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : "") + " " + esc(curLine.who);
 
-      const badgeWrap = mb.querySelector("#dauCurScoreBadgeWrap");
+      const badgeWrap = mb.querySelector("#rusiCurScoreBadgeWrap");
       if (badgeWrap) {
         badgeWrap.innerHTML = curScore !== undefined ? `
-          <span class="dau-score-badge ${curScore >= 70 ? "pass" : "retry"}">
+          <span class="rusi-score-badge ${curScore >= 70 ? "pass" : "retry"}">
             ${curScore >= 70 ? `Đạt ${curScore}%` : `${curScore}% (luyện lại)`}
           </span>
         ` : "";
       }
 
-      const ruEl = mb.querySelector("#dauCurRu");
+      const ruEl = mb.querySelector("#rusiCurRu");
       if (ruEl) ruEl.textContent = curLine.ru;
 
-      const viEl = mb.querySelector("#dauCurVi");
+      const viEl = mb.querySelector("#rusiCurVi");
       if (viEl) {
         viEl.textContent = curLine.vi || "";
         viEl.classList.toggle("hidden", !showSub || !curLine.vi);
       }
 
-      const subRu = mb.querySelector("#dauSubRu");
+      const subRu = mb.querySelector("#rusiSubRu");
       if (subRu) subRu.textContent = curLine.ru;
 
-      const subVi = mb.querySelector("#dauSubVi");
+      const subVi = mb.querySelector("#rusiSubVi");
       if (subVi) {
         subVi.textContent = curLine.vi || "";
         subVi.classList.toggle("hidden", !showSub || !curLine.vi);
       }
 
-      const micStatus = mb.querySelector("#dauMicStatus");
+      const micStatus = mb.querySelector("#rusiMicStatus");
       if (micStatus) {
         micStatus.innerHTML = curScore !== undefined ? `Điểm gần nhất: <b>${curScore}%</b>` : `Bấm nút <b>Micro</b> và đọc nhại lại câu tiếng Nga`;
       }
 
-      const scoreRingWrap = mb.querySelector("#dauScoreRingWrap");
+      const scoreRingWrap = mb.querySelector("#rusiScoreRingWrap");
       if (scoreRingWrap) {
         scoreRingWrap.innerHTML = curScore !== undefined ? `
           <div class="score-ring ${curScore >= 80 ? "" : curScore >= 50 ? "mid" : "low"}" title="Độ chính xác">${curScore}%</div>
         ` : "";
       }
 
-      const heardBox = mb.querySelector("#dauHeardFeedback");
+      const heardBox = mb.querySelector("#rusiHeardFeedback");
       if (heardBox) {
         heardBox.classList.add("hidden");
         heardBox.innerHTML = "";
@@ -5681,16 +5681,16 @@ function initListeningPage() {
       if (btnNext) btnNext.disabled = activeSentenceIdx === totalSentences - 1;
 
       // Sentence list highlight
-      mb.querySelectorAll(".dau-sentence-item").forEach((item) => {
+      mb.querySelectorAll(".rusi-sentence-item").forEach((item) => {
         const itemIdx = parseInt(item.dataset.sentenceIdx, 10);
         const isAct = itemIdx === activeSentenceIdx;
         item.classList.toggle("active", isAct);
-        const numBox = item.querySelector(".dau-item-idx");
+        const numBox = item.querySelector(".rusi-item-idx");
         if (numBox) numBox.classList.toggle("active", isAct);
       });
 
-      const list = mb.querySelector("#dauSentenceList");
-      const activeItem = mb.querySelector(`.dau-sentence-item[data-sentence-idx="${activeSentenceIdx}"]`);
+      const list = mb.querySelector("#rusiSentenceList");
+      const activeItem = mb.querySelector(`.rusi-sentence-item[data-sentence-idx="${activeSentenceIdx}"]`);
       if (list && activeItem) {
         const itemTop = activeItem.offsetTop - list.offsetTop;
         list.scrollTo({ top: Math.max(0, itemTop - 20), behavior: "smooth" });
@@ -5720,10 +5720,10 @@ function initListeningPage() {
 
       const micBtn = mb.querySelector("#btnMicActiveLine");
       const bottomMicBtn = mb.querySelector("#btnBottomMic");
-      const micStatus = mb.querySelector("#dauMicStatus");
+      const micStatus = mb.querySelector("#rusiMicStatus");
       const waveBox = mb.querySelector("#shadowWaveBox");
-      const heardBox = mb.querySelector("#dauHeardFeedback");
-      const scoreRingWrap = mb.querySelector("#dauScoreRingWrap");
+      const heardBox = mb.querySelector("#rusiHeardFeedback");
+      const scoreRingWrap = mb.querySelector("#rusiScoreRingWrap");
 
       isRecRunning = true;
       if (micBtn) micBtn.classList.add("rec");
@@ -5752,7 +5752,7 @@ function initListeningPage() {
           heardBox.innerHTML = `
             <div style="font-size:0.85rem">
               AI nghe được: <b style="color:var(--text)">"${esc(heard)}"</b>
-              <span class="dau-sim-pill ${sim >= 70 ? "pass" : "retry"}">${sim}% khớp</span>
+              <span class="rusi-sim-pill ${sim >= 70 ? "pass" : "retry"}">${sim}% khớp</span>
             </div>
           `;
         }
@@ -5774,10 +5774,10 @@ function initListeningPage() {
         }
 
         // Update active sentence score badge in card head
-        const badgeWrap = mb.querySelector("#dauCurScoreBadgeWrap");
+        const badgeWrap = mb.querySelector("#rusiCurScoreBadgeWrap");
         if (badgeWrap) {
           badgeWrap.innerHTML = `
-            <span class="dau-score-badge ${sim >= 70 ? "pass" : "retry"}">
+            <span class="rusi-score-badge ${sim >= 70 ? "pass" : "retry"}">
               ${sim >= 70 ? `Đạt ${sim}%` : `${sim}% (luyện lại)`}
             </span>
           `;
@@ -5785,15 +5785,15 @@ function initListeningPage() {
 
         // Update side panel counters
         const passedCount = getPassedCount();
-        const sidePassedEl = mb.querySelector("#dauSidePassed");
-        const progFill = mb.querySelector("#dauProgressFill");
+        const sidePassedEl = mb.querySelector("#rusiSidePassed");
+        const progFill = mb.querySelector("#rusiProgressFill");
         if (sidePassedEl) sidePassedEl.textContent = passedCount;
         if (progFill) progFill.style.width = Math.round((passedCount / totalSentences) * 100) + "%";
 
         // Update active item status in list
-        const activeListItem = mb.querySelector(`.dau-sentence-item[data-sentence-idx="${activeSentenceIdx}"] .dau-item-status`);
+        const activeListItem = mb.querySelector(`.rusi-sentence-item[data-sentence-idx="${activeSentenceIdx}"] .rusi-item-status`);
         if (activeListItem) {
-          activeListItem.innerHTML = `<span class="dau-mini-score ${sim >= 70 ? "pass" : "retry"}">${sim}%</span>`;
+          activeListItem.innerHTML = `<span class="rusi-mini-score ${sim >= 70 ? "pass" : "retry"}">${sim}%</span>`;
         }
       };
 
@@ -5843,10 +5843,10 @@ function initListeningPage() {
       if (btnNext) btnNext.onclick = () => selectSentence(activeSentenceIdx + 1);
 
       // Repeat buttons
-      mb.querySelectorAll(".dau-repeat-btn").forEach((btn) => {
+      mb.querySelectorAll(".rusi-repeat-btn").forEach((btn) => {
         btn.onclick = () => {
           repeatCount = parseInt(btn.dataset.rep, 10);
-          mb.querySelectorAll(".dau-repeat-btn").forEach((b) => b.classList.remove("active"));
+          mb.querySelectorAll(".rusi-repeat-btn").forEach((b) => b.classList.remove("active"));
           btn.classList.add("active");
           toast(`Tự động lặp lại: ${repeatCount} lần`);
         };
@@ -5886,7 +5886,7 @@ function initListeningPage() {
       }
 
       // Sentence list item click
-      mb.querySelectorAll(".dau-sentence-item").forEach((item) => {
+      mb.querySelectorAll(".rusi-sentence-item").forEach((item) => {
         item.onclick = () => {
           const sIdx = parseInt(item.dataset.sentenceIdx, 10);
           selectSentence(sIdx, true);
@@ -5953,7 +5953,7 @@ function initListeningPage() {
       });
     };
 
-    // Keyboard navigation handler (DauEnglish shortcuts)
+    // Keyboard navigation handler (RUSI shortcuts)
     const handleKeyNav = (e) => {
       if (typeof getActiveMode === "function" && getActiveMode() !== "video") return;
       if (["INPUT", "TEXTAREA", "SELECT"].includes(e.target.tagName) || e.target.isContentEditable) return;
@@ -5972,11 +5972,11 @@ function initListeningPage() {
       }
     };
 
-    if (window._dauShadowKeyHandler) {
-      window.removeEventListener("keydown", window._dauShadowKeyHandler);
-      window._dauShadowKeyHandler = null;
+    if (window._rusiShadowKeyHandler) {
+      window.removeEventListener("keydown", window._rusiShadowKeyHandler);
+      window._rusiShadowKeyHandler = null;
     }
-    window._dauShadowKeyHandler = handleKeyNav;
+    window._rusiShadowKeyHandler = handleKeyNav;
     window.addEventListener("keydown", handleKeyNav);
 
     // Initial event binding
@@ -8494,14 +8494,14 @@ function initSpeakingPage() {
       const iconKey = currentMode === "reflex" ? "zap-xp" : (s.icon || "mic-speaking");
 
       return `
-        <article class="dau-card dau-card-compact speaking-topic-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-speak-id="${s.id}">
-          <div class="dau-card-header">
-            <div class="dau-card-icon" style="background:rgba(234,88,12,0.08);color:#ea580c">
+        <article class="rusi-card rusi-card-compact speaking-topic-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-speak-id="${s.id}">
+          <div class="rusi-card-header">
+            <div class="rusi-card-icon" style="background:rgba(234,88,12,0.08);color:#ea580c">
               ${icon(iconKey, 24)}
             </div>
-            <div class="dau-card-header-main">
-              <div class="dau-card-title-row">
-                <h3 class="dau-card-ru" title="${esc(s.title)}">${esc(s.title)}</h3>
+            <div class="rusi-card-header-main">
+              <div class="rusi-card-title-row">
+                <h3 class="rusi-card-ru" title="${esc(s.title)}">${esc(s.title)}</h3>
                 ${isDone ? `
                   <span class="topic-status topic-status-completed" style="flex-shrink:0">
                     ${icon("check", 12)} Hoàn thành
@@ -8510,15 +8510,15 @@ function initSpeakingPage() {
                   <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
                 ` : ""}
               </div>
-              <div class="dau-card-subinfo">
+              <div class="rusi-card-subinfo">
                 <span>${s.level}</span>
-                <span class="dau-card-sep">•</span>
-                <span class="dau-card-count">${countLabel}</span>
+                <span class="rusi-card-sep">•</span>
+                <span class="rusi-card-count">${countLabel}</span>
               </div>
             </div>
           </div>
 
-          <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
+          <div class="rusi-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
             <div class="topic-footer-actions">
               ${isPro && !isUnlocked ? `
                 <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
@@ -8560,7 +8560,7 @@ function initSpeakingPage() {
       };
     });
 
-    renderDauPagination(el("#spPagination"), currentPage, totalPages, (newPage) => {
+    renderRusiPagination(el("#spPagination"), currentPage, totalPages, (newPage) => {
       currentPage = newPage;
       renderSpeakingCards();
     }, { remainingCount, unit: "bài" });
@@ -8599,7 +8599,7 @@ function initSpeakingPage() {
         </div>
 
         <div class="writing-topic-grid listening-topic-grid speaking-topic-grid" id="spCardsGrid"></div>
-        <div class="dau-pagination" id="spPagination"></div>
+        <div class="rusi-pagination" id="spPagination"></div>
       </section>
     `;
 
@@ -8822,13 +8822,13 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
 
     host.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
-      <div class="dau-workspace-back-bar">
-        <button type="button" class="dau-back-btn" id="btnBackSpList" title="Quay lại danh sách bài nói" aria-label="Quay lại">
+      <div class="rusi-workspace-back-bar">
+        <button type="button" class="rusi-back-btn" id="btnBackSpList" title="Quay lại danh sách bài nói" aria-label="Quay lại">
           ${icon("arrow-left", 18)}
         </button>
 
-        <div class="dau-workspace-info">
-          <span class="dau-workspace-title">
+        <div class="rusi-workspace-info">
+          <span class="rusi-workspace-title">
             ${esc(set.title)}
           </span>
         </div>
@@ -10134,15 +10134,15 @@ function initWritingPage() {
       const iconSvg = window.RusiIcons ? RusiIcons.get(iconKey, { size: 24 }) : icon("pen-tool", 24);
 
       return `
-        <!-- GIAO DIỆN THẺ TỐI GIẢN CHUẨN MỚI .dau-card-compact (Đồng bộ từ vựng, dùng 100% SVG RusiIcons) -->
-        <article class="dau-card dau-card-compact writing-topic-card ${isAllDone ? 'topic-completed' : ''} ${pro ? 'topic-pro' : ''} ${pro && !isUnlocked ? 'topic-locked' : ''}" data-topic="${esc(topic.key)}" tabindex="0">
-          <div class="dau-card-header">
-            <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
+        <!-- GIAO DIỆN THẺ TỐI GIẢN CHUẨN MỚI .rusi-card-compact (Đồng bộ từ vựng, dùng 100% SVG RusiIcons) -->
+        <article class="rusi-card rusi-card-compact writing-topic-card ${isAllDone ? 'topic-completed' : ''} ${pro ? 'topic-pro' : ''} ${pro && !isUnlocked ? 'topic-locked' : ''}" data-topic="${esc(topic.key)}" tabindex="0">
+          <div class="rusi-card-header">
+            <div class="rusi-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
               ${iconSvg}
             </div>
-            <div class="dau-card-header-main">
-              <div class="dau-card-title-row">
-                <h3 class="dau-card-ru" title="${esc(topic.name)}">${esc(topic.name)}</h3>
+            <div class="rusi-card-header-main">
+              <div class="rusi-card-title-row">
+                <h3 class="rusi-card-ru" title="${esc(topic.name)}">${esc(topic.name)}</h3>
                 ${isAllDone ? `
                   <span class="topic-status topic-status-completed" style="flex-shrink:0">
                     ${icon("check", 12)} Hoàn thành
@@ -10151,19 +10151,19 @@ function initWritingPage() {
                   <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
                 ` : ""}
               </div>
-              <div class="dau-card-subinfo">
+              <div class="rusi-card-subinfo">
                 <span>${currentLevel}</span>
-                <span class="dau-card-sep">•</span>
-                <span class="dau-card-count">${topic.tasks.length} bài luyện</span>
+                <span class="rusi-card-sep">•</span>
+                <span class="rusi-card-count">${topic.tasks.length} bài luyện</span>
                 ${done > 0 ? `
-                  <span class="dau-card-sep">•</span>
+                  <span class="rusi-card-sep">•</span>
                   <span style="color:#10b981;font-weight:400">${done}/${topic.tasks.length} xong</span>
                 ` : ""}
               </div>
             </div>
           </div>
 
-          <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
+          <div class="rusi-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
             <div class="topic-footer-actions">
               ${pro && !isUnlocked ? `
                 <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
@@ -10435,29 +10435,29 @@ function initWritingPage() {
                       </button>
                     </div>
                   </div>
-                  <div class="dau-vocab-list-wrap" id="writingVocabList" style="margin-top: 0;">
+                  <div class="rusi-vocab-list-wrap" id="writingVocabList" style="margin-top: 0;">
                     ${words.map((word, idx) => {
                       const wordRu = typeof word === "object" && word !== null ? (word.ru || word.word || "") : String(word);
                       const wordVi = getWordVi(word);
                       const wordPos = typeof word === "object" && word !== null && word.pos ? word.pos : "";
                       const audioUrl = typeof word === "object" && word !== null && word.audio_url ? word.audio_url : "";
                       return `
-                        <div class="dau-vocab-row-card" data-ru="${esc(wordRu)}" data-idx="${idx}">
-                          <div class="dau-row-main-grid">
-                            <div class="dau-row-col-ru">
-                              <div class="dau-row-ru-header">
-                                <span class="dau-row-ru ru">${esc(wordRu)}</span>
-                                ${wordPos ? `<span class="dau-row-pos" style="font-size:0.75rem;padding:2px 6px;border-radius:4px;background:rgba(23,87,166,0.08);color:var(--primary);margin-left:6px">${esc(wordPos)}</span>` : ""}
+                        <div class="rusi-vocab-row-card" data-ru="${esc(wordRu)}" data-idx="${idx}">
+                          <div class="rusi-row-main-grid">
+                            <div class="rusi-row-col-ru">
+                              <div class="rusi-row-ru-header">
+                                <span class="rusi-row-ru ru">${esc(wordRu)}</span>
+                                ${wordPos ? `<span class="rusi-row-pos" style="font-size:0.75rem;padding:2px 6px;border-radius:4px;background:rgba(23,87,166,0.08);color:var(--primary);margin-left:6px">${esc(wordPos)}</span>` : ""}
                               </div>
                             </div>
-                            <div class="dau-row-col-vi">
-                              <div class="dau-row-vi-text">${esc(wordVi)}</div>
+                            <div class="rusi-row-col-vi">
+                              <div class="rusi-row-vi-text">${esc(wordVi)}</div>
                             </div>
-                            <div class="dau-row-col-actions">
-                              <button type="button" class="dau-action-icon-btn writing-vocab-speak" data-word="${esc(wordRu)}" ${audioUrl ? `data-audio="${esc(audioUrl)}"` : ""} aria-label="Nghe phát âm ${esc(wordRu)}" title="Phát âm tiếng Nga">
+                            <div class="rusi-row-col-actions">
+                              <button type="button" class="rusi-action-icon-btn writing-vocab-speak" data-word="${esc(wordRu)}" ${audioUrl ? `data-audio="${esc(audioUrl)}"` : ""} aria-label="Nghe phát âm ${esc(wordRu)}" title="Phát âm tiếng Nga">
                                 ${icon("volume-high", 16)}
                               </button>
-                              <button type="button" class="dau-action-icon-btn writing-vocab-add" data-word="${esc(wordRu)}" data-vi="${esc(wordVi)}" aria-label="Thêm ${esc(wordRu)} vào lọ từ" title="Lưu vào Lọ cá nhân">
+                              <button type="button" class="rusi-action-icon-btn writing-vocab-add" data-word="${esc(wordRu)}" data-vi="${esc(wordVi)}" aria-label="Thêm ${esc(wordRu)} vào lọ từ" title="Lưu vào Lọ cá nhân">
                                 ${icon("archive-jar", 16)}
                               </button>
                             </div>
@@ -11049,7 +11049,7 @@ function initMockTestPage() {
             Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
             return true;
           }
-          startTest(found, null, examMode);
+          openExamBriefing(found, null, examMode);
           return true;
         }
       }
@@ -11099,9 +11099,10 @@ function initMockTestPage() {
 
   const matchesTestMode = (t, mode) => {
     const tm = (t.test_mode || t.mode || "").toLowerCase();
-    if (tm) return tm === mode;
-    const isFull = t.sub_test_type === "full" || (Array.isArray(t.parts) && t.parts.length >= 5) || Boolean(t.part5 && Object.keys(t.part5).length > 0);
-    return mode === "exam" ? isFull : !isFull;
+    const isFull = (t.sub_test_type === "full" || t.sub_test_type === "integrated") && t.sub_test_type !== "mock" && tm !== "practice";
+    if (mode === "exam") return isFull;
+    // Chế độ Luyện tập: hiển thị đề chuyên đề, đề thi thử rút gọn và cho phép C2/VNZh hiển thị để luyện tập tự do
+    return !isFull || t.level === "C2" || t.level === "VNZh";
   };
 
   const renderTrkiCards = () => {
@@ -11155,21 +11156,23 @@ function initMockTestPage() {
         const isPro = Boolean(t.is_pro_only || t.is_pro);
         const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
         const qCount = t.questionsCount || (t.questions ? t.questions.length : (t.parts ? t.parts.reduce((a, b) => a + (b.questions ? b.questions.length : 0), 0) : 34));
-        const durMin = Math.round((t.durationSeconds || (t.durationMin ? t.durationMin * 60 : 2700)) / 60);
-        const cleanTitle = (t.title || "").replace(/\s*\([^)]*\)/g, "").trim();
-        const countLabel = examMode === "practice" ? `${qCount} câu hỏi · Luyện tập tự do` : `Đề thi chuẩn 5 phần · ${durMin} phút`;
+        const durMin = t.durationSeconds 
+          ? Math.round(t.durationSeconds / 60) 
+          : (t.duration_min || t.durationMin || (Array.isArray(t.parts) ? t.parts.reduce((a, b) => a + (b.durationMin || b.duration_min || 0), 0) : 0) || 60);
+        const cleanTitle = (t.title || "").trim();
+        const countLabel = examMode === "practice" ? `${qCount} câu hỏi · Luyện tập tự do` : `Chuẩn 5 phần · ${qCount} câu · ${durMin} phút`;
         const actionLabel = isDone ? "Đã hoàn thành" : (examMode === "practice" ? "Vào luyện tập" : "Vào luyện thi");
         const iconKey = examMode === "practice" ? "target" : (t.icon || "graduation-cap");
 
         return `
-          <article class="dau-card dau-card-compact trki-topic-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-trki-id="${t.id}" tabindex="0">
-            <div class="dau-card-header">
-              <div class="dau-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
+          <article class="rusi-card rusi-card-compact trki-topic-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-trki-id="${t.id}" tabindex="0">
+            <div class="rusi-card-header">
+              <div class="rusi-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
                 ${icon(iconKey, 24)}
               </div>
-              <div class="dau-card-header-main">
-                <div class="dau-card-title-row">
-                  <h3 class="dau-card-ru" title="${esc(cleanTitle)}">${esc(cleanTitle)}</h3>
+              <div class="rusi-card-header-main">
+                <div class="rusi-card-title-row">
+                  <h3 class="rusi-card-ru" title="${esc(cleanTitle)}">${esc(cleanTitle)}</h3>
                   ${isDone ? `
                     <span class="topic-status topic-status-completed" style="flex-shrink:0">
                       ${icon("check", 12)} Hoàn thành
@@ -11178,15 +11181,15 @@ function initMockTestPage() {
                     <span class="topic-status topic-status-pro" style="flex-shrink:0">PRO</span>
                   ` : ""}
                 </div>
-                <div class="dau-card-subinfo">
+                <div class="rusi-card-subinfo">
                   <span>${t.level}</span>
-                  <span class="dau-card-sep">•</span>
-                  <span class="dau-card-count">${countLabel}</span>
+                  <span class="rusi-card-sep">•</span>
+                  <span class="rusi-card-count">${countLabel}</span>
                 </div>
               </div>
             </div>
 
-            <div class="dau-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
+            <div class="rusi-card-footer topic-footer" style="margin-top:auto;padding-top:10px;justify-content:flex-end">
               <div class="topic-footer-actions">
                 ${isPro && !isUnlocked ? `
                   <span class="topic-pro-lock-icon" title="Nội dung dành cho học viên PRO" aria-label="Khóa PRO">
@@ -11204,6 +11207,9 @@ function initMockTestPage() {
       }).join("");
 
       // Action: Click "Vào luyện tập / Vào luyện thi" or card
+
+      // Action: Click "Vào luyện tập / Vào luyện thi" or card -> Mở màn hình Briefing thông báo & kiểm tra thiết bị
+      // Action: Click "Vào luyện tập / Vào luyện thi" or card -> Mở màn hình Briefing thông báo & kiểm tra thiết bị
       const openExam = (id) => {
         const test = bank.find(x => x.id === id);
         if (!test) return;
@@ -11212,7 +11218,7 @@ function initMockTestPage() {
           Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
           return;
         }
-        startTest(test, null, examMode);
+        openExamBriefing(test, null, examMode);
       };
 
       gridHost.querySelectorAll(".btn-trki-action, .btn-trki-circle").forEach(btn => {
@@ -11222,7 +11228,7 @@ function initMockTestPage() {
         };
       });
 
-      gridHost.querySelectorAll(".topic-card, .dau-card").forEach(card => {
+      gridHost.querySelectorAll(".topic-card, .rusi-card").forEach(card => {
         card.onclick = (e) => {
           if (e.target.closest("button") || e.target.closest("a")) return;
           openExam(card.dataset.trkiId);
@@ -11236,7 +11242,7 @@ function initMockTestPage() {
       });
     }
 
-    renderDauPagination(el("#trkiPagination"), currentPage, totalPages, (newPage) => {
+    renderRusiPagination(el("#trkiPagination"), currentPage, totalPages, (newPage) => {
       currentPage = newPage;
       renderTrkiCards();
     }, { remainingCount, unit: "đề thi" });
@@ -11248,12 +11254,13 @@ function initMockTestPage() {
     flagged = {};
     sessionOptionOrders = {};
     tabSwitches = 0;
+    cleanupHardwareTests();
     if (timer) clearInterval(timer);
     if (visibilityHandler) {
       document.removeEventListener("visibilitychange", visibilityHandler);
       visibilityHandler = null;
     }
-    document.body.classList.remove("in-workspace");
+    document.body.classList.remove("in-workspace", "cbt-fullscreen-mode");
 
     host.innerHTML = `
       <section class="writing-hub listening-hub trki-hub" id="trkiHub">
@@ -11286,7 +11293,7 @@ function initMockTestPage() {
         </div>
 
         <div class="writing-topic-grid listening-topic-grid trki-topic-grid" id="trkiCardsGrid" style="margin-top:24px"></div>
-        <div class="dau-pagination" id="trkiPagination"></div>
+        <div class="rusi-pagination" id="trkiPagination"></div>
       </section>
     `;
 
@@ -11339,7 +11346,6 @@ function initMockTestPage() {
     try {
       const rows = await window.RusiSupabase.questionBank.getByTest(test.code);
       if (!rows || !rows.length) return;
-      // Map từ schema trki_question_bank → format {q, options, a, ex, topic} dùng trong renderQuestionBlock
       const mapped = rows
         .sort((x, y) => (x.order_index || 0) - (y.order_index || 0))
         .map(r => ({
@@ -11351,7 +11357,6 @@ function initMockTestPage() {
         }))
         .filter(r => r.q && r.options.length >= 2);
       if (!mapped.length) return;
-      // Đảm bảo test.parts tồn tại dạng array, chỉ nạp khi test chưa có câu hỏi hoặc DB đầy đủ hơn
       const existingCount = (test.parts && test.parts[0] && Array.isArray(test.parts[0].questions)) ? test.parts[0].questions.length : 0;
       if (!Array.isArray(test.parts) || !test.parts.length) {
         test.parts = [{ id: "gram", name: "Лексика и грамматика", vi: "Từ vựng và ngữ pháp", durationMin: 60, questions: mapped }];
@@ -11363,12 +11368,369 @@ function initMockTestPage() {
     }
   };
 
+  // Quản lý tài nguyên Microphone và Loa
+  let activeMicStream = null;
+  let activeAudioCtx = null;
+  let micAnimFrame = null;
+  const cleanupHardwareTests = () => {
+    if (activeMicStream) {
+      try {
+        activeMicStream.getTracks().forEach(t => t.stop());
+      } catch(_) {}
+      activeMicStream = null;
+    }
+    if (activeAudioCtx) {
+      try {
+        activeAudioCtx.close();
+      } catch(_) {}
+      activeAudioCtx = null;
+    }
+    if (micAnimFrame) {
+      cancelAnimationFrame(micAnimFrame);
+      micAnimFrame = null;
+    }
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  };
+
+  /* =====================================================================
+   * GIAI ĐOẠN 1: CỬA SỔ THÔNG BÁO BÀI THI & KIỂM TRA THIẾT BỊ (BRIEFING)
+   * ===================================================================== */
+  const openExamBriefing = async (test, partId = null, mode = "exam") => {
+    if (test) currentTest = test;
+    activePartId = partId;
+    examMode = mode || "exam";
+
+    cleanupHardwareTests();
+    document.body.classList.add("in-workspace", "cbt-fullscreen-mode");
+
+    if (currentTest && currentTest.code && currentTest.code.startsWith("trki_zlat")) {
+      await loadQBankIntoTest(currentTest);
+    }
+
+    const isPractice = (examMode === "practice");
+    const selectedPartList = getExamPartList();
+    const isSubset = Boolean(selectedPartList && selectedPartList.length > 0 && selectedPartList.length < (currentTest.parts || []).length);
+
+    const activeParts = isSubset
+      ? (currentTest.parts || []).filter(p => selectedPartList.includes(p.id))
+      : (currentTest.parts || []);
+
+    const totalQuestions = activeParts.reduce((acc, p) => {
+      if (p && Array.isArray(p.questions)) return acc + p.questions.length;
+      if (p && Array.isArray(p.writing_tasks)) return acc + p.writing_tasks.length;
+      if (p && Array.isArray(p.speaking_tasks)) return acc + p.speaking_tasks.length;
+      return acc;
+    }, 0);
+
+    const examDurationMin = isSubset
+      ? activeParts.reduce((acc, p) => acc + (p.durationMin || 15), 0)
+      : (currentTest.duration_min || currentTest.durationMin || (activeParts.length ? activeParts.reduce((acc, p) => acc + (p.durationMin || p.duration_min || 0), 0) : 0) || 60);
+
+    const passPct = currentTest.passPercent || 66;
+
+    // RENDER TOÀN MÀN HÌNH KHÔNG XUNG ĐỘT (CBT PORTAL SUITE)
+    host.innerHTML = `
+      <div class="cbt-app-portal" id="cbtPortalRoot">
+        <!-- TOP BAR DÀI RỘNG TRÊN ĐỈNH THAY THẾ HEADER WEBSITE -->
+        <header class="cbt-portal-header" role="banner">
+          <div class="cbt-header-left">
+            <button type="button" class="cbt-btn-icon" id="btnBriefingBack" title="Quay lại danh sách đề thi" aria-label="Quay lại danh sách đề thi">
+              ${icon("arrow-left", 18)}
+            </button>
+            <div class="cbt-header-info">
+              <div class="cbt-header-title-row">
+                <span class="cbt-level-pill">ТРКИ-${currentTest.level}</span>
+                <span class="cbt-test-name-text" title="${esc(currentTest.title)}">${esc(currentTest.title)}</span>
+              </div>
+              <span class="cbt-subtest-label">${isPractice ? "Chế độ: Luyện tập tự do" : "Kỳ thi mô phỏng khảo thí CBT chuẩn quốc tế"}</span>
+            </div>
+          </div>
+
+          <div class="cbt-header-center">
+            <div class="cbt-clock-pill" style="font-size:0.95rem;color:var(--primary)">
+              ${icon(isPractice ? "target" : "graduation-cap", 16)}
+              <span>${isPractice ? "Luyện tập tự do" : "Mô phỏng khảo thí CBT"}</span>
+            </div>
+          </div>
+
+          <div class="cbt-header-right">
+            <button type="button" class="cbt-btn-fullscreen" id="btnBriefingFullscreen" title="Bật/Tắt Toàn màn hình">
+              ${icon("maximize", 15)} <span>Toàn màn hình</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- KHUNG CHÍNH Ở GIỮA: CỬA SỔ BRIEFING THÔNG BÁO VÀ TEST THIẾT BỊ -->
+        <div class="cbt-portal-content">
+          <div class="cbt-briefing-stage">
+            <div class="cbt-briefing-card">
+              <div class="cbt-briefing-hero">
+                <div class="cbt-briefing-eyebrow">
+                  ${icon("shield-anti-cheat", 14)} HỆ THỐNG KHẢO THÍ CHUẨN QUỐC TẾ LIÊN BANG NGA
+                </div>
+                <h1 class="cbt-briefing-heading">${esc(currentTest.title)}</h1>
+                <p class="cbt-briefing-lead">
+                  Cấp độ <b>ТРКИ-${currentTest.level}</b> · Bài kiểm tra khảo thí mô phỏng cấu trúc kỳ thi quốc gia ТРКИ (TORFL). Vui lòng kiểm tra cấu trúc bài thi và thiết bị âm thanh, micro trước khi bắt đầu.
+                </p>
+              </div>
+
+              <!-- 4 THẺ CHỈ SỐ TÓM TẮT BÀI THI -->
+              <div class="cbt-matrix-summary-row">
+                <div class="cbt-summary-cell">
+                  <div class="cbt-summary-num">${examDurationMin} phút</div>
+                  <div class="cbt-summary-txt">${isPractice ? "Thời lượng gợi ý" : "Thời gian làm bài"}</div>
+                </div>
+                <div class="cbt-summary-cell">
+                  <div class="cbt-summary-num">${totalQuestions} câu</div>
+                  <div class="cbt-summary-txt">Tổng số câu hỏi</div>
+                </div>
+                <div class="cbt-summary-cell">
+                  <div class="cbt-summary-num">${activeParts.length} phần</div>
+                  <div class="cbt-summary-txt">Số phân môn (Subtests)</div>
+                </div>
+                <div class="cbt-summary-cell">
+                  <div class="cbt-summary-num">≥ ${passPct}%</div>
+                  <div class="cbt-summary-txt">Chuẩn đạt (Сдано)</div>
+                </div>
+              </div>
+
+              <!-- BẢNG CẤU TRÚC PHÂN MÔN -->
+              <div class="cbt-subtest-overview-box">
+                <div class="cbt-box-header-title">
+                  <span>${icon("list", 16)} CẤU TRÚC CÁC PHÂN MÔN KHẢO THÍ</span>
+                  <span style="font-size:0.78rem;color:var(--muted)">Chuẩn CEFR Châu Âu & Nga</span>
+                </div>
+                <div class="cbt-subtest-items-grid">
+                  ${activeParts.map((p, pIdx) => {
+                    const qCount = (p.questions ? p.questions.length : (p.writing_tasks ? p.writing_tasks.length : (p.speaking_tasks ? p.speaking_tasks.length : 0)));
+                    const dur = p.durationMin || p.duration_min || Math.round(examDurationMin / activeParts.length);
+                    return `
+                      <div class="cbt-subtest-row-item">
+                        <div class="cbt-row-left">
+                          <span class="cbt-part-circle-num">${pIdx + 1}</span>
+                          <div>
+                            <span class="cbt-row-title-ru ru">${esc(p.name || "Субтест " + (pIdx + 1))}</span>
+                            <span class="cbt-row-title-vi"> — ${esc(p.vi || "")}</span>
+                          </div>
+                        </div>
+                        <div class="cbt-row-right">
+                          <span>${qCount} câu</span>
+                          <span>•</span>
+                          <span>${dur} phút</span>
+                        </div>
+                      </div>
+                    `;
+                  }).join("")}
+                </div>
+              </div>
+
+              <!-- HỆ THỐNG KIỂM TRA THIẾT BỊ PHẦN CỨNG (LOA & MICRO) -->
+              <div class="cbt-hw-check-row">
+                <!-- 1. KIỂM TRA LOA / TAI NGHE -->
+                <div class="cbt-hw-card">
+                  <div class="cbt-hw-title-row">
+                    ${icon("volume-2", 18)} <span>Kiểm tra Loa / Tai nghe</span>
+                  </div>
+                  <p class="cbt-hw-desc">Nghe đoạn thoại phát âm tiếng Nga bản xứ để đảm bảo âm lượng phần Nghe hiểu rõ ràng.</p>
+                  <div class="cbt-hw-action-line">
+                    <button type="button" class="cbt-btn-test-action" id="btnTestSpeaker">
+                      ${icon("play-control", 14)} <span>Phát âm thanh mẫu</span>
+                    </button>
+                    <span class="cbt-status-pill-check idle" id="speakerStatusBadge">Chưa kiểm tra</span>
+                  </div>
+                </div>
+
+                <!-- 2. KIỂM TRA MICROPHONE -->
+                <div class="cbt-hw-card">
+                  <div class="cbt-hw-title-row">
+                    ${icon("mic-speaking", 18)} <span>Kiểm tra Microphone</span>
+                  </div>
+                  <p class="cbt-hw-desc">Bấm kiểm tra và nói thử vào micro: <i>«Здравствуйте!»</i> để kiểm tra độ nhạy.</p>
+                  <div class="cbt-hw-action-line">
+                    <button type="button" class="cbt-btn-test-action" id="btnTestMic">
+                      ${icon("mic-speaking", 14)} <span>Kiểm tra Micro</span>
+                    </button>
+                    <span class="cbt-status-pill-check idle" id="micStatusBadge">Chưa kiểm tra</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- NÚT BẮT ĐẦU LÀM BÀI CHÍNH -->
+              <div class="cbt-launch-row">
+                <button type="button" class="cbt-btn-start-now" id="btnStartExamNow">
+                  ${icon("play-control", 18)}
+                  <span>BẮT ĐẦU LÀM BÀI THI ${isPractice ? "LUYỆN TẬP" : "CHÍNH THỨC"} ➜</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    if (window.RusiIcons && typeof RusiIcons.replace === "function") {
+      RusiIcons.replace(host);
+    }
+
+    // 1. Back button: Thoát về hub
+    el("#btnBriefingBack").onclick = () => {
+      cleanupHardwareTests();
+      renderHub();
+    };
+
+    // 2. Fullscreen toggle
+    const btnFs = el("#btnBriefingFullscreen");
+    if (btnFs) {
+      btnFs.onclick = () => {
+        if (!document.fullscreenElement) {
+          if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+          document.body.classList.add("cbt-fullscreen-mode");
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+          document.body.classList.remove("cbt-fullscreen-mode");
+        }
+      };
+    }
+
+    // 3. Speaker Test Event
+    const btnSpeaker = el("#btnTestSpeaker");
+    const speakerBadge = el("#speakerStatusBadge");
+    let isSpeakerPlaying = false;
+
+    if (btnSpeaker) {
+      btnSpeaker.onclick = () => {
+        if (isSpeakerPlaying) {
+          if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
+          isSpeakerPlaying = false;
+          btnSpeaker.innerHTML = `${icon("play-control", 14)} <span>Phát âm thanh mẫu</span>`;
+          if (window.RusiIcons) RusiIcons.replace(btnSpeaker);
+          return;
+        }
+
+        const testPhrase = "Здравствуйте! Это проверка звука в системе тестирования РУСИ ТРКИ. Вы готовы начать экзамен?";
+        isSpeakerPlaying = true;
+        btnSpeaker.innerHTML = `${icon("pause-control", 14)} <span>Đang phát...</span>`;
+        if (window.RusiIcons) RusiIcons.replace(btnSpeaker);
+
+        if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(testPhrase);
+          u.lang = "ru-RU";
+          u.rate = 0.9;
+          if (typeof pickVoice === "function") {
+            const v = pickVoice("ru-RU");
+            if (v) u.voice = v;
+          }
+          u.onend = () => {
+            isSpeakerPlaying = false;
+            btnSpeaker.innerHTML = `${icon("check", 14)} <span>Phát lại</span>`;
+            speakerBadge.className = "cbt-status-pill-check ok";
+            speakerBadge.innerHTML = `${icon("check-circle-correct", 13)} Âm thanh tốt ✓`;
+            if (window.RusiIcons) RusiIcons.replace(host);
+          };
+          u.onerror = () => {
+            isSpeakerPlaying = false;
+            btnSpeaker.innerHTML = `${icon("play-control", 14)} <span>Phát lại</span>`;
+            speakerBadge.className = "cbt-status-pill-check ok";
+            speakerBadge.innerHTML = `${icon("check-circle-correct", 13)} Âm thanh sẵn sàng ✓`;
+            if (window.RusiIcons) RusiIcons.replace(host);
+          };
+          window.speechSynthesis.speak(u);
+        } else {
+          setTimeout(() => {
+            isSpeakerPlaying = false;
+            speakerBadge.className = "cbt-status-pill-check ok";
+            speakerBadge.innerHTML = `${icon("check-circle-correct", 13)} Âm thanh sẵn sàng ✓`;
+            if (window.RusiIcons) RusiIcons.replace(host);
+          }, 1500);
+        }
+      };
+    }
+
+    // 4. Microphone Test Event (Web Audio Analyser)
+    const btnMic = el("#btnTestMic");
+    const micBadge = el("#micStatusBadge");
+
+    if (btnMic) {
+      btnMic.onclick = async () => {
+        if (activeMicStream) {
+          cleanupHardwareTests();
+          btnMic.innerHTML = `${icon("mic-speaking", 14)} <span>Kiểm tra lại Micro</span>`;
+          if (window.RusiIcons) RusiIcons.replace(btnMic);
+          return;
+        }
+
+        try {
+          btnMic.innerHTML = `${icon("refresh-cw", 14)} <span>Đang kết nối...</span>`;
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          activeMicStream = stream;
+
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            activeAudioCtx = new AudioContextClass();
+            const source = activeAudioCtx.createMediaStreamSource(stream);
+            const analyser = activeAudioCtx.createAnalyser();
+            analyser.fftSize = 64;
+            source.connect(analyser);
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            btnMic.classList.add("active");
+            btnMic.innerHTML = `${icon("mic-speaking", 14)} <span>Đang lắng nghe...</span>`;
+
+            let hasDetectedVoice = false;
+            const updateMeter = () => {
+              if (!activeMicStream) return;
+              analyser.getByteFrequencyData(dataArray);
+              let sum = 0;
+              for (let i = 0; i < dataArray.length; i++) {
+                sum += dataArray[i];
+              }
+              const avg = sum / dataArray.length;
+              const pct = Math.min(100, Math.round((avg / 128) * 100));
+
+              if (pct > 15 && !hasDetectedVoice) {
+                hasDetectedVoice = true;
+                micBadge.className = "cbt-status-pill-check ok";
+                micBadge.innerHTML = `${icon("check-circle-correct", 13)} Micro hoạt động tốt ✓`;
+                if (window.RusiIcons) RusiIcons.replace(micBadge);
+              }
+
+              micAnimFrame = requestAnimationFrame(updateMeter);
+            };
+            updateMeter();
+          } else {
+            micBadge.className = "cbt-status-pill-check ok";
+            micBadge.innerHTML = `${icon("check-circle-correct", 13)} Micro sẵn sàng ✓`;
+          }
+        } catch (err) {
+          console.warn("[TRKI Mic Test] Không thể truy cập mic:", err);
+          micBadge.className = "cbt-status-pill-check idle";
+          micBadge.innerHTML = "Không tìm thấy mic (Có thể bỏ qua)";
+          btnMic.innerHTML = `${icon("mic-speaking", 14)} <span>Thử lại Micro</span>`;
+        }
+        if (window.RusiIcons) RusiIcons.replace(host);
+      };
+    }
+
+    // 5. Nút Bắt đầu làm bài -> Chuyển sang CBT Exam Room chính thức
+    el("#btnStartExamNow").onclick = () => {
+      cleanupHardwareTests();
+      startTest(currentTest, activePartId, examMode);
+    };
+  };
+
+  /* =====================================================================
+   * GIAI ĐOẠN 2: BẮT ĐẦU TÍNH GIỜ & KHỞI TẠO PHIÊN THI (START TEST)
+   * ===================================================================== */
   const startTest = async (test = null, partId = null, mode = "exam") => {
     if (test) currentTest = test;
     activePartId = partId;
     examMode = mode || "exam";
 
-    document.body.classList.add("in-workspace");
+    cleanupHardwareTests();
+    document.body.classList.add("in-workspace", "cbt-fullscreen-mode");
     started = true;
     tabSwitches = 0;
 
@@ -11387,15 +11749,14 @@ function initMockTestPage() {
       sessionStorage.setItem("trki_exam_mode", examMode);
     } catch(e) {}
 
-    // Xác định các phần sẽ làm
     const activeParts = isSubset
       ? (currentTest.parts || []).filter(p => selectedPartList.includes(p.id))
       : (currentTest.parts || []);
     const examDurationMin = isSubset
       ? activeParts.reduce((acc, p) => acc + (p.durationMin || 15), 0)
-      : (currentTest.durationMin || 45);
+      : (currentTest.duration_min || currentTest.durationMin || (activeParts.length ? activeParts.reduce((acc, p) => acc + (p.durationMin || p.duration_min || 0), 0) : 0) || 60);
 
-    // Đồng hồ Timestamp chống reload
+    // Timestamp chống reload
     const now = Date.now();
     let storedEndTime = 0;
     try { storedEndTime = parseInt(sessionStorage.getItem(storageKey + "_endTime") || "0", 10); } catch(e) {}
@@ -11405,7 +11766,7 @@ function initMockTestPage() {
     }
     timeLeft = Math.max(0, Math.floor((storedEndTime - now) / 1000));
 
-    // Khôi phục câu trả lời nếu đã lưu trong session
+    // Khôi phục câu trả lời nếu đã lưu
     answers = {};
     try {
       const savedAnswers = sessionStorage.getItem(storageKey + "_answers");
@@ -11423,7 +11784,7 @@ function initMockTestPage() {
       flagged = {};
     }
 
-    // Cơ chế đáp án ngẫu nhiên mặc định bên trong: tự động xáo trộn vị trí các đáp án mỗi lần luyện hoặc thi
+    // Cơ chế đáp án ngẫu nhiên
     const savedAnswers = sessionStorage.getItem(storageKey + "_answers");
     if (!savedAnswers || Object.keys(answers).length === 0) {
       sessionOptionOrders = {};
@@ -11462,11 +11823,8 @@ function initMockTestPage() {
         const t = el("#timerVal");
         if (t) {
           t.textContent = fmt(timeLeft);
-          t.classList.toggle("warn", timeLeft < 300);
-        }
-        const tSidebar = el("#timerValSidebar");
-        if (tSidebar) {
-          tSidebar.textContent = fmt(timeLeft);
+          const timerBox = el("#cbtTimerBox");
+          if (timerBox) timerBox.classList.toggle("warn", timeLeft < 300);
         }
         if (timeLeft <= 0) {
           clearInterval(timer);
@@ -11488,7 +11846,7 @@ function initMockTestPage() {
     const left = 3 - tabSwitches;
     alertBox.innerHTML = `
       <div class="anticheat-modal-box">
-        <div style="margin-bottom:12px;color:var(--red)">${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 48 }) : ""}</div>
+        <div style="margin-bottom:12px;color:var(--red)">${icon("shield-anti-cheat", 48)}</div>
         <h3>CẢNH BÁO VI PHẠM QUY CHẾ THI</h3>
         <p style="margin:12px 0;line-height:1.6">
           Hệ thống phát hiện bạn vừa rời khỏi màn hình bài thi (chuyển tab hoặc thu nhỏ trình duyệt).
@@ -11510,28 +11868,13 @@ function initMockTestPage() {
     };
   };
 
+  /* =====================================================================
+   * GIAI ĐOẠN 3: PHÒNG THI CHUẨN CBT (SPLIT-PANE 4/6, RESIZER, BOTTOM BAR & DRAWER)
+   * ===================================================================== */
   const renderTestRoom = () => {
     if (!currentTest || !Array.isArray(currentTest.parts)) {
       console.warn("Đề thi thiếu dữ liệu parts hợp lệ, quay về danh sách.");
       renderHub();
-      return;
-    }
-
-    // Kiểm tra có câu hỏi không (Bug #1 guard)
-    const totalQCheck = currentTest.parts.reduce((acc, p) => acc + ((p && p.questions) ? p.questions.length : 0), 0);
-    if (totalQCheck === 0) {
-      host.innerHTML = `
-        <div style="padding:60px 24px;text-align:center;max-width:480px;margin:0 auto">
-          <div style="margin-bottom:16px;color:var(--muted)">${typeof RusiIcons !== "undefined" ? RusiIcons.get("inbox", { size: 48 }) : "📭"}</div>
-          <h3 style="margin-bottom:8px">Chưa có câu hỏi cho đề thi này</h3>
-          <p style="color:var(--muted);margin-bottom:20px">Ngân hàng câu hỏi đang được cập nhật. Vui lòng thử lại sau ít phút.</p>
-          <button class="btn btn-primary" id="btnBackFromEmpty" style="display:inline-flex;align-items:center;gap:6px;margin:0 auto">${typeof RusiIcons !== "undefined" ? RusiIcons.get("arrow-left", { size: 16 }) : "←"} Quay lại danh sách đề</button>
-        </div>
-      `;
-      document.body.classList.remove("in-workspace");
-      started = false;
-      const btn = host.querySelector("#btnBackFromEmpty");
-      if (btn) btn.onclick = () => renderHub();
       return;
     }
 
@@ -11544,58 +11887,462 @@ function initMockTestPage() {
       ? currentTest.parts.filter(p => selectedPartList.includes(p.id))
       : currentTest.parts;
 
-    const totalQuestions = activeParts.reduce((acc, p) => acc + ((p && p.questions) ? p.questions.length : 0), 0);
-    const totalAnswered = Object.keys(answers).length;
-
-    const roomTitle = isSubset
-      ? `${esc(currentTest.title)} · ${esc(activeParts.map(p => p.name || p.vi).join(", "))} ${isPractice ? "(Luyện Tập)" : ""}`
-      : `${esc(currentTest.title)} ${isPractice ? "(Luyện Tập)" : "(Full Test)"}`;
-
-    const renderQuestionBlock = (q, qi, part) => {
-      const id = part.id + "_" + qi;
-      const isFlag = !!flagged[id];
-      const userAns = answers[id];
-      const hasAnswered = (userAns !== undefined);
-      const isCorrect = hasAnswered && (userAns === q.a);
-
-      const rawOpts = normalizeOptions(q.options);
-      if (!sessionOptionOrders[id] || sessionOptionOrders[id].length !== rawOpts.length) {
-        const indices = rawOpts.map((_, idx) => idx);
-        sessionOptionOrders[id] = (rawOpts.length >= 2) ? qShuffleArray(indices) : indices;
-        try {
-          sessionStorage.setItem(storageKey + "_opt_orders", JSON.stringify(sessionOptionOrders));
-        } catch(e) {}
+    // Xây dựng mảng tuần tự tất cả câu hỏi của đề thi
+    const examItems = [];
+    activeParts.forEach((part, pi) => {
+      if (Array.isArray(part.questions) && part.questions.length > 0) {
+        part.questions.forEach((q, qi) => {
+          examItems.push({
+            type: "question",
+            id: part.id + "_" + qi,
+            partId: part.id,
+            partIndex: pi,
+            part: part,
+            qi: qi,
+            q: q
+          });
+        });
+      } else if (Array.isArray(part.writing_tasks) && part.writing_tasks.length > 0) {
+        part.writing_tasks.forEach((wt, wti) => {
+          examItems.push({
+            type: "writing",
+            id: "write_" + part.id + "_" + wti,
+            partId: part.id,
+            partIndex: pi,
+            part: part,
+            qi: wti,
+            wt: wt
+          });
+        });
+      } else if (Array.isArray(part.speaking_tasks) && part.speaking_tasks.length > 0) {
+        part.speaking_tasks.forEach((st, sti) => {
+          examItems.push({
+            type: "speaking",
+            id: "speak_" + part.id + "_" + sti,
+            partId: part.id,
+            partIndex: pi,
+            part: part,
+            qi: sti,
+            st: st
+          });
+        });
       }
-      const order = sessionOptionOrders[id] || rawOpts.map((_, idx) => idx);
+    });
 
-      return `
-        <div class="quiz-q" id="qBox_${id}">
-          <div class="quiz-q-header">
-            <span class="quiz-q-num">Câu ${qi + 1} / ${part.questions.length}</span>
-            <button type="button" class="btn-flag-q ${isFlag ? 'is-flagged' : ''}" data-id="${id}">
-              ${window.RusiIcons ? RusiIcons.get("flag", { size: 13 }) : ""} <span>${isFlag ? "Đã đặt cờ" : "Đặt cờ"}</span>
+    const totalQuestions = examItems.length;
+    if (totalQuestions === 0) {
+      host.innerHTML = `
+        <div style="padding:60px 24px;text-align:center;max-width:480px;margin:0 auto">
+          <div style="margin-bottom:16px;color:var(--muted)">${icon("inbox", 48)}</div>
+          <h3 style="margin-bottom:8px">Chưa có câu hỏi cho đề thi này</h3>
+          <p style="color:var(--muted);margin-bottom:20px">Ngân hàng câu hỏi đang được cập nhật. Vui lòng thử lại sau ít phút.</p>
+          <button class="btn btn-primary" id="btnBackFromEmpty" style="display:inline-flex;align-items:center;gap:6px;margin:0 auto">${icon("arrow-left", 16)} Quay lại danh sách đề</button>
+        </div>
+      `;
+      document.body.classList.remove("in-workspace", "cbt-fullscreen-mode");
+      started = false;
+      const btn = host.querySelector("#btnBackFromEmpty");
+      if (btn) btn.onclick = () => renderHub();
+      return;
+    }
+
+    // Chỉ số câu hỏi hiện tại (bắt đầu từ câu đầu tiên chưa làm, hoặc câu 0)
+    let currentItemIndex = 0;
+    const firstUndone = examItems.findIndex(item => answers[item.id] === undefined);
+    if (firstUndone !== -1) currentItemIndex = firstUndone;
+
+    // Tỷ lệ độ rộng cột trái mặc định (40% theo yêu cầu của học viên)
+    let splitterPct = 40;
+    try {
+      const savedPct = parseFloat(localStorage.getItem("trki_splitter_pct"));
+      if (savedPct >= 25 && savedPct <= 75) splitterPct = savedPct;
+    } catch(_) {}
+
+    // RENDER KHUNG GIAO DIỆN CBT PORTAL CHUẨN QUỐC TẾ
+    host.innerHTML = `
+      <div class="cbt-app-portal" id="cbtPortalRoot">
+        <!-- TẦNG 1: TOP BAR DÀI TOÀN MÀN HÌNH THAY CHO HEADER TRANG WEB -->
+        <header class="cbt-portal-header" role="banner">
+          <div class="cbt-header-left">
+            <button type="button" class="cbt-btn-icon" id="btnExitTest" title="Rời khỏi phòng thi" aria-label="Rời khỏi phòng thi">
+              ${icon("arrow-left", 18)}
+            </button>
+            <div class="cbt-header-info">
+              <div class="cbt-header-title-row">
+                <span class="cbt-level-pill">ТРКИ-${currentTest.level}</span>
+                <span class="cbt-test-name-text" title="${esc(currentTest.title)}">${esc(currentTest.title)}</span>
+              </div>
+              <span class="cbt-subtest-label" id="cbtTopSubtestName">Phần 1</span>
+            </div>
+          </div>
+
+          <div class="cbt-header-center">
+            ${isPractice ? `
+              <div class="cbt-clock-pill" style="color:var(--primary);font-size:0.95rem">
+                ${icon("sparkles-clean", 16)} <span>Luyện tập tự do</span>
+              </div>
+            ` : `
+              <div class="cbt-clock-pill" id="cbtTimerBox" title="Thời gian còn lại của bài thi">
+                ${icon("timer-clock", 18)} <span id="timerVal">${fmt(timeLeft)}</span>
+              </div>
+            `}
+          </div>
+
+          <div class="cbt-header-right">
+            <div class="cbt-progress-badge" id="cbtProgressPill">
+              Câu <b id="cbtCurrentNum">1</b> / ${totalQuestions}
+            </div>
+            <button type="button" class="cbt-btn-fullscreen" id="btnToggleFullScreen" title="Toàn màn hình">
+              ${icon("maximize", 15)} <span>Toàn màn hình</span>
+            </button>
+            <button type="button" class="cbt-btn-submit-header" id="btnSubmitTop" title="${isPractice ? 'Hoàn thành bài luyện' : 'Nộp bài thi'}">
+              ${icon("check-circle", 15)} <span>${isPractice ? 'Hoàn thành' : 'Nộp bài'}</span>
             </button>
           </div>
-          <p class="q-text"><span class="ru">${esc(q.q)}</span></p>
-          <div class="options">
-            ${order.map((oi) => {
-              const opt = rawOpts[oi] || "";
-              let optClass = "option ru";
+        </header>
+
+        <!-- TẦNG 2: SPLIT-PANE 2 CỘT CÓ THANH RESIZER KÉO DI CHUYỂN ĐƯỢC 4/6 -->
+        <div class="cbt-portal-content">
+          <div class="cbt-workspace-split" id="cbtWorkspaceSplit">
+            <!-- CỘT TRÁI: NGỮ CẢNH / BÀI ĐỌC / AUDIO / TÓM TẮT PHÂN MÔN -->
+            <section class="cbt-split-left" id="cbtSplitLeft" style="width: ${splitterPct}%" aria-label="Tài liệu ngữ cảnh bài thi">
+              <div id="cbtSplitLeftContent"></div>
+            </section>
+
+            <!-- THANH RESIZER ĐIỀU CHỈNH ĐỘ RỘNG 4/6 -->
+            <div class="cbt-split-gutter" id="cbtSplitGutter" role="separator" aria-orientation="vertical" title="Kéo chuột sang trái hoặc phải để điều chỉnh tỷ lệ hiển thị">
+              <div class="cbt-gutter-handle"></div>
+            </div>
+
+            <!-- CỘT PHẢI: CÂU HỎI & CÁC LỰA CHỌN ĐÁP ÁN -->
+            <section class="cbt-split-right" id="cbtSplitRight" aria-label="Nội dung câu hỏi và đáp án">
+              <div class="cbt-question-box-wrap" id="cbtRightQuestionBox"></div>
+            </section>
+          </div>
+        </div>
+
+        <!-- TẦNG 3: BOTTOM NAVIGATION BAR CỐ ĐỊNH Ở ĐÁY -->
+        <footer class="cbt-portal-footer" role="navigation" aria-label="Điều hướng bài thi">
+          <div class="cbt-footer-nav-left">
+            <button type="button" class="cbt-btn-nav-step" id="btnPrevQ" title="Câu hỏi trước">
+              ${icon("chevron-left", 16)} <span>Câu trước</span>
+            </button>
+          </div>
+
+          <div class="cbt-footer-nav-center">
+            <button type="button" class="cbt-btn-drawer-trigger" id="btnOpenMatrixDrawer" title="Mở danh sách câu hỏi và trạng thái bài thi">
+              ${icon("list-tasks", 16)} <span class="drawer-text">Danh sách câu hỏi</span> (<span id="cbtDrawerAnsweredCount">0</span>/${totalQuestions}) ▴
+            </button>
+          </div>
+
+          <div class="cbt-footer-nav-right">
+            <button type="button" class="cbt-btn-nav-step" id="btnFlagBottom" title="Đánh dấu câu hỏi để xem lại sau">
+              ${icon("flag", 15)} <span id="flagBottomText">Đặt cờ</span>
+            </button>
+            <button type="button" class="cbt-btn-nav-step cbt-btn-next" id="btnNextQ" title="Câu hỏi kế tiếp">
+              <span>Câu sau</span> ${icon("chevron-right", 16)}
+            </button>
+          </div>
+        </footer>
+
+        <!-- DRAWER MA TRẬN BẢNG CÂU HỎI TRƯỢT LÊN TỪ ĐÁY -->
+        <div class="cbt-matrix-backdrop-mask" id="cbtMatrixBackdrop">
+          <div class="cbt-matrix-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="matrixDrawerTitle">
+            <div class="cbt-matrix-head-line">
+              <div class="cbt-matrix-title-txt" id="matrixDrawerTitle">
+                ${icon("list-tasks", 20)} <span>Danh sách câu hỏi & Trạng thái bài thi</span>
+              </div>
+              <button type="button" class="cbt-matrix-close-icon-btn" id="btnCloseMatrixDrawer" title="Đóng bảng câu hỏi">
+                ${icon("x", 18)}
+              </button>
+            </div>
+
+            <div class="cbt-matrix-legend-strip">
+              <div class="cbt-legend-tags-wrap">
+                <span><span class="cbt-status-dot-circle unanswered"></span> Chưa làm</span>
+                <span><span class="cbt-status-dot-circle answered"></span> Đã trả lời</span>
+                <span><span class="cbt-status-dot-circle flagged"></span> Gắn cờ</span>
+                <span><span class="cbt-status-dot-circle current"></span> Đang làm</span>
+              </div>
+
+              <div class="cbt-filter-buttons-row" role="tablist">
+                <button type="button" class="cbt-filter-badge-btn active" data-matrix-filter="all">Tất cả (${totalQuestions})</button>
+                <button type="button" class="cbt-filter-badge-btn" data-matrix-filter="answered">Đã làm (<span id="countDoneDrawer">0</span>)</button>
+                <button type="button" class="cbt-filter-badge-btn" data-matrix-filter="unanswered">Chưa làm (<span id="countUndoneDrawer">${totalQuestions}</span>)</button>
+                <button type="button" class="cbt-filter-badge-btn" data-matrix-filter="flagged">Gắn cờ (<span id="countFlagDrawer">0</span>)</button>
+              </div>
+            </div>
+
+            <div class="cbt-matrix-scroll-body" id="cbtMatrixBody"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // CẬP NHẬT GIAO DIỆN CÂU HỎI & NGỮ CẢNH THEO INDEX
+    let currentRenderedPartId = null;
+
+    const renderQuestionAt = (index) => {
+      if (index < 0) index = 0;
+      if (index >= totalQuestions) index = totalQuestions - 1;
+      currentItemIndex = index;
+
+      const item = examItems[currentItemIndex];
+      const part = item.part;
+      const id = item.id;
+      const isFlag = !!flagged[id];
+
+      // 1. Cập nhật Top bar
+      const topSubtest = el("#cbtTopSubtestName");
+      if (topSubtest) {
+        topSubtest.textContent = `Phần ${item.partIndex + 1}: ${part.vi || part.name}`;
+      }
+      const curNum = el("#cbtCurrentNum");
+      if (curNum) curNum.textContent = String(currentItemIndex + 1);
+
+      // 2. Cập nhật Bottom bar
+      const btnPrev = el("#btnPrevQ");
+      if (btnPrev) btnPrev.disabled = (currentItemIndex === 0);
+
+      const btnNext = el("#btnNextQ");
+      if (btnNext) {
+        if (currentItemIndex === totalQuestions - 1) {
+          btnNext.innerHTML = `<span>${isPractice ? 'Hoàn thành' : 'Nộp bài'}</span> ${icon("check-circle", 16)}`;
+        } else {
+          btnNext.innerHTML = `<span>Câu sau</span> ${icon("chevron-right", 16)}`;
+        }
+      }
+
+      const flagBottomBtn = el("#btnFlagBottom");
+      const flagBottomText = el("#flagBottomText");
+      if (flagBottomBtn && flagBottomText) {
+        flagBottomBtn.classList.toggle("is-flagged", isFlag);
+        flagBottomText.textContent = isFlag ? "Đã đặt cờ" : "Đặt cờ";
+      }
+
+      // 3. Render Ngữ cảnh Cột Trái (chỉ render lại khi đổi part)
+      if (currentRenderedPartId !== part.id) {
+        currentRenderedPartId = part.id;
+        const leftHost = el("#cbtSplitLeftContent");
+        if (leftHost) {
+          if (part.text) {
+            // Phần ĐỌC HIỂU (ЧТЕНИЕ)
+            leftHost.innerHTML = `
+              <div class="cbt-left-header-row">
+                <span class="cbt-left-badge-tag">Текст для чтения · Đọc hiểu</span>
+                <div class="cbt-left-tools-wrap">
+                  <button type="button" class="cbt-tool-btn" id="btnPassageFontDec" title="Thu nhỏ cỡ chữ">A-</button>
+                  <button type="button" class="cbt-tool-btn" id="btnPassageFontInc" title="Phóng to cỡ chữ">A+</button>
+                  <button type="button" class="cbt-tool-btn" id="btnPassageTrans" title="Bản dịch tiếng Việt">Bản dịch</button>
+                </div>
+              </div>
+              <div class="cbt-reading-passage-text ru" id="cbtPassageText">${esc(part.text.ru || "")}</div>
+              <div class="reading-vi-trans hidden" id="cbtPassageViTrans" style="margin-top:16px;padding:14px 16px;background:var(--surface);border-radius:10px;font-size:0.92rem;color:var(--muted);line-height:1.65;border:1px solid var(--border)">
+                ${esc(part.text.vi || "")}
+              </div>
+            `;
+
+            const pText = el("#cbtPassageText");
+            el("#btnPassageFontInc").onclick = () => {
+              if (pText) {
+                const cur = parseFloat(window.getComputedStyle(pText).fontSize) || 16;
+                if (cur < 24) pText.style.fontSize = (cur + 2) + "px";
+              }
+            };
+            el("#btnPassageFontDec").onclick = () => {
+              if (pText) {
+                const cur = parseFloat(window.getComputedStyle(pText).fontSize) || 16;
+                if (cur > 13) pText.style.fontSize = (cur - 2) + "px";
+              }
+            };
+            el("#btnPassageTrans").onclick = () => {
+              const transBox = el("#cbtPassageViTrans");
+              if (transBox) {
+                transBox.classList.toggle("hidden");
+                el("#btnPassageTrans").textContent = transBox.classList.contains("hidden") ? "Bản dịch" : "Ẩn dịch";
+              }
+            };
+          } else if (part.audio_url || part.lines) {
+            // Phần NGHE HIỂU (АУДИРОВАНИЕ)
+            leftHost.innerHTML = `
+              <div class="cbt-left-header-row">
+                <span class="cbt-left-badge-tag">Аудиозапись диалога · Nghe hiểu</span>
+              </div>
+              <div style="text-align:center;padding:24px 10px">
+                <div style="width:56px;height:56px;border-radius:50%;background:rgba(23,87,166,0.08);color:var(--primary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px">
+                  ${icon("headphones", 28)}
+                </div>
+                <h4 style="font-size:1.08rem;font-weight:800;color:var(--text);margin:0 0 6px">Đoạn hội thoại tiếng Nga bản xứ</h4>
+                <p style="font-size:0.86rem;color:var(--muted);margin-bottom:18px;max-width:320px;margin-inline:auto;line-height:1.5">
+                  Lắng nghe kỹ ngữ điệu và thông tin trong bài thoại để chọn đáp án bên phải.
+                </p>
+                <button type="button" class="btn btn-primary" id="btnPlayCbtAudio" style="height:44px;padding:0 22px;font-weight:700">
+                  ${icon("play-control", 16)} <span>Phát đoạn đối thoại</span>
+                </button>
+              </div>
+            `;
+
+            let isAudioPlaying = false;
+            let currentAudioObj = null;
+            const playBtn = el("#btnPlayCbtAudio");
+            if (playBtn) {
+              playBtn.onclick = () => {
+                if (isAudioPlaying) {
+                  if (currentAudioObj) {
+                    currentAudioObj.pause();
+                    currentAudioObj = null;
+                  }
+                  if (window.speechSynthesis) window.speechSynthesis.cancel();
+                  isAudioPlaying = false;
+                  playBtn.innerHTML = `${icon("play-control", 16)} <span>Phát đoạn đối thoại</span>`;
+                  if (window.RusiIcons) RusiIcons.replace(playBtn);
+                  return;
+                }
+
+                if (part.audio_url) {
+                  try {
+                    isAudioPlaying = true;
+                    playBtn.innerHTML = `${icon("pause-control", 16)} <span>Tạm dừng</span>`;
+                    currentAudioObj = new Audio(part.audio_url);
+                    currentAudioObj.onended = () => {
+                      isAudioPlaying = false;
+                      currentAudioObj = null;
+                      playBtn.innerHTML = `${icon("play-control", 16)} <span>Phát đoạn đối thoại</span>`;
+                      if (window.RusiIcons) RusiIcons.replace(playBtn);
+                    };
+                    currentAudioObj.play().catch(() => fallbackSpeech());
+                  } catch(e) {
+                    fallbackSpeech();
+                  }
+                } else {
+                  fallbackSpeech();
+                }
+
+                function fallbackSpeech() {
+                  const speechText = (part.lines && Array.isArray(part.lines))
+                    ? part.lines.map(l => l.ru || "").join(" ")
+                    : "Здравствуйте, слушайте внимательно диалог.";
+                  isAudioPlaying = true;
+                  playBtn.innerHTML = `${icon("pause-control", 16)} <span>Tạm dừng</span>`;
+                  if (window.speechSynthesis) {
+                    window.speechSynthesis.cancel();
+                    const u = new SpeechSynthesisUtterance(speechText);
+                    u.lang = "ru-RU";
+                    u.rate = 0.85;
+                    u.onend = () => {
+                      isAudioPlaying = false;
+                      playBtn.innerHTML = `${icon("play-control", 16)} <span>Phát đoạn đối thoại</span>`;
+                      if (window.RusiIcons) RusiIcons.replace(playBtn);
+                    };
+                    window.speechSynthesis.speak(u);
+                  }
+                }
+              };
+            }
+          } else if (part.writing_tasks) {
+            // Phần VIẾT (ПИСЬМО)
+            leftHost.innerHTML = `
+              <div class="cbt-left-header-row">
+                <span class="cbt-left-badge-tag">Субтест Письмо · Kỹ năng viết</span>
+              </div>
+              <div style="background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)">
+                <h4 style="font-weight:800;font-size:1.02rem;color:var(--text);margin-bottom:8px">Hướng dẫn làm bài thi Viết:</h4>
+                <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:10px">
+                  Học viên đọc kỹ yêu cầu của từng chủ đề ở cột bên phải và nhập trực tiếp văn bản tiếng Nga vào ô soạn thảo.
+                </p>
+                <div style="font-size:0.82rem;color:var(--primary);font-weight:700">
+                  Thời lượng phần thi: ${part.durationMin || 25} phút
+                </div>
+              </div>
+            `;
+          } else if (part.speaking_tasks) {
+            // Phần NÓI (ГОВОРЕНИЕ)
+            leftHost.innerHTML = `
+              <div class="cbt-left-header-row">
+                <span class="cbt-left-badge-tag">Субтест Говорение · Kỹ năng nói</span>
+              </div>
+              <div style="background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)">
+                <h4 style="font-weight:800;font-size:1.02rem;color:var(--text);margin-bottom:8px">Hướng dẫn làm bài thi Nói:</h4>
+                <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:10px">
+                  Nghe câu hỏi hoặc đọc tình huống bên phải, chuẩn bị ý và bấm nút ghi âm microphone để luyện phản xạ nói tiếng Nga.
+                </p>
+                <div style="font-size:0.82rem;color:var(--secondary);font-weight:700">
+                  Thời lượng phần thi: ${part.durationMin || 15} phút
+                </div>
+              </div>
+            `;
+          } else {
+            // Phần NGỮ PHÁP & TỪ VỰNG (ЛЕКСИКА И ГРАММАТИКА)
+            leftHost.innerHTML = `
+              <div class="cbt-left-header-row">
+                <span class="cbt-left-badge-tag">Лексика и грамматика · Ngữ pháp & Từ vựng</span>
+              </div>
+              <div style="background:var(--surface);border-radius:12px;padding:20px;border:1.5px solid var(--border)">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;color:var(--primary);font-weight:800;font-size:0.95rem">
+                  ${icon("book-open", 18)} <span>HƯỚNG DẪN KHẢO THÍ NGỮ PHÁP</span>
+                </div>
+                <p style="font-size:0.9rem;color:var(--text);line-height:1.65;margin-bottom:14px">
+                  Mỗi câu hỏi có các phương án lựa chọn. Hãy chọn một đáp án đúng nhất để hoàn thiện cấu trúc câu chuẩn ngữ pháp tiếng Nga.
+                </p>
+                <div style="background:var(--bg);border-radius:8px;padding:12px;font-size:0.82rem;color:var(--muted);line-height:1.5;border:1px solid var(--border)">
+                  <b>Mẹo thi ТРКИ:</b> Chú ý kỹ đến giới từ, giống - số của danh từ và cách chia của động từ để chọn dạng biến cách chính xác.
+                </div>
+              </div>
+            `;
+          }
+        }
+      }
+
+      // 4. Render Câu hỏi Cột Phải
+      const rightBox = el("#cbtRightQuestionBox");
+      if (!rightBox) return;
+
+      if (item.type === "question") {
+        const q = item.q;
+        const userAns = answers[id];
+        const hasAnswered = (userAns !== undefined);
+        const isCorrect = hasAnswered && (userAns === q.a);
+
+        const rawOpts = normalizeOptions(q.options);
+        if (!sessionOptionOrders[id] || sessionOptionOrders[id].length !== rawOpts.length) {
+          const indices = rawOpts.map((_, idx) => idx);
+          sessionOptionOrders[id] = (rawOpts.length >= 2) ? qShuffleArray(indices) : indices;
+          try { sessionStorage.setItem(storageKey + "_opt_orders", JSON.stringify(sessionOptionOrders)); } catch(e) {}
+        }
+        const order = sessionOptionOrders[id] || rawOpts.map((_, idx) => idx);
+        const letters = ["A", "B", "C", "D", "E", "F"];
+
+        rightBox.innerHTML = `
+          <div class="cbt-question-header-line">
+            <span class="cbt-q-number-pill">${icon("help-circle", 16)} Câu ${currentItemIndex + 1} / ${totalQuestions}</span>
+            <button type="button" class="cbt-btn-flag-toggle ${isFlag ? 'is-flagged' : ''}" id="btnFlagRight">
+              ${icon("flag", 14)} <span>${isFlag ? 'Đã đặt cờ' : 'Đặt cờ'}</span>
+            </button>
+          </div>
+
+          <div class="cbt-q-prompt-text ru">${esc(q.q)}</div>
+
+          <div class="cbt-options-card-list" role="radiogroup" aria-label="Các lựa chọn đáp án">
+            ${order.map((oi, lIdx) => {
+              const optText = rawOpts[oi] || "";
+              let cardClass = "cbt-choice-card";
               if (isPractice && hasAnswered) {
-                if (oi === q.a) optClass += " correct";
-                else if (oi === userAns && !isCorrect) optClass += " wrong";
+                if (oi === q.a) cardClass += " correct";
+                else if (oi === userAns && !isCorrect) cardClass += " wrong";
               } else if (userAns === oi) {
-                optClass += " selected";
+                cardClass += " selected";
               }
               return `
-                <button type="button" class="${optClass}" data-id="${id}" data-oi="${oi}">
-                  ${esc(opt)}
+                <button type="button" class="${cardClass}" data-oi="${oi}" role="radio" aria-checked="${userAns === oi ? 'true' : 'false'}">
+                  <span class="cbt-choice-circle-letter">${letters[lIdx] || (lIdx + 1)}</span>
+                  <span class="cbt-choice-body-text ru">${esc(optText)}</span>
                 </button>
               `;
             }).join("")}
           </div>
+
           ${isPractice && hasAnswered ? `
-            <div class="trki-practice-feedback ${isCorrect ? 'is-correct' : 'is-wrong'}" id="feedback_${id}">
+            <div class="trki-practice-feedback ${isCorrect ? 'is-correct' : 'is-wrong'}" style="margin-top:20px">
               <div class="feedback-badge-row">
                 <span class="feedback-badge ${isCorrect ? 'badge-correct' : 'badge-wrong'}">
                   ${isCorrect ? '✓ Đúng' : '✕ Sai'}
@@ -11606,274 +12353,332 @@ function initMockTestPage() {
                 <b>Giải thích:</b> ${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}
               </div>
             </div>
-          ` : ''}
-        </div>
-      `;
+          ` : ""}
+        `;
+
+        // Bắt sự kiện chọn đáp án
+        rightBox.querySelectorAll(".cbt-choice-card").forEach(optBtn => {
+          optBtn.onclick = () => {
+            const oi = parseInt(optBtn.dataset.oi, 10);
+            answers[id] = oi;
+            try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(e) {}
+            refreshMatrixCounts();
+            renderQuestionAt(currentItemIndex);
+          };
+        });
+      } else if (item.type === "writing") {
+        const wt = item.wt;
+        const savedText = answers[id] || "";
+        const wordCount = savedText.trim() ? savedText.trim().split(/\s+/).length : 0;
+
+        rightBox.innerHTML = `
+          <div class="cbt-question-header-line">
+            <span class="cbt-q-number-pill">${icon("pen-tool", 16)} Bài viết ${item.qi + 1}</span>
+            <button type="button" class="cbt-btn-flag-toggle ${isFlag ? 'is-flagged' : ''}" id="btnFlagRight">
+              ${icon("flag", 14)} <span>${isFlag ? 'Đã đặt cờ' : 'Đặt cờ'}</span>
+            </button>
+          </div>
+
+          <div style="background:var(--bg);padding:18px;border-radius:12px;margin-bottom:18px;border:1px solid var(--border)">
+            <h4 style="font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:6px">${esc(wt.title)}</h4>
+            <div class="ru" style="font-size:1.1rem;font-weight:600;line-height:1.7;color:var(--text);margin-bottom:8px">${esc(wt.prompt)}</div>
+            <div style="font-size:0.88rem;color:var(--muted)">${esc(wt.vi)}</div>
+          </div>
+
+          <textarea class="trki-exam-textarea ru" id="cbtWriteArea" placeholder="Пишите ваш текст здесь..." style="width:100%;min-height:220px;padding:16px 18px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);font-size:1.05rem;font-family:inherit;line-height:1.7;color:var(--text);box-sizing:border-box">${esc(savedText)}</textarea>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:0.86rem;color:var(--muted)">
+            <span id="cbtWordCountBadge">Dung lượng: <b>${wordCount} từ</b> (Tối thiểu ${wt.minWords || 35} từ)</span>
+            <span style="color:var(--green)">${icon("check-circle-correct", 14)} Tự động lưu bài làm</span>
+          </div>
+        `;
+
+        const ta = el("#cbtWriteArea");
+        if (ta) {
+          ta.oninput = () => {
+            const val = ta.value;
+            answers[id] = val;
+            try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(e) {}
+            const wc = val.trim() ? val.trim().split(/\s+/).length : 0;
+            const wcBadge = el("#cbtWordCountBadge");
+            if (wcBadge) wcBadge.innerHTML = `Dung lượng: <b>${wc} từ</b> (Tối thiểu ${wt.minWords || 35} từ)`;
+            refreshMatrixCounts();
+          };
+        }
+      } else if (item.type === "speaking") {
+        const st = item.st;
+        rightBox.innerHTML = `
+          <div class="cbt-question-header-line">
+            <span class="cbt-q-number-pill">${icon("mic-speaking", 16)} Bài luyện nói ${item.qi + 1}</span>
+            <button type="button" class="cbt-btn-flag-toggle ${isFlag ? 'is-flagged' : ''}" id="btnFlagRight">
+              ${icon("flag", 14)} <span>${isFlag ? 'Đã đặt cờ' : 'Đặt cờ'}</span>
+            </button>
+          </div>
+
+          <div style="background:var(--bg);padding:18px;border-radius:12px;margin-bottom:18px;border:1px solid var(--border)">
+            <h4 style="font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:6px">${esc(st.title)}</h4>
+            <div class="ru" style="font-size:1.15rem;font-weight:600;line-height:1.7;color:var(--text);margin-bottom:8px">${esc(st.prompt)}</div>
+            <div style="font-size:0.88rem;color:var(--muted);margin-bottom:14px">${esc(st.vi)}</div>
+
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <button type="button" class="btn btn-outline btn-sm" id="btnToggleSpeakSample">
+                ${icon("sparkles-clean", 14)} Câu gợi ý phản xạ
+              </button>
+              <button type="button" class="btn btn-primary btn-sm" id="btnSpeakRecord">
+                ${icon("mic-speaking", 14)} Luyện phát âm / Ghi âm
+              </button>
+              <span id="speakRecStatus" style="font-size:0.84rem;color:var(--muted)"></span>
+            </div>
+            <div class="hidden" id="speakSampleBox" style="margin-top:14px;padding:12px 14px;background:var(--surface);border:1px dashed var(--border);border-radius:8px;font-size:0.95rem">
+              <strong style="color:var(--primary)">Gợi ý mẫu:</strong> <span class="ru">${esc(st.suggested || "")}</span>
+            </div>
+          </div>
+        `;
+
+        const btnSample = el("#btnToggleSpeakSample");
+        if (btnSample) {
+          btnSample.onclick = () => {
+            const box = el("#speakSampleBox");
+            if (box) box.classList.toggle("hidden");
+          };
+        }
+      }
+
+      // Bắt sự kiện cờ bên phải
+      const btnFlagRight = el("#btnFlagRight");
+      if (btnFlagRight) {
+        btnFlagRight.onclick = () => toggleFlag(id);
+      }
+
+      if (window.RusiIcons && typeof RusiIcons.replace === "function") {
+        RusiIcons.replace(host);
+      }
+      refreshMatrixCounts();
     };
 
-    let html = `
-      <!-- STICKY TOP BACK BAR WITH TIMER -->
-      <div class="dau-workspace-back-bar">
-        <button type="button" class="dau-back-btn" id="btnExitTest" title="Thoát phòng thi" aria-label="Thoát phòng thi">
-          ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
-        </button>
-        <div class="dau-workspace-info">
-          <span class="dau-workspace-title">${roomTitle}</span>
-          ${isPractice ? `<span class="topic-status topic-status-level" style="margin-left:8px;font-size:10px">Luyện tập</span>` : ''}
-        </div>
-        <div class="dau-workspace-controls" style="display:flex;align-items:center;gap:10px;margin-left:auto;flex-shrink:0">
-          <button class="btn btn-outline btn-sm dau-top-btn" id="btnToggleFullScreen" type="button" title="Bật/Tắt chế độ toàn màn hình phòng thi (CBT Full-screen)">
-            ${window.RusiIcons ? RusiIcons.get("maximize", { size: 14 }) : ""} <span class="btn-text">Toàn màn hình</span>
-          </button>
-          ${isPractice ? `
-            <div class="dau-exam-timer" style="font-weight:700;font-size:0.92rem;color:var(--primary);display:inline-flex;align-items:center;gap:5px">
-              ${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 15 }) : ""} <span>Luyện tập tự do</span>
-            </div>
-          ` : `
-            <div class="dau-exam-timer" style="font-weight:700;font-size:1.05rem;color:var(--secondary);display:inline-flex;align-items:center;gap:4px">
-              ${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 16 }) : ""} <span id="timerVal">${fmt(timeLeft)}</span>
-            </div>
-          `}
-          <button class="btn btn-primary btn-sm dau-top-btn" id="btnSubmitTop" style="background:var(--secondary);border-color:var(--secondary)" title="${isPractice ? 'Hoàn thành bài luyện' : 'Nộp bài thi'}">${window.RusiIcons ? RusiIcons.get("check-circle", { size: 15 }) : ""} <span class="btn-text">${isPractice ? 'Hoàn thành' : 'Nộp bài thi'}</span></button>
-        </div>
-      </div>
+    // Toggle cờ xem lại
+    const toggleFlag = (id) => {
+      flagged[id] = !flagged[id];
+      try { sessionStorage.setItem(storageKey + "_flagged", JSON.stringify(flagged)); } catch(e) {}
+      renderQuestionAt(currentItemIndex);
+    };
 
-      <div class="mock-layout">
-        <div class="mock-main">
-    `;
-
-    activeParts.forEach((part, pi) => {
-      html += `
-        <div class="mock-part" id="part_${part.id}">
-          <div class="mock-part-title">
-            ${esc(part.name)}
-            <span class="mock-part-sub">(${esc(part.vi)})</span>
-          </div>
-      `;
-
-      if (part.text) {
-        // SPLIT-PANE LAYOUT FOR READING
-        html += `
-          <div class="cbt-split-container">
-            <div class="cbt-pane-media">
-              <div class="cbt-reading-header">
-                <span class="cbt-media-tag">Текст для чтения</span>
-                <div class="cbt-reading-tools">
-                  <button type="button" class="btn-cbt-tool btn-font-dec" title="Thu nhỏ cỡ chữ">A-</button>
-                  <button type="button" class="btn-cbt-tool btn-font-inc" title="Phóng to cỡ chữ">A+</button>
-                  <button type="button" class="btn-cbt-tool btn-reading-trans" data-text-idx="${pi}">Bản dịch</button>
-                </div>
-              </div>
-              <div class="cbt-reading-body">
-                <p class="ru cbt-passage-text" id="readingText_${pi}">${esc(part.text.ru)}</p>
-                <div class="reading-vi-trans hidden" style="margin-top:12px;padding:12px 14px;background:var(--bg);border-radius:8px;font-size:0.88rem;color:var(--muted);line-height:1.6">
-                  ${esc(part.text.vi)}
-                </div>
-              </div>
-            </div>
-            <div class="cbt-pane-questions">
-              ${part.questions.map((q, qi) => renderQuestionBlock(q, qi, part)).join("")}
-            </div>
-          </div>
-        `;
-      } else if (part.lines || part.audio_url) {
-        // SPLIT-PANE LAYOUT FOR LISTENING
-        html += `
-          <div class="cbt-split-container">
-            <div class="cbt-pane-media cbt-listening-pane">
-              <div class="cbt-reading-header">
-                <span class="cbt-media-tag">Аудиозапись диалога</span>
-              </div>
-              <div class="cbt-audio-box">
-                <div class="cbt-audio-icon">
-                  ${window.RusiIcons ? RusiIcons.get("headphones", { size: 26 }) : ""}
-                </div>
-                <h4 class="cbt-audio-title">Lắng nghe hội thoại bản xứ</h4>
-                <p class="cbt-audio-note">Nghe kỹ ngữ điệu và thông tin trong đoạn ghi âm để chọn đáp án chính xác bên phải.</p>
-                <div class="cbt-audio-controls">
-                  <button type="button" class="btn btn-primary btn-sm" id="playAudio">
-                    ${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div class="cbt-pane-questions">
-              ${part.questions.map((q, qi) => renderQuestionBlock(q, qi, part)).join("")}
-            </div>
-          </div>
-        `;
-      } else if (part.writing_tasks) {
-        // PHẦN 4: KỸ NĂNG VIẾT (СУБТЕСТ ПИСЬМО)
-        html += `
-          <div class="cbt-writing-container" style="padding:22px 24px;border-radius:18px;background:var(--surface);border:1.5px solid var(--border);margin-top:14px;box-shadow:0 2px 12px rgba(16,42,76,0.03)">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;color:var(--primary);font-weight:800;font-size:0.92rem;text-transform:uppercase;letter-spacing:0.05em">
-              ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 18 }) : ""}
-              <span>BÀI THI VIẾT (СУБТЕСТ ПИСЬМО) · ${part.durationMin || 25} PHÚT</span>
-            </div>
-        `;
-        part.writing_tasks.forEach((wt, wti) => {
-          const wId = "write_" + part.id + "_" + wti;
-          const savedText = answers[wId] || "";
-          const wordCount = savedText.trim() ? savedText.trim().split(/\s+/).length : 0;
-          html += `
-            <div class="trki-writing-task-box" id="qBox_${wId}" style="margin-bottom:20px">
-              <div style="background:linear-gradient(135deg,rgba(23,87,166,0.04),rgba(30,64,175,0.02));border-radius:14px;padding:18px 20px;border:1px solid rgba(23,87,166,0.18);margin-bottom:16px">
-                <div style="font-weight:800;font-size:1.05rem;color:var(--text);margin-bottom:8px">${esc(wt.title)}</div>
-                <div class="ru" style="font-size:1.15rem;font-weight:600;line-height:1.75;color:var(--text);margin-bottom:10px">${esc(wt.prompt)}</div>
-                <div style="font-size:0.9rem;color:var(--muted);line-height:1.55">${esc(wt.vi)}</div>
-              </div>
-              <textarea class="trki-exam-textarea ru" data-wid="${wId}" data-min="${wt.minWords || 35}" placeholder="Пишите ваш текст здесь..." style="width:100%;min-height:160px;padding:16px 18px;border-radius:14px;border:1.5px solid var(--border);background:var(--surface);font-size:1.05rem;font-family:inherit;line-height:1.7;color:var(--text);box-sizing:border-box">${esc(savedText)}</textarea>
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:0.86rem;color:var(--muted);flex-wrap:wrap;gap:8px">
-                <span class="trki-word-counter" id="counter_${wId}">Dung lượng: <b style="color:var(--text)">${wordCount} từ</b> (Tối thiểu ${wt.minWords || 35} từ)</span>
-                <span style="color:var(--green);display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Tự động lưu bài làm</span>
-              </div>
-            </div>
-          `;
-        });
-        html += `</div>`;
-      } else if (part.speaking_tasks) {
-        // PHẦN 5: KỸ NĂNG NÓI (СУБТЕСТ ГОВОРЕНИЕ)
-        html += `
-          <div class="cbt-speaking-container" style="padding:22px 24px;border-radius:18px;background:var(--surface);border:1.5px solid var(--border);margin-top:14px;box-shadow:0 2px 12px rgba(16,42,76,0.03)">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;color:var(--russia-red);font-weight:800;font-size:0.92rem;text-transform:uppercase;letter-spacing:0.05em">
-              ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 18 }) : ""}
-              <span>BÀI THI NÓI (СУБТЕСТ ГОВОРЕНИЕ) · ${part.durationMin || 15} PHÚT</span>
-            </div>
-        `;
-        part.speaking_tasks.forEach((st, sti) => {
-          const sId = "speak_" + part.id + "_" + sti;
-          html += `
-            <div class="trki-speaking-task-box" id="qBox_${sId}" style="background:var(--bg);border-radius:14px;padding:18px 20px;border:1px solid var(--border);margin-bottom:18px">
-              <div style="font-weight:800;font-size:1.02rem;color:var(--text);margin-bottom:8px">${esc(st.title)}</div>
-              <div class="ru" style="font-size:1.15rem;font-weight:600;line-height:1.75;color:var(--text);margin-bottom:8px">${esc(st.prompt)}</div>
-              <div style="font-size:0.88rem;color:var(--muted);line-height:1.55;margin-bottom:16px">${esc(st.vi)}</div>
-              <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-                <button type="button" class="btn btn-outline btn-sm btn-trki-suggested" data-sid="${sId}" style="font-size:0.84rem">
-                  ${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} Câu gợi ý phản xạ
-                </button>
-                <button type="button" class="btn btn-primary btn-sm btn-trki-mic" data-sid="${sId}" style="display:inline-flex;align-items:center;gap:6px;font-size:0.84rem">
-                  ${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 14 }) : ""} Luyện phát âm / Ghi âm
-                </button>
-                <span class="trki-mic-status" id="micStatus_${sId}" style="font-size:0.84rem;color:var(--muted)"></span>
-              </div>
-              <div class="trki-suggested-box hidden" id="suggestedBox_${sId}" style="margin-top:14px;padding:14px 16px;background:var(--surface);border:1px dashed var(--border);border-radius:10px;font-size:0.95rem;line-height:1.65">
-                <strong style="color:var(--primary)">Gợi ý mẫu:</strong> <span class="ru">${esc(st.suggested || "")}</span>
-              </div>
-            </div>
-          `;
-        });
-        html += `</div>`;
-      } else if (Array.isArray(part.questions)) {
-        // STANDARD (GRAMMAR & VOCABULARY)
-        html += part.questions.map((q, qi) => renderQuestionBlock(q, qi, part)).join("");
-      }
-
-      html += `</div>`;
-    });
-
-    html += `
-        </div>
-
-        <div class="mock-sidebar">
-          ${isPractice ? `
-            <div class="sidebar-timer" style="background:rgba(23,87,166,0.06);border-color:rgba(23,87,166,0.18)">
-              <div style="color:var(--primary);font-size:0.78rem;font-weight:700">CHẾ ĐỘ LUYỆN TẬP</div>
-              <div class="time-display" style="font-size:1.05rem;color:var(--primary)">Xem giải thích ngay</div>
-            </div>
-          ` : `
-            <div class="sidebar-timer">
-              <div>Thời gian còn lại</div>
-              <div class="time-display" id="timerValSidebar">${fmt(timeLeft)}</div>
-            </div>
-
-            <div style="background:var(--primary-soft);border-radius:8px;padding:8px 12px;margin-bottom:14px;font-size:0.82rem;display:flex;justify-content:space-between">
-              <span>${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 16 }) : ""} Chuyển tab:</span>
-              <b id="antiCheatCount">${tabSwitches}/3</b>
-            </div>
-          `}
-
-          <div class="question-palette-head">
-            <span>BẢNG CÂU HỎI</span>
-            <span style="color:var(--primary);font-size:0.8rem" id="answeredCount">${totalAnswered}/${totalQuestions}</span>
-          </div>
-
-          ${isPractice ? `
-            <div class="palette-legend">
-              <span><span class="dot" style="background:#16a34a"></span> Đúng</span>
-              <span><span class="dot" style="background:#dc2626"></span> Sai</span>
-              <span><span class="dot dot-undone"></span> Chưa làm</span>
-            </div>
-          ` : `
-            <div class="palette-legend">
-              <span><span class="dot dot-done"></span> Đã làm</span>
-              <span><span class="dot dot-flagged"></span> Đặt cờ</span>
-              <span><span class="dot dot-undone"></span> Chưa làm</span>
-            </div>
-          `}
-
-          <div class="cbt-palette-filter-row" role="tablist" aria-label="Lọc trạng thái câu hỏi">
-            <button type="button" class="cbt-filter-pill active" data-palette-filter="all">Tất cả (${totalQuestions})</button>
-            <button type="button" class="cbt-filter-pill" data-palette-filter="done">Đã làm (<span id="countDoneFilter">${totalAnswered}</span>)</button>
-            <button type="button" class="cbt-filter-pill" data-palette-filter="undone">Chưa làm (<span id="countUndoneFilter">${totalQuestions - totalAnswered}</span>)</button>
-            <button type="button" class="cbt-filter-pill" data-palette-filter="flagged">Đặt cờ (<span id="countFlagFilter">${Object.keys(flagged).filter(k => flagged[k]).length}</span>)</button>
-          </div>
-
-          <div class="question-palette-grid">
-    `;
-
-    let pNum = 0;
-    activeParts.forEach((part) => {
-      if (Array.isArray(part.questions)) {
-        part.questions.forEach((q, qi) => {
-          pNum++;
-          const id = part.id + "_" + qi;
-          const userAns = answers[id];
-          const isDone = userAns !== undefined;
-          const isFlag = !!flagged[id];
-          let extraClass = "";
-          if (isPractice && isDone) {
-            extraClass = (userAns === q.a) ? "done-correct" : "done-wrong";
-          } else if (isDone) {
-            extraClass = "done";
-          }
-          html += `<button type="button" class="palette-btn ${extraClass} ${isFlag ? "flagged" : ""}" id="pBtn_${id}" data-jump="${id}" title="Câu ${pNum}${isFlag ? ' (Đã đặt cờ)' : ''}">${pNum}</button>`;
-        });
-      } else if (part.writing_tasks) {
-        part.writing_tasks.forEach((wt, wti) => {
-          const wId = "write_" + part.id + "_" + wti;
-          const isDone = !!(answers[wId] && answers[wId].trim().length > 10);
-          html += `<button type="button" class="palette-btn palette-btn-skill ${isDone ? "done" : ""}" id="pBtn_${wId}" data-jump="${wId}" title="Viết: ${wt.title}">W${wti + 1}</button>`;
-        });
-      } else if (part.speaking_tasks) {
-        part.speaking_tasks.forEach((st, sti) => {
-          const sId = "speak_" + part.id + "_" + sti;
-          const isDone = !!answers[sId];
-          html += `<button type="button" class="palette-btn palette-btn-skill ${isDone ? "done" : ""}" id="pBtn_${sId}" data-jump="${sId}" title="Nói: ${st.title}">S${sti + 1}</button>`;
-        });
-      }
-    });
-
-    html += `
-          </div>
-
-          <button class="btn btn-primary btn-lg" id="submitTest" style="width:100%;margin-top:20px;background:var(--secondary);border-color:var(--secondary)">
-            ${isPractice ? "Hoàn thành luyện tập" : "Nộp bài thi"}
-          </button>
-        </div>
-      </div>
-    `;
-
-    host.innerHTML = html;
-    if (window.RusiIcons && typeof RusiIcons.replace === "function") {
-      RusiIcons.replace(host);
+    // Nút Flag ở Bottom bar
+    const flagBottom = el("#btnFlagBottom");
+    if (flagBottom) {
+      flagBottom.onclick = () => {
+        const item = examItems[currentItemIndex];
+        if (item) toggleFlag(item.id);
+      };
     }
 
+    // Nút Next & Prev
+    const btnPrev = el("#btnPrevQ");
+    if (btnPrev) {
+      btnPrev.onclick = () => {
+        if (currentItemIndex > 0) renderQuestionAt(currentItemIndex - 1);
+      };
+    }
+
+    const btnNext = el("#btnNextQ");
+    if (btnNext) {
+      btnNext.onclick = () => {
+        if (currentItemIndex < totalQuestions - 1) {
+          renderQuestionAt(currentItemIndex + 1);
+        } else {
+          openSubmitConfirmModal();
+        }
+      };
+    }
+
+    // Phím tắt bàn phím (Mũi tên trái/phải)
+    const handleKeyNav = (e) => {
+      if (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT") return;
+      if (e.key === "ArrowLeft" && currentItemIndex > 0) {
+        e.preventDefault();
+        renderQuestionAt(currentItemIndex - 1);
+      } else if (e.key === "ArrowRight" && currentItemIndex < totalQuestions - 1) {
+        e.preventDefault();
+        renderQuestionAt(currentItemIndex + 1);
+      }
+    };
+    document.addEventListener("keydown", handleKeyNav);
+
+    // KÉO DI CHUYỂN THANH RESIZER 4/6 (DRAGGABLE SPLITTER)
+    const splitter = el("#cbtSplitGutter");
+    const leftPane = el("#cbtSplitLeft");
+    const container = el("#cbtWorkspaceSplit");
+    let isDragging = false;
+
+    if (splitter && leftPane && container) {
+      const startDrag = (e) => {
+        isDragging = true;
+        try { splitter.setPointerCapture(e.pointerId); } catch(_) {}
+        document.body.classList.add("cbt-resizing");
+      };
+
+      const doDrag = (e) => {
+        if (!isDragging || !container) return;
+        const rect = container.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        let pct = (offsetX / rect.width) * 100;
+        if (pct < 25) pct = 25;
+        if (pct > 75) pct = 75;
+        leftPane.style.width = pct + "%";
+        try { localStorage.setItem("trki_splitter_pct", pct.toFixed(1)); } catch(_) {}
+      };
+
+      const stopDrag = (e) => {
+        if (isDragging) {
+          isDragging = false;
+          try { splitter.releasePointerCapture(e.pointerId); } catch(_) {}
+          document.body.classList.remove("cbt-resizing");
+        }
+      };
+
+      splitter.addEventListener("pointerdown", startDrag);
+      window.addEventListener("pointermove", doDrag);
+      window.addEventListener("pointerup", stopDrag);
+      window.addEventListener("pointercancel", stopDrag);
+    }
+
+    // QUẢN LÝ DRAWER MA TRẬN BẢNG CÂU HỎI
+    const drawerBackdrop = el("#cbtMatrixBackdrop");
+    const btnOpenDrawer = el("#btnOpenMatrixDrawer");
+    const btnCloseDrawer = el("#btnCloseMatrixDrawer");
+
+    let currentMatrixFilter = "all";
+
+    const renderMatrixDrawer = () => {
+      const matrixBody = el("#cbtMatrixBody");
+      if (!matrixBody) return;
+
+      let html = "";
+      activeParts.forEach((part, pi) => {
+        const partItems = examItems.filter(item => item.partIndex === pi);
+        if (!partItems.length) return;
+
+        const firstNum = examItems.indexOf(partItems[0]) + 1;
+        const lastNum = examItems.indexOf(partItems[partItems.length - 1]) + 1;
+
+        html += `
+          <div class="cbt-matrix-subtest-group">
+            <div class="cbt-matrix-subtest-caption">
+              <span>Phần ${pi + 1}: ${esc(part.vi || part.name)} (Câu ${firstNum} - ${lastNum})</span>
+              <span>${partItems.length} câu</span>
+            </div>
+            <div class="cbt-matrix-cells-grid">
+        `;
+
+        partItems.forEach(item => {
+          const globalIdx = examItems.indexOf(item);
+          const qNum = globalIdx + 1;
+          const userAns = answers[item.id];
+          const isDone = (userAns !== undefined && userAns !== "");
+          const isFlag = !!flagged[item.id];
+          const isCurrent = (globalIdx === currentItemIndex);
+
+          let filterMatch = true;
+          if (currentMatrixFilter === "answered") filterMatch = isDone;
+          else if (currentMatrixFilter === "unanswered") filterMatch = !isDone;
+          else if (currentMatrixFilter === "flagged") filterMatch = isFlag;
+
+          let btnClass = "cbt-matrix-q-btn";
+          if (isDone) btnClass += " answered";
+          if (isFlag) btnClass += " flagged";
+          if (isCurrent) btnClass += " current";
+          if (!filterMatch) btnClass += " hidden";
+
+          html += `
+            <button type="button" class="${btnClass}" data-jump-idx="${globalIdx}" title="Câu ${qNum}">
+              ${qNum}
+            </button>
+          `;
+        });
+
+        html += `
+            </div>
+          </div>
+        `;
+      });
+
+      matrixBody.innerHTML = html;
+
+      // Click nút câu hỏi -> Nhảy ngay đến câu đó & đóng drawer
+      matrixBody.querySelectorAll("[data-jump-idx]").forEach(btn => {
+        btn.onclick = () => {
+          const targetIdx = parseInt(btn.dataset.jumpIdx, 10);
+          renderQuestionAt(targetIdx);
+          closeDrawer();
+        };
+      });
+    };
+
+    const openDrawer = () => {
+      renderMatrixDrawer();
+      if (drawerBackdrop) drawerBackdrop.classList.add("open");
+    };
+
+    const closeDrawer = () => {
+      if (drawerBackdrop) drawerBackdrop.classList.remove("open");
+    };
+
+    if (btnOpenDrawer) btnOpenDrawer.onclick = openDrawer;
+    if (btnCloseDrawer) btnCloseDrawer.onclick = closeDrawer;
+    if (drawerBackdrop) {
+      drawerBackdrop.onclick = (e) => {
+        if (e.target === drawerBackdrop) closeDrawer();
+      };
+    }
+
+    // Bộ lọc trạng thái trong Drawer
+    host.querySelectorAll(".cbt-filter-badge-btn").forEach(btn => {
+      btn.onclick = () => {
+        host.querySelectorAll(".cbt-filter-badge-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentMatrixFilter = btn.dataset.matrixFilter || "all";
+        renderMatrixDrawer();
+      };
+    });
+
+    const refreshMatrixCounts = () => {
+      const answeredCount = Object.keys(answers).filter(k => answers[k] !== undefined && answers[k] !== "").length;
+      const unDoneCount = Math.max(0, totalQuestions - answeredCount);
+      const flagCount = Object.keys(flagged).filter(k => flagged[k]).length;
+
+      const badge = el("#cbtDrawerAnsweredCount");
+      if (badge) badge.textContent = String(answeredCount);
+      const doneBadge = el("#countDoneDrawer");
+      if (doneBadge) doneBadge.textContent = String(answeredCount);
+      const undoneBadge = el("#countUndoneDrawer");
+      if (undoneBadge) undoneBadge.textContent = String(unDoneCount);
+      const flagBadge = el("#countFlagDrawer");
+      if (flagBadge) flagBadge.textContent = String(flagCount);
+    };
+
+    // Toàn màn hình toggle
+    const btnFs = el("#btnToggleFullScreen");
+    if (btnFs) {
+      btnFs.onclick = () => {
+        if (!document.fullscreenElement) {
+          if (document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+          document.body.classList.add("cbt-fullscreen-mode");
+          btnFs.innerHTML = `${icon("minimize", 15)} <span>Thu nhỏ</span>`;
+        } else {
+          if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+          document.body.classList.remove("cbt-fullscreen-mode");
+          btnFs.innerHTML = `${icon("maximize", 15)} <span>Toàn màn hình</span>`;
+        }
+      };
+    }
+
+    // Thoát bài thi
     el("#btnExitTest").onclick = () => {
       const exitMsg = isPractice
         ? "Bạn có chắc chắn muốn kết thúc bài luyện tập?"
         : "Bạn có chắc chắn muốn rời khỏi phòng thi? Kết quả hiện tại sẽ không được lưu.";
       if (confirm(exitMsg)) {
-        const storageKey = getExamStorageKey();
+        cleanupHardwareTests();
+        document.removeEventListener("keydown", handleKeyNav);
         try {
           sessionStorage.removeItem("trki_active_exam_id");
           sessionStorage.removeItem("trki_active_part_id");
@@ -11886,292 +12691,15 @@ function initMockTestPage() {
         } catch(e) {}
         clearInterval(timer);
         if (visibilityHandler) document.removeEventListener("visibilitychange", visibilityHandler);
-        document.body.classList.remove("in-workspace");
+        document.body.classList.remove("in-workspace", "cbt-fullscreen-mode");
         renderHub();
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     };
 
-    // Tools for Split-Pane Reading
-    host.querySelectorAll(".btn-font-inc").forEach(b => {
-      b.onclick = () => {
-        const p = b.closest(".cbt-pane-media").querySelector(".cbt-passage-text");
-        if (p) {
-          const cur = parseFloat(window.getComputedStyle(p).fontSize) || 16;
-          if (cur < 24) p.style.fontSize = (cur + 2) + "px";
-        }
-      };
-    });
-    host.querySelectorAll(".btn-font-dec").forEach(b => {
-      b.onclick = () => {
-        const p = b.closest(".cbt-pane-media").querySelector(".cbt-passage-text");
-        if (p) {
-          const cur = parseFloat(window.getComputedStyle(p).fontSize) || 16;
-          if (cur > 14) p.style.fontSize = (cur - 2) + "px";
-        }
-      };
-    });
-    host.querySelectorAll(".btn-reading-trans").forEach(btn => {
-      btn.onclick = () => {
-        const transBox = btn.closest(".cbt-pane-media")
-          ? btn.closest(".cbt-pane-media").querySelector(".reading-vi-trans")
-          : btn.closest(".reading-box").querySelector(".reading-vi-trans");
-        if (transBox) {
-          transBox.classList.toggle("hidden");
-          btn.textContent = transBox.classList.contains("hidden") ? "Bản dịch" : "Ẩn dịch";
-        }
-      };
-    });
-
-    // Flag Question event
-    host.querySelectorAll(".btn-flag-q").forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const id = btn.dataset.id;
-        flagged[id] = !flagged[id];
-        const storageKey = getExamStorageKey();
-        try {
-          sessionStorage.setItem(storageKey + "_flagged", JSON.stringify(flagged));
-        } catch(e) {}
-
-        btn.classList.toggle("is-flagged", flagged[id]);
-        const span = btn.querySelector("span");
-        if (span) span.textContent = flagged[id] ? "Đã đặt cờ" : "Đặt cờ";
-
-        const pBtn = el(`#pBtn_${id}`);
-        if (pBtn) {
-          pBtn.classList.toggle("flagged", flagged[id]);
-        }
-        refreshPaletteCounts();
-      };
-    });
-
-    // Option selection event
-    host.querySelectorAll(".option").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const id = btn.dataset.id;
-        const oi = +btn.dataset.oi;
-        answers[id] = oi;
-        const storageKey = getExamStorageKey();
-        try {
-          sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers));
-        } catch(e) {}
-
-        const group = host.querySelectorAll(`.option[data-id="${id}"]`);
-
-        if (examMode === "practice") {
-          const [pId, qIdxStr] = id.split("_");
-          const qIdx = parseInt(qIdxStr, 10);
-          const targetPart = (currentTest.parts || []).find(p => p.id === pId);
-          const q = (targetPart && targetPart.questions) ? targetPart.questions[qIdx] : null;
-
-          if (q) {
-            const isCorrect = (oi === q.a);
-            group.forEach(g => {
-              g.classList.remove("selected", "correct", "wrong");
-              const gOi = +g.dataset.oi;
-              if (gOi === q.a) {
-                g.classList.add("correct");
-              } else if (gOi === oi && !isCorrect) {
-                g.classList.add("wrong");
-              }
-            });
-
-            let fb = host.querySelector(`#feedback_${id}`);
-            if (!fb) {
-              fb = document.createElement("div");
-              fb.id = `feedback_${id}`;
-              const qBox = el(`#qBox_${id}`);
-              if (qBox) qBox.appendChild(fb);
-            }
-            fb.className = `trki-practice-feedback ${isCorrect ? 'is-correct' : 'is-wrong'}`;
-            fb.innerHTML = `
-              <div class="feedback-badge-row">
-                <span class="feedback-badge ${isCorrect ? 'badge-correct' : 'badge-wrong'}">
-                  ${isCorrect ? '✓ Đúng' : '✕ Sai'}
-                </span>
-                ${!isCorrect ? `<span class="feedback-correct-answer">Đáp án đúng: <b class="ru" style="color:var(--green)">${esc(q.options[q.a])}</b></span>` : ''}
-              </div>
-              <div class="feedback-ex">
-                <b>Giải thích:</b> ${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}
-              </div>
-            `;
-
-            const pBtn = el(`#pBtn_${id}`);
-            if (pBtn) {
-              pBtn.classList.remove("done", "done-correct", "done-wrong");
-              pBtn.classList.add(isCorrect ? "done-correct" : "done-wrong");
-            }
-          }
-        } else {
-          group.forEach((g) => g.classList.remove("selected"));
-          btn.classList.add("selected");
-          const pBtn = el(`#pBtn_${id}`);
-          if (pBtn) pBtn.classList.add("done");
-        }
-
-        const ansCount = Object.keys(answers).length;
-        const countDisplay = el("#answeredCount");
-        if (countDisplay) countDisplay.textContent = `${ansCount}/${totalQuestions}`;
-        refreshPaletteCounts();
-      });
-    });
-
-    // Chế độ Toàn màn hình CBT Full-Screen Mode
-    const btnFs = host.querySelector("#btnToggleFullScreen");
-    if (btnFs) {
-      btnFs.onclick = () => {
-        if (!document.fullscreenElement) {
-          if (document.documentElement.requestFullscreen) {
-            document.documentElement.requestFullscreen().catch(() => {});
-          }
-          document.body.classList.add("cbt-fullscreen-mode");
-          btnFs.innerHTML = `${window.RusiIcons ? RusiIcons.get("minimize", { size: 14 }) : ""} <span class="btn-text">Thu nhỏ</span>`;
-        } else {
-          if (document.exitFullscreen) {
-            document.exitFullscreen().catch(() => {});
-          }
-          document.body.classList.remove("cbt-fullscreen-mode");
-          btnFs.innerHTML = `${window.RusiIcons ? RusiIcons.get("maximize", { size: 14 }) : ""} <span class="btn-text">Toàn màn hình</span>`;
-        }
-      };
-    }
-
-    // Bộ lọc trạng thái bảng câu hỏi (All, Done, Undone, Flagged)
-    let currentPaletteFilter = "all";
-    const applyPaletteFilter = (filter) => {
-      currentPaletteFilter = filter;
-      host.querySelectorAll(".cbt-filter-pill").forEach(p => {
-        p.classList.toggle("active", p.dataset.paletteFilter === filter);
-      });
-      host.querySelectorAll(".palette-btn[data-jump]").forEach(b => {
-        const isDone = b.classList.contains("done") || b.classList.contains("done-correct") || b.classList.contains("done-wrong");
-        const isFlag = b.classList.contains("flagged");
-        let show = true;
-        if (filter === "done") show = isDone;
-        else if (filter === "undone") show = !isDone;
-        else if (filter === "flagged") show = isFlag;
-        b.classList.toggle("cbt-filtered-out", !show);
-      });
-    };
-    host.querySelectorAll(".cbt-filter-pill").forEach(pill => {
-      pill.onclick = () => applyPaletteFilter(pill.dataset.paletteFilter);
-    });
-
-    const refreshPaletteCounts = () => {
-      const ansCount = Object.keys(answers).length;
-      const countDisplay = el("#answeredCount");
-      if (countDisplay) countDisplay.textContent = `${ansCount}/${totalQuestions}`;
-      const doneFilter = el("#countDoneFilter");
-      if (doneFilter) doneFilter.textContent = ansCount;
-      const undoneFilter = el("#countUndoneFilter");
-      if (undoneFilter) undoneFilter.textContent = Math.max(0, totalQuestions - ansCount);
-      const flagCount = Object.keys(flagged).filter(k => flagged[k]).length;
-      const flagFilter = el("#countFlagFilter");
-      if (flagFilter) flagFilter.textContent = flagCount;
-      if (currentPaletteFilter !== "all") {
-        applyPaletteFilter(currentPaletteFilter);
-      }
-    };
-    refreshPaletteCounts();
-
-    host.querySelectorAll("[data-jump]").forEach((pBtn) => {
-      pBtn.onclick = () => {
-        const id = pBtn.dataset.jump;
-        const targetQ = el(`#qBox_${id}`);
-        if (targetQ) {
-          targetQ.scrollIntoView({ behavior: "smooth", block: "start" });
-          host.querySelectorAll(".quiz-q").forEach((b) => b.classList.remove("active"));
-          targetQ.classList.add("active");
-        }
-      };
-    });
-
-    const play = el("#playAudio");
-    let isTestAudioPlaying = false;
-    let trkiNativeAudio = null;
-    if (play) {
-      play.onclick = () => {
-        if (isTestAudioPlaying) {
-          if (trkiNativeAudio) {
-            trkiNativeAudio.pause();
-            trkiNativeAudio.currentTime = 0;
-            trkiNativeAudio = null;
-          }
-          if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
-          isTestAudioPlaying = false;
-          play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
-          return;
-        }
-
-        const lisPart = activeParts.find((p) => p.audio_url || p.lines);
-        if (!lisPart) return;
-
-        const fallbackSpeech = () => {
-          if (!lisPart.lines || !Array.isArray(lisPart.lines) || !lisPart.lines.length) {
-            isTestAudioPlaying = false;
-            if (play) play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
-            return;
-          }
-          const fullText = lisPart.lines.map((l) => l.ru || "").filter(Boolean).join(" ");
-          if (!fullText) {
-            isTestAudioPlaying = false;
-            return;
-          }
-
-          isTestAudioPlaying = true;
-          play.innerHTML = `${window.RusiIcons ? RusiIcons.get("pause-control", { size: 16 }) : ""} Tạm dừng đối thoại`;
-
-          if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
-            window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(fullText);
-            u.lang = "ru-RU";
-            u.rate = 0.85;
-            if (typeof pickVoice === "function") {
-              const v = pickVoice("ru-RU");
-              if (v) u.voice = v;
-            }
-            u.onend = () => {
-              isTestAudioPlaying = false;
-              if (play) play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
-            };
-            u.onerror = () => {
-              isTestAudioPlaying = false;
-              if (play) play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
-            };
-            window.speechSynthesis.speak(u);
-          }
-        };
-
-        if (lisPart.audio_url) {
-          try {
-            isTestAudioPlaying = true;
-            play.innerHTML = `${window.RusiIcons ? RusiIcons.get("pause-control", { size: 16 }) : ""} Tạm dừng đối thoại`;
-            trkiNativeAudio = new Audio(lisPart.audio_url);
-            trkiNativeAudio.onended = () => {
-              isTestAudioPlaying = false;
-              trkiNativeAudio = null;
-              if (play) play.innerHTML = `${window.RusiIcons ? RusiIcons.get("play-control", { size: 16 }) : ""} Phát đoạn đối thoại`;
-            };
-            trkiNativeAudio.onerror = () => {
-              console.warn("[TRKI Audio] Không thể tải audio_url, chuyển sang SpeechSynthesis fallback");
-              trkiNativeAudio = null;
-              fallbackSpeech();
-            };
-            trkiNativeAudio.play().catch(() => fallbackSpeech());
-            return;
-          } catch(e) {
-            fallbackSpeech();
-            return;
-          }
-        }
-
-        fallbackSpeech();
-      };
-    }
-
+    // Modal xác nhận nộp bài thi
     const openSubmitConfirmModal = () => {
-      const answeredCount = Object.keys(answers).length;
+      const answeredCount = Object.keys(answers).filter(k => answers[k] !== undefined && answers[k] !== "").length;
       const unDoneCount = Math.max(0, totalQuestions - answeredCount);
       const flagCount = Object.keys(flagged).filter(k => flagged[k]).length;
 
@@ -12186,7 +12714,7 @@ function initMockTestPage() {
       modal.innerHTML = `
         <div class="anticheat-modal-box" style="border-top-color:var(--secondary);max-width:440px">
           <div style="margin-bottom:12px;color:var(--secondary)">
-            ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 48 }) : ""}
+            ${icon("check-circle-correct", 48)}
           </div>
           <h3 style="font-size:1.3rem;font-weight:800;color:var(--text);margin-bottom:8px">XÁC NHẬN NỘP BÀI THI</h3>
           <p style="color:var(--muted);font-size:0.92rem;margin-bottom:18px">
@@ -12230,17 +12758,11 @@ function initMockTestPage() {
       document.getElementById("btnCancelSubmit").onclick = () => modal.remove();
       document.getElementById("btnConfirmSubmit").onclick = () => {
         modal.remove();
+        document.removeEventListener("keydown", handleKeyNav);
         submit();
       };
     };
 
-    const submitBtn = el("#submitTest");
-    if (submitBtn) {
-      submitBtn.onclick = () => {
-        if (examMode === "exam") openSubmitConfirmModal();
-        else submit();
-      };
-    }
     const topSub = el("#btnSubmitTop");
     if (topSub) {
       topSub.onclick = () => {
@@ -12248,9 +12770,14 @@ function initMockTestPage() {
         else submit();
       };
     }
+
+    // Khởi tạo câu hỏi đầu tiên
+    renderQuestionAt(currentItemIndex);
   };
 
-  const submit = () => {
+  const submit = async () => {
+    document.body.classList.remove("cbt-fullscreen-mode");
+
     started = false;
     clearInterval(timer);
 
@@ -12275,6 +12802,42 @@ function initMockTestPage() {
     const activeParts = isSubset
       ? currentTest.parts.filter(p => selectedPartList.includes(p.id))
       : currentTest.parts;
+
+    // Chấm thi Server-Side bảo mật qua RPC (Zero-Answer Leak)
+    if (window.RusiSupabase && window.RusiSupabase.questionBank && typeof window.RusiSupabase.questionBank.gradeSubmission === "function" && currentTest && currentTest.code) {
+      try {
+        const timeSpent = Math.max(0, (currentTest.durationMin || 45) * 60 - remainingSeconds);
+        const answersPayload = {};
+        let globalIndex = 0;
+        activeParts.forEach(p => {
+          (p.questions || []).forEach((q, qi) => {
+            const ans = answers[p.id + "_" + qi];
+            if (ans !== undefined) {
+              answersPayload[String(globalIndex)] = ans;
+              if (q.code) answersPayload[q.code] = ans;
+              if (q.id) answersPayload[String(q.id)] = ans;
+            }
+            globalIndex++;
+          });
+        });
+        const serverGradeResult = await window.RusiSupabase.questionBank.gradeSubmission(currentTest.code, answersPayload, timeSpent);
+        if (serverGradeResult && serverGradeResult.success && Array.isArray(serverGradeResult.reviews)) {
+          let rIdx = 0;
+          activeParts.forEach(p => {
+            (p.questions || []).forEach((q) => {
+              const rev = serverGradeResult.reviews[rIdx];
+              if (rev) {
+                q.a = rev.correct_index;
+                q.ex = rev.explanation || q.ex || "";
+              }
+              rIdx++;
+            });
+          });
+        }
+      } catch (errGrade) {
+        console.warn("[TRKI] Server grading error, falling back to local:", errGrade);
+      }
+    }
 
     const detail = [];
     let total = 0;
@@ -12370,14 +12933,27 @@ function initMockTestPage() {
 
     host.innerHTML = `
       <!-- STICKY TOP BACK BAR -->
-      <div class="dau-workspace-back-bar">
-        <button type="button" class="dau-back-btn" id="btnReviewBack" title="Quay lại danh sách đề thi" aria-label="Quay lại danh sách đề thi">
-          ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
-        </button>
-        <div class="dau-workspace-info">
-          <span class="dau-workspace-title">${esc(currentTest.title)}</span>
+      <header class="cbt-top-bar" role="banner">
+        <div class="cbt-top-bar-left">
+          <button type="button" class="cbt-back-btn" id="btnReviewBack" title="Quay lại danh sách đề thi" aria-label="Quay lại danh sách đề thi">
+            ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
+          </button>
+          <div class="cbt-title-group">
+            <div class="cbt-title-row">
+              <span class="cbt-part-badge">ТРКИ-${currentTest.level}</span>
+              <span class="cbt-exam-title">${esc(currentTest.title)}</span>
+            </div>
+            <span class="cbt-subtest-name">Kết quả khảo thí & Giải thích đáp án chi tiết</span>
+          </div>
         </div>
-        <button class="btn btn-primary btn-sm dau-top-btn" id="btnRetryTop" title="Thi lại">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 15 }) : ""} <span class="btn-text">Thi lại</span></button>
+
+        <div class="cbt-top-bar-right">
+          <button class="btn btn-primary btn-sm btn-cbt-submit-top" id="btnRetryTop" title="Làm lại đề thi này">
+            ${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 15 }) : ""} <span>Làm lại đề</span>
+          </button>
+        </div>
+      </header>
+        <button class="btn btn-primary btn-sm rusi-top-btn" id="btnRetryTop" title="Thi lại">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 15 }) : ""} <span class="btn-text">Thi lại</span></button>
       </div>
 
       <div class="trki-workspace-result">
@@ -13533,7 +14109,7 @@ function initIndexPage() {
       } else {
         actionBtnHtml = `
           <button class="btn ${pkg.popular ? "btn-primary" : "btn-outline"} btn-upgrade-pkg" data-pkg="${pkg.id}" style="width:100%;${pkg.popular ? "background:var(--secondary);border-color:var(--secondary);color:#fff" : ""}">
-            ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Kích hoạt qua VietQR ngay
+            ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Kích hoạt ngay
           </button>`;
       }
 
@@ -13837,7 +14413,7 @@ function initIndexPage() {
 }
 
 /* =====================================================================
- * TRANG NÂNG CẤP TÀI KHOẢN PRO (upgrade.html - Chuẩn DauEnglish)
+ * TRANG NÂNG CẤP TÀI KHOẢN PRO (upgrade.html - Chuẩn RUSI)
  * ===================================================================== */
 function initUpgradePage() {
   const host = el("#upgradeHost");
@@ -13965,14 +14541,14 @@ function initUpgradePage() {
               </button>
             ` : `
               <button class="btn ${pkg.popular ? "btn-primary" : "btn-outline"} btn-select-upgrade" data-pkg="${pkg.id}" style="width:100%;${pkg.popular ? "background:var(--secondary);border-color:var(--secondary);color:#fff" : ""}">
-                ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Kích hoạt qua VietQR ngay
+                ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Kích hoạt ngay
               </button>
             `}
           </div>`;
         }).join("")}
       </div>
 
-      <!-- BẢNG SO SÁNH CHI TIẾT TÍNH NĂNG (CHUẨN DAUENGLISH FREE VS PRO) -->
+      <!-- BẢNG SO SÁNH CHI TIẾT TÍNH NĂNG (CHUẨN RUSI FREE VS PRO) -->
       <section class="comparison-section">
         <div class="comparison-heading">
           <span class="section-kicker">SO SÁNH QUYỀN LỢI</span>

@@ -605,10 +605,30 @@
               });
             }
             if (wordsToUpsert.length > 0) {
+              // Ưu tiên Atomic RPC chạy trong 1 Database Transaction duy nhất
+              try {
+                var rpcRes = await sb.rpc("rusi_sync_jar_words", {
+                  p_jar_id: jarId,
+                  p_words: wordsToUpsert.map(function (w, i) {
+                    return {
+                      id: w.id,
+                      word_with_stress: w.word_with_stress,
+                      meaning_vi: w.meaning_vi,
+                      pos: w.pos,
+                      level: w.level,
+                      position: i + 1
+                    };
+                  })
+                });
+                if (!rpcRes.error && rpcRes.data && rpcRes.data.success) {
+                  return true;
+                }
+              } catch (_) {}
+              // Dự phòng an toàn nếu RPC chưa kích hoạt
               await sb.from("vocabularies").upsert(wordsToUpsert, { onConflict: "id" });
-            }
-            if (itemsToInsert.length > 0) {
-              await sb.from("jar_items").upsert(itemsToInsert, { onConflict: "jar_id,vocab_id" });
+              if (itemsToInsert.length > 0) {
+                await sb.from("jar_items").upsert(itemsToInsert, { onConflict: "jar_id,vocab_id" });
+              }
             }
           }
           return true;
@@ -846,7 +866,8 @@
           var sb = getClient();
           if (!sb) return [];
           try {
-            var q = sb.from("trki_question_bank").select("*").eq("is_published", true).order("order_index", { ascending: true });
+            // Đọc từ View công khai trki_questions_public (ẩn hoàn toàn correct_index / đáp án)
+            var q = sb.from("trki_questions_public").select("*").eq("is_published", true).order("order_index", { ascending: true });
             if (opts.level && opts.level !== "all") q = q.eq("level", opts.level);
             if (opts.sub_test && opts.sub_test !== "all") q = q.eq("sub_test", opts.sub_test);
             if (opts.test_code) q = q.eq("test_code", opts.test_code);
@@ -867,7 +888,8 @@
         var sb = getClient();
         if (!sb || !testCode) return [];
         try {
-          var res = await sb.from("trki_question_bank")
+          // Bảo vệ chống lộ đáp án: Đọc từ View công khai
+          var res = await sb.from("trki_questions_public")
             .select("*")
             .eq("test_code", testCode)
             .eq("is_published", true)
@@ -884,6 +906,73 @@
         if (!all || !all.length) return [];
         var shuffled = all.slice().sort(function () { return 0.5 - Math.random(); });
         return shuffled.slice(0, opts.count || 10);
+      },
+
+      /**
+       * Chấm điểm bài thi TRKI bảo mật qua Database RPC (Zero-Answer Leak)
+       */
+      gradeSubmission: async function (testCode, answers, timeSpentSec) {
+        var sb = getClient();
+        if (!sb || !testCode) return null;
+        try {
+          var res = await sb.rpc("rusi_grade_trki_submission", {
+            p_test_code: testCode,
+            p_user_answers: answers || {},
+            p_time_spent_sec: timeSpentSec || 0
+          });
+          if (res.error) {
+            console.warn("[RusiSupabase] Lỗi RPC chấm thi TRKI:", res.error);
+            return null;
+          }
+          return res.data;
+        } catch (e) {
+          console.warn("[RusiSupabase] Exception chấm thi TRKI:", e);
+          return null;
+        }
+      }
+    },
+
+    /* =========================================================================
+     * 3b. DEVICE GUARD (BẢO VỆ TÀI KHOẢN PRO & CHỐNG CHIA SẺ THIẾT BỊ)
+     * ========================================================================= */
+    deviceGuard: {
+      register: async function (info) {
+        var sb = getClient();
+        if (!sb) return { allowed: true };
+        try {
+          var res = await sb.rpc("rusi_register_device", {
+            p_fingerprint: info.fingerprint,
+            p_device_name: info.deviceName || "Thiết bị",
+            p_device_type: info.deviceType || "desktop",
+            p_browser: info.browser || "Trình duyệt",
+            p_os: info.os || "Hệ điều hành"
+          });
+          return res.data || { allowed: true };
+        } catch (_) {
+          return { allowed: true };
+        }
+      },
+
+      revoke: async function (sessionId) {
+        var sb = getClient();
+        if (!sb || !sessionId) return false;
+        try {
+          var res = await sb.rpc("rusi_revoke_device", { p_session_id: sessionId });
+          return res.data && res.data.success;
+        } catch (_) {
+          return false;
+        }
+      },
+
+      getMyDevices: async function () {
+        var sb = getClient();
+        if (!sb) return [];
+        try {
+          var res = await sb.rpc("rusi_get_my_devices");
+          return res.data || [];
+        } catch (_) {
+          return [];
+        }
       }
     },
 

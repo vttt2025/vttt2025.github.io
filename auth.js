@@ -85,6 +85,69 @@
     return error;
   }
 
+
+  function getDeviceFingerprint() {
+    let fp = "";
+    try {
+      fp = localStorage.getItem("rusi_device_fp");
+    } catch (_) {}
+    if (fp) return fp;
+
+    const components = [
+      navigator.userAgent,
+      screen.width + "x" + screen.height,
+      screen.colorDepth,
+      navigator.hardwareConcurrency || 2,
+      Intl.DateTimeFormat().resolvedOptions().timeZone || "",
+      navigator.language || ""
+    ].join("###");
+
+    let hash = 0;
+    for (let i = 0; i < components.length; i++) {
+      hash = ((hash << 5) - hash) + components.charCodeAt(i);
+      hash |= 0;
+    }
+    const randPart = Math.random().toString(36).substring(2, 10);
+    fp = "dev_" + Math.abs(hash).toString(16) + "_" + randPart;
+    try {
+      localStorage.setItem("rusi_device_fp", fp);
+    } catch (_) {}
+    return fp;
+  }
+
+  function getDeviceInfo() {
+    const ua = navigator.userAgent || "";
+    let deviceType = "desktop";
+    if (/Mobi|Android/i.test(ua) || window.innerWidth <= 768) {
+      deviceType = "mobile";
+    } else if (/iPad|Tablet/i.test(ua) || (window.innerWidth <= 1024 && window.innerWidth > 768)) {
+      deviceType = "tablet";
+    }
+
+    let os = "Khác";
+    if (/Win/i.test(ua)) os = "Windows";
+    else if (/Mac/i.test(ua)) os = "macOS";
+    else if (/iPhone|iPad|iPod/i.test(ua)) os = "iOS";
+    else if (/Android/i.test(ua)) os = "Android";
+    else if (/Linux/i.test(ua)) os = "Linux";
+
+    let browser = "Trình duyệt";
+    if (/Edg/i.test(ua)) browser = "Edge";
+    else if (/Chrome/i.test(ua)) browser = "Chrome";
+    else if (/Safari/i.test(ua)) browser = "Safari";
+    else if (/Firefox/i.test(ua)) browser = "Firefox";
+
+    const deviceName = (deviceType === "mobile" ? "Điện thoại" : (deviceType === "tablet" ? "Máy tính bảng" : "Máy tính")) + " " + os + " (" + browser + ")";
+
+    return {
+      fingerprint: getDeviceFingerprint(),
+      deviceName: deviceName,
+      deviceType: deviceType,
+      browser: browser,
+      os: os
+    };
+  }
+
   const Auth = {
     user: (function () {
       try {
@@ -96,6 +159,99 @@
     _listeners: [],
     _readyPromise: null,
     _subscription: null,
+
+    async verifyDeviceGuard() {
+      if (!this.user || !window.RusiSupabase || !window.RusiSupabase.deviceGuard) return true;
+      const info = getDeviceInfo();
+      try {
+        const res = await window.RusiSupabase.deviceGuard.register(info);
+        if (res && res.allowed === false && res.reason === "device_limit_exceeded") {
+          this._showDeviceLimitModal(res);
+          return false;
+        }
+        return true;
+      } catch (e) {
+        console.warn("[DeviceGuard] Lỗi xác thực thiết bị:", e);
+        return true;
+      }
+    },
+
+    _showDeviceLimitModal(limitData) {
+      const existing = document.getElementById("rusiDeviceLimitModal");
+      if (existing) existing.remove();
+
+      const modal = document.createElement("div");
+      modal.id = "rusiDeviceLimitModal";
+      modal.className = "anticheat-modal";
+      modal.style.zIndex = "999999";
+
+      const devices = Array.isArray(limitData.devices) ? limitData.devices : [];
+
+      modal.innerHTML = `
+        <div class="anticheat-modal-box" style="border-top-color:#e11d48;max-width:480px;text-align:left">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+            <div style="width:44px;height:44px;border-radius:50%;background:rgba(225,29,72,0.1);color:#e11d48;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">
+              🛡️
+            </div>
+            <div>
+              <h3 style="font-size:1.15rem;font-weight:800;color:var(--text);margin:0">GIỚI HẠN THIẾT BỊ TIN CẬY</h3>
+              <span style="font-size:0.8rem;color:var(--muted)">RUSI TRKI Device Guard</span>
+            </div>
+          </div>
+
+          <p style="font-size:0.88rem;color:var(--text);line-height:1.55;margin-bottom:16px">
+            Tài khoản của bạn đã đạt giới hạn <b>tối đa ${limitData.max_devices || 2} thiết bị</b> đăng nhập đồng thời (theo chính sách bảo vệ tài khoản PRO). Vui lòng đăng xuất bớt một thiết bị cũ bên dưới để tiếp tục:
+          </p>
+
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
+            ${devices.map(d => `
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px">
+                <div>
+                  <div style="font-weight:700;font-size:0.88rem;color:var(--text)">${d.device_name || "Thiết bị"}</div>
+                  <div style="font-size:0.75rem;color:var(--muted)">Hoạt động: ${d.last_active_at ? new Date(d.last_active_at).toLocaleString('vi-VN') : 'Gần đây'}</div>
+                </div>
+                <button type="button" class="btn btn-outline btn-revoke-device" data-id="${d.id}" style="padding:6px 12px;font-size:0.8rem;color:#e11d48;border-color:#e11d48">
+                  Đăng xuất
+                </button>
+              </div>
+            `).join("")}
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:10px">
+            <button type="button" class="btn btn-outline" id="btnDeviceModalSignOut" style="padding:8px 16px;font-size:0.85rem">
+              Đăng xuất tài khoản
+            </button>
+          </div>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      modal.querySelectorAll(".btn-revoke-device").forEach(btn => {
+        btn.onclick = async () => {
+          const id = btn.dataset.id;
+          btn.textContent = "Đang xử lý...";
+          btn.disabled = true;
+          const ok = await window.RusiSupabase.deviceGuard.revoke(id);
+          if (ok) {
+            modal.remove();
+            if (typeof window.toast === "function") window.toast("✓ Đã đăng xuất thiết bị cũ.");
+            Auth.verifyDeviceGuard();
+          } else {
+            btn.textContent = "Thử lại";
+            btn.disabled = false;
+          }
+        };
+      });
+
+      const signOutBtn = modal.querySelector("#btnDeviceModalSignOut");
+      if (signOutBtn) {
+        signOutBtn.onclick = () => {
+          modal.remove();
+          Auth.signOut();
+        };
+      }
+    },
 
     async _hydrateUser(supabaseUser) {
       if (!supabaseUser) {
@@ -110,6 +266,9 @@
       }
       this.user = formatUser(supabaseUser, profile);
       getStore().set("auth_user", this.user);
+      if (this.user) {
+        setTimeout(() => this.verifyDeviceGuard(), 800);
+      }
       return this.user;
     },
 

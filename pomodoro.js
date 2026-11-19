@@ -14,6 +14,36 @@
 (function () {
   "use strict";
 
+  // Bộ theo dõi hoạt động học tập thực tế (Active Learning Time Tracker - Chống treo máy farm streak)
+  let lastUserActivityTime = Date.now();
+  let hiddenTabStartTime = null;
+
+  function markUserActive() {
+    lastUserActivityTime = Date.now();
+  }
+
+  if (typeof window !== "undefined") {
+    ["pointerdown", "keydown", "touchstart", "wheel"].forEach((evt) => {
+      window.addEventListener(evt, markUserActive, { passive: true });
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        hiddenTabStartTime = Date.now();
+      } else {
+        if (hiddenTabStartTime && (Date.now() - hiddenTabStartTime > 180000) && Pomodoro.phase === "focus" && Pomodoro.isRunning) {
+          Pomodoro.pause();
+          if (typeof window.toast === "function") {
+            window.toast("⏸️ Đồng hồ tạm dừng do tab chuyển sang chế độ nền quá 3 phút (Bảo đảm giờ học thực tế).");
+          }
+        }
+        hiddenTabStartTime = null;
+        lastUserActivityTime = Date.now();
+      }
+    });
+  }
+
+
   // Web Audio Context (mở khóa an toàn trên user gesture)
   let sharedAudioCtx = null;
   function ensureAudioContext() {
@@ -511,6 +541,14 @@
 
     tick: function () {
       if (!this.isRunning || !this.targetEndTime) return;
+      // Kiểm tra tính tương tác thực tế (Active Learning Time)
+      if (this.phase === "focus" && (Date.now() - lastUserActivityTime > 180000)) {
+        this.pause();
+        if (typeof window.toast === "function") {
+          window.toast("⏸️ Pomodoro tạm dừng do không phát hiện tương tác (Bảo đảm đo lường thời gian học thực tế).");
+        }
+        return;
+      }
 
       const now = Date.now();
       const diff = Math.round((this.targetEndTime - now) / 1000);

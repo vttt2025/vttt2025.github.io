@@ -37,7 +37,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
   
-  <link rel="stylesheet" href="styles.css?v=10.5" />
+  <link rel="stylesheet" href="styles.css?v=11.4" />
   <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
 
   <!-- JSON-LD Structured Data: WebSite, EducationalOrganization, FAQPage -->
@@ -101,6 +101,22 @@
             "acceptedAnswer": {
               "@type": "Answer",
               "text": "Đề thi được biên soạn theo đúng ma trận chuẩn quốc tế của Đại học Tổng hợp Saint Petersburg và MGU, chia đúng 3 Part với đồng hồ đếm ngược và quy tắc tính điểm chuẩn."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Nền tảng hỗ trợ luyện thi những cấp độ TRKI nào?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "RUSI TRKI cung cấp lộ trình và ngân hàng đề thi chuẩn hóa từ cấp độ Sơ cấp (A1, A2) đến Trung cấp và Cao cấp (B1, B2, C1). Mỗi bài thi đều có đồng hồ bấm giờ chuẩn phòng thi CBT và chấm điểm tự động kèm giải thích chi tiết."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Công nghệ AI của RUSI hỗ trợ cải thiện kỹ năng nói và viết như thế nào?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Với kỹ năng Nói, AI nhận diện giọng nói tiếng Nga bản xứ và chấm độ chính xác phát âm theo từng âm vị. Với kỹ năng Viết, AI tự động phân tích ngữ pháp 6 Cách, cấu trúc câu và chấm điểm theo 4 tiêu chí chuẩn của kỳ thi TRKI quốc tế."
             }
           }
         ]
@@ -641,6 +657,26 @@
             </div>
           </div>
 
+          <div class="faq-item">
+            <button type="button">
+              <span>Nền tảng hỗ trợ luyện thi những cấp độ TRKI nào?</span>
+              <i>+</i>
+            </button>
+            <div class="faq-answer">
+              <p>RUSI TRKI cung cấp lộ trình và ngân hàng đề thi chuẩn hóa từ cấp độ Sơ cấp (A1, A2) đến Trung cấp và Cao cấp (B1, B2, C1). Mỗi bài thi đều có đồng hồ bấm giờ chuẩn phòng thi CBT và chấm điểm tự động kèm giải thích chi tiết.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button type="button">
+              <span>Công nghệ AI của RUSI hỗ trợ cải thiện kỹ năng nói và viết như thế nào?</span>
+              <i>+</i>
+            </button>
+            <div class="faq-answer">
+              <p>Với kỹ năng Nói, AI nhận diện giọng nói tiếng Nga bản xứ và chấm độ chính xác phát âm theo từng âm vị. Với kỹ năng Viết, AI tự động phân tích ngữ pháp 6 Cách, cấu trúc câu và chấm điểm theo 4 tiêu chí chuẩn của kỳ thi TRKI quốc tế.</p>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -671,12 +707,12 @@
   </div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="supabase-client.js?v=7.5"></script>
+  <script src="supabase-client.js?v=7.8"></script>
 <script src="rusi-icons.js?v=5.0"></script>
   <script src="data.js?v=11.0"></script>
-  <script src="auth.js?v=8.0"></script>
-  <script src="app.js?v=8.9"></script>
-  <script src="pages.js?v=11.0"></script>
+  <script src="auth.js?v=8.1"></script>
+  <script src="app.js?v=9.1"></script>
+  <script src="pages.js?v=12.5"></script>
   <script>
     function initPage() {
       if (typeof initIndexPage === "function") {
@@ -687,6 +723,6 @@
       window.triggerPageInit();
     }
   </script>
-  <script src="pomodoro.js?v=7.0"></script>
+  <script src="pomodoro.js?v=7.1"></script>
 </body>
 </html>

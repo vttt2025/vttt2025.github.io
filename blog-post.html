@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=10.5" />
+  <link rel="stylesheet" href="styles.css?v=11.4" />
   <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
 </head>
 <body data-page="blog">
@@ -40,14 +40,14 @@
   <div id="app-footer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="supabase-client.js?v=7.5"></script>
+  <script src="supabase-client.js?v=7.8"></script>
   <script src="rusi-icons.js?v=5.0"></script>
   <script src="data.js?v=11.0"></script>
-  <script src="auth.js?v=8.0"></script>
+  <script src="auth.js?v=8.1"></script>
   <script src="dict-data.js?v=11.0"></script>
-  <script src="app.js?v=8.9"></script>
-  <script src="pages.js?v=11.0"></script>
-  <script src="pomodoro.js?v=7.0"></script>
+  <script src="app.js?v=9.1"></script>
+  <script src="pages.js?v=12.5"></script>
+  <script src="pomodoro.js?v=7.1"></script>
   <script>
     function renderMarkdownContent(text) {
       if (!text) return "";
@@ -175,7 +175,7 @@
 
       host.innerHTML = `
         <div class="bpost-nav-bar">
-          <a href="blog.html" class="dau-back-btn" style="text-decoration:none">
+          <a href="blog.html" class="rusi-back-btn" style="text-decoration:none">
             ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 16 }) : ""} <span class="btn-text">Quay lại danh sách bài viết</span>
           </a>
           <button type="button" class="btn btn-soft btn-sm" id="btnSharePost" style="display:flex;align-items:center;gap:6px">
@@ -195,7 +195,7 @@
 
         <article class="bpost-article">
           <div class="bpost-header">
-            <span class="dau-badge dau-badge-b1" style="font-weight:700">
+            <span class="rusi-badge rusi-badge-b1" style="font-weight:700">
               ${post.categoryName || "CẨM NANG DU HỌC NGA"}
             </span>
             <h1 class="bpost-title">${post.title}</h1>

@@ -1,6 +1,6 @@
 /**
  * auth-page.js — Xử lý logic cho trang Đăng nhập (login.html) và Đăng ký (signup.html)
- * Tương đồng hành vi của https://dauenglish.com/login?redirect=%2F và /signup?redirect=%2F
+ * Tương đồng hành vi của https://rusitrki.com/login?redirect=%2F và /signup?redirect=%2F
  */
 
 (function () {
