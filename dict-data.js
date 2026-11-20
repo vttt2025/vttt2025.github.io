@@ -35,7 +35,16 @@ const RusiDict = {
   load(dir) {
     if (this._cache[dir]) return Promise.resolve(this._cache[dir]);
     if (this._loading[dir]) return this._loading[dir];
-    this._loading[dir] = fetch("data/dict-" + dir + ".json")
+    let root = '';
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname || '';
+      if (path.startsWith('/rusitrki/')) root = '/rusitrki/';
+      else {
+        const segs = path.replace(/^\//, '').split('/').filter(Boolean);
+        if (segs.length > 1) root = '/';
+      }
+    }
+    this._loading[dir] = fetch(root + "data/dict-" + dir + ".json")
       .then((r) => {
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.json();

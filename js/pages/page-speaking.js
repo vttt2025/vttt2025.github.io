@@ -5,6 +5,7 @@
  */
 
 function initSpeakingPage() {
+  const el = window.el || function(sel) { return document.querySelector(sel); };
   const host = el("#speakHost");
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const icon = (name, size = 18) => (window.RusiIcons ? RusiIcons.get(name, { size }) : "");
@@ -64,7 +65,16 @@ function initSpeakingPage() {
   const checkUrlSet = () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const targetId = urlParams.get("set");
+      const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || urlParams.get(k);
+      const modeParam = (getParam("mode") || "").toLowerCase();
+      if (modeParam === "shadowing" || modeParam === "reflex") {
+        currentMode = modeParam;
+      }
+      const lvlParam = (getParam("level") || "").toUpperCase();
+      if (lvlParam && ["A1", "A2", "B1", "B2"].includes(lvlParam)) {
+        currentLevel = lvlParam;
+      }
+      const targetId = getParam("set") || getParam("id");
       if (targetId) {
         if (typeof window.requireAuth === "function" && !window.requireAuth("speaking.html?set=" + encodeURIComponent(targetId))) return true;
         const all = getSpeakingSets();
@@ -106,8 +116,8 @@ function initSpeakingPage() {
   };
   loadCloudSpeaking();
 
-  if (window.RusiDataLoader && !RusiDataLoader.isLoaded("SPEAKING_SETS")) {
-    RusiDataLoader.load("SPEAKING_SETS").then(() => {
+  if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("SPEAKING_SETS")) {
+    window.RusiDataLoader.load("SPEAKING_SETS").then(() => {
       if (!document.body.classList.contains("in-workspace")) {
         if (!checkUrlSet()) {
           renderSpeakingCards();
@@ -118,9 +128,17 @@ function initSpeakingPage() {
 
   const filteredSets = () => {
     const all = getSpeakingSets();
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetCat = (urlParams.get("cat") || urlParams.get("category") || "").toLowerCase().trim();
+
     return all.filter((s) => {
       if (s.level !== currentLevel) return false;
-      return matchesSpeakingMode(s, currentMode);
+      if (!matchesSpeakingMode(s, currentMode)) return false;
+      if (targetCat) {
+        const sCat = (s.topic || s.category || s.genre || "").toLowerCase();
+        if (sCat && !sCat.includes(targetCat)) return false;
+      }
+      return true;
     });
   };
 
@@ -257,6 +275,9 @@ function initSpeakingPage() {
   };
 
   const renderHub = () => {
+    if (window.setRusiDeepUrl) {
+      window.setRusiDeepUrl('/speaking');
+    }
     document.body.classList.remove("in-workspace");
     host.innerHTML = `
       <section class="writing-hub listening-hub speaking-hub" id="speakingHub">
@@ -328,6 +349,9 @@ function initSpeakingPage() {
   };
 
 const openSpeakingWorkspace = (set, mode = currentMode) => {
+    if (window.setRusiDeepUrl && set) {
+      window.setRusiDeepUrl('/speaking/' + (mode || 'shadowing') + '/' + encodeURIComponent(set.id || set.code));
+    }
     if (typeof window.requireAuth === "function" && !window.requireAuth("speaking.html?set=" + encodeURIComponent((set && (set.id || set.code)) || ""))) return;
     document.body.classList.add("in-workspace");
     const todayKey = "speak_today_" + new Date().toDateString();

@@ -2493,8 +2493,17 @@ function _loadPageModule(moduleSrc, callback) {
     if (callback) callback();
     return;
   }
+  let root = '';
+  if (typeof window !== 'undefined') {
+    const path = window.location.pathname || '';
+    if (path.startsWith('/rusitrki/')) root = '/rusitrki/';
+    else {
+      const segs = path.replace(/^\//, '').split('/').filter(Boolean);
+      if (segs.length > 1) root = '/';
+    }
+  }
   const s = document.createElement("script");
-  s.src = moduleSrc + "?v=1.0";
+  s.src = root + moduleSrc + "?v=1.0";
   s.onload = () => { if (callback) callback(); };
   s.onerror = (e) => console.error("[RusiRouter] Không thể nạp module: " + moduleSrc, e);
   document.head.appendChild(s);

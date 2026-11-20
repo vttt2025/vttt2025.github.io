@@ -55,7 +55,12 @@ function initMockTestPage() {
   const checkUrlExam = () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const targetId = urlParams.get("exam") || urlParams.get("test") || urlParams.get("id");
+      const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || urlParams.get(k);
+      const targetLevel = getParam("level");
+      if (targetLevel && ["A1", "A2", "B1", "B2", "C1", "C2"].includes(targetLevel.toUpperCase())) {
+        currentLevel = targetLevel.toUpperCase();
+      }
+      const targetId = getParam("exam") || getParam("test") || getParam("id");
       const urlMode = urlParams.get("mode");
       if (urlMode === "exam" || urlMode === "practice") {
         examMode = urlMode;
@@ -100,8 +105,8 @@ function initMockTestPage() {
   };
   loadCloudTests();
 
-  if (window.RusiDataLoader && !RusiDataLoader.isLoaded("TRKI_BANK")) {
-    RusiDataLoader.load("TRKI_BANK").then((loaded) => {
+  if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("TRKI_BANK")) {
+    window.RusiDataLoader.load("TRKI_BANK").then((loaded) => {
       if (loaded && loaded.length && (!bank || !bank.length)) {
         bank = loaded;
         if (!currentTest || !bank.some(t => t.id === currentTest.id)) {
@@ -268,6 +273,9 @@ function initMockTestPage() {
   };
 
   const renderHub = () => {
+    if (window.setRusiDeepUrl) {
+      window.setRusiDeepUrl('/mock-test');
+    }
     started = false;
     answers = {};
     flagged = {};
@@ -417,6 +425,9 @@ function initMockTestPage() {
    * GIAI ĐOẠN 1: CỬA SỔ THÔNG BÁO BÀI THI & KIỂM TRA THIẾT BỊ (BRIEFING)
    * ===================================================================== */
   const openExamBriefing = async (test, partId = null, mode = "exam") => {
+    if (window.setRusiDeepUrl && test) {
+      window.setRusiDeepUrl('/mock-test/de_thi/' + encodeURIComponent(test.id || test.code));
+    }
     if (test) currentTest = test;
     activePartId = partId;
     examMode = mode || "exam";

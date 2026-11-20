@@ -25,6 +25,9 @@ function initVocabPage() {
   window.exitSrsToVocab = showMainLayout;
 
   const showSrsWorkspace = () => {
+    if (window.setRusiDeepUrl) {
+      window.setRusiDeepUrl('/vocabulary/srs');
+    }
     if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?srs=1")) return;
     // Thu thập danh sách từ cần ôn tập theo Spaced Repetition (ưu tiên từ due / đang học)
     let reviewWords = [];
@@ -157,8 +160,8 @@ function initVocabPage() {
   };
   loadCloudJars();
 
-  if (window.RusiDataLoader && !RusiDataLoader.isLoaded("VOCAB_JARS")) {
-    RusiDataLoader.loadMultiple(["VOCAB_JARS", "TOPIC_ARTICLES"]).then(() => {
+  if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("VOCAB_JARS")) {
+    window.RusiDataLoader.loadMultiple(["VOCAB_JARS", "TOPIC_ARTICLES"]).then(() => {
       if (!document.body.classList.contains("in-workspace")) {
         renderVocabCards();
       }
@@ -372,6 +375,9 @@ function initVocabPage() {
   };
 
   const renderVocabHub = () => {
+    if (window.setRusiDeepUrl) {
+      window.setRusiDeepUrl('/vocabulary');
+    }
     const shelfHost = el("#jarsShelfHost");
     if (!shelfHost) return;
     const detail = el("#jarDetailHost");
@@ -1085,6 +1091,9 @@ function initVocabPage() {
   };
 
 const showTopicArticle = (jarId) => {
+    if (window.setRusiDeepUrl && jarId) {
+      window.setRusiDeepUrl('/vocabulary/chu_de/' + encodeURIComponent(jarId));
+    }
     if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?topic=" + encodeURIComponent(jarId || ""))) return;
     // 1. Kiểm tra bản nháp xem trước thời gian thực từ CMS (sessionStorage / localStorage)
     let previewDraft = null;
@@ -1368,6 +1377,9 @@ const showTopicArticle = (jarId) => {
   };
 
   const showJarDetail = (jarId, initialMode = "list") => {
+    if (window.setRusiDeepUrl && jarId) {
+      window.setRusiDeepUrl('/vocabulary/lo_tu/' + encodeURIComponent(jarId));
+    }
     if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?jar=" + encodeURIComponent(jarId || ""))) return;
     window.currentActiveJarId = jarId;
     const customJars = STORE.get("custom_jars", []);
@@ -1691,11 +1703,12 @@ const showTopicArticle = (jarId) => {
     }
   });
 
-  // Hỗ trợ mở trực tiếp Lọ từ vựng hoặc Bài học chủ đề từ URL / Live Preview Studio CMS
+  // Hỗ trợ mở trực tiếp Lọ từ vựng hoặc Bài học chủ đề từ URL / Live Preview Studio CMS / Deep Link
   const urlParams = new URLSearchParams(window.location.search);
-  const targetTopic = urlParams.get("topic") || urlParams.get("article");
-  const targetJar = urlParams.get("jar");
-  const targetMode = urlParams.get("mode");
+  const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || urlParams.get(k);
+  const targetTopic = getParam("topic") || getParam("article");
+  const targetJar = getParam("jar");
+  const targetMode = getParam("mode");
 
   if (targetTopic) {
     if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?topic=" + encodeURIComponent(targetTopic))) return;

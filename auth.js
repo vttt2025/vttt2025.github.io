@@ -496,8 +496,7 @@
     if (isUserLoggedIn()) return true;
     let target = redirectTarget;
     if (!target) {
-      const pageName = window.location.pathname.split("/").pop() || "index.html";
-      target = pageName + window.location.search + window.location.hash;
+      target = (window.location.pathname + window.location.search + window.location.hash).replace(/^\//, '') || "index.html";
     }
     window.location.href = `login.html?redirect=${encodeURIComponent(target)}`;
     return false;

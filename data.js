@@ -4756,9 +4756,18 @@
           }
         } catch (_) {}
 
-        // Bước 2: Tải file JSON tĩnh độc lập từ server / Cloudflare CDN
+        // Bước 2: Tải file JSON tĩnh độc lập từ server / Cloudflare CDN (Root-aware)
         try {
-          const res = await fetch(conf.file + '?v=' + DATA_VERSION);
+          function getAppRoot() {
+            if (typeof window === 'undefined') return '';
+            if (window.location.protocol === 'file:') return '';
+            const path = window.location.pathname || '';
+            if (path.startsWith('/rusitrki/')) return '/rusitrki/';
+            const segs = path.replace(/^\//, '').split('/').filter(Boolean);
+            if (segs.length <= 1) return '';
+            return '/';
+          }
+          const res = await fetch(getAppRoot() + conf.file + '?v=' + DATA_VERSION);
           if (res.ok) {
             const data = await res.json();
             conf.assign(data);
@@ -4783,16 +4792,17 @@
     // Tự động phân tích trang hiện tại và chuẩn bị trước đúng các module cần thiết
     async prepareForCurrentPage() {
       if (typeof window === 'undefined') return;
+      const page = ((typeof document !== 'undefined' && document.body) ? (document.body.getAttribute('data-page') || '') : '').toLowerCase();
       const path = (window.location.pathname || '').toLowerCase();
 
       let targetModules = [];
-      if (path.includes('vocabulary')) {
+      if (page === 'vocabulary' || path.includes('vocab')) {
         targetModules = ['VOCAB_JARS', 'TOPIC_ARTICLES'];
-      } else if (path.includes('mock-test')) {
+      } else if (page === 'mock-test' || path.includes('mock-test') || path.includes('trki') || path.includes('test')) {
         targetModules = ['TRKI_BANK', 'TRKI_QUESTION_BANK'];
-      } else if (path.includes('speaking')) {
+      } else if (page === 'speaking' || path.includes('speak')) {
         targetModules = ['SPEAKING_SETS'];
-      } else if (path.includes('admin')) {
+      } else if (page === 'admin' || path.includes('admin') || path.includes('cms')) {
         // Trên trang admin: nạp các module phổ biến
         targetModules = ['VOCAB_JARS', 'TRKI_BANK', 'SPEAKING_SETS'];
       }
@@ -4820,6 +4830,7 @@
   // Khởi động nạp tự động ngay khi tệp script được đọc
   if (typeof window !== 'undefined') {
     window.RusiDataLoader = RusiDataLoader;
+    if (typeof globalThis !== "undefined") globalThis.RusiDataLoader = RusiDataLoader;
 
     // Đối tượng DATA tổng hợp bảo toàn backwards-compatibility
     window.DATA = {

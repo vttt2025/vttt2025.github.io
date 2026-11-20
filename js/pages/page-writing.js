@@ -335,6 +335,9 @@ function initWritingPage() {
   };
 
   const renderHub = () => {
+    if (window.setRusiDeepUrl) {
+      window.setRusiDeepUrl('/writing');
+    }
     document.body.classList.remove("in-workspace");
     host.innerHTML = `
       <section class="writing-hub" id="writingHub">
@@ -409,6 +412,9 @@ function initWritingPage() {
   };
 
   const openWorkspace = (topic, initialTask) => {
+    if (window.setRusiDeepUrl && initialTask) {
+      window.setRusiDeepUrl('/writing/bai_viet/' + encodeURIComponent(initialTask.id || initialTask.code || (topic && topic.key)));
+    }
     if (typeof window.requireAuth === "function" && !window.requireAuth("writing.html?topic=" + encodeURIComponent((topic && (topic.key || topic.id || topic.title)) || ""))) return;
     document.body.classList.add("in-workspace");
     let currentTask = initialTask;
@@ -1107,7 +1113,34 @@ function initWritingPage() {
     }
   };
 
-  renderHub();
+  const checkUrlTask = () => {
+    try {
+      const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || (urlParams ? urlParams.get(k) : null);
+      const targetTask = getParam("task") || getParam("id");
+      if (targetTask) {
+        const allTasks = getTasks();
+        const found = allTasks.find(t => t.id === targetTask || t.code === targetTask);
+        if (found) {
+          const mode = taskMode(found);
+          currentMode = mode;
+          currentLevel = found.level || currentLevel;
+          const topics = groupedTopics();
+          const topic = topics.find(tp => tp.tasks.some(t => t.id === found.id)) || {
+            key: found.category || "custom",
+            name: found.title || "Luyện viết",
+            tasks: [found]
+          };
+          openWorkspace(topic, found);
+          return true;
+        }
+      }
+    } catch (_) {}
+    return false;
+  };
+
+  if (!checkUrlTask()) {
+    renderHub();
+  }
   loadCloudWriting();
 }
 window.initWritingPage = initWritingPage;

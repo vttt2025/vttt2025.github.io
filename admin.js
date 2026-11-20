@@ -9496,11 +9496,19 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
       };
     }
 
-    // Auth readiness listener
+    // Auth readiness listener (với timeout chống treo màn hình trắng)
     if (window.Auth && window.Auth.isReady) {
+      const authTimeout = setTimeout(() => {
+        applyAuthState(!!(window.Auth && window.Auth.user));
+      }, 1000);
+
       window.Auth.isReady().then(() => {
+        clearTimeout(authTimeout);
         applyAuthState(!!window.Auth.user);
         window.Auth.onChange((u) => applyAuthState(!!u));
+      }).catch(() => {
+        clearTimeout(authTimeout);
+        applyAuthState(false);
       });
     } else {
       applyAuthState(false);

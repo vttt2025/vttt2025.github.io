@@ -32,85 +32,211 @@
         relPath = '/' + relPath.slice(root.length);
       }
 
-      // Bỏ dấu gạch chéo cuối nếu có
-      var clean = relPath.replace(/\/+$/, '');
+      // Bỏ dấu gạch chéo cuối và dấu chấm thừa nếu có (vd: /vocabulary/chu_de/lo_tu_vung./////)
+      var clean = relPath.replace(/[\/.]+$/, '');
       if (clean === '' || clean === '/') {
         window.location.replace(root + 'index.html');
         return;
       }
 
-      // Bản đồ các đường dẫn hợp lệ (Clean URLs không cần đuôi .html)
-      var cleanRoutes = {
-        'login': 'login.html',
-        'dang-nhap': 'login.html',
-        'signup': 'signup.html',
-        'dang-ky': 'signup.html',
-        'vocabulary': 'vocabulary.html',
-        'vocab': 'vocabulary.html',
-        'tu-vung': 'vocabulary.html',
-        'writing': 'writing.html',
-        'write': 'writing.html',
-        'viet': 'writing.html',
-        'listening': 'listening.html',
-        'listen': 'listening.html',
-        'nghe': 'listening.html',
-        'speaking': 'speaking.html',
-        'speak': 'speaking.html',
-        'noi': 'speaking.html',
-        'mock-test': 'mock-test.html',
-        'trki': 'mock-test.html',
-        'test': 'mock-test.html',
-        'exam': 'mock-test.html',
-        'thi-thu': 'mock-test.html',
-        'blog': 'blog.html',
-        'cam-nang': 'blog.html',
-        'blog-post': 'blog-post.html',
-        'shop': 'shop.html',
-        'store': 'shop.html',
-        'cua-hang': 'shop.html',
-        'product-detail': 'product-detail.html',
-        'admin': 'admin.html',
-        'cms': 'admin.html',
-        'upgrade': 'upgrade.html',
-        'nang-cap': 'upgrade.html',
-        'pricing': 'upgrade.html',
-        'pro': 'upgrade.html',
-        'how-to-study': 'how-to-study.html',
-        'huong-dan': 'how-to-study.html',
-        'index': 'index.html',
-        'home': 'index.html'
-      };
-
       var segments = clean.split('/').filter(Boolean);
       var first = (segments[0] || '').toLowerCase();
       var second = (segments[1] || '').toLowerCase();
+      var third = (segments[2] || '').toLowerCase();
+      var fourth = (segments[3] || '').toLowerCase();
       var slug = clean.split('/').pop().toLowerCase();
 
       var target = null;
       var extraParams = [];
+      var routeParamsObj = {};
 
-      if (cleanRoutes[first]) {
-        target = cleanRoutes[first];
-        // Xử lý các sub-route ngữ nghĩa (ví dụ: /speak/shadowing?cat=movie, /trki/b1)
-        if (first === 'speak' || first === 'speaking' || first === 'noi') {
-          if (second === 'shadowing' || second === 'nhai') {
-            extraParams.push('mode=shadowing');
-          } else if (second === 'reflex' || second === 'phan-xa') {
-            extraParams.push('mode=reflex');
+      // 1. VOCABULARY (/vocabulary, /vocab, /tu-vung)
+      if (first === 'vocabulary' || first === 'vocab' || first === 'tu-vung') {
+        target = 'vocabulary.html';
+        if (second === 'srs') {
+          extraParams.push('srs=1');
+          routeParamsObj.srs = '1';
+        } else if (second === 'chu_de' || second === 'chu-de' || second === 'topic' || second === 'article') {
+          if (third && fourth) {
+            extraParams.push('topic=' + encodeURIComponent(third));
+            extraParams.push('jar=' + encodeURIComponent(fourth));
+            extraParams.push('mode=jar');
+            routeParamsObj.topic = third;
+            routeParamsObj.jar = fourth;
+            routeParamsObj.mode = 'jar';
+          } else if (third) {
+            extraParams.push('topic=' + encodeURIComponent(third));
+            extraParams.push('jar=' + encodeURIComponent(third));
+            routeParamsObj.topic = third;
+            routeParamsObj.jar = third;
           }
-        } else if (first === 'listen' || first === 'listening' || first === 'nghe') {
-          if (second) extraParams.push('mode=' + encodeURIComponent(second));
-        } else if (first === 'vocab' || first === 'vocabulary' || first === 'tu-vung') {
-          if (second) extraParams.push('tab=' + encodeURIComponent(second));
-        } else if (first === 'write' || first === 'writing' || first === 'viet') {
-          if (second) extraParams.push('mode=' + encodeURIComponent(second));
-        } else if (first === 'trki' || first === 'mock-test' || first === 'test' || first === 'exam') {
-          if (['a1', 'a2', 'b1', 'b2', 'c1', 'c2'].indexOf(second) !== -1) {
-            extraParams.push('level=' + second.toUpperCase());
+        } else if (second === 'lo_tu' || second === 'lo-tu' || second === 'jar') {
+          if (third) {
+            extraParams.push('jar=' + encodeURIComponent(third));
+            extraParams.push('mode=jar');
+            routeParamsObj.jar = third;
+            routeParamsObj.mode = 'jar';
           }
+        } else if (second && third) {
+          extraParams.push('topic=' + encodeURIComponent(second));
+          extraParams.push('jar=' + encodeURIComponent(third));
+          extraParams.push('mode=jar');
+          routeParamsObj.topic = second;
+          routeParamsObj.jar = third;
+          routeParamsObj.mode = 'jar';
+        } else if (second) {
+          extraParams.push('topic=' + encodeURIComponent(second));
+          extraParams.push('jar=' + encodeURIComponent(second));
+          routeParamsObj.topic = second;
+          routeParamsObj.jar = second;
         }
-      } else if (cleanRoutes[slug]) {
-        target = cleanRoutes[slug];
+      }
+
+      // 2. SPEAKING (/speaking, /speak, /noi)
+      else if (first === 'speaking' || first === 'speak' || first === 'noi') {
+        target = 'speaking.html';
+        if (second === 'shadowing' || second === 'reflex') {
+          extraParams.push('mode=' + second);
+          routeParamsObj.mode = second;
+          if (third) {
+            extraParams.push('set=' + encodeURIComponent(third));
+            routeParamsObj.set = third;
+          }
+        } else if (second) {
+          extraParams.push('set=' + encodeURIComponent(second));
+          routeParamsObj.set = second;
+        }
+      }
+
+      // 3. LISTENING (/listening, /listen, /nghe)
+      else if (first === 'listening' || first === 'listen' || first === 'nghe') {
+        target = 'listening.html';
+        if (second === 'bai_hoc' || second === 'bai-hoc' || second === 'lesson' || second === 'id') {
+          if (third) {
+            extraParams.push('lesson=' + encodeURIComponent(third));
+            routeParamsObj.lesson = third;
+            routeParamsObj.id = third;
+          }
+        } else if (second === 'dictation' || second === 'comprehension') {
+          extraParams.push('mode=' + second);
+          routeParamsObj.mode = second;
+          if (third) {
+            extraParams.push('lesson=' + encodeURIComponent(third));
+            routeParamsObj.lesson = third;
+            routeParamsObj.id = third;
+          }
+        } else if (second) {
+          extraParams.push('lesson=' + encodeURIComponent(second));
+          routeParamsObj.lesson = second;
+          routeParamsObj.id = second;
+        }
+      }
+
+      // 4. WRITING (/writing, /write, /viet)
+      else if (first === 'writing' || first === 'write' || first === 'viet') {
+        target = 'writing.html';
+        if (second === 'bai_viet' || second === 'bai-viet' || second === 'task' || second === 'id') {
+          if (third) {
+            extraParams.push('task=' + encodeURIComponent(third));
+            routeParamsObj.task = third;
+            routeParamsObj.id = third;
+          }
+        } else if (second === 'picture' || second === 'translation') {
+          extraParams.push('mode=' + second);
+          routeParamsObj.mode = second;
+          if (third) {
+            extraParams.push('task=' + encodeURIComponent(third));
+            routeParamsObj.task = third;
+            routeParamsObj.id = third;
+          }
+        } else if (second) {
+          extraParams.push('task=' + encodeURIComponent(second));
+          routeParamsObj.task = second;
+          routeParamsObj.id = second;
+        }
+      }
+
+      // 5. MOCK-TEST (/mock-test, /trki, /test, /exam, /thi-thu)
+      else if (first === 'mock-test' || first === 'trki' || first === 'test' || first === 'exam' || first === 'thi-thu') {
+        target = 'mock-test.html';
+        if (second === 'de_thi' || second === 'de-thi' || second === 'exam' || second === 'test') {
+          if (third) {
+            extraParams.push('test=' + encodeURIComponent(third));
+            routeParamsObj.test = third;
+            routeParamsObj.id = third;
+          }
+        } else if (['a1', 'a2', 'b1', 'b2', 'c1', 'c2'].indexOf(second) !== -1) {
+          extraParams.push('level=' + second.toUpperCase());
+          routeParamsObj.level = second.toUpperCase();
+          if (third) {
+            extraParams.push('test=' + encodeURIComponent(third));
+            routeParamsObj.test = third;
+            routeParamsObj.id = third;
+          }
+        } else if (second) {
+          extraParams.push('test=' + encodeURIComponent(second));
+          routeParamsObj.test = second;
+          routeParamsObj.id = second;
+        }
+      }
+
+      // 6. BLOG (/blog, /cam-nang)
+      else if (first === 'blog' || first === 'cam-nang') {
+        if (second === 'bai_viet' || second === 'bai-viet' || second === 'post') {
+          target = 'blog-post.html';
+          if (third) {
+            extraParams.push('slug=' + encodeURIComponent(third));
+            routeParamsObj.slug = third;
+          }
+        } else if (second) {
+          target = 'blog-post.html';
+          extraParams.push('slug=' + encodeURIComponent(second));
+          routeParamsObj.slug = second;
+        } else {
+          target = 'blog.html';
+        }
+      }
+
+      // 7. SHOP (/shop, /store, /cua-hang)
+      else if (first === 'shop' || first === 'store' || first === 'cua-hang') {
+        if (second === 'san_pham' || second === 'san-pham' || second === 'product' || second === 'item') {
+          target = 'product-detail.html';
+          if (third) {
+            extraParams.push('id=' + encodeURIComponent(third));
+            routeParamsObj.id = third;
+          }
+        } else if (second) {
+          target = 'product-detail.html';
+          extraParams.push('id=' + encodeURIComponent(second));
+          routeParamsObj.id = second;
+        } else {
+          target = 'shop.html';
+        }
+      }
+
+      // 8. ĐƯỜNG DẪN TĨNH KHÁC
+      else {
+        var cleanRoutes = {
+          'login': 'login.html',
+          'dang-nhap': 'login.html',
+          'signup': 'signup.html',
+          'dang-ky': 'signup.html',
+          'admin': 'admin.html',
+          'cms': 'admin.html',
+          'upgrade': 'upgrade.html',
+          'nang-cap': 'upgrade.html',
+          'pricing': 'upgrade.html',
+          'pro': 'upgrade.html',
+          'how-to-study': 'how-to-study.html',
+          'huong-dan': 'how-to-study.html',
+          'index': 'index.html',
+          'home': 'index.html'
+        };
+        if (cleanRoutes[first]) {
+          target = cleanRoutes[first];
+        } else if (cleanRoutes[slug]) {
+          target = cleanRoutes[slug];
+        }
       }
 
       // 1. Nếu là đường dẫn sạch hợp lệ -> chuyển tiếp đúng đến file .html tương ứng
@@ -120,9 +246,11 @@
           var prefix = finalSearch ? (finalSearch + '&') : '?';
           finalSearch = prefix + extraParams.join('&');
         }
-        // Lưu URL sạch ban đầu để trang đích giữ nguyên trên thanh địa chỉ trình duyệt
+        // Lưu URL sạch ban đầu và bộ tham số deep route để trang đích phục hồi chính xác
         try {
-          sessionStorage.setItem('rusi_clean_url', window.location.pathname + window.location.search + window.location.hash);
+          var cleanFullUrl = window.location.pathname.replace(/[\/.]+$/, '') + (window.location.search || '') + (window.location.hash || '');
+          sessionStorage.setItem('rusi_clean_url', cleanFullUrl);
+          sessionStorage.setItem('rusi_route_params', JSON.stringify(routeParamsObj));
         } catch (_) {}
         window.location.replace(root + target + finalSearch + hash);
         return;

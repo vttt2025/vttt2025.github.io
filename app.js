@@ -1,23 +1,128 @@
+
+// Universal DOM Helpers (Phòng ngừa lỗi ReferenceError trên mọi trang)
+window.el = window.el || function(sel) { return document.querySelector(sel); };
+window.esc = window.esc || function(str) {
+  if (str === null || str === undefined) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+};
 // =========================================================================
-// RUSI TRKI — CLEAN URL ENGINE (Loại bỏ .html trên thanh địa chỉ trình duyệt)
+// RUSI TRKI — CLEAN & DEEP URL ROUTING ENGINE
 // =========================================================================
 (function initCleanUrls() {
-  if (typeof window === "undefined" || !window.history || !window.history.replaceState) return;
+  if (typeof window === "undefined") return;
   try {
-    const stored = sessionStorage.getItem("rusi_clean_url");
-    if (stored) {
-      sessionStorage.removeItem("rusi_clean_url");
-      window.history.replaceState(null, document.title, stored);
-      return;
-    }
-    const path = window.location.pathname;
-    if (path.endsWith(".html")) {
-      const cleanPath = path.slice(0, -5);
-      const target = (cleanPath === "/index" ? "/" : cleanPath) + window.location.search + window.location.hash;
-      window.history.replaceState(null, document.title, target);
+    const rawStoredParams = sessionStorage.getItem("rusi_route_params");
+    if (rawStoredParams) {
+      window.__RUSI_DEEP_PARAMS__ = JSON.parse(rawStoredParams);
+      sessionStorage.removeItem("rusi_route_params");
     }
   } catch (_) {}
+
+  // Phòng vệ: Không thay đổi URL nếu đang chạy file:// hoặc trên localhost dev server (tránh Live Server 404 trắng trang)
+  const isLocalDev = window.location.protocol === "file:" ||
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    window.location.hostname === "0.0.0.0";
+  if (isLocalDev) return;
+
+  if (window.history && window.history.replaceState) {
+    try {
+      const stored = sessionStorage.getItem("rusi_clean_url");
+      if (stored) {
+        sessionStorage.removeItem("rusi_clean_url");
+        const cleanStored = stored.replace(/\/+$/, '') || '/';
+        window.history.replaceState(null, document.title, cleanStored);
+      } else {
+        const path = window.location.pathname;
+        if (path.endsWith(".html")) {
+          const cleanPath = path.slice(0, -5);
+          const target = (cleanPath === "/index" ? "/" : (cleanPath.endsWith("/index") ? cleanPath.slice(0, -5) : cleanPath)) + window.location.search + window.location.hash;
+          window.history.replaceState(null, document.title, target);
+        }
+      }
+    } catch (_) {}
+  }
 })();
+
+// Hàm toàn cục lấy tham số điều hướng từ query param, session params hoặc deep pathname
+window.getRusiRouteParam = function(key) {
+  if (typeof window === "undefined") return null;
+  try {
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.has(key)) return sp.get(key);
+  } catch (_) {}
+  if (window.__RUSI_DEEP_PARAMS__ && window.__RUSI_DEEP_PARAMS__[key] !== undefined) {
+    return window.__RUSI_DEEP_PARAMS__[key];
+  }
+  try {
+    const root = (window.__RUSI_APP_ROOT__ || '/');
+    let p = window.location.pathname;
+    if (root !== '/' && p.indexOf(root) === 0) p = '/' + p.slice(root.length);
+    const clean = p.replace(/[\/.]+$/, '');
+    const segments = clean.split('/').filter(Boolean);
+    const first = (segments[0] || '').toLowerCase();
+    const second = (segments[1] || '').toLowerCase();
+    const third = (segments[2] || '').toLowerCase();
+    const fourth = (segments[3] || '').toLowerCase();
+
+    if (first === 'vocabulary' || first === 'vocab' || first === 'tu-vung') {
+      if (key === 'srs' && second === 'srs') return '1';
+      if (key === 'mode') {
+        if (fourth || (second && third && second !== 'chu_de') || second === 'lo_tu' || second === 'lo-tu' || second === 'jar') return 'jar';
+      }
+      if (key === 'jar') {
+        if ((second === 'lo_tu' || second === 'lo-tu' || second === 'jar') && third) return third;
+        if (second === 'chu_de' && third && fourth) return fourth;
+        if (second === 'chu_de' && third) return third;
+        if (second && third) return third;
+        if (second && second !== 'srs' && second !== 'chu_de') return second;
+      }
+      if (key === 'topic' || key === 'article') {
+        if (second === 'chu_de' && third) return third;
+        if (second && third) return second;
+        if (second && second !== 'srs') return second;
+      }
+    } else if (first === 'speaking' || first === 'speak' || first === 'noi') {
+      if (key === 'mode' && (second === 'shadowing' || second === 'reflex')) return second;
+      if (key === 'set' || key === 'id') return third || (second !== 'shadowing' && second !== 'reflex' ? second : null);
+    } else if (first === 'listening' || first === 'listen' || first === 'nghe') {
+      if (key === 'mode' && (second === 'dictation' || second === 'comprehension')) return second;
+      if (key === 'lesson' || key === 'id') return third || (second !== 'dictation' && second !== 'comprehension' && second !== 'bai_hoc' && second !== 'bai-hoc' ? second : null);
+    } else if (first === 'writing' || first === 'write' || first === 'viet') {
+      if (key === 'mode' && (second === 'picture' || second === 'translation')) return second;
+      if (key === 'task' || key === 'id') return third || (second !== 'picture' && second !== 'translation' && second !== 'bai_viet' && second !== 'bai-viet' ? second : null);
+    } else if (first === 'mock-test' || first === 'trki' || first === 'test' || first === 'exam' || first === 'thi-thu') {
+      if (key === 'level' && ['a1', 'a2', 'b1', 'b2', 'c1', 'c2'].includes(second)) return second.toUpperCase();
+      if (key === 'test' || key === 'exam' || key === 'id') return third || (!['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'de_thi', 'de-thi'].includes(second) ? second : null);
+    }
+  } catch (_) {}
+  return null;
+};
+
+// Cập nhật thanh địa chỉ URL ngữ nghĩa mượt mà không reload trang
+window.setRusiDeepUrl = function(path) {
+  if (typeof window === "undefined" || !window.history || !window.history.pushState) return;
+  try {
+    // Không pushState khi ở local server để tránh Live Server 404 khi tải lại
+    const isLocalDev = window.location.protocol === "file:" ||
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      window.location.hostname === "0.0.0.0";
+    if (isLocalDev) return;
+
+    const root = (window.__RUSI_APP_ROOT__ || (window.location.pathname.startsWith('/rusitrki/') ? '/rusitrki/' : '/'));
+    const cleanPath = path.replace(/^[\/]+/, '');
+    const finalUrl = (root === '/' ? '/' : root) + cleanPath;
+    if (window.location.pathname + window.location.search !== finalUrl) {
+      window.history.pushState(null, document.title, finalUrl);
+    }
+  } catch (_) {}
+};
 
 const STORE = {
   get(key, fallback) {
@@ -1125,8 +1230,8 @@ const Monetization = {
       document.body.appendChild(modal);
     }
 
-    const pageName = window.location.pathname.split("/").pop() || "index.html";
-    let redirectTarget = pageName + window.location.search + window.location.hash;
+    const fullCurrentPath = (window.location.pathname + window.location.search + window.location.hash).replace(/^\//, '') || "index.html";
+    let redirectTarget = fullCurrentPath;
     if (targetPkg) {
       const sep = redirectTarget.includes("?") ? "&" : "?";
       redirectTarget = `${redirectTarget}${sep}pkg=${encodeURIComponent(targetPkg)}`;
@@ -2085,8 +2190,8 @@ function renderUserArea() {
   if (!user) {
     renderIndexProgressIfLoggedIn(null);
 
-    const pageName = window.location.pathname.split("/").pop() || "index.html";
-    const currentRedirect = encodeURIComponent(pageName + window.location.search + window.location.hash);
+    const fullCurrentPath = (window.location.pathname + window.location.search + window.location.hash).replace(/^\//, '') || "index.html";
+    const currentRedirect = encodeURIComponent(fullCurrentPath);
     host.innerHTML = `
       <div class="auth-buttons-group">
         <a class="btn-auth-login" id="btnLogin" href="login.html?redirect=${currentRedirect}">Đăng nhập</a>

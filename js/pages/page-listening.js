@@ -819,6 +819,9 @@ function initListeningPage() {
   };
 
   const renderHub = () => {
+    if (window.setRusiDeepUrl) {
+      window.setRusiDeepUrl('/listening');
+    }
     document.body.classList.remove("in-workspace");
     currentLesson = null;
     host.innerHTML = `
@@ -2003,6 +2006,9 @@ function initListeningPage() {
    * Bố cục 3/7: 3 phần menu câu hỏi bên trái, 7 phần phát audio & trắc nghiệm
    * ===================================================================== */
   const openComprehensionWorkspace = (lesson) => {
+    if (window.setRusiDeepUrl && lesson) {
+      window.setRusiDeepUrl('/listening/bai_hoc/' + encodeURIComponent(lesson.id || lesson.code));
+    }
     if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent((lesson && lesson.id) || ""))) return;
     currentLesson = lesson;
     document.body.classList.add("in-workspace");
@@ -2883,6 +2889,9 @@ function initListeningPage() {
 
 
   const openDictationWorkspace = (lesson) => {
+    if (window.setRusiDeepUrl && lesson) {
+      window.setRusiDeepUrl('/listening/dictation/' + encodeURIComponent(lesson.id || lesson.code));
+    }
     if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent((lesson && lesson.id) || ""))) return;
     currentLesson = lesson;
     document.body.classList.add("in-workspace");
@@ -4096,7 +4105,12 @@ function initListeningPage() {
   const checkUrlLesson = () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const targetId = urlParams.get("id") || urlParams.get("lesson");
+      const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || urlParams.get(k);
+      const modeParam = (getParam("mode") || "").toLowerCase();
+      if (modeParam === "dictation" || modeParam === "comprehension") {
+        currentMode = modeParam;
+      }
+      const targetId = getParam("id") || getParam("lesson");
       if (targetId) {
         if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent(targetId))) return true;
         const all = typeof getLessons === "function" ? getLessons() : [];
