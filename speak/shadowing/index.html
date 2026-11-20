@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="robots" content="noindex, follow">
+  <title>RUSI TRKI</title>
+  <script>
+    try {
+      sessionStorage.setItem("rusi_clean_url", window.location.pathname + window.location.search + window.location.hash);
+    } catch (_) {}
+    var target = "../../speaking.html?mode=shadowing";
+    if (window.location.search) {
+      target += "&" + window.location.search.slice(1);
+    }
+    window.location.replace(target + window.location.hash);
+  </script>
+</head>
+<body></body>
+</html>

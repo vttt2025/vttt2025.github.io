@@ -2005,7 +2005,10 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     State.currentPage = 1;
 
     // Tự động nạp module theo nhu cầu nếu chưa có trong bộ nhớ (On-demand Lazy Loading)
-    if (State.currentSlug && window.RusiDataLoader && typeof window.RusiDataLoader.isLoaded === "function" && !window.RusiDataLoader.isLoaded(State.currentSlug)) {
+    const _MODULAR_COLLECTIONS = new Set(["TRKI_BANK", "TRKI_QUESTION_BANK", "VOCAB_JARS", "VOCABULARIES", "TOPIC_ARTICLES", "SPEAKING_SETS"]);
+    if (State.currentSlug && _MODULAR_COLLECTIONS.has(State.currentSlug) && window.RusiDataLoader && typeof window.RusiDataLoader.isLoaded === "function" && !window.RusiDataLoader.isLoaded(State.currentSlug) && !window._attemptedAdminLoads?.has(State.currentSlug)) {
+      if (!window._attemptedAdminLoads) window._attemptedAdminLoads = new Set();
+      window._attemptedAdminLoads.add(State.currentSlug);
       window.RusiDataLoader.load(State.currentSlug).then(() => {
         handleRoute();
       });
@@ -9535,9 +9538,9 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
           closeLivePreview();
           return;
         }
-        const modalSb = document.getElementById("modalSupabaseKey");
-        if (modalSb && modalSb.classList.contains("visible")) {
-          modalSb.classList.remove("visible");
+        const modalSb = document.getElementById("modalSupabaseDrawer");
+        if (modalSb && modalSb.classList.contains("open")) {
+          closeSupabaseModal();
           return;
         }
         const kebabDropdown = document.getElementById("kebabDropdown");

@@ -5676,8 +5676,6 @@ body.rusika-chat-open .rusika-floating-widget {
   }
 }
 
-
-
 /* ==========================================================================
    FIGMA SITE DESIGN SYSTEM (RussUp / Rusi TRKI Modern Russian Aesthetic)
    Source: https://rigor-hall-40167838.figma.site
@@ -6263,7 +6261,6 @@ body.rusika-chat-open .rusika-floating-widget {
   background: rgba(197, 34, 51, 0.08);
   color: var(--russia-red-dark);
 }
-
 
 /* =====================================================================
  * HỆ THỐNG MODAL OVERLAY & DIALOG CHUẨN (AUTH MODAL & UNIVERSAL)
@@ -9621,7 +9618,6 @@ html, body {
   -webkit-text-size-adjust: 100%;
 }
 
-
 img, video, iframe {
   max-width: 100%;
   height: auto;
@@ -10597,8 +10593,6 @@ img, video, iframe {
     grid-template-columns: 1fr;
     gap: 10px;
   }
-
-
 
   /* ---------------- TRANG CHỦ & MASCOT RUSIKA (index.html) ---------------- */
   .rusika-card {
@@ -13508,10 +13502,6 @@ img, video, iframe {
   }
 }
 
-
-
-
-
 /* =====================================================================
  * RESPONSIVE & "MORE..." OVERFLOW SYSTEM UTILITIES
  * ===================================================================== */
@@ -13744,7 +13734,6 @@ img, video, iframe {
     mask-image: linear-gradient(to right, #000 85%, transparent 100%);
   }
 }
-
 
 /* =====================================================================
  * COMPACT MINIMALIST CARDS & WORD BOXES & VIDEO LISTENING (MODERN RUSSIAN STYLE)
@@ -18580,7 +18569,7 @@ body[data-page="blog"] {
   --muted: #53657a;
   --nav-link-color: #2c3e55;
   background-color: #f6f9fc !important;
-  background-image: 
+  background-image:
     radial-gradient(ellipse 85% 45% at 50% -5%, rgba(23, 87, 166, 0.1) 0%, transparent 68%),
     radial-gradient(ellipse 55% 35% at 92% 14%, rgba(197, 34, 51, 0.045) 0%, transparent 55%),
     radial-gradient(ellipse 50% 30% at 8% 42%, rgba(23, 87, 166, 0.04) 0%, transparent 50%),
@@ -18610,7 +18599,7 @@ body[data-page="blog"] {
   --muted: #94a3b8;
   --nav-link-color: #cbd5e1;
   background-color: #0a0f19 !important;
-  background-image: 
+  background-image:
     radial-gradient(ellipse 75% 45% at 50% -5%, rgba(37, 99, 235, 0.18) 0%, transparent 70%),
     radial-gradient(ellipse 50% 35% at 90% 15%, rgba(225, 29, 72, 0.07) 0%, transparent 55%),
     radial-gradient(ellipse 45% 30% at 10% 45%, rgba(30, 64, 175, 0.08) 0%, transparent 50%),
@@ -20825,7 +20814,6 @@ body[data-page="upgrade"] main.container {
   color: #475569;
 }
 
-
 @media (max-width: 768px) {
   body[data-page="vocabulary"] main.container,
   body[data-page="listening"] main.container,
@@ -20945,7 +20933,6 @@ body[data-page="upgrade"] main.container {
     padding: 8px 10px;
   }
 }
-
 
 /* =====================================================================
  * VOCABULARY FULL-WIDTH LAYOUT & HORIZONTAL PROGRESS DASHBOARD
@@ -21604,7 +21591,6 @@ body[data-page="upgrade"] main.container {
   .rusi-skeleton-grid { grid-template-columns: 1fr; gap: 16px; }
   .rusi-skeleton-card { height: 210px; }
 }
-
 
 /* =====================================================================
  * HEADER COMPACT POMODORO CHIP (Góc trên bên phải header - Tối giản, thanh lịch)
@@ -23065,7 +23051,6 @@ body.menu-locked .header-inner,
   color: var(--russia-red, #c52233) !important;
 }
 
-
 /* --- Spec 3.3 & 9.4: Quy Chuẩn Vùng Chạm Tap Target >= 44x44px --- */
 .btn-icon-compact {
   width: 34px;
@@ -23984,7 +23969,6 @@ body.has-bottom-bar .rusika-floating-widget {
   }
 }
 
-
 /* =====================================================================
  * REALTIME WIKTIONARY & WORD DETAILS STYLES
  * ===================================================================== */
@@ -24687,12 +24671,12 @@ body.has-bottom-bar .rusika-floating-widget {
     border-radius: 16px !important;
     min-height: auto !important;
   }
-  
+
   .rusi-card.rusi-card-compact .rusi-card-header {
     gap: 12px !important;
     align-items: flex-start !important;
   }
-  
+
   .rusi-card.rusi-card-compact .rusi-card-icon {
     width: 42px !important;
     height: 42px !important;
@@ -25497,7 +25481,6 @@ body.has-bottom-bar .rusika-floating-widget {
     display: none !important;
   }
 }
-
 
 /* --- CHI TIẾT NGỮ PHÁP MẶT SAU THẺ FLASHCARD & PREVIEW BOX (SPEC 1) --- */
 .qcard-pos-badge,
@@ -28956,7 +28939,6 @@ body.has-bottom-bar .rusika-floating-widget {
   }
 }
 
-
 /* =====================================================================
  * CẢI TIẾN LUYỆN DỊCH, NGHE HIỂU VÀ ĐỌC BÀI VIẾT
  * ===================================================================== */
@@ -29712,7 +29694,6 @@ body.has-bottom-bar .rusika-floating-widget {
   align-items: center;
   gap: 8px;
 }
-
 
 /* =====================================================================
  * TINH CHỈNH GIAO DIỆN MỚI THEO YÊU CẦU NGƯỜI DÙNG
@@ -31215,7 +31196,7 @@ html.index-personalized body,
 body.index-personalized {
   --bg: #f6f9fc;
   background-color: #f6f9fc;
-  background-image: 
+  background-image:
     radial-gradient(ellipse 80% 45% at 50% -5%, rgba(23, 87, 166, 0.1) 0%, transparent 68%),
     radial-gradient(ellipse 55% 35% at 90% 12%, rgba(197, 34, 51, 0.045) 0%, transparent 55%),
     radial-gradient(ellipse 50% 30% at 10% 40%, rgba(23, 87, 166, 0.035) 0%, transparent 50%),
@@ -31229,7 +31210,7 @@ body.index-personalized {
 [data-theme="dark"] body.index-personalized {
   --bg: #0a0f19;
   background-color: #0a0f19;
-  background-image: 
+  background-image:
     radial-gradient(ellipse 75% 45% at 50% -5%, rgba(37, 99, 235, 0.18) 0%, transparent 70%),
     radial-gradient(ellipse 50% 35% at 90% 15%, rgba(225, 29, 72, 0.07) 0%, transparent 55%),
     radial-gradient(ellipse 45% 30% at 10% 45%, rgba(30, 64, 175, 0.08) 0%, transparent 50%),
@@ -32437,7 +32418,6 @@ body.index-personalized #indexUserProgressHost {
   }
 }
 
-
 /* ============================================================================
  * RUSI UI ENHANCEMENTS: AI REVIEW, UNIFIED VOICE MEMO, WIDE TEST RESULT
  * ============================================================================ */
@@ -32676,7 +32656,6 @@ body.index-personalized #indexUserProgressHost {
     gap: 8px;
   }
 }
-
 
 /* =====================================================================
    2. THẺ VOICE MEMO TỐI GIẢN (SLIM AUDIO CAPSULE, APPLE/TELEGRAM AESTHETIC)
@@ -34135,9 +34114,6 @@ body.cbt-fullscreen-mode {
     grid-template-columns: 1fr;
   }
 }
-
-
-
 
 /* =====================================================================
  * CBT INTERNATIONAL EXAM WORKSPACE PORTAL (CHUẨN KHẢO THÍ QUỐC TẾ MỚI)

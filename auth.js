@@ -162,6 +162,7 @@
 
     async verifyDeviceGuard() {
       if (!this.user || !window.RusiSupabase || !window.RusiSupabase.deviceGuard) return true;
+      if (this.user.provider === "guest" || (typeof this.user.uid === "string" && this.user.uid.startsWith("guest_"))) return true;
       const info = getDeviceInfo();
       try {
         const res = await window.RusiSupabase.deviceGuard.register(info);

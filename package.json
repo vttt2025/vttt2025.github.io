@@ -6,7 +6,8 @@
     "auto-audio": "node scripts/auto_fill_vocab_audio.js",
     "sync-audio": "node scripts/auto_fill_vocab_audio.js",
     "sync": "node scripts/sync-from-supabase.js",
-    "test": "node -c app.js && node -c pages.js && node -c admin.js"
+    "test": "node scripts/verify_clean_code.js",
+    "verify": "node scripts/verify_clean_code.js"
   },
   "keywords": [
     "russian",

@@ -1,3 +1,24 @@
+// =========================================================================
+// RUSI TRKI — CLEAN URL ENGINE (Loại bỏ .html trên thanh địa chỉ trình duyệt)
+// =========================================================================
+(function initCleanUrls() {
+  if (typeof window === "undefined" || !window.history || !window.history.replaceState) return;
+  try {
+    const stored = sessionStorage.getItem("rusi_clean_url");
+    if (stored) {
+      sessionStorage.removeItem("rusi_clean_url");
+      window.history.replaceState(null, document.title, stored);
+      return;
+    }
+    const path = window.location.pathname;
+    if (path.endsWith(".html")) {
+      const cleanPath = path.slice(0, -5);
+      const target = (cleanPath === "/index" ? "/" : cleanPath) + window.location.search + window.location.hash;
+      window.history.replaceState(null, document.title, target);
+    }
+  } catch (_) {}
+})();
+
 const STORE = {
   get(key, fallback) {
     try {

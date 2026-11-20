@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="styles.css?v=11.4" />
+  <link rel="stylesheet" href="styles.css?v=11.5" />
   <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
 
   <script>
@@ -39,34 +39,92 @@
         return;
       }
 
-      var slug = clean.split('/').pop().toLowerCase();
-
       // Bản đồ các đường dẫn hợp lệ (Clean URLs không cần đuôi .html)
       var cleanRoutes = {
         'login': 'login.html',
+        'dang-nhap': 'login.html',
         'signup': 'signup.html',
+        'dang-ky': 'signup.html',
         'vocabulary': 'vocabulary.html',
+        'vocab': 'vocabulary.html',
         'tu-vung': 'vocabulary.html',
         'writing': 'writing.html',
+        'write': 'writing.html',
         'viet': 'writing.html',
         'listening': 'listening.html',
+        'listen': 'listening.html',
         'nghe': 'listening.html',
         'speaking': 'speaking.html',
+        'speak': 'speaking.html',
         'noi': 'speaking.html',
         'mock-test': 'mock-test.html',
         'trki': 'mock-test.html',
+        'test': 'mock-test.html',
+        'exam': 'mock-test.html',
+        'thi-thu': 'mock-test.html',
         'blog': 'blog.html',
+        'cam-nang': 'blog.html',
+        'blog-post': 'blog-post.html',
+        'shop': 'shop.html',
+        'store': 'shop.html',
+        'cua-hang': 'shop.html',
+        'product-detail': 'product-detail.html',
         'admin': 'admin.html',
+        'cms': 'admin.html',
         'upgrade': 'upgrade.html',
         'nang-cap': 'upgrade.html',
         'pricing': 'upgrade.html',
+        'pro': 'upgrade.html',
+        'how-to-study': 'how-to-study.html',
+        'huong-dan': 'how-to-study.html',
         'index': 'index.html',
         'home': 'index.html'
       };
 
+      var segments = clean.split('/').filter(Boolean);
+      var first = (segments[0] || '').toLowerCase();
+      var second = (segments[1] || '').toLowerCase();
+      var slug = clean.split('/').pop().toLowerCase();
+
+      var target = null;
+      var extraParams = [];
+
+      if (cleanRoutes[first]) {
+        target = cleanRoutes[first];
+        // Xử lý các sub-route ngữ nghĩa (ví dụ: /speak/shadowing?cat=movie, /trki/b1)
+        if (first === 'speak' || first === 'speaking' || first === 'noi') {
+          if (second === 'shadowing' || second === 'nhai') {
+            extraParams.push('mode=shadowing');
+          } else if (second === 'reflex' || second === 'phan-xa') {
+            extraParams.push('mode=reflex');
+          }
+        } else if (first === 'listen' || first === 'listening' || first === 'nghe') {
+          if (second) extraParams.push('mode=' + encodeURIComponent(second));
+        } else if (first === 'vocab' || first === 'vocabulary' || first === 'tu-vung') {
+          if (second) extraParams.push('tab=' + encodeURIComponent(second));
+        } else if (first === 'write' || first === 'writing' || first === 'viet') {
+          if (second) extraParams.push('mode=' + encodeURIComponent(second));
+        } else if (first === 'trki' || first === 'mock-test' || first === 'test' || first === 'exam') {
+          if (['a1', 'a2', 'b1', 'b2', 'c1', 'c2'].indexOf(second) !== -1) {
+            extraParams.push('level=' + second.toUpperCase());
+          }
+        }
+      } else if (cleanRoutes[slug]) {
+        target = cleanRoutes[slug];
+      }
+
       // 1. Nếu là đường dẫn sạch hợp lệ -> chuyển tiếp đúng đến file .html tương ứng
-      if (cleanRoutes[slug]) {
-        window.location.replace(root + cleanRoutes[slug] + search + hash);
+      if (target) {
+        var finalSearch = search;
+        if (extraParams.length > 0) {
+          var prefix = finalSearch ? (finalSearch + '&') : '?';
+          finalSearch = prefix + extraParams.join('&');
+        }
+        // Lưu URL sạch ban đầu để trang đích giữ nguyên trên thanh địa chỉ trình duyệt
+        try {
+          sessionStorage.setItem('rusi_clean_url', window.location.pathname + window.location.search + window.location.hash);
+        } catch (_) {}
+        window.location.replace(root + target + finalSearch + hash);
         return;
       }
 
@@ -420,7 +478,7 @@
   <script src="supabase-client.js?v=7.8"></script>
   <script src="rusi-icons.js?v=5.0"></script>
   <script src="data.js?v=11.1"></script>
-  <script src="auth.js?v=8.1"></script>
+  <script src="auth.js?v=8.2"></script>
   <script src="app.js?v=9.1"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
