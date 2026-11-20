@@ -189,6 +189,7 @@ const RUSI_XP_RULES = {
 window.RUSI_XP_RULES = RUSI_XP_RULES;
 
 const Progress = {
+
   /**
    * Xác nhận chuỗi Streak ngày học (XP-Gated Streak & 5-Min Rule).
    * Yêu cầu: Đã hoàn thành 1 bài luyện bất kỳ HOẶC học liên tục >= 5 phút trong ngày.
@@ -2862,6 +2863,12 @@ let _pageInited = false;
 
 async function triggerPageInit() {
   if (_pageInited) return;
+  const curPage = (document.body && document.body.dataset && document.body.dataset.page) || "";
+  const NO_INIT_PAGES = ["admin", "login", "signup", "how-to-study", "404"];
+  if (NO_INIT_PAGES.includes(curPage) && typeof window.initPage !== "function") {
+    _pageInited = true;
+    return;
+  }
   if (typeof window.initPage === "function") {
     _pageInited = true;
     try {
@@ -3209,3 +3216,11 @@ const RusiMarkdown = {
   }
 };
 window.RusiMarkdown = RusiMarkdown;
+
+// Universal Global Exports
+window.Progress = Progress;
+if (typeof MascotRusika !== "undefined") window.MascotRusika = MascotRusika;
+if (typeof AuthModal !== "undefined") window.AuthModal = AuthModal;
+if (typeof currentSeason !== "undefined") window.currentSeason = currentSeason;
+if (typeof renderHeader !== "undefined") window.renderHeader = renderHeader;
+if (typeof renderFooter !== "undefined") window.renderFooter = renderFooter;

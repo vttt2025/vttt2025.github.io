@@ -208,7 +208,7 @@
             ${devices.map(d => `
               <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px">
                 <div>
-                  <div style="font-weight:700;font-size:0.88rem;color:var(--text)">${d.device_name || "Thiết bị"}</div>
+                  <div style="font-weight:700;font-size:0.88rem;color:var(--text)">${(typeof esc === "function" ? esc(d.device_name) : d.device_name) || "Thiết bị"}</div>
                   <div style="font-size:0.75rem;color:var(--muted)">Hoạt động: ${d.last_active_at ? new Date(d.last_active_at).toLocaleString('vi-VN') : 'Gần đây'}</div>
                 </div>
                 <button type="button" class="btn btn-outline btn-revoke-device" data-id="${d.id}" style="padding:6px 12px;font-size:0.8rem;color:#e11d48;border-color:#e11d48">

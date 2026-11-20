@@ -72,8 +72,11 @@
       }
     }
 
-    // Đảm bảo target hợp lệ
+    // Đảm bảo target hợp lệ & phòng chống Open Redirect / javascript: DOM-XSS
     if (!target || target === "/" || target === "") target = "index.html";
+    if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/i.test(target) || target.startsWith("//") || target.startsWith("\\")) {
+      target = "index.html";
+    }
     return target;
   }
 

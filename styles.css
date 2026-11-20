@@ -30277,6 +30277,29 @@ body.has-bottom-bar .rusika-floating-widget {
   background: transparent !important;
 }
 
+/* Hiệu ứng Karaoke Shadowing: Chữ sáng theo miệng người bản xứ khi phát audio/video */
+.sp-target-word.sp-karaoke-active {
+  color: #c52233 !important;
+  background: rgba(197, 34, 51, 0.12) !important;
+  border-radius: 4px;
+  padding: 0 4px;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  transition: all 0.15s ease;
+}
+
+[data-theme="dark"] .sp-target-word.sp-karaoke-active {
+  color: #f87171 !important;
+  background: rgba(248, 113, 113, 0.18) !important;
+}
+
+/* Sóng âm dynamic khi đang thu âm */
+.sp-vm-waveform.is-live .sp-vm-bar {
+  animation: none !important;
+  transition: height 0.08s ease;
+}
+
 .sp-vi-translation {
   font-size: 0.95rem;
   color: var(--muted);
@@ -35260,3 +35283,39 @@ body.cbt-resizing .cbt-gutter-handle {
   }
 }
 
+
+/* ==========================================================================
+   MOBILE & TABLET SAFEGUARDS (Anti-AutoZoom & Touch Targets - Responsive Audit)
+   ========================================================================== */
+@media (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Touch Target >= 44x44px for modals, buttons and tabs */
+  .modal-close,
+  .diag-modal-close,
+  .rusi-kebab-btn,
+  .btn-outline,
+  #lisTabs .tab,
+  .voc-pmodal-tab {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* More... Rule: Enforce single-line nowrap with smooth momentum scroll */
+  #lisTabs.tabs,
+  .cbt-filter-buttons-row,
+  .voc-progress-modal-tabs {
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    mask-image: linear-gradient(to right, black 85%, transparent 100%) !important;
+    -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%) !important;
+  }
+}

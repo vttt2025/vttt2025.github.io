@@ -779,7 +779,7 @@ const SRS = {
     if (state.sessionQueue.length === 0 && (state.sessionDone || []).length > 0) {
       if (!state._sessionAwarded) {
         state._sessionAwarded = true;
-        Progress.addXp(15);
+        if (typeof Progress !== "undefined" && typeof Progress.addXp === "function") Progress.addXp(15);
         toast("Chúc mừng! Bạn đã hoàn thành phiên ôn tập Spaced Repetition (+15 XP)!");
       }
     }
@@ -802,7 +802,7 @@ const SRS = {
     card.dueDate = Number.MAX_SAFE_INTEGER;
     if (state.sessionQueue[0] === cardId) state.sessionQueue.shift();
     if (!state.sessionDone.includes(cardId)) state.sessionDone.push(cardId);
-    Progress.addXp(10);
+    if (typeof Progress !== "undefined" && typeof Progress.addXp === "function") Progress.addXp(10);
     this.saveState(state);
   },
 
@@ -894,3 +894,6 @@ const SRS = {
     if (!state.sessionInserted.includes(cardId)) state.sessionInserted.push(cardId);
   }
 };
+
+window.SRS = SRS;
+if (typeof globalThis !== "undefined") globalThis.SRS = SRS;

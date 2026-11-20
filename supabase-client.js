@@ -332,7 +332,7 @@
         return { ok: false, message: "Chưa cấu hình URL Supabase trong supabase-config.js" };
       }
 
-      if (!window.isSupabaseConfigured()) {
+      if (typeof window.isSupabaseConfigured !== "function" || !window.isSupabaseConfigured()) {
         return {
           ok: false,
           needsKey: true,

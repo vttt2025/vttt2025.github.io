@@ -4559,3 +4559,14 @@ body.payload-body {
     font-size: 16px !important;
   }
 }
+
+/* Admin Mobile Auto-Zoom Protection */
+@media (max-width: 768px) {
+  .p-input,
+  .p-textarea,
+  .p-select,
+  .payload-search-input,
+  .p-md-textarea {
+    font-size: 16px !important;
+  }
+}

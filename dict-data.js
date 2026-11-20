@@ -14,6 +14,12 @@ const RusiDict = {
   _loading: {},
 
   /** Chuỗi so sánh: lowercase + chuẩn hóa ё->е + bỏ dấu (đ, ô, ả... -> d, o, a). */
+  _cardId(e) {
+    if (typeof SRS !== "undefined" && typeof SRS.cardId === "function") return SRS.cardId(e);
+    if (typeof window !== "undefined" && window.SRS && typeof window.SRS.cardId === "function") return window.SRS.cardId(e);
+    return (e && e.dk) ? ("srsd_" + e.dk) : ((e && e.ru) ? ("srs_" + String(e.ru).toLowerCase().replace(/[^а-яёa-z0-9]/gi, "_")) : (e ? (e.id || "") : ""));
+  },
+
   fold(s) {
     return (s || "")
       .toLowerCase()
@@ -178,7 +184,7 @@ const RusiDict = {
       if (lvl !== "all" && e.level !== lvl) continue;
       if (pos !== "all" && !(e.pos || "").toLowerCase().includes(pos)) continue;
       if (status !== "all" && sm) {
-        const st = sm.get(SRS.cardId(e)) || "unseen";
+        const st = sm.get(this._cardId(e)) || "unseen";
         if (status === "new" ? st !== "unseen" && st !== "new" : st !== status) continue;
       }
       if (!q) {
@@ -207,7 +213,7 @@ const RusiDict = {
     const sm = this.statusMap(state);
     const res = { total: c.list.length, unseen: 0, new: 0, learning: 0, reviewing: 0, mastered: 0 };
     for (const e of c.list) {
-      const st = sm.get(SRS.cardId(e)) || "unseen";
+      const st = sm.get(this._cardId(e)) || "unseen";
       res[st]++;
     }
     return res;

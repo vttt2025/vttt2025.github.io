@@ -1037,7 +1037,7 @@ function initWritingPage() {
                   <span class="rusi-ai-feedback-heading">Nhận xét chi tiết</span>
                 </div>
                 <div class="rusi-ai-feedback-content">
-                  ${feedbackComment}
+                  ${esc(feedbackComment)}
                 </div>
               </div>
             </div>

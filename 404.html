@@ -626,7 +626,8 @@
         const badgeEl = document.getElementById("errorBadgeText");
         const decoded = decodeURIComponent(q).replace(/\+/g, " ");
         if (titleEl) titleEl.textContent = `Không tìm thấy kết quả cho "${decoded}"`;
-        if (descEl) descEl.innerHTML = `Hệ thống không tìm thấy bài học hay từ vựng nào khớp với từ khóa <strong>"${decoded}"</strong>. Hãy thử kiểm tra lại chính tả hoặc chọn một chuyên mục bên dưới nhé!`;
+        const esc404 = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+        if (descEl) descEl.innerHTML = `Hệ thống không tìm thấy bài học hay từ vựng nào khớp với từ khóa <strong>"${esc404(decoded)}"</strong>. Hãy thử kiểm tra lại chính tả hoặc chọn một chuyên mục bên dưới nhé!`;
         if (badgeEl) badgeEl.textContent = `Ошибка 404 · Không tìm thấy: ${decoded}`;
       }
     });

@@ -9180,7 +9180,7 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
     const el = document.getElementById("loginGateAlert");
     if (!el) return;
     el.className = `payload-gate-alert alert-${type}`;
-    el.innerHTML = message;
+    el.textContent = message;
     el.style.display = "block";
   }
 
