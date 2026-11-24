@@ -89,7 +89,11 @@ function initSpeakingPage() {
       if (targetId) {
         if (typeof window.requireAuth === "function" && !window.requireAuth("speaking.html?set=" + encodeURIComponent(targetId))) return true;
         const all = getSpeakingSets();
-        const found = all.find(s => s.id === targetId || s.code === targetId);
+        const found = all.find(s => String(s.id).toLowerCase() === String(targetId).toLowerCase() || String(s.code || "").toLowerCase() === String(targetId).toLowerCase());
+        if (found && !canOpen(found)) {
+          if (window.Monetization && window.Monetization.openUpgradeModal) window.Monetization.openUpgradeModal("pro");
+          return false;
+        }
         if (found) {
           if (matchesSpeakingMode(found, "reflex")) {
             currentMode = "reflex";
@@ -414,6 +418,8 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
     };
 
     let currentSentenceIdx = 0;
+    let recordingSentenceIdx = null;
+    let autoAdvanceTimer = null;
     let currentSpeed = 1.0;
     let loopMode = 0; // 0: Tắt, 3: 3 lần, 5: 5 lần
     let loopRemaining = 0;
@@ -797,7 +803,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
 
     // Thuật toán so khớp chuỗi từ Word Error Rate (WER) tiếng Nga chuẩn (Chuẩn hóa số & từ đệm)
     const computeWordErrorRate = (targetRu, heardRu) => {
-      const refWords = (targetRu || "").split(/\s+/).map(cleanRussianToken).filter(w => Boolean(w) && !RU_FILLER_WORDS.has(w));
+      const refWords = (targetRu || "").split(/\s+/).map(cleanRussianToken).filter(Boolean);
       const hypWords = (heardRu || "").split(/\s+/).map(cleanRussianToken).filter(w => Boolean(w) && !RU_FILLER_WORDS.has(w));
       const n = refWords.length;
       const m = hypWords.length;
@@ -875,14 +881,14 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
 
         let matched = null;
         for (let k = alignIdx; k < res.alignments.length; k++) {
-          if (res.alignments[k].word === cTok) {
+          if (res.alignments[k].word === cTok && res.alignments[k].status !== "extra") {
             matched = res.alignments[k];
             alignIdx = k + 1;
             break;
           }
         }
         if (!matched) {
-          matched = res.alignments.find(a => a.word === cTok);
+          matched = res.alignments.find(a => a.word === cTok && a.status !== "extra");
         }
 
         if (matched && matched.status === "correct") {
@@ -1117,6 +1123,8 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
 
     // Nạp câu hiện hành vào sân khấu
     const loadSentence = (idx) => {
+      if (isRecording) stopRecording();
+      if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
       if (idx < 0 || idx >= items.length) return;
       currentSentenceIdx = idx;
       const it = items[idx];
@@ -1256,6 +1264,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       const btnMic = el("#btnRecordMic");
       if (btnMic) btnMic.classList.add("is-recording");
 
+      recordingSentenceIdx = currentSentenceIdx;
       voiceStartTime = Date.now();
 
       // 1. Khởi động Hardware Audio Recorder (WAV 16kHz PCM + VAD theo chuẩn DauEnglish)
@@ -1384,13 +1393,14 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       const dotEl = el("#spResultDot");
 
       if (lastHeardText) {
-        const it = items[currentSentenceIdx];
+        const targetIdx = (recordingSentenceIdx !== null && recordingSentenceIdx < items.length) ? recordingSentenceIdx : currentSentenceIdx;
+        const it = items[targetIdx];
         const targetText = (it.ru || it.text_ru || it.text || "").trim();
         const werResult = computeWordErrorRate(targetText, lastHeardText);
         const sim = werResult ? werResult.accuracy : 0;
 
-        const bestScore = Math.max(sim, STORE.get("speak_" + set.id + "_" + currentSentenceIdx, 0));
-        STORE.set("speak_" + set.id + "_" + currentSentenceIdx, bestScore);
+        const bestScore = Math.max(sim, STORE.get("speak_" + set.id + "_" + targetIdx, 0));
+        STORE.set("speak_" + set.id + "_" + targetIdx, bestScore);
         STORE.set(todayKey, STORE.get(todayKey, 0) + 1);
 
         // Đồng bộ điểm lên Supabase nếu có đăng nhập

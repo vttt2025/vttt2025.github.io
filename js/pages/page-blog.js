@@ -42,9 +42,11 @@ function initBlogPage() {
 
       <div class="shop-grid">
         ${filtered
-          .map(
-            (p, i) => `
-          <article class="product-card blog-card" data-slug="${p.slug || i}" onclick="window.location.href='blog-post.html?slug=' + encodeURIComponent('${p.slug || i}')" style="cursor:pointer">
+          .map((p, i) => {
+            const slugVal = String(p.slug || i);
+            const hrefVal = "blog-post.html?slug=" + encodeURIComponent(slugVal);
+            return `
+          <article class="product-card blog-card" data-slug="${esc(slugVal)}" data-href="${esc(hrefVal)}" style="cursor:pointer">
             <div class="product-img-wrap">
               <img src="${esc(p.cover || "assets/red-square.jpg")}" class="product-img" alt="${esc(p.title)}" />
               <span class="product-badge">${esc(p.categoryName || "Du học")}</span>
@@ -52,15 +54,15 @@ function initBlogPage() {
             <div class="product-body">
               <div class="product-cat">${esc(p.date || "")} · ${esc(p.readTime || "5 phút đọc")}</div>
               <h3 class="product-title" style="font-size:1.05rem">
-                <a href="blog-post.html?slug=${encodeURIComponent(p.slug || i)}" style="color:inherit;text-decoration:none">${esc(p.title)}</a>
+                <a href="${esc(hrefVal)}" style="color:inherit;text-decoration:none">${esc(p.title)}</a>
               </h3>
               <p class="product-desc">${esc(p.excerpt)}</p>
-              <a href="blog-post.html?slug=${encodeURIComponent(p.slug || i)}" class="btn btn-primary btn-sm btn-read-post" style="margin-top:auto;text-decoration:none">
+              <a href="${esc(hrefVal)}" class="btn btn-primary btn-sm btn-read-post" style="margin-top:auto;text-decoration:none">
                 Đọc bài viết →
               </a>
             </div>
-          </article>`
-          )
+          </article>`;
+          })
           .join("")}
       </div>
     `;
@@ -70,6 +72,14 @@ function initBlogPage() {
         selectedCategory = btn.dataset.c;
         renderBlog();
       };
+    });
+
+    host.querySelectorAll(".blog-card").forEach((card) => {
+      card.addEventListener("click", (e) => {
+        if (e.target.closest("a, button")) return;
+        const href = card.dataset.href;
+        if (href) window.location.href = href;
+      });
     });
 
     host.querySelectorAll(".btn-read-post").forEach((btn) => {

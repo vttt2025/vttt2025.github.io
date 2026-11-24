@@ -143,7 +143,13 @@ function initVocabPage() {
   let cloudJars = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("jars:system") : null;
 
   const loadCloudJars = async () => {
-    // 0-Egress rule: Chỉ truy vấn Supabase nếu bộ nhớ RAM/IndexedDB chưa có dữ liệu lọ từ vựng
+    // 0-Egress rule: Nạp từ RAM/IndexedDB/CDN JSON trước, chỉ truy vấn Supabase nếu vẫn chưa có dữ liệu
+    if (window.RusiDataLoader && (!window.RusiDataLoader.isLoaded("VOCAB_JARS") || !window.RusiDataLoader.isLoaded("VOCAB_LESSONS"))) {
+      await window.RusiDataLoader.loadMultiple(["VOCAB_JARS", "TOPIC_ARTICLES", "VOCAB_LESSONS"]);
+      if (!document.body.classList.contains("in-workspace")) {
+        renderVocabCards();
+      }
+    }
     if (window.VOCAB_JARS && window.VOCAB_JARS.length > 0) return;
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
       try {
@@ -159,14 +165,6 @@ function initVocabPage() {
     }
   };
   loadCloudJars();
-
-  if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("VOCAB_JARS")) {
-    window.RusiDataLoader.loadMultiple(["VOCAB_JARS", "TOPIC_ARTICLES"]).then(() => {
-      if (!document.body.classList.contains("in-workspace")) {
-        renderVocabCards();
-      }
-    });
-  }
 
   const getVocabJars = () => {
     const customJars = STORE.get("custom_jars", []);
@@ -626,7 +624,7 @@ function initVocabPage() {
       };
     }
 
-    const jarsContainer = userJarsHost || sidebarHost;
+    const jarsContainer = userJarsHost;
     if (jarsContainer) {
       // Cho phép bấm trực tiếp vào bất kỳ vị trí nào trên thẻ Lọ từ vựng
       jarsContainer.querySelectorAll(".voc-user-jar-card").forEach(card => {
@@ -833,7 +831,7 @@ function initVocabPage() {
 
           <!-- SEARCH BAR -->
           <div style="position:relative;margin-bottom:14px;flex-shrink:0">
-            <input type="text" id="vocProgressSearchInput" placeholder="Tìm kiếm từ tiếng Nga hoặc nghĩa tiếng Việt..." value="${searchTxt}" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:0.9rem;box-sizing:border-box;background:var(--bg);color:var(--text)" />
+            <input type="text" id="vocProgressSearchInput" placeholder="Tìm kiếm từ tiếng Nga hoặc nghĩa tiếng Việt..." value="${esc(searchTxt)}" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:0.9rem;box-sizing:border-box;background:var(--bg);color:var(--text)" />
             ${searchTxt ? `<button type="button" id="vocProgressSearchClear" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:1.1rem;cursor:pointer;color:var(--muted)">×</button>` : ""}
           </div>
 
@@ -857,11 +855,11 @@ function initVocabPage() {
                 <div class="voc-pmodal-row">
                   <div style="flex:1;min-width:0">
                     <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap">
-                      <strong class="ru voc-pmodal-word" data-speak-ru="${w.ru}" title="Nhấn để nghe phát âm">${displayWord}</strong>
-                      ${w.pos ? `<span class="voc-pmodal-pos">(${(window.formatRussianGrammar ? window.formatRussianGrammar(w.pos, null, w.gender) : w.pos)})</span>` : ""}
-                      ${w.jarTitle ? `<span class="voc-pmodal-tag">${w.jarTitle}</span>` : ""}
+                      <strong class="ru voc-pmodal-word" data-speak-ru="${esc(w.ru)}" title="Nhấn để nghe phát âm">${esc(displayWord)}</strong>
+                      ${w.pos ? `<span class="voc-pmodal-pos">(${esc(window.formatRussianGrammar ? window.formatRussianGrammar(w.pos, null, w.gender) : w.pos)})</span>` : ""}
+                      ${w.jarTitle ? `<span class="voc-pmodal-tag">${esc(w.jarTitle)}</span>` : ""}
                     </div>
-                    <div class="voc-pmodal-vi">${w.vi || ""}</div>
+                    <div class="voc-pmodal-vi">${esc(w.vi || "")}</div>
                     ${w.ex ? `<div class="ru voc-pmodal-ex">${esc(stripQuotes(w.ex))}</div>` : ""}
                   </div>
 
@@ -947,7 +945,8 @@ function initVocabPage() {
           list = list.filter(w => (w || "").toLowerCase().trim() !== normRu);
           if (typeof STORE !== "undefined") STORE.set("vocab_mastered_words", list);
           if (typeof SRS !== "undefined" && typeof SRS.unmarkMastered === "function") {
-            SRS.unmarkMastered(normRu);
+            const cardKey = typeof SRS.cardId === "function" ? SRS.cardId({ ru: normRu }) : normRu;
+            SRS.unmarkMastered(cardKey);
           }
           if (typeof Progress !== "undefined" && typeof Progress.syncToCloud === "function") {
             Progress.syncToCloud();
@@ -970,8 +969,13 @@ function initVocabPage() {
         btn.onclick = (e) => {
           e.stopPropagation();
           const ru = btn.dataset.ru;
-          if (ru && typeof SRS !== "undefined" && SRS.addToQueue) {
-            SRS.addToQueue(ru);
+          if (ru && typeof SRS !== "undefined") {
+            const wObj = activeList.find(x => (x.ru || "").toLowerCase().trim() === (ru || "").toLowerCase().trim());
+            if (wObj && typeof SRS.ensureCard === "function") {
+              SRS.ensureCard(wObj);
+            } else if (typeof SRS.addToQueue === "function") {
+              SRS.addToQueue(ru);
+            }
             if (typeof toast === "function") toast(`Đã đưa “${ru}” vào hàng đợi ôn tập!`);
             window.dispatchEvent(new CustomEvent("trki:progress-updated"));
             renderModalContent();
@@ -1145,7 +1149,7 @@ const showTopicArticle = (jarId) => {
       } catch (_) {}
     }
 
-    if (!item) return;
+    if (!item) { renderVocabHub(); return; }
     const jar = item.raw || item;
 
     // Kiểm tra quyền truy cập PRO (bỏ qua khi đang xem trước CMS)
@@ -1391,6 +1395,7 @@ const showTopicArticle = (jarId) => {
     let jar = [...baseJars, ...customJars].find((j) => j.id === jarId || j.code === jarId);
     if (!jar) {
       console.warn("Không tìm thấy lọ từ vựng:", jarId);
+      renderVocabHub();
       return;
     }
     if (!jar.words || !jar.words.length) {
@@ -1534,7 +1539,8 @@ const showTopicArticle = (jarId) => {
   };
 
   const showLesson = (id) => {
-    const found = (typeof VOCAB_LESSONS !== "undefined" && Array.isArray(VOCAB_LESSONS)) ? VOCAB_LESSONS.find(l => l.id === id) : null;
+    const lessons = (typeof window !== "undefined" && Array.isArray(window.VOCAB_LESSONS)) ? window.VOCAB_LESSONS : [];
+    const found = lessons.find(l => l.id === id) || null;
     if (!found) return;
     document.body.classList.add("in-workspace");
     const mainLayout = el("#vocMainLayout");
@@ -1707,7 +1713,7 @@ const showTopicArticle = (jarId) => {
   const urlParams = new URLSearchParams(window.location.search);
   const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || urlParams.get(k);
   const targetTopic = getParam("topic") || getParam("article");
-  const targetJar = getParam("jar");
+  const targetJar = getParam("jar") || getParam("lo_tu") || getParam("id");
   const targetMode = getParam("mode");
 
   if (targetTopic) {
@@ -1720,7 +1726,7 @@ const showTopicArticle = (jarId) => {
   } else if (targetJar) {
     if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?jar=" + encodeURIComponent(targetJar))) return;
     showJarDetail(targetJar);
-  } else if (urlParams.get("srs")) {
+  } else if (getParam("srs")) {
     if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?srs=1")) return;
     showSrsWorkspace();
   } else {

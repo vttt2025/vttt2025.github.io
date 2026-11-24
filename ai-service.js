@@ -77,11 +77,15 @@
       userId = null,
       isPro = null
     }) {
-      const curUser = (typeof window !== "undefined" && window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
-      const effectiveUserId = userId || curUser?.id || curUser?.uid || null;
-      const effectiveIsPro = (isPro !== null && isPro !== undefined)
-        ? Boolean(isPro)
-        : (typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : Boolean(curUser?.is_pro));
+      const session = await (typeof window !== "undefined" ? window.RusiSupabase?.auth?.getSession?.() : null);
+      const accessToken = session?.access_token;
+      if (!accessToken) {
+        return {
+          success: false,
+          requireAuth: true,
+          message: "Vui lòng đăng nhập để sử dụng tính năng chấm điểm AI (Miễn phí 3 lượt/ngày)!"
+        };
+      }
 
       // 1. ƯU TIÊN HÀNG ĐẦU: Gọi trực tiếp Supabase Edge Function an toàn (Bảo vệ API Key tuyệt đối)
       try {
@@ -97,7 +101,7 @@
           method: "POST",
           headers: {
             "apikey": anonKey,
-            "Authorization": `Bearer ${anonKey}`,
+            "Authorization": `Bearer ${accessToken}`,
             "Content-Type": "application/json"
           },
           body: JSON.stringify({
@@ -110,9 +114,7 @@
             imageDesc,
             suggestedWords,
             taskType,
-            imageUrl,
-            userId: effectiveUserId,
-            isPro: effectiveIsPro
+            imageUrl
           }),
           signal: fetchSignal
         });
@@ -148,7 +150,23 @@
             };
           }
         } else {
-          console.warn("[RusiAI] Edge Function trả về HTTP status:", res.status);
+          let errData = null;
+          try { errData = await res.json(); } catch (_) {}
+          const errMsg = (errData && (errData.message || errData.error)) || `Lỗi máy chủ (${res.status})`;
+          if (res.status === 401) {
+            return {
+              success: false,
+              requireAuth: true,
+              message: (errData && errData.message) || "Vui lòng đăng nhập để sử dụng tính năng chấm điểm AI (Miễn phí 3 lượt/ngày)!"
+            };
+          }
+          console.warn("[RusiAI] Edge Function trả về HTTP status:", res.status, errMsg);
+          return {
+            success: false,
+            serverError: true,
+            status: res.status,
+            message: errMsg
+          };
         }
       } catch (edgeErr) {
         console.warn("[RusiAI] Không thể kết nối Supabase Edge Function:", edgeErr);
@@ -206,14 +224,23 @@ ${modelAnswer ? `- BÀI VIẾT MẪU ĐẠT ĐIỂM TỐI ĐA TRKI: "${modelAnsw
         try {
           const cleaned = rawReply.replace(/```json/gi, "").replace(/```/g, "").trim();
           const parsed = JSON.parse(cleaned);
+          const numOr = (v, fb) => {
+            const n = Number(v);
+            return Number.isFinite(n) ? n : fb;
+          };
+          const g = Math.max(0, Math.min(25, numOr(parsed.grammar, 18)));
+          const l = Math.max(0, Math.min(25, numOr(parsed.lexis, 18)));
+          const s = Math.max(0, Math.min(25, numOr(parsed.structure, 18)));
+          const c = Math.max(0, Math.min(25, numOr(parsed.content, 18)));
+          const t = Math.max(0, Math.min(100, numOr(parsed.total, g + l + s + c)));
           return {
             success: true,
-            total: Number(parsed.total) || 75,
-            grammar: Number(parsed.grammar) || 18,
-            lexis: Number(parsed.lexis) || 18,
-            structure: Number(parsed.structure) || 18,
-            content: Number(parsed.content) || 18,
-            passed: parsed.passed !== undefined ? Boolean(parsed.passed) : (Number(parsed.total) >= 66),
+            total: t,
+            grammar: g,
+            lexis: l,
+            structure: s,
+            content: c,
+            passed: parsed.passed !== undefined ? Boolean(parsed.passed) : (t >= 66),
             feedback: parsed.feedback || "Bài viết hoàn thành tốt."
           };
         } catch (err) {

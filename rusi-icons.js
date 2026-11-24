@@ -11,8 +11,9 @@
   if (typeof module === 'object' && module.exports) {
     module.exports = factory();
   } else {
-    root.RUSI_ICONS = factory().RUSI_ICONS;
-    root.RusiIcons = factory().RusiIcons;
+    var exp = factory();
+    root.RUSI_ICONS = exp.RUSI_ICONS;
+    root.RusiIcons = exp.RusiIcons;
   }
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';

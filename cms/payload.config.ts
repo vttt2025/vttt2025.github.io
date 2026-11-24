@@ -25,6 +25,11 @@ import { SiteSettings } from './globals/SiteSettings';
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
+const payloadSecret = process.env.PAYLOAD_SECRET;
+if (!payloadSecret && process.env.NODE_ENV === 'production') {
+  throw new Error('PAYLOAD_SECRET environment variable is required in production.');
+}
+
 export default buildConfig({
   admin: {
     user: Users.slug,
@@ -54,7 +59,7 @@ export default buildConfig({
     SiteSettings,
   ],
   editor: lexicalEditor({}),
-  secret: process.env.PAYLOAD_SECRET || 'rusitrki-payload-secret-key-production-2026',
+  secret: payloadSecret || 'dev-only-insecure-payload-secret-do-not-use-in-production',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },

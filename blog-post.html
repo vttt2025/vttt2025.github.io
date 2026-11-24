@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://nrhtdwjihnlaxrbitmcf.supabase.co https://images.unsplash.com https://img.vietqr.io https://upload.wikimedia.org https://i.ytimg.com https://*.googleusercontent.com; media-src 'self' blob: data: https://nrhtdwjihnlaxrbitmcf.supabase.co https://upload.wikimedia.org https://commons.wikimedia.org; connect-src 'self' https://nrhtdwjihnlaxrbitmcf.supabase.co wss://nrhtdwjihnlaxrbitmcf.supabase.co https://api.groq.com https://upload.wikimedia.org https://cdn.jsdelivr.net; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <title>Chi Tiết Bài Viết — RUSI TRKI</title>
   <meta name="description" content="Kênh chia sẻ kinh nghiệm du học Nga, phương pháp học tiếng Nga và cuộc sống sinh viên xứ sở Bạch Dương." />
   <link rel="canonical" href="https://rusitrki.com/blog.html" />
@@ -22,8 +24,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=11.5" />
-  <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
+  <link rel="stylesheet" href="styles.min.css?v=12.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/favicon-192.png" />
 </head>
 <body data-page="blog">
   <div id="app-header"></div>
@@ -38,16 +41,14 @@
   </main>
 
   <div id="app-footer"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="supabase-client.js?v=7.8"></script>
-  <script src="rusi-icons.js?v=5.0"></script>
-  <script src="data.js?v=11.1"></script>
-  <script src="auth.js?v=8.2"></script>
-  <script src="dict-data.js?v=11.1"></script>
-  <script src="app.js?v=9.1"></script>
-  <script src="pages.js?v=13.0"></script>
-  <script src="pomodoro.js?v=7.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js" integrity="sha384-2zrRDgDHSYB/GN3nFW3fsZXoxEhKIr3N2h63Tc6DEOB9JJdFIu8xMJT2Cph/gBil" crossorigin="anonymous" defer></script>
+  <script src="supabase-config.js" defer></script>
+  <script src="supabase-client.js?v=12.0" defer></script>
+  <script src="rusi-icons.js?v=5.0" defer></script>
+  <script src="data.js?v=12.0" defer></script>
+  <script src="auth.js?v=12.0" defer></script>
+  <script src="app.js?v=12.0" defer></script>
+  <script src="pomodoro.js?v=7.1" defer></script>
   <script>
     function renderMarkdownContent(text) {
       if (!text) return "";
@@ -103,8 +104,25 @@
       return html;
     }
 
+    function safeEsc(str) {
+      if (typeof esc === "function") return esc(str);
+      return String(str == null ? "" : str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function safeMediaUrl(url, fallback) {
+      const raw = String(url || "").trim();
+      if (!raw) return fallback || "";
+      if (/^(https?:\/\/|assets\/|\/(?!\/))/i.test(raw)) return raw;
+      return fallback || "";
+    }
+
     function formatInline(str) {
-      return str
+      return safeEsc(str)
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/`([^`]+)`/g, '<code>$1</code>')
@@ -144,7 +162,7 @@
       const cached = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("blog:all") : null;
       let posts = (cached && cached.length) ? cached : [];
 
-      if (window.RusiSupabase && typeof window.RusiSupabase.blog?.getAll === "function") {
+      if ((!window.BLOG_POSTS || !window.BLOG_POSTS.length) && window.RusiSupabase && typeof window.RusiSupabase.blog?.getAll === "function") {
         try {
           const remote = await window.RusiSupabase.blog.getAll();
           if (remote && remote.length) posts = remote;
@@ -156,7 +174,7 @@
         posts = window.BLOG_POSTS.slice();
       }
 
-      const post = previewDoc || posts.find(p => p.slug === slug || p.id === slug || String(posts.indexOf(p)) === slug) || posts[0];
+      const post = previewDoc || posts.find(p => p.slug === slug || p.id === slug || String(posts.indexOf(p)) === slug) || (!slug ? posts[0] : null);
 
       if (!post) {
         host.innerHTML = `
@@ -172,6 +190,7 @@
       document.title = (previewDoc ? "[XEM TRƯỚC] " : "") + post.title + " — RUSI TRKI";
 
       const relatedPosts = posts.filter(p => p !== post && (p.slug !== post.slug)).slice(0, 2);
+      const safePostCover = safeMediaUrl(post.cover, "");
 
       host.innerHTML = `
         <div class="bpost-nav-bar">
@@ -196,19 +215,19 @@
         <article class="bpost-article">
           <div class="bpost-header">
             <span class="rusi-badge rusi-badge-b1" style="font-weight:700">
-              ${post.categoryName || "CẨM NANG DU HỌC NGA"}
+              ${safeEsc(post.categoryName || "CẨM NANG DU HỌC NGA")}
             </span>
-            <h1 class="bpost-title">${post.title}</h1>
+            <h1 class="bpost-title">${safeEsc(post.title)}</h1>
             <div class="bpost-meta-row">
-              <span><b>Tác giả:</b> ${post.author || "RUSI Editorial Team"}</span>
+              <span><b>Tác giả:</b> ${safeEsc(post.author || "RUSI Editorial Team")}</span>
               <span>•</span>
-              <span><b>Ngày đăng:</b> ${post.date || "Tháng 8, 2026"}</span>
+              <span><b>Ngày đăng:</b> ${safeEsc(post.date || "Tháng 8, 2026")}</span>
               <span>•</span>
-              <span><b>Thời gian đọc:</b> ${post.readTime || "5 phút đọc"}</span>
+              <span><b>Thời gian đọc:</b> ${safeEsc(post.readTime || "5 phút đọc")}</span>
             </div>
           </div>
 
-          ${post.cover ? `<img src="${post.cover}" class="bpost-cover" alt="${post.title}" />` : ""}
+          ${safePostCover ? `<img src="${safeEsc(safePostCover)}" class="bpost-cover" alt="${safeEsc(post.title)}" />` : ""}
 
           <div class="bpost-body">
             ${renderMarkdownContent(post.content || post.excerpt)}
@@ -235,28 +254,43 @@
               ${window.RusiIcons ? RusiIcons.get("book-open-blog", { size: 20 }) : ""} Bài viết cùng chuyên mục
             </h3>
             <div class="shop-grid">
-              ${relatedPosts.map(p => `
-                <article class="product-card blog-card" onclick="window.location.href='blog-post.html?slug=' + encodeURIComponent('${p.slug || p.id}')" style="cursor:pointer">
+              ${relatedPosts.map(p => {
+                const pSlug = String(p.slug || p.id || "");
+                const pCover = safeMediaUrl(p.cover, "assets/red-square.jpg");
+                return `
+                <article class="product-card blog-card" data-slug="${safeEsc(pSlug)}" style="cursor:pointer">
                   <div class="product-img-wrap">
-                    <img src="${p.cover || "assets/red-square.jpg"}" class="product-img" alt="${p.title}" />
-                    <span class="product-badge">${p.categoryName || "Du học"}</span>
+                    <img src="${safeEsc(pCover)}" class="product-img" alt="${safeEsc(p.title)}" />
+                    <span class="product-badge">${safeEsc(p.categoryName || "Du học")}</span>
                   </div>
                   <div class="product-body">
-                    <div class="product-cat">${p.date || ""} · ${p.readTime || "5 phút đọc"}</div>
+                    <div class="product-cat">${safeEsc(p.date || "")} · ${safeEsc(p.readTime || "5 phút đọc")}</div>
                     <h3 class="product-title" style="font-size:1.05rem">
-                      <a href="blog-post.html?slug=${encodeURIComponent(p.slug || p.id)}" style="color:inherit;text-decoration:none">${p.title}</a>
+                      <a href="blog-post.html?slug=${encodeURIComponent(pSlug)}" style="color:inherit;text-decoration:none">${safeEsc(p.title)}</a>
                     </h3>
-                    <p class="product-desc">${p.excerpt}</p>
-                    <a href="blog-post.html?slug=${encodeURIComponent(p.slug || p.id)}" class="btn btn-primary btn-sm btn-read-post" style="margin-top:auto;text-decoration:none">
+                    <p class="product-desc">${safeEsc(p.excerpt || "")}</p>
+                    <a href="blog-post.html?slug=${encodeURIComponent(pSlug)}" class="btn btn-primary btn-sm btn-read-post" style="margin-top:auto;text-decoration:none">
                       Đọc bài viết →
                     </a>
                   </div>
                 </article>
-              `).join("")}
+              `;
+              }).join("")}
             </div>
           </section>
         ` : ""}
       `;
+
+      // Related post card click delegation
+      host.querySelectorAll(".blog-card[data-slug]").forEach((card) => {
+        card.addEventListener("click", (e) => {
+          if (e.target && e.target.closest("a")) return;
+          const targetSlug = card.getAttribute("data-slug");
+          if (targetSlug) {
+            window.location.href = "blog-post.html?slug=" + encodeURIComponent(targetSlug);
+          }
+        });
+      });
 
       // Share button copy link
       const btnShare = document.getElementById("btnSharePost");
@@ -274,9 +308,14 @@
       }
     }
 
-    function initPage() {
-      initBlogPostPage();
-    }
+    document.addEventListener("DOMContentLoaded", function () {
+      window.initPage = function initPage() {
+        initBlogPostPage();
+      };
+      if (window.triggerPageInit) {
+        window.triggerPageInit();
+      }
+    });
   </script>
 </body>
 </html>

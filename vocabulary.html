@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://nrhtdwjihnlaxrbitmcf.supabase.co https://images.unsplash.com https://img.vietqr.io https://upload.wikimedia.org https://i.ytimg.com https://*.googleusercontent.com; media-src 'self' blob: data: https://nrhtdwjihnlaxrbitmcf.supabase.co https://upload.wikimedia.org https://commons.wikimedia.org; connect-src 'self' https://nrhtdwjihnlaxrbitmcf.supabase.co wss://nrhtdwjihnlaxrbitmcf.supabase.co https://api.groq.com https://upload.wikimedia.org https://cdn.jsdelivr.net; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <title>Kho Lọ Từ Vựng Tiếng Nga Spaced Repetition (SM-2) — RUSI TRKI</title>
   <meta name="description" content="Học từ vựng tiếng Nga qua mô hình Lọ Từ Vựng độc quyền, chuỗi hành động liên tiếp và thuật toán Spaced Repetition (SM-2) giúp ghi nhớ bền vững 5.000 từ vựng." />
   <meta name="keywords" content="từ vựng tiếng Nga, lọ từ vựng, spaced repetition tiếng nga, flashcard tiếng nga, học tiếng nga theo chủ đề, học từ vựng a1 b2, rusi trki" />
@@ -35,9 +37,12 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://nrhtdwjihnlaxrbitmcf.supabase.co" crossorigin>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=PT+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=11.5" />
-  <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
+  <link rel="stylesheet" href="styles.min.css?v=12.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/favicon-192.png" />
 
   <!-- JSON-LD Structured Data: Course, BreadcrumbList -->
   <script type="application/ld+json">
@@ -112,27 +117,29 @@
   </main>
 
   <div id="app-footer"></div>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="supabase-client.js?v=7.8"></script>
-<script src="rusi-icons.js?v=5.0"></script>
-  <script src="data.js?v=11.1"></script>
-  <script src="auth.js?v=8.2"></script>
-  <script src="srs.js?v=5.0"></script>
-  <script src="dict-data.js?v=11.1"></script>
-  <script src="app.js?v=9.1"></script>
-  <script src="pages.js?v=13.0"></script>
-  <script src="js/pages/page-vocab.js?v=1.0"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js" integrity="sha384-2zrRDgDHSYB/GN3nFW3fsZXoxEhKIr3N2h63Tc6DEOB9JJdFIu8xMJT2Cph/gBil" crossorigin="anonymous" defer></script>
+  <script src="supabase-config.js" defer></script>
+  <script src="supabase-client.js?v=12.0" defer></script>
+  <script src="rusi-icons.js?v=5.0" defer></script>
+  <script src="data.js?v=12.0" defer></script>
+  <script src="auth.js?v=12.0" defer></script>
+  <script src="srs.js?v=5.0" defer></script>
+  <script src="dict-data.js?v=12.0" defer></script>
+  <script src="app.js?v=12.0" defer></script>
+  <script src="pages.js?v=13.0" defer></script>
+  <script src="js/pages/page-vocab.js?v=12.0" defer></script>
+  <script src="pomodoro.js?v=7.1" defer></script>
   <script>
-    function initPage() {
-      if (typeof initVocabPage === "function") {
-        initVocabPage();
+    document.addEventListener("DOMContentLoaded", function () {
+      window.initPage = function initPage() {
+        if (typeof initVocabPage === "function") {
+          initVocabPage();
+        }
+      };
+      if (window.triggerPageInit) {
+        window.triggerPageInit();
       }
-    }
-    if (window.triggerPageInit) {
-      window.triggerPageInit();
-    }
+    });
   </script>
-  <script src="pomodoro.js?v=7.1"></script>
 </body>
 </html>

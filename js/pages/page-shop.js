@@ -63,30 +63,32 @@ function initShopPage() {
 
       <div class="shop-grid">
         ${filtered
-          .map(
-            (p) => `
-          <div class="product-card shop-product-card" data-id="${esc(p.id)}" onclick="window.location.href='product-detail.html?id=' + encodeURIComponent('${p.id}')" style="cursor:pointer">
+          .map((p) => {
+            const idVal = String(p.id ?? "");
+            const hrefVal = "product-detail.html?id=" + encodeURIComponent(idVal);
+            return `
+          <div class="product-card shop-product-card" data-id="${esc(idVal)}" data-href="${esc(hrefVal)}" style="cursor:pointer">
             <div class="product-img-wrap">
               <img src="${esc(p.image)}" class="product-img" alt="${esc(p.title)}" />
               ${p.badge ? `<span class="product-badge">${esc(p.badge)}</span>` : ""}
             </div>
             <div class="product-body">
-              <div class="product-cat">${esc(p.categoryName)}</div>
+              <div class="product-cat">${esc(p.categoryName || p.category_name || "")}</div>
               <h3 class="product-title">
-                <a href="product-detail.html?id=${encodeURIComponent(p.id)}" style="color:inherit;text-decoration:none">${esc(p.title)}</a>
+                <a href="${esc(hrefVal)}" style="color:inherit;text-decoration:none">${esc(p.title)}</a>
               </h3>
               <p class="product-desc">${esc(p.desc)}</p>
               <div class="product-pricing">
-                <span class="product-price">${p.price.toLocaleString("vi-VN")} đ</span>
-                ${p.priceRub ? `<span class="product-rub">(≈ ${p.priceRub} ₽)</span>` : ""}
-                ${p.originalPrice ? `<span class="product-old-price">${p.originalPrice.toLocaleString("vi-VN")} đ</span>` : ""}
+                <span class="product-price">${Number(p.price || 0).toLocaleString("vi-VN")} đ</span>
+                ${p.priceRub ? `<span class="product-rub">(≈ ${esc(p.priceRub)} ₽)</span>` : ""}
+                ${(p.originalPrice || p.original_price || p.priceOld) ? `<span class="product-old-price">${Number(p.originalPrice || p.original_price || p.priceOld).toLocaleString("vi-VN")} đ</span>` : ""}
               </div>
-              <button class="btn btn-primary btn-sm btn-add-cart" data-id="${p.id}" style="margin-top:auto" onclick="event.stopPropagation()">
+              <button class="btn btn-primary btn-sm btn-add-cart" data-id="${esc(idVal)}" style="margin-top:auto">
                 ${window.RusiIcons ? RusiIcons.get("shopping-bag-shop", { size: 16 }) : ""} ${p.category === "dich_vu_du_hoc" ? "Đăng ký tư vấn" : "Thêm vào giỏ"}
               </button>
             </div>
-          </div>`
-          )
+          </div>`;
+          })
           .join("")}
       </div>
     `;
@@ -96,6 +98,14 @@ function initShopPage() {
         currentCat = btn.dataset.c;
         renderShop();
       };
+    });
+
+    host.querySelectorAll(".shop-product-card").forEach((card) => {
+      card.addEventListener("click", (e) => {
+        if (e.target.closest("a, button")) return;
+        const href = card.dataset.href;
+        if (href) window.location.href = href;
+      });
     });
 
     host.querySelectorAll(".btn-add-cart").forEach((btn) => {
@@ -156,9 +166,9 @@ function initShopPage() {
                 <div style="font-size:0.8rem;color:var(--secondary);font-weight:700">${it.price.toLocaleString("vi-VN")} đ</div>
               </div>
               <div style="display:flex;align-items:center;gap:4px">
-                <button class="btn btn-soft btn-sm btn-qty" data-id="${it.id}" data-op="-1" style="padding:2px 6px">-</button>
-                <span style="font-size:0.85rem;font-weight:700;min-width:18px;text-align:center">${it.qty}</span>
-                <button class="btn btn-soft btn-sm btn-qty" data-id="${it.id}" data-op="1" style="padding:2px 6px">+</button>
+                <button class="btn btn-soft btn-sm btn-qty" data-id="${esc(it.id)}" data-op="-1" style="padding:2px 6px">-</button>
+                <span style="font-size:0.85rem;font-weight:700;min-width:18px;text-align:center">${Number(it.qty) || 0}</span>
+                <button class="btn btn-soft btn-sm btn-qty" data-id="${esc(it.id)}" data-op="1" style="padding:2px 6px">+</button>
               </div>
             </div>`
                 )
@@ -237,7 +247,7 @@ function initShopPage() {
       <div class="anticheat-modal-box" style="max-width:500px;text-align:left">
         <h3 style="margin-bottom:12px">${window.RusiIcons ? RusiIcons.get("shopping-bag-shop", { size: 20 }) : ""} Đặt Hàng & Thanh Toán VietQR</h3>
         <div style="font-size:0.85rem;color:var(--muted);margin-bottom:14px">
-          Mã đơn hàng: <b style="color:var(--primary)">${orderId}</b> · Tổng tiền: <b style="color:var(--secondary)">${total.toLocaleString("vi-VN")} đ</b>
+          Mã đơn hàng: <b style="color:var(--primary)">${esc(orderId)}</b> · Tổng tiền: <b style="color:var(--secondary)">${total.toLocaleString("vi-VN")} đ</b>
         </div>
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
           <input type="text" id="custName" placeholder="Họ và tên của bạn" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px" />
@@ -245,7 +255,7 @@ function initShopPage() {
           <input type="text" id="custAddress" placeholder="Địa chỉ giao hàng (hoặc ghi KTX trường)" style="padding:8px 12px;border:1px solid var(--border);border-radius:8px" />
         </div>
         <div class="vietqr-img-box" style="text-align:center">
-          <img src="${qrUrl}" style="max-width:220px;border-radius:8px" alt="VietQR" />
+          <img src="${esc(qrUrl)}" style="max-width:220px;border-radius:8px" alt="VietQR" />
           <p style="font-size:0.75rem;color:var(--muted);margin-top:6px">Quét mã chuyển khoản tức thì qua ứng dụng ngân hàng</p>
         </div>
         <div style="display:flex;gap:10px;margin-top:16px">

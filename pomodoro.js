@@ -497,8 +497,10 @@
 
     start: function () {
       ensureAudioContext();
+      markUserActive();
       if (this.phase === "idle" || this.phase === "completed") {
         this.phase = "focus";
+        this.currentCycle = 1;
         this.remainingSeconds = this.focusMin * 60;
       }
       this.isRunning = true;
@@ -582,8 +584,8 @@
         if (typeof window.toast === "function") {
           window.toast("🎉 Xuất sắc! Bạn đã hoàn thành toàn bộ " + this.totalCycles + " chu kỳ Pomodoro (+25 XP)!");
         }
-        if (typeof window.XP !== "undefined" && window.XP.add) {
-          window.XP.add(25);
+        if (typeof window.Progress !== "undefined" && typeof window.Progress.addXp === "function") {
+          window.Progress.addXp(25, "Hoàn thành Pomodoro");
         }
 
         this.remainingSeconds = this.focusMin * 60;
@@ -609,6 +611,7 @@
 
     onBreakEnded: function () {
       playPomoSound("break_end");
+      markUserActive();
 
       this.currentCycle++;
       this.phase = "focus";
@@ -756,11 +759,16 @@
 
       // 4. Tiêu đề Tab trình duyệt
       if (this.isRunning) {
-        document.title = `(${timeStr}) Pomodoro · RUSI TRKI`;
+        if (!this._baseTitle) {
+          this._baseTitle = (document.title || "").replace(/^\([0-9:]+\)\s*/, "") || "RUSI TRKI";
+        }
+        document.title = `(${timeStr}) ${this._baseTitle}`;
       } else {
-        if (typeof document.title === "string") {
-        document.title = document.title.replace(/^\([0-9:]+\)\s*/, "");
-      }
+        if (this._baseTitle) {
+          document.title = this._baseTitle;
+        } else if (typeof document.title === "string") {
+          document.title = document.title.replace(/^\([0-9:]+\)\s*/, "");
+        }
       }
     }
   };

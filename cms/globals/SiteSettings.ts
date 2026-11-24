@@ -1,6 +1,10 @@
 import type { GlobalConfig } from 'payload';
 
 export const SiteSettings: GlobalConfig = {
+  access: {
+    read: () => true,
+    update: ({ req: { user } }) => Boolean(user && (user.role === 'super_admin' || user.role === 'academic_admin')),
+  },
   slug: 'site-settings',
   label: 'Cấu hình hệ thống RUSI TRKI',
   admin: {

@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://nrhtdwjihnlaxrbitmcf.supabase.co https://images.unsplash.com https://img.vietqr.io https://upload.wikimedia.org https://i.ytimg.com https://*.googleusercontent.com; media-src 'self' blob: data: https://nrhtdwjihnlaxrbitmcf.supabase.co https://upload.wikimedia.org https://commons.wikimedia.org; connect-src 'self' https://nrhtdwjihnlaxrbitmcf.supabase.co wss://nrhtdwjihnlaxrbitmcf.supabase.co https://api.groq.com https://upload.wikimedia.org https://cdn.jsdelivr.net; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <title>Cách Học Cùng RUSI — Lộ Trình &amp; Phương Pháp Chinh Phục Tiếng Nga — RUSI TRKI</title>
   <meta name="description" content="Hướng dẫn chi tiết phương pháp học tiếng Nga hiệu quả cùng RUSI: Lộ trình từ số 0 đến B2, quy trình học Lọ từ vựng, nghe chép chính tả, shadowing và luyện đề TRKI." />
   <meta name="keywords" content="cách học tiếng nga, phương pháp học tiếng nga hiệu quả, tự học tiếng nga cho người mới, lộ trình học tiếng nga b1, rusi trki" />
@@ -36,8 +38,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=11.5" />
-  <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
+  <link rel="stylesheet" href="styles.min.css?v=12.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/favicon-192.png" />
 
   <!-- JSON-LD Structured Data: Article, HowTo, BreadcrumbList -->
   <script type="application/ld+json">
@@ -460,15 +463,14 @@
   </main>
 
   <div id="app-footer"></div>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="supabase-client.js?v=7.8"></script>
-  <script src="rusi-icons.js?v=5.0"></script>
-  <script src="data.js?v=11.1"></script>
-  <script src="auth.js?v=8.2"></script>
-  <script src="app.js?v=9.1"></script>
-  <script src="pages.js?v=13.0"></script>
-  <script src="pomodoro.js?v=7.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js" integrity="sha384-2zrRDgDHSYB/GN3nFW3fsZXoxEhKIr3N2h63Tc6DEOB9JJdFIu8xMJT2Cph/gBil" crossorigin="anonymous" defer></script>
+  <script src="supabase-config.js" defer></script>
+  <script src="supabase-client.js?v=12.0" defer></script>
+  <script src="rusi-icons.js?v=5.0" defer></script>
+  <script src="data.js?v=12.0" defer></script>
+  <script src="auth.js?v=12.0" defer></script>
+  <script src="app.js?v=12.0" defer></script>
+  <script src="pomodoro.js?v=7.1" defer></script>
   <script>
     // Highlight active sticky pill on scroll
     document.addEventListener("DOMContentLoaded", () => {

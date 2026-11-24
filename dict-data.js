@@ -12,6 +12,68 @@
 const RusiDict = {
   _cache: {},
   _loading: {},
+  _idbPromise: null,
+  _IDB_NAME: "rusi_dict_db",
+  _IDB_STORE: "dict_store",
+  _IDB_VERSION: 1,
+  _DATA_VERSION: "v1",
+
+  _openIDB() {
+    if (this._idbPromise) return this._idbPromise;
+    this._idbPromise = new Promise((resolve) => {
+      if (typeof window === "undefined" || !window.indexedDB) return resolve(null);
+      try {
+        const req = window.indexedDB.open(this._IDB_NAME, this._IDB_VERSION);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(this._IDB_STORE)) {
+            db.createObjectStore(this._IDB_STORE, { keyPath: "key" });
+          }
+        };
+        req.onsuccess = (e) => resolve(e.target.result);
+        req.onerror = () => resolve(null);
+      } catch (_) {
+        resolve(null);
+      }
+    });
+    return this._idbPromise;
+  },
+
+  async _getIDB(key) {
+    const db = await this._openIDB();
+    if (!db) return null;
+    return new Promise((resolve) => {
+      try {
+        const tx = db.transaction(this._IDB_STORE, "readonly");
+        const req = tx.objectStore(this._IDB_STORE).get(key);
+        req.onsuccess = () => {
+          const res = req.result;
+          if (res && res.version === this._DATA_VERSION && res.data && Array.isArray(res.data.rows)) {
+            resolve(res.data);
+          } else {
+            resolve(null);
+          }
+        };
+        req.onerror = () => resolve(null);
+      } catch (_) {
+        resolve(null);
+      }
+    });
+  },
+
+  async _saveIDB(key, data) {
+    const db = await this._openIDB();
+    if (!db) return;
+    try {
+      const tx = db.transaction(this._IDB_STORE, "readwrite");
+      tx.objectStore(this._IDB_STORE).put({
+        key,
+        version: this._DATA_VERSION,
+        data,
+        cachedAt: Date.now()
+      });
+    } catch (_) {}
+  },
 
   /** Chuỗi so sánh: lowercase + chuẩn hóa ё->е + bỏ dấu (đ, ô, ả... -> d, o, a). */
   _cardId(e) {
@@ -37,7 +99,7 @@ const RusiDict = {
     return pos || gram || "";
   },
 
-  /** Tải (và cache) một hướng từ điển. */
+  /** Tải (và cache RAM + IndexedDB 0-Egress) một hướng từ điển. */
   load(dir) {
     if (this._cache[dir]) return Promise.resolve(this._cache[dir]);
     if (this._loading[dir]) return this._loading[dir];
@@ -50,19 +112,26 @@ const RusiDict = {
         if (segs.length > 1) root = '/';
       }
     }
-    this._loading[dir] = fetch(root + "data/dict-" + dir + ".json")
-      .then((r) => {
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        return r.json();
-      })
-      .then((data) => {
-        const built = this._build(data);
+    const idbKey = "dict-" + dir;
+    this._loading[dir] = (async () => {
+      // 1. Thử đọc raw JSON từ IndexedDB (0 byte Egress cho lần truy cập lại)
+      const cached = await this._getIDB(idbKey);
+      if (cached) {
+        const built = this._build(cached);
         this._cache[dir] = built;
         return built;
-      })
-      .finally(() => {
-        delete this._loading[dir];
-      });
+      }
+      // 2. Tải từ CDN tĩnh và lưu vào IndexedDB
+      const r = await fetch(root + "data/dict-" + dir + ".json");
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const data = await r.json();
+      this._saveIDB(idbKey, data);
+      const built = this._build(data);
+      this._cache[dir] = built;
+      return built;
+    })().finally(() => {
+      delete this._loading[dir];
+    });
     return this._loading[dir];
   },
 
@@ -136,7 +205,7 @@ const RusiDict = {
 
   /** Entry khớp chính xác theo từ (ưu tiên hướng đã tải). */
   lookup(word) {
-    const key = (word || "").toLowerCase().trim();
+    const key = (word || "").replace(/[\u0300\u0301]/g, "").toLowerCase().trim();
     if (!key) return null;
     const normKey = key.replace(/ё/g, "е");
     for (const dir of ["ru-vi", "vi-ru"]) {
@@ -243,7 +312,11 @@ const RusiDict = {
     },
 
     _fetchJson(url) {
-      return fetch(url).then((r) => {
+      if (typeof window !== "undefined" && window.location.protocol === "file:") {
+        return Promise.reject(new Error("Local file protocol does not support extra dictionary fetch"));
+      }
+      const root = (typeof window !== "undefined" && typeof window.getRusiAppRoot === "function") ? window.getRusiAppRoot() : "";
+      return fetch(root + url).then((r) => {
         if (!r.ok) throw new Error("HTTP " + r.status);
         return r.json();
       });

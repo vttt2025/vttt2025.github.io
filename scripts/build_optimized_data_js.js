@@ -194,6 +194,7 @@ const dataJsContent = `/**
           const cached = await getFromIDB(moduleKey);
           if (hasValidData(cached)) {
             conf.assign(cached);
+            _loadedModules.add(moduleKey);
             return cached;
           }
         } catch (_) {}
@@ -204,6 +205,7 @@ const dataJsContent = `/**
           if (res.ok) {
             const data = await res.json();
             conf.assign(data);
+            _loadedModules.add(moduleKey);
             // Lưu vào IndexedDB cho các lần truy cập tiếp theo (Offline-first)
             saveToIDB(moduleKey, data);
             return data;
@@ -236,7 +238,7 @@ const dataJsContent = `/**
         targetModules = ['SPEAKING_SETS'];
       } else if (path.includes('admin')) {
         // Trên trang admin: nạp các module phổ biến
-        targetModules = ['VOCAB_JARS', 'TRKI_BANK', 'SPEAKING_SETS'];
+        targetModules = ['VOCAB_JARS', 'TOPIC_ARTICLES', 'VOCABULARIES', 'TRKI_BANK', 'SPEAKING_SETS'];
       }
 
       if (targetModules.length > 0) {
@@ -244,18 +246,9 @@ const dataJsContent = `/**
       }
     },
 
-    // Tải trước ngầm các module còn lại trong thời gian CPU nhàn rỗi (requestIdleCallback)
+    // 0-Egress: Vô hiệu hóa tải ngầm toàn bộ để tiết kiệm 100% dung lượng băng thông
     prefetchIdle() {
-      if (typeof window === 'undefined') return;
-      const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 2000));
-      idle(() => {
-        const remaining = Object.keys(MODULE_REGISTRY).filter((k) => !this.isLoaded(k));
-        remaining.forEach((k, idx) => {
-          setTimeout(() => {
-            this.load(k).catch(() => {});
-          }, idx * 1500);
-        });
-      });
+      // No-op theo chuẩn Zero-Egress Architecture
     }
   };
 

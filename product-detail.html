@@ -1,9 +1,11 @@
 ﻿<!DOCTYPE html>
 <html lang="vi" data-theme="light" data-season="winter">
 <head>
-  <script>window.location.replace("index.html");</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://nrhtdwjihnlaxrbitmcf.supabase.co https://images.unsplash.com https://img.vietqr.io https://upload.wikimedia.org https://i.ytimg.com https://*.googleusercontent.com; media-src 'self' blob: data: https://nrhtdwjihnlaxrbitmcf.supabase.co https://upload.wikimedia.org https://commons.wikimedia.org; connect-src 'self' https://nrhtdwjihnlaxrbitmcf.supabase.co wss://nrhtdwjihnlaxrbitmcf.supabase.co https://api.groq.com https://upload.wikimedia.org https://cdn.jsdelivr.net; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self';" />
+  <script>window.location.replace("index.html");</script>
   <title>Chi Tiết Sản Phẩm — Cửa Hàng RUSI TRKI</title>
   <meta name="description" content="Sản phẩm quà tặng, bánh kẹo truyền thống Nga, mỹ phẩm Siberia thiên nhiên và dịch vụ hỗ trợ hồ sơ du học Nga chính hãng." />
   <link rel="canonical" href="https://rusitrki.com/shop.html" />
@@ -23,8 +25,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=11.5" />
-  <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
+  <link rel="stylesheet" href="styles.min.css?v=12.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/favicon-192.png" />
 </head>
 <body data-page="shop">
   <div id="app-header"></div>
@@ -39,16 +42,32 @@
   </main>
 
   <div id="app-footer"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="supabase-client.js?v=7.8"></script>
-  <script src="rusi-icons.js?v=5.0"></script>
-  <script src="data.js?v=11.1"></script>
-  <script src="auth.js?v=8.2"></script>
-  <script src="app.js?v=9.1"></script>
-  <script src="pages.js?v=13.0"></script>
-  <script src="pomodoro.js?v=7.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js" integrity="sha384-2zrRDgDHSYB/GN3nFW3fsZXoxEhKIr3N2h63Tc6DEOB9JJdFIu8xMJT2Cph/gBil" crossorigin="anonymous" defer></script>
+  <script src="supabase-config.js" defer></script>
+  <script src="supabase-client.js?v=12.0" defer></script>
+  <script src="rusi-icons.js?v=5.0" defer></script>
+  <script src="data.js?v=12.0" defer></script>
+  <script src="auth.js?v=12.0" defer></script>
+  <script src="app.js?v=12.0" defer></script>
+  <script src="pomodoro.js?v=7.1" defer></script>
   <script>
+    function safeEsc(str) {
+      if (typeof esc === "function") return esc(str);
+      return String(str == null ? "" : str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function safeMediaUrl(url, fallback) {
+      const raw = String(url || "").trim();
+      if (!raw) return fallback || "";
+      if (/^(https?:\/\/|assets\/|\/(?!\/))/i.test(raw)) return raw;
+      return fallback || "";
+    }
+
     async function initProductDetailPage() {
       const host = document.getElementById("productDetailHost");
       if (!host) return;
@@ -99,20 +118,20 @@
             ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 16 }) : ""} <span class="btn-text">Quay lại Cửa hàng</span>
           </a>
           <span style="font-size:0.85rem;color:var(--muted)">
-            Trang chủ / Cửa hàng / <b>${esc(p.categoryName || "Sản phẩm")}</b>
+            Trang chủ / Cửa hàng / <b>${esc(p.categoryName || p.category_name || "Sản phẩm")}</b>
           </span>
         </div>
 
         <div class="pdetail-grid">
           <!-- LEFT: IMAGE BOX -->
           <div class="pdetail-img-box">
-            <img src="${esc(p.image)}" alt="${esc(p.title)}" id="mainProductImg" />
+            <img src="${safeEsc(safeMediaUrl(p.image, "assets/red-square.jpg"))}" alt="${safeEsc(p.title)}" id="mainProductImg" />
             ${p.badge ? `<span class="pdetail-badge-chip">${esc(p.badge)}</span>` : ""}
           </div>
 
           <!-- RIGHT: DETAILS & ACTIONS -->
           <div class="pdetail-meta">
-            <span class="pdetail-category">${esc(p.categoryName || "Sản phẩm chính hãng")}</span>
+            <span class="pdetail-category">${esc(p.categoryName || p.category_name || "Sản phẩm chính hãng")}</span>
             <h1 class="pdetail-title">${esc(p.title)}</h1>
 
             <div class="pdetail-rating-row">
@@ -121,7 +140,7 @@
               </span>
               <span>(148 đánh giá của học viên)</span>
               <span>•</span>
-              <span style="color:#16a34a;font-weight:700">Đã bán ${p.sold || 520}+</span>
+              <span style="color:#16a34a;font-weight:700">Đã bán ${Number(p.sold) || 520}+</span>
             </div>
 
             <div class="pdetail-price-box">
@@ -237,31 +256,55 @@
               ${window.RusiIcons ? RusiIcons.get("shopping-bag-shop", { size: 20 }) : ""} Sản phẩm liên quan cùng danh mục
             </h3>
             <div class="shop-grid">
-              ${related.map(r => `
-                <div class="product-card shop-product-card" onclick="window.location.href='product-detail.html?id=' + encodeURIComponent('${r.id}')" style="cursor:pointer">
+              ${related.map(r => {
+                const rId = String(r.id || "");
+                const rImg = safeMediaUrl(r.image, "assets/red-square.jpg");
+                return `
+                <div class="product-card shop-product-card" data-id="${safeEsc(rId)}" style="cursor:pointer">
                   <div class="product-img-wrap">
-                    <img src="${r.image}" class="product-img" alt="${r.title}" />
-                    ${r.badge ? `<span class="product-badge">${r.badge}</span>` : ""}
+                    <img src="${safeEsc(rImg)}" class="product-img" alt="${safeEsc(r.title)}" />
+                    ${r.badge ? `<span class="product-badge">${safeEsc(r.badge)}</span>` : ""}
                   </div>
                   <div class="product-body">
-                    <div class="product-cat">${r.categoryName || ""}</div>
+                    <div class="product-cat">${safeEsc(r.categoryName || "")}</div>
                     <h3 class="product-title">
-                      <a href="product-detail.html?id=${encodeURIComponent(r.id)}" style="color:inherit;text-decoration:none">${r.title}</a>
+                      <a href="product-detail.html?id=${encodeURIComponent(rId)}" style="color:inherit;text-decoration:none">${safeEsc(r.title)}</a>
                     </h3>
-                    <p class="product-desc">${r.desc}</p>
+                    <p class="product-desc">${safeEsc(r.desc || "")}</p>
                     <div class="product-pricing">
-                      <span class="product-price">${r.price.toLocaleString("vi-VN")} đ</span>
+                      <span class="product-price">${Number(r.price || 0).toLocaleString("vi-VN")} đ</span>
                     </div>
-                    <button class="btn btn-primary btn-sm" style="margin-top:auto" onclick="event.stopPropagation();window.location.href='product-detail.html?id=' + encodeURIComponent('${r.id}')">
+                    <button type="button" class="btn btn-primary btn-sm js-related-product-btn" data-id="${safeEsc(rId)}" style="margin-top:auto">
                       Xem chi tiết →
                     </button>
                   </div>
                 </div>
-              `).join("")}
+              `;
+              }).join("")}
             </div>
           </div>
         ` : ""}
       `;
+
+      // Related product card & button click listeners
+      host.querySelectorAll(".shop-product-card[data-id]").forEach((card) => {
+        card.addEventListener("click", (e) => {
+          if (e.target && e.target.closest("a, button")) return;
+          const targetId = card.getAttribute("data-id");
+          if (targetId) {
+            window.location.href = "product-detail.html?id=" + encodeURIComponent(targetId);
+          }
+        });
+      });
+      host.querySelectorAll(".js-related-product-btn[data-id]").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const targetId = btn.getAttribute("data-id");
+          if (targetId) {
+            window.location.href = "product-detail.html?id=" + encodeURIComponent(targetId);
+          }
+        });
+      });
 
       // Quantity buttons
       let qty = 1;
@@ -330,9 +373,14 @@
       });
     }
 
-    function initPage() {
-      initProductDetailPage();
-    }
+    document.addEventListener("DOMContentLoaded", function () {
+      window.initPage = function initPage() {
+        initProductDetailPage();
+      };
+      if (window.triggerPageInit) {
+        window.triggerPageInit();
+      }
+    });
   </script>
 </body>
 </html>

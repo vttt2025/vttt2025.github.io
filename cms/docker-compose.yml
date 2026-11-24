@@ -9,7 +9,7 @@ services:
       - '3000:3000'
     environment:
       - DATABASE_URI=postgresql://postgres:postgres@postgres:5432/rusitrki_cms
-      - PAYLOAD_SECRET=rusitrki_super_secure_payload_secret_key_2026
+      - PAYLOAD_SECRET=${PAYLOAD_SECRET:-rusitrki_super_secure_payload_secret_key_2026}
       - PORT=3000
     depends_on:
       - postgres

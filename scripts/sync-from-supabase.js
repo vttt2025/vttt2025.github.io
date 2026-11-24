@@ -380,7 +380,12 @@ async function main() {
   const rawTests = await api(config, 'trki_tests?select=*&order=level.asc');
   const formattedTests = rawTests.map(t => {
     const raw = t.raw_data || {};
-    const parts = (Array.isArray(t.parts) && t.parts.length) ? t.parts : (raw.parts || t.sections || []);
+    let parts = (Array.isArray(t.parts) && t.parts.length) ? t.parts : (raw.parts || t.sections || []);
+    // Zero-Answer Leak: strip answers and official_key
+    parts = JSON.parse(JSON.stringify(parts, (key, value) => {
+      if (key === 'official_key' || key === 'answers' || key === 'answer_key') return undefined;
+      return value;
+    }));
     return {
       id: t.code || t.id,
       code: t.code || t.id,
@@ -407,7 +412,7 @@ async function main() {
 
   // 5b. Tải TOÀN BỘ ngân hàng câu hỏi TRKI cốt lõi (phân trang không giới hạn)
   process.stdout.write('5b. Tải trki_question_bank (toàn bộ ngân hàng câu hỏi)... ');
-  const rawQuestionBank = await apiAll(config, 'trki_question_bank?select=*&order=level.asc,sub_test.asc,order_index.asc');
+  const rawQuestionBank = await apiAll(config, 'trki_question_bank?select=id,code,test_code,test_id,level,sub_test,part_number,question_type,order_index,prompt,prompt_vi,passage,audio_url,image_url,options,topic,grammar_case,difficulty,points,is_published,is_pro_only&order=level.asc,sub_test.asc,order_index.asc');
   console.log(`✓ ${rawQuestionBank.length} câu hỏi`);
 
   // 6. Tải sản phẩm shop (sắp xếp theo price_minor)

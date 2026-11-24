@@ -886,6 +886,13 @@ function initWritingPage() {
                   return;
                 }
 
+                if (aiRes.serverError) {
+                  if (scoreBox) scoreBox.classList.add("hidden");
+                  if (submitBtn) submitBtn.disabled = false;
+                  toast(aiRes.message || "Máy chủ AI đang bảo trì. Vui lòng thử lại sau.");
+                  return;
+                }
+
                 if (aiRes.requireAuth) {
                   if (scoreBox) scoreBox.classList.add("hidden");
                   if (submitBtn) submitBtn.disabled = false;
@@ -965,16 +972,16 @@ function initWritingPage() {
 
             if (isPicture) {
               if (modelMatches >= 3 || usedHints.length >= 2) {
-                feedbackComment = `Bài viết bám sát bối cảnh bức tranh (${count} từ, ${sentences.length} câu). Bạn đã quan sát tốt các nhân vật và vận dụng thành công <b>${usedHints.length} từ vựng gợi ý</b> của tranh. Tiếp tục trau chuốt thêm biến cách để bài viết hoàn hảo hơn nhé!`;
+                feedbackComment = `Bài viết bám sát bối cảnh bức tranh (${count} từ, ${sentences.length} câu). Bạn đã quan sát tốt các nhân vật và vận dụng thành công ${usedHints.length} từ vựng gợi ý của tranh. Tiếp tục trau chuốt thêm biến cách để bài viết hoàn hảo hơn nhé!`;
               } else {
-                feedbackComment = `Bài viết đạt độ dài (${count} từ) nhưng chưa miêu tả sát các chi tiết nhân vật/hành động trong bức tranh so với bài mẫu. Hãy quan sát kỹ tranh và xem phần <b>“Bài mẫu”</b> để học cách miêu tả sinh động hơn nhé!`;
+                feedbackComment = `Bài viết đạt độ dài (${count} từ) nhưng chưa miêu tả sát các chi tiết nhân vật/hành động trong bức tranh so với bài mẫu. Hãy quan sát kỹ tranh và xem phần “Bài mẫu” để học cách miêu tả sinh động hơn nhé!`;
               }
             } else {
               feedbackComment = `Bài viết hoàn thành tốt yêu cầu luyện dịch (${count} từ, ${sentences.length} câu hoàn chỉnh). Khả năng diễn đạt và liên kết câu mạch lạc.`;
             }
 
             if (latinChars.length > 0) {
-              feedbackComment += `<br><span style="color:var(--secondary)">Lưu ý: Có xuất hiện một số ký tự Latinh trong bài, hãy kiểm tra lại bàn phím tiếng Nga nhé.</span>`;
+              feedbackComment += `\nLưu ý: Có xuất hiện một số ký tự Latinh trong bài, hãy kiểm tra lại bàn phím tiếng Nga nhé.`;
             }
           }
 
@@ -1042,8 +1049,6 @@ function initWritingPage() {
               </div>
             </div>
           `;
-          revealVocab();
-
           if (typeof Progress !== "undefined") {
             Progress.addXp(earnedXp, {
               title: `Bài viết: ${t.title || t.id}`,
@@ -1051,12 +1056,14 @@ function initWritingPage() {
               item_id: t.id,
               score: total
             });
-            Progress.markDone("writeDone", t.id, {
-              skill_type: "writing",
-              item_id: t.id,
-              score: total,
-              xp_earned: earnedXp
-            });
+            if (isPassed) {
+              Progress.markDone("writeDone", t.id, {
+                skill_type: "writing",
+                item_id: t.id,
+                score: total,
+                xp_earned: earnedXp
+              });
+            }
           }
           toast(`AI Rusika đã phân tích và chấm xong bài viết (+${earnedXp} XP)!`);
           updateQuotaDisplay();
@@ -1096,7 +1103,17 @@ function initWritingPage() {
   };
 
   const loadCloudWriting = async () => {
-    // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có đề viết trong RAM/IndexedDB
+    // 0-Egress rule: Nạp từ RAM/IndexedDB/CDN JSON trước, bỏ qua truy vấn Supabase nếu đã có đề viết
+    if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("WRITING_TASKS")) {
+      await window.RusiDataLoader.loadMultiple(["WRITING_TASKS", "WRITING_TOPICS"]);
+      if (window.WRITING_TASKS && window.WRITING_TASKS.length > 0) {
+        if (!getTasks().some((t) => t.level === currentLevel && taskMode(t) === currentMode)) {
+          currentLevel = getFirstLevelWithTasks(currentMode);
+        }
+        if (!document.body.classList.contains("in-workspace")) { if (!checkUrlTask()) renderHub(); }
+        return;
+      }
+    }
     if (window.WRITING_TASKS && window.WRITING_TASKS.length > 0) return;
     if (!window.RusiSupabase || !window.RusiSupabase.isReady || !window.RusiSupabase.isReady()) return;
     try {
@@ -1106,7 +1123,7 @@ function initWritingPage() {
         if (!getTasks().some((t) => t.level === currentLevel && taskMode(t) === currentMode)) {
           currentLevel = getFirstLevelWithTasks(currentMode);
         }
-        if (!document.body.classList.contains("in-workspace")) renderHub();
+        if (!document.body.classList.contains("in-workspace")) { if (!checkUrlTask()) renderHub(); }
       }
     } catch (error) {
       console.warn("[Supabase] Lỗi tải đề viết từ cloud:", error);
@@ -1116,11 +1133,15 @@ function initWritingPage() {
   const checkUrlTask = () => {
     try {
       const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || (urlParams ? urlParams.get(k) : null);
-      const targetTask = getParam("task") || getParam("id");
+      const targetTask = getParam("task") || getParam("id") || getParam("topic");
       if (targetTask) {
         const allTasks = getTasks();
-        const found = allTasks.find(t => t.id === targetTask || t.code === targetTask);
+        const found = allTasks.find(t => t.id === targetTask || t.code === targetTask || (t.category && t.category === targetTask));
         if (found) {
+          if (!canOpen(found)) {
+            if (window.Monetization && window.Monetization.openUpgradeModal) window.Monetization.openUpgradeModal("pro");
+            return false;
+          }
           const mode = taskMode(found);
           currentMode = mode;
           currentLevel = found.level || currentLevel;

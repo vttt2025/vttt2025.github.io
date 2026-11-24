@@ -38,7 +38,8 @@ function initUpgradePage() {
 
     // Tạo phần hiển thị trạng thái học viên (User Strip)
     let userStripHtml = "";
-    if (user) {
+    const isGuest = user && (String(user.id || user.uid || "").startsWith("guest_") || user.isGuest);
+    if (user && !isGuest) {
       const initials = (user.name || user.email || "?")
         .split(/\s+/)
         .map((s) => s[0])
@@ -379,12 +380,16 @@ function initUpgradePage() {
   render();
 
   // Tự động mở modal VietQR nếu có query param ?pkg=... sau khi đăng nhập chuyển hướng về
+  let pkgAutoOpened = false;
   const checkAutoOpenPkg = () => {
+    if (pkgAutoOpened) return;
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const targetPkg = urlParams.get("pkg");
       const currentUser = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
-      if (targetPkg && currentUser && typeof Monetization !== "undefined") {
+      const isGuest = currentUser && (String(currentUser.id || currentUser.uid || "").startsWith("guest_") || currentUser.isGuest);
+      if (targetPkg && currentUser && !isGuest && typeof Monetization !== "undefined") {
+        pkgAutoOpened = true;
         setTimeout(() => {
           Monetization.openUpgradeModal(targetPkg);
           if (window.history && window.history.replaceState) {

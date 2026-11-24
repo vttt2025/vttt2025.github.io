@@ -27,6 +27,14 @@ if (fs.existsSync(path.join('js', 'pages'))) {
     jsFiles.push(path.join('js', 'pages', f));
   });
 }
+if (fs.existsSync(path.join('js', 'audioRecorder.js'))) {
+  jsFiles.push(path.join('js', 'audioRecorder.js'));
+}
+if (fs.existsSync('scripts')) {
+  fs.readdirSync('scripts').filter(f => f.endsWith('.js')).forEach(f => {
+    jsFiles.push(path.join('scripts', f));
+  });
+}
 jsFiles.forEach(file => {
   try {
     execSync('node -c "' + file + '"', { stdio: 'pipe' });
@@ -89,6 +97,27 @@ htmlFiles.forEach(file => {
   passedChecks++;
 });
 console.log(`✓ Tài nguyên HTML: 16/16 tệp HTML có đường dẫn chính xác 100%.`);
+
+// 3b. KIỂM TRA BẢO VỆ ĐÁP ÁN THI (ZERO-ANSWER LEAK) & KÍCH THƯỚC DATA.JS
+const trkiBankPath = path.join('data', 'modules', 'trki_bank.json');
+if (fs.existsSync(trkiBankPath)) {
+  const trkiRaw = fs.readFileSync(trkiBankPath, 'utf8');
+  if (trkiRaw.includes('"official_key"')) {
+    errors.push('[Bảo mật Zero-Answer Leak] Phát hiện "official_key" còn tồn tại trong data/modules/trki_bank.json!');
+  } else {
+    passedChecks++;
+  }
+}
+if (fs.existsSync('data.js')) {
+  const dataJsSize = fs.statSync('data.js').size;
+  const maxBytes = 500 * 1024;
+  if (dataJsSize > maxBytes) {
+    errors.push(`[0-Egress Budget] data.js (${(dataJsSize / 1024).toFixed(1)} KB) vượt quá ngân sách 500 KB!`);
+  } else {
+    passedChecks++;
+  }
+}
+console.log('✓ Zero-Answer Leak & 0-Egress: Đáp án thi được bảo vệ, data.js đạt ngân sách.');
 
 // 4. KIỂM TRA RÀ SOÁT BẢO MẬT & DEAD CODE NGUY HIỂM
 const sensitivePatterns = [

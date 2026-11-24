@@ -491,7 +491,7 @@
           });
         });
         const words = Array.from(map.values());
-        if (typeof window !== "undefined" && words.length > 0) window.VOCABULARIES = words;
+        // window.VOCABULARIES is maintained via modular data loader
         return words;
       },
       desc: "Kho từ vựng tiếng Nga toàn diện có trọng âm, từ loại, phiên âm IPA, giải nghĩa và bảng chia từ.",
@@ -1795,7 +1795,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       }),
       fields: [
         { key: "id", label: "User ID", type: "text", required: true },
-        { key: "email", label: "Email Gmail", type: "text", required: true },
+        { key: "email", label: "Email Gmail", type: "text", required: false },
         { key: "full_name", label: "Họ và tên", type: "text" },
         {
           key: "role",
@@ -1850,16 +1850,22 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     devMode: false
   };
 
+  let _ramAdminStore = null;
   function loadAdminStore() {
     try {
       return JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
     } catch (e) {
-      return {};
+      return _ramAdminStore || {};
     }
   }
 
   function saveAdminStore(store) {
-    localStorage.setItem(STORE_KEY, JSON.stringify(store));
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(store));
+    } catch (e) {
+      console.warn("[AdminStore] LocalStorage quota exceeded, caching in RAM fallback:", e);
+      _ramAdminStore = store;
+    }
   }
 
   const OBSOLETE_MOCK_TEST_IDS = new Set(["trki_a1", "trki_gram_a1a2", "trki_a2", "trki_reading_b1", "trki_b1", "trki_b2"]);
@@ -2010,6 +2016,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       if (!window._attemptedAdminLoads) window._attemptedAdminLoads = new Set();
       window._attemptedAdminLoads.add(State.currentSlug);
       window.RusiDataLoader.load(State.currentSlug).then(() => {
+        renderSidebarLists();
         handleRoute();
       });
       return;
@@ -6335,6 +6342,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
   }
 
   function refreshStructureTab() {
+    if (typeof window !== "undefined") window.refreshStructureTab = refreshStructureTab;
     const tabS = document.getElementById("tabStructure");
     if (tabS && State.currentSlug && State.currentDraft) {
       tabS.innerHTML = renderActiveStructureBuilder(State.currentSlug, State.currentDraft);
@@ -7276,9 +7284,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             currency: "VND",
             payment_method: String(doc.paymentMethod || doc.payment_method || "VIETQR").toUpperCase(),
             status: String(doc.status || "pending").toLowerCase(),
-            shipping_address: doc.shipping_address || null,
+            shipping_address: (typeof doc.shipping_address === "string" ? (() => { try { return JSON.parse(doc.shipping_address); } catch(_) { return doc.shipping_address; } })() : doc.shipping_address) || null,
             casso_trans_id: doc.casso_trans_id || null,
-            paid_at: doc.paid_at ? new Date(doc.paid_at).toISOString() : null,
+            paid_at: (doc.paid_at ? new Date(doc.paid_at).toISOString() : (String(doc.status || "").toLowerCase() === "paid" ? new Date().toISOString() : null)),
             expires_at: doc.expires_at || new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
             updated_at: new Date().toISOString()
           };
@@ -7311,19 +7319,15 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     },
 
     getClient() {
-      // 1. Service Role Key (quyền Admin cao nhất, tự động bypass Row-Level Security)
-      const serviceKey = localStorage.getItem("trki_sb_service_key") || (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.serviceRoleKey);
-      if (serviceKey && typeof window.supabase !== "undefined" && window.SUPABASE_CONFIG) {
-        return window.supabase.createClient(window.SUPABASE_CONFIG.url, serviceKey.trim());
-      }
+      try { localStorage.removeItem("trki_sb_service_key"); } catch (_) {}
 
-      // 2. Client từ window.RusiSupabase
+      // 1. Client từ window.RusiSupabase
       if (window.RusiSupabase && window.RusiSupabase.getClient) {
         const client = window.RusiSupabase.getClient();
         if (client) return client;
       }
 
-      // 3. Anon Key công khai
+      // 2. Anon Key công khai
       if (typeof window.supabase !== "undefined" && window.SUPABASE_CONFIG) {
         const key = localStorage.getItem("trki_sb_anon_key") || window.SUPABASE_CONFIG.anonKey;
         if (key && !key.includes("DÁN_ANON_KEY")) {
@@ -8987,9 +8991,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     if (closeBtn) closeBtn.onclick = closeSupabaseModal;
     backdrop.onclick = closeSupabaseModal;
 
+    try { localStorage.removeItem("trki_sb_service_key"); } catch (_) {}
     const serviceInp = document.getElementById("sbServiceKeyInput");
     if (serviceInp) {
-      serviceInp.value = localStorage.getItem("trki_sb_service_key") || "";
+      serviceInp.value = "";
     }
 
     const anonInp = document.getElementById("sbAnonKeyInput");
@@ -9003,7 +9008,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     if (saveBtn) {
       saveBtn.onclick = () => {
         // Tự động dọn dẹp khóa service_role khỏi LocalStorage trình duyệt để bảo vệ an toàn
-        localStorage.removeItem("trki_sb_service_key");
+        try { localStorage.removeItem("trki_sb_service_key"); } catch (_) {}
 
         const aVal = (anonInp?.value || "").trim();
         if (aVal) {
@@ -9150,11 +9155,7 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
   // 17. AUTH & GATE LOGIC
   // =========================================================================
 
-  const DEFAULT_ADMIN_EMAILS = [
-    "admin@rusitrki.com",
-    "academic@rusitrki.com",
-    "tuadenzettt@gmail.com"
-  ];
+  const DEFAULT_ADMIN_EMAILS = [];
 
   function isLocalEnvironment() {
     try {
@@ -9168,12 +9169,7 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
   function isUserAdmin(user) {
     if (!user) return false;
     const role = String(user.role || "").toLowerCase().trim();
-    if (role === "academic_admin" || role === "super_admin") return true;
-
-    const email = String(user.email || "").toLowerCase().trim();
-    if (email && DEFAULT_ADMIN_EMAILS.includes(email)) return true;
-
-    return false;
+    return role === "academic_admin" || role === "super_admin";
   }
 
   function showLoginAlert(message, type = "error") {
@@ -9291,7 +9287,7 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
       if (nameEl) nameEl.textContent = user.displayName || user.name || email;
       if (avatarEl) avatarEl.textContent = (user.displayName || user.name || email)[0].toUpperCase();
       if (roleEl) {
-        roleEl.textContent = (user.role === "super_admin" || DEFAULT_ADMIN_EMAILS.includes(email))
+        roleEl.textContent = (user.role === "super_admin")
           ? "Super Admin"
           : "Academic Admin";
       }
@@ -9310,7 +9306,7 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
 
       const sqlSnippet = document.getElementById("sqlRoleSnippet");
       if (sqlSnippet) {
-        sqlSnippet.textContent = `UPDATE profiles SET role = 'super_admin' WHERE email = '${email}';`;
+        sqlSnippet.textContent = `UPDATE profiles SET role = 'super_admin' WHERE id = (SELECT id FROM auth.users WHERE email = '${email}' LIMIT 1);`;
       }
     }
   }
@@ -9374,10 +9370,10 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
   // 19. INITIALIZATION
   // =========================================================================
 
-  function init() {
+  async function init() {
+    try { localStorage.removeItem("trki_sb_service_key"); } catch (_) {}
     initTheme();
     initMobileDrawer();
-    renderSidebarLists();
 
     const impInput = document.getElementById("importFileInput");
     if (impInput) impInput.addEventListener("change", onImportFile);
@@ -9572,16 +9568,27 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
     window.addEventListener("storage", (e) => {
       if (e.key === STORE_KEY) {
         renderSidebarLists();
-        handleRoute();
+        const isEditing = document.querySelector(".p-editor-pane, .live-markdown-input, #editorModal, .p-form");
+        if (!isEditing) {
+          handleRoute();
+        }
       }
     });
 
     window.addEventListener("hashchange", handleRoute);
+
+    if (window.RusiDataLoader && typeof window.RusiDataLoader.prepareForCurrentPage === "function") {
+      try {
+        await window.RusiDataLoader.prepareForCurrentPage();
+      } catch (err) {
+        console.warn("[Admin] Lỗi prepareForCurrentPage:", err);
+      }
+    }
+
+    renderSidebarLists();
     handleRoute();
 
-    if (window.RusiDataLoader && typeof window.RusiDataLoader.prefetchIdle === "function") {
-      window.RusiDataLoader.prefetchIdle();
-    }
+    // 0-Egress: prefetchIdle disabled in admin studio
   }
 
   if (document.readyState === "loading") {

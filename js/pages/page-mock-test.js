@@ -15,7 +15,8 @@ function initMockTestPage() {
     ["B1", "TRKI-1"],
     ["B2", "TRKI-2"],
     ["C1", "TRKI-3"],
-    ["C2", "TRKI-4"]
+    ["C2", "TRKI-4"],
+    ["VNZh", "ВЖ"]
   ];
 
   const MODE_INFO = {
@@ -32,8 +33,9 @@ function initMockTestPage() {
   };
 
   const cachedTests = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("tests:all") : null;
-  const localBank = (typeof TRKI_BANK !== "undefined" && Array.isArray(TRKI_BANK)) ? TRKI_BANK : ((typeof window !== "undefined" && Array.isArray(window.TRKI_BANK)) ? window.TRKI_BANK : []);
-  let bank = (cachedTests && cachedTests.length) ? cachedTests : localBank;
+  const fullBank = (typeof window !== "undefined" && Array.isArray(window.TRKI_BANK) && window.TRKI_BANK.length) ? window.TRKI_BANK : [];
+  const indexBank = (typeof window !== "undefined" && Array.isArray(window.TRKI_INDEX) && window.TRKI_INDEX.length) ? window.TRKI_INDEX : [];
+  let bank = fullBank.length ? fullBank : (indexBank.length ? indexBank : ((cachedTests && cachedTests.length) ? cachedTests : []));
 
   let currentLevel = "A1";
   let currentPage = 1;
@@ -82,8 +84,8 @@ function initMockTestPage() {
   };
 
   const loadCloudTests = async () => {
-    // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có ngân hàng đề thi trong RAM/IndexedDB
-    if (window.TRKI_BANK && window.TRKI_BANK.length > 0) return;
+    // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có mục lục hoặc ngân hàng đề thi trong RAM/IndexedDB
+    if ((window.TRKI_BANK && window.TRKI_BANK.length > 0) || (window.TRKI_INDEX && window.TRKI_INDEX.length > 0)) return;
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
       try {
         const remote = await window.RusiSupabase.tests.getPublished();
@@ -105,8 +107,9 @@ function initMockTestPage() {
   };
   loadCloudTests();
 
-  if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("TRKI_BANK")) {
-    window.RusiDataLoader.load("TRKI_BANK").then((loaded) => {
+  if (window.RusiDataLoader && !bank.length) {
+    const modKey = window.RusiDataLoader.isLoaded("TRKI_BANK") ? "TRKI_BANK" : "TRKI_INDEX";
+    window.RusiDataLoader.load(modKey).then((loaded) => {
       if (loaded && loaded.length && (!bank || !bank.length)) {
         bank = loaded;
         if (!currentTest || !bank.some(t => t.id === currentTest.id)) {
@@ -179,7 +182,7 @@ function initMockTestPage() {
         const isDone = Progress.doneList("trkiDone").includes(t.id);
         const isPro = Boolean(t.is_pro_only || t.is_pro);
         const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
-        const qCount = t.questionsCount || (t.questions ? t.questions.length : (t.parts ? t.parts.reduce((a, b) => a + (b.questions ? b.questions.length : 0), 0) : 34));
+        const qCount = t.questionCount || t.questionsCount || (t.questions ? t.questions.length : (t.parts ? t.parts.reduce((a, b) => a + (b.questions ? b.questions.length : 0), 0) : 34));
         const durMin = t.durationSeconds 
           ? Math.round(t.durationSeconds / 60) 
           : (t.duration_min || t.durationMin || (Array.isArray(t.parts) ? t.parts.reduce((a, b) => a + (b.durationMin || b.duration_min || 0), 0) : 0) || 60);
@@ -378,7 +381,7 @@ function initMockTestPage() {
         .map(r => ({
           q: r.prompt || r.question_text || "",
           options: normalizeOptions(r.options),
-          a: typeof r.correct_index === "number" ? r.correct_index : 0,
+          a: typeof r.correct_index === "number" ? r.correct_index : undefined,
           ex: r.explanation || "",
           topic: r.topic || ""
         }))
@@ -400,6 +403,10 @@ function initMockTestPage() {
   let activeAudioCtx = null;
   let micAnimFrame = null;
   const cleanupHardwareTests = () => {
+    if (window._mockTestSpeakRecorder) {
+      try { if (window._mockTestSpeakRecorder.state !== "inactive") window._mockTestSpeakRecorder.stop(); } catch(_) {}
+      window._mockTestSpeakRecorder = null;
+    }
     if (activeMicStream) {
       try {
         activeMicStream.getTracks().forEach(t => t.stop());
@@ -435,8 +442,23 @@ function initMockTestPage() {
     cleanupHardwareTests();
     document.body.classList.add("in-workspace", "cbt-fullscreen-mode");
 
+    // Nạp chi tiết câu hỏi từ TRKI_BANK theo nhu cầu (On-Demand Lazy Load) khi chọn từ mục lục nhẹ
+    if (currentTest && (currentTest._isIndexOnly || !Array.isArray(currentTest.parts) || !currentTest.parts.length)) {
+      host.innerHTML = `<div style="padding:80px 24px;text-align:center;color:var(--muted)"><div class="rusi-skeleton-hero" style="max-width:520px;margin:0 auto 16px"></div><p>Đang tải nội dung đề thi...</p></div>`;
+      if (window.RusiDataLoader && typeof window.RusiDataLoader.load === "function") {
+        const loadedFull = await window.RusiDataLoader.load("TRKI_BANK");
+        if (Array.isArray(loadedFull) && loadedFull.length) {
+          bank = loadedFull;
+          const match = loadedFull.find(t => t.id === currentTest.id || t.code === currentTest.code);
+          if (match) currentTest = match;
+        }
+      }
+    }
+
     if (currentTest && currentTest.code && currentTest.code.startsWith("trki_zlat")) {
-      await loadQBankIntoTest(currentTest);
+      if (!(currentTest.parts && currentTest.parts[0] && Array.isArray(currentTest.parts[0].questions) && currentTest.parts[0].questions.length > 0)) {
+        await loadQBankIntoTest(currentTest);
+      }
     }
 
     const isPractice = (examMode === "practice");
@@ -458,7 +480,7 @@ function initMockTestPage() {
       ? activeParts.reduce((acc, p) => acc + (p.durationMin || 15), 0)
       : (currentTest.duration_min || currentTest.durationMin || (activeParts.length ? activeParts.reduce((acc, p) => acc + (p.durationMin || p.duration_min || 0), 0) : 0) || 60);
 
-    const passPct = currentTest.passPercent || 66;
+    const passPct = currentTest.pass_percent || currentTest.passPercent || 66;
 
     // RENDER TOÀN MÀN HÌNH KHÔNG XUNG ĐỘT (CBT PORTAL SUITE)
     host.innerHTML = `
@@ -917,9 +939,18 @@ function initMockTestPage() {
       ? currentTest.parts.filter(p => selectedPartList.includes(p.id))
       : currentTest.parts;
 
+    // Tính chỉ số câu hỏi toàn cục theo toàn bộ đề thi (đồng bộ chính xác với RPC chấm thi server-side)
+    const partQuestionOffsets = new Map();
+    let runningGlobalIdx = 0;
+    (currentTest.parts || []).forEach((p) => {
+      partQuestionOffsets.set(p.id, runningGlobalIdx);
+      if (Array.isArray(p.questions)) runningGlobalIdx += p.questions.length;
+    });
+
     // Xây dựng mảng tuần tự tất cả câu hỏi của đề thi
     const examItems = [];
     activeParts.forEach((part, pi) => {
+      const baseGlobalIdx = partQuestionOffsets.get(part.id) || 0;
       if (Array.isArray(part.questions) && part.questions.length > 0) {
         part.questions.forEach((q, qi) => {
           examItems.push({
@@ -929,6 +960,7 @@ function initMockTestPage() {
             partIndex: pi,
             part: part,
             qi: qi,
+            globalQIdx: baseGlobalIdx + qi,
             q: q
           });
         });
@@ -1155,7 +1187,10 @@ function initMockTestPage() {
         currentRenderedPartId = part.id;
         const leftHost = el("#cbtSplitLeftContent");
         if (leftHost) {
-          if (part.text) {
+          const qPassage = item.q && (item.q.passage || item.q.reading_passage);
+          if (part.text || qPassage) {
+            const pRu = (part.text && (part.text.ru || part.text)) || qPassage || "";
+            const pVi = (part.text && part.text.vi) || "";
             // Phần ĐỌC HIỂU (ЧТЕНИЕ)
             leftHost.innerHTML = `
               <div class="cbt-left-header-row">
@@ -1166,9 +1201,9 @@ function initMockTestPage() {
                   <button type="button" class="cbt-tool-btn" id="btnPassageTrans" title="Bản dịch tiếng Việt">Bản dịch</button>
                 </div>
               </div>
-              <div class="cbt-reading-passage-text ru" id="cbtPassageText">${esc(part.text.ru || "")}</div>
+              <div class="cbt-reading-passage-text ru" id="cbtPassageText">${esc(pRu)}</div>
               <div class="reading-vi-trans hidden" id="cbtPassageViTrans" style="margin-top:16px;padding:14px 16px;background:var(--surface);border-radius:10px;font-size:0.92rem;color:var(--muted);line-height:1.65;border:1px solid var(--border)">
-                ${esc(part.text.vi || "")}
+                ${esc(pVi)}
               </div>
             `;
 
@@ -1331,7 +1366,8 @@ function initMockTestPage() {
         const q = item.q;
         const userAns = answers[id];
         const hasAnswered = (userAns !== undefined);
-        const isCorrect = hasAnswered && (userAns === q.a);
+        const hasServerKey = (typeof q.a === "number");
+        const isCorrect = hasAnswered && hasServerKey && (userAns === q.a);
 
         const rawOpts = normalizeOptions(q.options);
         if (!sessionOptionOrders[id] || sessionOptionOrders[id].length !== rawOpts.length) {
@@ -1356,7 +1392,7 @@ function initMockTestPage() {
             ${order.map((oi, lIdx) => {
               const optText = rawOpts[oi] || "";
               let cardClass = "cbt-choice-card";
-              if (isPractice && hasAnswered) {
+              if (isPractice && hasAnswered && hasServerKey) {
                 if (oi === q.a) cardClass += " correct";
                 else if (oi === userAns && !isCorrect) cardClass += " wrong";
               } else if (userAns === oi) {
@@ -1371,26 +1407,60 @@ function initMockTestPage() {
             }).join("")}
           </div>
 
-          ${isPractice && hasAnswered ? `
+          ${isPractice && hasAnswered ? (hasServerKey ? `
             <div class="trki-practice-feedback ${isCorrect ? 'is-correct' : 'is-wrong'}" style="margin-top:20px">
               <div class="feedback-badge-row">
                 <span class="feedback-badge ${isCorrect ? 'badge-correct' : 'badge-wrong'}">
                   ${isCorrect ? '✓ Đúng' : '✕ Sai'}
                 </span>
-                ${!isCorrect ? `<span class="feedback-correct-answer">Đáp án đúng: <b class="ru" style="color:var(--green)">${esc(q.options[q.a])}</b></span>` : ''}
+                ${!isCorrect ? `<span class="feedback-correct-answer">Đáp án đúng: <b class="ru" style="color:var(--green)">${esc(rawOpts[q.a] || q._correctAnswer || "")}</b></span>` : ''}
               </div>
               <div class="feedback-ex">
                 <b>Giải thích:</b> ${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}
               </div>
             </div>
-          ` : ""}
+          ` : `
+            <div class="trki-practice-feedback" style="margin-top:20px;color:var(--muted)">
+              ${q._checkFailed ? 'Không thể kết nối máy chủ kiểm tra đáp án lúc này. Vui lòng thử chọn lại.' : 'Đang đối chiếu đáp án từ máy chủ...'}
+            </div>
+          `) : ""}
         `;
+
+        // Chế độ Luyện tập: Kiểm tra đáp án 1 câu qua RPC bảo mật (Zero-Answer Leak)
+        if (isPractice && hasAnswered && !hasServerKey && !q._checking) {
+          q._checking = true;
+          q._checkFailed = false;
+          const checkCode = currentTest.code || currentTest.id;
+          const qIdx = typeof item.globalQIdx === "number" ? item.globalQIdx : currentItemIndex;
+          const checkFn = window.RusiSupabase && window.RusiSupabase.questionBank && window.RusiSupabase.questionBank.checkQuestion;
+          if (typeof checkFn === "function") {
+            checkFn(checkCode, qIdx, userAns).then((res) => {
+              q._checking = false;
+              if (res && res.found && typeof res.correct_index === "number") {
+                q.a = res.correct_index;
+                q._correctAnswer = res.correct_answer || "";
+                q.ex = res.explanation || "";
+              } else {
+                q._checkFailed = true;
+              }
+              if (examItems[currentItemIndex] === item) renderQuestionAt(currentItemIndex);
+            }).catch(() => {
+              q._checking = false;
+              q._checkFailed = true;
+              if (examItems[currentItemIndex] === item) renderQuestionAt(currentItemIndex);
+            });
+          } else {
+            q._checking = false;
+            q._checkFailed = true;
+          }
+        }
 
         // Bắt sự kiện chọn đáp án
         rightBox.querySelectorAll(".cbt-choice-card").forEach(optBtn => {
           optBtn.onclick = () => {
             const oi = parseInt(optBtn.dataset.oi, 10);
             answers[id] = oi;
+            q._checkFailed = false;
             try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(e) {}
             refreshMatrixCounts();
             renderQuestionAt(currentItemIndex);
@@ -1469,6 +1539,40 @@ function initMockTestPage() {
           btnSample.onclick = () => {
             const box = el("#speakSampleBox");
             if (box) box.classList.toggle("hidden");
+          };
+        }
+
+        const btnSpeakRec = el("#btnSpeakRecord");
+        const speakStatus = el("#speakRecStatus");
+        if (btnSpeakRec) {
+          btnSpeakRec.onclick = async () => {
+            if (window._mockTestSpeakRecorder && window._mockTestSpeakRecorder.state === "recording") {
+              try { window._mockTestSpeakRecorder.stop(); } catch(_) {}
+              btnSpeakRec.innerHTML = `${icon("mic-speaking", 14)} Luyện phát âm / Ghi âm`;
+              btnSpeakRec.classList.remove("is-recording");
+              if (speakStatus) speakStatus.textContent = "Đã ghi âm xong.";
+              return;
+            }
+            try {
+              const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+              activeMicStream = stream;
+              const chunks = [];
+              const recorder = new MediaRecorder(stream);
+              window._mockTestSpeakRecorder = recorder;
+              recorder.ondataavailable = (ev) => { if (ev.data.size > 0) chunks.push(ev.data); };
+              recorder.onstop = () => {
+                stream.getTracks().forEach(t => t.stop());
+                activeMicStream = null;
+                answers[id] = true;
+                refreshMatrixCounts();
+              };
+              recorder.start();
+              btnSpeakRec.innerHTML = `${icon("mic-speaking", 14)} Đang ghi âm... (Bấm dừng)`;
+              btnSpeakRec.classList.add("is-recording");
+              if (speakStatus) speakStatus.textContent = "Đang ghi âm câu trả lời của bạn...";
+            } catch(recErr) {
+              if (speakStatus) speakStatus.textContent = "Không thể truy cập microphone.";
+            }
           };
         }
       }
@@ -1833,39 +1937,41 @@ function initMockTestPage() {
       ? currentTest.parts.filter(p => selectedPartList.includes(p.id))
       : currentTest.parts;
 
-    // Chấm thi Server-Side bảo mật qua RPC (Zero-Answer Leak)
-    if (window.RusiSupabase && window.RusiSupabase.questionBank && typeof window.RusiSupabase.questionBank.gradeSubmission === "function" && currentTest && currentTest.code) {
+    // Chấm thi Server-Side bảo mật qua RPC (Zero-Answer Leak — đồng bộ đúng offset khi thi từng phần)
+    if (window.RusiSupabase && window.RusiSupabase.questionBank && typeof window.RusiSupabase.questionBank.gradeSubmission === "function" && currentTest && (currentTest.code || currentTest.id)) {
       try {
-        const timeSpent = Math.max(0, (currentTest.durationMin || 45) * 60 - remainingSeconds);
+        const durationM = currentTest.duration_min || currentTest.durationMin || 45;
+        const timeSpent = Math.max(0, durationM * 60 - (typeof timeLeft === "number" ? timeLeft : 0));
         const answersPayload = {};
-        let globalIndex = 0;
-        activeParts.forEach(p => {
+        let fullIdx = 0;
+        const partBaseOffsets = new Map();
+        (currentTest.parts || []).forEach(p => {
+          partBaseOffsets.set(p.id, fullIdx);
           (p.questions || []).forEach((q, qi) => {
             const ans = answers[p.id + "_" + qi];
             if (ans !== undefined) {
-              answersPayload[String(globalIndex)] = ans;
+              answersPayload[String(fullIdx)] = ans;
               if (q.code) answersPayload[q.code] = ans;
               if (q.id) answersPayload[String(q.id)] = ans;
             }
-            globalIndex++;
+            fullIdx++;
           });
         });
-        const serverGradeResult = await window.RusiSupabase.questionBank.gradeSubmission(currentTest.code, answersPayload, timeSpent);
+        const serverGradeResult = await window.RusiSupabase.questionBank.gradeSubmission(currentTest.code || currentTest.id, answersPayload, timeSpent);
         if (serverGradeResult && serverGradeResult.success && Array.isArray(serverGradeResult.reviews)) {
-          let rIdx = 0;
           activeParts.forEach(p => {
-            (p.questions || []).forEach((q) => {
-              const rev = serverGradeResult.reviews[rIdx];
-              if (rev) {
+            const base = partBaseOffsets.get(p.id) || 0;
+            (p.questions || []).forEach((q, qi) => {
+              const rev = serverGradeResult.reviews[base + qi];
+              if (rev && typeof rev.correct_index === "number") {
                 q.a = rev.correct_index;
                 q.ex = rev.explanation || q.ex || "";
               }
-              rIdx++;
             });
           });
         }
       } catch (errGrade) {
-        console.warn("[TRKI] Server grading error, falling back to local:", errGrade);
+        console.warn("[TRKI] Server grading error:", errGrade);
       }
     }
 
@@ -1889,12 +1995,12 @@ function initMockTestPage() {
         pct,
         count: pc,
         total: questions.length,
-        passed: pct >= (currentTest.passPercent || 66)
+        passed: pct >= (currentTest.pass_percent || currentTest.passPercent || 66)
       });
     });
 
     const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
-    const requiredPassPct = currentTest.passPercent || 66;
+    const requiredPassPct = currentTest.pass_percent || currentTest.passPercent || 66;
 
     // Check TRKI Official Passing Standards
     const allSubtestsPassed = detail.every(d => d.pct >= requiredPassPct);
@@ -1983,8 +2089,6 @@ function initMockTestPage() {
           </button>
         </div>
       </header>
-        <button class="btn btn-primary btn-sm rusi-top-btn" id="btnRetryTop" title="Thi lại">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 15 }) : ""} <span class="btn-text">Thi lại</span></button>
-      </div>
 
       <div class="trki-workspace-result">
         <!-- 1. THẺ HERO KẾT QUẢ ĐÁNH GIÁ (GỌN GÀNG, HIỆN ĐẠI, 1 KHỐI DUY NHẤT) -->

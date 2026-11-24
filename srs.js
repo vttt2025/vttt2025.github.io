@@ -577,13 +577,14 @@ const SRS = {
   /** Sinh id ổn định cho card. Từ ngoài từ điển đầy đủ dùng dk riêng để tránh trùng do mất dấu. */
   cardId(word) {
     if (word && word.dk) return "srsd_" + word.dk;
-    return "srs_" + word.ru.toLowerCase().replace(/[^а-яёa-z0-9]/gi, "_");
+    const cleanRu = (word && (word.ru || "")).replace(/[\u0300\u0301]/g, "").toLowerCase().trim();
+    return "srs_" + cleanRu.replace(/[^а-яёa-z0-9]/gi, "_");
   },
 
   /** Tìm entry: pool SRS_WORDS trước, sau đó tra từ điển đầy đủ (nếu đã tải). */
   findWord(ru) {
-    const lower = ru.toLowerCase().trim();
-    const pool = SRS_WORDS.find((w) => w.ru.toLowerCase() === lower);
+    const lower = (ru || "").replace(/[\u0300\u0301]/g, "").toLowerCase().trim();
+    const pool = SRS_WORDS.find((w) => (w.ru || "").replace(/[\u0300\u0301]/g, "").toLowerCase().trim() === lower);
     if (pool) return pool;
     if (window.RusiDict) return RusiDict.lookup(lower) || null;
     return null;
@@ -664,13 +665,15 @@ const SRS = {
 
   /** Khởi tạo queue cho session học: trộn từ tới hạn + từ mới. */
   buildSession({ level = "all", newLimit = 8, dueLimit = 30 } = {}) {
-    const state = this.getState();
+    let state = this.getState();
     const due = this.getDueCards(state, dueLimit);
     const news = this.getNewCards(state, level, newLimit);
     const queue = [...due.map((c) => c.id), ...news.map((w) => this.ensureCard(w))];
+    state = this.getState();
     state.sessionQueue = queue;
     state.sessionInserted = [];
     state.sessionDone = [];
+    state._sessionAwarded = false;
     this.saveState(state);
     return { queue: queue.map((id) => state.cards[id]), newCount: news.length, dueCount: due.length };
   },
@@ -718,19 +721,20 @@ const SRS = {
         this._reinsertAfter(state, cardId, SRS_AGAIN_REINSERT_AFTER);
         reinserted = true;
         nextIntervalH = 0;
-      } else if (rating === "good") {
-        // Good lần đầu: 1 ngày, từ này được tính là "đã học"
+      } else if (rating === "good" || rating === "easy") {
+        // Good/Easy lần đầu: từ này được tính là "đã học", không chèn lại vào session
         card.isNew = false;
         card.learningStep = 2;
         card.repetitions = 1;
         state.today.newLearned++;
-      } else if (rating === "hard" || rating === "easy") {
-        // Hard/Easy lần đầu: chuyển sang trạng thái "đang học", chèn lại
+        if (rating === "easy") nextIntervalH = 72;
+      } else if (rating === "hard") {
+        // Hard lần đầu: chuyển sang trạng thái "đang học", chèn lại
         card.isNew = false;
         card.learningStep = 1;
         card.repetitions = 1;
         state.today.newLearned++;
-        this._reinsertAfter(state, cardId, rating === "easy" ? 3 : 5);
+        this._reinsertAfter(state, cardId, 5);
         reinserted = true;
       }
     } else {
@@ -793,9 +797,30 @@ const SRS = {
   },
 
   /** Đánh dấu Mastered — loại khỏi queue, không còn nhắc ôn. */
-  markMastered(cardId) {
+  markMastered(idOrWord) {
     const state = this.getState();
-    const card = state.cards[cardId];
+    let card = state.cards[idOrWord];
+    let cardId = idOrWord;
+    if (!card && typeof idOrWord === "string") {
+      const generatedId = this.cardId({ ru: idOrWord });
+      card = state.cards[generatedId];
+      if (card) {
+        cardId = generatedId;
+      } else {
+        const w = this.findWord(idOrWord) || { ru: idOrWord };
+        cardId = this.ensureCard(w);
+        const nextState = this.getState();
+        card = nextState.cards[cardId];
+        if (card) {
+          card.mastered = true;
+          card.learningStep = 2;
+          card.dueDate = Number.MAX_SAFE_INTEGER;
+          this.saveState(nextState);
+          if (typeof Progress !== "undefined" && typeof Progress.addXp === "function") Progress.addXp(10);
+          return;
+        }
+      }
+    }
     if (!card) return;
     card.mastered = true;
     card.learningStep = 2;
@@ -807,9 +832,13 @@ const SRS = {
   },
 
   /** Hủy Mastered. */
-  unmarkMastered(cardId) {
+  unmarkMastered(idOrWord) {
     const state = this.getState();
-    const card = state.cards[cardId];
+    let card = state.cards[idOrWord];
+    if (!card && typeof idOrWord === "string") {
+      const generatedId = this.cardId({ ru: idOrWord });
+      card = state.cards[generatedId];
+    }
     if (!card) return;
     card.mastered = false;
     card.dueDate = Date.now();
@@ -823,6 +852,7 @@ const SRS = {
     state.sessionQueue = [];
     state.sessionInserted = [];
     state.sessionDone = [];
+    state._sessionAwarded = false;
     state.today = { date: new Date().toDateString(), reviewed: 0, newLearned: 0, correct: 0 };
     this.saveState(state);
   },
@@ -866,7 +896,8 @@ const SRS = {
     const target = card.ru;
     // Che phần đầu/cuối của target word
     if (ex.toLowerCase().includes(target.toLowerCase())) {
-      const re = new RegExp(target, "i");
+      const escapedTarget = target.replace(/[.*+?^${}()|[\]\\]/g, (m) => "\\" + m);
+      const re = new RegExp(escapedTarget, "i");
       const masked = ex.replace(re, "____");
       return { masked, target, fullSentence: ex };
     }

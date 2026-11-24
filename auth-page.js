@@ -49,9 +49,9 @@
   }
 
   /** Lấy URL cần chuyển tiếp tới sau khi đăng nhập */
-  function getRedirectTarget() {
+  function getRedirectTarget(override) {
     const params = new URLSearchParams(window.location.search);
-    const param = params.get("redirect");
+    const param = override || params.get("redirect");
     let saved = null;
     try {
       saved = localStorage.getItem("auth_redirect");
@@ -330,6 +330,7 @@
     }
   }
 
+  window.getRedirectTarget = getRedirectTarget;
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", initAuthPage);
   } else {

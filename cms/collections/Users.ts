@@ -1,4 +1,6 @@
-import type { CollectionConfig } from 'payload';
+import type { CollectionConfig, FieldAccess } from 'payload';
+
+const isSuperAdmin: FieldAccess = ({ req: { user } }) => user?.role === 'super_admin';
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -26,9 +28,40 @@ export const Users: CollectionConfig = {
       ],
       defaultValue: 'student',
       required: true,
+      access: {
+        create: isSuperAdmin,
+        update: isSuperAdmin,
+      },
     },
-    { name: 'is_pro', type: 'checkbox', label: 'Kích hoạt tài khoản PRO', defaultValue: false },
-    { name: 'streak_days', type: 'number', label: 'Số ngày học liên tiếp (Streak)', defaultValue: 0 },
-    { name: 'xp', type: 'number', label: 'Điểm kinh nghiệm (XP)', defaultValue: 0 },
+    {
+      name: 'is_pro',
+      type: 'checkbox',
+      label: 'Kích hoạt tài khoản PRO',
+      defaultValue: false,
+      access: {
+        create: isSuperAdmin,
+        update: isSuperAdmin,
+      },
+    },
+    {
+      name: 'streak_days',
+      type: 'number',
+      label: 'Số ngày học liên tiếp (Streak)',
+      defaultValue: 0,
+      access: {
+        create: isSuperAdmin,
+        update: isSuperAdmin,
+      },
+    },
+    {
+      name: 'xp',
+      type: 'number',
+      label: 'Điểm kinh nghiệm (XP)',
+      defaultValue: 0,
+      access: {
+        create: isSuperAdmin,
+        update: isSuperAdmin,
+      },
+    },
   ],
 };

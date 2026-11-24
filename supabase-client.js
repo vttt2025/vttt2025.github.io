@@ -725,7 +725,8 @@
         var sb = getClient();
         if (!sb || !keyword) return [];
         try {
-          var k = keyword.trim().toLowerCase();
+          var k = String(keyword).trim().toLowerCase().replace(/[,()\\*]/g, "").slice(0, 80);
+          if (!k) return [];
           var res = await sb.from("vocabularies")
             .select("*")
             .or("word_normalized.ilike.%" + k + "%,meaning_vi.ilike.%" + k + "%,word_with_stress.ilike.%" + k + "%")
@@ -823,7 +824,7 @@
                 part3: row.part3 || null,
                 part4: row.part4 || null,
                 part5: row.part5 || null,
-                answers: row.answers || null
+                answers: null
               };
             });
           } catch (e) {
@@ -927,6 +928,29 @@
           return res.data;
         } catch (e) {
           console.warn("[RusiSupabase] Exception chấm thi TRKI:", e);
+          return null;
+        }
+      },
+
+      /**
+       * Kiểm tra 1 câu hỏi TRKI bảo mật qua Database RPC (Practice Mode, Zero-Answer Leak)
+       */
+      checkQuestion: async function (testCode, questionIndex, userChoice) {
+        var sb = getClient();
+        if (!sb || !testCode) return null;
+        try {
+          var res = await sb.rpc("rusi_check_trki_question", {
+            p_test_code: testCode,
+            p_question_index: questionIndex,
+            p_user_choice: userChoice
+          });
+          if (res.error) {
+            console.warn("[RusiSupabase] Lỗi RPC kiểm tra câu hỏi TRKI:", res.error);
+            return null;
+          }
+          return res.data;
+        } catch (e) {
+          console.warn("[RusiSupabase] Exception kiểm tra câu hỏi TRKI:", e);
           return null;
         }
       }
@@ -1445,10 +1469,26 @@
         var sb = getClient();
         if (!sb || !orderId) return null;
         try {
-          var res = await sb.from("orders").select("id,status,package_id,amount,paid_at").eq("id", orderId).maybeSingle();
+          var idCol = isValidUUID(orderId) ? "id" : "order_code";
+          var res = await sb.from("orders").select("id,order_code,status,package_id,amount,paid_at").eq(idCol, orderId).maybeSingle();
           return res.error ? null : res.data;
         } catch (_) {
           return null;
+        }
+      },
+
+      activate: async function (orderCode, cassoRef) {
+        var sb = getClient();
+        if (!sb || !orderCode) return { ok: false, message: "Thiếu mã đơn hàng" };
+        try {
+          var res = await sb.rpc("rusi_activate_order", {
+            p_order_code: orderCode,
+            p_casso_ref: cassoRef || null
+          });
+          if (res.error) return { ok: false, message: res.error.message, error: res.error };
+          return { ok: true, data: res.data };
+        } catch (e) {
+          return { ok: false, message: e.message, error: e };
         }
       },
 
@@ -1512,7 +1552,7 @@
         return await RusiSupabase.writing.getAll();
       }
       if (k === "trki" || k === "tests" || k === "trki_bank") {
-        return await RusiSupabase.trki.getAll();
+        return await RusiSupabase.tests.getPublished();
       }
       if (k === "vocab" || k === "jars" || k === "vocab_jars") {
         return await RusiSupabase.jars.getSystemJars();
@@ -1683,7 +1723,7 @@
           return res.data;
         } catch (err) {
           console.warn("[RusiSupabase] Lỗi check_and_consume_ai_quota:", err);
-          return { allowed: true, used_count: 1, max_limit: isPro ? 20 : 3, remaining: (isPro ? 20 : 3) - 1, is_pro: Boolean(isPro) };
+          return { allowed: false, reason: "network_error", message: "Không thể xác minh hạn mức AI lúc này. Vui lòng thử lại." };
         }
       }
     }

@@ -3,17 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>404 — Không Tìm Thấy Trang | RUSI TRKI</title>
-  <meta name="description" content="Trang bạn đang tìm kiếm không tồn tại hoặc đã được chuyển đi trên nền tảng học tiếng Nga RUSI TRKI." />
-  <meta name="robots" content="noindex, follow" />
-
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="styles.css?v=11.5" />
-  <link rel="icon" type="image/svg+xml" href="assets/rusi-logo.svg" />
-
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.youtube.com https://s.ytimg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://nrhtdwjihnlaxrbitmcf.supabase.co https://images.unsplash.com https://img.vietqr.io https://upload.wikimedia.org https://i.ytimg.com https://*.googleusercontent.com; media-src 'self' blob: data: https://nrhtdwjihnlaxrbitmcf.supabase.co https://upload.wikimedia.org https://commons.wikimedia.org; connect-src 'self' https://nrhtdwjihnlaxrbitmcf.supabase.co wss://nrhtdwjihnlaxrbitmcf.supabase.co https://api.groq.com https://upload.wikimedia.org https://cdn.jsdelivr.net; frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self';" />
   <script>
     (function() {
       var path = window.location.pathname;
@@ -34,16 +25,20 @@
 
       // Bỏ dấu gạch chéo cuối và dấu chấm thừa nếu có (vd: /vocabulary/chu_de/lo_tu_vung./////)
       var clean = relPath.replace(/[\/.]+$/, '');
-      if (clean === '' || clean === '/') {
+      if (clean === '' || clean === '/' || clean === '/404' || clean === '/404.html') {
         window.location.replace(root + 'index.html');
         return;
       }
 
+      var rawSegments = clean.split('/').filter(Boolean);
       var segments = clean.split('/').filter(Boolean);
       var first = (segments[0] || '').toLowerCase();
       var second = (segments[1] || '').toLowerCase();
       var third = (segments[2] || '').toLowerCase();
       var fourth = (segments[3] || '').toLowerCase();
+      var rawSecond = rawSegments[1] || '';
+      var rawThird = rawSegments[2] || '';
+      var rawFourth = rawSegments[3] || '';
       var slug = clean.split('/').pop().toLowerCase();
 
       var target = null;
@@ -99,12 +94,12 @@
           extraParams.push('mode=' + second);
           routeParamsObj.mode = second;
           if (third) {
-            extraParams.push('set=' + encodeURIComponent(third));
-            routeParamsObj.set = third;
+            extraParams.push('set=' + encodeURIComponent(rawThird || third));
+            routeParamsObj.set = rawThird || third;
           }
         } else if (second) {
-          extraParams.push('set=' + encodeURIComponent(second));
-          routeParamsObj.set = second;
+          extraParams.push('set=' + encodeURIComponent(rawSecond || second));
+          routeParamsObj.set = rawSecond || second;
         }
       }
 
@@ -270,6 +265,17 @@
       }
     })();
   </script>
+  <title>404 — Không Tìm Thấy Trang | RUSI TRKI</title>
+  <meta name="description" content="Trang bạn đang tìm kiếm không tồn tại hoặc đã được chuyển đi trên nền tảng học tiếng Nga RUSI TRKI." />
+  <meta name="robots" content="noindex, follow" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.min.css?v=12.0" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="assets/favicon-192.png" />
 
   <style>
     .error-page-main {
@@ -601,13 +607,12 @@
 
     <div id="app-footer"></div>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="supabase-client.js?v=7.8"></script>
-  <script src="rusi-icons.js?v=5.0"></script>
-  <script src="data.js?v=11.1"></script>
-  <script src="auth.js?v=8.2"></script>
-  <script src="app.js?v=9.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js" integrity="sha384-2zrRDgDHSYB/GN3nFW3fsZXoxEhKIr3N2h63Tc6DEOB9JJdFIu8xMJT2Cph/gBil" crossorigin="anonymous" defer></script>
+  <script src="supabase-config.js" defer></script>
+  <script src="supabase-client.js?v=12.0" defer></script>
+  <script src="rusi-icons.js?v=5.0" defer></script>
+  <script src="auth.js?v=12.0" defer></script>
+  <script src="app.js?v=12.0" defer></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const avatarEl = document.getElementById("mascot404Avatar");
@@ -624,7 +629,7 @@
         const titleEl = document.getElementById("errorTitle");
         const descEl = document.getElementById("errorDesc");
         const badgeEl = document.getElementById("errorBadgeText");
-        const decoded = decodeURIComponent(q).replace(/\+/g, " ");
+        const decoded = (q || "").replace(/\+/g, " ");
         if (titleEl) titleEl.textContent = `Không tìm thấy kết quả cho "${decoded}"`;
         const esc404 = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
         if (descEl) descEl.innerHTML = `Hệ thống không tìm thấy bài học hay từ vựng nào khớp với từ khóa <strong>"${esc404(decoded)}"</strong>. Hãy thử kiểm tra lại chính tả hoặc chọn một chuyên mục bên dưới nhé!`;

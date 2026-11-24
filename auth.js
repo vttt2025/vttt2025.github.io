@@ -8,6 +8,15 @@
 (function () {
   "use strict";
 
+  try { localStorage.removeItem("trki_sb_service_key"); } catch (_) {}
+
+  function safeEsc(val) {
+    if (typeof esc === "function") return esc(val);
+    return String(val == null ? "" : val).replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+  }
+
   function getStore() {
     if (typeof window !== "undefined" && window.STORE) return window.STORE;
     return {
@@ -208,10 +217,10 @@
             ${devices.map(d => `
               <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px">
                 <div>
-                  <div style="font-weight:700;font-size:0.88rem;color:var(--text)">${(typeof esc === "function" ? esc(d.device_name) : d.device_name) || "Thiết bị"}</div>
+                  <div style="font-weight:700;font-size:0.88rem;color:var(--text)">${safeEsc(d.device_name) || "Thiết bị"}</div>
                   <div style="font-size:0.75rem;color:var(--muted)">Hoạt động: ${d.last_active_at ? new Date(d.last_active_at).toLocaleString('vi-VN') : 'Gần đây'}</div>
                 </div>
-                <button type="button" class="btn btn-outline btn-revoke-device" data-id="${d.id}" style="padding:6px 12px;font-size:0.8rem;color:#e11d48;border-color:#e11d48">
+                <button type="button" class="btn btn-outline btn-revoke-device" data-id="${safeEsc(d.id)}" style="padding:6px 12px;font-size:0.8rem;color:#e11d48;border-color:#e11d48">
                   Đăng xuất
                 </button>
               </div>
@@ -299,6 +308,13 @@
 
         if (!this._subscription) {
           const result = client.auth.onAuthStateChange((_event, session) => {
+            if (_event === "INITIAL_SESSION") return;
+            if (_event === "SIGNED_OUT") {
+              if (this._deviceGuardTimer) {
+                clearInterval(this._deviceGuardTimer);
+                this._deviceGuardTimer = null;
+              }
+            }
             setTimeout(async () => {
               const user = await this._hydrateUser(session?.user || null);
               this._emit(user);
@@ -427,9 +443,16 @@
    */
   function clearBrowserUserData() {
     try {
+      try { localStorage.removeItem("trki_sb_service_key"); } catch (_) {}
+      try {
+        localStorage.removeItem("rusi_pomodoro_state");
+        if (window.RusiPomodoro && typeof window.RusiPomodoro.reset === "function") window.RusiPomodoro.reset();
+        if (window.RusiSupabase && typeof window.RusiSupabase.clearCache === "function") window.RusiSupabase.clearCache();
+      } catch (_) {}
+
       const preserveKeys = new Set([
         "data-theme", "rusi_theme", "theme",
-        "trki_sb_anon_key", "trki_sb_service_key", "rusi_supabase_anon_key"
+        "trki_sb_anon_key", "rusi_supabase_anon_key"
       ]);
 
       const keysToRemove = [];
@@ -498,7 +521,8 @@
     if (!target) {
       target = (window.location.pathname + window.location.search + window.location.hash).replace(/^\//, '') || "index.html";
     }
-    window.location.href = `login.html?redirect=${encodeURIComponent(target)}`;
+    const root = (typeof window.getRusiAppRoot === "function") ? window.getRusiAppRoot() : "/";
+    window.location.href = `${root}login.html?redirect=${encodeURIComponent(target)}`;
     return false;
   }
 

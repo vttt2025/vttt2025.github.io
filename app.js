@@ -1,6 +1,11 @@
 
 // Universal DOM Helpers (Phòng ngừa lỗi ReferenceError trên mọi trang)
 window.el = window.el || function(sel) { return document.querySelector(sel); };
+window.getRusiAppRoot = function() {
+  if (typeof window === "undefined") return "/";
+  if (window.location.protocol === "file:") return "";
+  return window.location.pathname.indexOf("/rusitrki/") === 0 ? "/rusitrki/" : "/";
+};
 window.esc = window.esc || function(str) {
   if (str === null || str === undefined) return "";
   return String(str)
@@ -64,11 +69,15 @@ window.getRusiRouteParam = function(key) {
     let p = window.location.pathname;
     if (root !== '/' && p.indexOf(root) === 0) p = '/' + p.slice(root.length);
     const clean = p.replace(/[\/.]+$/, '');
+    const rawSegments = clean.split('/').filter(Boolean);
     const segments = clean.split('/').filter(Boolean);
     const first = (segments[0] || '').toLowerCase();
     const second = (segments[1] || '').toLowerCase();
     const third = (segments[2] || '').toLowerCase();
     const fourth = (segments[3] || '').toLowerCase();
+    const rawSecond = rawSegments[1] || '';
+    const rawThird = rawSegments[2] || '';
+    const rawFourth = rawSegments[3] || '';
 
     if (first === 'vocabulary' || first === 'vocab' || first === 'tu-vung') {
       if (key === 'srs' && second === 'srs') return '1';
@@ -76,29 +85,31 @@ window.getRusiRouteParam = function(key) {
         if (fourth || (second && third && second !== 'chu_de') || second === 'lo_tu' || second === 'lo-tu' || second === 'jar') return 'jar';
       }
       if (key === 'jar') {
-        if ((second === 'lo_tu' || second === 'lo-tu' || second === 'jar') && third) return third;
-        if (second === 'chu_de' && third && fourth) return fourth;
-        if (second === 'chu_de' && third) return third;
-        if (second && third) return third;
-        if (second && second !== 'srs' && second !== 'chu_de') return second;
+        if ((second === 'lo_tu' || second === 'lo-tu' || second === 'jar') && third) return rawThird;
+        if (second === 'chu_de' && third && fourth) return rawFourth;
+        if (second === 'chu_de' && third) return rawThird;
+        if (second && third) return rawThird;
+        if (second && second !== 'srs' && second !== 'chu_de') return rawSecond;
       }
       if (key === 'topic' || key === 'article') {
-        if (second === 'chu_de' && third) return third;
-        if (second && third) return second;
-        if (second && second !== 'srs') return second;
+        if (second === 'chu_de' && third) return rawThird;
+        if (second !== 'lo_tu' && second !== 'lo-tu' && second !== 'jar' && second !== 'srs') {
+          if (third) return rawSecond;
+          return rawSecond;
+        }
       }
     } else if (first === 'speaking' || first === 'speak' || first === 'noi') {
       if (key === 'mode' && (second === 'shadowing' || second === 'reflex')) return second;
-      if (key === 'set' || key === 'id') return third || (second !== 'shadowing' && second !== 'reflex' ? second : null);
+      if (key === 'set' || key === 'id') return rawThird || (second !== 'shadowing' && second !== 'reflex' ? rawSecond : null);
     } else if (first === 'listening' || first === 'listen' || first === 'nghe') {
       if (key === 'mode' && (second === 'dictation' || second === 'comprehension')) return second;
-      if (key === 'lesson' || key === 'id') return third || (second !== 'dictation' && second !== 'comprehension' && second !== 'bai_hoc' && second !== 'bai-hoc' ? second : null);
+      if (key === 'lesson' || key === 'id') return rawThird || (second !== 'dictation' && second !== 'comprehension' && second !== 'bai_hoc' && second !== 'bai-hoc' ? rawSecond : null);
     } else if (first === 'writing' || first === 'write' || first === 'viet') {
       if (key === 'mode' && (second === 'picture' || second === 'translation')) return second;
-      if (key === 'task' || key === 'id') return third || (second !== 'picture' && second !== 'translation' && second !== 'bai_viet' && second !== 'bai-viet' ? second : null);
+      if (key === 'task' || key === 'id') return rawThird || (second !== 'picture' && second !== 'translation' && second !== 'bai_viet' && second !== 'bai-viet' ? rawSecond : null);
     } else if (first === 'mock-test' || first === 'trki' || first === 'test' || first === 'exam' || first === 'thi-thu') {
       if (key === 'level' && ['a1', 'a2', 'b1', 'b2', 'c1', 'c2'].includes(second)) return second.toUpperCase();
-      if (key === 'test' || key === 'exam' || key === 'id') return third || (!['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'de_thi', 'de-thi'].includes(second) ? second : null);
+      if (key === 'test' || key === 'exam' || key === 'id') return rawThird || (!['a1', 'a2', 'b1', 'b2', 'c1', 'c2', 'de_thi', 'de-thi'].includes(second) ? rawSecond : null);
     }
   } catch (_) {}
   return null;
@@ -115,6 +126,7 @@ window.setRusiDeepUrl = function(path) {
       window.location.hostname === "0.0.0.0";
     if (isLocalDev) return;
 
+    window.__RUSI_DEEP_PARAMS__ = null;
     const root = (window.__RUSI_APP_ROOT__ || (window.location.pathname.startsWith('/rusitrki/') ? '/rusitrki/' : '/'));
     const cleanPath = path.replace(/^[\/]+/, '');
     const finalUrl = (root === '/' ? '/' : root) + cleanPath;
@@ -330,7 +342,8 @@ const Progress = {
 
       // 3. Đồng bộ gamification vào profiles
       if (window.RusiSupabase.profile && typeof window.RusiSupabase.profile.syncGamification === "function") {
-        window.RusiSupabase.profile.syncGamification(userId, streak, xp).catch(() => {});
+        const lvl = typeof MascotRusika !== "undefined" ? MascotRusika.getLevel(xp) : 1;
+        window.RusiSupabase.profile.syncGamification(userId, streak, xp, lvl).catch(() => {});
       }
     }
   },
@@ -362,6 +375,7 @@ const Progress = {
               STORE.set(k, merged);
             });
           }
+          this.checkStreakStatus();
           updateHeaderChips();
           window.dispatchEvent(new CustomEvent("trki:progress-updated"));
         }
@@ -1231,12 +1245,13 @@ const Monetization = {
       document.body.appendChild(modal);
     }
 
-    const fullCurrentPath = (window.location.pathname + window.location.search + window.location.hash).replace(/^\//, '') || "index.html";
-    let redirectTarget = fullCurrentPath;
+    const hash = window.location.hash || "";
+    let cleanPath = (window.location.pathname + window.location.search).replace(/^\//, '') || "index.html";
     if (targetPkg) {
-      const sep = redirectTarget.includes("?") ? "&" : "?";
-      redirectTarget = `${redirectTarget}${sep}pkg=${encodeURIComponent(targetPkg)}`;
+      const sep = cleanPath.includes("?") ? "&" : "?";
+      cleanPath = `${cleanPath}${sep}pkg=${encodeURIComponent(targetPkg)}`;
     }
+    const redirectTarget = cleanPath + hash;
     const currentRedirect = encodeURIComponent(redirectTarget);
 
     modal.innerHTML = `
@@ -1272,8 +1287,9 @@ const Monetization = {
    */
   openUpgradeModal(pkgId = "pro_3m") {
     const user = this.getCurrentUser();
+    const isGuest = user && (String(user.id || user.uid || "").startsWith("guest_") || user.isGuest);
     // Chuẩn hiện nay: Nâng cấp yêu cầu phiên đăng nhập để gắn quyền PRO
-    if (!user) {
+    if (!user || isGuest) {
       this.showAuthRequiredModal("Đăng nhập để Nâng cấp PRO", "Để kích hoạt và bảo lưu gói PRO vĩnh viễn trên mọi thiết bị, bạn cần đăng nhập tài khoản trước.", pkgId);
       return;
     }
@@ -1479,7 +1495,11 @@ const Monetization = {
                 </button>
               </div>
             </div>`;
-          document.getElementById("btnVietQrFinish").onclick = () => modal.remove();
+          document.getElementById("btnVietQrFinish").onclick = () => {
+            clearInterval(Monetization._timerInterval);
+            if (Monetization._pollInterval) clearInterval(Monetization._pollInterval);
+            modal.remove();
+          };
         };
       }
     };
@@ -1503,6 +1523,12 @@ const Monetization = {
           scanBox.style.opacity = "0.2";
           scanBox.style.filter = "grayscale(1)";
         }
+        const confirmBtnEl = document.getElementById("btnConfirmPaid");
+        if (confirmBtnEl) {
+          confirmBtnEl.disabled = true;
+          confirmBtnEl.textContent = "Phiên thanh toán đã hết hạn";
+        }
+        modal.querySelectorAll("[data-pkg-select]").forEach(b => b.disabled = true);
         toast("Phiên thanh toán đã hết hạn — Vui lòng tạo lại mã đơn mới.");
       }
     }, 1000);
@@ -1658,10 +1684,17 @@ function pickVoice(lang) {
 
 let _wordAudioLookupCache = null;
 let _currentNativeAudio = null;
+let _lastVocabJarsLen = -1;
+let _lastVocabulariesLen = -1;
 
 function getWordAudioUrl(word) {
   if (!word || typeof word !== "string") return "";
-  if (!_wordAudioLookupCache) {
+  const currentJarsLen = (typeof VOCAB_JARS !== "undefined" && Array.isArray(VOCAB_JARS)) ? VOCAB_JARS.length : 0;
+  const currentVocabLen = (typeof VOCABULARIES !== "undefined" && Array.isArray(VOCABULARIES)) ? VOCABULARIES.length : 0;
+  if (!_wordAudioLookupCache || currentJarsLen !== _lastVocabJarsLen || currentVocabLen !== _lastVocabulariesLen) {
+    _lastVocabJarsLen = currentJarsLen;
+    _lastVocabulariesLen = currentVocabLen;
+    _wordAudioLookupCache = new Map();
     _wordAudioLookupCache = new Map();
     const cleanFn = (s) => (s || "").replace(/[\u0300-\u036f́̀]/g, "").replace(/[«»""''„“]/g, "").replace(/^[(\[]|[)\]]$/g, "").trim().toLowerCase();
 
@@ -1822,10 +1855,12 @@ function shuffle(arr) {
 }
 
 function esc(s) {
+  if (s === null || s === undefined) return "";
   return String(s).replace(/[&<>"']/g, (c) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
   }[c]));
 }
+window.esc = esc;
 
 /**
  * NAV_LINKS — cấu trúc mảng các cấp:
@@ -1869,6 +1904,15 @@ function applySeason(season = "winter") {
   document.body.dataset.season = "winter";
 
   let fx = document.getElementById("seasonFx");
+  const reduceMotion =
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduceMotion) {
+    if (fx) fx.innerHTML = "";
+    return;
+  }
+
   if (!fx) {
     fx = document.createElement("div");
     fx.id = "seasonFx";
@@ -1879,7 +1923,8 @@ function applySeason(season = "winter") {
   if (!fx) return;
   fx.innerHTML = "";
 
-  for (let i = 0; i < 8; i++) {
+  const SNOW_COUNT = 8;
+  for (let i = 0; i < SNOW_COUNT; i++) {
     const s = document.createElement("span");
     s.textContent = i % 2 === 0 ? "*" : "•";
     s.style.fontSize = i % 2 === 0 ? (9 + Math.random() * 8 + "px") : "5px";
@@ -2187,8 +2232,10 @@ function renderUserArea() {
     if (pomoPop) pomoPop.style.display = "none";
   }
 
-  // 1. KHI CHƯA ĐĂNG NHẬP: Duy nhất 2 nút Đăng nhập & Đăng ký (ẩn Pomodoro & ẩn tiến độ index)
-  if (!user) {
+  const isGuest = user && (String(user.id || user.uid || "").startsWith("guest_") || user.isGuest);
+
+  // 1. KHI CHƯA ĐĂNG NHẬP HOẶC LÀ GUEST: Duy nhất 2 nút Đăng nhập & Đăng ký
+  if (!user || isGuest) {
     renderIndexProgressIfLoggedIn(null);
 
     const fullCurrentPath = (window.location.pathname + window.location.search + window.location.hash).replace(/^\//, '') || "index.html";
@@ -2407,6 +2454,17 @@ function getSynchronizedVocabStats() {
     } catch (e) {
       console.warn("SRS stats error:", e);
     }
+  } else if (typeof STORE !== "undefined") {
+    try {
+      st = STORE.get("srs", null);
+      if (st && st.cards) {
+        const now = Date.now();
+        Object.values(st.cards).forEach((c) => {
+          if (c.mastered) stats.mastered = (stats.mastered || 0) + 1;
+          else if (c.dueDate && c.dueDate <= now) dueCount++;
+        });
+      }
+    } catch (_) {}
   }
 
   const masteredWords = (typeof STORE !== "undefined") ? STORE.get("vocab_mastered_words", []) : [];
@@ -2466,9 +2524,10 @@ window.getSynchronizedVocabStats = getSynchronizedVocabStats;
 function renderIndexProgressIfLoggedIn(user) {
   const host = document.getElementById("indexUserProgressHost");
   if (!host) return;
-  document.body.classList.toggle("index-personalized", Boolean(user));
-  document.documentElement.classList.toggle("index-personalized", Boolean(user));
-  if (!user) {
+  const isGuest = user && (String(user.id || user.uid || "").startsWith("guest_") || user.isGuest);
+  document.body.classList.toggle("index-personalized", Boolean(user && !isGuest));
+  document.documentElement.classList.toggle("index-personalized", Boolean(user && !isGuest));
+  if (!user || isGuest) {
     delete host.dataset.renderedKey;
     host.style.display = "none";
     host.innerHTML = "";
@@ -2922,14 +2981,13 @@ function bootApp() {
   try { bindAuthToHeader(); } catch (e) { console.error("[Boot] bindAuthToHeader:", e); }
   // Dọn dẹp triệt để dữ liệu mock/cũ của client, chỉ sử dụng dữ liệu từ Supabase Cloud
   try {
-    const pageName = document.body ? document.body.dataset.page : "";
-    if (pageName !== "admin") {
-      localStorage.removeItem("trki_admin_data");
-    }
     localStorage.removeItem("trki_local_data");
     localStorage.removeItem("rusi_local_data");
-    sessionStorage.removeItem("rusi_live_preview_draft");
-    localStorage.removeItem("rusi_live_preview_draft");
+    const isPreview = window.location && window.location.search && window.location.search.includes("preview=1");
+    if (!isPreview) {
+      sessionStorage.removeItem("rusi_live_preview_draft");
+      localStorage.removeItem("rusi_live_preview_draft");
+    }
     // Xoá bộ nhớ đệm sessionStorage cũ của các phiên bản trước
     if (typeof sessionStorage !== "undefined") {
       for (let i = sessionStorage.length - 1; i >= 0; i--) {
@@ -2954,31 +3012,27 @@ function bootApp() {
   }
 
   triggerPageInit();
+
+  try {
+    if (
+      "serviceWorker" in navigator &&
+      (location.protocol === "https:" || location.hostname === "localhost" || location.hostname === "127.0.0.1")
+    ) {
+      const swRoot = (typeof window.getRusiAppRoot === "function") ? window.getRusiAppRoot() : "";
+      const registerSw = () => navigator.serviceWorker.register(swRoot + "sw.js").catch(() => {});
+      if (document.readyState === "complete") registerSw();
+      else window.addEventListener("load", registerSw, { once: true });
+    }
+  } catch (_) {}
 }
 window.bootApp = bootApp;
 
 /**
- * Khởi động nạp trước bộ nhớ đệm (Browser Cache Warmup).
- * Tải ngầm các bảng dữ liệu Supabase vào RusiCache (Memory + SessionStorage)
- * giúp người học chuyển trang tức thì (0ms) mà không cần tải lại mạng.
+ * Bộ nhớ đệm theo nhu cầu (No-op giữ tương thích API).
+ * Mỗi trang chỉ nạp đúng module cần thiết qua RusiDataLoader.prepareForCurrentPage().
  */
 function warmBrowserCache() {
-  if (typeof window === "undefined") return;
-  const idle = window.requestIdleCallback || ((cb) => setTimeout(cb, 1000));
-  idle(() => {
-    try {
-      // 1. Tải trước ngầm các module tĩnh vào IndexedDB trình duyệt (0-Egress Supabase)
-      if (window.RusiDataLoader && typeof window.RusiDataLoader.prefetchIdle === "function") {
-        window.RusiDataLoader.prefetchIdle();
-      }
-      // 2. Chỉ làm ấm bảng nhẹ từ Supabase nếu client đã khởi tạo
-      if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
-        if (window.RusiSupabase.packages && typeof window.RusiSupabase.packages.getAll === "function") {
-          window.RusiSupabase.packages.getAll().catch(() => {});
-        }
-      }
-    } catch (_) {}
-  });
+  // No-op: Không tải nền 15.5MB và không gọi Supabase packages.getAll() lặp lại trên mỗi trang.
 }
 window.warmBrowserCache = warmBrowserCache;
 
@@ -3016,7 +3070,7 @@ const RusiMarkdown = {
     src = src.replace(/```([a-zA-Z0-9_-]*)\n([\s\S]*?)```/g, (match, lang, code) => {
       const idx = codeBlocks.length;
       codeBlocks.push(`<pre class="rusi-code-block"><code class="language-${lang || 'plaintext'}">${this.escapeHtml(code.trim())}</code></pre>`);
-      return `@@CODEBLOCK_${idx}@@`;
+      return `@@CODEBLOCK${idx}@@`;
     });
 
     const lines = src.split("\n");
@@ -3176,43 +3230,95 @@ const RusiMarkdown = {
         continue;
       }
 
-      // Normal paragraph
+      // Normal paragraph or standalone codeblock
       flushList();
-      out.push(`<p class="rusi-md-p">${this.formatInline(trimmed)}</p>`);
+      if (/^@@CODEBLOCK\d+@@$/.test(trimmed)) {
+        out.push(trimmed);
+      } else {
+        out.push(`<p class="rusi-md-p">${this.formatInline(trimmed)}</p>`);
+      }
     }
 
     flushList();
     flushTable();
 
     let html = out.join("\n");
-    html = html.replace(/@@CODEBLOCK_(\d+)@@/g, (match, idx) => codeBlocks[Number(idx)] || "");
+    html = html.replace(/@@CODEBLOCK(\d+)@@/g, (match, idx) => codeBlocks[Number(idx)] || "");
     return html;
+  },
+
+  _safeUrl(url) {
+    if (!url || typeof url !== "string") return "#";
+    const raw = url
+      .replace(/&amp;/g, "&")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .trim();
+    if (!raw || /[\x00-\x1f\x7f"'<>`]/.test(raw) || /^[\/\\][\/\\]/.test(raw) || /\\/.test(raw)) return "#";
+    const normalized = raw.replace(/\s+/g, "").toLowerCase();
+    if (/^(javascript|vbscript|data):/.test(normalized)) return "#";
+    const hasSafePrefix = /^(https?:\/\/|mailto:|\/|\.\/|\.\.\/|#)/i.test(raw);
+    const hasScheme = /^[a-z][a-z0-9+.-]*:/i.test(normalized);
+    if (!hasSafePrefix && hasScheme) return "#";
+    return this.escapeHtml(raw);
   },
 
   formatInline(str) {
     if (!str) return "";
-    return str
-      // Images: ![alt](url)
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="rusi-md-img" loading="lazy" />')
-      // Links: [text](url)
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="rusi-md-link">$1</a>')
-      // Bold: **text** or __text__
+    const tokens = [];
+    const stash = (html) => {
+      const idx = tokens.length;
+      tokens.push(html);
+      return `\u0000MDTOK${idx}\u0000`;
+    };
+
+    let out = this.escapeHtml(str).replace(/\u0000/g, "").replace(/&lt;br\s*\/?&gt;/gi, "<br/>");
+
+    // Inline code: `code`
+    out = out.replace(/`([^`]+)`/g, (_, code) =>
+      stash(`<code class="rusi-md-inline-code">${code}</code>`)
+    );
+    // Images: ![alt](url)
+    out = out.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_, alt, url) =>
+      stash(`<img src="${this._safeUrl(url)}" alt="${alt}" class="rusi-md-img" loading="lazy" />`)
+    );
+    // Links: [text](url)
+    out = out.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_, label, url) => {
+      const fmtLabel = label
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+      return stash(`<a href="${this._safeUrl(url)}" target="_blank" rel="noopener noreferrer" class="rusi-md-link">${fmtLabel}</a>`);
+    });
+    // Bold: **text** or __text__
+    out = out
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/__(.*?)__/g, '<strong>$1</strong>')
-      // Italic: *text* or _text_
-      .replace(/\*([^\*]+)\*/g, '<em>$1</em>')
-      .replace(/_([^_]+)_/g, '<em>$1</em>')
+      // Italic: *text* or _text_ (non-word boundary to protect snake_case)
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      .replace(/(^|[^\w])_([^_\n]+)_(?=[^\w]|$)/g, '$1<em>$2</em>')
       // Strikethrough: ~~text~~
       .replace(/~~(.*?)~~/g, '<del>$1</del>')
-      // Inline code: `code`
-      .replace(/`([^`]+)`/g, '<code class="rusi-md-inline-code">$1</code>')
       // Quotes: “text” or «text»
       .replace(/[«“](.*?)[»”]/g, '<span class="rusi-quote-highlight">“$1”</span>');
+
+    let restored = out;
+    for (let pass = 0; pass < 5; pass++) {
+      if (!/\u0000MDTOK\d+\u0000/.test(restored)) break;
+      restored = restored.replace(/\u0000MDTOK(\d+)\u0000/g, (_, idx) => tokens[Number(idx)] || "");
+    }
+    return restored;
   },
 
   escapeHtml(str) {
-    if (!str) return "";
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    if (str === null || str === undefined) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 };
 window.RusiMarkdown = RusiMarkdown;

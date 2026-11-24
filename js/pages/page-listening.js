@@ -638,7 +638,16 @@ function initListeningPage() {
   };
 
   const loadCloudListening = async () => {
-    // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có bài nghe trong RAM/IndexedDB
+    // 0-Egress rule: Nạp từ RAM/IndexedDB/CDN JSON trước, bỏ qua truy vấn Supabase nếu đã có dữ liệu
+    if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("LISTENING_LESSONS")) {
+      await window.RusiDataLoader.load("LISTENING_LESSONS");
+      if (window.LISTENING_LESSONS && window.LISTENING_LESSONS.length > 0) {
+        if (!currentLesson && !document.body.classList.contains("in-workspace")) {
+          renderListeningCards();
+        }
+        return;
+      }
+    }
     if (window.LISTENING_LESSONS && window.LISTENING_LESSONS.length > 0) return;
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
       try {
@@ -2231,7 +2240,12 @@ function initListeningPage() {
             compNativeAudio = new Audio(lesson.audio_url);
           }
           compNativeAudio.playbackRate = currentSpeed;
-          compNativeAudio.currentTime = currentTimeSec;
+          const applyTime = () => { try { compNativeAudio.currentTime = currentTimeSec; } catch (_) {} };
+          if (compNativeAudio.readyState >= 1) {
+            applyTime();
+          } else {
+            compNativeAudio.addEventListener("loadedmetadata", applyTime, { once: true });
+          }
           compNativeAudio.play().catch(() => {});
           compNativeAudio.onended = () => {
             isPlaying = false;
@@ -2476,7 +2490,7 @@ function initListeningPage() {
             ${isSubmitted ? `
               <div class="lis-comp-explanation ${isCorr ? 'is-pass' : 'is-fail'}">
                 <strong>${isCorr ? "✓ Giải thích: " : `✕ Đáp án đúng là [${["A","B","C","D"][q.a] || (q.a + 1)}] ${esc(q.options[q.a])}: `}</strong>
-                ${esc(q.exp || (isCorr ? "Bạn đã nắm bắt rất chuẩn thông tin từ audio." : "Căn cứ vào nội dung thông tin được phát trong bài nghe."))}
+                ${esc(q.explanation || q.exp || (isCorr ? "Bạn đã nắm bắt rất chuẩn thông tin từ audio." : "Căn cứ vào nội dung thông tin được phát trong bài nghe."))}
               </div>
             ` : ""}
           </div>
@@ -2729,7 +2743,7 @@ function initListeningPage() {
                     </div>
                     ${lines.map((ln, idx) => `
                       <div class="lis-comp-dialogue-line ${idx === currentLineIdx ? "is-active" : ""}" data-line-idx="${idx}">
-                        <strong>${esc(ln.who || "Người nói")}:</strong>
+                        <strong>${esc(ln.speaker || ln.who || "Người nói")}:</strong>
                         <span class="ru">${esc(ln.ru || "")}</span>
                         <span class="line-vi">${esc(ln.vi || "")}</span>
                       </div>
@@ -2830,7 +2844,7 @@ function initListeningPage() {
       const skipBackBtn = host.querySelector("#btnCompSkipBack");
       if (skipBackBtn) {
         skipBackBtn.onclick = () => {
-          const cur = isPlaying ? (playbackBaseTimeSec + (Date.now() - playbackStartTimestamp) / 1000) : currentTimeSec;
+          const cur = (compNativeAudio && !compNativeAudio.paused) ? compNativeAudio.currentTime : (isPlaying ? (playbackBaseTimeSec + (Date.now() - playbackStartTimestamp) / 1000) : currentTimeSec);
           const targetSec = Math.max(0, cur - 5);
           playFromTime(targetSec);
         };
@@ -2840,7 +2854,7 @@ function initListeningPage() {
       const skipFwdBtn = host.querySelector("#btnCompSkipFwd");
       if (skipFwdBtn) {
         skipFwdBtn.onclick = () => {
-          const cur = isPlaying ? (playbackBaseTimeSec + (Date.now() - playbackStartTimestamp) / 1000) : currentTimeSec;
+          const cur = (compNativeAudio && !compNativeAudio.paused) ? compNativeAudio.currentTime : (isPlaying ? (playbackBaseTimeSec + (Date.now() - playbackStartTimestamp) / 1000) : currentTimeSec);
           const targetSec = Math.min(totalDurationSec, cur + 5);
           playFromTime(targetSec);
         };
@@ -3708,10 +3722,15 @@ function initListeningPage() {
             renderWorkspace();
           }, 1100);
         } else {
-          Progress.markDone("listenDone", `${lesson.id}_dict`);
-          Progress.markDone("listenDone", `${lesson.id}_dict_done`);
-          Progress.addXp(20);
-          toast("Xuất sắc! Bạn đã hoàn thành toàn bộ bài nghe chép chính tả! 🎉 (+20 XP)");
+          const allDone = sentences.every((_, i) => isSentenceDone(i));
+          if (allDone) {
+            Progress.markDone("listenDone", `${lesson.id}_dict`);
+            Progress.markDone("listenDone", `${lesson.id}_dict_done`);
+            Progress.addXp(20);
+            toast("Xuất sắc! Bạn đã hoàn thành toàn bộ bài nghe chép chính tả! 🎉 (+20 XP)");
+          } else {
+            toast("Bạn đã làm đến cuối bài nghe! Hãy hoàn thành các câu còn lại để nhận XP nhé.");
+          }
           autoAdvanceTimeout = setTimeout(() => {
             stopAudio();
             currentSentenceIdx = 0;
@@ -4113,9 +4132,14 @@ function initListeningPage() {
       const targetId = getParam("id") || getParam("lesson");
       if (targetId) {
         if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent(targetId))) return true;
-        const all = typeof getLessons === "function" ? getLessons() : [];
+        const all = typeof getListeningLessons === "function" ? getListeningLessons() : [];
         const found = all.find(l => l.id === targetId || l.code === targetId);
         if (found) {
+          const isPro = Boolean(found.is_pro_only || found.is_pro);
+          if (isPro && typeof Monetization !== "undefined" && !Monetization.isPro()) {
+            Monetization.showProGateModal("Nội dung bài nghe PRO", "Nâng cấp tài khoản PRO để mở khóa trọn vẹn bài học này!");
+            return false;
+          }
           if (currentMode === "dictation") openDictationWorkspace(found);
           else openComprehensionWorkspace(found);
           return true;

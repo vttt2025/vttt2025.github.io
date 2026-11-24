@@ -510,7 +510,11 @@ window.openAddToJarModal = function(wordData) {
       STORE.set("custom_jars", currentCustomJars);
     }
     if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
-      window.RusiSupabase.jars.save(window.Auth.user.uid, newJar).catch(() => {});
+      window.RusiSupabase.jars.save(window.Auth.user.uid, newJar).then(() => {
+        let jars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
+        const idx = jars.findIndex(j => j.id === newJar.id || (newJar.uuid && j.id === newJar.uuid));
+        if (idx !== -1) { jars[idx] = newJar; STORE.set("custom_jars", jars); }
+      }).catch(() => {});
     }
     sel.value = newJarId;
 
@@ -827,7 +831,8 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     uniqueRawWords.push(w);
   });
 
-  const words = uniqueRawWords.map((w, idx) => ({
+  let words = uniqueRawWords.map((w, idx) => ({
+    ...w,
     id: w.id || w.vocab_id || "w-" + idx,
     ru: (w.ru || "").trim(),
     stress: (w.stress || w.ru || "").trim(),
@@ -845,6 +850,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     syn: stripQuotes(w.syn || (Array.isArray(w.synonyms) ? w.synonyms.join(", ") : "")),
     ant: stripQuotes(w.ant || (Array.isArray(w.antonyms) ? w.antonyms.join(", ") : ""))
   }));
+
+  const initialMode = (options && options.initialMode) ? options.initialMode : "list";
+  let currentMode = initialMode;
 
   if (words.length === 0) {
     container.innerHTML = `
@@ -864,7 +872,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     return;
   }
 
-  const initialMode = (options && options.initialMode) ? options.initialMode : "list";
   const hasTopbarModes = Boolean(document.querySelector("#rusiTopbarModes .quizlet-mode-btn"));
 
   container.innerHTML = `
@@ -892,7 +899,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
   `;
 
   // Mode switching
-  let currentMode = initialMode;
+  currentMode = initialMode;
   let matchTimerInterval = null;
 
   // Lấy các nút chế độ trong top bar (nếu có) và trong container
@@ -2457,7 +2464,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             const wordRu = b.dataset.ru;
             if (confirm(`Bạn có chắc muốn xóa từ “${wordRu}” khỏi lọ này không?`)) {
               let jars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
-              const target = jars.find(j => j.id === jarId);
+              const target = jars.find(j => String(j.id) === String(jarId));
               if (target && target.words) {
                 target.words = target.words.filter(w => (w.ru || "").trim() !== wordRu.trim());
                 STORE.set("custom_jars", jars);
@@ -2512,62 +2519,62 @@ function _loadPageModule(moduleSrc, callback) {
 window.initVocabPage = function(...args) {
   _loadPageModule("js/pages/page-vocab.js", () => {
     if (typeof window._initVocabPage === "function") window._initVocabPage(...args);
-    else if (typeof initVocabPage === "function") initVocabPage(...args);
+    else if (typeof initVocabPage === "function" && initVocabPage !== window.initVocabPage) initVocabPage(...args);
   });
 };
 
 window.initListeningPage = function(...args) {
   _loadPageModule("js/pages/page-listening.js", () => {
     if (typeof window._initListeningPage === "function") window._initListeningPage(...args);
-    else if (typeof initListeningPage === "function") initListeningPage(...args);
+    else if (typeof initListeningPage === "function" && initListeningPage !== window.initListeningPage) initListeningPage(...args);
   });
 };
 
 window.initSpeakingPage = function(...args) {
   _loadPageModule("js/pages/page-speaking.js", () => {
     if (typeof window._initSpeakingPage === "function") window._initSpeakingPage(...args);
-    else if (typeof initSpeakingPage === "function") initSpeakingPage(...args);
+    else if (typeof initSpeakingPage === "function" && initSpeakingPage !== window.initSpeakingPage) initSpeakingPage(...args);
   });
 };
 
 window.initWritingPage = function(...args) {
   _loadPageModule("js/pages/page-writing.js", () => {
     if (typeof window._initWritingPage === "function") window._initWritingPage(...args);
-    else if (typeof initWritingPage === "function") initWritingPage(...args);
+    else if (typeof initWritingPage === "function" && initWritingPage !== window.initWritingPage) initWritingPage(...args);
   });
 };
 
 window.initMockTestPage = function(...args) {
   _loadPageModule("js/pages/page-mock-test.js", () => {
     if (typeof window._initMockTestPage === "function") window._initMockTestPage(...args);
-    else if (typeof initMockTestPage === "function") initMockTestPage(...args);
+    else if (typeof initMockTestPage === "function" && initMockTestPage !== window.initMockTestPage) initMockTestPage(...args);
   });
 };
 
 window.initBlogPage = function(...args) {
   _loadPageModule("js/pages/page-blog.js", () => {
     if (typeof window._initBlogPage === "function") window._initBlogPage(...args);
-    else if (typeof initBlogPage === "function") initBlogPage(...args);
+    else if (typeof initBlogPage === "function" && initBlogPage !== window.initBlogPage) initBlogPage(...args);
   });
 };
 
 window.initShopPage = function(...args) {
   _loadPageModule("js/pages/page-shop.js", () => {
     if (typeof window._initShopPage === "function") window._initShopPage(...args);
-    else if (typeof initShopPage === "function") initShopPage(...args);
+    else if (typeof initShopPage === "function" && initShopPage !== window.initShopPage) initShopPage(...args);
   });
 };
 
 window.initIndexPage = function(...args) {
   _loadPageModule("js/pages/page-index.js", () => {
     if (typeof window._initIndexPage === "function") window._initIndexPage(...args);
-    else if (typeof initIndexPage === "function") initIndexPage(...args);
+    else if (typeof initIndexPage === "function" && initIndexPage !== window.initIndexPage) initIndexPage(...args);
   });
 };
 
 window.initUpgradePage = function(...args) {
   _loadPageModule("js/pages/page-upgrade.js", () => {
     if (typeof window._initUpgradePage === "function") window._initUpgradePage(...args);
-    else if (typeof initUpgradePage === "function") initUpgradePage(...args);
+    else if (typeof initUpgradePage === "function" && initUpgradePage !== window.initUpgradePage) initUpgradePage(...args);
   });
 };

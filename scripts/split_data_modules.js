@@ -49,6 +49,14 @@ MODULES.forEach(m => {
   const data = win[m.key];
   if (data !== undefined) {
     const targetPath = path.join(MODULES_DIR, m.file);
+    if (fs.existsSync(targetPath)) {
+      const existingStat = fs.statSync(targetPath);
+      const isDataEmpty = Array.isArray(data) ? data.length === 0 : (data && typeof data === 'object' ? Object.keys(data).length === 0 : true);
+      if (existingStat.size > 100 && isDataEmpty) {
+        console.log(`[Bảo vệ] ${m.file.padEnd(25)} : Đã có sẵn dữ liệu (${(existingStat.size / 1024).toFixed(1)} KB), không ghi đè rỗng.`);
+        return;
+      }
+    }
     const jsonStr = JSON.stringify(data);
     fs.writeFileSync(targetPath, jsonStr, 'utf8');
     const bytes = fs.statSync(targetPath).size;
