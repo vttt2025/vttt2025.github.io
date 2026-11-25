@@ -639,8 +639,8 @@
           owner_id: "",
           publication_status: "published",
           words: [
-            { id: generateUUID(), ru: "сло́во", vi: "từ ngữ", note: "сущ. ср. (оно)", ex: "Русское слово." },
-            { id: generateUUID(), ru: "кни́га", vi: "quyển sách", note: "сущ. ж. (она)", ex: "Я читаю интересную книгу." }
+            { ru: "сло́во", vi: "từ ngữ", note: "сущ. ср. (оно)", ex: "Русское слово." },
+            { ru: "кни́га", vi: "quyển sách", note: "сущ. ж. (она)", ex: "Я читаю интересную книгу." }
           ]
         };
       },
