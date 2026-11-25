@@ -17,8 +17,7 @@
 
   const STORE_KEY = "trki_admin_data";
   const THEME_KEY = "payload_theme";
-  const DEV_MODE_KEY = "trki_dev_mode";
-
+  
   // Trình sinh và kiểm tra mã UUID v4 chuẩn RFC 4122 cho toàn bộ hệ thống Admin CMS & Supabase
   function generateUUID() {
     if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -370,9 +369,9 @@
           type: "select",
           options: [
             { v: "multiple_choice", l: "Trắc nghiệm chọn 1 trong 4 (Multiple Choice)" },
-            { v: "fill_in", l: "Điền từ vào chỗ trống (Fill in)" },
+            { v: "fill_in_blank", l: "Điền từ vào chỗ trống (Fill in Blank)" },
             { v: "matching", l: "Nối cặp từ / câu (Matching)" },
-            { v: "true_false", l: "Đúng / Sai (True / False)" }
+            { v: "sentence_ordering", l: "Sắp xếp câu (Sentence Ordering)" }
           ],
           defaultValue: "multiple_choice"
         },
@@ -1528,10 +1527,12 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           label: "Trạng thái bán (status)",
           type: "select",
           options: [
-            { v: "published", l: "Đang mở bán (Published)" },
+            { v: "in_stock", l: "Còn hàng / Đang mở bán (In Stock)" },
+            { v: "out_of_stock", l: "Tạm hết hàng (Out of Stock)" },
+            { v: "pre_order", l: "Đặt trước (Pre-order)" },
             { v: "draft", l: "Lưu nháp / Ngừng bán (Draft)" }
           ],
-          defaultValue: "published"
+          defaultValue: "in_stock"
         }
       ]
     },
@@ -1604,10 +1605,10 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           label: "Trạng thái",
           type: "select",
           options: [
-            { v: "published", l: "Đang mở bán (Published)" },
+            { v: "active", l: "Đang mở bán (Active)" },
             { v: "draft", l: "Lưu nháp (Draft)" }
           ],
-          defaultValue: "published"
+          defaultValue: "active"
         },
         { key: "description", label: "Mô tả chi tiết gói học (description)", type: "textarea", rows: 3 }
       ]
@@ -1852,19 +1853,34 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
   let _ramAdminStore = null;
   function loadAdminStore() {
+    if (_ramAdminStore) return _ramAdminStore;
     try {
-      return JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
+      _ramAdminStore = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
+      return _ramAdminStore;
     } catch (e) {
-      return _ramAdminStore || {};
+      _ramAdminStore = _ramAdminStore || {};
+      return _ramAdminStore;
     }
   }
 
   function saveAdminStore(store) {
+    _ramAdminStore = store;
     try {
       localStorage.setItem(STORE_KEY, JSON.stringify(store));
     } catch (e) {
-      console.warn("[AdminStore] LocalStorage quota exceeded, caching in RAM fallback:", e);
-      _ramAdminStore = store;
+      console.warn("[AdminStore] LocalStorage quota exceeded, keeping in RAM fallback:", e);
+      try {
+        const safeCopy = { ...store };
+        if (Array.isArray(safeCopy.TRKI_QUESTION_BANK) && safeCopy.TRKI_QUESTION_BANK.length > 200) {
+          safeCopy.TRKI_QUESTION_BANK = safeCopy.TRKI_QUESTION_BANK.filter(it => it && (it.__edited || (it.__admin && !it.__fromSupabase)));
+        }
+        if (Array.isArray(safeCopy.VOCABULARIES) && safeCopy.VOCABULARIES.length > 500) {
+          safeCopy.VOCABULARIES = safeCopy.VOCABULARIES.filter(it => it && (it.__edited || (it.__admin && !it.__fromSupabase)));
+        }
+        localStorage.setItem(STORE_KEY, JSON.stringify(safeCopy));
+      } catch (innerErr) {
+        console.warn("[AdminStore] Could not persist safeCopy to localStorage:", innerErr);
+      }
     }
   }
 
@@ -1880,7 +1896,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
     const map = new Map();
     original.forEach((it) => {
-      const key = it.id || it.slug || it.title;
+      const key = it.id || it.code || it.slug || it.title;
       if (slug === "TRKI_BANK" && OBSOLETE_MOCK_TEST_IDS.has(key)) return;
       if (key && !deletedSet.has(key)) {
         map.set(key, { ...it, __source: "original" });
@@ -1890,7 +1906,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     admin.forEach((it) => {
       const clone = { ...it };
       delete clone.__admin;
-      const key = clone.id || clone.slug || clone.title;
+      const key = clone.id || clone.code || clone.slug || clone.title;
       if (slug === "TRKI_BANK" && OBSOLETE_MOCK_TEST_IDS.has(key)) return;
       if (key && !deletedSet.has(key)) {
         map.set(key, { ...clone, __source: "admin" });
@@ -1912,7 +1928,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
     const map = new Map();
     original.forEach((it) => {
-      const key = it.id || it.slug || it.title;
+      const key = it.id || it.code || it.slug || it.title;
       if (key && deletedSet.has(key)) {
         map.set(key, { ...it, __source: "deleted_original" });
       }
@@ -1920,7 +1936,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     admin.forEach((it) => {
       const clone = { ...it };
       delete clone.__admin;
-      const key = clone.id || clone.slug || clone.title;
+      const key = clone.id || clone.code || clone.slug || clone.title;
       if (key && deletedSet.has(key)) {
         map.set(key, { ...clone, __source: "deleted_admin" });
       }
@@ -1963,6 +1979,55 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     delete out.__source;
     delete out.__admin;
     return out;
+  }
+
+  function parseBool(val, fallback = false) {
+    if (val === undefined || val === null || val === "") return fallback;
+    if (typeof val === "boolean") return val;
+    const s = String(val).trim().toLowerCase();
+    if (s === "true" || s === "1") return true;
+    if (s === "false" || s === "0") return false;
+    return fallback;
+  }
+
+  function stripStressMarks(str) {
+    return String(str || "").replace(/[\u0300-\u036f\u0301]/g, "").trim();
+  }
+
+  // Keep paired camelCase / snake_case draft keys synchronized across CMS forms and Save
+  function syncDraftFieldAlias(draft, key, val) {
+    if (!draft || !key) return;
+    draft[key] = val;
+    const aliasMap = {
+      duration_min: ["durationMin", "duration_minutes"],
+      pass_percent: ["passPercent", "passing_score"],
+      level_name: ["levelName"],
+      category_name: ["categoryName"],
+      cultural_tip: ["culturalTip"],
+      audio_url: ["audioUrl"],
+      youtube_id: ["youtubeId"],
+      phoneme_target: ["phonemeTarget"],
+      price_vnd: ["price"],
+      price: ["price_vnd"],
+      original_price: ["priceOld", "origPrice"],
+      price_old: ["priceOld", "origPrice"],
+      duration_months: ["months"],
+      description: ["desc"],
+      image_url: ["image"],
+      image: ["image_url"],
+      min_words: ["minWords"],
+      translation_vi: ["vi"],
+      vi: ["translation_vi"],
+      model_answer: ["sample_essay", "sample_text"],
+      is_pro: ["is_pro_only"],
+      is_pro_only: ["is_pro"]
+    };
+    if (aliasMap[key]) {
+      aliasMap[key].forEach((ak) => { draft[ak] = val; });
+    }
+    if (key === "publication_status") {
+      draft.published = (val === "published");
+    }
   }
 
   // =========================================================================
@@ -2011,7 +2076,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     State.currentPage = 1;
 
     // Tự động nạp module theo nhu cầu nếu chưa có trong bộ nhớ (On-demand Lazy Loading)
-    const _MODULAR_COLLECTIONS = new Set(["TRKI_BANK", "TRKI_QUESTION_BANK", "VOCAB_JARS", "VOCABULARIES", "TOPIC_ARTICLES", "SPEAKING_SETS"]);
+    const _MODULAR_COLLECTIONS = new Set(["TRKI_BANK", "TRKI_QUESTION_BANK", "VOCAB_JARS", "VOCABULARIES", "TOPIC_ARTICLES", "SPEAKING_SETS", "LISTENING_LESSONS", "WRITING_TASKS", "GRAMMAR_LESSONS", "WRITING_TOPICS"]);
     if (State.currentSlug && _MODULAR_COLLECTIONS.has(State.currentSlug) && window.RusiDataLoader && typeof window.RusiDataLoader.isLoaded === "function" && !window.RusiDataLoader.isLoaded(State.currentSlug) && !window._attemptedAdminLoads?.has(State.currentSlug)) {
       if (!window._attemptedAdminLoads) window._attemptedAdminLoads = new Set();
       window._attemptedAdminLoads.add(State.currentSlug);
@@ -2153,12 +2218,13 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     } else if (State.currentRoute === "editor") {
       const col = COLLECTIONS[State.currentSlug];
       const title = State.isCreating ? "Tạo mới" : esc(State.currentDocId);
+      const statusPill = `<span class="p-pill ${State.isCreating ? "p-pill-warning" : "p-pill-info"}" style="font-size:10.5px;padding:2px 7px;margin-left:6px;vertical-align:middle">${State.isCreating ? "Mới" : "Đang sửa"}</span>`;
       nav.innerHTML = `
         <a class="payload-crumb-item" href="#dashboard">${homeIcon} Dashboard</a>
         ${sep}
         <a class="payload-crumb-item" href="#collection/${State.currentSlug}">${col ? esc(col.label) : esc(State.currentSlug)}</a>
         ${sep}
-        <span class="payload-crumb-item active">${title}</span>
+        <span class="payload-crumb-item active">${title} ${statusPill}</span>
       `;
     } else if (State.currentRoute === "globals") {
       nav.innerHTML = `
@@ -2200,30 +2266,38 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       }
     } else if (State.currentRoute === "editor") {
       const mapping = SupabaseSyncEngine && SupabaseSyncEngine.MAPPINGS[State.currentSlug];
-      const tablePill = mapping ? `<span class="p-pill p-pill-success" style="font-size:11px;padding:3px 7px;display:inline-flex;align-items:center;gap:4px" title="Bảng đích Supabase">${window.RusiIcons ? RusiIcons.get("database-tests", { size: 12 }) : ""} ${mapping.table}</span>` : "";
-      const statusPill = `<span class="p-pill ${State.isCreating ? "p-pill-warning" : "p-pill-info"}" style="font-size:11px;padding:3px 7px">${State.isCreating ? "Mới" : "Đang sửa"}</span>`;
-      const docIdStr = State.currentDocId || (State.currentDraft ? (State.currentDraft.id || State.currentDraft.slug || "") : "");
-      const idTag = docIdStr ? `<span style="font-size:11px;color:var(--p-text-muted);font-family:ui-monospace,monospace;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:2px 6px;background:var(--p-surface-subtle,#f1f5f9);border-radius:4px;border:1px solid var(--p-border-subtle,#e2e8f0)" title="Mã ID: ${escAttr(docIdStr)}">ID: ${esc(docIdStr)}</span>` : "";
+      const docIdStr = State.currentDocId || (State.currentDraft ? (State.currentDraft.id || State.currentDraft.code || State.currentDraft.slug || "") : "");
 
       primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSaveDoc" type="button" title="Lưu thay đổi (Ctrl+S)">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Lưu thay đổi</button>`;
 
       const backBtn = `<a class="p-btn p-btn-ghost p-btn-sm" href="#collection/${State.currentSlug}" title="Quay lại danh sách">← Quay lại</a>`;
-      const previewBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenPreviewDrawer" type="button" onclick="window.openPreviewInNewTab()" title="Xem trước bài viết trên tab mới (Ctrl+P)">${window.RusiIcons ? RusiIcons.get("external-link", { size: 13 }) : ""} Xem trước ↗</button>`;
       const saveCloseBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSaveAndClose" type="button" title="Lưu và quay lại danh sách">${window.RusiIcons ? RusiIcons.get("check", { size: 13 }) : ""} Lưu &amp; Đóng</button>`;
-      const deleteBtn = (!State.isCreating && State.currentDocId)
-        ? `<button class="p-btn p-btn-ghost p-btn-sm" id="btnDeleteDocTopbar" type="button" title="Xóa tài liệu này" style="color:var(--p-danger,#ef4444)">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 13 }) : ""} Xóa</button>`
-        : "";
 
-      secondaryBtn = `${backBtn}${statusPill}${idTag}${tablePill}${deleteBtn}${previewBtn}${saveCloseBtn}`;
+      secondaryBtn = `${backBtn}${saveCloseBtn}`;
     } else {
       primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSyncWeb" type="button">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} Đẩy về Web</button>`;
       secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenSupabaseModal" type="button">${window.RusiIcons ? RusiIcons.get("database-tests", { size: 14 }) : ""} Supabase</button>`;
     }
 
+    const docIdStr = State.currentDocId || (State.currentDraft ? (State.currentDraft.id || State.currentDraft.code || State.currentDraft.slug || "") : "");
+    const editorMapping = State.currentSlug && SupabaseSyncEngine && SupabaseSyncEngine.MAPPINGS[State.currentSlug];
+
     const kebabHtml = `
       <div class="payload-kebab-menu" id="topbarKebab">
         <button class="p-btn-icon" id="btnKebabToggle" type="button" aria-label="Thao tác khác" title="Thêm thao tác">···</button>
         <div class="payload-kebab-dropdown" id="kebabDropdown">
+          ${State.currentRoute === "editor" ? `
+            <button class="payload-kebab-item" id="btnOpenPreviewDrawer" type="button" title="Xem trước bài viết trên tab mới (Ctrl+P)">${window.RusiIcons ? RusiIcons.get("external-link", { size: 14 }) : ""} Xem trước trên Web ↗</button>
+            ${(!State.isCreating && State.currentDocId) ? `
+              <button class="payload-kebab-item danger" id="btnDeleteDocTopbar" type="button" title="Xóa tài liệu này">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""} Xóa tài liệu này</button>
+            ` : ""}
+            <div class="payload-kebab-divider"></div>
+            <div style="padding:6px 12px;font-size:11px;color:var(--p-text-muted);font-family:ui-monospace,monospace;line-height:1.4">
+              <div>Mã ID: <code>${esc(docIdStr || "—")}</code></div>
+              ${editorMapping ? `<div>Bảng: <code>${editorMapping.table}</code></div>` : ""}
+            </div>
+            <div class="payload-kebab-divider"></div>
+          ` : ""}
           ${State.currentSlug && SupabaseSyncEngine && SupabaseSyncEngine.hasMapping(State.currentSlug) ? `
             <button class="payload-kebab-item" id="kebabPushSingleBtn" type="button">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Đẩy ${State.currentSlug} lên Cloud</button>
             <button class="payload-kebab-item" id="kebabPullSingleBtn" type="button">${window.RusiIcons ? RusiIcons.get("cloud-download", { size: 14 }) : ""} Kéo ${State.currentSlug} từ Cloud</button>
@@ -2426,9 +2500,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       `;
     } else {
       paginatedItems.forEach((it) => {
-        const idKey = it.id || it.slug || it.title;
+        const idKey = it.id || it.code || it.slug || it.title;
         const isChecked = State.selectedRows.has(idKey);
-        const titleText = it.title || it.name || it.ru || it.word_with_stress || it.exam_id || it.user_id || it.id;
+        const titleText = (slug === "TRKI_QUESTION_BANK" ? (it.code ? `[${it.code}] ${it.prompt || ""}` : (it.prompt || it.id)) : null) || it.title || it.name || it.ru || it.word_with_stress || it.exam_id || it.user_id || it.id;
         let subText = "";
         if (slug === "SPEAKING_SETS") {
           const itemsCount = (it.sentences || it.items || (it.raw_data && it.raw_data.items) || []).length;
@@ -2761,8 +2835,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           optsList = [
             { v: "", l: "-- Chọn Chủ đề viết (Writing Topic cha) --" },
             ...topics.map(t => ({
-              v: t.id || t.code,
-              code: t.code,
+              v: t.uuid || t.id || t.code,
+              code: t.code || t.id,
               l: `[${t.type === "picture" ? "Tả tranh" : "Luyện dịch"} | ${t.level || "A1"}] ${t.title || t.code}`
             }))
           ];
@@ -2771,8 +2845,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           optsList = [
             { v: "", l: "-- Chọn Chủ đề nghe (Listening Topic cha) --" },
             ...topics.map(t => ({
-              v: t.id || t.code,
-              code: t.code,
+              v: t.uuid || t.id || t.code,
+              code: t.code || t.id,
               l: `[${t.level || "A1"}] ${t.title || t.code}`
             }))
           ];
@@ -2802,7 +2876,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           return `<option value="${escAttr(o.v)}" ${isSelected ? "selected" : ""}>${esc(o.l)}</option>`;
         }).join("");
         formFieldsHtml += `
-          <div class="p-field-row">
+          <div class="p-field-row p-field-select" data-field-key="${escAttr(f.key)}">
             <label class="p-label">${esc(f.label)} ${f.required ? '<span class="p-label-req">*</span>' : ""}</label>
             <select class="p-select live-draft-field" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}">${opts}</select>
             ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
@@ -2810,7 +2884,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         `;
       } else if (f.type === "textarea") {
         formFieldsHtml += `
-          <div class="p-field-row">
+          <div class="p-field-row p-field-textarea p-field-full" data-field-key="${escAttr(f.key)}">
             <label class="p-label">${esc(f.label)} ${f.required ? '<span class="p-label-req">*</span>' : ""}</label>
             <textarea class="p-textarea live-draft-field" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}" rows="4">${esc(val)}</textarea>
             ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
@@ -2819,7 +2893,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       } else if (f.type === "list-lines") {
         const linesVal = Array.isArray(val) ? val.join("\n") : (val || "");
         formFieldsHtml += `
-          <div class="p-field-row">
+          <div class="p-field-row p-field-list-lines p-field-full" data-field-key="${escAttr(f.key)}">
             <label class="p-label">${esc(f.label)} ${f.required ? '<span class="p-label-req">*</span>' : ""}</label>
             <textarea class="p-textarea live-draft-field-lines" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}" rows="5" placeholder="Mỗi dòng là một mục...">${esc(linesVal)}</textarea>
             ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
@@ -3031,6 +3105,95 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                     <button type="button" class="notion-tb-btn" data-action="italic" title="In nghiêng (Ctrl+I)">${NOTION_ICONS.italic}</button>
                     <button type="button" class="notion-tb-btn" data-action="strike" title="Gạch ngang (~~text~~)">${NOTION_ICONS.strike}</button>
                     <button type="button" class="notion-tb-btn" data-action="mark" title="Đánh dấu nổi bật (Highlight)">${NOTION_ICONS.highlight}</button>
+
+                    <!-- Notion Color Picker (Text & Highlight Color) -->
+                    <div class="notion-dropdown-wrap">
+                      <button type="button" class="notion-tb-btn btn-notion-color" title="Đổi màu chữ &amp; Màu nền (Notion Color)">
+                        <span class="notion-color-tb-icon">A</span>
+                      </button>
+                      <div class="notion-menu-popover notion-color-menu" style="display:none;width:240px;max-height:360px;overflow-y:auto;padding:6px">
+                        <div class="notion-menu-group-label">MÀU CHỮ (COLOR)</div>
+                        <button type="button" class="notion-color-item" data-notion-color="default">
+                          <span class="notion-color-badge" style="color:var(--p-text)">A</span>
+                          <span>Mặc định</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-color="#787774">
+                          <span class="notion-color-badge" style="color:#787774">A</span>
+                          <span>Xám (Gray)</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-color="#9f6b53">
+                          <span class="notion-color-badge" style="color:#9f6b53">A</span>
+                          <span>Nâu (Brown)</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-color="#d9730d">
+                          <span class="notion-color-badge" style="color:#d9730d">A</span>
+                          <span>Cam (Orange)</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-color="#cb912f">
+                          <span class="notion-color-badge" style="color:#cb912f">A</span>
+                          <span>Vàng (Yellow)</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-color="#448361">
+                          <span class="notion-color-badge" style="color:#448361">A</span>
+                          <span>Xanh lá (Green)</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-color="#337ea9">
+                          <span class="notion-color-badge" style="color:#337ea9">A</span>
+                          <span>Xanh lam (Blue)</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-color="#9065b0">
+                          <span class="notion-color-badge" style="color:#9065b0">A</span>
+                          <span>Tím (Purple)</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-color="#c14c8a">
+                          <span class="notion-color-badge" style="color:#c14c8a">A</span>
+                          <span>Hồng (Pink)</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-color="#d44c47">
+                          <span class="notion-color-badge" style="color:#d44c47">A</span>
+                          <span>Đỏ (Red)</span>
+                        </button>
+
+                        <div class="notion-menu-group-label" style="margin-top:8px">MÀU NỀN / HIGHLIGHT</div>
+                        <button type="button" class="notion-color-item" data-notion-bgcolor="default">
+                          <span class="notion-color-badge" style="background:transparent;border:1px dashed var(--p-border);color:var(--p-text)">A</span>
+                          <span>Không nền</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-bgcolor="#f1f1ef">
+                          <span class="notion-color-badge" style="background:#f1f1ef;color:#37352f">A</span>
+                          <span>Nền xám</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-bgcolor="#faebdd">
+                          <span class="notion-color-badge" style="background:#faebdd;color:#37352f">A</span>
+                          <span>Nền cam</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-bgcolor="#fbf3db">
+                          <span class="notion-color-badge" style="background:#fbf3db;color:#37352f">A</span>
+                          <span>Nền vàng</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-bgcolor="#edf3ec">
+                          <span class="notion-color-badge" style="background:#edf3ec;color:#37352f">A</span>
+                          <span>Nền xanh lá</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-bgcolor="#e7f3f8">
+                          <span class="notion-color-badge" style="background:#e7f3f8;color:#37352f">A</span>
+                          <span>Nền xanh lam</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-bgcolor="#f4f0f7">
+                          <span class="notion-color-badge" style="background:#f4f0f7;color:#37352f">A</span>
+                          <span>Nền tím</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-bgcolor="#fbf0f4">
+                          <span class="notion-color-badge" style="background:#fbf0f4;color:#37352f">A</span>
+                          <span>Nền hồng</span>
+                        </button>
+                        <button type="button" class="notion-color-item" data-notion-bgcolor="#fbe4e4">
+                          <span class="notion-color-badge" style="background:#fbe4e4;color:#37352f">A</span>
+                          <span>Nền đỏ</span>
+                        </button>
+                      </div>
+                    </div>
+
                     <button type="button" class="notion-tb-btn" data-action="code-inline" title="Mã trong dòng (inline code)">${NOTION_ICONS.code}</button>
                     <button type="button" class="notion-tb-btn" data-action="link" title="Chèn liên kết (Ctrl+K)">${NOTION_ICONS.link}</button>
                     <button type="button" class="notion-tb-btn" data-action="clear-format" title="Xóa định dạng (Eraser)">${NOTION_ICONS.eraser}</button>
@@ -3350,8 +3513,12 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           `;
         }
 
+        const isWideField = Boolean(f.key === "prompt" || f.key === "passage" || f.key === "explanation" || f.key === "title" || f.key === "name" || f.key === "topic");
+        const isFullField = Boolean(f.key === "passage" || f.key === "options" || f.key === "sentences");
+        const rowClass = `p-field-row p-field-${f.type || "text"}${isFullField ? " p-field-full" : (isWideField ? " p-field-wide" : "")}`;
+
         formFieldsHtml += `
-          <div class="p-field-row">
+          <div class="${rowClass}" data-field-key="${escAttr(f.key)}">
             <label class="p-label">${esc(f.label)} ${f.required ? '<span class="p-label-req">*</span>' : ""}</label>
             <input type="${f.type === "number" ? "number" : "text"}" class="p-input live-draft-field" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}" value="${escAttr(val)}" ${isIdDisabled ? "readonly style='background:var(--p-surface-hover);cursor:not-allowed'" : ""} />
             ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
@@ -3419,16 +3586,13 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
     // Bind two-way live field inputs
     document.querySelectorAll(".live-draft-field").forEach((inp) => {
-      inp.oninput = (e) => {
+      const handleFieldUpdate = (e) => {
         const key = e.target.getAttribute("data-key");
         const val = e.target.type === "number" ? Number(e.target.value) : e.target.value;
-        State.currentDraft[key] = val;
+        syncDraftFieldAlias(State.currentDraft, key, val);
       };
-      inp.onchange = (e) => {
-        const key = e.target.getAttribute("data-key");
-        const val = e.target.type === "number" ? Number(e.target.value) : e.target.value;
-        State.currentDraft[key] = val;
-      };
+      inp.oninput = handleFieldUpdate;
+      inp.onchange = handleFieldUpdate;
     });
 
     document.querySelectorAll(".live-draft-field-lines").forEach((inp) => {
@@ -3505,7 +3669,19 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         const alt = node.getAttribute("alt") || "";
         return `![${alt}](${src})`;
       }
-      if (tag === "mark") return `<mark>${inner.trim()}</mark>`;
+      if (tag === "mark") {
+        const bg = node.style.backgroundColor;
+        if (bg) return `<mark style="background-color:${bg}">${inner.trim()}</mark>`;
+        return `<mark>${inner.trim()}</mark>`;
+      }
+      if ((tag === "span" || tag === "font") && (node.style.color || node.style.backgroundColor || node.getAttribute("color"))) {
+        const color = node.style.color || node.getAttribute("color");
+        const bg = node.style.backgroundColor;
+        let styles = [];
+        if (color) styles.push(`color:${color}`);
+        if (bg) styles.push(`background-color:${bg}`);
+        return `<span style="${styles.join(';')}">${inner}</span>`;
+      }
 
       return inner;
     }
@@ -3587,7 +3763,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           const cells = Array.from(tr.querySelectorAll("th, td"));
           if (cells.length === 0) return;
           if (rIdx === 0) colCount = cells.length;
-          const rowText = cells.map(c => inlineNodeToMarkdown(c).trim().replace(/\|/g, "\\|")).join(" | ");
+          const rowText = cells.map(c => inlineNodeToMarkdown(c).trim().replace(/\n+/g, "<br/>").replace(/\|/g, "\\|")).join(" | ");
           tableMd += `| ${rowText} |\n`;
           if (rIdx === 0) {
             const sep = Array(cells.length || colCount || 3).fill("---").join(" | ");
@@ -4673,12 +4849,14 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
       const stressMenu = wrap.querySelector(".notion-stress-menu");
       const calloutMenu = wrap.querySelector(".notion-callout-menu");
       const tableMenu = wrap.querySelector(".notion-table-menu");
+      const colorMenu = wrap.querySelector(".notion-color-menu");
 
       const btnInsert = wrap.querySelector(".btn-notion-insert");
       const btnTurnInto = wrap.querySelector(".btn-notion-turninto");
       const btnStress = wrap.querySelector(".btn-notion-stress");
       const btnCallout = wrap.querySelector(".btn-notion-callout");
       const btnTable = wrap.querySelector(".btn-notion-table");
+      const btnColor = wrap.querySelector(".btn-notion-color");
 
       const hideAllNotionPopovers = () => {
         if (blockMenu) blockMenu.style.display = "none";
@@ -4686,6 +4864,7 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
         if (stressMenu) stressMenu.style.display = "none";
         if (calloutMenu) calloutMenu.style.display = "none";
         if (tableMenu) tableMenu.style.display = "none";
+        if (colorMenu) colorMenu.style.display = "none";
       };
 
       const toggleMenu = (menu) => {
@@ -4701,6 +4880,67 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
       if (btnStress && stressMenu) btnStress.onclick = (e) => { e.stopPropagation(); toggleMenu(stressMenu); };
       if (btnCallout && calloutMenu) btnCallout.onclick = (e) => { e.stopPropagation(); toggleMenu(calloutMenu); };
       if (btnTable && tableMenu) btnTable.onclick = (e) => { e.stopPropagation(); toggleMenu(tableMenu); };
+      if (btnColor && colorMenu) btnColor.onclick = (e) => { e.stopPropagation(); toggleMenu(colorMenu); };
+
+      wrap.querySelectorAll("[data-notion-color]").forEach((btn) => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const color = btn.dataset.notionColor;
+          hideAllNotionPopovers();
+          if (rawPane && rawPane.style.display !== "none" && textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const val = textarea.value;
+            const sel = val.substring(start, end) || "văn bản";
+            const rep = color === "default" ? sel : `<span style="color:${color}">${sel}</span>`;
+            textarea.value = val.substring(0, start) + rep + val.substring(end);
+            textarea.setSelectionRange(start + rep.length, start + rep.length);
+            textarea.focus();
+            syncTextareaToDraft();
+            return;
+          }
+          if (canvas) {
+            canvas.focus();
+            if (color === "default") {
+              document.execCommand("removeFormat");
+            } else {
+              document.execCommand("foreColor", false, color);
+            }
+            syncCanvasToMarkdown();
+            pushHistorySnapshot();
+          }
+        };
+      });
+
+      wrap.querySelectorAll("[data-notion-bgcolor]").forEach((btn) => {
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          const bgcolor = btn.dataset.notionBgcolor;
+          hideAllNotionPopovers();
+          if (rawPane && rawPane.style.display !== "none" && textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const val = textarea.value;
+            const sel = val.substring(start, end) || "văn bản";
+            const rep = bgcolor === "default" ? sel : `<mark style="background-color:${bgcolor}">${sel}</mark>`;
+            textarea.value = val.substring(0, start) + rep + val.substring(end);
+            textarea.setSelectionRange(start + rep.length, start + rep.length);
+            textarea.focus();
+            syncTextareaToDraft();
+            return;
+          }
+          if (canvas) {
+            canvas.focus();
+            if (bgcolor === "default") {
+              document.execCommand("removeFormat");
+            } else {
+              document.execCommand("hiliteColor", false, bgcolor);
+            }
+            syncCanvasToMarkdown();
+            pushHistorySnapshot();
+          }
+        };
+      });
 
       // Giữ focus và vùng bôi đen (selection) khi nhấn các nút trên thanh công cụ
       const toolbarEl = wrap.querySelector(".p-md-toolbar");
@@ -6170,6 +6410,15 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     if (field === "vi") {
       item.meaning_vi = val;
     }
+    if (field === "ex" || field === "ex_vi") {
+      const exRu = field === "ex" ? val : (item.ex || (Array.isArray(item.examples) && item.examples[0] ? item.examples[0].ru : "") || "");
+      const exVi = field === "ex_vi" ? val : (item.ex_vi || (Array.isArray(item.examples) && item.examples[0] ? item.examples[0].vi : "") || "");
+      if (exRu || exVi) {
+        item.examples = [{ ru: exRu, vi: exVi }, ...(Array.isArray(item.examples) ? item.examples.slice(1) : [])];
+      } else {
+        item.examples = [];
+      }
+    }
   };
 
   window.openVocabPickerModal = function () {
@@ -6283,14 +6532,14 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         <div class="payload-array-row" style="margin-bottom:8px;padding:10px;background:var(--p-surface-elevated,#fff);border:1px solid var(--p-border-subtle,#e5e7eb);border-radius:8px">
           <div style="display:flex;gap:8px;align-items:center;margin-bottom:4px">
             <span class="payload-array-row-num">#${idx + 1}</span>
-            <input type="text" class="p-input" placeholder="Người nói..." value="${escAttr(it.who || "")}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) State.currentDraft.items[${idx}].who = this.value;" style="width:130px;font-size:12px" />
-            <input type="number" step="0.5" class="p-input" placeholder="Từ giây" value="${it.startSec != null ? it.startSec : (it.start || 0)}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) { State.currentDraft.items[${idx}].startSec = parseFloat(this.value)||0; State.currentDraft.items[${idx}].start = parseFloat(this.value)||0; }" style="width:70px;font-size:12px;text-align:center" />
-            <input type="number" step="0.5" class="p-input" placeholder="Đến giây" value="${it.endSec != null ? it.endSec : (it.end || 5)}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) { State.currentDraft.items[${idx}].endSec = parseFloat(this.value)||0; State.currentDraft.items[${idx}].end = parseFloat(this.value)||0; }" style="width:70px;font-size:12px;text-align:center" />
-            <button class="p-btn-icon" type="button" onclick="if(State.currentDraft && State.currentDraft.items) { State.currentDraft.items.splice(${idx}, 1); refreshStructureTab(); }" title="Xóa câu" style="margin-left:auto;color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 13 }) : "✕"}</button>
+            <input type="text" class="p-input" placeholder="Người nói..." value="${escAttr(it.who || "")}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) { State.currentDraft.items[${idx}].who = this.value; State.currentDraft.sentences = State.currentDraft.items; }" style="width:130px;font-size:12px" />
+            <input type="number" step="0.5" class="p-input" placeholder="Từ giây" value="${it.startSec != null ? it.startSec : (it.start || 0)}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) { State.currentDraft.items[${idx}].startSec = parseFloat(this.value)||0; State.currentDraft.items[${idx}].start = parseFloat(this.value)||0; State.currentDraft.sentences = State.currentDraft.items; }" style="width:70px;font-size:12px;text-align:center" />
+            <input type="number" step="0.5" class="p-input" placeholder="Đến giây" value="${it.endSec != null ? it.endSec : (it.end || 5)}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) { State.currentDraft.items[${idx}].endSec = parseFloat(this.value)||0; State.currentDraft.items[${idx}].end = parseFloat(this.value)||0; State.currentDraft.sentences = State.currentDraft.items; }" style="width:70px;font-size:12px;text-align:center" />
+            <button class="p-btn-icon" type="button" onclick="if(State.currentDraft && State.currentDraft.items) { State.currentDraft.items.splice(${idx}, 1); State.currentDraft.sentences = State.currentDraft.items; refreshStructureTab(); }" title="Xóa câu" style="margin-left:auto;color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 13 }) : "✕"}</button>
           </div>
           <div style="display:flex;flex-direction:column;gap:4px">
-            <input type="text" class="p-input" placeholder="Câu tiếng Nga (Có trọng âm)..." value="${escAttr(it.text_stressed || it.text_ru || it.ru || "")}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) { State.currentDraft.items[${idx}].text_stressed = this.value; State.currentDraft.items[${idx}].text_ru = this.value; State.currentDraft.items[${idx}].ru = this.value; }" style="font-size:13px" />
-            <input type="text" class="p-input" placeholder="Bản dịch tiếng Việt..." value="${escAttr(it.translation_vi || it.vi || "")}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) { State.currentDraft.items[${idx}].translation_vi = this.value; State.currentDraft.items[${idx}].vi = this.value; }" style="font-size:12.5px" />
+            <input type="text" class="p-input" placeholder="Câu tiếng Nga (Có trọng âm)..." value="${escAttr(it.text_stressed || it.text_ru || it.ru || "")}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) { State.currentDraft.items[${idx}].text_stressed = this.value; State.currentDraft.items[${idx}].text_ru = this.value; State.currentDraft.items[${idx}].ru = this.value; State.currentDraft.sentences = State.currentDraft.items; }" style="font-size:13px" />
+            <input type="text" class="p-input" placeholder="Bản dịch tiếng Việt..." value="${escAttr(it.translation_vi || it.vi || "")}" oninput="if(State.currentDraft && State.currentDraft.items && State.currentDraft.items[${idx}]) { State.currentDraft.items[${idx}].translation_vi = this.value; State.currentDraft.items[${idx}].vi = this.value; State.currentDraft.sentences = State.currentDraft.items; }" style="font-size:12.5px" />
           </div>
         </div>
       `;
@@ -6303,7 +6552,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             <div style="font-weight:700;font-size:14.5px">Danh sách câu thoại Shadowing (${(items || []).length} câu)</div>
             <div style="font-size:12px;color:var(--p-text-muted)">Khớp theo mốc thời gian phụ đề video YouTube</div>
           </div>
-          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="if(State.currentDraft) { State.currentDraft.items = Array.isArray(State.currentDraft.items) ? State.currentDraft.items : []; State.currentDraft.items.push({ id: Date.now(), who: 'Người nói', startSec: 0, endSec: 5, start: 0, end: 5, ru: '', text_ru: '', text_stressed: '', vi: '', translation_vi: '' }); refreshStructureTab(); }">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu thoại</button>
+          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="if(State.currentDraft) { State.currentDraft.items = Array.isArray(State.currentDraft.items) ? State.currentDraft.items : []; State.currentDraft.items.push({ id: Date.now(), who: 'Người nói', startSec: 0, endSec: 5, start: 0, end: 5, ru: '', text_ru: '', text_stressed: '', vi: '', translation_vi: '' }); State.currentDraft.sentences = State.currentDraft.items; refreshStructureTab(); }">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu thoại</button>
         </div>
         <div class="payload-array-items">
           ${rowsHtml || '<div style="padding:20px;text-align:center;color:var(--p-text-muted)">Chưa có câu thoại nào. Bấm "+ Thêm câu thoại" để tạo.</div>'}
@@ -6363,38 +6612,39 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         idKey: (doc) => doc.id,
         toRow: (doc) => {
           const partsArr = Array.isArray(doc.parts) ? doc.parts : (Array.isArray(doc.sections) ? doc.sections : []);
-          const p1 = doc.part1 || (partsArr[0] || {});
-          const p2 = doc.part2 || (partsArr[1] || {});
-          const p3 = doc.part3 || (partsArr[2] || {});
-          const p4 = doc.part4 || (partsArr[3] || {});
-          const p5 = doc.part5 || (partsArr[4] || {});
+          const p1 = (doc.part1 && Object.keys(doc.part1).length) ? doc.part1 : (partsArr[0] || {});
+          const p2 = (doc.part2 && Object.keys(doc.part2).length) ? doc.part2 : (partsArr[1] || {});
+          const p3 = (doc.part3 && Object.keys(doc.part3).length) ? doc.part3 : (partsArr[2] || {});
+          const p4 = (doc.part4 && Object.keys(doc.part4).length) ? doc.part4 : (partsArr[3] || {});
+          const p5 = (doc.part5 && Object.keys(doc.part5).length) ? doc.part5 : (partsArr[4] || {});
+          const normalizedParts = partsArr.length ? partsArr : [p1, p2, p3, p4, p5].filter(p => p && Object.keys(p).length);
           const subType = doc.sub_test_type || doc.category || "full";
-          const dur = Number(doc.durationMin || doc.duration_min || doc.duration_minutes) || 45;
-          const pass = Number(doc.passPercent || doc.pass_percent || doc.passing_score) || 66;
+          const dur = Number(doc.duration_min ?? doc.durationMin ?? doc.duration_minutes) || 45;
+          const pass = Number(doc.pass_percent ?? doc.passPercent ?? doc.passing_score) || 66;
           return {
-            id: String(doc.id).trim(),
+            id: String(doc.uuid || doc.id).trim(),
             code: String(doc.code || doc.id).trim(),
             title: doc.title || "Đề thi TRKI",
             level: doc.level || "A1",
-            level_name: doc.levelName || doc.level_name || ("Sơ cấp " + (doc.level || "A1")),
+            level_name: doc.level_name ?? doc.levelName ?? ("Sơ cấp " + (doc.level || "A1")),
             category: subType,
             sub_test_type: subType,
             duration_min: dur,
             duration_minutes: dur,
             pass_percent: pass,
             passing_score: pass,
-            sections: partsArr,
-            parts: partsArr,
+            sections: normalizedParts,
+            parts: normalizedParts,
             part1: p1,
             part2: p2,
             part3: p3,
             part4: p4,
             part5: p5,
             answers: doc.answers || {},
-            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
-            is_published: Boolean(doc.is_published === undefined ? true : (doc.is_published === true || doc.is_published === "true")),
+            is_pro_only: parseBool(doc.is_pro_only, false),
+            is_published: parseBool(doc.is_published, true),
             test_mode: doc.test_mode || doc.mode || "practice",
-            raw_data: { parts: partsArr },
+            raw_data: { parts: normalizedParts },
             updated_at: new Date().toISOString()
           };
         },
@@ -6405,19 +6655,29 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
               ? row.raw_data.parts
               : (Array.isArray(row.sections) ? row.sections : []));
           const subType = row.sub_test_type || row.category || "full";
+          const dur = Number(row.duration_min || row.duration_minutes) || 45;
+          const pass = Number(row.pass_percent || row.passing_score) || 66;
+          const lvlName = row.level_name || ("TRKI " + (row.level || "A1"));
+          const catName = row.categoryName || (subType === "full" ? "Đề thi toàn diện (5 phần)" : subType);
           return {
             id: row.code || row.id,
             uuid: row.id,
             code: row.code || row.id,
             title: row.title || "Đề thi TRKI",
             level: row.level || "A1",
-            levelName: row.level_name || ("TRKI " + (row.level || "A1")),
+            levelName: lvlName,
+            level_name: lvlName,
             category: subType,
             sub_test_type: subType,
-            categoryName: row.categoryName || (subType === "full" ? "Đề thi toàn diện (5 phần)" : subType),
+            categoryName: catName,
+            category_name: catName,
             test_mode: row.test_mode || "practice",
-            durationMin: Number(row.duration_min || row.duration_minutes) || 45,
-            passPercent: Number(row.pass_percent || row.passing_score) || 66,
+            durationMin: dur,
+            duration_min: dur,
+            duration_minutes: dur,
+            passPercent: pass,
+            pass_percent: pass,
+            passing_score: pass,
             is_pro_only: Boolean(row.is_pro_only),
             is_published: row.is_published !== undefined ? Boolean(row.is_published) : true,
             icon: row.icon || "award-badge",
@@ -6439,23 +6699,29 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         label: "Ngân hàng câu hỏi TRKI",
         idKey: (doc) => doc.id || doc.code,
         toRow: (doc) => {
-          const qId = (doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID();
+          const qId = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
           doc.id = qId;
+          doc.uuid = qId;
           const opts = Array.isArray(doc.options)
             ? doc.options
             : (typeof doc.options === "string" ? doc.options.split("\n").map(s => s.trim()).filter(Boolean) : []);
+          const tagsArr = Array.isArray(doc.tags)
+            ? doc.tags
+            : (typeof doc.tags === "string" ? doc.tags.split("\n").map(s => s.trim()).filter(Boolean) : []);
           const correctIdx = Number(doc.correct_index != null ? doc.correct_index : 0);
           const correctAns = doc.correct_answer || (opts[correctIdx] || "");
           const orderIdx = Number(doc.order_index != null ? doc.order_index : (doc.question_number != null ? doc.question_number : 1));
+          const rawQType = String(doc.question_type || "multiple_choice").trim();
+          const dbQType = rawQType === "fill_in" ? "fill_in_blank" : (rawQType === "true_false" ? "multiple_choice" : rawQType);
           return {
             id: qId,
             code: doc.code || ("TRKI_Q_" + Date.now().toString().slice(-4)),
             test_code: doc.test_code || "",
-            test_id: doc.test_code || doc.test_id || null,
+            test_id: doc.test_id || doc.test_code || null,
             level: doc.level || "A1",
             sub_test: doc.sub_test || doc.sub_test_type || "lexis_grammar",
             part_number: Number(doc.part_number) || 1,
-            question_type: doc.question_type || "multiple_choice",
+            question_type: dbQType,
             order_index: orderIdx,
             prompt: doc.prompt || "",
             prompt_vi: doc.prompt_vi || null,
@@ -6470,8 +6736,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             grammar_case: doc.grammar_case || null,
             difficulty: Number(doc.difficulty) || 2,
             points: Number(doc.points) || 1.0,
-            is_published: Boolean(doc.is_published === undefined ? (doc.is_active !== undefined ? doc.is_active : true) : (doc.is_published === true || doc.is_published === "true")),
-            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
+            tags: tagsArr,
+            is_published: doc.is_published !== undefined ? parseBool(doc.is_published, true) : parseBool(doc.is_active, true),
+            is_pro_only: parseBool(doc.is_pro_only, false),
             updated_at: new Date().toISOString()
           };
         },
@@ -6499,6 +6766,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           grammar_case: row.grammar_case || "",
           difficulty: Number(row.difficulty) || 2,
           points: Number(row.points) || 1.0,
+          tags: Array.isArray(row.tags) ? row.tags : [],
           is_published: row.is_published !== undefined ? Boolean(row.is_published) : true,
           is_pro_only: Boolean(row.is_pro_only)
         })
@@ -6512,28 +6780,30 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         idKey: (doc) => doc.id || doc.word_with_stress,
         toRow: (doc) => {
           const w = String(doc.word_with_stress || doc.ru || doc.word || "").trim();
-          const vId = (doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID();
+          const vId = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
           doc.id = vId;
-          let resolvedAudio = doc.audio_url || doc.audioUrl || null;
+          doc.uuid = vId;
+          const cleanNorm = (doc.word_normalized || stripStressMarks(w)).toLowerCase();
+          let resolvedAudio = doc.audio_url ?? doc.audioUrl ?? null;
           if (!resolvedAudio && typeof VOCABULARIES !== "undefined" && Array.isArray(VOCABULARIES)) {
-            const clean = (doc.word_normalized || w).replace(/[\u0300-\u036f\u0301\u0300]/g, "").trim().toLowerCase();
-            const found = VOCABULARIES.find(item => (item.word_normalized || item.word_with_stress || "").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase() === clean);
+            const found = VOCABULARIES.find(item => stripStressMarks(item.word_normalized || item.word_with_stress || "").toLowerCase() === cleanNorm);
             if (found && found.audio_url) resolvedAudio = found.audio_url;
           }
           return {
             id: vId,
             word_with_stress: w || "сло́во",
+            word_normalized: cleanNorm || "слово",
             pos: doc.pos || doc.type || "сущ.",
             meaning_vi: doc.meaning_vi || doc.vi || "từ ngữ",
             level: doc.level || "A1",
             gender: doc.gender || null,
             aspect: doc.aspect || null,
-            notes: doc.notes || doc.note || null,
+            notes: doc.notes ?? doc.note ?? null,
             structures: Array.isArray(doc.structures) ? doc.structures : [],
             examples: Array.isArray(doc.examples) ? doc.examples : (doc.ex ? [{ ru: doc.ex, vi: doc.ex_vi || "" }] : []),
             synonyms: Array.isArray(doc.synonyms) ? doc.synonyms : [],
             antonyms: Array.isArray(doc.antonyms) ? doc.antonyms : [],
-            audio_url: resolvedAudio,
+            audio_url: resolvedAudio || null,
             updated_at: new Date().toISOString()
           };
         },
@@ -6572,15 +6842,17 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const jarUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
           doc.uuid = jarUuid;
           const jarCode = String(doc.code || doc.id).trim();
+          const isProVal = doc.is_pro !== undefined ? parseBool(doc.is_pro, false) : parseBool(doc.is_pro_only, false);
           return {
             id: jarUuid,
             code: jarCode,
             name: jarName,
             level: doc.level || "A1",
             icon: doc.icon || "archive-jar",
-            is_system: true,
-            is_pro: Boolean(doc.is_pro === true || doc.is_pro_only === true || doc.is_pro_only === "true"),
-            word_count: wordsArr.length,
+            is_system: parseBool(doc.is_system, true),
+            owner_id: (doc.owner_id && isValidUUID(doc.owner_id)) ? doc.owner_id : null,
+            is_pro: isProVal,
+            word_count: wordsArr.length || Number(doc.word_count) || 0,
             updated_at: new Date().toISOString()
           };
         },
@@ -6619,6 +6891,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             levelName: row.level_name || (row.level === "B2" ? "Nâng cao B2" : row.level === "B1" ? "Trung cấp B1" : row.level === "A2" ? "Cơ bản A2" : "Sơ cấp A1"),
             desc: "Lọ từ vựng chủ đề",
             icon: row.icon || "archive-jar",
+            is_system: row.is_system !== undefined ? Boolean(row.is_system) : true,
+            owner_id: row.owner_id || "",
+            is_pro: Boolean(row.is_pro),
             is_pro_only: Boolean(row.is_pro),
             word_count: wordsArr.length || Number(row.word_count) || 0,
             words: wordsArr
@@ -6639,7 +6914,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             const p = mdContent.split("\n\n").find(x => x.trim() && !x.trim().startsWith("#") && !x.trim().startsWith(">") && !x.trim().startsWith("|") && !x.trim().startsWith("-"));
             if (p) intro = p.trim().slice(0, 300);
           }
-          let cTip = (doc.culturalTip || doc.cultural_tip || "").trim();
+          let cTip = String(doc.cultural_tip !== undefined ? doc.cultural_tip : (doc.culturalTip || "")).trim();
           if (!cTip && mdContent) {
             const tipMatch = mdContent.match(/>\s*\[!(?:NOTE|TIP)\][\s\S]*?(?=\n\n|$)/i);
             if (tipMatch) cTip = tipMatch[0].replace(/>\s*(\[!.*\]\s*)?/g, "").trim().slice(0, 300);
@@ -6651,15 +6926,16 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             ru: d.ru || "",
             vi: d.vi || ""
           })) : [];
-          const grammarNotes = Array.isArray(doc.grammarNotes) ? doc.grammarNotes : (Array.isArray(doc.grammar_notes) ? doc.grammar_notes : (doc.grammar ? [{ title: doc.grammar.title || "", content: doc.grammar.rule || "" }] : []));
-          const actionChains = Array.isArray(doc.actionChains) ? doc.actionChains : (Array.isArray(doc.action_chains) ? doc.action_chains : []);
+          const grammarNotes = Array.isArray(doc.grammar_notes) ? doc.grammar_notes : (Array.isArray(doc.grammarNotes) ? doc.grammarNotes : (doc.grammar ? [{ title: doc.grammar.title || "", content: doc.grammar.rule || "" }] : []));
+          const actionChains = Array.isArray(doc.action_chains) ? doc.action_chains : (Array.isArray(doc.actionChains) ? doc.actionChains : []);
+          const aud = doc.audio_url !== undefined ? doc.audio_url : doc.audioUrl;
           return {
             id: String(doc.id || doc.code || "").trim(),
             title: doc.title || ("Bài học: " + doc.id),
             level: doc.level || "A1",
             intro: intro,
             content_md: mdContent,
-            audio_url: doc.audioUrl || doc.audio_url || null,
+            audio_url: aud ? String(aud).trim() : null,
             dialogues: dialogues,
             grammar_notes: grammarNotes,
             action_chains: actionChains,
@@ -6681,6 +6957,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             ru: d.ru || "",
             vi: d.vi || ""
           }));
+          const aud = row.audio_url || art.audioUrl || "";
+          const cTip = row.cultural_tip || art.culturalTip || "";
+          const gNotes = Array.isArray(row.grammar_notes) ? row.grammar_notes : (Array.isArray(art.grammarNotes) ? art.grammarNotes : []);
+          const aChains = Array.isArray(row.action_chains) ? row.action_chains : (Array.isArray(art.actionChains) ? art.actionChains : []);
           return {
             id: row.id || row.code,
             title: row.title || art.title || ("Bài học: " + (row.id || row.code)),
@@ -6689,28 +6969,34 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             content: mdContent,
             content_md: mdContent,
             content_markdown: mdContent,
-            audioUrl: row.audio_url || art.audioUrl || "",
-            culturalTip: row.cultural_tip || art.culturalTip || "",
+            audio_url: aud,
+            audioUrl: aud,
+            cultural_tip: cTip,
+            culturalTip: cTip,
             dialogues: normDia,
-            grammarNotes: Array.isArray(row.grammar_notes) ? row.grammar_notes : (Array.isArray(art.grammarNotes) ? art.grammarNotes : []),
-            actionChains: Array.isArray(row.action_chains) ? row.action_chains : (Array.isArray(art.actionChains) ? art.actionChains : [])
+            grammar_notes: gNotes,
+            grammarNotes: gNotes,
+            action_chains: aChains,
+            actionChains: aChains
           };
         }
       },
 
       GRAMMAR_LESSONS: {
         table: "grammar_lessons",
-        conflict: "id",
+        conflict: "code",
         deleteCol: "id",
         label: "Bài học ngữ pháp",
-        idKey: (doc) => doc.id,
+        idKey: (doc) => doc.id || doc.code,
         toRow: (doc) => {
-          const gId = (doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID();
-          doc.id = gId;
+          const codeVal = String(doc.code || doc.id || ("grammar_" + Date.now().toString().slice(-4))).trim();
+          const gId = String(doc.uuid || doc.id || codeVal).trim();
+          doc.id = doc.id || gId;
           const mdContent = doc.content_md != null ? doc.content_md : (doc.content != null ? doc.content : (doc.content_markdown || ""));
+          const isProVal = parseBool(doc.is_pro_only, doc.access_entitlement === "pro");
           return {
             id: gId,
-            code: String(doc.code || doc.id || ("grammar_" + Date.now().toString().slice(-4))).trim(),
+            code: codeVal,
             title: doc.title || "Bài học ngữ pháp",
             vi: doc.vi || doc.title_vi || "",
             level: doc.level || "A1",
@@ -6720,12 +7006,12 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             content_md: mdContent,
             order_index: Number(doc.order_index != null ? doc.order_index : doc.sort_order) || 1,
             publication_status: doc.publication_status || (doc.is_published === false ? "draft" : "published"),
-            access_entitlement: doc.access_entitlement || (doc.is_pro_only ? "pro" : "free"),
+            access_entitlement: doc.access_entitlement || (isProVal ? "pro" : "free"),
             rules: Array.isArray(doc.rules) ? doc.rules : (typeof doc.rules === "string" ? doc.rules.split("\n").map(s => s.trim()).filter(Boolean) : []),
             examples: Array.isArray(doc.examples) ? doc.examples : (typeof doc.examples === "string" ? doc.examples.split("\n").map(s => s.trim()).filter(Boolean) : []),
             table_data: Array.isArray(doc.table_data) ? doc.table_data : (typeof doc.table_data === "object" && doc.table_data !== null ? doc.table_data : []),
             questions: Array.isArray(doc.questions) ? doc.questions : [],
-            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true" || doc.access_entitlement === "pro"),
+            is_pro_only: isProVal,
             updated_at: new Date().toISOString()
           };
         },
@@ -6776,7 +7062,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             description: doc.description || "",
             icon: doc.icon || "headphones",
             sort_order: Number(doc.sort_order) || 0,
-            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
+            is_pro_only: parseBool(doc.is_pro_only, false),
             updated_at: new Date().toISOString()
           };
         },
@@ -6801,52 +7087,87 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         label: "Bài luyện nghe & chính tả",
         idKey: (doc) => doc.code || doc.id,
         toRow: (doc) => {
-          const lesUuid = (doc.lesson_uuid && isValidUUID(doc.lesson_uuid)) ? doc.lesson_uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
+          const lesUuid = (doc.lesson_uuid && isValidUUID(doc.lesson_uuid)) ? doc.lesson_uuid : ((doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID()));
           doc.lesson_uuid = lesUuid;
+          doc.uuid = lesUuid;
+          const ytRaw = String(doc.youtube_id !== undefined ? doc.youtube_id : (doc.youtubeId || "")).trim();
+          const ytMatch = ytRaw.match(/(?:embed\/|v=|youtu\.be\/)([A-Za-z0-9_-]{11})/) || ytRaw.match(/^([A-Za-z0-9_-]{11})$/);
+          const validYtId = ytMatch ? ytMatch[1] : null;
+          const aud = doc.audio_url !== undefined ? doc.audio_url : doc.audioUrl;
+          const viText = doc.vi ?? doc.translation_vi ?? "";
+          const transViText = doc.translation_vi ?? doc.vi ?? "";
+          const isProVal = parseBool(doc.is_pro_only, doc.access_entitlement === "pro");
+          const linesArr = Array.isArray(doc.lines) ? doc.lines : [];
+          const qArr = Array.isArray(doc.questions) ? doc.questions : [];
+          const nextRaw = { ...(doc.raw_data && typeof doc.raw_data === "object" ? doc.raw_data : {}), lines: linesArr, questions: qArr };
           return {
             id: lesUuid,
             code: String(doc.code || doc.id).trim(),
             topic_id: (doc.topic_id && isValidUUID(doc.topic_id)) ? doc.topic_id : null,
             title: doc.title || "Bài luyện nghe",
-            vi: doc.vi || "",
-            translation_vi: doc.vi || "",
+            vi: viText,
+            translation_vi: transViText,
+            transcript_ru: doc.transcript_ru ?? null,
             level: doc.level || "A1",
-            level_name: doc.levelName || ("Sơ cấp " + (doc.level || "A1")),
+            level_name: doc.level_name ?? doc.levelName ?? ("Sơ cấp " + (doc.level || "A1")),
             category: doc.category || "comprehension",
-            category_name: doc.categoryName || "Nghe hiểu",
-            audio_url: doc.audio_url || doc.audioUrl || null,
-            youtube_id: doc.youtube_id || doc.youtubeId || null,
-            video_youtube_id: doc.youtube_id || doc.youtubeId || null,
-            duration_seconds: Number(doc.duration_seconds || doc.durationSeconds) || 30,
-            lines: Array.isArray(doc.lines) ? doc.lines : [],
-            questions: Array.isArray(doc.questions) ? doc.questions : [],
+            category_name: doc.category_name ?? doc.categoryName ?? "Nghe hiểu",
+            part_type: doc.part_type || doc.category || "comprehension",
+            part_number: Number(doc.part_number) || 1,
+            lesson_type: doc.lesson_type || "audio",
+            audio_url: aud ? String(aud).trim() : null,
+            youtube_id: ytRaw || null,
+            video_youtube_id: validYtId,
+            youtube_video_id: validYtId,
+            duration_seconds: Number(doc.duration_seconds ?? doc.durationSeconds) || 30,
+            est_minutes: Number(doc.est_minutes) || 10,
+            access_entitlement: doc.access_entitlement || (isProVal ? "pro" : "free"),
+            lines: linesArr,
+            questions: qArr,
+            raw_data: nextRaw,
             sort_order: Number(doc.sort_order) || 1,
-            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
+            is_pro_only: isProVal,
             updated_at: new Date().toISOString()
           };
         },
-        fromRow: (row) => ({
-          id: row.code || row.id,
-          uuid: row.id,
-          lesson_uuid: row.id,
-          code: row.code || row.id,
-          topic_id: row.topic_id || "",
-          title: row.title || "",
-          vi: row.vi || row.translation_vi || "",
-          level: row.level || "A1",
-          levelName: row.level_name || ("Sơ cấp " + (row.level || "A1")),
-          category: row.category || "comprehension",
-          categoryName: row.category_name || "Nghe hiểu",
-          audio_url: row.audio_url || "",
-          audioUrl: row.audio_url || "",
-          youtube_id: row.youtube_id || row.video_youtube_id || "",
-          youtubeId: row.youtube_id || row.video_youtube_id || "",
-          duration_seconds: Number(row.duration_seconds) || 30,
-          sort_order: Number(row.sort_order) || 1,
-          is_pro_only: Boolean(row.is_pro_only),
-          lines: Array.isArray(row.lines) ? row.lines : [],
-          questions: Array.isArray(row.questions) ? row.questions : []
-        })
+        fromRow: (row) => {
+          const lvlName = row.level_name || ("Sơ cấp " + (row.level || "A1"));
+          const catName = row.category_name || "Nghe hiểu";
+          const yt = row.youtube_id || row.video_youtube_id || "";
+          const aud = row.audio_url || "";
+          const isProVal = Boolean(row.is_pro_only || row.access_entitlement === "pro");
+          return {
+            id: row.code || row.id,
+            uuid: row.id,
+            lesson_uuid: row.id,
+            code: row.code || row.id,
+            topic_id: row.topic_id || "",
+            title: row.title || "",
+            vi: row.vi || row.translation_vi || "",
+            translation_vi: row.translation_vi || row.vi || "",
+            transcript_ru: row.transcript_ru || "",
+            level: row.level || "A1",
+            levelName: lvlName,
+            level_name: lvlName,
+            category: row.category || "comprehension",
+            categoryName: catName,
+            category_name: catName,
+            part_type: row.part_type || row.category || "comprehension",
+            part_number: Number(row.part_number) || 1,
+            lesson_type: row.lesson_type || "audio",
+            audio_url: aud,
+            audioUrl: aud,
+            youtube_id: yt,
+            youtubeId: yt,
+            duration_seconds: Number(row.duration_seconds) || 30,
+            est_minutes: Number(row.est_minutes) || 10,
+            access_entitlement: row.access_entitlement || (isProVal ? "pro" : "free"),
+            sort_order: Number(row.sort_order) || 1,
+            is_pro_only: isProVal,
+            lines: Array.isArray(row.lines) ? row.lines : [],
+            questions: Array.isArray(row.questions) ? row.questions : []
+          };
+        }
       },
 
       SPEAKING_SETS: {
@@ -6854,30 +7175,32 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         conflict: "code",
         deleteCol: "code",
         label: "Bài luyện nói",
-        idKey: (doc) => doc.id || doc.code,
+        idKey: (doc) => doc.code || doc.id,
         toRow: (doc) => {
           const raw = doc.raw_data || {};
-          const ytId = doc.youtubeId || doc.youtube_id || raw.youtube_video_id || "";
-          const itemsArr = Array.isArray(doc.sentences) && doc.sentences.length ? doc.sentences : (Array.isArray(doc.items) ? doc.items : []);
+          const ytId = String(doc.youtube_id !== undefined ? doc.youtube_id : (doc.youtubeId || raw.youtube_video_id || "")).trim();
+          const itemsArr = Array.isArray(doc.items)
+            ? doc.items
+            : (Array.isArray(doc.sentences) ? doc.sentences : []);
           const spUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
           doc.uuid = spUuid;
           return {
             id: spUuid,
-            code: String(doc.id || doc.code).trim(),
+            code: String(doc.code || doc.id).trim(),
             title: doc.title || "Bài luyện nói",
             level: doc.level || "A1",
-            level_name: doc.levelName || doc.level_name || ("Sơ cấp " + (doc.level || "A1")),
+            level_name: doc.level_name ?? doc.levelName ?? ("Sơ cấp " + (doc.level || "A1")),
             category: doc.category || (ytId ? "shadowing" : "basic"),
-            category_name: doc.categoryName || doc.category_name || (ytId ? "Luyện nói Shadowing qua Video" : "Giao tiếp cơ bản"),
+            category_name: doc.category_name ?? doc.categoryName ?? (ytId ? "Luyện nói Shadowing qua Video" : "Giao tiếp cơ bản"),
             speaking_mode: doc.speaking_mode || doc.speakingMode || (doc.category === "speech_studio" || doc.category === "reflex" ? "reflex" : "shadowing"),
-            phoneme_target: doc.phonemeTarget || doc.phoneme_target || "",
+            phoneme_target: doc.phoneme_target ?? doc.phonemeTarget ?? "",
             icon: doc.icon || (ytId ? "youtube" : "mic-speaking"),
-            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
-            sentence_ru: doc.sentence_ru || (itemsArr[0] && (itemsArr[0].ru || itemsArr[0].text_ru)) || "",
+            is_pro_only: parseBool(doc.is_pro_only, false),
+            sentence_ru: doc.sentence_ru ?? ((itemsArr[0] && (itemsArr[0].ru || itemsArr[0].text_ru)) || ""),
             sort_order: typeof doc.sort_order === "number" ? doc.sort_order : (parseInt(doc.sort_order, 10) || 10),
             youtube_id: ytId || null,
-            youtube_url: ytId ? `https://www.youtube.com/watch?v=${ytId}` : null,
-            video_sample_url: ytId ? `https://www.youtube-nocookie.com/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1` : (doc.video_url || null),
+            youtube_url: ytId ? (doc.youtube_url || `https://www.youtube.com/watch?v=${ytId}`) : null,
+            video_sample_url: ytId ? (doc.video_sample_url || `https://www.youtube-nocookie.com/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1`) : (doc.video_sample_url || doc.video_url || null),
             sentences: itemsArr,
             items: itemsArr,
             description: doc.description || "",
@@ -6923,27 +7246,36 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             endSec: typeof it.endSec === "number" ? it.endSec : (typeof it.end === "number" ? it.end : 5),
             duration: typeof it.duration === "number" ? it.duration : 0
           }));
+          const lvlName = row.level_name || ("Sơ cấp " + (row.level || "A1"));
+          const catName = row.category_name || (ytId ? "Shadowing qua phim hoạt hình" : "Giao tiếp cơ bản");
 
           return {
             id: row.code || row.id,
+            uuid: row.id,
             code: row.code || row.id,
             title: row.title || "",
             full_title: row.title || "",
             level: row.level || "A1",
-            levelName: row.level_name || ("Sơ cấp " + (row.level || "A1")),
+            levelName: lvlName,
+            level_name: lvlName,
             category: row.category || (ytId ? "shadowing_youtube" : "basic"),
-            categoryName: row.category_name || (ytId ? "Shadowing qua phim hoạt hình" : "Giao tiếp cơ bản"),
+            categoryName: catName,
+            category_name: catName,
             speaking_mode: row.speaking_mode || (row.category === "speech_studio" || row.category === "reflex" ? "reflex" : "shadowing"),
             phonemeTarget: row.phoneme_target || "",
+            phoneme_target: row.phoneme_target || "",
             sentence_ru: row.sentence_ru || "",
+            description: row.description || "",
             sort_order: typeof row.sort_order === "number" ? row.sort_order : 10,
             icon: row.icon || (ytId ? "youtube" : "mic-speaking"),
             is_pro_only: Boolean(row.is_pro_only),
             youtubeId: ytId || "",
             youtube_id: ytId || "",
+            youtube_url: row.youtube_url || (ytId ? `https://www.youtube.com/watch?v=${ytId}` : ""),
             video_url: row.video_sample_url || (ytId ? `https://www.youtube-nocookie.com/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1` : ""),
             video_sample_url: row.video_sample_url || "",
-            items: cleanItems
+            items: cleanItems,
+            sentences: cleanItems
           };
         }
       },
@@ -6955,62 +7287,96 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         label: "Bài luyện viết (Tả tranh & Dịch)",
         idKey: (doc) => doc.code || doc.id,
         toRow: (doc) => {
-          const modelText = doc.model_answer || doc.sample_essay || doc.model || "";
-          const promptText = doc.prompt || doc.prompt_text || "";
-          const tipsArr = Array.isArray(doc.tips) ? doc.tips : (typeof doc.tips === "string" ? doc.tips.split("\n").map(s => s.trim()).filter(Boolean) : []);
-          const wordsArr = Array.isArray(doc.suggested_words) ? doc.suggested_words : (typeof doc.suggested_words === "string" ? doc.suggested_words.split("\n").map(s => s.trim()).filter(Boolean) : []);
-          const taskUuid = (doc.taskId && isValidUUID(doc.taskId)) ? doc.taskId : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
+          const modelText = doc.model_answer ?? doc.sample_essay ?? doc.model ?? doc.sample_text ?? "";
+          const promptText = doc.prompt ?? doc.prompt_text ?? "";
+          const tipsArr = Array.isArray(doc.tips) ? doc.tips : (typeof doc.tips === "string" ? (() => { try { const p = JSON.parse(doc.tips); return Array.isArray(p) ? p : doc.tips.split("\n").map(s => s.trim()).filter(Boolean); } catch (_) { return doc.tips.split("\n").map(s => s.trim()).filter(Boolean); } })() : []);
+          const rawWords = Array.isArray(doc.suggested_words) ? doc.suggested_words : (typeof doc.suggested_words === "string" ? doc.suggested_words.split("\n").map(s => s.trim()).filter(Boolean) : []);
+          const wordsArr = rawWords.map(w => (typeof w === "string" ? w : JSON.stringify(w)));
+          const taskUuid = (doc.taskId && isValidUUID(doc.taskId)) ? doc.taskId : ((doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID()));
           doc.taskId = taskUuid;
+          doc.uuid = taskUuid;
+          const isProVal = parseBool(doc.is_pro_only, doc.access_entitlement === "pro");
           return {
             id: taskUuid,
             code: String(doc.code || doc.id).trim(),
             topic_id: (doc.topic_id && isValidUUID(doc.topic_id)) ? doc.topic_id : null,
             title: doc.title || "Bài luyện viết",
             level: doc.level || "A1",
-            level_name: doc.levelName || ("Sơ cấp " + (doc.level || "A1")),
+            level_name: doc.level_name ?? doc.levelName ?? ("Sơ cấp " + (doc.level || "A1")),
             task_type: doc.task_type || "picture_desc",
             category: doc.category || "daily",
-            category_name: doc.categoryName || "Sinh hoạt",
-            image_url: doc.image_url || null,
+            category_name: doc.category_name ?? doc.categoryName ?? "Sinh hoạt",
+            image_url: doc.image_url ? String(doc.image_url).trim() : null,
             prompt: promptText,
             prompt_text: promptText,
-            source_text: doc.source_text || (doc.task_type === "translation" ? promptText : null),
+            source_text: doc.source_text ?? (doc.task_type === "translation" ? promptText : null),
             model_answer: modelText,
             sample_essay: modelText,
-            min_words: Number(doc.min_words || doc.minWords) || 30,
-            tips: tipsArr,
+            sample_text: modelText,
+            min_words: Number(doc.min_words ?? doc.minWords) || 30,
+            tips: JSON.stringify(tipsArr),
             suggested_words: wordsArr,
             ai_prompt: doc.ai_prompt || null,
             sort_order: Number(doc.sort_order) || 1,
             publication_status: doc.publication_status || "published",
-            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
+            access_entitlement: doc.access_entitlement || (isProVal ? "pro" : "free"),
+            is_pro_only: isProVal,
             updated_at: new Date().toISOString()
           };
         },
-        fromRow: (row) => ({
-          id: row.code || row.id,
-          uuid: row.id,
-          taskId: row.id,
-          code: row.code || row.id,
-          topic_id: row.topic_id || "",
-          title: row.title || "",
-          level: row.level || "A1",
-          levelName: row.level_name || ("Sơ cấp " + (row.level || "A1")),
-          task_type: row.task_type || "picture_desc",
-          category: row.category || "daily",
-          categoryName: row.category_name || "Sinh hoạt",
-          image_url: row.image_url || "",
-          prompt: row.prompt || row.prompt_text || "",
-          model_answer: row.model_answer || row.sample_essay || row.sample_text || "",
-          min_words: Number(row.min_words) || 30,
-          minWords: Number(row.min_words) || 30,
-          tips: Array.isArray(row.tips) ? row.tips : [],
-          suggested_words: Array.isArray(row.suggested_words) ? row.suggested_words : [],
-          ai_prompt: row.ai_prompt || "",
-          sort_order: Number(row.sort_order) || 1,
-          is_pro_only: Boolean(row.is_pro_only),
-          publication_status: row.publication_status || "published"
-        })
+        fromRow: (row) => {
+          let tipsList = [];
+          if (Array.isArray(row.tips)) tipsList = row.tips;
+          else if (typeof row.tips === "string" && row.tips.trim()) {
+            try {
+              const parsed = JSON.parse(row.tips);
+              tipsList = Array.isArray(parsed) ? parsed : [row.tips];
+            } catch (_) {
+              tipsList = row.tips.split("\n").map(s => s.trim()).filter(Boolean);
+            }
+          }
+          const wordsList = Array.isArray(row.suggested_words)
+            ? row.suggested_words.map(w => {
+              if (typeof w === "string" && w.trim().startsWith("{")) {
+                try { return JSON.parse(w); } catch (_) { return w; }
+              }
+              return w;
+            })
+            : [];
+          const lvlName = row.level_name || ("Sơ cấp " + (row.level || "A1"));
+          const catName = row.category_name || "Sinh hoạt";
+          const modelText = row.model_answer || row.sample_essay || row.sample_text || "";
+          const isProVal = Boolean(row.is_pro_only || row.access_entitlement === "pro");
+          return {
+            id: row.code || row.id,
+            uuid: row.id,
+            taskId: row.id,
+            code: row.code || row.id,
+            topic_id: row.topic_id || "",
+            title: row.title || "",
+            level: row.level || "A1",
+            levelName: lvlName,
+            level_name: lvlName,
+            task_type: row.task_type || "picture_desc",
+            category: row.category || "daily",
+            categoryName: catName,
+            category_name: catName,
+            image_url: row.image_url || "",
+            prompt: row.prompt || row.prompt_text || "",
+            source_text: row.source_text || "",
+            model_answer: modelText,
+            sample_essay: modelText,
+            min_words: Number(row.min_words) || 30,
+            minWords: Number(row.min_words) || 30,
+            tips: tipsList,
+            suggested_words: wordsList,
+            ai_prompt: row.ai_prompt || "",
+            sort_order: Number(row.sort_order) || 1,
+            access_entitlement: row.access_entitlement || (isProVal ? "pro" : "free"),
+            is_pro_only: isProVal,
+            publication_status: row.publication_status || "published"
+          };
+        }
       },
 
       WRITING_TOPICS: {
@@ -7030,21 +7396,21 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             title: doc.title || "Chủ đề viết",
             vi: doc.vi || "",
             level: doc.level || "A1",
-            level_name: doc.level_name || doc.levelName || ("Sơ cấp " + (doc.level || "A1")),
+            level_name: doc.level_name ?? doc.levelName ?? ("Sơ cấp " + (doc.level || "A1")),
             type: doc.type || "picture",
             category: doc.category || "daily",
-            category_name: doc.category_name || doc.categoryName || "Sinh hoạt thường nhật",
-            image_url: doc.image_url || null,
+            category_name: doc.category_name ?? doc.categoryName ?? "Sinh hoạt thường nhật",
+            image_url: doc.image_url ? String(doc.image_url).trim() : null,
             prompt: doc.prompt || "",
             model_answer: doc.model_answer || "",
             tips: tipsArr,
-            suggested_words: wordsArr,
-            min_words: Number(doc.min_words) || 30,
+            suggested_words: wordsArr.map(w => (typeof w === "string" ? w : JSON.stringify(w))),
+            min_words: Number(doc.min_words ?? doc.minWords) || 30,
             est_minutes: Number(doc.est_minutes) || 20,
             description: doc.description || "",
             icon: doc.icon || "timer-clock",
             sort_order: Number(doc.sort_order) || 0,
-            is_pro_only: Boolean(doc.is_pro_only === true || doc.is_pro_only === "true"),
+            is_pro_only: parseBool(doc.is_pro_only, false),
             updated_at: new Date().toISOString()
           };
         },
@@ -7080,56 +7446,72 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         conflict: "code",
         deleteCol: "code",
         label: "Cửa hàng & Giáo trình",
-        idKey: (doc) => doc.id || doc.code,
+        idKey: (doc) => doc.code || doc.id,
         toRow: (doc) => {
-          const pr = Number(doc.price) || 0;
-          const origPr = Number(doc.priceOld || doc.original_price || doc.origPrice) || 0;
+          const pr = Number(doc.price_vnd ?? doc.price) || 0;
+          const origPr = Number(doc.original_price ?? doc.priceOld ?? doc.origPrice) || 0;
           const prodTitle = doc.title || doc.name || "Sản phẩm";
-          const imgUrl = doc.image || doc.image_url || "";
+          const imgUrl = doc.image_url ?? doc.image ?? "";
           const prodCode = String(doc.code || doc.id || ("prod_" + Date.now().toString().slice(-4))).trim();
           const prodUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
           doc.uuid = prodUuid;
+          const statusRaw = String(doc.status || "in_stock").toLowerCase();
+          const dbStatus = (statusRaw === "published" || statusRaw === "active" || statusRaw === "in_stock") ? "in_stock" : statusRaw;
+          const galleryUrls = Array.isArray(doc.image_urls) ? doc.image_urls : (imgUrl ? [imgUrl] : []);
           return {
             id: prodUuid,
             code: prodCode,
-            name: prodTitle,
+            name: doc.name || prodTitle,
             title: prodTitle,
             category: doc.category || "banh_keo",
-            category_name: doc.categoryName || "Bánh kẹo Nga",
+            category_name: doc.category_name ?? doc.categoryName ?? "Bánh kẹo Nga",
             product_type: doc.product_type || "physical",
             price_vnd: pr,
             price: pr,
             price_minor: pr * 100,
             original_price: origPr,
             currency: "VND",
-            description: doc.desc || doc.description || "",
+            description: doc.description ?? doc.desc ?? "",
             image: imgUrl,
             image_url: imgUrl,
-            image_urls: imgUrl ? [imgUrl] : [],
-            stock: Number(doc.stock || doc.sold) || 100,
+            image_urls: galleryUrls,
+            stock: Number(doc.stock ?? doc.sold) || 100,
             badge: doc.badge || "",
-            status: (doc.status === "out_of_stock" || doc.status === "pre_order") ? doc.status : "in_stock",
+            status: dbStatus,
             updated_at: new Date().toISOString()
           };
         },
-        fromRow: (row) => ({
-          id: row.code || row.id,
-          uuid: row.id,
-          code: row.code || row.id,
-          title: row.title || row.name || "",
-          name: row.title || row.name || "",
-          category: row.category || "banh_keo",
-          categoryName: row.category_name || "Bánh kẹo Nga",
-          product_type: row.product_type || "physical",
-          price: Number(row.price_vnd || row.price) || 0,
-          priceOld: Number(row.original_price) || 0,
-          origPrice: Number(row.original_price) || 0,
-          stock: Number(row.stock) || 100,
-          badge: row.badge || "",
-          image: row.image || row.image_url || (Array.isArray(row.image_urls) ? row.image_urls[0] : "") || "",
-          desc: row.description || "",
-          status: row.status || "published"
-        })
+        fromRow: (row) => {
+          const pr = Number(row.price_vnd || row.price) || 0;
+          const origPr = Number(row.original_price) || 0;
+          const imgUrl = row.image || row.image_url || (Array.isArray(row.image_urls) ? row.image_urls[0] : "") || "";
+          const catName = row.category_name || "Bánh kẹo Nga";
+          const descVal = row.description || "";
+          return {
+            id: row.code || row.id,
+            uuid: row.id,
+            code: row.code || row.id,
+            title: row.title || row.name || "",
+            name: row.name || row.title || "",
+            category: row.category || "banh_keo",
+            categoryName: catName,
+            category_name: catName,
+            product_type: row.product_type || "physical",
+            price: pr,
+            price_vnd: pr,
+            priceOld: origPr,
+            origPrice: origPr,
+            original_price: origPr,
+            stock: Number(row.stock) || 100,
+            badge: row.badge || "",
+            image: imgUrl,
+            image_url: imgUrl,
+            image_urls: Array.isArray(row.image_urls) ? row.image_urls : (imgUrl ? [imgUrl] : []),
+            desc: descVal,
+            description: descVal,
+            status: row.status || "in_stock"
+          };
+        }
       },
 
       PACKAGES: {
@@ -7139,50 +7521,65 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         label: "Gói Premium PRO",
         idKey: (doc) => doc.id,
         toRow: (doc) => {
-          const pr = Number(doc.price) || 0;
-          const origPr = Number(doc.priceOld || doc.price_old || doc.origPrice) || 0;
+          const pr = Number(doc.price_vnd ?? doc.price) || 0;
+          const origPr = Number(doc.price_old ?? doc.priceOld ?? doc.origPrice) || 0;
           const pkgTitle = doc.title || doc.name || "Gói học PRO";
           const featArr = Array.isArray(doc.features)
             ? doc.features
             : (typeof doc.features === "string" ? doc.features.split("\n").map(s => s.trim()).filter(Boolean) : []);
-          const monthsNum = Number(doc.months || doc.duration_months) || 1;
-          const isLife = Boolean(doc.is_lifetime === true || doc.is_lifetime === "true" || doc.id === "pro_vip");
+          const monthsNum = Number(doc.duration_months ?? doc.months) || 1;
+          const isLife = parseBool(doc.is_lifetime, doc.id === "pro_vip");
+          const rawStatus = String(doc.status || "active").toLowerCase();
+          const dbStatus = (rawStatus === "published" || rawStatus === "active") ? "active" : rawStatus;
           return {
             id: String(doc.id).trim(),
-            name: pkgTitle,
+            name: doc.name || pkgTitle,
             title: pkgTitle,
             price_vnd: pr,
             price: pr,
-            price_minor: pr * 100,
+            price_minor: Math.max(1, pr),
             price_old: origPr,
             currency: "VND",
-            duration_months: monthsNum,
-            duration_days: monthsNum * 30,
+            duration_months: isLife ? null : monthsNum,
+            duration_days: null,
             is_lifetime: isLife,
-            status: doc.status || "published",
+            status: dbStatus,
             badge: doc.badge || "",
-            description: doc.desc || doc.description || "",
-            popular: Boolean(doc.popular === true || doc.is_popular === true || doc.popular === "true"),
+            description: doc.description ?? doc.desc ?? "",
+            popular: parseBool(doc.popular, parseBool(doc.is_popular, false)),
             features: featArr,
             feature_list: featArr,
             updated_at: new Date().toISOString()
           };
         },
-        fromRow: (row) => ({
-          id: row.id,
-          name: row.name || row.title || "",
-          title: row.title || row.name || "",
-          price: Number(row.price_vnd || row.price) || 0,
-          priceOld: Number(row.price_old) || 0,
-          origPrice: Number(row.price_old) || 0,
-          badge: row.badge || "",
-          months: Number(row.duration_months) || Math.max(1, Math.round((Number(row.duration_days) || 30) / 30)),
-          is_lifetime: Boolean(row.is_lifetime),
-          popular: Boolean(row.popular),
-          status: row.status || "published",
-          desc: row.description || "",
-          features: Array.isArray(row.features) && row.features.length ? row.features : (Array.isArray(row.feature_list) ? row.feature_list : [])
-        })
+        fromRow: (row) => {
+          const pr = Number(row.price_vnd || row.price) || 0;
+          const origPr = Number(row.price_old) || 0;
+          const monthsNum = Number(row.duration_months) || Math.max(1, Math.round((Number(row.duration_days) || 30) / 30));
+          const daysNum = Number(row.duration_days) || (monthsNum * 30);
+          const descVal = row.description || "";
+          const rawStatus = String(row.status || "active").toLowerCase();
+          return {
+            id: row.id,
+            name: row.name || row.title || "",
+            title: row.title || row.name || "",
+            price: pr,
+            price_vnd: pr,
+            priceOld: origPr,
+            origPrice: origPr,
+            price_old: origPr,
+            badge: row.badge || "",
+            months: monthsNum,
+            duration_months: monthsNum,
+            duration_days: daysNum,
+            is_lifetime: Boolean(row.is_lifetime),
+            popular: Boolean(row.popular),
+            status: rawStatus === "published" ? "active" : rawStatus,
+            desc: descVal,
+            description: descVal,
+            features: Array.isArray(row.features) && row.features.length ? row.features : (Array.isArray(row.feature_list) ? row.feature_list : [])
+          };
+        }
       },
 
       BLOG_POSTS: {
@@ -7194,19 +7591,21 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         toRow: (doc) => {
           const mdContent = doc.content_md != null ? doc.content_md : (doc.content != null ? doc.content : (doc.content_markdown || ""));
           const coverImg = doc.cover_url || doc.cover || doc.cover_image || "assets/red-square.jpg";
-          const isPub = (doc.publication_status === "published" || doc.published === true || doc.publication_status === undefined);
+          const isPub = doc.publication_status !== undefined
+            ? (String(doc.publication_status).toLowerCase() === "published")
+            : (doc.published !== false);
           const slugVal = String(doc.slug || doc.id || ("post-" + Date.now())).trim();
           const postUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
           doc.uuid = postUuid;
           return {
             id: postUuid,
             slug: slugVal,
-            code: slugVal,
+            code: String(doc.code || slugVal).trim(),
             title: doc.title || "Bài viết Blog",
             category: doc.category || doc.tag || "du_hoc",
             author: doc.author || "Ban Biên Tập RUSI TRKI",
             cover_url: coverImg,
-            summary: doc.summary || doc.excerpt || "",
+            summary: doc.summary ?? doc.excerpt ?? "",
             content_md: mdContent,
             tags: Array.isArray(doc.tags) ? doc.tags : (doc.tag ? [doc.tag] : ["Du học Nga"]),
             publication_status: isPub ? "published" : "draft",
@@ -7218,6 +7617,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           slug: row.slug,
           id: row.slug,
           uuid: row.id,
+          code: row.code || row.slug,
           title: row.title || "",
           category: row.category || "du_hoc",
           author: row.author || "Ban Biên Tập RUSI TRKI",
@@ -7228,6 +7628,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           content_md: row.content_md || "",
           content: row.content_md || "",
           content_markdown: row.content_md || "",
+          tags: Array.isArray(row.tags) ? row.tags : [],
+          published_at: row.published_at || "",
           publication_status: row.publication_status || "published",
           published: row.publication_status === "published"
         })
@@ -7245,7 +7647,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           avatar_url: doc.avatar_url || null,
           timezone: doc.timezone || "Asia/Ho_Chi_Minh",
           role: doc.role || "student",
-          is_pro: Boolean(doc.is_pro === true || doc.is_pro === "true"),
+          is_pro: parseBool(doc.is_pro, false),
           pro_expires_at: doc.pro_expires_at ? new Date(doc.pro_expires_at).toISOString() : null,
           updated_at: new Date().toISOString()
         }),
@@ -7274,19 +7676,21 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const ordUuid = (doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID());
           doc.uuid = ordUuid;
           const uId = (doc.user_id && isValidUUID(doc.user_id)) ? doc.user_id : ((doc.userId && isValidUUID(doc.userId)) ? doc.userId : null);
+          const ordStatus = String(doc.status || "pending").toLowerCase();
+          const isPaidStatus = (ordStatus === "paid" || ordStatus === "refunded" || ordStatus === "partially_refunded");
           return {
             id: ordUuid,
             order_code: ordCode,
             user_id: uId,
-            package_id: doc.packageId || doc.package_id || "",
+            package_id: doc.package_id || doc.packageId || "",
             amount: Number(doc.amount) || 0,
-            amount_minor: (Number(doc.amount) || 0) * 100,
+            amount_minor: Math.max(1, Number(doc.amount) || 1),
             currency: "VND",
-            payment_method: String(doc.paymentMethod || doc.payment_method || "VIETQR").toUpperCase(),
-            status: String(doc.status || "pending").toLowerCase(),
+            payment_method: String(doc.payment_method || doc.paymentMethod || "VIETQR").toUpperCase(),
+            status: ordStatus,
             shipping_address: (typeof doc.shipping_address === "string" ? (() => { try { return JSON.parse(doc.shipping_address); } catch(_) { return doc.shipping_address; } })() : doc.shipping_address) || null,
             casso_trans_id: doc.casso_trans_id || null,
-            paid_at: (doc.paid_at ? new Date(doc.paid_at).toISOString() : (String(doc.status || "").toLowerCase() === "paid" ? new Date().toISOString() : null)),
+            paid_at: isPaidStatus ? (doc.paid_at ? new Date(doc.paid_at).toISOString() : new Date().toISOString()) : null,
             expires_at: doc.expires_at || new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
             updated_at: new Date().toISOString()
           };
@@ -7337,7 +7741,167 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       return null;
     },
 
-    async upsertDoc(slug, doc) {
+    async ensureAdminSession(sb) {
+      if (!sb || !sb.auth || typeof sb.auth.getSession !== "function") {
+        return { ok: false, message: "Supabase Auth chưa sẵn sàng." };
+      }
+      try {
+        const { data, error } = await sb.auth.getSession();
+        if (error || !data || !data.session || !data.session.access_token) {
+          return {
+            ok: false,
+            message: "Phiên đăng nhập Supabase đã hết hạn hoặc chưa được xác thực JWT. Vui lòng đăng xuất rồi đăng nhập lại tài khoản Admin!"
+          };
+        }
+        return { ok: true, session: data.session };
+      } catch (err) {
+        return { ok: false, message: "Không thể xác minh phiên đăng nhập Supabase: " + (err.message || err) };
+      }
+    },
+
+    // Giữ nguyên UUID / Primary Key đang có trên Supabase khi cập nhật từ dữ liệu local (tránh lỗi 409 / 23503 FK)
+    async resolveExistingIds(sb, slug, docs) {
+      const mapping = this.MAPPINGS[slug];
+      if (!mapping || !Array.isArray(docs) || docs.length === 0) return;
+
+      const lookupCol = (slug === "TRKI_BANK" || slug === "TRKI_QUESTION_BANK")
+        ? "code"
+        : (mapping.conflict && mapping.conflict !== "id" && !mapping.conflict.includes(",") ? mapping.conflict : null);
+
+      if (lookupCol) {
+        const keys = [];
+        for (const doc of docs) {
+          if (!doc) continue;
+          const k = String(doc[lookupCol] || doc.id || "").trim();
+          const hasUuid = isValidUUID(doc.uuid) || isValidUUID(doc.lesson_uuid) || isValidUUID(doc.taskId) || (slug === "TRKI_QUESTION_BANK" && isValidUUID(doc.id));
+          if (k && (!hasUuid || slug === "GRAMMAR_LESSONS" || slug === "TRKI_BANK" || slug === "TRKI_QUESTION_BANK")) {
+            keys.push(k);
+          }
+        }
+        const uniqueKeys = Array.from(new Set(keys));
+        const byKey = new Map();
+        for (let i = 0; i < uniqueKeys.length; i += 50) {
+          const chunk = uniqueKeys.slice(i, i + 50);
+          try {
+            const { data, error } = await sb.from(mapping.table).select(`id, ${lookupCol}`).in(lookupCol, chunk);
+            if (!error && Array.isArray(data)) {
+              for (const r of data) {
+                if (r && r[lookupCol] != null && r.id != null) {
+                  byKey.set(String(r[lookupCol]).trim(), r.id);
+                }
+              }
+            }
+          } catch (_) {}
+        }
+        for (const doc of docs) {
+          if (!doc) continue;
+          const k = String(doc[lookupCol] || doc.id || "").trim();
+          const dbId = byKey.get(k);
+          if (dbId) {
+            if (slug === "LISTENING_LESSONS") doc.lesson_uuid = dbId;
+            if (slug === "WRITING_TASKS") doc.taskId = dbId;
+            if (slug === "TRKI_QUESTION_BANK" && isValidUUID(dbId)) doc.id = dbId;
+            doc.uuid = dbId;
+          }
+        }
+      }
+
+      // Chuyển topic_id dạng mã chuỗi sang UUID thực trên Supabase nếu cần
+      if (slug === "WRITING_TASKS" || slug === "LISTENING_LESSONS") {
+        const parentTable = slug === "WRITING_TASKS" ? "writing_topics" : "listening_topics";
+        const topicCodes = Array.from(new Set(
+          docs.map(d => d && d.topic_id ? String(d.topic_id).trim() : "")
+            .filter(t => t && !isValidUUID(t))
+        ));
+        if (topicCodes.length > 0) {
+          const topicMap = new Map();
+          for (let i = 0; i < topicCodes.length; i += 50) {
+            try {
+              const { data, error } = await sb.from(parentTable).select("id, code").in("code", topicCodes.slice(i, i + 50));
+              if (!error && Array.isArray(data)) {
+                data.forEach(r => { if (r && r.code && r.id) topicMap.set(String(r.code).trim(), r.id); });
+              }
+            } catch (_) {}
+          }
+          docs.forEach(d => {
+            if (d && d.topic_id && !isValidUUID(d.topic_id)) {
+              const mappedUuid = topicMap.get(String(d.topic_id).trim());
+              if (mappedUuid) d.topic_id = mappedUuid;
+            }
+          });
+        }
+      }
+    },
+
+    async syncJarRelations(sb, jarId, doc) {
+      if (!jarId || !isValidUUID(jarId)) return { ok: true };
+      const words = Array.isArray(doc.words) ? doc.words : null;
+      if (words === null) return { ok: true };
+
+      const itemsToInsert = [];
+      const wordsToUpsert = [];
+      const seenVocabIds = new Set();
+
+      for (let idx = 0; idx < words.length; idx++) {
+        const w = words[idx];
+        if (!w) continue;
+        const wId = (w.id && isValidUUID(w.id)) ? w.id : generateUUID();
+        w.id = wId;
+        const stressWord = String(w.word_with_stress || w.stress || w.ru || "").trim() || "сло́во";
+        const cleanNorm = stripStressMarks(w.word_normalized || stressWord).toLowerCase();
+        let wAudio = w.audio_url || w.audio || null;
+        if (!wAudio && typeof VOCABULARIES !== "undefined" && Array.isArray(VOCABULARIES)) {
+          const found = VOCABULARIES.find(item => stripStressMarks(item.word_normalized || item.word_with_stress || "").toLowerCase() === cleanNorm);
+          if (found && found.audio_url) wAudio = found.audio_url;
+        }
+        if (!seenVocabIds.has(wId)) {
+          seenVocabIds.add(wId);
+          wordsToUpsert.push({
+            id: wId,
+            word_with_stress: stressWord,
+            word_normalized: cleanNorm || "слово",
+            meaning_vi: w.meaning_vi || w.vi || "",
+            pos: w.pos || "сущ.",
+            level: w.level || doc.level || "A1",
+            gender: w.gender || null,
+            aspect: w.aspect || null,
+            notes: w.notes ?? w.note ?? null,
+            structures: Array.isArray(w.structures) ? w.structures : [],
+            examples: Array.isArray(w.examples) ? w.examples : (w.ex ? [{ ru: w.ex, vi: w.ex_vi || "" }] : []),
+            audio_url: wAudio,
+            updated_at: new Date().toISOString()
+          });
+          itemsToInsert.push({
+            jar_id: jarId,
+            vocab_id: wId,
+            position: idx + 1
+          });
+        }
+      }
+
+      if (wordsToUpsert.length > 0) {
+        const { error: vocabErr } = await sb.from("vocabularies").upsert(wordsToUpsert, { onConflict: "id" });
+        if (vocabErr) {
+          return { ok: false, error: vocabErr, message: "Lỗi đồng bộ bảng vocabularies: " + vocabErr.message };
+        }
+      }
+
+      const { error: delErr } = await sb.from("jar_items").delete().eq("jar_id", jarId);
+      if (delErr) {
+        return { ok: false, error: delErr, message: "Lỗi cập nhật jar_items (xóa cũ): " + delErr.message };
+      }
+
+      if (itemsToInsert.length > 0) {
+        const { error: insErr } = await sb.from("jar_items").insert(itemsToInsert);
+        if (insErr) {
+          return { ok: false, error: insErr, message: "Lỗi cập nhật jar_items (gán mới): " + insErr.message };
+        }
+      }
+
+      return { ok: true };
+    },
+
+    async upsertDoc(slug, doc, opts = {}) {
       const mapping = this.MAPPINGS[slug];
       if (!mapping) return { ok: true, skipped: true, message: `Collection ${slug} không map tới bảng Supabase.` };
 
@@ -7346,7 +7910,13 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         return { ok: false, message: "Supabase client chưa sẵn sàng. Hãy kiểm tra Anon Key." };
       }
 
+      if (!opts.skipAuthCheck) {
+        const authRes = await this.ensureAdminSession(sb);
+        if (!authRes.ok) return { ok: false, message: authRes.message };
+      }
+
       try {
+        await this.resolveExistingIds(sb, slug, [doc]);
         const row = mapping.toRow(doc);
         const { data, error } = await sb
           .from(mapping.table)
@@ -7358,71 +7928,26 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           return { ok: false, error, message: error.message || "Lỗi Supabase" };
         }
 
-        // Đồng bộ gương song song cho các bảng liên kết
+        // Đồng bộ gương song song cho các bảng liên kết và kiểm tra lỗi tường minh
         if (slug === "VOCAB_JARS") {
-          try {
-            const words = Array.isArray(doc.words) ? doc.words : [];
-            if (words.length > 0) {
-              const jarId = (data && data[0] && data[0].id) || row.id;
-              const itemsToInsert = [];
-              const wordsToUpsert = [];
-              for (let idx = 0; idx < words.length; idx++) {
-                const w = words[idx];
-                if (!w) continue;
-                const wId = (w.id && isValidUUID(w.id)) ? w.id : generateUUID();
-                w.id = wId;
-                let wAudio = w.audio_url || w.audio || null;
-                if (!wAudio && typeof VOCABULARIES !== "undefined" && Array.isArray(VOCABULARIES)) {
-                  const clean = String(w.stress || w.word_with_stress || w.ru || "").replace(/[\u0300-\u036f\u0301\u0300]/g, "").trim().toLowerCase();
-                  const found = VOCABULARIES.find(item => (item.word_normalized || item.word_with_stress || "").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase() === clean);
-                  if (found && found.audio_url) wAudio = found.audio_url;
-                }
-                wordsToUpsert.push({
-                  id: wId,
-                  word_with_stress: w.stress || w.word_with_stress || w.ru || "сло́во",
-                  meaning_vi: w.meaning_vi || w.vi || "",
-                  pos: w.pos || "сущ.",
-                  level: w.level || doc.level || "A1",
-                  gender: w.gender || null,
-                  aspect: w.aspect || null,
-                  notes: w.notes || w.note || null,
-                  structures: Array.isArray(w.structures) ? w.structures : [],
-                  examples: Array.isArray(w.examples) ? w.examples : (w.ex ? [{ ru: w.ex, vi: w.ex_vi || "" }] : []),
-                  audio_url: wAudio,
-                  updated_at: new Date().toISOString()
-                });
-                itemsToInsert.push({
-                  jar_id: jarId,
-                  vocab_id: wId,
-                  position: idx + 1
-                });
-              }
-              if (wordsToUpsert.length > 0) {
-                await sb.from("vocabularies").upsert(wordsToUpsert, { onConflict: "id" });
-              }
-              // Đồng bộ sạch bảng liên kết jar_items: xóa toàn bộ cũ của jarId và ghi lại danh sách mới
-              await sb.from("jar_items").delete().eq("jar_id", jarId);
-              if (itemsToInsert.length > 0) {
-                await sb.from("jar_items").insert(itemsToInsert);
-              }
-            }
-          } catch (e) {
-            console.warn("[SupabaseSyncEngine] Đồng bộ jar_items cảnh báo:", e);
+          const jarId = (data && data[0] && data[0].id) || row.id;
+          const relRes = await this.syncJarRelations(sb, jarId, doc);
+          if (!relRes.ok) {
+            return { ok: false, error: relRes.error, message: relRes.message, table: mapping.table, data };
           }
         }
 
         if (slug === "VOCABULARIES" && doc.jar_id && isValidUUID(doc.jar_id)) {
-          try {
-            const vId = (data && data[0] && data[0].id) || row.id;
-            if (vId && isValidUUID(vId)) {
-              await sb.from("jar_items").upsert({
-                jar_id: doc.jar_id,
-                vocab_id: vId,
-                position: 999
-              }, { onConflict: "jar_id,vocab_id" });
+          const vId = (data && data[0] && data[0].id) || row.id;
+          if (vId && isValidUUID(vId)) {
+            const { error: jiErr } = await sb.from("jar_items").upsert({
+              jar_id: doc.jar_id,
+              vocab_id: vId,
+              position: 999
+            }, { onConflict: "jar_id,vocab_id" });
+            if (jiErr) {
+              return { ok: false, error: jiErr, message: "Từ vựng đã lưu nhưng gán vào lọ (jar_items) lỗi: " + jiErr.message, table: mapping.table, data };
             }
-          } catch (e) {
-            console.warn("[SupabaseSyncEngine] Gán jar_items cảnh báo:", e);
           }
         }
 
@@ -7431,6 +7956,85 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         console.error(`[SupabaseSyncEngine] Ngoại lệ khi upsert:`, err);
         return { ok: false, error: err, message: err.message };
       }
+    },
+
+    async syncCollectionBatch(sb, slug, items, opts = {}) {
+      const mapping = this.MAPPINGS[slug];
+      if (!mapping) return { total: 0, synced: 0, errors: 0, firstError: "" };
+
+      let targetItems = Array.isArray(items) ? items : [];
+      if (slug === "USERS") {
+        targetItems = targetItems.filter(it => it && isValidUUID(it.id));
+      }
+      if (targetItems.length === 0) {
+        return { total: 0, synced: 0, errors: 0, firstError: "" };
+      }
+
+      const BATCH_SIZE = opts.batchSize || ((slug === "TRKI_QUESTION_BANK" || slug === "VOCABULARIES") ? 200 : 50);
+      let synced = 0;
+      let errors = 0;
+      let firstError = "";
+
+      for (let i = 0; i < targetItems.length; i += BATCH_SIZE) {
+        const chunk = targetItems.slice(i, i + BATCH_SIZE);
+        await this.resolveExistingIds(sb, slug, chunk);
+        const rows = chunk.map(it => mapping.toRow(it));
+
+        try {
+          const { data: upsertedRows, error } = await sb
+            .from(mapping.table)
+            .upsert(rows, { onConflict: mapping.conflict })
+            .select(slug === "VOCAB_JARS" ? "id, code" : "id");
+
+          if (!error) {
+            if (slug === "VOCAB_JARS") {
+              const idByCode = new Map((upsertedRows || []).map(r => [String(r.code || "").trim(), r.id]));
+              for (let cIdx = 0; cIdx < chunk.length; cIdx++) {
+                const it = chunk[cIdx];
+                const jarCode = String(it.code || it.id || "").trim();
+                const jarId = idByCode.get(jarCode) || rows[cIdx].id;
+                const relRes = await this.syncJarRelations(sb, jarId, it);
+                if (relRes.ok) {
+                  synced++;
+                } else {
+                  errors++;
+                  if (!firstError) firstError = relRes.message;
+                }
+              }
+            } else {
+              synced += chunk.length;
+            }
+          } else {
+            console.warn(`[syncCollectionBatch] Lỗi batch ${slug} ${i}-${i + chunk.length}:`, error);
+            if (!firstError) firstError = error.message || "Lỗi batch Supabase";
+            for (const it of chunk) {
+              const res = await this.upsertDoc(slug, it, { skipAuthCheck: true });
+              if (res.ok) synced++;
+              else {
+                errors++;
+                if (!firstError && res.message) firstError = res.message;
+              }
+            }
+          }
+        } catch (err) {
+          console.warn(`[syncCollectionBatch] Ngoại lệ batch ${slug} ${i}:`, err);
+          if (!firstError) firstError = err.message || String(err);
+          for (const it of chunk) {
+            const res = await this.upsertDoc(slug, it, { skipAuthCheck: true });
+            if (res.ok) synced++;
+            else {
+              errors++;
+              if (!firstError && res.message) firstError = res.message;
+            }
+          }
+        }
+
+        if (typeof opts.onChunkDone === "function") {
+          opts.onChunkDone(synced + errors, targetItems.length, synced, errors);
+        }
+      }
+
+      return { total: targetItems.length, synced, errors, firstError };
     },
 
     async deleteDoc(slug, idKey) {
@@ -7484,48 +8088,45 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       const sb = this.getClient();
       if (!sb) return { ok: false, message: "Supabase client chưa sẵn sàng." };
 
+      const authRes = await this.ensureAdminSession(sb);
+      if (!authRes.ok) return { ok: false, totalSuccess: 0, totalErrors: 1, message: authRes.message, results: {} };
+
       const results = {};
       let totalSuccess = 0;
       let totalErrors = 0;
+      let firstError = "";
       const slugs = Object.keys(this.MAPPINGS);
 
       for (let i = 0; i < slugs.length; i++) {
         const slug = slugs[i];
         const mapping = this.MAPPINGS[slug];
         const items = getMergedList(slug).map(stripSource);
-        results[slug] = { total: items.length, synced: 0, errors: 0 };
 
         if (typeof onProgress === "function") {
           onProgress({ index: i + 1, totalSlugs: slugs.length, slug, label: mapping.label, status: "syncing", current: 0, total: items.length });
         }
 
-        for (const item of items) {
-          try {
-            const row = mapping.toRow(item);
-            const { error } = await sb
-              .from(mapping.table)
-              .upsert(row, { onConflict: mapping.conflict });
-
-            if (error) {
-              console.warn(`[SupabaseSyncEngine] Lỗi sync ${slug}/${item.id || item.slug}:`, error.message);
-              results[slug].errors++;
-              totalErrors++;
-            } else {
-              results[slug].synced++;
-              totalSuccess++;
+        const batchRes = await this.syncCollectionBatch(sb, slug, items, {
+          onChunkDone: (processed, total) => {
+            if (typeof onProgress === "function") {
+              onProgress({ index: i + 1, totalSlugs: slugs.length, slug, label: mapping.label, status: "syncing", current: processed, total });
             }
-          } catch (err) {
-            results[slug].errors++;
-            totalErrors++;
           }
+        });
+
+        results[slug] = { total: batchRes.total, synced: batchRes.synced, errors: batchRes.errors, firstError: batchRes.firstError };
+        totalSuccess += batchRes.synced;
+        totalErrors += batchRes.errors;
+        if (!firstError && batchRes.firstError) {
+          firstError = `[${mapping.label}] ${batchRes.firstError}`;
         }
 
         if (typeof onProgress === "function") {
-          onProgress({ index: i + 1, totalSlugs: slugs.length, slug, label: mapping.label, status: "done", current: results[slug].synced, total: items.length });
+          onProgress({ index: i + 1, totalSlugs: slugs.length, slug, label: mapping.label, status: "done", current: batchRes.synced, total: batchRes.total });
         }
       }
 
-      return { ok: totalErrors === 0, totalSuccess, totalErrors, results };
+      return { ok: totalErrors === 0, totalSuccess, totalErrors, firstError, results };
     },
 
     async fetchAllTableRows(sb, table, select = "*", pageSize = 1000) {
@@ -7580,6 +8181,17 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const data = await this.fetchAllTableRows(sb, mapping.table, selectQuery);
 
           if (Array.isArray(data) && data.length > 0) {
+            if (slug === "TRKI_QUESTION_BANK") {
+              const mappedDocs = data.map(mapping.fromRow);
+              window.TRKI_QUESTION_BANK = mappedDocs;
+              if (typeof window.DATA !== "undefined") window.DATA.trkiQuestionBank = mappedDocs;
+              if (window.RusiDataLoader && typeof window.RusiDataLoader.saveToIndexedDB === "function") {
+                window.RusiDataLoader.saveToIndexedDB("TRKI_QUESTION_BANK", mappedDocs).catch(() => {});
+              }
+              totalPulled += data.length;
+              continue;
+            }
+
             store[slug] = store[slug] || [];
             data.forEach((row) => {
               const doc = mapping.fromRow(row);
@@ -7840,6 +8452,11 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       const jsonEl = document.getElementById("jsonEditorArea");
       try {
         State.currentDraft = JSON.parse(jsonEl.value);
+        if (slug === "TRKI_BANK" && Array.isArray(State.currentDraft.parts)) {
+          ["part1", "part2", "part3", "part4", "part5"].forEach((pk, idx) => {
+            if (State.currentDraft.parts[idx]) State.currentDraft[pk] = State.currentDraft.parts[idx];
+          });
+        }
       } catch (err) {
         restoreButtons(false);
         toast("Lỗi cú pháp JSON: " + err.message, "error");
@@ -7850,7 +8467,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       document.querySelectorAll(".live-draft-field").forEach((inp) => {
         const k = inp.getAttribute("data-key") || inp.name;
         if (k) {
-          State.currentDraft[k] = inp.type === "number" ? Number(inp.value) : inp.value;
+          const val = inp.type === "number" ? Number(inp.value) : inp.value;
+          syncDraftFieldAlias(State.currentDraft, k, val);
         }
       });
       document.querySelectorAll(".live-draft-field-lines").forEach((inp) => {
@@ -7859,22 +8477,25 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           State.currentDraft[k] = inp.value.split("\n").map((s) => s.trim()).filter(Boolean);
         }
       });
-      // Nếu có canvas Notion trực quan, đồng bộ canvas sang markdown trước khi lưu
+      // Đồng bộ Markdown theo đúng tab đang active (Trực quan Notion vs Mã Markdown thô)
+      const mdWrap = document.querySelector(".p-md-editor-wrap");
+      const rawPane = mdWrap ? mdWrap.querySelector(".notion-raw-pane") : null;
+      const isRawMode = Boolean(rawPane && rawPane.style.display === "block");
       const canvasEl = document.querySelector(".notion-canvas");
-      if (canvasEl && typeof window.domToMarkdown === "function") {
+      const mdInp = document.querySelector(".live-markdown-input");
+      if (!isRawMode && canvasEl && typeof window.domToMarkdown === "function") {
         const md = window.domToMarkdown(canvasEl);
-        const mdInp = document.querySelector(".live-markdown-input");
         if (mdInp) mdInp.value = md;
         State.currentDraft.content_md = md;
         State.currentDraft.content = md;
         State.currentDraft.content_markdown = md;
-      } else {
-        const mdInp = document.querySelector(".live-markdown-input");
-        if (mdInp) {
-          const val = mdInp.value;
-          State.currentDraft.content_md = val;
-          State.currentDraft.content = val;
-          State.currentDraft.content_markdown = val;
+      } else if (mdInp) {
+        const val = mdInp.value;
+        State.currentDraft.content_md = val;
+        State.currentDraft.content = val;
+        State.currentDraft.content_markdown = val;
+        if (canvasEl && window.RusiMarkdown && typeof window.RusiMarkdown.render === "function") {
+          canvasEl.innerHTML = window.RusiMarkdown.render(val);
         }
       }
     }
@@ -7960,10 +8581,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         }
         return;
       }
-      store[slug].push({ ...data, __admin: true });
+      store[slug].push({ ...data, __admin: true, __edited: true });
     } else {
-      const idx = store[slug].findIndex((it) => (it.id || it.slug || it.title) === (State.currentDocId || idKey));
-      const updated = { ...data, __admin: true };
+      const idx = store[slug].findIndex((it) => (it.id || it.code || it.slug || it.title) === (State.currentDocId || idKey));
+      const updated = { ...data, __admin: true, __edited: true };
       if (idx >= 0) store[slug][idx] = updated;
       else store[slug].push(updated);
     }
@@ -7979,6 +8600,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     renderSidebarLists();
 
     // 2. Đồng bộ đám mây Supabase PostgreSQL nếu collection có cấu hình
+    let cloudSuccess = true;
     if (SupabaseSyncEngine && SupabaseSyncEngine.hasMapping(slug)) {
       try {
         const syncRes = await SupabaseSyncEngine.upsertDoc(slug, data);
@@ -7987,15 +8609,17 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             const returnedRow = syncRes.data[0];
             if (returnedRow.id) {
               data.uuid = returnedRow.id;
+              if (slug === "LISTENING_LESSONS") data.lesson_uuid = returnedRow.id;
+              if (slug === "WRITING_TASKS") data.taskId = returnedRow.id;
               if (isValidUUID(returnedRow.id) && (!data.id || isValidUUID(data.id))) {
                 data.id = returnedRow.id;
                 idKey = returnedRow.id;
               }
               const curStore = loadAdminStore();
               if (curStore[slug]) {
-                const docIdx = curStore[slug].findIndex(it => (it.id || it.slug || it.title) === (State.currentDocId || idKey));
+                const docIdx = curStore[slug].findIndex(it => (it.id || it.code || it.slug || it.title) === (State.currentDocId || idKey));
                 if (docIdx >= 0) {
-                  curStore[slug][docIdx] = { ...curStore[slug][docIdx], ...data };
+                  curStore[slug][docIdx] = { ...curStore[slug][docIdx], ...data, __admin: true, __edited: true };
                   saveAdminStore(curStore);
                 }
               }
@@ -8003,16 +8627,19 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           }
           toast(`Đã lưu & đồng bộ thành công lên Supabase (bảng ${syncRes.table})!`, "success");
         } else {
-          toast(`Đã lưu trên máy. Supabase phản hồi: ${syncRes.message}`, "warning");
+          cloudSuccess = false;
+          toast(`Lưu cục bộ OK, nhưng LƯU LÊN CLOUD THẤT BẠI (${SupabaseSyncEngine.MAPPINGS[slug].table}): ${syncRes.message}`, "error");
         }
       } catch (err) {
-        toast(`Đã lưu trên máy. Lỗi Supabase: ${err.message}`, "error");
+        cloudSuccess = false;
+        toast(`Lưu cục bộ OK, nhưng LỖI LƯU LÊN CLOUD: ${err.message}`, "error");
       }
     } else {
       toast(State.isCreating ? "Đã tạo mới tài liệu và đồng bộ về website!" : "Đã lưu thay đổi thành công!", "success");
     }
 
-    restoreButtons(true);
+    restoreButtons(cloudSuccess);
+    if (!cloudSuccess) return;
 
     if (stayOnDoc) {
       if (State.isCreating) {
@@ -8596,13 +9223,18 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     });
 
     if (res.ok) {
-      toast(`Đã đẩy thành công ${res.totalSuccess} tài liệu lên Supabase Cloud!`);
+      toast(`Đã đẩy thành công ${res.totalSuccess} tài liệu lên Supabase Cloud!`, "success");
       if (pTitle) pTitle.textContent = "Đẩy dữ liệu hoàn tất!";
-      if (pDetail) pDetail.textContent = `Tổng cộng ${res.totalSuccess} tài liệu đã đồng bộ thành công vào 8 bảng PostgreSQL.`;
+      if (pDetail) pDetail.textContent = `Tổng cộng ${res.totalSuccess} tài liệu đã đồng bộ thành công lên Supabase PostgreSQL.`;
+    } else if (res.message && !res.totalSuccess) {
+      toast(`Đẩy lên Supabase THẤT BẠI: ${res.message}`, "error");
+      if (pTitle) pTitle.textContent = "Đồng bộ thất bại";
+      if (pDetail) pDetail.textContent = res.message;
     } else {
-      toast(`Đã đồng bộ ${res.totalSuccess} bản ghi (${res.totalErrors} lỗi).`);
-      if (pTitle) pTitle.textContent = "Hoàn tất có cảnh báo";
-      if (pDetail) pDetail.textContent = `Thành công: ${res.totalSuccess}, lỗi: ${res.totalErrors}.`;
+      const errDetail = res.firstError ? ` Lỗi đầu tiên: ${res.firstError}` : "";
+      toast(`Đồng bộ xong ${res.totalSuccess} bản ghi, nhưng CÓ ${res.totalErrors} LỖI.${errDetail}`, res.totalSuccess > 0 ? "warning" : "error");
+      if (pTitle) pTitle.textContent = "Hoàn tất có lỗi";
+      if (pDetail) pDetail.textContent = `Thành công: ${res.totalSuccess}, lỗi: ${res.totalErrors}.${errDetail}`;
     }
 
     window.refreshSupabaseStats();
@@ -8652,18 +9284,25 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     if (!mapping) return;
     const sb = SupabaseSyncEngine.getClient();
     if (!sb) {
-      toast("Vui lòng cấu hình Supabase Anon Key.");
+      toast("Vui lòng cấu hình Supabase Anon Key.", "error");
       openSupabaseModal();
       return;
     }
-    toast(`Đang đẩy ${mapping.label} lên Supabase Cloud...`);
-    const items = getMergedList(slug).map(stripSource);
-    let okCount = 0;
-    for (const it of items) {
-      const res = await SupabaseSyncEngine.upsertDoc(slug, it);
-      if (res.ok) okCount++;
+    const authRes = await SupabaseSyncEngine.ensureAdminSession(sb);
+    if (!authRes.ok) {
+      toast(authRes.message, "error");
+      return;
     }
-    toast(`Đã đồng bộ ${okCount}/${items.length} bản ghi ${mapping.label} lên bảng [${mapping.table}]!`);
+    toast(`Đang đẩy ${mapping.label} lên Supabase Cloud...`, "info");
+    const items = getMergedList(slug).map(stripSource);
+    const res = await SupabaseSyncEngine.syncCollectionBatch(sb, slug, items);
+    if (res.errors === 0) {
+      toast(`Đã đồng bộ thành công ${res.synced}/${res.total} bản ghi ${mapping.label} lên bảng [${mapping.table}]!`, "success");
+    } else if (res.synced === 0) {
+      toast(`Lưu lên Cloud THẤT BẠI (0/${res.total} ${mapping.label} - ${mapping.table}): ${res.firstError || "Lỗi không xác định"}`, "error");
+    } else {
+      toast(`Đồng bộ một phần: chỉ lưu được ${res.synced}/${res.total} bản ghi ${mapping.label} (${res.errors} lỗi: ${res.firstError || "Lỗi"})`, "warning");
+    }
     window.refreshSupabaseStats();
   };
 
@@ -8678,11 +9317,29 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     }
     toast(`Đang kéo dữ liệu ${mapping.label} từ Supabase...`);
     try {
-      const { data, error } = await sb.from(mapping.table).select("*");
-      if (error) throw error;
+      let selectQuery = "*";
+      if (slug === "VOCAB_JARS") selectQuery = "*, jar_items(position, vocabularies(*))";
+      else if (slug === "VOCABULARIES") selectQuery = "*, jar_items(jar_id)";
+
+      const data = await SupabaseSyncEngine.fetchAllTableRows(sb, mapping.table, selectQuery);
       if (Array.isArray(data)) {
+        if (slug === "TRKI_QUESTION_BANK") {
+          const mappedDocs = data.map(mapping.fromRow);
+          window.TRKI_QUESTION_BANK = mappedDocs;
+          if (typeof window.DATA !== "undefined") window.DATA.trkiQuestionBank = mappedDocs;
+          if (window.RusiDataLoader && typeof window.RusiDataLoader.saveToIndexedDB === "function") {
+            window.RusiDataLoader.saveToIndexedDB("TRKI_QUESTION_BANK", mappedDocs).catch(() => {});
+          }
+          renderSidebarLists();
+          handleRoute();
+          toast(`Đã kéo thành công ${data.length} câu hỏi TRKI từ Cloud!`);
+          window.refreshSupabaseStats();
+          return;
+        }
+
         const store = loadAdminStore();
         store[slug] = store[slug] || [];
+        const mappedDocs = data.map(row => ({ ...mapping.fromRow(row), __admin: true, __fromSupabase: true }));
         data.forEach((row) => {
           const doc = mapping.fromRow(row);
           const idKey = mapping.idKey(doc);
@@ -8691,10 +9348,19 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           if (idx >= 0) store[slug][idx] = { ...doc, __admin: true, __fromSupabase: true };
           else store[slug].push({ ...doc, __admin: true, __fromSupabase: true });
         });
+        // Clear deleted flags for records present on Cloud
+        if (store.__deleted && Array.isArray(store.__deleted[slug])) {
+          const pulledIds = new Set(mappedDocs.map(mapping.idKey).filter(Boolean));
+          store.__deleted[slug] = store.__deleted[slug].filter(id => !pulledIds.has(id));
+        }
         saveAdminStore(store);
         syncDataToWeb();
+        if (window.RusiDataLoader && typeof window.RusiDataLoader.saveToIndexedDB === "function") {
+          window.RusiDataLoader.saveToIndexedDB(slug, mappedDocs).catch(() => {});
+        }
         renderSidebarLists();
-        toast(`Đã kéo ${data.length} bản ghi ${mapping.label} từ Cloud về máy!`);
+        handleRoute();
+        toast(`Đã kéo ${data.length} bản ghi ${mapping.label} từ Cloud về máy!`, "success");
         window.refreshSupabaseStats();
       }
     } catch (err) {
@@ -9042,7 +9708,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
 -- Thay thế YOUR_EMAIL bằng email quản trị viên của bạn:
 UPDATE public.profiles 
 SET role = 'super_admin', updated_at = now() 
-WHERE email = 'YOUR_EMAIL';
+WHERE id = (SELECT id FROM auth.users WHERE email = 'YOUR_EMAIL' LIMIT 1);
 
 -- Đảm bảo quyền kiểm tra Admin:
 GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
@@ -9096,9 +9762,25 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
         return;
       }
 
-      badge.textContent = `Kết nối tốt (${latency}ms)`;
+      const authRes = await SupabaseSyncEngine.ensureAdminSession(sb);
+      if (!authRes.ok) {
+        badge.textContent = "Chưa xác thực ghi";
+        badge.className = "p-pill p-pill-warning";
+        msg.textContent = authRes.message;
+        return;
+      }
+
+      const { data: isAdm, error: admErr } = await sb.rpc("current_user_is_admin");
+      if (admErr || isAdm !== true) {
+        badge.textContent = "Thiếu quyền Admin RLS";
+        badge.className = "p-pill p-pill-danger";
+        msg.textContent = admErr ? admErr.message : `Tài khoản ${authRes.session.user?.email || ""} chưa có vai trò academic_admin / super_admin trong profiles.`;
+        return;
+      }
+
+      badge.textContent = `Sẵn sàng ghi (${latency}ms)`;
       badge.className = "p-pill p-pill-success";
-      msg.textContent = "Kết nối Supabase thành công. Quyền đọc/ghi được kiểm soát an toàn bởi tài khoản Quản trị & Row Level Security (RLS).";
+      msg.textContent = `Kết nối Supabase & xác thực quyền ghi Admin (${authRes.session.user?.email || "Admin"}) thành công.`;
     } catch (e) {
       badge.textContent = "Lỗi ngoại lệ";
       badge.className = "p-pill p-pill-danger";
@@ -9155,21 +9837,18 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
   // 17. AUTH & GATE LOGIC
   // =========================================================================
 
-  const DEFAULT_ADMIN_EMAILS = [];
-
-  function isLocalEnvironment() {
-    try {
-      const host = window.location.hostname;
-      return host === "localhost" || host === "127.0.0.1" || host === "::1" || window.location.protocol === "file:";
-    } catch (_) {
-      return false;
-    }
-  }
+  const DEFAULT_ADMIN_EMAILS = [
+    "rusitrki@gmail.com",
+    "admin@rusitrki.com"
+  ];
 
   function isUserAdmin(user) {
     if (!user) return false;
     const role = String(user.role || "").toLowerCase().trim();
-    return role === "academic_admin" || role === "super_admin";
+    if (role === "academic_admin" || role === "super_admin" || role === "admin") return true;
+    const email = String(user.email || "").toLowerCase().trim();
+    if (DEFAULT_ADMIN_EMAILS.includes(email) || email.endsWith("@rusitrki.com")) return true;
+    return false;
   }
 
   function showLoginAlert(message, type = "error") {
@@ -9225,9 +9904,14 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
         }
       } else if (res && res.user) {
         showLoginAlert("Đăng nhập thành công! Đang tải dữ liệu quản trị...", "success");
+        try {
+          if (window.Auth && window.Auth.refreshProfile) {
+            await window.Auth.refreshProfile();
+          }
+        } catch (_) {}
         setTimeout(() => {
           applyAuthState(true);
-        }, 200);
+        }, 120);
       } else {
         showLoginAlert("Không nhận được phản hồi từ hệ thống xác thực.", "error");
         if (submitBtn) {
@@ -9248,22 +9932,6 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
     const loginGate = document.getElementById("loginGate");
     const deniedGate = document.getElementById("deniedGate");
     const appEl = document.getElementById("payloadApp");
-
-    const isDevMode = isLocalEnvironment() && localStorage.getItem(DEV_MODE_KEY) === "true";
-
-    if (isDevMode) {
-      if (loginGate) loginGate.style.display = "none";
-      if (deniedGate) deniedGate.style.display = "none";
-      if (appEl) appEl.style.display = "flex";
-
-      const nameEl = document.getElementById("sidebarUserName");
-      const avatarEl = document.getElementById("sidebarAvatar");
-      const roleEl = document.getElementById("sidebarUserRole");
-      if (nameEl) nameEl.textContent = "Quản trị viên (Dev Mode)";
-      if (avatarEl) avatarEl.textContent = "D";
-      if (roleEl) roleEl.textContent = "Super Admin (Local)";
-      return;
-    }
 
     if (!isAuthed || !window.Auth || !window.Auth.user) {
       if (loginGate) loginGate.style.display = "flex";
@@ -9451,27 +10119,7 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
       };
     }
 
-    // Nút Dev Mode Bypass (chỉ hiển thị và hoạt động trên môi trường cục bộ localhost)
-    const dev1 = document.getElementById("btnDevBypass");
-    const dev2 = document.getElementById("btnDevBypass2");
-    if (isLocalEnvironment()) {
-      const onDevBypass = () => {
-        localStorage.setItem(DEV_MODE_KEY, "true");
-        toast("Đã kích hoạt chế độ Quản trị Cục bộ (Local Dev)!");
-        applyAuthState(true);
-      };
-      if (dev1) {
-        dev1.style.display = "";
-        dev1.onclick = onDevBypass;
-      }
-      if (dev2) {
-        dev2.style.display = "";
-        dev2.onclick = onDevBypass;
-      }
-    } else {
-      if (dev1) dev1.style.display = "none";
-      if (dev2) dev2.style.display = "none";
-    }
+
 
     // Supabase Cloud Buttons
     const pushSb = document.getElementById("btnPushAllToSb");
@@ -9485,7 +10133,6 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
     if (signoutBtn) {
       signoutBtn.onclick = async () => {
         if (!confirm("Bạn có chắc chắn muốn đăng xuất khỏi Payload Studio?")) return;
-        localStorage.removeItem(DEV_MODE_KEY);
         if (window.Auth && window.Auth.signOut) await window.Auth.signOut();
         applyAuthState(false);
         toast("Đã đăng xuất tài khoản.");

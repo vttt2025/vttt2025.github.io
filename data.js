@@ -488,7 +488,7 @@
       } else if (page === 'mock-test' || routePath.includes('mock-test') || fileName.includes('trki') || routePath.includes('test')) {
         targetModules = ['TRKI_INDEX'];
       } else if (page === 'admin' || routePath.includes('admin') || routePath.includes('cms')) {
-        targetModules = ['VOCAB_JARS', 'TOPIC_ARTICLES', 'VOCABULARIES', 'TRKI_BANK', 'SPEAKING_SETS', 'LISTENING_LESSONS', 'WRITING_TASKS', 'WRITING_TOPICS', 'GRAMMAR_LESSONS', 'VOCAB_LESSONS'];
+        targetModules = ['VOCAB_JARS', 'TOPIC_ARTICLES', 'VOCABULARIES', 'TRKI_BANK', 'TRKI_QUESTION_BANK', 'SPEAKING_SETS', 'LISTENING_LESSONS', 'WRITING_TASKS', 'WRITING_TOPICS', 'GRAMMAR_LESSONS', 'VOCAB_LESSONS'];
       }
 
       if (targetModules.length > 0) {

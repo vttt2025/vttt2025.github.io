@@ -238,7 +238,7 @@ const dataJsContent = `/**
         targetModules = ['SPEAKING_SETS'];
       } else if (path.includes('admin')) {
         // Trên trang admin: nạp các module phổ biến
-        targetModules = ['VOCAB_JARS', 'TOPIC_ARTICLES', 'VOCABULARIES', 'TRKI_BANK', 'SPEAKING_SETS'];
+        targetModules = ['VOCAB_JARS', 'TOPIC_ARTICLES', 'VOCABULARIES', 'TRKI_BANK', 'TRKI_QUESTION_BANK', 'SPEAKING_SETS'];
       }
 
       if (targetModules.length > 0) {

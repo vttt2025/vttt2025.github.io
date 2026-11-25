@@ -971,8 +971,13 @@
             p_browser: info.browser || "Trình duyệt",
             p_os: info.os || "Hệ điều hành"
           });
+          if (res.error) {
+            console.warn("[DeviceGuard] RPC rusi_register_device error:", res.error);
+            return { allowed: true };
+          }
           return res.data || { allowed: true };
-        } catch (_) {
+        } catch (e) {
+          console.warn("[DeviceGuard] Exception register device:", e);
           return { allowed: true };
         }
       },
@@ -982,7 +987,39 @@
         if (!sb || !sessionId) return false;
         try {
           var res = await sb.rpc("rusi_revoke_device", { p_session_id: sessionId });
-          return res.data && res.data.success;
+          if (res.error) {
+            console.warn("[DeviceGuard] RPC rusi_revoke_device error:", res.error);
+            return false;
+          }
+          return Boolean(res.data && res.data.success);
+        } catch (e) {
+          console.warn("[DeviceGuard] Exception revoke device:", e);
+          return false;
+        }
+      },
+
+      revokeAll: async function () {
+        var sb = getClient();
+        if (!sb) return false;
+        try {
+          var res = await sb.rpc("rusi_revoke_all_devices");
+          if (res.error) {
+            console.warn("[DeviceGuard] RPC rusi_revoke_all_devices error:", res.error);
+            return false;
+          }
+          return Boolean(res.data && res.data.success);
+        } catch (e) {
+          console.warn("[DeviceGuard] Exception revokeAll devices:", e);
+          return false;
+        }
+      },
+
+      revokeCurrent: async function (fingerprint) {
+        var sb = getClient();
+        if (!sb || !fingerprint) return false;
+        try {
+          var res = await sb.rpc("rusi_revoke_my_device", { p_fingerprint: fingerprint });
+          return Boolean(res.data && res.data.success);
         } catch (_) {
           return false;
         }

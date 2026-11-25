@@ -99,13 +99,13 @@
     let fp = "";
     try {
       fp = localStorage.getItem("rusi_device_fp");
+      if (fp && fp.startsWith("dev_")) return fp;
     } catch (_) {}
-    if (fp) return fp;
 
     const components = [
-      navigator.userAgent,
-      screen.width + "x" + screen.height,
-      screen.colorDepth,
+      navigator.userAgent || "",
+      (window.screen ? screen.width + "x" + screen.height : ""),
+      (window.screen ? screen.colorDepth : ""),
       navigator.hardwareConcurrency || 2,
       Intl.DateTimeFormat().resolvedOptions().timeZone || "",
       navigator.language || ""
@@ -116,8 +116,8 @@
       hash = ((hash << 5) - hash) + components.charCodeAt(i);
       hash |= 0;
     }
-    const randPart = Math.random().toString(36).substring(2, 10);
-    fp = "dev_" + Math.abs(hash).toString(16) + "_" + randPart;
+    // Fingerprint tất định (deterministic): cùng trình duyệt + màn hình luôn cho ra mã nhất quán
+    fp = "dev_" + Math.abs(hash).toString(16);
     try {
       localStorage.setItem("rusi_device_fp", fp);
     } catch (_) {}
@@ -126,27 +126,29 @@
 
   function getDeviceInfo() {
     const ua = navigator.userAgent || "";
-    let deviceType = "desktop";
-    if (/Mobi|Android/i.test(ua) || window.innerWidth <= 768) {
-      deviceType = "mobile";
-    } else if (/iPad|Tablet/i.test(ua) || (window.innerWidth <= 1024 && window.innerWidth > 768)) {
-      deviceType = "tablet";
-    }
-
     let os = "Khác";
     if (/Win/i.test(ua)) os = "Windows";
+    else if (/iPhone|iPod/i.test(ua)) os = "iOS";
+    else if (/iPad/i.test(ua)) os = "iPadOS";
     else if (/Mac/i.test(ua)) os = "macOS";
-    else if (/iPhone|iPad|iPod/i.test(ua)) os = "iOS";
     else if (/Android/i.test(ua)) os = "Android";
     else if (/Linux/i.test(ua)) os = "Linux";
 
+    let deviceType = "desktop";
+    if (/iPhone|iPod|Android.*Mobile/i.test(ua)) {
+      deviceType = "mobile";
+    } else if (/iPad|Tablet|Android(?!.*Mobile)/i.test(ua)) {
+      deviceType = "tablet";
+    }
+
     let browser = "Trình duyệt";
     if (/Edg/i.test(ua)) browser = "Edge";
-    else if (/Chrome/i.test(ua)) browser = "Chrome";
+    else if (/Chrome|CriOS/i.test(ua)) browser = "Chrome";
     else if (/Safari/i.test(ua)) browser = "Safari";
-    else if (/Firefox/i.test(ua)) browser = "Firefox";
+    else if (/Firefox|FxiOS/i.test(ua)) browser = "Firefox";
 
-    const deviceName = (deviceType === "mobile" ? "Điện thoại" : (deviceType === "tablet" ? "Máy tính bảng" : "Máy tính")) + " " + os + " (" + browser + ")";
+    const typeLabel = deviceType === "mobile" ? "Điện thoại" : (deviceType === "tablet" ? "Máy tính bảng" : "Máy tính");
+    const deviceName = typeLabel + " " + os + " (" + browser + ")";
 
     return {
       fingerprint: getDeviceFingerprint(),
@@ -168,10 +170,22 @@
     _listeners: [],
     _readyPromise: null,
     _subscription: null,
+    _isVerifyingDevice: false,
 
     async verifyDeviceGuard() {
       if (!this.user || !window.RusiSupabase || !window.RusiSupabase.deviceGuard) return true;
       if (this.user.provider === "guest" || (typeof this.user.uid === "string" && this.user.uid.startsWith("guest_"))) return true;
+      // Admin hoặc giáo viên được miễn giới hạn thiết bị
+      const role = String(this.user.role || "").toLowerCase();
+      if (role === "admin" || role === "super_admin" || role === "academic_admin" || role === "teacher") {
+        return true;
+      }
+      // Tính năng Device Guard chỉ bảo vệ tài khoản PRO tránh chia sẻ lậu
+      if (!this.user.is_pro) return true;
+
+      if (this._isVerifyingDevice) return true;
+      this._isVerifyingDevice = true;
+
       const info = getDeviceInfo();
       try {
         const res = await window.RusiSupabase.deviceGuard.register(info);
@@ -179,81 +193,165 @@
           this._showDeviceLimitModal(res);
           return false;
         }
+        // Nếu trước đó đang mở modal giới hạn mà giờ đã hợp lệ thì đóng modal
+        const existing = document.getElementById("rusiDeviceLimitModal");
+        if (existing) existing.remove();
         return true;
       } catch (e) {
         console.warn("[DeviceGuard] Lỗi xác thực thiết bị:", e);
         return true;
+      } finally {
+        this._isVerifyingDevice = false;
       }
     },
 
     _showDeviceLimitModal(limitData) {
-      const existing = document.getElementById("rusiDeviceLimitModal");
-      if (existing) existing.remove();
-
-      const modal = document.createElement("div");
-      modal.id = "rusiDeviceLimitModal";
-      modal.className = "anticheat-modal";
-      modal.style.zIndex = "999999";
+      let modal = document.getElementById("rusiDeviceLimitModal");
+      if (!modal) {
+        modal = document.createElement("div");
+        modal.id = "rusiDeviceLimitModal";
+        modal.className = "modal-overlay";
+        modal.setAttribute("role", "dialog");
+        modal.setAttribute("aria-modal", "true");
+        modal.setAttribute("aria-labelledby", "deviceLimitHeading");
+        document.body.appendChild(modal);
+      }
 
       const devices = Array.isArray(limitData.devices) ? limitData.devices : [];
 
+      function formatRelativeTime(dateStr) {
+        if (!dateStr) return "Gần đây";
+        try {
+          const d = new Date(dateStr);
+          const diffMs = Date.now() - d.getTime();
+          const diffMin = Math.floor(diffMs / 60000);
+          if (diffMin < 2) return "Vừa mới xong";
+          if (diffMin < 60) return `${diffMin} phút trước`;
+          const diffHr = Math.floor(diffMin / 60);
+          if (diffHr < 24) return `${diffHr} giờ trước`;
+          const diffDay = Math.floor(diffHr / 24);
+          if (diffDay < 7) return `${diffDay} ngày trước`;
+          return d.toLocaleDateString("vi-VN");
+        } catch (_) {
+          return "Gần đây";
+        }
+      }
+
+      function getDeviceIcon(type) {
+        if (type === "mobile") return "📱";
+        if (type === "tablet") return "📟";
+        return "💻";
+      }
+
       modal.innerHTML = `
-        <div class="anticheat-modal-box" style="border-top-color:#e11d48;max-width:480px;text-align:left">
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-            <div style="width:44px;height:44px;border-radius:50%;background:rgba(225,29,72,0.1);color:#e11d48;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">
-              🛡️
-            </div>
-            <div>
-              <h3 style="font-size:1.15rem;font-weight:800;color:var(--text);margin:0">GIỚI HẠN THIẾT BỊ TIN CẬY</h3>
-              <span style="font-size:0.8rem;color:var(--muted)">RUSI TRKI Device Guard</span>
+        <div class="modal-card device-limit-modal-card">
+          <div class="device-limit-header">
+            <div class="device-limit-badge">
+              ${window.RusiIcons ? RusiIcons.get("shield-check", { size: 14 }) : "🛡️"}
+              <span>RUSI DEVICE GUARD</span>
             </div>
           </div>
 
-          <p style="font-size:0.88rem;color:var(--text);line-height:1.55;margin-bottom:16px">
-            Tài khoản của bạn đã đạt giới hạn <b>tối đa ${limitData.max_devices || 2} thiết bị</b> đăng nhập đồng thời (theo chính sách bảo vệ tài khoản PRO). Vui lòng đăng xuất bớt một thiết bị cũ bên dưới để tiếp tục:
-          </p>
+          <div class="device-limit-body">
+            <div class="device-limit-hero">
+              <div class="device-limit-hero-icon">
+                ${window.RusiIcons ? RusiIcons.get("shield-check", { size: 30 }) : "🛡️"}
+              </div>
+              <div class="device-limit-hero-text">
+                <h3 class="device-limit-title" id="deviceLimitHeading">Giới Hạn Thiết Bị Tin Cậy</h3>
+                <p class="device-limit-desc">
+                  Tài khoản PRO của bạn đạt giới hạn <b>tối đa ${limitData.max_devices || 2} thiết bị</b> đăng nhập đồng thời. Vui lòng đăng xuất bớt một thiết bị cũ bên dưới để tiếp tục học trên thiết bị này:
+                </p>
+              </div>
+            </div>
 
-          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px">
-            ${devices.map(d => `
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:10px">
-                <div>
-                  <div style="font-weight:700;font-size:0.88rem;color:var(--text)">${safeEsc(d.device_name) || "Thiết bị"}</div>
-                  <div style="font-size:0.75rem;color:var(--muted)">Hoạt động: ${d.last_active_at ? new Date(d.last_active_at).toLocaleString('vi-VN') : 'Gần đây'}</div>
+            <div class="device-limit-list-title">
+              <span>Thiết bị đang chiếm phiên học (${devices.length}):</span>
+            </div>
+
+            <div class="device-limit-list">
+              ${devices.length === 0 ? `
+                <div class="device-limit-empty">Chưa có thông tin phiên thiết bị cũ. Bấm nút bên dưới để giải phóng ngay.</div>
+              ` : devices.map(d => `
+                <div class="device-limit-item">
+                  <div class="device-item-left">
+                    <span class="device-item-icon">${getDeviceIcon(d.device_type)}</span>
+                    <div class="device-item-info">
+                      <div class="device-item-name">${safeEsc(d.device_name) || "Thiết bị"}</div>
+                      <div class="device-item-time">Hoạt động: <b>${formatRelativeTime(d.last_active_at)}</b></div>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-revoke-device" data-id="${safeEsc(d.id)}" aria-label="Đăng xuất thiết bị này">
+                    Đăng xuất
+                  </button>
                 </div>
-                <button type="button" class="btn btn-outline btn-revoke-device" data-id="${safeEsc(d.id)}" style="padding:6px 12px;font-size:0.8rem;color:#e11d48;border-color:#e11d48">
-                  Đăng xuất
+              `).join("")}
+            </div>
+
+            <div class="device-limit-footer">
+              <div class="device-limit-footer-main">
+                <button type="button" class="btn btn-primary" id="btnDeviceRevokeAll" style="width:100%">
+                  ${window.RusiIcons ? RusiIcons.get("refresh", { size: 14 }) : "⚡"} Đăng xuất tất cả thiết bị khác & Tiếp tục
                 </button>
               </div>
-            `).join("")}
-          </div>
-
-          <div style="display:flex;justify-content:flex-end;gap:10px">
-            <button type="button" class="btn btn-outline" id="btnDeviceModalSignOut" style="padding:8px 16px;font-size:0.85rem">
-              Đăng xuất tài khoản
-            </button>
+              <div class="device-limit-footer-sub">
+                <button type="button" class="btn btn-ghost" id="btnDeviceModalSignOut">
+                  Đăng xuất tài khoản này
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       `;
 
-      document.body.appendChild(modal);
-
+      // 1. Xử lý nút đăng xuất từng thiết bị lẻ
       modal.querySelectorAll(".btn-revoke-device").forEach(btn => {
         btn.onclick = async () => {
           const id = btn.dataset.id;
           btn.textContent = "Đang xử lý...";
           btn.disabled = true;
-          const ok = await window.RusiSupabase.deviceGuard.revoke(id);
-          if (ok) {
-            modal.remove();
-            if (typeof window.toast === "function") window.toast("✓ Đã đăng xuất thiết bị cũ.");
-            Auth.verifyDeviceGuard();
-          } else {
+          try {
+            const ok = await window.RusiSupabase.deviceGuard.revoke(id);
+            if (ok) {
+              if (typeof window.toast === "function") window.toast("✓ Đã đăng xuất thiết bị cũ thành công.");
+              modal.remove();
+              Auth.verifyDeviceGuard();
+            } else {
+              btn.textContent = "Thử lại";
+              btn.disabled = false;
+              if (typeof window.toast === "function") window.toast("Không thể đăng xuất thiết bị, vui lòng thử lại.", "error");
+            }
+          } catch (err) {
             btn.textContent = "Thử lại";
             btn.disabled = false;
           }
         };
       });
 
+      // 2. Xử lý nút Đăng xuất tất cả thiết bị khác (1-Click Giải phóng nhanh nhất)
+      const btnRevokeAll = modal.querySelector("#btnDeviceRevokeAll");
+      if (btnRevokeAll) {
+        btnRevokeAll.onclick = async () => {
+          btnRevokeAll.textContent = "Đang giải phóng phiên...";
+          btnRevokeAll.disabled = true;
+          try {
+            const ok = await window.RusiSupabase.deviceGuard.revokeAll();
+            if (ok) {
+              if (typeof window.toast === "function") window.toast("✓ Đã đăng xuất toàn bộ thiết bị cũ! Bắt đầu học trên thiết bị này.");
+              modal.remove();
+              Auth.verifyDeviceGuard();
+            } else {
+              btnRevokeAll.textContent = "Thử lại";
+              btnRevokeAll.disabled = false;
+            }
+          } catch (_) {
+            btnRevokeAll.textContent = "Thử lại";
+            btnRevokeAll.disabled = false;
+          }
+        };
+      }
+
+      // 3. Xử lý nút Đăng xuất tài khoản này
       const signOutBtn = modal.querySelector("#btnDeviceModalSignOut");
       if (signOutBtn) {
         signOutBtn.onclick = () => {
@@ -416,6 +514,13 @@
       try {
         if (typeof Progress !== "undefined" && typeof Progress.syncToCloud === "function") {
           await Progress.syncToCloud();
+        }
+      } catch (_) {}
+
+      // 1b. Giải phóng thiết bị hiện tại khỏi danh sách giới hạn thiết bị
+      try {
+        if (window.RusiSupabase?.deviceGuard?.revokeCurrent) {
+          await window.RusiSupabase.deviceGuard.revokeCurrent(getDeviceFingerprint());
         }
       } catch (_) {}
 

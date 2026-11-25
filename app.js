@@ -1568,66 +1568,146 @@ const Monetization = {
     if (!modal) {
       modal = document.createElement("div");
       modal.id = "manageProModal";
-      modal.className = "vietqr-overlay";
+      modal.className = "modal-overlay";
+      modal.setAttribute("role", "dialog");
+      modal.setAttribute("aria-modal", "true");
+      modal.setAttribute("aria-labelledby", "manageProHeading");
       document.body.appendChild(modal);
     }
 
     modal.innerHTML = `
-      <div class="vietqr-card manage-pro-card" style="max-width:580px">
-        <button class="vietqr-close" id="closeManagePro">&times;</button>
-        <div style="text-align:center;margin-bottom:20px">
-          <span class="vietqr-chip-kicker" style="display:inline-flex;align-items:center;gap:6px">${window.RusiIcons ? RusiIcons.get("gem", { size: 14 }) : ""} QUẢN LÝ GÓI CƯỚC HỌC VIÊN</span>
-          <h3 style="margin:4px 0">${esc(proInfo.pkgTitle)}</h3>
-          <p style="color:var(--muted);font-size:0.86rem">Tài khoản: <b>${esc((user && user.email) || (user && user.name) || "Học viên")}</b></p>
+      <div class="modal-card manage-pro-modal-card">
+        <div class="manage-pro-header">
+          <div class="manage-pro-badge-pill">
+            ${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""}
+            <span>HỘI VIÊN CHÍNH THỨC</span>
+          </div>
+          <button class="manage-pro-close-btn" id="closeManagePro" type="button" aria-label="Đóng cửa sổ">
+            ${window.RusiIcons ? RusiIcons.get("x", { size: 18 }) : "✕"}
+          </button>
         </div>
 
-        <div class="manage-pro-hero">
-          <div>
-            <div class="manage-pro-title">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 20 }) : ""} Trạng thái Thành viên PRO</div>
-            <div class="manage-pro-meta">
-              ${proInfo.isLifetime ? `${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} Bạn đang sở hữu đặc quyền VIP Vĩnh Viễn` : `${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 14 }) : ""} Hạn sử dụng: <b>${esc(proInfo.expiresFormatted)}</b>`}
+        <div class="manage-pro-body">
+          <div class="manage-pro-hero-box">
+            <div class="manage-pro-hero-main">
+              <div class="manage-pro-hero-icon">
+                ${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 28 }) : "👑"}
+              </div>
+              <div class="manage-pro-hero-details">
+                <div class="manage-pro-status-tag">
+                  <span class="manage-pro-dot"></span> ĐANG HOẠT ĐỘNG
+                </div>
+                <h3 class="manage-pro-pkg-title" id="manageProHeading">${esc(proInfo.pkgTitle)}</h3>
+                <div class="manage-pro-user-email">
+                  ${window.RusiIcons ? RusiIcons.get("user-avatar-default", { size: 13 }) : ""}
+                  <span>${esc((user && user.email) || (user && user.name) || "Học viên RUSI")}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="manage-pro-expiry-card">
+              <div class="manage-pro-expiry-lbl">Thời hạn sử dụng</div>
+              <div class="manage-pro-expiry-val">
+                ${proInfo.isLifetime ? "Vĩnh viễn (Trọn đời)" : esc(proInfo.expiresFormatted)}
+              </div>
+              ${(typeof proInfo.daysRemaining === "number" && !proInfo.isLifetime) ? `
+                <div class="manage-pro-expiry-days ${proInfo.daysRemaining <= 7 ? "is-urgent" : ""}">
+                  ${proInfo.daysRemaining === 0 ? "Hết hạn hôm nay" : `Còn ${proInfo.daysRemaining} ngày`}
+                </div>
+              ` : ""}
             </div>
           </div>
-          <span class="manage-pro-status" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} ĐANG HOẠT ĐỘNG</span>
-        </div>
 
-        <div class="vietqr-perks-box" style="margin-bottom:20px">
-          <div class="vietqr-perks-title">Các đặc quyền VIP đang kích hoạt:</div>
-          <ul class="vietqr-perks-list">
-            <li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> Mở khóa 100% ngân hàng đề thi ТРКИ A1, A2, B1, B2</li>
-            <li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> Không giới hạn lượt luyện nói & sửa lỗi phát âm AI Rusika</li>
-            <li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> Chấm bài viết Письмо theo 4 tiêu chí TRKI chuẩn quốc tế</li>
-            <li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> Luyện nghe 4 Part CEFR kèm transcript chi tiết</li>
-            <li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> Mở khóa toàn bộ 100+ Lọ từ vựng chuyên ngành</li>
-            <li><span class="chk">${window.RusiIcons ? RusiIcons.get("check", { size: 14 }) : ""}</span> Ưu tiên hỗ trợ hồ sơ học bổng Du học Nga</li>
-          </ul>
-        </div>
-
-        ${(proInfo.pkgId !== "pro_1y") ? `
-          <div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:12px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;gap:12px">
-            <div>
-              <div style="font-weight:800;font-size:0.86rem;color:#166534">Nâng cấp lên Gói Toàn Diện 1 Năm?</div>
-              <div style="font-size:0.78rem;color:#15803D">Đồng hành trọn vẹn suốt 1 năm Khoa dự bị (Подфак) với ưu đãi tiết kiệm 60%.</div>
+          <div class="manage-pro-perks-section">
+            <h4 class="manage-pro-section-title">
+              ${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 16 }) : ""} Đặc quyền VIP đang kích hoạt trên tài khoản:
+            </h4>
+            <div class="manage-pro-perks-grid">
+              <div class="manage-pro-perk-item">
+                <span class="perk-icon">${window.RusiIcons ? RusiIcons.get("award-badge", { size: 16 }) : "🎯"}</span>
+                <div class="perk-info">
+                  <strong>100% Đề thi TRKI (A1 - C2)</strong>
+                  <span>Đầy đủ 5 phân môn, thi mô phỏng CBT &amp; chấm tự động</span>
+                </div>
+              </div>
+              <div class="manage-pro-perk-item">
+                <span class="perk-icon">${window.RusiIcons ? RusiIcons.get("mic-speaking", { size: 16 }) : "🎙️"}</span>
+                <div class="perk-info">
+                  <strong>AI Rusika Chấm Phát Âm</strong>
+                  <span>Không giới hạn số lượt chấm âm vị &amp; so khớp ngữ điệu</span>
+                </div>
+              </div>
+              <div class="manage-pro-perk-item">
+                <span class="perk-icon">${window.RusiIcons ? RusiIcons.get("edit-pencil", { size: 16 }) : "✍️"}</span>
+                <div class="perk-info">
+                  <strong>AI Chữa Bài Viết (Письмо)</strong>
+                  <span>Sửa lỗi biến cách, ngữ pháp và gợi ý nâng cấp câu</span>
+                </div>
+              </div>
+              <div class="manage-pro-perk-item">
+                <span class="perk-icon">${window.RusiIcons ? RusiIcons.get("headphones", { size: 16 }) : "🎧"}</span>
+                <div class="perk-info">
+                  <strong>Nghe Hiểu &amp; Chép Chính Tả</strong>
+                  <span>Audio bản xứ chuẩn studio, transcript phân tích chi tiết</span>
+                </div>
+              </div>
+              <div class="manage-pro-perk-item">
+                <span class="perk-icon">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : "📚"}</span>
+                <div class="perk-info">
+                  <strong>100+ Lọ Từ Vựng &amp; Xuất PDF</strong>
+                  <span>Mở khóa toàn bộ từ vựng chuyên ngành &amp; in PDF chuẩn A4</span>
+                </div>
+              </div>
+              <div class="manage-pro-perk-item">
+                <span class="perk-icon">${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 16 }) : "🍅"}</span>
+                <div class="perk-info">
+                  <strong>Pomodoro &amp; Gamification PRO</strong>
+                  <span>Nhân đôi XP, chuông tập trung &amp; huy hiệu VIP nổi bật</span>
+                </div>
+              </div>
             </div>
-            <button class="btn btn-sm btn-primary" id="btnExtendLifetime" style="background:#059669;border-color:#059669;white-space:nowrap">
-              ${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 16 }) : ""} Nâng cấp 1 Năm
-            </button>
           </div>
-        ` : ""}
 
-        <div style="display:flex;gap:10px;justify-content:flex-end">
-          <button class="btn btn-outline btn-sm" id="btnCloseManageProBtn">Đóng</button>
+          <div class="manage-pro-footer-actions">
+            <div class="manage-pro-support-hint">
+              ${window.RusiIcons ? RusiIcons.get("help-circle", { size: 14 }) : ""}
+              <span>Cần hỗ trợ kích hoạt hay hóa đơn? <a href="https://zalo.me/0339933999" target="_blank" rel="noopener noreferrer">Liên hệ ban học vụ ↗</a></span>
+            </div>
+            <div class="manage-pro-btn-group">
+              <button class="btn btn-outline btn-sm" id="btnCloseManageProBtn" type="button">Đóng</button>
+              <a class="btn btn-primary btn-sm" id="btnManageUpgradePage" href="upgrade.html" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+                ${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 15 }) : ""} Gia hạn / Nâng cấp gói
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     `;
 
-    document.getElementById("closeManagePro").onclick = () => modal.remove();
-    document.getElementById("btnCloseManageProBtn").onclick = () => modal.remove();
-    const extendBtn = document.getElementById("btnExtendLifetime");
-    if (extendBtn) {
-      extendBtn.onclick = () => {
-        modal.remove();
-        Monetization.openUpgradeModal("pro_1y");
+    const closeModal = () => {
+      document.removeEventListener("keydown", onEsc);
+      modal.remove();
+    };
+
+    const onEsc = (e) => {
+      if (e.key === "Escape") closeModal();
+    };
+    document.addEventListener("keydown", onEsc);
+
+    modal.onclick = (e) => {
+      if (e.target === modal) closeModal();
+    };
+
+    const closeBtn = document.getElementById("closeManagePro");
+    if (closeBtn) closeBtn.onclick = closeModal;
+
+    const closeFooterBtn = document.getElementById("btnCloseManageProBtn");
+    if (closeFooterBtn) closeFooterBtn.onclick = closeModal;
+
+    const upgradeLink = document.getElementById("btnManageUpgradePage");
+    if (upgradeLink) {
+      upgradeLink.onclick = () => {
+        closeModal();
       };
     }
   }

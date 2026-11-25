@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css?v=4.1" />
+  <link rel="stylesheet" href="admin.css?v=4.3" />
   <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="192x192" href="assets/favicon-192.png" />
 </head>
@@ -58,7 +58,7 @@
         <span>HOẶC</span>
       </div>
 
-      <!-- Quick OAuth & Dev bypass -->
+      <!-- Quick OAuth -->
       <div style="display:flex;flex-direction:column;gap:10px">
         <button class="p-btn p-btn-secondary" id="adminLoginBtn" type="button" style="width:100%;padding:9px 16px;font-size:13.5px">
           <svg style="width:18px;height:18px;margin-right:8px" viewBox="0 0 48 48" aria-hidden="true">
@@ -68,10 +68,6 @@
             <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3a12 12 0 0 1-4.1 5.6l6.2 5.2C41 36.7 44 31 44 24c0-1.2-.1-2.4-.4-3.5z"/>
           </svg>
           Đăng nhập bằng tài khoản Google
-        </button>
-
-        <button class="p-btn p-btn-ghost p-btn-sm" id="btnDevBypass" type="button" style="color:var(--p-text-muted);font-size:12px;margin-top:6px;display:none" title="Dành cho môi trường phát triển offline cục bộ">
-          <i data-rusi-icon="zap-xp" data-size="14"></i> Chế độ Cục bộ (Local Dev Preview)
         </button>
       </div>
 
@@ -94,7 +90,7 @@
         Tài khoản của bạn đã được xác thực thành công trên Supabase Auth nhưng chưa được gán vai trò quản trị (<code>academic_admin</code> hoặc <code>super_admin</code>).
       </p>
 
-      <!-- Hộp hướng dẫn cấp quyền nhanh cho chủ sở hữu / Dev -->
+      <!-- Hộp hướng dẫn cấp quyền nhanh cho Quản trị viên -->
       <div style="background:var(--p-surface-elevated);border:1px solid var(--p-border);border-radius:var(--p-radius);padding:14px;text-align:left;margin-bottom:20px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <span style="font-size:12px;font-weight:600;color:var(--p-text)">Hướng dẫn cấp quyền Quản trị:</span>
@@ -114,9 +110,6 @@
         </button>
         <button class="p-btn p-btn-secondary" id="btnSwitchAccount" type="button">
           <i data-rusi-icon="log-out" data-size="16"></i> Đăng xuất &amp; Đổi tài khoản khác
-        </button>
-        <button class="p-btn p-btn-ghost p-btn-sm" id="btnDevBypass2" type="button" style="color:var(--p-text-muted);font-size:12px;display:none">
-          <i data-rusi-icon="zap-xp" data-size="14"></i> Mở bằng Chế độ Cục bộ (Local Dev)
         </button>
       </div>
     </div>
@@ -348,6 +341,6 @@
   <script src="data.js?v=12.0" defer></script>
   <script src="auth.js?v=12.0" defer></script>
   <script src="app.js?v=12.0" defer></script>
-  <script src="admin.js?v=12.0" defer></script>
+  <script src="admin.js?v=12.2" defer></script>
 </body>
 </html>

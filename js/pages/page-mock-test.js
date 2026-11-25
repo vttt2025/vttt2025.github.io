@@ -1086,22 +1086,19 @@ function initMockTestPage() {
         <!-- TẦNG 3: BOTTOM NAVIGATION BAR CỐ ĐỊNH Ở ĐÁY -->
         <footer class="cbt-portal-footer" role="navigation" aria-label="Điều hướng bài thi">
           <div class="cbt-footer-nav-left">
-            <button type="button" class="cbt-btn-nav-step" id="btnPrevQ" title="Câu hỏi trước">
+            <button type="button" class="cbt-btn-nav-step" id="btnPrevQ" title="Câu hỏi trước (Phím ←)">
               ${icon("chevron-left", 16)} <span>Câu trước</span>
             </button>
           </div>
 
           <div class="cbt-footer-nav-center">
-            <button type="button" class="cbt-btn-drawer-trigger" id="btnOpenMatrixDrawer" title="Mở danh sách câu hỏi và trạng thái bài thi">
-              ${icon("list-tasks", 16)} <span class="drawer-text">Danh sách câu hỏi</span> (<span id="cbtDrawerAnsweredCount">0</span>/${totalQuestions}) ▴
+            <button type="button" class="cbt-btn-drawer-trigger" id="btnOpenMatrixDrawer" title="Mở danh sách câu hỏi (Phím M)">
+              ${icon("list-tasks", 16)} <span class="drawer-text">Bảng câu hỏi</span> (<span id="cbtDrawerAnsweredCount" class="cbt-drawer-count-badge">0</span>/${totalQuestions}) <span class="cbt-drawer-caret">▴</span>
             </button>
           </div>
 
           <div class="cbt-footer-nav-right">
-            <button type="button" class="cbt-btn-nav-step" id="btnFlagBottom" title="Đánh dấu câu hỏi để xem lại sau">
-              ${icon("flag", 15)} <span id="flagBottomText">Đặt cờ</span>
-            </button>
-            <button type="button" class="cbt-btn-nav-step cbt-btn-next" id="btnNextQ" title="Câu hỏi kế tiếp">
+            <button type="button" class="cbt-btn-nav-step cbt-btn-next" id="btnNextQ" title="Câu hỏi kế tiếp (Phím →)">
               <span>Câu sau</span> ${icon("chevron-right", 16)}
             </button>
           </div>
@@ -1141,8 +1138,120 @@ function initMockTestPage() {
       </div>
     `;
 
+    // Helper format thời gian audio mm:ss
+    const fmtAudioTime = (s) => {
+      if (!s || isNaN(s) || s < 0) return "00:00";
+      const m = Math.floor(s / 60);
+      const sec = Math.floor(s % 60);
+      return `${m < 10 ? '0' : ''}${m}:${sec < 10 ? '0' : ''}${sec}`;
+    };
+
+    // Quản lý Audio cho phần Nghe hiểu (Аудирование)
+    let activeCbtAudio = null;
+    let isCbtAudioPlaying = false;
+    let cbtAudioSpeed = 1.0;
+
+    const stopCbtAudio = () => {
+      if (activeCbtAudio) {
+        try {
+          activeCbtAudio.pause();
+          activeCbtAudio.currentTime = 0;
+        } catch(_) {}
+        activeCbtAudio = null;
+      }
+      if (window.speechSynthesis) {
+        try { window.speechSynthesis.cancel(); } catch(_) {}
+      }
+      isCbtAudioPlaying = false;
+      const playBtn = el("#btnPlayCbtAudio");
+      if (playBtn) {
+        playBtn.classList.remove("is-playing");
+        playBtn.innerHTML = icon("play-control", 20);
+        if (window.RusiIcons) RusiIcons.replace(playBtn);
+      }
+    };
+
     // CẬP NHẬT GIAO DIỆN CÂU HỎI & NGỮ CẢNH THEO INDEX
     let currentRenderedPartId = null;
+
+    // Helper render Lộ trình bài thi & Mini Palette khi ở Phần Ngữ pháp & Từ vựng (Focus Mode)
+    const renderLeftPaneGrammarRoadmap = (curItem) => {
+      const leftHost = el("#cbtSplitLeftContent");
+      if (!leftHost) return;
+
+      const answeredCount = Object.keys(answers).filter(k => answers[k] !== undefined && answers[k] !== "").length;
+
+      const roadmapPartsHtml = activeParts.map((p, pIdx) => {
+        const isActive = (pIdx === curItem.partIndex);
+        const pItems = examItems.filter(it => it.partIndex === pIdx);
+        const pDone = pItems.filter(it => answers[it.id] !== undefined && answers[it.id] !== "").length;
+        return `
+          <div class="cbt-roadmap-part-row ${isActive ? 'active' : ''}">
+            <div class="cbt-roadmap-part-num">${pIdx + 1}</div>
+            <div class="cbt-roadmap-part-meta">
+              <span class="cbt-roadmap-part-name">${esc(p.vi || p.name || `Phần ${pIdx + 1}`)}</span>
+              <span class="cbt-roadmap-part-sub">${pDone}/${pItems.length} câu · ${p.durationMin || 15}p</span>
+            </div>
+            ${isActive ? '<span class="cbt-part-current-dot"></span>' : ''}
+          </div>
+        `;
+      }).join("");
+
+      const miniChipsHtml = examItems.map((it, idx) => {
+        const isDone = (answers[it.id] !== undefined && answers[it.id] !== "");
+        const isFl = !!flagged[it.id];
+        const isCur = (idx === currentItemIndex);
+        let chipCls = "cbt-mini-chip";
+        if (isDone) chipCls += " answered";
+        if (isFl) chipCls += " flagged";
+        if (isCur) chipCls += " current";
+        return `<button type="button" class="${chipCls}" data-jump-mini="${idx}" title="Câu ${idx + 1}">${idx + 1}</button>`;
+      }).join("");
+
+      leftHost.innerHTML = `
+        <div class="cbt-grammar-roadmap">
+          <div class="cbt-left-header-row">
+            <span class="cbt-left-badge-tag">${icon("layers", 13)} Lộ trình khảo thí</span>
+            <span class="cbt-subtest-stat">Phần ${curItem.partIndex + 1}/${activeParts.length}</span>
+          </div>
+
+          <div class="cbt-roadmap-subtests-list">
+            ${roadmapPartsHtml}
+          </div>
+
+          <!-- Bảng chọn câu hỏi nhanh Mini Palette -->
+          <div class="cbt-nav-mini-palette">
+            <div class="cbt-mini-palette-head">
+              <span>Bảng câu hỏi</span>
+              <span class="cbt-mini-answered-count" id="cbtMiniAnsweredCount">${answeredCount}/${totalQuestions}</span>
+            </div>
+            <div class="cbt-mini-chips-grid">
+              ${miniChipsHtml}
+            </div>
+          </div>
+
+          <!-- Phím tắt bàn phím tiện ích -->
+          <div class="cbt-shortcuts-card">
+            <div class="cbt-shortcuts-head">
+              ${icon("sparkles-clean", 13)} <span>Phím tắt thao tác nhanh:</span>
+            </div>
+            <div class="cbt-shortcuts-list">
+              <div><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> : Chọn nhanh đáp án</div>
+              <div><kbd>←</kbd> <kbd>→</kbd> : Câu trước / Câu sau</div>
+              <div><kbd>F</kbd> : Đặt cờ câu hỏi</div>
+              <div><kbd>M</kbd> : Mở bảng ma trận</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      leftHost.querySelectorAll("[data-jump-mini]").forEach(btn => {
+        btn.onclick = () => {
+          const targetIdx = parseInt(btn.dataset.jumpMini, 10);
+          renderQuestionAt(targetIdx);
+        };
+      });
+    };
 
     const renderQuestionAt = (index) => {
       if (index < 0) index = 0;
@@ -1170,113 +1279,205 @@ function initMockTestPage() {
       if (btnNext) {
         if (currentItemIndex === totalQuestions - 1) {
           btnNext.innerHTML = `<span>${isPractice ? 'Hoàn thành' : 'Nộp bài'}</span> ${icon("check-circle", 16)}`;
+          btnNext.classList.add("cbt-btn-finish");
         } else {
           btnNext.innerHTML = `<span>Câu sau</span> ${icon("chevron-right", 16)}`;
+          btnNext.classList.remove("cbt-btn-finish");
         }
       }
 
-      const flagBottomBtn = el("#btnFlagBottom");
-      const flagBottomText = el("#flagBottomText");
-      if (flagBottomBtn && flagBottomText) {
-        flagBottomBtn.classList.toggle("is-flagged", isFlag);
-        flagBottomText.textContent = isFlag ? "Đã đặt cờ" : "Đặt cờ";
+      // 3. Phân biệt chế độ Focus Mode (Part 1 Grammar) vs Split Mode (Reading / Audio / Writing / Speaking)
+      const qPassage = item.q && (item.q.passage || item.q.reading_passage);
+      const isReading = !!(part.text || qPassage);
+      const isListening = !!(part.audio_url || part.lines);
+      const isWriting = !!part.writing_tasks;
+      const isSpeaking = !!part.speaking_tasks;
+      const hasContext = isReading || isListening || isWriting || isSpeaking;
+
+      const workspaceSplit = el("#cbtWorkspaceSplit");
+      if (workspaceSplit) {
+        if (hasContext) {
+          workspaceSplit.classList.add("cbt-mode-split");
+          workspaceSplit.classList.remove("cbt-mode-focus");
+        } else {
+          workspaceSplit.classList.add("cbt-mode-focus");
+          workspaceSplit.classList.remove("cbt-mode-split");
+        }
       }
 
-      // 3. Render Ngữ cảnh Cột Trái (chỉ render lại khi đổi part)
-      if (currentRenderedPartId !== part.id) {
-        currentRenderedPartId = part.id;
-        const leftHost = el("#cbtSplitLeftContent");
-        if (leftHost) {
-          const qPassage = item.q && (item.q.passage || item.q.reading_passage);
-          if (part.text || qPassage) {
+      // 4. Render Cột Trái (Left Pane)
+      const leftHost = el("#cbtSplitLeftContent");
+      if (leftHost) {
+        if (!hasContext) {
+          // Ngữ pháp & Từ vựng: Hiển thị Live Exam Roadmap & Mini Question Palette
+          renderLeftPaneGrammarRoadmap(item);
+          currentRenderedPartId = part.id;
+        } else if (currentRenderedPartId !== part.id) {
+          stopCbtAudio();
+          currentRenderedPartId = part.id;
+
+          if (isReading) {
+            // Phần ĐỌC HIỂU (ЧТЕНИЕ)
             const pRu = (part.text && (part.text.ru || part.text)) || qPassage || "";
             const pVi = (part.text && part.text.vi) || "";
-            // Phần ĐỌC HIỂU (ЧТЕНИЕ)
+            const wordCount = pRu.trim() ? pRu.trim().split(/\s+/).length : 0;
+
             leftHost.innerHTML = `
               <div class="cbt-left-header-row">
-                <span class="cbt-left-badge-tag">Текст для чтения · Đọc hiểu</span>
-                <div class="cbt-left-tools-wrap">
-                  <button type="button" class="cbt-tool-btn" id="btnPassageFontDec" title="Thu nhỏ cỡ chữ">A-</button>
-                  <button type="button" class="cbt-tool-btn" id="btnPassageFontInc" title="Phóng to cỡ chữ">A+</button>
-                  <button type="button" class="cbt-tool-btn" id="btnPassageTrans" title="Bản dịch tiếng Việt">Bản dịch</button>
+                <span class="cbt-left-badge-tag">${icon("book-open", 13)} Текст для чтения · Đọc hiểu</span>
+                <div class="cbt-passage-toolbar">
+                  <span class="cbt-subtest-stat">${wordCount} từ</span>
+                  <div class="cbt-font-stepper">
+                    <button type="button" class="cbt-tool-btn" id="btnPassageFontDec" title="Thu nhỏ cỡ chữ">A⁻</button>
+                    <button type="button" class="cbt-tool-btn" id="btnPassageFontInc" title="Phóng to cỡ chữ">A⁺</button>
+                  </div>
+                  ${pVi ? `
+                    <button type="button" class="cbt-btn-trans" id="btnPassageTrans" title="Bản dịch tiếng Việt">
+                      ${icon("globe", 13)} <span>Bản dịch</span>
+                    </button>
+                  ` : ''}
                 </div>
               </div>
               <div class="cbt-reading-passage-text ru" id="cbtPassageText">${esc(pRu)}</div>
-              <div class="reading-vi-trans hidden" id="cbtPassageViTrans" style="margin-top:16px;padding:14px 16px;background:var(--surface);border-radius:10px;font-size:0.92rem;color:var(--muted);line-height:1.65;border:1px solid var(--border)">
-                ${esc(pVi)}
-              </div>
+              ${pVi ? `
+                <div class="reading-vi-trans hidden" id="cbtPassageViTrans">
+                  <div class="cbt-trans-header">${icon("check-circle", 14)} Bản dịch tiếng Việt đối chiếu</div>
+                  <div class="cbt-trans-body">${esc(pVi)}</div>
+                </div>
+              ` : ''}
             `;
 
             const pText = el("#cbtPassageText");
-            el("#btnPassageFontInc").onclick = () => {
-              if (pText) {
-                const cur = parseFloat(window.getComputedStyle(pText).fontSize) || 16;
-                if (cur < 24) pText.style.fontSize = (cur + 2) + "px";
-              }
-            };
-            el("#btnPassageFontDec").onclick = () => {
-              if (pText) {
-                const cur = parseFloat(window.getComputedStyle(pText).fontSize) || 16;
+            const btnInc = el("#btnPassageFontInc");
+            const btnDec = el("#btnPassageFontDec");
+            const btnTrans = el("#btnPassageTrans");
+
+            if (btnInc && pText) {
+              btnInc.onclick = () => {
+                const cur = parseFloat(window.getComputedStyle(pText).fontSize) || 17;
+                if (cur < 26) pText.style.fontSize = (cur + 2) + "px";
+              };
+            }
+            if (btnDec && pText) {
+              btnDec.onclick = () => {
+                const cur = parseFloat(window.getComputedStyle(pText).fontSize) || 17;
                 if (cur > 13) pText.style.fontSize = (cur - 2) + "px";
-              }
-            };
-            el("#btnPassageTrans").onclick = () => {
-              const transBox = el("#cbtPassageViTrans");
-              if (transBox) {
-                transBox.classList.toggle("hidden");
-                el("#btnPassageTrans").textContent = transBox.classList.contains("hidden") ? "Bản dịch" : "Ẩn dịch";
-              }
-            };
-          } else if (part.audio_url || part.lines) {
+              };
+            }
+            if (btnTrans) {
+              btnTrans.onclick = () => {
+                const transBox = el("#cbtPassageViTrans");
+                if (transBox) {
+                  transBox.classList.toggle("hidden");
+                  btnTrans.classList.toggle("active", !transBox.classList.contains("hidden"));
+                }
+              };
+            }
+          } else if (isListening) {
             // Phần NGHE HIỂU (АУДИРОВАНИЕ)
             leftHost.innerHTML = `
               <div class="cbt-left-header-row">
-                <span class="cbt-left-badge-tag">Аудиозапись диалога · Nghe hiểu</span>
+                <span class="cbt-left-badge-tag">${icon("headphones", 13)} Аудирование · Nghe hiểu</span>
+                <span class="cbt-audio-status-pill">${icon("shield-check", 12)} Giọng bản ngữ</span>
               </div>
-              <div style="text-align:center;padding:24px 10px">
-                <div style="width:56px;height:56px;border-radius:50%;background:rgba(23,87,166,0.08);color:var(--primary);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px">
-                  ${icon("headphones", 28)}
+
+              <div class="cbt-audio-console-card">
+                <div class="cbt-audio-main-row">
+                  <button type="button" class="cbt-btn-play-hero" id="btnPlayCbtAudio" title="Phát / Dừng Audio">
+                    ${icon("play-control", 20)}
+                  </button>
+                  <div class="cbt-audio-track-wrap">
+                    <div class="cbt-audio-time-row">
+                      <span class="cbt-audio-title">Đoạn hội thoại tiếng Nga</span>
+                      <span class="cbt-audio-timer-digits" id="cbtAudioTimerDigits">00:00 / 00:00</span>
+                    </div>
+                    <div class="cbt-audio-scrubber-bar" id="cbtAudioScrubber" title="Nhấp chuột để tua nhanh">
+                      <div class="cbt-audio-progress-fill" id="cbtAudioProgressFill" style="width: 0%"></div>
+                    </div>
+                  </div>
+                  <button type="button" class="cbt-btn-speed-toggle" id="btnCbtAudioSpeed" title="Tốc độ phát">1.0x</button>
                 </div>
-                <h4 style="font-size:1.08rem;font-weight:800;color:var(--text);margin:0 0 6px">Đoạn hội thoại tiếng Nga bản xứ</h4>
-                <p style="font-size:0.86rem;color:var(--muted);margin-bottom:18px;max-width:320px;margin-inline:auto;line-height:1.5">
-                  Lắng nghe kỹ ngữ điệu và thông tin trong bài thoại để chọn đáp án bên phải.
-                </p>
-                <button type="button" class="btn btn-primary" id="btnPlayCbtAudio" style="height:44px;padding:0 22px;font-weight:700">
-                  ${icon("play-control", 16)} <span>Phát đoạn đối thoại</span>
-                </button>
               </div>
+
+              ${(part.lines && Array.isArray(part.lines) && part.lines.length) ? `
+                <div class="cbt-dialogue-transcript-card">
+                  <div class="cbt-dialogue-head">
+                    <span>${icon("message-square", 14)} Lời thoại hội thoại</span>
+                    <button type="button" class="cbt-btn-toggle-subtitles" id="btnToggleSubtitles">
+                      ${icon("eye", 13)} <span>Xem lời thoại</span>
+                    </button>
+                  </div>
+                  <div class="cbt-dialogue-lines-list hidden" id="cbtDialogueLinesList">
+                    ${part.lines.map((l, lIdx) => `
+                      <div class="cbt-dialogue-bubble">
+                        <div class="cbt-dialogue-speaker">${esc(l.who || `Người ${lIdx + 1}`)}:</div>
+                        <div class="cbt-dialogue-text ru">${esc(l.ru || "")}</div>
+                        ${l.vi ? `<div class="cbt-dialogue-vi">${esc(l.vi)}</div>` : ''}
+                      </div>
+                    `).join("")}
+                  </div>
+                </div>
+              ` : ''}
             `;
 
-            let isAudioPlaying = false;
-            let currentAudioObj = null;
             const playBtn = el("#btnPlayCbtAudio");
+            const scrubber = el("#cbtAudioScrubber");
+            const fill = el("#cbtAudioProgressFill");
+            const timerDigits = el("#cbtAudioTimerDigits");
+            const speedBtn = el("#btnCbtAudioSpeed");
+            const toggleSubs = el("#btnToggleSubtitles");
+            const linesList = el("#cbtDialogueLinesList");
+
+            if (toggleSubs && linesList) {
+              toggleSubs.onclick = () => {
+                linesList.classList.toggle("hidden");
+                toggleSubs.innerHTML = linesList.classList.contains("hidden")
+                  ? `${icon("eye", 13)} <span>Xem lời thoại</span>`
+                  : `${icon("eye-off", 13)} <span>Ẩn lời thoại</span>`;
+                if (window.RusiIcons) RusiIcons.replace(toggleSubs);
+              };
+            }
+
+            if (speedBtn) {
+              speedBtn.onclick = () => {
+                if (cbtAudioSpeed === 1.0) cbtAudioSpeed = 0.85;
+                else if (cbtAudioSpeed === 0.85) cbtAudioSpeed = 1.15;
+                else cbtAudioSpeed = 1.0;
+                speedBtn.textContent = cbtAudioSpeed + "x";
+                if (activeCbtAudio) activeCbtAudio.playbackRate = cbtAudioSpeed;
+              };
+            }
+
             if (playBtn) {
               playBtn.onclick = () => {
-                if (isAudioPlaying) {
-                  if (currentAudioObj) {
-                    currentAudioObj.pause();
-                    currentAudioObj = null;
-                  }
-                  if (window.speechSynthesis) window.speechSynthesis.cancel();
-                  isAudioPlaying = false;
-                  playBtn.innerHTML = `${icon("play-control", 16)} <span>Phát đoạn đối thoại</span>`;
-                  if (window.RusiIcons) RusiIcons.replace(playBtn);
+                if (isCbtAudioPlaying) {
+                  stopCbtAudio();
                   return;
                 }
 
                 if (part.audio_url) {
                   try {
-                    isAudioPlaying = true;
-                    playBtn.innerHTML = `${icon("pause-control", 16)} <span>Tạm dừng</span>`;
-                    currentAudioObj = new Audio(part.audio_url);
-                    currentAudioObj.onended = () => {
-                      isAudioPlaying = false;
-                      currentAudioObj = null;
-                      playBtn.innerHTML = `${icon("play-control", 16)} <span>Phát đoạn đối thoại</span>`;
-                      if (window.RusiIcons) RusiIcons.replace(playBtn);
-                    };
-                    currentAudioObj.play().catch(() => fallbackSpeech());
-                  } catch(e) {
+                    isCbtAudioPlaying = true;
+                    playBtn.classList.add("is-playing");
+                    playBtn.innerHTML = icon("pause-control", 20);
+                    if (window.RusiIcons) RusiIcons.replace(playBtn);
+
+                    if (!activeCbtAudio) {
+                      activeCbtAudio = new Audio(part.audio_url);
+                      activeCbtAudio.playbackRate = cbtAudioSpeed;
+                      activeCbtAudio.ontimeupdate = () => {
+                        if (!activeCbtAudio) return;
+                        const cur = activeCbtAudio.currentTime || 0;
+                        const dur = activeCbtAudio.duration || 0;
+                        if (fill && dur > 0) fill.style.width = ((cur / dur) * 100) + "%";
+                        if (timerDigits) timerDigits.textContent = `${fmtAudioTime(cur)} / ${dur > 0 ? fmtAudioTime(dur) : '00:00'}`;
+                      };
+                      activeCbtAudio.onended = () => {
+                        stopCbtAudio();
+                      };
+                    }
+                    activeCbtAudio.play().catch(() => fallbackSpeech());
+                  } catch(_) {
                     fallbackSpeech();
                   }
                 } else {
@@ -1287,28 +1488,39 @@ function initMockTestPage() {
                   const speechText = (part.lines && Array.isArray(part.lines))
                     ? part.lines.map(l => l.ru || "").join(" ")
                     : "Здравствуйте, слушайте внимательно диалог.";
-                  isAudioPlaying = true;
-                  playBtn.innerHTML = `${icon("pause-control", 16)} <span>Tạm dừng</span>`;
+                  isCbtAudioPlaying = true;
+                  playBtn.classList.add("is-playing");
+                  playBtn.innerHTML = icon("pause-control", 20);
+                  if (window.RusiIcons) RusiIcons.replace(playBtn);
+
                   if (window.speechSynthesis) {
                     window.speechSynthesis.cancel();
                     const u = new SpeechSynthesisUtterance(speechText);
                     u.lang = "ru-RU";
-                    u.rate = 0.85;
+                    u.rate = cbtAudioSpeed * 0.9;
                     u.onend = () => {
-                      isAudioPlaying = false;
-                      playBtn.innerHTML = `${icon("play-control", 16)} <span>Phát đoạn đối thoại</span>`;
-                      if (window.RusiIcons) RusiIcons.replace(playBtn);
+                      stopCbtAudio();
                     };
                     window.speechSynthesis.speak(u);
                   }
                 }
               };
             }
-          } else if (part.writing_tasks) {
+
+            if (scrubber) {
+              scrubber.onclick = (ev) => {
+                if (activeCbtAudio && activeCbtAudio.duration) {
+                  const rect = scrubber.getBoundingClientRect();
+                  const pos = Math.max(0, Math.min(1, (ev.clientX - rect.left) / rect.width));
+                  activeCbtAudio.currentTime = pos * activeCbtAudio.duration;
+                }
+              };
+            }
+          } else if (isWriting) {
             // Phần VIẾT (ПИСЬМО)
             leftHost.innerHTML = `
               <div class="cbt-left-header-row">
-                <span class="cbt-left-badge-tag">Субтест Письмо · Kỹ năng viết</span>
+                <span class="cbt-left-badge-tag">${icon("pen-tool", 13)} Субтест Письмо · Kỹ năng viết</span>
               </div>
               <div style="background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)">
                 <h4 style="font-weight:800;font-size:1.02rem;color:var(--text);margin-bottom:8px">Hướng dẫn làm bài thi Viết:</h4>
@@ -1320,11 +1532,11 @@ function initMockTestPage() {
                 </div>
               </div>
             `;
-          } else if (part.speaking_tasks) {
+          } else if (isSpeaking) {
             // Phần NÓI (ГОВОРЕНИЕ)
             leftHost.innerHTML = `
               <div class="cbt-left-header-row">
-                <span class="cbt-left-badge-tag">Субтест Говорение · Kỹ năng nói</span>
+                <span class="cbt-left-badge-tag">${icon("mic-speaking", 13)} Субтест Говорение · Kỹ năng nói</span>
               </div>
               <div style="background:var(--surface);border-radius:12px;padding:18px;border:1px solid var(--border)">
                 <h4 style="font-weight:800;font-size:1.02rem;color:var(--text);margin-bottom:8px">Hướng dẫn làm bài thi Nói:</h4>
@@ -1336,29 +1548,11 @@ function initMockTestPage() {
                 </div>
               </div>
             `;
-          } else {
-            // Phần NGỮ PHÁP & TỪ VỰNG (ЛЕКСИКА И ГРАММАТИКА)
-            leftHost.innerHTML = `
-              <div class="cbt-left-header-row">
-                <span class="cbt-left-badge-tag">Лексика и грамматика · Ngữ pháp & Từ vựng</span>
-              </div>
-              <div style="background:var(--surface);border-radius:12px;padding:20px;border:1.5px solid var(--border)">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;color:var(--primary);font-weight:800;font-size:0.95rem">
-                  ${icon("book-open", 18)} <span>HƯỚNG DẪN KHẢO THÍ NGỮ PHÁP</span>
-                </div>
-                <p style="font-size:0.9rem;color:var(--text);line-height:1.65;margin-bottom:14px">
-                  Mỗi câu hỏi có các phương án lựa chọn. Hãy chọn một đáp án đúng nhất để hoàn thiện cấu trúc câu chuẩn ngữ pháp tiếng Nga.
-                </p>
-                <div style="background:var(--bg);border-radius:8px;padding:12px;font-size:0.82rem;color:var(--muted);line-height:1.5;border:1px solid var(--border)">
-                  <b>Mẹo thi ТРКИ:</b> Chú ý kỹ đến giới từ, giống - số của danh từ và cách chia của động từ để chọn dạng biến cách chính xác.
-                </div>
-              </div>
-            `;
           }
         }
       }
 
-      // 4. Render Câu hỏi Cột Phải
+      // 5. Render Câu hỏi Cột Phải
       const rightBox = el("#cbtRightQuestionBox");
       if (!rightBox) return;
 
@@ -1378,15 +1572,18 @@ function initMockTestPage() {
         const order = sessionOptionOrders[id] || rawOpts.map((_, idx) => idx);
         const letters = ["A", "B", "C", "D", "E", "F"];
 
+        // Format khoảng trống ___ cho nổi bật trực quan
+        const formattedPrompt = esc(q.q || "").replace(/___+/g, '<span class="cbt-fill-slot">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+
         rightBox.innerHTML = `
           <div class="cbt-question-header-line">
-            <span class="cbt-q-number-pill">${icon("help-circle", 16)} Câu ${currentItemIndex + 1} / ${totalQuestions}</span>
-            <button type="button" class="cbt-btn-flag-toggle ${isFlag ? 'is-flagged' : ''}" id="btnFlagRight">
+            <span class="cbt-q-number-pill">${icon("help-circle", 15)} Câu ${currentItemIndex + 1} / ${totalQuestions} · ${esc(part.vi || part.name || "")}</span>
+            <button type="button" class="cbt-btn-flag-toggle ${isFlag ? 'is-flagged' : ''}" id="btnFlagRight" title="Đặt cờ xem lại (Phím F)">
               ${icon("flag", 14)} <span>${isFlag ? 'Đã đặt cờ' : 'Đặt cờ'}</span>
             </button>
           </div>
 
-          <div class="cbt-q-prompt-text ru">${esc(q.q)}</div>
+          <div class="cbt-q-prompt-text ru">${formattedPrompt}</div>
 
           <div class="cbt-options-card-list" role="radiogroup" aria-label="Các lựa chọn đáp án">
             ${order.map((oi, lIdx) => {
@@ -1402,6 +1599,7 @@ function initMockTestPage() {
                 <button type="button" class="${cardClass}" data-oi="${oi}" role="radio" aria-checked="${userAns === oi ? 'true' : 'false'}">
                   <span class="cbt-choice-circle-letter">${letters[lIdx] || (lIdx + 1)}</span>
                   <span class="cbt-choice-body-text ru">${esc(optText)}</span>
+                  <span class="cbt-choice-kbd-hint">[${lIdx + 1}]</span>
                 </button>
               `;
             }).join("")}
@@ -1481,21 +1679,28 @@ function initMockTestPage() {
 
           <div style="background:var(--bg);padding:18px;border-radius:12px;margin-bottom:18px;border:1px solid var(--border)">
             <h4 style="font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:6px">${esc(wt.title)}</h4>
-            <div class="ru" style="font-size:1.1rem;font-weight:600;line-height:1.7;color:var(--text);margin-bottom:8px">${esc(wt.prompt)}</div>
-            <div style="font-size:0.88rem;color:var(--muted)">${esc(wt.vi)}</div>
+            <div class="ru" style="font-size:1.1rem;font-weight:600;line-height:1.7;color:var(--text);margin-bottom:12px">${esc(wt.prompt)}</div>
+            ${wt.hints && Array.isArray(wt.hints) ? `
+              <div style="font-size:0.86rem;color:var(--muted);background:var(--surface);padding:10px 14px;border-radius:8px;margin-bottom:12px;border:1px dashed var(--border)">
+                <b>Gợi ý triển khai:</b>
+                <ul style="margin:4px 0 0 16px;padding:0">
+                  ${wt.hints.map(h => `<li class="ru">${esc(h)}</li>`).join("")}
+                </ul>
+              </div>
+            ` : ''}
+            <div style="display:flex;align-items:center;justify-content:space-between;font-size:0.84rem;color:var(--muted)">
+              <span id="cbtWordCountBadge">Dung lượng: <b>${wordCount} từ</b> (Tối thiểu ${wt.minWords || 35} từ)</span>
+              <span style="color:var(--primary);font-weight:700">Nhập văn bản tiếng Nga</span>
+            </div>
           </div>
 
-          <textarea class="trki-exam-textarea ru" id="cbtWriteArea" placeholder="Пишите ваш текст здесь..." style="width:100%;min-height:220px;padding:16px 18px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);font-size:1.05rem;font-family:inherit;line-height:1.7;color:var(--text);box-sizing:border-box">${esc(savedText)}</textarea>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:0.86rem;color:var(--muted)">
-            <span id="cbtWordCountBadge">Dung lượng: <b>${wordCount} từ</b> (Tối thiểu ${wt.minWords || 35} từ)</span>
-            <span style="color:var(--green)">${icon("check-circle-correct", 14)} Tự động lưu bài làm</span>
-          </div>
+          <textarea class="cbt-writing-textarea ru" id="cbtWritingInput" placeholder="Введите ваш текст на русском языке здесь..." rows="12" style="width:100%;padding:16px;border-radius:10px;border:1.5px solid var(--border);font-size:1.05rem;line-height:1.7;background:var(--surface);color:var(--text);font-family:var(--font-ru, 'PT Sans', serif);box-sizing:border-box">${esc(savedText)}</textarea>
         `;
 
-        const ta = el("#cbtWriteArea");
-        if (ta) {
-          ta.oninput = () => {
-            const val = ta.value;
+        const textarea = el("#cbtWritingInput");
+        if (textarea) {
+          textarea.oninput = () => {
+            const val = textarea.value;
             answers[id] = val;
             try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(e) {}
             const wc = val.trim() ? val.trim().split(/\s+/).length : 0;
@@ -1589,21 +1794,17 @@ function initMockTestPage() {
       refreshMatrixCounts();
     };
 
+    // Global jump helper
+    window._cbtJumpToQuestion = (targetIdx) => {
+      if (typeof targetIdx === "number") renderQuestionAt(targetIdx);
+    };
+
     // Toggle cờ xem lại
     const toggleFlag = (id) => {
       flagged[id] = !flagged[id];
       try { sessionStorage.setItem(storageKey + "_flagged", JSON.stringify(flagged)); } catch(e) {}
       renderQuestionAt(currentItemIndex);
     };
-
-    // Nút Flag ở Bottom bar
-    const flagBottom = el("#btnFlagBottom");
-    if (flagBottom) {
-      flagBottom.onclick = () => {
-        const item = examItems[currentItemIndex];
-        if (item) toggleFlag(item.id);
-      };
-    }
 
     // Nút Next & Prev
     const btnPrev = el("#btnPrevQ");
@@ -1624,15 +1825,66 @@ function initMockTestPage() {
       };
     }
 
-    // Phím tắt bàn phím (Mũi tên trái/phải)
+    // Phím tắt bàn phím toàn diện (1, 2, 3, 4, Mũi tên trái/phải, F, M)
     const handleKeyNav = (e) => {
-      if (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT") return;
+      if (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT" || e.target.isContentEditable) return;
+
+      const key = e.key.toLowerCase();
+      const item = examItems[currentItemIndex];
+
+      // Phím 1, 2, 3, 4 hoặc a, b, c, d chọn đáp án
+      if (item && item.type === "question") {
+        const q = item.q;
+        const rawOpts = normalizeOptions(q.options);
+        const order = sessionOptionOrders[item.id] || rawOpts.map((_, idx) => idx);
+        let selectedOrderIndex = -1;
+        if (key === "1" || key === "a") selectedOrderIndex = 0;
+        else if (key === "2" || key === "b") selectedOrderIndex = 1;
+        else if (key === "3" || key === "c") selectedOrderIndex = 2;
+        else if (key === "4" || key === "d") selectedOrderIndex = 3;
+
+        if (selectedOrderIndex >= 0 && selectedOrderIndex < order.length) {
+          e.preventDefault();
+          const oi = order[selectedOrderIndex];
+          answers[item.id] = oi;
+          q._checkFailed = false;
+          try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(err) {}
+          refreshMatrixCounts();
+          renderQuestionAt(currentItemIndex);
+          return;
+        }
+      }
+
+      // Phím F: Đặt / Bỏ cờ
+      if (key === "f") {
+        e.preventDefault();
+        if (item) toggleFlag(item.id);
+        return;
+      }
+
+      // Phím M: Mở / Đóng drawer ma trận câu hỏi
+      if (key === "m") {
+        e.preventDefault();
+        const drawerBackdrop = el("#cbtMatrixBackdrop");
+        if (drawerBackdrop && drawerBackdrop.classList.contains("open")) {
+          closeDrawer();
+        } else {
+          openDrawer();
+        }
+        return;
+      }
+
+      // Phím mũi tên sang trái / sang phải
       if (e.key === "ArrowLeft" && currentItemIndex > 0) {
         e.preventDefault();
         renderQuestionAt(currentItemIndex - 1);
-      } else if (e.key === "ArrowRight" && currentItemIndex < totalQuestions - 1) {
+      } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        renderQuestionAt(currentItemIndex + 1);
+        if (currentItemIndex < totalQuestions - 1) {
+          renderQuestionAt(currentItemIndex + 1);
+        } else {
+          openSubmitConfirmModal();
+        }
       }
     };
     document.addEventListener("keydown", handleKeyNav);
@@ -1787,6 +2039,20 @@ function initMockTestPage() {
       if (undoneBadge) undoneBadge.textContent = String(unDoneCount);
       const flagBadge = el("#countFlagDrawer");
       if (flagBadge) flagBadge.textContent = String(flagCount);
+
+      // Cập nhật số lượng trên mini palette nếu đang hiển thị
+      const miniCount = el("#cbtMiniAnsweredCount");
+      if (miniCount) miniCount.textContent = `${answeredCount}/${totalQuestions}`;
+
+      host.querySelectorAll(".cbt-mini-chip").forEach(chip => {
+        const qIdx = parseInt(chip.dataset.jumpMini, 10);
+        const it = examItems[qIdx];
+        if (!it) return;
+        const isDone = (answers[it.id] !== undefined && answers[it.id] !== "");
+        const isFl = !!flagged[it.id];
+        const isCur = (qIdx === currentItemIndex);
+        chip.className = `cbt-mini-chip ${isDone ? 'answered' : ''} ${isFl ? 'flagged' : ''} ${isCur ? 'current' : ''}`.trim();
+      });
     };
 
     // Toàn màn hình toggle
@@ -1811,6 +2077,7 @@ function initMockTestPage() {
         ? "Bạn có chắc chắn muốn kết thúc bài luyện tập?"
         : "Bạn có chắc chắn muốn rời khỏi phòng thi? Kết quả hiện tại sẽ không được lưu.";
       if (confirm(exitMsg)) {
+        stopCbtAudio();
         cleanupHardwareTests();
         document.removeEventListener("keydown", handleKeyNav);
         try {
