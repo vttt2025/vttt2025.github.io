@@ -1,10 +1,10 @@
 {
  "modules": {
   "topic_articles.json": {
-   "v": "d73a0a975a6a"
+   "v": "7ef5286dd27d"
   },
   "vocab_jars.json": {
-   "v": "02ca0f1ab11a"
+   "v": "8be15e6a095f"
   },
   "vocabularies.json": {
    "v": "52fad8279b9a"
@@ -13,19 +13,19 @@
    "v": "bf3b044aae2c"
   },
   "listening_lessons.json": {
-   "v": "d24131165051"
+   "v": "3849a1148d69"
   },
   "speaking_sets.json": {
-   "v": "de653e6dbc60"
+   "v": "7ba3e29639e0"
   },
   "writing_tasks.json": {
-   "v": "f14fd4e419eb"
+   "v": "e73ad6a68815"
   },
   "writing_topics.json": {
-   "v": "5e591395c4c0"
+   "v": "e5144e3be4ae"
   },
   "trki_bank.json": {
-   "v": "98b7695d214b"
+   "v": "f6f5406386e1"
   },
   "shop_products.json": {
    "v": "d8968435836d"
@@ -34,7 +34,7 @@
    "v": "d1787e153cc2"
   },
   "grammar_lessons.json": {
-   "v": "5e0a69088b0e"
+   "v": "261db4248eeb"
   },
   "blog_posts.json": {
    "v": "6d4a8b0aa77b"
@@ -44,6 +44,9 @@
   },
   "trki_questions.json": {
    "v": "4f53cda18c2b"
+  },
+  "listening_topics.json": {
+   "v": "20a116120086"
   }
  },
  "sources": {
@@ -65,5 +68,5 @@
   "blog_posts": 2,
   "packages": 3
  },
- "generated_at": "2026-11-25T17:30:17.015Z"
+ "generated_at": "2026-11-25T17:52:52.312Z"
 }
