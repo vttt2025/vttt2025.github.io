@@ -1,10 +1,10 @@
 {
  "modules": {
   "topic_articles.json": {
-   "v": "c94b8bac61e2"
+   "v": "32a4edae397d"
   },
   "vocab_jars.json": {
-   "v": "76423f0fc546"
+   "v": "8157f061cdf6"
   },
   "vocabularies.json": {
    "v": "52fad8279b9a"
@@ -47,7 +47,7 @@
   }
  },
  "sources": {
-  "topic_articles": 1,
+  "topic_articles": 3,
   "vocab_jars": 1,
   "jar_items": 1,
   "vocabularies": 1,
@@ -65,5 +65,5 @@
   "blog_posts": 1,
   "packages": 3
  },
- "generated_at": "2026-11-25T04:39:23.702Z"
+ "generated_at": "2026-11-25T04:47:31.574Z"
 }
