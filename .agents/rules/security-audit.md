@@ -1,6 +1,6 @@
 # Security Audit Guidelines (Cloudflare Security Audit Standard)
 
-Khi xây dựng, mở rộng, kiểm tra hoặc sửa đổi bất kỳ thành phần web, API, script hay tính năng nào trong dự án, trợ lý AI **BẮT BUỘC** áp dụng tiêu chuẩn bảo mật theo bộ kỹ năng [security-audit](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/security-audit/SKILL.md) từ Cloudflare:
+Khi xây dựng, mở rộng, kiểm tra hoặc sửa đổi bất kỳ thành phần web, API, script hay tính năng nào trong dự án, trợ lý AI **BẮT BUỘC** áp dụng tiêu chuẩn bảo mật theo bộ kỹ năng [security-audit](../skills/security-audit/SKILL.md) từ Cloudflare:
 
 ## 1. Nguyên Tắc Cốt Lõi (Core Principles)
 1. **Xác thực tại ranh giới tin cậy (Trust Boundary Enforcement):**
@@ -15,8 +15,8 @@ Khi xây dựng, mở rộng, kiểm tra hoặc sửa đổi bất kỳ thành p
    - Khi phát hiện rủi ro an ninh, luôn ưu tiên giải pháp sửa lỗi gọn gàng, cục bộ và có tính kiểm chứng cao, không tạo ra các lớp abstraction phức tạp hoặc làm thay đổi logic người dùng.
 
 ## 2. Tài Liệu Tra Cứu Chuyên Sâu Của Skill
-- Tổng quan & Quy trình kiểm toán: [SKILL.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/security-audit/SKILL.md)
-- Bảo mật Web Protocol & Xác thực Auth: [WEB-PROTOCOL-AND-AUTH.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/security-audit/WEB-PROTOCOL-AND-AUTH.md)
-- Bảo mật Client-side & Trình duyệt: [CLIENT-SIDE.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/security-audit/CLIENT-SIDE.md)
-- Cô lập dữ liệu & Vòng đời thông tin: [DATA-ISOLATION-AND-LIFECYCLE.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/security-audit/DATA-ISOLATION-AND-LIFECYCLE.md)
-- Các lớp tấn công & kiểm tra: [ATTACK-CLASSES.md](file:///E:/OneDrive%20-%20Hoc%20vien%20Ky%20thuat%20mat%20ma/Projects/rusitrki/.agents/skills/security-audit/ATTACK-CLASSES.md)
+- Tổng quan & Quy trình kiểm toán: [SKILL.md](../skills/security-audit/SKILL.md)
+- Bảo mật Web Protocol & Xác thực Auth: [WEB-PROTOCOL-AND-AUTH.md](../skills/security-audit/WEB-PROTOCOL-AND-AUTH.md)
+- Bảo mật Client-side & Trình duyệt: [CLIENT-SIDE.md](../skills/security-audit/CLIENT-SIDE.md)
+- Cô lập dữ liệu & Vòng đời thông tin: [DATA-ISOLATION-AND-LIFECYCLE.md](../skills/security-audit/DATA-ISOLATION-AND-LIFECYCLE.md)
+- Các lớp tấn công & kiểm tra: [ATTACK-CLASSES.md](../skills/security-audit/ATTACK-CLASSES.md)

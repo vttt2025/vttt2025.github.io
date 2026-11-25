@@ -23,7 +23,7 @@ ECC provides structured engineering workflows, review standards, and autonomous 
    - Sanitize all text before rendering to DOM via `esc()` or safe text nodes to prevent XSS.
    - Enforce authentication and RLS checks on data mutations.
 5. **Quality Review Checklist:**
-   - Functions are small (<50 lines).
-   - Error handling is explicit and fails loudly without silently masking bugs.
+   - New functions are small and focused; existing large files are not split unless asked.
+   - No new empty `catch` blocks for errors that can lose data; failures are surfaced clearly.
    - No hardcoded secrets or environment credentials.
    - Changes verified with syntax checks (`node -c`), diff inspection, and visual/viewport evaluation.
