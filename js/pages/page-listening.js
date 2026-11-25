@@ -65,45 +65,64 @@ function initListeningPage() {
    * - Hỗ trợ tua đến vị trí bất kỳ bằng nhấp chuột hoặc kéo cảm ứng
    * - Khi phát hết audio, toàn bộ waveform chuyển sang màu đã phát (#4598FF)
    */
-  const audioPeaksCache = new Map();
+  // Mỗi URL chỉ tải + giải mã 1 lần thành đường bao độ phân giải cố định; đổi số thanh (resize) chỉ lấy mẫu lại.
+  const AUDIO_ENVELOPE_RES = 1024;
+  const audioEnvelopeCache = new Map(); // url -> Promise<Float32Array|null>
+
+  const loadAudioEnvelope = (url) => {
+    if (!audioEnvelopeCache.has(url)) {
+      audioEnvelopeCache.set(url, (async () => {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return null;
+        let actx = null;
+        try {
+          const resp = await fetch(url);
+          if (!resp.ok) return null;
+          const buf = await resp.arrayBuffer();
+          actx = new AudioCtx();
+          const audioBuf = await actx.decodeAudioData(buf);
+          const data = audioBuf.getChannelData(0);
+          const res = Math.min(AUDIO_ENVELOPE_RES, data.length);
+          if (!res) return null;
+          const env = new Float32Array(res);
+          for (let i = 0; i < res; i++) {
+            const start = Math.floor((i * data.length) / res);
+            const end = Math.max(start + 1, Math.floor(((i + 1) * data.length) / res));
+            let sum = 0;
+            for (let j = start; j < end; j++) sum += Math.abs(data[j]);
+            env[i] = sum / (end - start);
+          }
+          return env;
+        } catch (err) {
+          console.warn("[Listening] Không giải mã được audio để vẽ sóng:", err);
+          return null;
+        } finally {
+          if (actx) { try { actx.close(); } catch (_) {} }
+        }
+      })());
+    }
+    return audioEnvelopeCache.get(url);
+  };
 
   const extractAudioPeaks = async (url, count) => {
-    if (!url) return null;
-    const key = `${url}:${count}`;
-    if (audioPeaksCache.has(key)) return audioPeaksCache.get(key);
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (!AudioCtx) return null;
-      const actx = new AudioCtx();
-      const resp = await fetch(url);
-      if (!resp.ok) return null;
-      const buf = await resp.arrayBuffer();
-      const audioBuf = await actx.decodeAudioData(buf);
-      const data = audioBuf.getChannelData(0);
-      const blockSize = Math.floor(data.length / count);
-      const peaks = new Float32Array(count);
-      let maxPeak = 0.0001;
-
-      for (let i = 0; i < count; i++) {
-        let sum = 0;
-        const start = i * blockSize;
-        const end = Math.min(data.length, start + blockSize);
-        for (let j = start; j < end; j++) {
-          sum += Math.abs(data[j]);
-        }
-        const amp = sum / (end - start);
-        peaks[i] = amp;
-        if (amp > maxPeak) maxPeak = amp;
-      }
-      for (let i = 0; i < count; i++) {
-        peaks[i] = Math.max(0.14, Math.min(0.96, (peaks[i] / maxPeak) * 0.95));
-      }
-      try { actx.close(); } catch (_) {}
-      audioPeaksCache.set(key, peaks);
-      return peaks;
-    } catch (_) {
-      return null;
+    if (!url || count <= 0) return null;
+    const env = await loadAudioEnvelope(url);
+    if (!env || !env.length) return null;
+    const peaks = new Float32Array(count);
+    let maxPeak = 0.0001;
+    for (let i = 0; i < count; i++) {
+      const start = Math.floor((i * env.length) / count);
+      const end = Math.max(start + 1, Math.floor(((i + 1) * env.length) / count));
+      let sum = 0;
+      for (let j = start; j < end; j++) sum += env[Math.min(j, env.length - 1)];
+      const amp = sum / (end - start);
+      peaks[i] = amp;
+      if (amp > maxPeak) maxPeak = amp;
     }
+    for (let i = 0; i < count; i++) {
+      peaks[i] = Math.max(0.14, Math.min(0.96, (peaks[i] / maxPeak) * 0.95));
+    }
+    return peaks;
   };
 
   const generateConsistentWaveform = (text, count) => {
@@ -302,15 +321,25 @@ function initListeningPage() {
       return Math.max(65, Math.min(180, Math.floor(w / 4.4)));
     };
 
+    // Chỉ vẽ lại khi cần (đang phát, rê chuột, tua, đổi dữ liệu) thay vì chạy 60fps liên tục
+    const requestDraw = () => {
+      if (!animId) animId = requestAnimationFrame(() => draw());
+    };
+
+    let profileToken = 0;
     const updateProfile = async () => {
+      const token = ++profileToken;
       if (audioUrl) {
         const realPeaks = await extractAudioPeaks(audioUrl, barCount);
+        if (token !== profileToken) return;
         if (realPeaks && realPeaks.length === barCount) {
           profile = realPeaks;
+          requestDraw();
           return;
         }
       }
       profile = generateConsistentWaveform(spokenText, barCount);
+      requestDraw();
     };
 
     const updateTimeDisplay = () => {
@@ -332,6 +361,7 @@ function initListeningPage() {
       barCount = computeBarCount(width);
       updateProfile();
       updateTimeDisplay();
+      requestDraw();
     };
 
     resize();
@@ -340,8 +370,15 @@ function initListeningPage() {
       resizeObserver = new ResizeObserver(() => resize());
       resizeObserver.observe(wrapEl);
     }
+    // Đổi giao diện sáng/tối khi đang đứng yên vẫn phải vẽ lại màu
+    let themeObserver = null;
+    if (typeof MutationObserver !== "undefined") {
+      themeObserver = new MutationObserver(() => requestDraw());
+      themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    }
 
-    const handleSeek = (clientX) => {
+    // Kéo/nhấn chỉ cập nhật vị trí trên sóng; chỉ gọi onSeek (phát âm thanh) 1 lần khi nhả tay
+    const handleSeek = (clientX, commit) => {
       const rect = wrapEl.getBoundingClientRect();
       if (!rect.width) return;
       const clickX = clientX - rect.left;
@@ -351,47 +388,52 @@ function initListeningPage() {
       isCompleted = (pct >= 0.995);
       startTime = Date.now() - (pct * durationSec * 1000);
       updateTimeDisplay();
-      if (typeof options.onSeek === "function") {
+      requestDraw();
+      if (commit && typeof options.onSeek === "function") {
         options.onSeek(pct);
       }
     };
 
-    wrapEl.onclick = (e) => {
-      handleSeek(e.clientX);
-    };
-
     let isSeeking = false;
     wrapEl.onpointerdown = (e) => {
+      if (e.button > 0) return;
       isSeeking = true;
-      handleSeek(e.clientX);
+      handleSeek(e.clientX, false);
       try { wrapEl.setPointerCapture(e.pointerId); } catch (_) {}
     };
 
     wrapEl.onpointermove = (e) => {
-      const rect = wrapEl.getBoundingClientRect();
-      hoverX = e.clientX - rect.left;
+      // Cảm ứng không có "rời chuột" nên không hiện vạch rê/tooltip để khỏi bị kẹt lại
+      if (e.pointerType !== "touch") {
+        const rect = wrapEl.getBoundingClientRect();
+        hoverX = e.clientX - rect.left;
+        requestDraw();
+      }
       if (isSeeking) {
-        handleSeek(e.clientX);
+        handleSeek(e.clientX, false);
       }
     };
 
-    const endSeek = (e) => {
-      if (isSeeking) {
-        isSeeking = false;
-        try { wrapEl.releasePointerCapture(e.pointerId); } catch (_) {}
-      }
+    const releaseSeek = (e) => {
+      isSeeking = false;
+      try { wrapEl.releasePointerCapture(e.pointerId); } catch (_) {}
     };
-    wrapEl.onpointerup = endSeek;
-    wrapEl.onpointercancel = endSeek;
-    wrapEl.onmouseleave = () => {
+    wrapEl.onpointerup = (e) => {
+      if (!isSeeking) return;
+      releaseSeek(e);
+      handleSeek(e.clientX, true);
+    };
+    wrapEl.onpointercancel = (e) => {
+      if (isSeeking) releaseSeek(e);
+    };
+    wrapEl.onpointerleave = () => {
       hoverX = -1;
+      requestDraw();
     };
 
     const draw = () => {
-      if (!ctx || width <= 0 || height <= 0) {
-        animId = requestAnimationFrame(draw);
-        return;
-      }
+      animId = null;
+      if (!ctx || width <= 0 || height <= 0) return;
       ctx.clearRect(0, 0, width, height);
 
       const centerY = height / 2;
@@ -538,10 +580,10 @@ function initListeningPage() {
         ctx.restore();
       }
 
-      animId = requestAnimationFrame(draw);
+      if (isPlaying && !isCompleted) requestDraw();
     };
 
-    animId = requestAnimationFrame(draw);
+    requestDraw();
 
     return {
       setSpokenText: (text, soundUrl = null) => {
@@ -553,6 +595,7 @@ function initListeningPage() {
         isCompleted = false;
         updateProfile();
         updateTimeDisplay();
+        requestDraw();
       },
       start: (text, estDuration = 3.0, soundUrl = null) => {
         isPlaying = true;
@@ -566,6 +609,7 @@ function initListeningPage() {
         activeCharIndex = 0;
         updateProfile();
         updateTimeDisplay();
+        requestDraw();
       },
       updateBoundary: (charIndex, charLength = 0) => {
         activeCharIndex = charIndex;
@@ -573,13 +617,16 @@ function initListeningPage() {
           const ratio = Math.max(0, Math.min(0.98, charIndex / spokenText.length));
           targetProgress = Math.max(targetProgress, ratio);
         }
+        requestDraw();
       },
       setProgress: (pct) => {
+        if (isSeeking) return; // đang kéo tua: không để tiến độ audio cũ giật vạch về chỗ cũ
         currentProgress = Math.max(0, Math.min(1, pct));
         targetProgress = currentProgress;
         isCompleted = (currentProgress >= 0.995);
         startTime = Date.now() - (currentProgress * durationSec * 1000);
         updateTimeDisplay();
+        requestDraw();
       },
       seek: (pct) => {
         currentProgress = Math.max(0, Math.min(1, pct));
@@ -587,6 +634,7 @@ function initListeningPage() {
         isCompleted = (currentProgress >= 0.995);
         startTime = Date.now() - (currentProgress * durationSec * 1000);
         updateTimeDisplay();
+        requestDraw();
       },
       resume: () => {
         if (currentProgress >= 0.995) {
@@ -598,9 +646,11 @@ function initListeningPage() {
         isPlaying = true;
         isCompleted = false;
         updateTimeDisplay();
+        requestDraw();
       },
       pause: () => {
         isPlaying = false;
+        requestDraw();
       },
       complete: () => {
         isPlaying = false;
@@ -608,6 +658,7 @@ function initListeningPage() {
         targetProgress = 1.0;
         isCompleted = true;
         updateTimeDisplay();
+        requestDraw();
       },
       stop: (keepComplete = false) => {
         isPlaying = false;
@@ -617,11 +668,15 @@ function initListeningPage() {
         }
         activeCharIndex = -1;
         updateTimeDisplay();
+        requestDraw();
       },
       destroy: () => {
         isPlaying = false;
         if (animId) cancelAnimationFrame(animId);
+        animId = null;
+        profileToken++;
         if (resizeObserver) resizeObserver.disconnect();
+        if (themeObserver) themeObserver.disconnect();
         wrapEl.innerHTML = "";
       }
     };
@@ -2988,8 +3043,7 @@ function initListeningPage() {
       }
       dictWaveform = createRealtimeWaveform(wrap, {
         onSeek: (pct) => {
-          stopAudio();
-          playCurrentAudio();
+          playCurrentAudio(pct);
         }
       });
       const s = sentences[currentSentenceIdx];
@@ -3026,10 +3080,12 @@ function initListeningPage() {
       }
     };
 
-    const playCurrentAudio = () => {
+    // startPct (0–1): vị trí bắt đầu phát trong câu, dùng khi người dùng tua trên sóng âm
+    const playCurrentAudio = (startPct = 0) => {
       stopAudio();
       const s = sentences[currentSentenceIdx];
       if (!s) return;
+      const fromPct = Math.max(0, Math.min(0.98, Number(startPct) || 0));
 
       isPlaying = true;
       const playerCard = host.querySelector("#dictPlayerCard");
@@ -3043,6 +3099,7 @@ function initListeningPage() {
       const soundUrl = (s && (s.audio_url || s.audio)) || null;
       if (dictWaveform) {
         dictWaveform.start(s.ru, estDurationSec, soundUrl);
+        if (fromPct > 0) dictWaveform.seek(fromPct);
       }
 
       const onPlaybackDone = () => {
@@ -3069,7 +3126,10 @@ function initListeningPage() {
 
       const speakWithSynthesis = () => {
         if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
-          const u = new SpeechSynthesisUtterance(s.ru);
+          // TTS không tua được: đọc từ đầu từ gần vị trí tua nhất
+          let textOffset = Math.floor(fromPct * s.ru.length);
+          while (textOffset > 0 && !/\s/.test(s.ru[textOffset - 1])) textOffset--;
+          const u = new SpeechSynthesisUtterance(s.ru.slice(textOffset));
           u.lang = "ru-RU";
           u.rate = speed;
           if (typeof pickVoice === "function") {
@@ -3078,7 +3138,7 @@ function initListeningPage() {
           }
           u.onboundary = (e) => {
             if (dictWaveform && e.charIndex !== undefined && s.ru.length > 0) {
-              dictWaveform.updateBoundary(e.charIndex, e.charLength || 0);
+              dictWaveform.updateBoundary(textOffset + e.charIndex, e.charLength || 0);
             }
           };
           u.onend = onPlaybackDone;
@@ -3098,7 +3158,7 @@ function initListeningPage() {
           dictNativeAudio.playbackRate = speed;
           const startT = (typeof s.start_sec === "number") ? s.start_sec : 0;
           const endT = (typeof s.end_sec === "number") ? s.end_sec : (startT + estDurationSec);
-          dictNativeAudio.currentTime = startT;
+          dictNativeAudio.currentTime = startT + fromPct * Math.max(0, endT - startT);
 
           let hasEnded = false;
           const checkEnd = () => {
