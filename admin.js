@@ -1852,6 +1852,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
   };
 
   let _ramAdminStore = null;
+  function invalidateAdminStoreCache() {
+    _ramAdminStore = null;
+  }
   function loadAdminStore() {
     if (_ramAdminStore) return _ramAdminStore;
     try {
@@ -7199,8 +7202,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             sentence_ru: doc.sentence_ru ?? ((itemsArr[0] && (itemsArr[0].ru || itemsArr[0].text_ru)) || ""),
             sort_order: typeof doc.sort_order === "number" ? doc.sort_order : (parseInt(doc.sort_order, 10) || 10),
             youtube_id: ytId || null,
-            youtube_url: ytId ? (doc.youtube_url || `https://www.youtube.com/watch?v=${ytId}`) : null,
-            video_sample_url: ytId ? (doc.video_sample_url || `https://www.youtube-nocookie.com/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1`) : (doc.video_sample_url || doc.video_url || null),
+            // Chỉ giữ URL cũ nếu nó vẫn trỏ đúng ytId hiện tại; đổi YouTube ID thì dựng lại URL.
+            youtube_url: ytId ? ((doc.youtube_url && String(doc.youtube_url).includes(ytId)) ? doc.youtube_url : `https://www.youtube.com/watch?v=${ytId}`) : null,
+            video_sample_url: ytId ? ((doc.video_sample_url && String(doc.video_sample_url).includes(ytId)) ? doc.video_sample_url : `https://www.youtube-nocookie.com/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1`) : (doc.video_sample_url || doc.video_url || null),
             sentences: itemsArr,
             items: itemsArr,
             description: doc.description || "",
@@ -7314,7 +7318,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             sample_essay: modelText,
             sample_text: modelText,
             min_words: Number(doc.min_words ?? doc.minWords) || 30,
-            tips: JSON.stringify(tipsArr),
+            tips: tipsArr,
             suggested_words: wordsArr,
             ai_prompt: doc.ai_prompt || null,
             sort_order: Number(doc.sort_order) || 1,
@@ -8639,7 +8643,16 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     }
 
     restoreButtons(cloudSuccess);
-    if (!cloudSuccess) return;
+    if (!cloudSuccess) {
+      // Bản ghi đã nằm trong store cục bộ → chuyển sang chế độ sửa để admin bấm Lưu lại (thử lại cloud)
+      // mà không bị kiểm tra trùng ID của chế độ tạo mới chặn.
+      if (State.isCreating) {
+        State.isCreating = false;
+        State.currentDocId = idKey;
+        window.location.hash = `#collection/${slug}/edit/${idKey}`;
+      }
+      return;
+    }
 
     if (stayOnDoc) {
       if (State.isCreating) {
@@ -9635,6 +9648,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
   function resetAdminData() {
     if (!confirm("Khôi phục TOÀN BỘ dữ liệu về mặc định gốc (từ data.js)? Tất cả chỉnh sửa admin sẽ được đặt lại.")) return;
     localStorage.removeItem(STORE_KEY);
+    invalidateAdminStoreCache();
     syncDataToWeb();
     renderSidebarLists();
     handleRoute();
@@ -9837,18 +9851,11 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
   // 17. AUTH & GATE LOGIC
   // =========================================================================
 
-  const DEFAULT_ADMIN_EMAILS = [
-    "rusitrki@gmail.com",
-    "admin@rusitrki.com"
-  ];
-
+  // Quyền admin chỉ dựa vào role phía server (profiles), không bao giờ dựa vào email.
   function isUserAdmin(user) {
     if (!user) return false;
     const role = String(user.role || "").toLowerCase().trim();
-    if (role === "academic_admin" || role === "super_admin" || role === "admin") return true;
-    const email = String(user.email || "").toLowerCase().trim();
-    if (DEFAULT_ADMIN_EMAILS.includes(email) || email.endsWith("@rusitrki.com")) return true;
-    return false;
+    return role === "admin" || role === "super_admin" || role === "academic_admin";
   }
 
   function showLoginAlert(message, type = "error") {
@@ -10213,7 +10220,9 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
     });
 
     window.addEventListener("storage", (e) => {
-      if (e.key === STORE_KEY) {
+      if (e.key === STORE_KEY || e.key === null) {
+        // Tab khác đã ghi/xoá store → bỏ cache RAM để đọc lại bản mới nhất.
+        invalidateAdminStoreCache();
         renderSidebarLists();
         const isEditing = document.querySelector(".p-editor-pane, .live-markdown-input, #editorModal, .p-form");
         if (!isEditing) {

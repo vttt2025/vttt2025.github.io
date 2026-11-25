@@ -51,6 +51,14 @@ function initMockTestPage() {
   let started = false;
   let tabSwitches = 0;
   let visibilityHandler = null;
+  // Dọn audio + phím tắt của phòng thi hiện tại (gán trong renderTestRoom, gọi khi nộp bài / render lại).
+  let workspaceTeardown = null;
+  const runWorkspaceTeardown = () => {
+    if (workspaceTeardown) {
+      try { workspaceTeardown(); } catch (_) {}
+      workspaceTeardown = null;
+    }
+  };
   let shuffleOptionsEnabled = typeof STORE !== "undefined" ? STORE.get("trki_shuffle_options", true) : true;
   let sessionOptionOrders = {};
 
@@ -924,6 +932,7 @@ function initMockTestPage() {
    * GIAI ĐOẠN 3: PHÒNG THI CHUẨN CBT (SPLIT-PANE 4/6, RESIZER, BOTTOM BAR & DRAWER)
    * ===================================================================== */
   const renderTestRoom = () => {
+    runWorkspaceTeardown();
     if (!currentTest || !Array.isArray(currentTest.parts)) {
       console.warn("Đề thi thiếu dữ liệu parts hợp lệ, quay về danh sách.");
       renderHub();
@@ -1171,6 +1180,23 @@ function initMockTestPage() {
       }
     };
 
+    // Tạm dừng: giữ nguyên vị trí phát để bấm Play tiếp tục từ chỗ cũ.
+    // Giọng đọc dự phòng (speechSynthesis) không resume ổn định nên vẫn dừng hẳn.
+    const pauseCbtAudio = () => {
+      if (!activeCbtAudio) {
+        stopCbtAudio();
+        return;
+      }
+      try { activeCbtAudio.pause(); } catch(_) {}
+      isCbtAudioPlaying = false;
+      const playBtn = el("#btnPlayCbtAudio");
+      if (playBtn) {
+        playBtn.classList.remove("is-playing");
+        playBtn.innerHTML = icon("play-control", 20);
+        if (window.RusiIcons) RusiIcons.replace(playBtn);
+      }
+    };
+
     // CẬP NHẬT GIAO DIỆN CÂU HỎI & NGỮ CẢNH THEO INDEX
     let currentRenderedPartId = null;
 
@@ -1310,6 +1336,7 @@ function initMockTestPage() {
       if (leftHost) {
         if (!hasContext) {
           // Ngữ pháp & Từ vựng: Hiển thị Live Exam Roadmap & Mini Question Palette
+          if (currentRenderedPartId !== part.id) stopCbtAudio();
           renderLeftPaneGrammarRoadmap(item);
           currentRenderedPartId = part.id;
         } else if (currentRenderedPartId !== part.id) {
@@ -1451,7 +1478,7 @@ function initMockTestPage() {
             if (playBtn) {
               playBtn.onclick = () => {
                 if (isCbtAudioPlaying) {
-                  stopCbtAudio();
+                  pauseCbtAudio();
                   return;
                 }
 
@@ -1828,6 +1855,9 @@ function initMockTestPage() {
     // Phím tắt bàn phím toàn diện (1, 2, 3, 4, Mũi tên trái/phải, F, M)
     const handleKeyNav = (e) => {
       if (e.target.tagName === "TEXTAREA" || e.target.tagName === "INPUT" || e.target.isContentEditable) return;
+      // Không chặn phím tắt trình duyệt/hệ điều hành (Ctrl+C, Ctrl+F, Cmd+A...).
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      if (typeof e.key !== "string") return;
 
       const key = e.key.toLowerCase();
       const item = examItems[currentItemIndex];
@@ -1888,6 +1918,10 @@ function initMockTestPage() {
       }
     };
     document.addEventListener("keydown", handleKeyNav);
+    workspaceTeardown = () => {
+      stopCbtAudio();
+      document.removeEventListener("keydown", handleKeyNav);
+    };
 
     // KÉO DI CHUYỂN THANH RESIZER 4/6 (DRAGGABLE SPLITTER)
     const splitter = el("#cbtSplitGutter");
@@ -2177,6 +2211,7 @@ function initMockTestPage() {
   };
 
   const submit = async () => {
+    runWorkspaceTeardown();
     document.body.classList.remove("cbt-fullscreen-mode");
 
     started = false;

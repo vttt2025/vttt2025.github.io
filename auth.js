@@ -99,7 +99,9 @@
     let fp = "";
     try {
       fp = localStorage.getItem("rusi_device_fp");
-      if (fp && fp.startsWith("dev_")) return fp;
+      // Chỉ dùng lại mã có phần ngẫu nhiên riêng của bản cài (dev_<hash>_<rand>).
+      // Mã tất định cũ (dev_<hash>) bị trùng giữa các máy cùng model → tạo lại.
+      if (fp && /^dev_[0-9a-f]+_[0-9a-z]+$/.test(fp)) return fp;
     } catch (_) {}
 
     const components = [
@@ -116,8 +118,17 @@
       hash = ((hash << 5) - hash) + components.charCodeAt(i);
       hash |= 0;
     }
-    // Fingerprint tất định (deterministic): cùng trình duyệt + màn hình luôn cho ra mã nhất quán
-    fp = "dev_" + Math.abs(hash).toString(16);
+    // Hash phần cứng + phần ngẫu nhiên riêng cho mỗi bản cài: hai máy cùng model/OS vẫn ra hai mã khác nhau.
+    // Tính ổn định do localStorage đảm bảo (mã được lưu và dùng lại ở trên).
+    let randPart = "";
+    try {
+      const buf = new Uint32Array(2);
+      crypto.getRandomValues(buf);
+      randPart = buf[0].toString(36) + buf[1].toString(36);
+    } catch (_) {
+      randPart = Math.random().toString(36).substring(2, 12);
+    }
+    fp = "dev_" + Math.abs(hash).toString(16) + "_" + randPart;
     try {
       localStorage.setItem("rusi_device_fp", fp);
     } catch (_) {}
