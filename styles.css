@@ -32709,6 +32709,20 @@ body.index-personalized #indexUserProgressHost {
   padding-left: 24px;
 }
 
+/* Danh sách lồng nhau: thụt thêm 1 cấp, không chừa khoảng trống lớn như danh sách gốc */
+.rusi-md-rendered li > .rusi-md-ul,
+.rusi-md-rendered li > .rusi-md-ol {
+  margin: 6px 0 4px;
+  padding-left: 22px;
+}
+
+.rusi-md-rendered .rusi-md-audio {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  margin: 16px 0;
+}
+
 .rusi-md-rendered .rusi-md-li {
   margin-bottom: 8px;
   line-height: 1.75;

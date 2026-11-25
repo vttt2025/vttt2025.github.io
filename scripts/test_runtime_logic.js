@@ -42,7 +42,38 @@ const codeHtml = RM.render('```javascript\nconst a = 10;\n```');
 assert(codeHtml.includes('<pre class="rusi-code-block">') && codeHtml.includes('const a = 10;'), 'Code block must be rendered');
 passed++;
 
-console.log('✓ 1. RusiMarkdown: XSS sanitized, <br/> preserved, codeblock intact.');
+// 1d. Định dạng trình soạn admin cần lưu lại đúng: căn lề bảng, \| trong ô, danh sách lồng, •, ol start, «»
+const tbl = RM.render('| A | B |\n|:---:|---:|\n| `x \\| y` | 2 |');
+assert(/<th data-align="center"/.test(tbl) && /<td data-align="right"/.test(tbl), 'table alignment kept');
+assert((tbl.match(/<td/g) || []).length === 2 && tbl.includes('x | y'), 'escaped pipe stays inside one cell');
+const nested = RM.render('- Cha\n  - Con\n- Cha 2').replace(/\s/g, '');
+assert.strictEqual(nested, '<ulclass="rusi-md-ul"><li>Cha<ulclass="rusi-md-ul"><li>Con</li></ul></li><li>Cha2</li></ul>', 'nested list');
+assert(RM.render('• a').includes('data-marker="•"'), '• marker remembered');
+assert(RM.render('3. ba').includes('start="3"'), 'ordered list start');
+assert(RM.render('«Привет»').includes('«Привет»'), 'guillemets kept');
+passed++;
+
+// 1e. Thẻ an toàn được phép (mark/span màu, audio) nhưng mọi biến thể nguy hiểm vẫn bị chặn
+assert(RM.render('<mark style="background-color:#fef08a">x</mark>').includes('<mark style="background-color:#fef08a">x</mark>'), 'mark color');
+assert(RM.render('<span style="color:rgb(220, 38, 38)">x</span>').includes('<span style="color:rgb(220, 38, 38)">x</span>'), 'span color');
+assert(/<audio class="rusi-md-audio" controls preload="none" src="https:\/\/a\.b\/c\.mp3"><\/audio>/.test(RM.render('<audio controls src="https://a.b/c.mp3"></audio>')), 'audio https');
+[
+  '<mark style="background:url(javascript:alert(1))">x</mark>',
+  '<mark onclick="alert(1)">x</mark>',
+  '<span style="color:expression(alert(1))">x</span>',
+  '<span style="color:red&quot; onmouseover=&quot;alert(1)">x</span>',
+  '<audio controls src="javascript:alert(1)"></audio>',
+  '<audio controls src="https://a/b.mp3" onerror="alert(1)"></audio>',
+  '<audio controls src="data:audio/mp3;base64,AAAA"></audio>',
+  '<mark><img src=x onerror=alert(1)></mark>',
+  '| a |\n|---|\n| <svg onload=alert(1)> |',
+].forEach((payload) => {
+  const live = RM.render(payload).replace(/&lt;[\s\S]*?&gt;/g, '');
+  assert(!/<(script|img|svg|iframe)\b|\son\w+\s*=|javascript:|expression\(|data:audio/i.test(live), 'XSS blocked: ' + payload);
+});
+passed++;
+
+console.log('✓ 1. RusiMarkdown: XSS sanitized, <br/> preserved, codeblock intact, editor formats round-trip safely.');
 
 // ============================================================================
 // 2. Test SRS module

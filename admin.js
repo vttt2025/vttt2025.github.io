@@ -2817,9 +2817,6 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       preview: `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
       zen: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>`,
       zenExit: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
-      alignLeft: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="17" y1="10" x2="3" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="3" y2="14"></line><line x1="17" y1="18" x2="3" y2="18"></line></svg>`,
-      alignCenter: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="10" x2="6" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="18" y1="14" x2="6" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>`,
-      alignRight: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="10" x2="7" y2="10"></line><line x1="21" y1="6" x2="3" y2="6"></line><line x1="21" y1="14" x2="7" y2="14"></line><line x1="21" y1="18" x2="3" y2="18"></line></svg>`,
       eraser: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"></path><path d="M22 21H7"></path><path d="m5 11 9 9"></path></svg>`,
       codeSnippet: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>`
     };
@@ -3204,14 +3201,6 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
                   <span class="p-md-sep"></span>
 
-                  <!-- Text Alignment -->
-                  <div class="p-md-group">
-                    <button type="button" class="notion-tb-btn" data-action="align-left" title="Căn lề trái">${NOTION_ICONS.alignLeft}</button>
-                    <button type="button" class="notion-tb-btn" data-action="align-center" title="Căn giữa">${NOTION_ICONS.alignCenter}</button>
-                    <button type="button" class="notion-tb-btn" data-action="align-right" title="Căn lề phải">${NOTION_ICONS.alignRight}</button>
-                  </div>
-
-                  <span class="p-md-sep"></span>
 
                   <!-- Russian Accents Dropdown Palette (icon-only button) -->
                   <div class="notion-dropdown-wrap">
@@ -3689,6 +3678,28 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       return inner;
     }
 
+    // Danh sách (có lồng nhau) → Markdown: thụt 2 khoảng trắng mỗi cấp, giữ data-marker (•) và ol[start]
+    function listToMarkdown(listEl, depth) {
+      const ordered = listEl.tagName === "OL";
+      let n = ordered ? (parseInt(listEl.getAttribute("start"), 10) || 1) : 0;
+      // data-indent: danh sách gốc vốn thụt lề (vd. sau dòng công thức trong một mục cha)
+      const baseIndent = depth === 0 ? Math.min(12, parseInt(listEl.getAttribute("data-indent"), 10) || 0) : 0;
+      const pad = " ".repeat(baseIndent) + "  ".repeat(depth);
+      let md = "";
+      Array.from(listEl.children).forEach((li) => {
+        if (li.tagName !== "LI") return;
+        const clone = li.cloneNode(true);
+        clone.querySelectorAll(":scope > ul, :scope > ol").forEach((x) => x.remove());
+        const text = inlineNodeToMarkdown(clone).trim();
+        const marker = ordered ? `${n++}.` : (li.getAttribute("data-marker") || "-");
+        if (text) md += `${pad}${marker} ${text}\n`;
+        Array.from(li.children).forEach((child) => {
+          if (child.tagName === "UL" || child.tagName === "OL") md += listToMarkdown(child, depth + 1);
+        });
+      });
+      return md;
+    }
+
     function blockNodeToMarkdown(node) {
       if (!node) return "";
       if (node.nodeType === 3) {
@@ -3720,37 +3731,45 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       if (tag === "pre") {
         const codeEl = node.querySelector("code");
         const codeText = codeEl ? codeEl.textContent : node.textContent;
-        return "```\n" + codeText.trim() + "\n```\n\n";
+        // Giữ tên ngôn ngữ (vd ```mermaid) từ class "language-x" do RusiMarkdown gắn
+        const langMatch = codeEl && (codeEl.className || "").match(/language-([a-zA-Z0-9_-]+)/);
+        const lang = langMatch && langMatch[1] !== "plaintext" ? langMatch[1] : "";
+        return "```" + lang + "\n" + codeText.trim() + "\n```\n\n";
       }
 
       // Audio tag
       if (tag === "audio") {
-        const src = node.getAttribute("src") || "";
+        const src = (node.getAttribute("src") || "").replace(/"/g, "%22");
         return `<audio controls src="${src}"></audio>\n\n`;
       }
 
       // Callout box
       if (node.classList && node.classList.contains("rusi-md-callout")) {
         let alertType = "NOTE";
-        if (node.classList.contains("rusi-md-callout-tip")) alertType = "TIP";
+        const dataAlert = (node.getAttribute("data-alert") || "").toUpperCase();
+        if (/^(NOTE|TIP|WARNING|IMPORTANT|CAUTION)$/.test(dataAlert)) alertType = dataAlert;
+        else if (node.classList.contains("rusi-md-callout-tip")) alertType = "TIP";
         else if (node.classList.contains("rusi-md-callout-warning")) alertType = "WARNING";
         else if (node.classList.contains("rusi-md-callout-important")) alertType = "IMPORTANT";
         else if (node.classList.contains("rusi-md-callout-caution")) alertType = "CAUTION";
 
         const textEl = node.querySelector(".rusi-md-callout-text") || node.querySelector(".rusi-md-callout-body") || node;
         const rawText = inlineNodeToMarkdown(textEl).trim();
-        const lines = rawText.split("\n").map(l => l.trim()).filter(Boolean);
+        // Giữ thụt lề đầu dòng (danh sách con trong callout) và dòng ">" trống ngăn cách đoạn
+        const lines = rawText.split("\n").map(l => l.replace(/\s+$/, ""))
+          .filter((l, i, arr) => l || (i > 0 && arr[i - 1]));
         if (lines.length === 0) return `> [!${alertType}]\n> \n\n`;
-        const quoteLines = lines.map(l => `> ${l}`).join("\n");
+        const quoteLines = lines.map(l => (l ? `> ${l}` : ">")).join("\n");
         return `> [!${alertType}]\n${quoteLines}\n\n`;
       }
 
-      // Blockquote
+      // Blockquote (giữ dòng trống ">" để không gộp các đoạn trích dẫn)
       if (tag === "blockquote") {
         const rawText = inlineNodeToMarkdown(node).trim();
-        const lines = rawText.split("\n").map(l => l.trim()).filter(Boolean);
+        const lines = rawText.split("\n").map(l => l.replace(/\s+$/, ""))
+          .filter((l, i, arr) => l || (i > 0 && arr[i - 1]));
         if (lines.length === 0) return "";
-        const quoteLines = lines.map(l => `> ${l}`).join("\n");
+        const quoteLines = lines.map(l => (l ? `> ${l}` : ">")).join("\n");
         return `${quoteLines}\n\n`;
       }
 
@@ -3769,37 +3788,25 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           const rowText = cells.map(c => inlineNodeToMarkdown(c).trim().replace(/\n+/g, "<br/>").replace(/\|/g, "\\|")).join(" | ");
           tableMd += `| ${rowText} |\n`;
           if (rIdx === 0) {
-            const sep = Array(cells.length || colCount || 3).fill("---").join(" | ");
+            // Giữ căn lề cột (data-align do RusiMarkdown gắn từ dòng |:---:| gốc)
+            const SEP = { center: ":---:", right: "---:", left: ":---" };
+            const sep = (cells.length ? cells : Array(colCount || 3).fill(null))
+              .map(c => SEP[c && c.getAttribute("data-align")] || "---").join(" | ");
             tableMd += `| ${sep} |\n`;
           }
         });
         return `${tableMd}\n`;
       }
 
-      // Lists
-      if (tag === "ul") {
-        const items = Array.from(node.querySelectorAll(":scope > li"));
-        let listMd = "";
-        items.forEach(li => {
-          const text = inlineNodeToMarkdown(li).trim();
-          if (text) listMd += `- ${text}\n`;
-        });
+      // Lists (lồng nhau theo thụt lề 2 khoảng trắng; giữ ký hiệu • và số bắt đầu của danh sách số)
+      if (tag === "ul" || tag === "ol") {
+        const listMd = listToMarkdown(node, 0);
         return listMd ? `${listMd}\n` : "";
       }
 
-      if (tag === "ol") {
-        const items = Array.from(node.querySelectorAll(":scope > li"));
-        let listMd = "";
-        items.forEach((li, idx) => {
-          const text = inlineNodeToMarkdown(li).trim();
-          if (text) listMd += `${idx + 1}. ${text}\n`;
-        });
-        return listMd ? `${listMd}\n` : "";
-      }
-
-      // Standard paragraph or div container
+      // Standard paragraph or div container (AUDIO: khối /audio được bọc trong div.topic-audio-box)
       if (tag === "p" || tag === "div") {
-        const blockTags = ["H1","H2","H3","H4","P","DIV","TABLE","UL","OL","BLOCKQUOTE","PRE","HR"];
+        const blockTags = ["H1","H2","H3","H4","P","DIV","TABLE","UL","OL","BLOCKQUOTE","PRE","HR","AUDIO"];
         const hasBlockChildren = Array.from(node.children).some(child => blockTags.includes(child.tagName));
         if (hasBlockChildren) {
           return Array.from(node.childNodes).map(blockNodeToMarkdown).join("");
@@ -3835,8 +3842,13 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           cell.setAttribute("contenteditable", "true");
         });
 
-        // Bọc trong .notion-table-wrapper nếu chưa có
+        // Bọc trong .notion-table-wrapper nếu chưa có (dùng lại wrapper của RusiMarkdown, tránh bọc 2 lớp)
         let wrapper = tbl.closest(".notion-table-wrapper");
+        if (!wrapper && tbl.parentElement && tbl.parentElement.classList.contains("topic-vocab-table-wrapper")) {
+          wrapper = tbl.parentElement;
+          wrapper.classList.add("notion-table-wrapper");
+          wrapper.setAttribute("contenteditable", "false");
+        }
         if (!wrapper) {
           wrapper = document.createElement("div");
           wrapper.className = "topic-vocab-table-wrapper notion-table-wrapper";
@@ -3953,8 +3965,11 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       }
 
       // Hàm đồng bộ canvas sang markdown và State.currentDraft
+      // Chỉ được gọi sau khi canvas bị sửa → đánh dấu "đã sửa". Khi chưa sửa, lưu / tab Markdown / xem trước
+      // giữ nguyên Markdown gốc thay vì tạo lại từ DOM (tạo lại làm mất căn lề, khoảng trắng... dù không ai sửa).
       const syncCanvasToMarkdown = (shouldUpdateCounters = true) => {
         if (!canvas) return "";
+        wrap.dataset.canvasDirty = "1";
         const md = window.domToMarkdown(canvas);
         if (textarea) textarea.value = md;
         State.currentDraft[fieldKey] = md;
@@ -4002,6 +4017,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       let historyDebounceTimer = null;
       if (canvas) {
         canvas.addEventListener("input", () => {
+          wrap.dataset.canvasDirty = "1"; // ngay lập tức: lưu trong 150ms debounce vẫn lấy nội dung mới
           clearTimeout(inputDebounceTimer);
           inputDebounceTimer = setTimeout(() => {
             syncCanvasToMarkdown();
@@ -4011,6 +4027,14 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           historyDebounceTimer = setTimeout(() => {
             pushHistorySnapshot();
           }, 350);
+        });
+
+        // Dán chỉ lấy chữ thuần: tránh style/span/div rác từ Word, Google Docs, trang web lọt vào Markdown
+        canvas.addEventListener("paste", (e) => {
+          const text = e.clipboardData && e.clipboardData.getData("text/plain");
+          if (typeof text !== "string") return;
+          e.preventDefault();
+          document.execCommand("insertText", false, text);
         });
       }
 
@@ -4276,6 +4300,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         canvas.addEventListener("keydown", handleEditorKeydown);
       }
       wrap.addEventListener("keydown", (e) => {
+        // Sự kiện từ canvas đã được xử lý ở listener của canvas (nổi bọt lên đây) → tránh hoàn tác 2 bước
+        if (canvas && canvas.contains(e.target)) return;
         if ((e.ctrlKey || e.metaKey) && (e.key.toLowerCase() === "z" || e.key.toLowerCase() === "y")) {
           handleEditorKeydown(e);
         }
@@ -4784,9 +4810,6 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
           else if (act === "code-inline") rep = `\`${sel}\``;
           else if (act === "link") rep = `[${sel}](https://rusitrki.com)`;
           else if (act === "ru-quote") rep = `“${sel}”`;
-          else if (act === "align-center") rep = `<div align="center">\n${sel}\n</div>`;
-          else if (act === "align-right") rep = `<div align="right">\n${sel}\n</div>`;
-          else if (act === "align-left") rep = `<div align="left">\n${sel}\n</div>`;
           else if (act === "clear-format") rep = sel.replace(/[*_~`#><[\]()]/g, "");
 
           textarea.value = val.substring(0, start) + rep + val.substring(end);
@@ -4802,12 +4825,12 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
         else if (act === "code-inline") {
           const sel = window.getSelection();
           if (sel && sel.toString()) {
-            document.execCommand("insertHTML", false, `<code class="rusi-md-inline-code">${sel.toString()}</code>`);
+            document.execCommand("insertHTML", false, `<code class="rusi-md-inline-code">${esc(sel.toString())}</code>`);
           }
         } else if (act === "mark") {
           const sel = window.getSelection();
           if (sel && sel.toString()) {
-            document.execCommand("insertHTML", false, `<mark>${sel.toString()}</mark>`);
+            document.execCommand("insertHTML", false, `<mark>${esc(sel.toString())}</mark>`);
           }
         } else if (act === "link") {
           const url = prompt("Nhập địa chỉ liên kết (URL):", "https://rusitrki.com");
@@ -4822,12 +4845,6 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
         } else if (act === "clear-format") {
           document.execCommand("removeFormat");
           document.execCommand("unlink");
-        } else if (act === "align-left") {
-          document.execCommand("justifyLeft");
-        } else if (act === "align-center") {
-          document.execCommand("justifyCenter");
-        } else if (act === "align-right") {
-          document.execCommand("justifyRight");
         }
         syncCanvasToMarkdown();
         pushHistorySnapshot();
@@ -5011,7 +5028,7 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
           const mode = btn.dataset.canvasMode;
 
           if (mode === "raw") {
-            syncCanvasToMarkdown();
+            if (wrap.dataset.canvasDirty === "1") syncCanvasToMarkdown();
             if (surface) surface.style.display = "none";
             if (rawPane) rawPane.style.display = "block";
             if (textarea) textarea.focus();
@@ -5025,6 +5042,8 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
             }
             enhanceCanvasElements(canvas);
             pushHistorySnapshot();
+            // Canvas vừa dựng lại từ textarea: textarea là bản chuẩn cho tới khi sửa tiếp trên canvas
+            wrap.dataset.canvasDirty = "0";
             if (rawPane) rawPane.style.display = "none";
             if (surface) surface.style.display = "block";
             canvas.focus();
@@ -8410,6 +8429,16 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
   // 10. SAVE, DELETE, CLONE & BULK ACTIONS
   // =========================================================================
 
+  // Canvas trực quan chỉ là nguồn chuẩn khi đang hiện (không ở tab Mã Markdown) VÀ đã bị sửa.
+  // Ngược lại textarea .live-markdown-input giữ Markdown chuẩn (bản gốc hoặc bản sửa ở tab Markdown).
+  function mdCanvasNeedsSync() {
+    const wrap = document.querySelector(".p-md-editor-wrap");
+    if (!wrap || !wrap.querySelector(".notion-canvas")) return false;
+    const rawPane = wrap.querySelector(".notion-raw-pane");
+    const isRawMode = Boolean(rawPane && rawPane.style.display === "block");
+    return !isRawMode && wrap.dataset.canvasDirty === "1";
+  }
+
   window.saveDocument = async function (stayOnDoc = true) {
     const slug = State.currentSlug;
     const col = COLLECTIONS[slug];
@@ -8487,7 +8516,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       const isRawMode = Boolean(rawPane && rawPane.style.display === "block");
       const canvasEl = document.querySelector(".notion-canvas");
       const mdInp = document.querySelector(".live-markdown-input");
-      if (!isRawMode && canvasEl && typeof window.domToMarkdown === "function") {
+      if (!isRawMode && canvasEl && mdCanvasNeedsSync() && typeof window.domToMarkdown === "function") {
         const md = window.domToMarkdown(canvasEl);
         if (mdInp) mdInp.value = md;
         State.currentDraft.content_md = md;
@@ -8904,9 +8933,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         const k = inp.getAttribute("data-key") || inp.name;
         if (k) State.currentDraft[k] = inp.type === "number" ? Number(inp.value) : inp.value;
       });
-      // Nếu có canvas Notion trực quan, đồng bộ canvas sang markdown trước khi lưu
+      // Nếu canvas Notion trực quan đang hiện và đã bị sửa, đồng bộ canvas sang markdown
       const canvasEl = document.querySelector(".notion-canvas");
-      if (canvasEl && typeof window.domToMarkdown === "function") {
+      if (canvasEl && mdCanvasNeedsSync() && typeof window.domToMarkdown === "function") {
         const md = window.domToMarkdown(canvasEl);
         const mdInp = document.querySelector(".live-markdown-input");
         if (mdInp) mdInp.value = md;
@@ -8989,9 +9018,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         const k = inp.getAttribute("data-key") || inp.name;
         if (k) State.currentDraft[k] = inp.type === "number" ? Number(inp.value) : inp.value;
       });
-      // Nếu có canvas Notion trực quan, đồng bộ canvas sang markdown trước khi lưu
+      // Nếu canvas Notion trực quan đang hiện và đã bị sửa, đồng bộ canvas sang markdown
       const canvasEl = document.querySelector(".notion-canvas");
-      if (canvasEl && typeof window.domToMarkdown === "function") {
+      if (canvasEl && mdCanvasNeedsSync() && typeof window.domToMarkdown === "function") {
         const md = window.domToMarkdown(canvasEl);
         const mdInp = document.querySelector(".live-markdown-input");
         if (mdInp) mdInp.value = md;

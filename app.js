@@ -3155,17 +3155,41 @@ const RusiMarkdown = {
 
     const lines = src.split("\n");
     const out = [];
-    let inList = false;
-    let listType = "";
     let inTable = false;
     let tableRows = [];
+    let tableAligns = [];
+    // Danh sách lồng nhau: mỗi phần tử { type: "ul"|"ol", indent } — thụt lề sâu hơn mở danh sách con trong <li>
+    const listStack = [];
 
     const flushList = () => {
-      if (inList) {
-        out.push(listType === "ol" ? "</ol>" : "</ul>");
-        inList = false;
-        listType = "";
+      while (listStack.length) {
+        out.push("</li>" + (listStack.pop().type === "ol" ? "</ol>" : "</ul>"));
       }
+    };
+
+    const pushListItem = (type, indent, html, attrs) => {
+      while (listStack.length && (listStack[listStack.length - 1].indent > indent ||
+        (listStack[listStack.length - 1].indent === indent && listStack[listStack.length - 1].type !== type))) {
+        out.push("</li>" + (listStack.pop().type === "ol" ? "</ol>" : "</ul>"));
+      }
+      const top = listStack[listStack.length - 1];
+      if (!top || top.indent < indent) {
+        // Danh sách gốc vốn thụt lề: ghi lại để trình soạn admin lưu đúng khoảng trắng
+        const indentAttr = !top && indent > 0 ? ` data-indent="${indent}"` : "";
+        out.push(`<${type} class="rusi-md-${type}"${attrs.list || ""}${indentAttr}>`);
+        listStack.push({ type, indent });
+      } else {
+        out.push("</li>");
+      }
+      out.push(`<li${attrs.item || ""}>${html}`);
+    };
+
+    // Ô bảng: tách theo "|" chưa escape; "\|" là ký tự | trong nội dung ô
+    // (không dùng regex lookbehind: Safari iOS < 16.4 sẽ lỗi cú pháp toàn bộ app.js)
+    const splitCells = (row) => row.replace(/\\\|/g, "\u0001").split("|").map(c => c.replace(/\u0001/g, "|"));
+    const alignAttr = (idx) => {
+      const a = tableAligns[idx];
+      return a ? ` data-align="${a}"${a === "left" ? "" : ` style="text-align:${a}"`}` : "";
     };
 
     const flushTable = () => {
@@ -3174,9 +3198,9 @@ const RusiMarkdown = {
           let tblHtml = '<div class="topic-vocab-table-wrapper" style="overflow-x:auto;margin:16px 0"><table class="topic-vocab-table rusi-md-table">';
           tableRows.forEach((row, rIdx) => {
             if (rIdx === 0) {
-              tblHtml += '<thead><tr>' + row.map(c => `<th>${this.formatInline(c.trim())}</th>`).join('') + '</tr></thead><tbody>';
+              tblHtml += '<thead><tr>' + row.map((c, ci) => `<th${alignAttr(ci)}>${this.formatInline(c.trim())}</th>`).join('') + '</tr></thead><tbody>';
             } else {
-              tblHtml += '<tr>' + row.map(c => `<td>${this.formatInline(c.trim())}</td>`).join('') + '</tr>';
+              tblHtml += '<tr>' + row.map((c, ci) => `<td${alignAttr(ci)}>${this.formatInline(c.trim())}</td>`).join('') + '</tr>';
             }
           });
           tblHtml += '</tbody></table></div>';
@@ -3184,6 +3208,7 @@ const RusiMarkdown = {
         }
         inTable = false;
         tableRows = [];
+        tableAligns = [];
       }
     };
 
@@ -3200,11 +3225,18 @@ const RusiMarkdown = {
       // Table row: | col1 | col2 |
       if (trimmed.startsWith("|") && trimmed.endsWith("|")) {
         flushList();
-        // Separator row: |---|---|
+        // Separator row: |---|:---:|---:| → căn lề từng cột
         if (/^\|(\s*[-:]+[-| :]*)\|$/.test(trimmed)) {
+          tableAligns = trimmed.slice(1, -1).split("|").map((s) => {
+            const t = s.trim();
+            if (t.startsWith(":") && t.endsWith(":")) return "center";
+            if (t.endsWith(":")) return "right";
+            if (t.startsWith(":")) return "left";
+            return "";
+          });
           continue;
         }
-        const cells = trimmed.slice(1, -1).split("|");
+        const cells = splitCells(trimmed.slice(1, -1));
         inTable = true;
         tableRows.push(cells);
         continue;
@@ -3271,7 +3303,7 @@ const RusiMarkdown = {
           }
 
           out.push(`
-            <div class="rusi-md-callout ${typeClass}">
+            <div class="rusi-md-callout ${typeClass}" data-alert="${alertType}">
               <span class="rusi-md-callout-icon">${icon}</span>
               <div class="rusi-md-callout-body">
                 <div class="rusi-md-callout-title">${typeTitle}</div>
@@ -3285,29 +3317,32 @@ const RusiMarkdown = {
         continue;
       }
 
-      // Ordered list: 1. 2. 3.
+      const indent = (line.match(/^[ \t]*/)[0] || "").replace(/\t/g, "    ").length;
+
+      // Ordered list: 1. 2. 3. (giữ số bắt đầu qua thuộc tính start)
       const olMatch = trimmed.match(/^(\d+)\.\s+(.+)$/);
       if (olMatch) {
-        if (!inList || listType !== "ol") {
-          flushList();
-          inList = true;
-          listType = "ol";
-          out.push('<ol class="rusi-md-ol">');
-        }
-        out.push(`<li>${this.formatInline(olMatch[2])}</li>`);
+        const start = Number(olMatch[1]);
+        pushListItem("ol", indent, this.formatInline(olMatch[2]), { list: start !== 1 ? ` start="${start}"` : "" });
         continue;
       }
 
-      // Unordered list: - * •
+      // Unordered list: - * • (ghi nhớ ký hiệu gốc để trình soạn admin lưu lại đúng)
       if (trimmed.startsWith("- ") || trimmed.startsWith("* ") || trimmed.startsWith("• ")) {
-        if (!inList || listType !== "ul") {
-          flushList();
-          inList = true;
-          listType = "ul";
-          out.push('<ul class="rusi-md-ul">');
-        }
-        out.push(`<li>${this.formatInline(trimmed.slice(2))}</li>`);
+        const marker = trimmed[0];
+        pushListItem("ul", indent, this.formatInline(trimmed.slice(2)), { item: marker === "-" ? "" : ` data-marker="${marker}"` });
         continue;
+      }
+
+      // Audio nhúng (trình soạn admin tạo ra): chỉ nhận nguồn http(s) hoặc đường dẫn tương đối an toàn
+      const audioMatch = trimmed.match(/^<audio\b[^>]*\bsrc="([^"]+)"[^>]*>\s*<\/audio>$/i);
+      if (audioMatch) {
+        flushList();
+        const safeSrc = this._safeUrl(audioMatch[1]);
+        if (safeSrc !== "#" && !/^(mailto:|#)/i.test(safeSrc)) {
+          out.push(`<audio class="rusi-md-audio" controls preload="none" src="${safeSrc}"></audio>`);
+          continue;
+        }
       }
 
       // Normal paragraph or standalone codeblock
@@ -3345,6 +3380,21 @@ const RusiMarkdown = {
     return this.escapeHtml(raw);
   },
 
+  // Chỉ chấp nhận "color:X" và/hoặc "background-color:X" với X là mã hex hoặc rgb()/rgba(); ngược lại null
+  _safeColorStyle(style) {
+    if (style === undefined || style === null) return "";
+    const COLOR = /^(#[0-9a-f]{3,8}|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*(0|1|0?\.\d+)\s*)?\))$/i;
+    const parts = String(style).split(";").map(s => s.trim()).filter(Boolean);
+    if (!parts.length) return null;
+    const safe = [];
+    for (const p of parts) {
+      const m = p.match(/^(color|background-color)\s*:\s*(.+)$/i);
+      if (!m || !COLOR.test(m[2].trim())) return null;
+      safe.push(`${m[1].toLowerCase()}:${m[2].trim()}`);
+    }
+    return safe.join(";");
+  },
+
   formatInline(str) {
     if (!str) return "";
     const tokens = [];
@@ -3380,8 +3430,18 @@ const RusiMarkdown = {
       .replace(/(^|[^\w])_([^_\n]+)_(?=[^\w]|$)/g, '$1<em>$2</em>')
       // Strikethrough: ~~text~~
       .replace(/~~(.*?)~~/g, '<del>$1</del>')
-      // Quotes: “text” or «text»
-      .replace(/[«“](.*?)[»”]/g, '<span class="rusi-quote-highlight">“$1”</span>');
+      // Quotes: “text” or «text» (giữ nguyên ký tự ngoặc gốc)
+      .replace(/([«“])(.*?)([»”])/g, '<span class="rusi-quote-highlight">$1$2$3</span>');
+
+    // Thẻ màu do trình soạn admin tạo ra: chỉ khôi phục <mark>/<span> khi style là màu hợp lệ
+    // (văn bản đã escape ở trên nên mọi thuộc tính khác vẫn hiện dạng chữ, không thành HTML)
+    out = out
+      .replace(/&lt;(mark|span)(?: style=&quot;([^&]*)&quot;)?&gt;([\s\S]*?)&lt;\/\1&gt;/g, (m, tag, style, inner) => {
+        const safeStyle = this._safeColorStyle(style);
+        if (style !== undefined && safeStyle === null) return m;
+        if (tag === "span" && !safeStyle) return m;
+        return `<${tag}${safeStyle ? ` style="${safeStyle}"` : ""}>${inner}</${tag}>`;
+      });
 
     let restored = out;
     for (let pass = 0; pass < 5; pass++) {
