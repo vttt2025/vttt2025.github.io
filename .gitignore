@@ -8,3 +8,4 @@ scratch/
 trki_tests_20.json
 data/supabase-backup.json
 .tmp/
+supabase/.temp/

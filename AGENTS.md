@@ -31,7 +31,7 @@ Nền tảng luyện thi chứng chỉ tiếng Nga ТРКИ. Web tĩnh (HTML + J
 - Dữ liệu lớn nằm trong `data/modules/*.json`, nạp theo trang qua `RusiDataLoader.prepareForCurrentPage()` / `load(key)` (RAM → IndexedDB `rusi_offline_db` → file tĩnh). Không nhồi lại vào `data.js`.
 - Không thêm truy vấn quét cả bảng (`select("*")` không giới hạn) chạy lúc tải trang hay warmup. Supabase dùng cho Auth, tiến độ người dùng, đơn hàng, RPC chấm thi.
 - Nội dung PRO khóa bằng `Monetization.isPro()` **và** RLS.
-- Repo chưa có file SQL cho schema/RPC (`rusi_register_device`, `rusi_revoke_*`, `current_user_is_admin`...). Khi thêm hoặc đổi RPC/cột, ghi migration SQL vào repo; không đoán kiểu cột — tra `PROJECT_SPEC.md`.
+- Migration SQL nằm trong `supabase/migrations/` (hiện có Device Guard: bảng `user_device_sessions` + RPC `rusi_*device*`). Phần lớn schema/RPC khác (`current_user_is_admin`, `rusi_grade_trki_exam`...) chưa có file SQL. Khi thêm hoặc đổi RPC/cột, ghi migration mới, idempotent; không đoán kiểu cột — tra `PROJECT_SPEC.md`.
 
 ## Cách làm việc
 
