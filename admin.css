@@ -4730,3 +4730,286 @@ body.payload-body {
   background: var(--p-surface-hover, #f1f5f9);
   color: var(--p-text, #0f172a);
 }
+
+/* =========================================================================
+ * MARKDOWN EDITOR — toolbar dính, thống kê, toolbar responsive, menu "/"
+ * Đặt cuối file để thắng các lớp trước (L1731, L2445, L2945, L3251, L3959,
+ * studio .topic-article-con-vat-studio L4376+, .notion-toolbar L4718).
+ * ========================================================================= */
+
+/* overflow-x:hidden biến .payload-app thành scroll container (overflow-y tính thành auto)
+   nên position:sticky của topbar/toolbar không bám theo cuộn trang. clip cắt tràn ngang
+   mà không tạo scroll container; trình duyệt cũ giữ lại "hidden" ở L191. */
+.payload-app {
+  overflow-x: clip;
+}
+
+/* --- Toolbar dính dưới topbar khi bài dài --- */
+/* position: relative làm khối chứa cho menu "/" (absolute). Rule gốc ở L1715 không có hiệu lực
+   vì khối chú thích phía trên (L1712) thiếu "/*" mở đầu nên trình duyệt bỏ cả rule. */
+.p-md-editor-wrap {
+  position: relative;
+  --md-sticky-top: var(--p-header-height, 64px);
+}
+
+.p-md-editor-wrap.fullscreen-mode {
+  --md-sticky-top: 0px;
+}
+
+/* z-index 80: trên canvas, dưới topbar (90), menu ··· (150), drawer/backdrop (200–250) */
+.p-md-editor-wrap > .p-md-toolbar {
+  position: sticky;
+  top: var(--md-sticky-top);
+  z-index: 80;
+}
+
+/* --- Thống kê nội dung ở mép phải toolbar --- */
+.md-toolbar-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.md-toolbar-stats {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding: 0 4px;
+  font-size: 11.5px;
+  line-height: 1;
+  color: var(--p-text-muted, #64748b);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.md-toolbar-stats b {
+  font-weight: 600;
+  color: var(--p-text, #0f172a);
+}
+
+.md-stat::before {
+  content: "·";
+  margin: 0 6px;
+  color: var(--p-text-dim, #94a3b8);
+}
+
+.md-stat-chars::before {
+  content: none;
+}
+
+/* --- Nút "···" (chỉ laptop/tablet) --- */
+.md-tb-more-btn {
+  display: none;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.p-md-editor-wrap.md-tb-expanded .md-tb-more-btn {
+  background: var(--p-surface-hover, #f1f5f9);
+  color: var(--p-text, #0f172a);
+}
+
+/* --- Desktop/laptop/tablet: một hàng, chỉ xuống dòng khi thật sự thiếu chỗ; menu thả không bị cắt --- */
+@media (min-width: 769px) {
+  .p-md-editor-wrap .p-md-actions-row {
+    flex-wrap: wrap;
+    overflow: visible !important;
+  }
+
+  .p-md-editor-wrap .notion-slash-palette {
+    width: min(330px, calc(100vw - 16px));
+  }
+}
+
+/* Laptop (1025–1280px): chỉ "từ" + "phút đọc"; nhóm ít dùng gom vào "···" */
+@media (max-width: 1280px) {
+  .md-stat-chars,
+  .md-stat-lines {
+    display: none;
+  }
+
+  .md-stat-words::before {
+    content: none;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1280px) {
+  .p-md-editor-wrap:not(.md-tb-expanded) .md-tb-secondary {
+    display: none;
+  }
+
+  .p-md-editor-wrap .md-tb-more-btn {
+    display: inline-flex;
+  }
+
+  /* Hàng không đủ chỗ (fitToolbarStats trong admin.js): chỉ giữ số từ thay vì đẩy cụm cuối xuống hàng 2 */
+  .p-md-editor-wrap.md-stats-compact .md-stat-read {
+    display: none;
+  }
+}
+
+/* Tablet/mobile: chỉ số từ */
+@media (max-width: 1024px) {
+  .md-stat-read {
+    display: none;
+  }
+
+  /* Bỏ rule ≤900px (L3251) đẩy nhóm chế độ xem xuống một hàng riêng */
+  .p-md-editor-wrap .notion-view-modes {
+    width: auto;
+    margin-top: 0;
+    padding-top: 2px;
+    border-top: 0;
+  }
+}
+
+/* --- Menu "/" --- */
+.p-md-editor-wrap .notion-slash-palette {
+  z-index: 85; /* trên toolbar dính (80), dưới topbar (90) và drawer */
+}
+
+.p-md-editor-wrap .notion-slash-list {
+  min-height: 0;
+}
+
+.notion-slash-empty {
+  padding: 10px 12px;
+  font-size: 12.5px;
+  color: var(--p-text-muted, #64748b);
+}
+
+/* --- Mobile (≤768px) --- */
+@media (max-width: 768px) {
+  .p-md-editor-wrap {
+    --md-sticky-top: 60px; /* .payload-topbar cao 60px ở ≤768px (L4060) */
+  }
+
+  .p-md-editor-wrap.fullscreen-mode {
+    --md-sticky-top: 0px;
+  }
+
+  /* backdrop-filter biến toolbar thành khối chứa của phần tử fixed → bottom sheet lệch chỗ */
+  .p-md-editor-wrap .p-md-toolbar {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  /* Một hàng cuộn ngang bên trong toolbar, ẩn thanh cuộn */
+  .p-md-editor-wrap .p-md-actions-row {
+    flex-wrap: nowrap;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    gap: 2px;
+    min-height: 52px;
+    padding: 4px 0 4px 6px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .p-md-editor-wrap .p-md-actions-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .p-md-editor-wrap .p-md-group,
+  .p-md-editor-wrap .notion-dropdown-wrap,
+  .p-md-editor-wrap .notion-view-modes {
+    flex: 0 0 auto;
+  }
+
+  .p-md-editor-wrap .notion-tb-btn,
+  .p-md-editor-wrap .notion-view-btn,
+  .p-md-editor-wrap .notion-zen-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+  }
+
+  .p-md-editor-wrap .notion-view-modes {
+    position: static;
+    box-shadow: none;
+  }
+
+  /* Số từ ghim ở mép phải; lớp mờ bên trái báo còn nút để cuộn (tắt khi đã cuộn tới cuối) */
+  .md-toolbar-end {
+    display: contents;
+  }
+
+  .md-toolbar-stats {
+    order: 99;
+    position: sticky;
+    right: 0;
+    align-self: stretch;
+    padding: 0 12px 0 8px;
+    background: var(--p-surface, #ffffff);
+  }
+
+  .md-toolbar-stats::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 100%;
+    width: 28px;
+    background: linear-gradient(to right, transparent, var(--p-surface, #ffffff));
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+
+  .p-md-toolbar.is-scroll-end .md-toolbar-stats::before {
+    opacity: 0;
+  }
+
+  /* Menu thả của toolbar: bottom sheet (thoát khỏi hàng cuộn ngang) */
+  .p-md-editor-wrap .notion-menu-popover {
+    position: fixed !important;
+    top: auto !important;
+    right: 8px !important;
+    bottom: 8px !important;
+    left: 8px !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: min(60vh, 440px) !important;
+    border-radius: 14px;
+  }
+
+  .p-md-editor-wrap .notion-menu-item,
+  .p-md-editor-wrap .notion-color-item,
+  .p-md-editor-wrap .notion-stress-vowel,
+  .p-md-editor-wrap .notion-stress-punct,
+  .p-md-editor-wrap .notion-stress-quick-apply {
+    min-height: 44px;
+  }
+
+  /* Menu "/": bottom sheet, hàng 44px (bottom/max-height tinh chỉnh theo bàn phím trong positionSlashPalette) */
+  .p-md-editor-wrap .notion-slash-palette {
+    position: fixed;
+    top: auto !important;
+    right: 8px;
+    bottom: 8px;
+    left: 8px !important;
+    width: auto;
+    max-width: none;
+    max-height: min(55vh, 440px);
+    border-radius: 14px;
+  }
+
+  .p-md-editor-wrap .notion-slash-list {
+    max-height: none;
+  }
+
+  .p-md-editor-wrap .notion-slash-item {
+    min-height: 44px;
+  }
+
+  .p-md-editor-wrap .notion-slash-filter {
+    font-size: 16px;
+  }
+
+  .p-md-editor-wrap .notion-slash-kbd {
+    display: none;
+  }
+}

@@ -9,3 +9,6 @@ trki_tests_20.json
 data/supabase-backup.json
 .tmp/
 supabase/.temp/
+
+# Claude Code personal settings
+.claude/settings.local.json

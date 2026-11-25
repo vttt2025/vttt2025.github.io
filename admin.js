@@ -3163,9 +3163,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                     <button type="button" class="notion-tb-btn" data-notion-turn="h3" title="Tiêu đề 3 (###)"><strong style="font-size:11px">H3</strong></button>
                     <button type="button" class="notion-tb-btn" data-notion-action="ul" title="Danh sách chấm (-)">${NOTION_ICONS.ul}</button>
                     <button type="button" class="notion-tb-btn" data-notion-action="ol" title="Danh sách số (1.)">${NOTION_ICONS.ol}</button>
-                    <button type="button" class="notion-tb-btn" data-notion-action="task" title="Việc cần làm (Checklist)">${NOTION_ICONS.task}</button>
+                    <button type="button" class="notion-tb-btn md-tb-secondary" data-notion-action="task" title="Việc cần làm (Checklist)">${NOTION_ICONS.task}</button>
                     <button type="button" class="notion-tb-btn" data-notion-action="quote" title="Trích dẫn (&gt;)">${NOTION_ICONS.quote}</button>
-                    <button type="button" class="notion-tb-btn" data-notion-action="hr" title="Đường phân cách (---)">${NOTION_ICONS.hr}</button>
+                    <button type="button" class="notion-tb-btn md-tb-secondary" data-notion-action="hr" title="Đường phân cách (---)">${NOTION_ICONS.hr}</button>
                   </div>
 
                   <span class="p-md-sep"></span>
@@ -3182,7 +3182,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                   <div class="p-md-group">
                     <button type="button" class="notion-tb-btn" data-action="bold" title="In đậm (Ctrl+B)">${NOTION_ICONS.bold}</button>
                     <button type="button" class="notion-tb-btn" data-action="italic" title="In nghiêng (Ctrl+I)">${NOTION_ICONS.italic}</button>
-                    <button type="button" class="notion-tb-btn" data-action="strike" title="Gạch ngang (~~text~~)">${NOTION_ICONS.strike}</button>
+                    <button type="button" class="notion-tb-btn md-tb-secondary" data-action="strike" title="Gạch ngang (~~text~~)">${NOTION_ICONS.strike}</button>
                     <button type="button" class="notion-tb-btn" data-action="mark" title="Đánh dấu nổi bật (Highlight)">${NOTION_ICONS.highlight}</button>
 
                     <!-- Notion Color Picker (Text & Highlight Color) -->
@@ -3273,9 +3273,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                       </div>
                     </div>
 
-                    <button type="button" class="notion-tb-btn" data-action="code-inline" title="Mã trong dòng (inline code)">${NOTION_ICONS.code}</button>
+                    <button type="button" class="notion-tb-btn md-tb-secondary" data-action="code-inline" title="Mã trong dòng (inline code)">${NOTION_ICONS.code}</button>
                     <button type="button" class="notion-tb-btn" data-action="link" title="Chèn liên kết (Ctrl+K)">${NOTION_ICONS.link}</button>
-                    <button type="button" class="notion-tb-btn" data-action="clear-format" title="Xóa định dạng (Eraser)">${NOTION_ICONS.eraser}</button>
+                    <button type="button" class="notion-tb-btn md-tb-secondary" data-action="clear-format" title="Xóa định dạng (Eraser)">${NOTION_ICONS.eraser}</button>
                   </div>
 
                   <span class="p-md-sep"></span>
@@ -3317,7 +3317,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                   </div>
 
                   <!-- Callouts Dropdown (icon-only button) -->
-                  <div class="notion-dropdown-wrap">
+                  <div class="notion-dropdown-wrap md-tb-secondary">
                     <button type="button" class="notion-tb-btn btn-notion-callout" title="Chèn hộp ghi chú Callout">
                       ${NOTION_ICONS.callout}
                     </button>
@@ -3354,7 +3354,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                   </div>
 
                   <!-- Tables Dropdown (icon-only button) -->
-                  <div class="notion-dropdown-wrap">
+                  <div class="notion-dropdown-wrap md-tb-secondary">
                     <button type="button" class="notion-tb-btn btn-notion-table" title="Chèn bảng dữ liệu hoặc từ vựng">
                       ${NOTION_ICONS.table}
                     </button>
@@ -3379,13 +3379,25 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                   </div>
 
                   <!-- Media Buttons -->
-                  <div class="p-md-group">
+                  <div class="p-md-group md-tb-secondary">
                     <button type="button" class="notion-tb-btn" data-notion-action="img" title="Chèn hình ảnh minh họa">${NOTION_ICONS.image}</button>
                     <button type="button" class="notion-tb-btn" data-notion-action="audio" title="Khung nghe Audio tiếng Nga">${NOTION_ICONS.audio}</button>
                   </div>
 
+                  <!-- Laptop/tablet: hiện/ẩn nhóm công cụ ít dùng (.md-tb-secondary) -->
+                  <button type="button" class="notion-tb-btn md-tb-more-btn" title="Thêm công cụ" aria-label="Thêm công cụ" aria-expanded="false">···</button>
+
+                  <div class="md-toolbar-end">
+                  <!-- Thống kê nội dung (cập nhật trong syncCanvasToMarkdown / syncTextareaToDraft) -->
+                  <div class="md-toolbar-stats">
+                    <span class="md-stat md-stat-chars"><b class="md-char-count">${String(mdVal).length}</b> ký tự</span>
+                    <span class="md-stat md-stat-words"><b class="md-word-count">${wordCountVal}</b> từ</span>
+                    <span class="md-stat md-stat-lines"><b class="md-line-count">${lineCountVal}</b> dòng</span>
+                    <span class="md-stat md-stat-read"><span class="md-read-time">~${readTimeVal} phút đọc</span></span>
+                  </div>
+
                   <!-- Modes & Zen (Right-aligned, icon-only) -->
-                  <div class="notion-view-modes" style="margin-left:auto">
+                  <div class="notion-view-modes">
                     <button type="button" class="notion-view-btn active" data-canvas-mode="wysiwyg" title="Soạn thảo trực quan chuẩn Notion">
                       ${NOTION_ICONS.edit}
                     </button>
@@ -3394,6 +3406,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                     </button>
                     <span class="notion-view-sep"></span>
                     <button type="button" class="notion-zen-btn" data-action="zen" title="Toàn màn hình không xao nhãng (Esc)">${NOTION_ICONS.zen}</button>
+                  </div>
                   </div>
                 </div>
               </div>
@@ -3538,6 +3551,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
                     <div class="notion-slash-item-info"><div class="notion-slash-item-title">Khối mã nguồn (Code)</div><div class="notion-slash-item-desc">Mã hoặc định dạng chuyên biệt</div></div>
                     <span class="notion-slash-item-shortcut">/code</span>
                   </button>
+                  <div class="notion-slash-empty" style="display:none">Không có kết quả</div>
                 </div>
               </div>
             </div>
@@ -4301,6 +4315,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
       // Xử lý phím tắt trong Canvas (Tab bảng, Esc, Enter Slash, Ctrl+Z, Ctrl+Y)
       const handleEditorKeydown = (e) => {
+        // Menu "/" đang mở: ↑/↓/Enter/Tab/Esc điều khiển menu (trước cả Tab chuyển ô bảng)
+        if (handleSlashNavKey(e)) return;
+
         // Ctrl/Cmd + Z => Undo (khi không giữ Shift)
         if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === "z") {
           if (canvas && (!rawPane || rawPane.style.display !== "block")) {
@@ -4372,7 +4389,6 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
         // Phím Esc đóng menu và thoát Zen mode
         if (e.key === "Escape") {
-          hideSlashPalette();
           hideAllNotionPopovers();
           if (wrap.classList.contains("fullscreen-mode")) {
             e.preventDefault();
@@ -4381,37 +4397,6 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
             if (zenBtn) zenBtn.innerHTML = NOTION_ICONS.zen;
           }
           return;
-        }
-
-        // Điều hướng phím mũi tên và Enter khi menu Slash đang mở
-        if (slashPalette && slashPalette.style.display !== "none") {
-          const visibleItems = Array.from(slashPalette.querySelectorAll(".notion-slash-item")).filter(it => it.style.display !== "none");
-          let activeIdx = visibleItems.findIndex(it => it.classList.contains("active"));
-
-          if (e.key === "ArrowDown") {
-            e.preventDefault();
-            if (activeIdx < visibleItems.length - 1) activeIdx++;
-            else activeIdx = 0;
-            visibleItems.forEach((it, i) => it.classList.toggle("active", i === activeIdx));
-            if (visibleItems[activeIdx]) visibleItems[activeIdx].scrollIntoView({ block: "nearest" });
-            return;
-          }
-          if (e.key === "ArrowUp") {
-            e.preventDefault();
-            if (activeIdx > 0) activeIdx--;
-            else activeIdx = visibleItems.length - 1;
-            visibleItems.forEach((it, i) => it.classList.toggle("active", i === activeIdx));
-            if (visibleItems[activeIdx]) visibleItems[activeIdx].scrollIntoView({ block: "nearest" });
-            return;
-          }
-          if (e.key === "Enter") {
-            e.preventDefault();
-            const selectedItem = visibleItems[activeIdx] || visibleItems[0];
-            if (selectedItem) {
-              executeBlockAction(selectedItem.dataset.notionAction);
-            }
-            return;
-          }
         }
       };
 
@@ -4432,94 +4417,51 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       if (btnUndo) btnUndo.onclick = () => doUndo();
       if (btnRedo) btnRedo.onclick = () => doRedo();
 
-      // Xử lý Floating Slash Command Menu (Gõ '/' là ra ngay)
-      let slashTextNode = null;
-      let slashCharIndex = -1;
+      // Menu lệnh "/" kiểu Notion: gõ "/" ở đầu dòng hoặc sau khoảng trắng → menu ngay dưới con trỏ,
+      // chữ gõ sau "/" lọc mục (không phân biệt dấu tiếng Việt); chọn mục thì xoá "/từ-khoá" rồi chèn khối.
+      let slashState = null; // { node, index, query, lastMatchLen } — vị trí ký tự "/" trong text node
+      const slashItems = slashPalette ? Array.from(slashPalette.querySelectorAll(".notion-slash-item")) : [];
+      const slashList = slashPalette ? slashPalette.querySelector(".notion-slash-list") : null;
+      const slashEmpty = slashPalette ? slashPalette.querySelector(".notion-slash-empty") : null;
+      const foldVi = (str) => String(str || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/đ/g, "d");
+      const slashHaystack = new Map(slashItems.map((it) => [it, foldVi([
+        it.querySelector(".notion-slash-item-title")?.textContent,
+        it.querySelector(".notion-slash-item-desc")?.textContent,
+        it.querySelector(".notion-slash-item-shortcut")?.textContent,
+        it.dataset.notionAction
+      ].join(" "))]));
+      const isSlashOpen = () => Boolean(slashPalette && slashPalette.style.display !== "none");
 
+      // Đóng menu, giữ nguyên chữ đã gõ trong bài
       const hideSlashPalette = () => {
+        slashState = null;
         if (!slashPalette) return;
         slashPalette.style.display = "none";
         if (slashFilter) slashFilter.value = "";
       };
 
-      const showSlashPaletteNearCursor = (range, query = "") => {
-        if (!slashPalette) return;
-
-        let rect = null;
-        if (slashTextNode && slashCharIndex >= 0) {
-          try {
-            const charRange = document.createRange();
-            charRange.setStart(slashTextNode, slashCharIndex);
-            charRange.setEnd(slashTextNode, Math.min(slashTextNode.nodeValue.length, slashCharIndex + 1));
-            const cr = charRange.getBoundingClientRect();
-            if (cr && (cr.width > 0 || cr.height > 0 || cr.top > 0 || cr.left > 0)) {
-              rect = cr;
-            }
-          } catch (err) {}
-        }
-        if (!rect || (rect.width === 0 && rect.height === 0 && rect.top === 0 && rect.left === 0)) {
-          const r = range.getBoundingClientRect();
-          if (r && (r.width > 0 || r.height > 0 || r.top > 0 || r.left > 0)) {
-            rect = r;
-          }
-        }
-        if (!rect || (rect.width === 0 && rect.height === 0 && rect.top === 0 && rect.left === 0)) {
-          if (range.startContainer && range.startContainer.parentElement) {
-            rect = range.startContainer.parentElement.getBoundingClientRect();
-          }
-        }
-
-        const wrapRect = wrap.getBoundingClientRect();
-        if (!rect || (rect.top === 0 && rect.bottom === 0)) {
-          rect = { top: wrapRect.top + 50, bottom: wrapRect.top + 70, left: wrapRect.left + 20, right: wrapRect.left + 40, width: 20, height: 20 };
-        }
-
-        const paletteWidth = 330;
-        const paletteHeight = 360;
-
-        let top = (rect.bottom - wrapRect.top + 6);
-        let left = (rect.left - wrapRect.left);
-
-        // If near bottom of browser viewport, flip above cursor
-        const spaceBelow = window.innerHeight - rect.bottom;
-        if (spaceBelow < 340 && rect.top > 320) {
-          top = Math.max(10, rect.top - wrapRect.top - paletteHeight - 6);
-        }
-
-        // Ensure inside wrap bounds
-        if (left + paletteWidth > wrapRect.width - 16) {
-          left = Math.max(12, wrapRect.width - paletteWidth - 16);
-        }
-        if (left < 12) left = 12;
-
-        slashPalette.style.top = `${Math.round(top)}px`;
-        slashPalette.style.left = `${Math.round(left)}px`;
-        slashPalette.style.display = "flex";
-
-        filterSlashItems(query);
+      const setActiveSlashItem = (item, scroll = true) => {
+        slashItems.forEach((it) => it.classList.toggle("active", it === item));
+        if (item && scroll) item.scrollIntoView({ block: "nearest" });
       };
 
       const filterSlashItems = (query = "") => {
-        if (!slashPalette) return;
-        const cleanQ = query.trim().toLowerCase();
-        const items = slashPalette.querySelectorAll(".notion-slash-item");
-        let hasMatch = false;
-
-        items.forEach((it, idx) => {
-          const title = (it.querySelector(".notion-slash-item-title")?.textContent || "").toLowerCase();
-          const desc = (it.querySelector(".notion-slash-item-desc")?.textContent || "").toLowerCase();
-          const shortcut = (it.querySelector(".notion-slash-item-shortcut")?.textContent || "").toLowerCase();
-          const action = (it.dataset.notionAction || "").toLowerCase();
-
-          const isMatch = !cleanQ || title.includes(cleanQ) || desc.includes(cleanQ) || shortcut.includes(cleanQ) || action.includes(cleanQ);
+        if (!slashPalette) return 0;
+        const tokens = foldVi(query).split(/\s+/).filter(Boolean);
+        let firstMatch = null;
+        let count = 0;
+        slashItems.forEach((it) => {
+          const hay = slashHaystack.get(it) || "";
+          const isMatch = tokens.every((t) => hay.includes(t));
           it.style.display = isMatch ? "flex" : "none";
-          if (isMatch && !hasMatch) {
-            it.classList.add("active");
-            hasMatch = true;
-          } else {
-            it.classList.remove("active");
+          if (isMatch) {
+            count++;
+            if (!firstMatch) firstMatch = it;
           }
         });
+        setActiveSlashItem(firstMatch, false);
+        if (slashList) slashList.scrollTop = 0;
+        if (slashEmpty) slashEmpty.style.display = count ? "none" : "block";
 
         // Ẩn nhóm nếu không có item nào hiển thị
         slashPalette.querySelectorAll(".notion-menu-group-label").forEach((lbl) => {
@@ -4534,34 +4476,203 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           }
           lbl.style.display = groupHasVisible ? "block" : "none";
         });
+        return count;
       };
 
-      // Bắt sự kiện gõ '/' trong canvas
-      if (canvas) {
-        canvas.addEventListener("keyup", (e) => {
-          if (e.key === "ArrowDown" || e.key === "ArrowUp" || e.key === "Enter" || e.key === "Escape") return;
-          const sel = window.getSelection();
-          if (!sel || sel.rangeCount === 0) return;
-          const range = sel.getRangeAt(0);
-          const node = range.startContainer;
+      // Khung chữ của ký tự "/" (neo menu); nếu text node đã đổi thì lấy khối chứa
+      const getSlashAnchorRect = () => {
+        if (!slashState || !slashState.node.isConnected) return null;
+        const { node, index } = slashState;
+        if (index < node.nodeValue.length) {
+          const r = document.createRange();
+          r.setStart(node, index);
+          r.setEnd(node, index + 1);
+          const rects = r.getClientRects();
+          const cr = rects.length ? rects[rects.length - 1] : null;
+          if (cr && (cr.width || cr.height)) return cr;
+        }
+        return node.parentElement ? node.parentElement.getBoundingClientRect() : null;
+      };
 
-          if (node.nodeType === 3) {
-            const text = node.nodeValue;
-            const offset = range.startOffset;
-            const lastSlash = text.lastIndexOf("/", offset - 1);
-            if (lastSlash !== -1) {
-              const charBefore = lastSlash > 0 ? text[lastSlash - 1] : "\n";
-              if (charBefore === " " || charBefore === "\n" || charBefore === "\u00A0" || lastSlash === 0) {
-                slashTextNode = node;
-                slashCharIndex = lastSlash;
-                const query = text.substring(lastSlash + 1, offset);
-                showSlashPaletteNearCursor(range, query);
-                return;
-              }
-            }
+      // Desktop/tablet: ngay dưới con trỏ, lật lên trên nếu thiếu chỗ, luôn nằm trong viewport và dưới toolbar.
+      // Mobile (≤768px): bottom sheet (CSS) — chỉ chừa chỗ bàn phím ảo và cuộn để dòng đang gõ không bị che.
+      const positionSlashPalette = () => {
+        if (!slashPalette || !isSlashOpen()) return;
+        const vv = window.visualViewport;
+        const viewTop = vv ? vv.offsetTop : 0;
+        const viewBottom = vv ? vv.offsetTop + vv.height : window.innerHeight;
+        const anchor = getSlashAnchorRect();
+        const st = slashPalette.style;
+
+        if (window.matchMedia("(max-width: 768px)").matches) {
+          st.removeProperty("top");
+          st.removeProperty("left");
+          st.bottom = `${Math.round(Math.max(0, window.innerHeight - viewBottom) + 8)}px`;
+          st.maxHeight = `${Math.round(Math.min(440, (viewBottom - viewTop) * 0.55))}px`;
+          const sheetTop = slashPalette.getBoundingClientRect().top;
+          if (anchor && anchor.bottom > sheetTop - 8) {
+            const dy = anchor.bottom - sheetTop + 16;
+            if (wrap.classList.contains("fullscreen-mode") && surface) surface.scrollTop += dy;
+            else window.scrollBy(0, dy);
           }
+          return;
+        }
+
+        st.removeProperty("bottom");
+        st.maxHeight = "";
+        const toolbar = wrap.querySelector(".p-md-toolbar");
+        const minTop = Math.max(viewTop, toolbar ? toolbar.getBoundingClientRect().bottom : 0) + 6;
+        const maxBottom = viewBottom - 8;
+        const wrapRect = wrap.getBoundingClientRect();
+        const rect = anchor || { top: wrapRect.top + 50, bottom: wrapRect.top + 70, left: wrapRect.left + 20 };
+        const spaceBelow = maxBottom - (rect.bottom + 6);
+        const spaceAbove = (rect.top - 6) - minTop;
+        let h = slashPalette.offsetHeight;
+        const w = slashPalette.offsetWidth;
+        let top;
+        if (h <= spaceBelow || spaceBelow >= spaceAbove) {
+          if (h > spaceBelow) { st.maxHeight = `${Math.max(140, Math.floor(spaceBelow))}px`; h = slashPalette.offsetHeight; }
+          top = rect.bottom + 6;
+        } else {
+          if (h > spaceAbove) { st.maxHeight = `${Math.max(140, Math.floor(spaceAbove))}px`; h = slashPalette.offsetHeight; }
+          top = rect.top - 6 - h;
+        }
+        top = Math.min(Math.max(top, minTop), Math.max(minTop, maxBottom - h));
+        const left = Math.min(Math.max(8, rect.left), Math.max(8, window.innerWidth - w - 8));
+        // Palette absolute trong wrap: đổi toạ độ viewport sang toạ độ của wrap
+        // (inline !important để thắng rule cũ "left: 12px !important" ở ≤900px)
+        st.setProperty("top", `${Math.round(top - wrapRect.top - wrap.clientTop)}px`, "important");
+        st.setProperty("left", `${Math.round(left - wrapRect.left - wrap.clientLeft)}px`, "important");
+      };
+
+      const openSlashPalette = (node, index) => {
+        if (!slashPalette) return;
+        hideAllNotionPopovers();
+        slashState = { node, index, query: "", lastMatchLen: 0 };
+        if (slashFilter) slashFilter.value = "";
+        filterSlashItems("");
+        slashPalette.style.display = "flex";
+        positionSlashPalette();
+      };
+
+      // "/" hợp lệ khi ở đầu dòng/khối hoặc ngay sau khoảng trắng (không bật trong "a/b", "http://")
+      const isSlashBoundary = (node, index) => {
+        if (index > 0) return /[\s ]/.test(node.nodeValue.charAt(index - 1));
+        const prev = node.previousSibling;
+        if (!prev || prev.nodeName === "BR") return true;
+        const prevText = prev.textContent || "";
+        return !prevText || /[\s ]$/.test(prevText);
+      };
+
+      // Cập nhật từ khoá theo con trỏ; đóng khi con trỏ rời "/từ-khoá", "/" bị xoá (Backspace) hoặc gõ khoảng trắng ngay sau "/"
+      const updateSlashFromCaret = () => {
+        if (!slashState) return;
+        const { node, index } = slashState;
+        const sel = window.getSelection();
+        if (!sel || !sel.rangeCount || !sel.isCollapsed || sel.anchorNode !== node || !node.isConnected ||
+            node.nodeValue.charAt(index) !== "/" || sel.anchorOffset <= index) {
           hideSlashPalette();
+          return;
+        }
+        const query = node.nodeValue.slice(index + 1, sel.anchorOffset);
+        if (/^[\s ]/.test(query)) {
+          hideSlashPalette();
+          return;
+        }
+        slashState.query = query;
+        if (slashFilter) slashFilter.value = query;
+        const count = filterSlashItems(query);
+        if (count) {
+          slashState.lastMatchLen = query.length;
+        } else if (query.length - slashState.lastMatchLen > 3) {
+          // Như Notion: hiện "Không có kết quả" thêm vài ký tự rồi tự đóng, giữ nguyên chữ đã gõ
+          hideSlashPalette();
+          return;
+        }
+        positionSlashPalette();
+      };
+
+      // Xoá "/từ-khoá" đã gõ và đặt con trỏ tại vị trí "/" trước khi chèn khối
+      const removeSlashQueryText = (ctx) => {
+        const { node, index, query } = ctx;
+        if (!node.isConnected || node.nodeValue.charAt(index) !== "/") return;
+        const len = node.nodeValue.substr(index + 1, query.length) === query ? query.length + 1 : 1;
+        node.deleteData(index, len);
+        const sel = window.getSelection();
+        if (!sel) return;
+        const range = document.createRange();
+        range.setStart(node, index);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      };
+
+      // ↑/↓ (Shift+Tab) chọn mục, Enter/Tab chèn, Esc đóng (giữ chữ). Bỏ qua khi có Ctrl/Cmd/Alt.
+      const handleSlashNavKey = (e) => {
+        if (!isSlashOpen() || e.ctrlKey || e.metaKey || e.altKey) return false;
+        const visible = slashItems.filter((it) => it.style.display !== "none");
+        const idx = visible.findIndex((it) => it.classList.contains("active"));
+        if (e.key === "ArrowDown" || e.key === "ArrowUp" || (e.key === "Tab" && e.shiftKey)) {
+          e.preventDefault();
+          if (visible.length) {
+            const step = e.key === "ArrowDown" ? 1 : -1;
+            const nextIdx = idx < 0 ? 0 : (idx + step + visible.length) % visible.length;
+            setActiveSlashItem(visible[nextIdx]);
+          }
+          return true;
+        }
+        if (e.key === "Enter" || e.key === "Tab") {
+          if (!visible.length) {
+            hideSlashPalette();
+            return false;
+          }
+          e.preventDefault();
+          executeBlockAction((visible[idx] || visible[0]).dataset.notionAction);
+          return true;
+        }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          hideSlashPalette();
+          return true;
+        }
+        return false;
+      };
+
+      if (canvas && slashPalette) {
+        canvas.addEventListener("input", (e) => {
+          if (slashState) {
+            updateSlashFromCaret();
+            return;
+          }
+          if (!e.inputType || !e.inputType.startsWith("insert")) return;
+          const sel = window.getSelection();
+          if (!sel || !sel.rangeCount || !sel.isCollapsed) return;
+          const node = sel.anchorNode;
+          const offset = sel.anchorOffset;
+          if (!node || node.nodeType !== 3 || offset < 1 || node.nodeValue.charAt(offset - 1) !== "/") return;
+          if (node.parentElement && node.parentElement.closest("pre, code")) return;
+          if (!isSlashBoundary(node, offset - 1)) return;
+          openSlashPalette(node, offset - 1);
         });
+        // Di chuyển con trỏ bằng phím (←/→/Home/End) ra khỏi "/từ-khoá" thì đóng menu
+        canvas.addEventListener("keyup", (e) => {
+          if (slashState && (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Home" || e.key === "End")) {
+            updateSlashFromCaret();
+          }
+        });
+        // Giữ con trỏ trong bài khi bấm chuột vào mục của menu; rê chuột đổi mục đang chọn
+        slashPalette.addEventListener("mousedown", (e) => {
+          if (!e.target.closest(".notion-slash-filter")) e.preventDefault();
+        });
+        slashPalette.addEventListener("mousemove", (e) => {
+          const it = e.target.closest(".notion-slash-item");
+          if (it && !it.classList.contains("active")) setActiveSlashItem(it, false);
+        });
+        if (surface) {
+          surface.addEventListener("scroll", () => {
+            if (isSlashOpen()) positionSlashPalette();
+          }, { passive: true });
+        }
       }
 
       // Xử lý ô tìm kiếm trong slash palette nếu gõ trực tiếp vào
@@ -4569,25 +4680,24 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         slashFilter.addEventListener("input", () => {
           filterSlashItems(slashFilter.value);
         });
+        slashFilter.addEventListener("keydown", (e) => {
+          const ctx = slashState;
+          if (!handleSlashNavKey(e) || e.key !== "Escape" || !canvas) return;
+          // Esc trong ô tìm: quay lại bài, con trỏ sau "/từ-khoá"
+          canvas.focus();
+          if (ctx && ctx.node.isConnected) {
+            const sel = window.getSelection();
+            const range = document.createRange();
+            range.setStart(ctx.node, Math.min(ctx.node.nodeValue.length, ctx.index + 1 + ctx.query.length));
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        });
       }
 
       // Chèn khối visual HTML trực tiếp vào vị trí con trỏ ("như bảng là ra bảng liền")
       const insertVisualBlockHtml = (html) => {
-        // Dọn dẹp ký tự '/' và từ khóa tìm kiếm đã gõ
-        if (slashTextNode && slashCharIndex >= 0) {
-          try {
-            const sel = window.getSelection();
-            const currOffset = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).startOffset : slashCharIndex + 1;
-            const original = slashTextNode.nodeValue;
-            slashTextNode.nodeValue = original.substring(0, slashCharIndex) + original.substring(currOffset);
-          } catch (err) {
-            // fallback
-          }
-        }
-        hideSlashPalette();
-        slashTextNode = null;
-        slashCharIndex = -1;
-
         const tempDiv = document.createElement("div");
         tempDiv.innerHTML = html;
         const frag = document.createDocumentFragment();
@@ -4605,7 +4715,16 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         if (sel && sel.rangeCount > 0 && canvas.contains(sel.getRangeAt(0).commonAncestorContainer)) {
           const range = sel.getRangeAt(0);
           range.collapse(false);
-          range.insertNode(frag);
+          // Dòng trống (vd. vừa xoá "/lệnh"): thay cả đoạn trống bằng khối mới, không lồng khối vào trong <p>
+          const caretEl = range.startContainer.nodeType === 1 ? range.startContainer : range.startContainer.parentElement;
+          const emptyBlock = caretEl && caretEl !== canvas ? caretEl.closest("p, div") : null;
+          if (emptyBlock && emptyBlock.parentElement === canvas &&
+              !emptyBlock.textContent.replace(/\u00A0/g, " ").trim() &&
+              !emptyBlock.querySelector("img, audio, video, table, input, hr")) {
+            canvas.replaceChild(frag, emptyBlock);
+          } else {
+            range.insertNode(frag);
+          }
         } else {
           canvas.appendChild(frag);
         }
@@ -4621,8 +4740,11 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
       // Hành động chèn khối tương tác
       const executeBlockAction = (act) => {
+        // Chọn từ menu "/": xoá "/từ-khoá" trước khi chèn
+        const slashCtx = isSlashOpen() ? slashState : null;
         hideAllNotionPopovers();
         hideSlashPalette();
+        if (slashCtx) removeSlashQueryText(slashCtx);
 
         if (act === "table-vocab") {
           // Bảng từ vựng 4 cột song ngữ tiếng Nga có trọng âm ("như bảng là ra bảng liền")
@@ -5090,6 +5212,44 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
             e.preventDefault();
           }
         });
+      }
+
+      // Laptop/tablet (769–1280px): nút "···" hiện/ẩn nhóm công cụ ít dùng (.md-tb-secondary)
+      const moreBtn = wrap.querySelector(".md-tb-more-btn");
+      if (moreBtn) {
+        moreBtn.onclick = (e) => {
+          e.stopPropagation();
+          const expanded = wrap.classList.toggle("md-tb-expanded");
+          moreBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
+        };
+      }
+
+      // Mobile: toolbar cuộn ngang — tắt lớp mờ mép phải khi đã cuộn tới cuối
+      const actionsRow = wrap.querySelector(".p-md-actions-row");
+      if (toolbarEl && actionsRow) {
+        const updateToolbarFade = () => {
+          toolbarEl.classList.toggle("is-scroll-end", actionsRow.scrollLeft + actionsRow.clientWidth >= actionsRow.scrollWidth - 2);
+        };
+        actionsRow.addEventListener("scroll", updateToolbarFade, { passive: true });
+        updateToolbarFade();
+      }
+
+      // Laptop/tablet: nếu cụm thống kê + chế độ xem bị đẩy xuống hàng 2 thì rút gọn thống kê còn số từ
+      const toolbarEnd = wrap.querySelector(".md-toolbar-end");
+      if (actionsRow && toolbarEnd && typeof ResizeObserver === "function") {
+        let fitFrame = 0;
+        const fitToolbarStats = () => {
+          fitFrame = 0;
+          wrap.classList.remove("md-stats-compact");
+          if (!window.matchMedia("(min-width: 769px) and (max-width: 1280px)").matches) return;
+          const first = actionsRow.firstElementChild;
+          if (first && toolbarEnd.getBoundingClientRect().top > first.getBoundingClientRect().bottom - 2) {
+            wrap.classList.add("md-stats-compact");
+          }
+        };
+        new ResizeObserver(() => {
+          if (!fitFrame) fitFrame = requestAnimationFrame(fitToolbarStats);
+        }).observe(actionsRow);
       }
 
       document.addEventListener("click", (e) => {
