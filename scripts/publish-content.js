@@ -236,7 +236,8 @@ const BUILDERS = {
   'trki_bank.json': {
     tables: ['trki_tests'],
     async build(cfg) {
-      const rows = await api(cfg, 'trki_tests?select=*&order=level.asc');
+      // View đã xoá khoá đáp án phía server; bảng trki_tests không còn cho anon đọc
+      const rows = await api(cfg, 'trki_tests_public?select=*&order=level.asc');
       return rows.map((t) => {
         const raw = t.raw_data || {};
         const parts = (Array.isArray(t.parts) && t.parts.length) ? t.parts : (raw.parts || t.sections || []);
@@ -386,6 +387,10 @@ async function main() {
     const text = JSON.stringify(data);
     const file = path.join(MODULES_DIR, f);
     const prev = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
+    // Chống xoá trắng module khi API trả rỗng do lỗi quyền/RLS (trki_questions.json cố ý luôn rỗng)
+    if (f !== 'trki_questions.json' && Array.isArray(data) && !data.length && prev && prev !== '[]') {
+      throw new Error(`${f}: Supabase trả về 0 dòng trong khi bản hiện tại có dữ liệu — dừng xuất bản (kiểm tra RLS/quyền đọc).`);
+    }
     manifest.modules[f] = { v: hashOf(text) };
     if (prev !== text) {
       changedFiles.push(f);

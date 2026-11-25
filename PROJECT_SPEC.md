@@ -283,23 +283,20 @@ Hệ thống nhận diện trạng thái xác thực của người dùng để 
 
 ### 2.3. Cổng Thanh Toán VietQR 2.0 Tự Động & Kích Hoạt Tức Thì:
 * **Quy chuẩn Tạo Đơn & Mã Định Danh Đơn Hàng**:
-  * Mã giao dịch được sinh duy nhất theo cấu trúc: `RUSI_[MãĐơn]_[UserTag]` (ví dụ: `RUSI_9824_Q9F2`).
+  * Mã đơn sinh ở client (`app.js`) theo cấu trúc `RUSI_[timestamp ms]_[UserTag]` (ví dụ: `RUSI_1764051234567_Q9F2`) và dùng luôn làm nội dung chuyển khoản. Ảnh QR tạo qua `img.vietqr.io` với `amount` = giá gói, `addInfo` = mã đơn.
   * Mã nội dung chuyển khoản được mã hóa gọn gàng, tương thích tuyệt đối với cú pháp quét quang học của hệ sinh thái Napas247 và các ứng dụng ngân hàng di động tại Việt Nam.
 * **Đồng Hồ Đếm Ngược Phiên Giao Dịch (15:00 Session Timer)**:
-  * Server tạo `orders.expires_at` theo thời hạn 15 phút; client hiển thị thời gian còn lại từ mốc này. Reload hoặc sửa đồng hồ thiết bị không được gia hạn đơn.
+  * Hiện trạng: đồng hồ 15:00 tính ở client (`Date.now() + 15 phút`). Mục tiêu: server ghi `orders.expires_at` và client chỉ hiển thị thời gian còn lại, để reload hoặc sửa đồng hồ thiết bị không gia hạn được đơn.
   * Khi hết thời gian 15:00, mã QR tự động làm mờ và hiển thị nút `[Tạo mã thanh toán mới]` nhằm ngăn chặn việc chuyển khoản vào các phiên đã hủy.
 * **Tiện Ích Sao Chép 1-Chạm (One-Tap Copy)**:
   * Trang bị nút sao chép độc lập cho từng trường thông tin: *Số tài khoản*, *Số tiền*, và *Nội dung chuyển khoản*.
   * Tích hợp tooltip/toast thông báo tức thì: icon `check-circle-correct` + văn bản `"Đã chép vào bộ nhớ tạm"`, tự động ẩn sau 2 giây. Vùng chạm nút sao chép đảm bảo $\ge 44 \times 44$px.
-* **Cơ Chế Xác Thực & Kích Hoạt Realtime Không Cần Tải Lại Trang**:
-  * Khi giao diện thanh toán hiển thị, tiến trình nền tự động polling kiểm tra trạng thái giao dịch qua Webhook / API dịch vụ đối soát ngân hàng (Casso):
-    ```javascript
-    // Đọc trạng thái đơn của chính chủ; backoff/jitter, dừng khi đơn kết thúc
-    const pollPaymentStatus = async (orderId) => { ... };
-    ```
-  * Ngay khi tài khoản nhận được biến động số dư khớp đúng số tiền và cú pháp:
-    1. Modal thanh toán hiển thị màn hình chúc mừng (Success State) với hiệu ứng pháo hoa nhẹ và âm báo nhẹ nhàng.
-    2. Trạng thái bản quyền của học viên được cập nhật lập tức trên toàn bộ runtime ứng dụng (`window.AppState.isPro = true`), tự động gỡ bỏ toàn bộ khóa nội dung mà không cần người dùng phải bấm tải lại trang (F5).
+* **Cơ Chế Xác Thực & Kích Hoạt Không Cần Tải Lại Trang**:
+  * Khi modal thanh toán mở, client gọi `RusiSupabase.orders.checkStatus(orderId)` mỗi 3 giây (đọc đơn của chính chủ qua RLS) cho tới khi `status = 'paid'` hoặc hết phiên.
+  * Kích hoạt đơn bằng RPC `rusi_activate_order(p_order_code, p_casso_ref)`; hàm chỉ chạy với admin hoặc `service_role`. Repo **chưa có webhook Casso** (Edge Function duy nhất là `ai-review`), nên hiện tại admin/Operations kích hoạt trong CMS. Database đã có `rusi_record_payment` để nối webhook về sau.
+  * Khi đơn chuyển `paid`:
+    1. Client hiện toast xác nhận và đóng modal thanh toán.
+    2. `Monetization.setPro()` cập nhật trạng thái PRO trong runtime, gỡ khóa nội dung mà không cần tải lại trang (F5).
 * **Bảo Mật Phân Quyền & Lưu Trữ Per-User State**:
   * Nguồn quyền hội viên là `profiles.is_pro` và `orders` đã xác nhận phía server qua RPC. `trki_pro_${user.uid}` chỉ là cache hiển thị, không là bằng chứng quyền truy cập; không tin cờ PRO do trình duyệt tự sửa.
   * Tuyệt đối không cho phép dùng chung tài khoản để gian lận bản quyền; mọi thao tác mở khóa nội dung nhạy cảm (như lời giải đề TRKI, gọi API chấm điểm AI) đều phải được thẩm định chữ ký Token hợp lệ từ phía backend trước khi trả kết quả.
@@ -347,7 +344,7 @@ Hệ thống nhận diện trạng thái xác thực của người dùng để 
 ---
 
 ### 3.3. Quy Chuẩn Header Navigation Trên Điện Thoại & Máy Tính Bảng:
-* **Chiều cao chuẩn cố định**: `60px` trên toàn bộ thiết bị di động (<= 960px, <= 768px, <= 480px), loại bỏ hoàn toàn hiện tượng giật giàn trang (Cumulative Layout Shift) khi co giãn khung nhìn.
+* **Chiều cao chuẩn cố định** (biến `--header-height` trong `styles.css`): `71px` desktop, `65px` khi `<= 1024px`, `61px` khi `<= 768px`. Chiều cao cố định theo breakpoint để tránh giật trang (Cumulative Layout Shift) khi co giãn khung nhìn.
 * **Cụm thao tác góc phải (`.header-actions`)**:
   * *Khi chưa đăng nhập*: Chỉ hiển thị 1 nút chính `[Đăng nhập]`, ẩn nút `[Đăng ký]` ở header ngoài trên màn hình mobile (<= 768px) để tránh tràn viền (nút Đăng ký được tích hợp sẵn bên trong Mobile Drawer).
   * *Khi đã đăng nhập*:
@@ -357,14 +354,14 @@ Hệ thống nhận diện trạng thái xác thực của người dùng để 
     * **Nút Nâng cấp PRO**: Thu gọn thành pill nhỏ gọn với icon SVG `zap` + chữ `PRO`. Trên màn hình siêu hẹp (<= 360px), tự động ẩn vào trong Drawer để ưu tiên không gian cho Avatar.
     * **Nút Tài khoản**: Chỉ hiển thị Avatar tròn 34px (hitbox 44px), ẩn tên học viên và icon caret để tiết kiệm không gian.
     * **Menu thả xuống tài khoản (`.user-dropdown`)**: Định vị cố định theo khung nhìn:
-      `position: fixed; top: 62px; right: 12px; width: min(calc(100vw - 24px), 320px); max-height: calc(100dvh - 74px); overflow-y: auto; overscroll-behavior: contain;`
+      `position: fixed; top: var(--header-height); right: 12px; width: min(calc(100vw - 24px), 320px); max-height: calc(100dvh - var(--header-height) - 12px); overflow-y: auto; overscroll-behavior: contain;`
       chống triệt để lỗi tràn mép trái màn hình và hỗ trợ cuộn mượt mà khi xoay ngang máy.
     * **Cơ chế đóng chéo (Mutual Exclusion)**: Thao tác mở User Dropdown sẽ lập tức tự động đóng Popover Pomodoro và Mobile Drawer (và ngược lại), không để nhiều menu nổi cùng lúc.
 * **Nút Menu Hamburger (`.menu-button`)**:
   * Vùng chạm chuẩn 44px x 44px (`touch-action: manipulation;`).
   * 2 vạch ngang xếp tầng cân đối, tự động xoay mượt thành hình dấu `X` khi mở và phục hồi trạng thái 2 vạch khi đóng qua CSS transition.
 * **Ngăn kéo điều hướng di động (`.header-center.nav-open`) & Lớp phủ Backdrop (`.header-backdrop`)**:
-  * Trượt nhẹ nhàng từ chân header (`top: 60px; max-height: calc(100dvh - 60px); overflow-y: auto; overscroll-behavior: contain;`).
+  * Trượt nhẹ nhàng từ chân header (`top: var(--header-height); max-height: calc(100dvh - var(--header-height)); overflow-y: auto; overscroll-behavior: contain;`).
   * Lớp phủ Backdrop mờ phía sau (`z-index: 1005`); chạm vào backdrop, bấm phím Escape hoặc chạm vào bất kỳ liên kết điều hướng nào sẽ tự động đóng ngăn kéo ngay lập tức.
   * Tự động khóa cuộn trang (`body.menu-locked { overflow: hidden; touch-action: none; }`) để ngăn cuộn kép và triệt tiêu dội trang (rubber-banding) trên iOS Safari.
 
@@ -444,63 +441,48 @@ Trung tâm quản trị nội dung được thiết kế theo chuẩn giao diệ
 
 ---
 
-### 4.3. Cơ Chế Đồng Bộ Dữ Liệu Thời Gian Thực (Live Propagation Engine):
+### 4.3. Xuất Bản Nội Dung Tự Động (Content Publish Pipeline):
 
-> Luồng localStorage dưới đây chỉ mô tả phản hồi trong cùng trình duyệt. Thay đổi CMS có thẩm quyền phải được xác thực và lưu trên backend/database theo Mục 7; sau commit mới cập nhật cache hoặc phát thông báo đến người dùng khác.
+> Luồng cũ `localStorage: trki_admin_data` → `mergeAdminData()` chỉ còn tác dụng xem trước trong cùng trình duyệt của admin. Nội dung đến học viên **chỉ** qua pipeline dưới đây.
 
 ```text
-[Admin sửa tại admin.html] ➔ [localStorage: trki_admin_data] ➔ [app.js: mergeAdminData()]
-                                       │
-                    ┌──────────────────┴──────────────────┐
-                    ▼                                     ▼
-        [window.* Datasets Mutated]              [Cross-Tab Reactivity]
-         (target.splice in-place)               (storage event broadcast)
-                    │                                     │
-                    ▼                                     ▼
-        [Trang học viên nhận ngay]               [Mọi tab đang mở cập nhật tức thì]
+[Admin lưu trong admin.html] ─► [Supabase Postgres: bảng nội dung]
+                                        │ trigger cấp câu lệnh rusi_publish_content
+                                        ▼
+                 [public.content_versions.version++]  +  [repository_dispatch "content-changed"]
+                                        │ (pg_net, token Vault github_publish_token, tối đa 1 lần/20 giây)
+                                        ▼
+               [.github/workflows/publish-content.yml] — chờ 90 giây, chạy scripts/publish-content.js
+                                        │ chỉ kéo bảng có version khác manifest, xoá mọi trường đáp án (ANSWER_KEYS)
+                                        ▼
+               [commit data/modules/*.json + manifest.json] ─► GitHub Pages ─► trình duyệt học viên
 ```
+
+* Migration: `supabase/migrations/20261125090000_content_publish_trigger.sql` (idempotent). Lỗi gửi tín hiệu không bao giờ làm hỏng thao tác ghi của admin.
+* Xuất bản tay: `npm run publish-content` (chỉ module đổi) hoặc `npm run sync` (`--all`). **Không** dùng `scripts/sync-from-supabase.js` (cũ, làm lộ đáp án).
+* Không sửa tay file trong `data/modules/` — sẽ bị ghi đè ở lần xuất bản sau.
+
 ---
 
-## 5. KIẾN TRÚC HYBRID SUPABASE & OFFLINE-FIRST
+## 5. KIẾN TRÚC DỮ LIỆU: FILE TĨNH + INDEXEDDB (0-EGRESS) & SUPABASE
 
-Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gian Thực — Dự Phòng Ngoại Tuyến Toàn Diện (Cloud-First, Offline-Fallback)**:
+Nội dung học nạp từ file tĩnh trên GitHub Pages; Supabase chỉ phục vụ dữ liệu theo người dùng. Mục tiêu: giữ egress Supabase dưới quota 5GB/tháng.
 
 ```text
-                               ┌────────────────────────────────┐
-                               │   Supabase PostgreSQL Cloud   │
-                               │      <PROJECT_DATABASE>        │
-                               └───────────────▲────────────────┘
-                                               │ (REST API / RLS / RPC)
-                                               ▼
-                               ┌────────────────────────────────┐
-                               │       supabase-client.js       │
-                               │   (window.RusiSupabase API)    │
-                               └───────────────▲────────────────┘
-                                               │
-                                ┌──────────────┴──────────────┐
-                    (Nếu Online)│                 (Nếu Offline│hoặc lỗi mạng)
-                                ▼                             ▼
-                    [Nạp trực tiếp từ Cloud]      [Fallback tức thì từ data.js]
-                     Hiển thị dữ liệu mới nhất     Đọc localStorage (STORE)
+                  [data/modules/manifest.json]  (fetch no-store: hash từng module)
+                                │
+   RusiDataLoader.load(key) ────┼─► 1. RAM (biến window.*)
+   (data.js)                    ├─► 2. IndexedDB rusi_offline_db — dùng nếu đúng phiên bản
+                                └─► 3. Tải data/modules/<file>.json rồi lưu vào IndexedDB
+   Phiên bản module = DATA_VERSION (data.js) + hash trong manifest. Offline (không đọc được manifest) → dùng bản cache bất kỳ.
 ```
 
-* **Các Phân hệ Đồng bộ Supabase Cốt Lõi**:
-  1. ocabularies, ocab_jars & jar_items: Quản lý kho từ vựng tiếng Nga toàn diện và 18 Lọ từ vựng hệ thống/cá nhân; tiến độ học SRS theo dõi tại user_vocab_progress theo Mục 7.
-  2. 	rki_tests & private.exam_answer_keys: Danh mục đề thi ТРКИ từ A1 đến C2; cấu trúc câu hỏi, đáp án riêng tư và phiên nộp bài theo Mục 7.
-  3. listening_lessons: Kho bài tập nghe hiểu 4 Part, câu hỏi trắc nghiệm và phụ đề video YouTube.
-  4. speaking_lessons: Bộ bài tập Shadowing kèm chuỗi âm vị và mốc thời gian YouTube.
-  5. writing_tasks: Đề bài miêu tả tranh, viết tóm tắt và viết theo chủ đề kèm tiêu chí chấm rubric.
-  6. 	opic_articles: Hệ thống bài học ngữ cảnh theo chủ đề sống còn tại Nga (soạn thảo Markdown GFM).
-  7. log_posts: Cẩm nang du học, bài viết đời sống ký túc xá và kinh nghiệm học tiếng Nga.
-  8. shop_products: Danh mục sản phẩm Nga nội địa, dịch vụ tư vấn du học và tools tiện ích.
-  9. packages & orders: Bảng giá cước hội viên PRO, cấu hình khuyến mãi và đơn hàng đối soát VietQR.
-
-* **Chuẩn Hóa API Khởi Tạo Trang (Unified Page Bootstrappers)**: Toàn bộ các trang con học viên đều triển khai qua giao thức nạp dữ liệu thống nhất:`initVocabPage()`, `initWritingPage()`, `initListeningPage()`, `initSpeakingPage()`, `initMockTestPage()`, `initBlogPage()`, `initShopPage()`, `initUpgradePage()`. 
-  * Quy trình thực thi: 
-  - Bước 1: Gọi `window.RusiSupabase.fetchModuleData(moduleKey)`.
-  - Bước 2 (Happy Path): Truy vấn thành công trong vòng 2.5s $\rightarrow$ Cập nhật runtime và kích hoạt giao diện từ Cloud.
-  - Bước 3 (Fallback): Nếu lỗi kết nối, quá thời gian chờ (timeout) hoặc thiết bị mất mạng $\rightarrow$ Tự động chuyển vùng đọc sang `window.DATA` trong `data.js` kết hợp dữ liệu lưu trữ tại `localStorage.getItem('trki_admin_data')`.
-  - Bước 4 (Auto Reconnect): Lắng nghe sự kiện `window.addEventListener('online')` để tự động kéo lại dữ liệu mới nhất mà không bắt người học phải tải lại trang.
+* **Module nạp theo trang** (`MODULE_REGISTRY` trong `data.js`): `VOCAB_JARS`, `VOCABULARIES`, `VOCAB_LESSONS`, `TOPIC_ARTICLES`, `SPEAKING_SETS`, `LISTENING_LESSONS`, `WRITING_TASKS`, `WRITING_TOPICS`, `GRAMMAR_LESSONS`, `TRKI_INDEX`, `TRKI_BANK`, `TRKI_QUESTION_BANK`. `RusiDataLoader.prepareForCurrentPage()` chọn module theo trang.
+* **Blog, Shop, Gói PRO**: `page-blog.js`, `page-shop.js`, `page-upgrade.js` dùng dữ liệu nhẹ trong `data.js` (`window.BLOG_POSTS`...). Chỉ khi dữ liệu này trống mới truy vấn Supabase (`blog_posts`, `shop_products`, `packages`). Các file `blog_posts.json`, `shop_products.json`, `packages.json` có được xuất bản nhưng client chưa đọc.
+* **Supabase dùng cho**: Auth, `profiles`, tiến độ (`user_progress`, `practice_logs`), đơn hàng (`orders`), RPC chấm thi, hạn mức AI (`user_ai_usage`), Device Guard và thao tác ghi của CMS.
+* **Bootstrapper từng trang** (`js/pages/page-*.js`): `initIndexPage()`, `initVocabPage()`, `initWritingPage()`, `initListeningPage()`, `initSpeakingPage()`, `initMockTestPage()`, `initBlogPage()`, `initShopPage()`, `initUpgradePage()`.
+* `RusiSupabase.fetchModuleData()` vẫn còn trong `supabase-client.js` nhưng không nơi nào gọi; không dùng nó cho luồng nạp trang.
+* Cấm thêm truy vấn quét cả bảng (`select("*")` không giới hạn) chạy lúc tải trang hoặc warmup.
 
 ---
 
@@ -514,23 +496,28 @@ Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gia
 ### 6.2. Chống Rò Rỉ Đáp Án Đề Thi & Chống Gian Lận (Zero-Answer Leak):
 * **Bảo mật ngân hàng đề thi**: Đáp án/lời giải được tách khỏi dữ liệu đề vào `private.exam_answer_keys`, không cấp quyền đọc trực tiếp cho anon/authenticated. API lấy câu hỏi phải kiểm tra quyền, phiên làm bài và version đề; chỉ trả câu hỏi/phương án được giao với ID ổn định. Không chứa answer key trong raw payload, file fallback hoặc metadata. Lời giải chỉ được phát hành theo trạng thái và quyền xem kết quả của phiên.
 
-* **Quy trình chấm thi an toàn qua RPC**: Client gửi `attempt_id` và câu trả lời; server xác minh chủ phiên, thời hạn, version và tập câu được giao, khóa attempt, chấm điểm thực tế từng phân môn rồi lưu kết quả và XP duy nhất trong cùng transaction. XP được ghi tại `xp_events` và tổng hợp tại `learner_stats`; retry cùng attempt trả kết quả đã chốt. Ngưỡng đạt và quy tắc thưởng phải được version hóa theo Mục 7; không dùng hàm mẫu gán cố định điểm.
+* **Hiện trạng chấm thi**: client đọc câu hỏi từ view `trki_questions_public` (không có `correct_index`) và nộp bài qua RPC `rusi_grade_trki_submission(p_test_code, p_user_answers, p_time_spent_sec)`. RPC đọc đáp án từ `public.trki_question_bank.correct_index`; nếu đề chưa có trong bank thì đọc JSON trong `trki_tests`. Chế độ luyện từng câu dùng `rusi_check_trki_question`. RPC `rusi_grade_trki_exam` vẫn có trong database nhưng client không gọi. Lưu ý lỗ hổng ở Mục 7.5.
+
+* **Mục tiêu — quy trình chấm thi an toàn qua RPC**: Client gửi `attempt_id` và câu trả lời; server xác minh chủ phiên, thời hạn, version và tập câu được giao, khóa attempt, chấm điểm thực tế từng phân môn rồi lưu kết quả và XP duy nhất trong cùng transaction. XP được ghi tại `xp_events` và tổng hợp tại `learner_stats`; retry cùng attempt trả kết quả đã chốt. Ngưỡng đạt và quy tắc thưởng phải được version hóa theo Mục 7; không dùng hàm mẫu gán cố định điểm.
 
 ### 6.3. Giám Sát Phiên Học & Chống Chia Sẻ Tài Khoản (Single Active Session):
+* **Hiện trạng — Device Guard**: mỗi tài khoản tối đa **2 thiết bị** hoạt động (`public.user_device_sessions`, migration `20261125025406_device_guard.sql`). Client (`auth.js`) gọi `rusi_register_device`, `rusi_get_my_devices`, `rusi_revoke_device`, `rusi_revoke_my_device`, `rusi_revoke_all_devices`; fingerprint lưu tại `localStorage.rusi_device_fp`. Bảng `private.active_sessions` và hàm `private.rusi_session_ok()` đã có.
+
 * **Kiểm soát phiên đăng nhập duy nhất**: Đánh giá cấu hình phiên của Supabase Auth đang sử dụng; nếu cần bổ sung, quản lý session đang hoạt động phía server tại `private.active_sessions`. Các API/RPC hoặc policy được bảo vệ kiểm tra session ID từ JWT đã xác minh so với phiên còn hiệu lực; client không được tự ghi session có thẩm quyền. Realtime chỉ giúp giao diện nhận thông báo và đăng xuất nhanh, không thay thế kiểm tra server. Khi bị thay thế phiên, hiển thị: "Tài khoản của bạn vừa được đăng nhập trên một thiết bị khác. Vui lòng đăng nhập lại nếu đây không phải thao tác của bạn." Xóa token/cache riêng theo cơ chế Auth và chính sách ứng dụng.
 
 ---
 
 ## 7. KIẾN TRÚC CƠ SỞ DỮ LIỆU THỰC TẾ & BẢO MẬT (PRAGMATIC POSTGRESQL SCHEMA) — SUPABASE
 
-> **Cập nhật kiến trúc: 10/11/2026 — Mô hình Pragmatic 18 Tables (Tối ưu từ bản 51 bảng FK4).**  
+> **Cập nhật kiến trúc: 10/11/2026 — Mô hình Pragmatic (Tối ưu từ bản 51 bảng FK4).**  
+> **Đối chiếu database thật ngày 25/11/2026**: 29 bảng `public` + 1 view (`trki_questions_public`) + 3 bảng `private` (`exam_answer_keys`, `active_sessions`, `audit_logs`). Danh sách đầy đủ ở 7.1; các bảng ngoài nhóm cốt lõi ở 7.2 (Phân hệ 7).  
 > **Nguyên tắc thiết kế chủ đạo (Karpathy Guidelines)**: *Simplicity First & Pragmatic Engineering*.  
 > Loại bỏ triệt để tình trạng chuẩn hóa quan hệ quá mức (Over-engineering 3NF/4NF) khiến cơ sở dữ liệu phình to 51 bảng và gãy kết nối với Frontend. Thay vào đó, kiến trúc chuẩn hóa tập trung vào **18 bảng cốt lõi**, kết hợp sức mạnh trường `JSONB` của PostgreSQL để lưu trữ dữ liệu phụ thuộc (câu hỏi trắc nghiệm, phân đoạn audio, đáp án lựa chọn), vừa đảm bảo **tốc độ truy vấn dưới 30ms**, vừa khớp 1:1 với mã nguồn `supabase-client.js` và `admin.js`.  
 > **Điểm mấu chốt bắt buộc**: Có **bảng từ vựng chuyên sâu `vocabularies` độc lập** với đầy đủ 16 thuộc tính ngôn ngữ tiếng Nga (trọng âm, từ loại, 6 cách, biến cách, cặp thể, quản cách, cụm từ và câu ví dụ) kết hợp cùng bảng Lọ từ vựng `vocab_jars` và bảng liên kết `jar_items`.
 
 ---
 
-### 7.1. Bảng Ma Trận Phân Bổ 18 Bảng Cốt Lõi Theo Phân Hệ
+### 7.1. Bảng Ma Trận Phân Bổ Bảng Theo Phân Hệ
 
 | Phân hệ | Tên Bảng (`public` / `private`) | Mục đích & Nghiệp vụ cốt lõi | Kiểu Khóa chính | Khóa ngoại & Liên kết |
 |---|---|---|:---:|---|
@@ -540,6 +527,7 @@ Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gia
 | **II. Từ vựng & Lọ từ vựng** | **`public.vocabularies`** | **Kho từ vựng tiếng Nga toàn diện (trọng âm, từ loại, 6 cách, ví dụ)** | `id` (UUID) | Độc lập (từ điển cốt lõi A1–C2) |
 | | `public.vocab_jars` | Danh mục 18 Lọ từ vựng hệ thống & các Lọ cá nhân tự tạo | `id` (UUID) | `owner_id` FK `profiles(id)` (NULL nếu là lọ hệ thống) |
 | | `public.jar_items` | Bảng liên kết nhiều-nhiều giữa Lọ từ vựng và Từ vựng | `jar_id, vocab_id` | FK `vocab_jars(id)`, FK `vocabularies(id)` |
+| | `public.vocab_lessons` | Bài học hành động đời sống gắn với lọ (Markdown) | `id` (UUID) | `jar_id` → `vocab_jars(id)` |
 | **III. Bài học & Kỹ năng** | `public.topic_articles` | Bài học chủ đề chuyên sâu, biên dịch Markdown GFM | `id` (TEXT) | Ánh xạ mã lọ `vocab_jars.code` |
 | | `public.grammar_lessons` | Kho bài học ngữ pháp 6 cách, chia thì, quy tắc & ví dụ | `id` (TEXT) | Độc lập |
 | | `public.listening_topics` | Chủ đề luyện nghe & chép chính tả (Sân bay, mua sắm, KTX, quán ăn, thư viện...) | `id` (UUID) | Độc lập |
@@ -550,17 +538,26 @@ Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gia
 | | `public.writing_tasks` | Bài luyện tập con (ảnh Storage, đề bài, bài mẫu, gợi ý, prompt AI) | `id` (UUID) | FK `writing_topics(id)` ON DELETE CASCADE |
 | | `public.writing_task_vocab` | Bảng liên kết đề bài viết với kho từ điển cốt lõi `vocabularies` | `task_id, vocab_id` | FK `writing_tasks(id)`, FK `vocabularies(id)` |
 | | `public.writing_submissions`| Bài nộp tự luận của học viên & kết quả AI chấm 4 tiêu chí | `id` (UUID) | FK `profiles(id)`, FK `writing_tasks(id)` |
-| **IV. Khảo thí TRKI Bảo mật** | `public.trki_tests` | Đề thi trắc nghiệm A1–C2 (CHỈ chứa câu hỏi, KHÔNG có đáp án) | `id` (TEXT) | Độc lập |
+| **IV. Khảo thí TRKI Bảo mật** | `public.trki_tests` | Đề thi A1–C2 (JSON `part1`–`part5`, `parts`, `sections`). ⚠ Vẫn còn cột `answers` đọc công khai — xem 7.5 | `id` (TEXT) | Độc lập |
+| | `public.trki_question_bank` | Ngân hàng câu hỏi TRKI dạng dòng, có `correct_index`/`correct_answer`/`explanation` — nguồn chấm của `rusi_grade_trki_submission` | `id` (UUID) | `test_code`, `test_id` |
+| | `public.trki_questions_public` (VIEW) | Câu hỏi đã xuất bản, bỏ cột đáp án — client đọc từ đây | — | View của `trki_question_bank` |
 | | `private.exam_answer_keys` | **Bảng riêng tư giấu đáp án đúng & giải thích (Zero-Leak)** | `exam_id` (TEXT) | FK `trki_tests(id)` ON DELETE CASCADE |
 | | `public.trki_submissions` | Lịch sử nộp bài thi thử, điểm số từng phân môn & kết quả đỗ/trượt | `id` (UUID) | FK `profiles(id)`, FK `trki_tests(id)` |
 | **V. Giao dịch & Thương mại** | `public.packages` | Danh mục gói cước hội viên PRO (`pro_1m`, `pro_3m`, `pro_1y`) | `id` (TEXT) | Độc lập |
 | | `public.orders` | Đơn hàng VietQR, mã giao dịch Casso, trạng thái kích hoạt PRO | `id` (UUID) | FK `profiles(id)`, FK `packages(id)` |
 | | `public.shop_products` | Sản phẩm hàng Nga nội địa, dịch vụ tư vấn du học & công cụ | `id` (TEXT) | Độc lập |
 | **VI. Blog & Cẩm nang** | `public.blog_posts` | Bài viết cẩm nang du học, KTX, đời sống Nga (Markdown GFM) | `id` (TEXT) | Độc lập |
+| **VII. Vận hành & Hệ thống** | `public.practice_logs` | Nhật ký từng lượt luyện (kỹ năng, điểm, thời lượng, XP) | `id` (UUID) | `user_id` |
+| | `public.user_ai_usage` | Hạn mức chấm AI theo ngày | `id` (UUID) | `user_id` |
+| | `public.user_device_sessions` | Device Guard — thiết bị đăng nhập của tài khoản | `id` (UUID) | `user_id` |
+| | `public.content_versions` | Bộ đếm thay đổi từng bảng nội dung cho pipeline xuất bản (anon đọc được) | `table_name` | — |
+| | `public.content_publish_state` | Mốc gửi `repository_dispatch` gần nhất (chống dồn) | `id = 1` | — |
+| | `private.active_sessions` | Phiên đăng nhập có hiệu lực (dùng bởi `private.rusi_session_ok()`) | `user_id, session_id` | — |
+| | `private.audit_logs` | Nhật ký kiểm toán (ví dụ `ACTIVATE_ORDER`) | `id` (BIGINT) | — |
 
 ---
 
-### 7.2. Đặc Tả Chi Tiết 18 Bảng Cốt Lõi
+### 7.2. Đặc Tả Chi Tiết Các Bảng
 
 #### Phân hệ 1: Người Dùng, Phân Quyền & Tiến Độ Học Tập
 
@@ -626,7 +623,7 @@ Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gia
    - `icon TEXT NOT NULL DEFAULT 'archive-jar'`: Mã icon Lucide đại diện.
    - `is_system BOOLEAN NOT NULL DEFAULT true`: `true` = Lọ hệ thống chuẩn hóa; `false` = Lọ cá nhân do học viên PRO tự tạo.
    - `word_count INT NOT NULL DEFAULT 0`: Số lượng từ có trong lọ.
-   - `is_pro`: cở bản lọ dành cho PRO
+   - `is_pro BOOLEAN`: cờ đánh dấu lọ dành cho PRO.
    - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
 6. **`public.jar_items`**:
@@ -798,7 +795,7 @@ Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gia
     - `ai_feedback JSONB`: Kết quả phân tích chi tiết từ AI (điểm 4 tiêu chí, câu lỗi, câu sửa, giải thích ngữ pháp).
     - `submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
-15. **Supabase Storage: Bucket `writing-images`**:
+* **Supabase Storage: Bucket `writing-images`**:
     > Bucket lưu trữ hình ảnh công khai cho phân hệ Tả tranh (`public = true`), cho phép client tải ảnh qua đường dẫn:
     > `https://nrhtdwjihnlaxrbitmcf.supabase.co/storage/v1/object/public/writing-images/<filename>`.
     - Phân quyền: Cấp policy `Public Access Writing Images` (SELECT công khai cho anon/authenticated).
@@ -820,7 +817,8 @@ Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gia
     - `part3 JSONB NOT NULL DEFAULT '{}'::jsonb`: Phần 3 - Nghe hiểu (Аудирование) gồm file âm thanh native Russian lưu trữ tại Supabase Storage bucket `trki-audio`, hệ thống câu hỏi trắc nghiệm và lời thoại hội thoại.
     - `part4 JSONB NOT NULL DEFAULT '{}'::jsonb`: Phần 4 - Chủ đề viết (Письмо) gồm đề bài viết tự luận, yêu cầu số từ tối thiểu (`minWords`), dịch tiếng Việt và bài văn mẫu chuẩn ngữ pháp.
     - `part5 JSONB NOT NULL DEFAULT '{}'::jsonb`: Phần 5 - Đề bài tình huống (Говорение) gồm các tình huống giao tiếp đời sống thực tế, bản dịch tiếng Việt và câu nói gợi ý mẫu phản xạ.
-    - `answers JSONB NOT NULL DEFAULT '{}'::jsonb`: Bảng đáp án và hướng dẫn giải cho tất cả các phần trong đề (`part1`, `part2`, `part3`, `part4`, `part5`).
+    - `answers JSONB NOT NULL DEFAULT '{}'::jsonb`: Bảng đáp án và hướng dẫn giải cho tất cả các phần. **⚠ Cột này vi phạm Zero-Answer Leak**: anon/authenticated đang có quyền SELECT. Phải thu hồi quyền hoặc chuyển sang `private.exam_answer_keys` (Mục 7.5).
+    - Các cột khác có trong database: `level_name`, `category`, `sub_test_type`, `duration_minutes`, `passing_score`, `sections`, `raw_data`, `is_published`, `test_mode`.
     - `parts JSONB`: Mảng hợp nhất 5 phần thi `[part1, part2, part3, part4, part5]` được trigger `private.rusi_sync_trki_test()` tự động đồng bộ hóa hai chiều.
     - `is_pro_only BOOLEAN NOT NULL DEFAULT false`: Khóa đề thi thử B1–B2 cho tài khoản PRO.
     - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
@@ -855,6 +853,7 @@ Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gia
     - `is_lifetime BOOLEAN NOT NULL DEFAULT false`: Đánh dấu gói Vĩnh viễn.
     - `badge TEXT`: Nhãn nổi bật (ví dụ: "Phổ Biến Nhất", "VIP Quyền Năng").
     - `features JSONB NOT NULL DEFAULT '[]'::jsonb`: Mảng các quyền lợi đặc quyền.
+    - Các cột khác có trong database: `title`, `description`, `price`, `price_old`, `price_minor`, `currency`, `duration_days`, `status`, `feature_list`, `popular`. Giá hiện hành: `pro_1m` 399.000đ, `pro_3m` 899.000đ, `pro_1y` 1.899.000đ.
     - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
 19. **`public.orders`**:
@@ -869,6 +868,7 @@ Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gia
     - `expires_at TIMESTAMPTZ NOT NULL`: Thời điểm hết hạn phiên giao dịch 15:00.
     - `paid_at TIMESTAMPTZ`: Thời điểm nhận được tiền.
     - `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
+    - Các cột khác có trong database: `client_order_key`, `amount_minor`, `currency`, `shipping_address` (đơn Shop), `updated_at`.
 
 20. **`public.shop_products`**:
     - `id TEXT PRIMARY KEY`: Mã sản phẩm (ví dụ: `sp_alenka`, `sp_visa_mvd`, `sp_keyboard_tools`).
@@ -900,54 +900,73 @@ Hệ thống vận hành theo mô hình kiến trúc lai **Đám Mây Thời Gia
 
 ---
 
-### 7.3. Các Hàm RPC Nghiệp Vụ Bảo Mật Cốt Lõi (Security Definer RPCs)
+#### Phân hệ 7: Bảng Bổ Sung Đang Dùng
 
-Mọi thao tác can thiệp vào tài chính, bản quyền PRO, điểm số và đáp án đề thi đều được thực hiện thông qua RPC phía server (`SECURITY DEFINER`), cô lập hoàn toàn logic nhạy cảm khỏi client:
+22. **`public.vocab_lessons`**: `id UUID`, `code TEXT`, `jar_id UUID`, `title TEXT`, `level TEXT`, `content_md TEXT`, `created_at`, `updated_at`.
+23. **`public.trki_question_bank`**: `id UUID`, `code`, `level`, `sub_test` (`lexis_grammar`/`grammar`/`reading`/`listening`/`writing`/`speaking`), `part_number`, `question_type`, `topic`, `grammar_case`, `difficulty`, `prompt`, `prompt_vi`, `passage`, `audio_url`, `image_url`, `options JSONB`, **`correct_index INT`, `correct_answer TEXT`, `explanation TEXT`** (đáp án — không được expose), `tags TEXT[]`, `points NUMERIC`, `test_code`, `test_id`, `order_index`, `is_published`, `is_pro_only`, `created_at`, `updated_at`.
+    - View **`public.trki_questions_public`**: cùng các cột nhưng bỏ `correct_index`, `correct_answer`, `explanation`.
+24. **`public.practice_logs`**: `id UUID`, `user_id UUID`, `skill_type TEXT`, `item_id TEXT`, `item_title TEXT`, `score NUMERIC`, `duration_seconds INT`, `xp_earned INT`, `details JSONB`, `created_at`.
+25. **`public.user_ai_usage`**: `id UUID`, `user_id UUID`, `usage_date DATE`, `used_count INT`, `max_limit INT`, `is_pro BOOLEAN`, `last_used_at`, `created_at`, `updated_at`. Dùng bởi `check_and_consume_ai_quota` / `get_user_ai_quota`.
+26. **`public.user_device_sessions`**: `id UUID`, `user_id UUID`, `device_fingerprint TEXT`, `device_name`, `device_type`, `browser`, `os`, `ip_address`, `is_active BOOLEAN`, `last_active_at`, `created_at`.
+27. **`public.content_versions`** (`table_name TEXT PK`, `version BIGINT`, `changed_at`) và **`public.content_publish_state`** (`id = 1`, `last_dispatch_at`): phục vụ pipeline xuất bản Mục 4.3.
+28. **`private.active_sessions`**: `user_id UUID`, `session_id UUID`, `activated_at`, `revoked_at`.
+29. **`private.audit_logs`**: `id BIGINT`, `actor_id UUID`, `db_role TEXT`, `action TEXT`, `entity_table TEXT`, `entity_key JSONB`, `changed_columns TEXT[]`, `occurred_at`.
 
-1. **`public.rusi_grade_trki_exam(p_test_id TEXT, p_user_answers JSONB, p_time_spent_sec INT) -> JSONB`**:
-   - **Mục đích**: Chấm thi trắc nghiệm TRKI bảo mật tuyệt đối chống gian lận (Zero-Answer Leak).
-   - **Quy trình xử lý**:
-     * Xác thực `auth.uid()`, kiểm tra sự tồn tại của `trki_tests`.
-     * Đọc đáp án bí mật và lời giải sư phạm từ `private.exam_answer_keys(keys, explanations)`.
-     * So khớp từng câu hỏi với `p_user_answers`, tính điểm phần trăm `score_percent` và trạng thái ĐẠT/KHÔNG ĐẠT (`passed` khi $\ge 66\%$, hỗ trợ quy chế bảo lưu 1 kỹ năng $60-65\%$).
-     * Lưu bài làm vào `public.trki_submissions`.
-     * Thưởng ngay `+30 XP` vào `public.user_progress`, cập nhật mảng `done_list.trkiDone` trong cùng một transaction.
-   - **Trả về**: `{ submission_id, score_percent, passed, correct_count, total_questions, xp_earned, explanations }`.
-
-2. **`public.rusi_submit_srs_review(p_vocab_id UUID, p_rating SMALLINT) -> JSONB`**:
-   - **Mục đích**: Ghi nhận kết quả ôn từ vựng và tự động giãn cách theo thuật toán Spaced Repetition (SM-2).
-   - **Tham số đánh giá (`p_rating`)**: `1`: Again (Ôn lại), `2`: Hard (Khó), `3`: Good (Nhớ tốt), `4`: Easy (Dễ).
-   - **Quy trình xử lý**:
-     * Đọc tiến độ từ `public.user_vocab_progress`. Nếu từ mới, khởi tạo `ease_factor = 2.5`.
-     * Điều chỉnh `interval_days` (ngày), `ease_factor` (min 1.3), và trạng thái `learning_state` (1: Learning, 2: Reviewing, 3: Mastered).
-     * Tính toán mốc thời gian đến hạn kế tiếp: `next_review_at = NOW() + interval_days`.
-     * Cập nhật `user_vocab_progress` (`ON CONFLICT (user_id, vocab_id) DO UPDATE`).
-   - **Trả về**: `{ vocab_id, state, interval_days, next_review_at }`.
-
-3. **`public.rusi_activate_order(p_order_code TEXT, p_casso_ref TEXT) -> JSONB`**:
-   - **Mục đích**: Tự động đối soát và kích hoạt quyền hội viên PRO qua Webhook ngân hàng / Casso.
-   - **Quy trình xử lý**:
-     * Tìm đơn hàng `orders` có mã `order_code` ở trạng thái `pending`.
-     * Đọc thông tin gói từ `packages`, xác định ngày hết hạn `pro_expires_at` (thời hạn 1, 3 hoặc 12 tháng).
-     * Cập nhật đơn hàng: `status = 'paid'`, lưu `casso_trans_id`, `paid_at = NOW()`.
-     * Nâng cấp hồ sơ học viên: `profiles.is_pro = true`, `profiles.pro_expires_at = v_expires`.
-   - **Trả về**: `{ success: true, user_id, expires_at }`.
+* **Storage buckets** (đều `public = true`): `writing-images`, `listening-audio`, `trki-audio`, `vocab-audio`.
 
 ---
 
-### 7.4. Phân Quyền Row Level Security (RLS) Chuẩn Xác
+### 7.3. Các Hàm RPC Nghiệp Vụ (Security Definer RPCs)
 
-1. **Bảng nội dung học tập công khai** (`vocabularies`, `vocab_jars`, `jar_items`, `topic_articles`, `grammar_lessons`, `listening_topics`, `listening_lessons`, `listening_lesson_vocab`, `speaking_lessons`, `writing_topics`, `writing_tasks`, `writing_task_vocab`, `trki_tests`, `packages`, `shop_products`, `blog_posts`):
-   - `SELECT`: Cấp quyền đọc tự do cho `anon` và `authenticated`.
-   - `INSERT, UPDATE, DELETE`: Giới hạn nghiêm ngặt chỉ tài khoản quản trị (`profiles.role IN ('admin', 'super_admin')`).
-2. **Bảng dữ liệu cá nhân học viên** (`profiles`, `user_progress`, `user_vocab_progress`, `writing_submissions`, `trki_submissions`, `orders`):
-   - `SELECT`: `auth.uid() = user_id` (học viên chỉ xem dữ liệu của chính mình) hoặc Admin xem toàn bộ.
-   - `UPDATE`: Học viên chỉ được cập nhật các trường profile cho phép (`full_name`, `avatar_url`), **tuyệt đối không được cập nhật `role`, `is_pro`, `xp_total` trực tiếp từ client**. Mọi điểm số và bản quyền đều qua RPC bảo mật.
-3. **Bảng giấu đáp án đề thi** (`private.exam_answer_keys`):
-   - Nằm trong `private schema`, không expose qua Data API, chặn 100% quyền truy cập trực tiếp từ client.
+Mọi thao tác can thiệp vào tài chính, bản quyền PRO, điểm số và đáp án đề thi phải đi qua RPC phía server (`SECURITY DEFINER`).
+
+**RPC client đang gọi** (`supabase-client.js`, `auth.js`):
+
+| RPC | Mục đích |
+|---|---|
+| `rusi_grade_trki_submission(p_test_code, p_user_answers, p_time_spent_sec)` | Chấm bài thi TRKI. Đáp án đọc từ `trki_question_bank.correct_index`; nếu đề chưa có trong bank thì đọc JSON `trki_tests`. Trả điểm, đúng/sai từng câu và giải thích. |
+| `rusi_check_trki_question(p_test_code, p_question_index, p_user_choice)` | Kiểm tra một câu (chế độ luyện từng câu). |
+| `rusi_activate_order(p_order_code, p_casso_ref)` | Chỉ admin/`service_role`. Đặt `orders.status = 'paid'`, cộng hạn PRO nối tiếp hạn hiện tại theo `packages.duration_months`/`duration_days` (NULL nếu `is_lifetime`), ghi `private.audit_logs`. |
+| `sync_my_progress(p_streak, p_xp, p_mascot_level)` | Đồng bộ streak/XP. ⚠ Hàm cập nhật các cột `profiles.streak_count`, `xp_points`, `mascot_level`, `last_study_date` — không tồn tại trong `profiles` (Mục 7.5). |
+| `rusi_sync_jar_words(p_jar_id, p_words)` | Đồng bộ từ trong lọ cá nhân. |
+| `check_and_consume_ai_quota(p_user_id, p_is_pro)`, `get_user_ai_quota(p_user_id, p_is_pro)` | Hạn mức chấm AI theo ngày (`user_ai_usage`). |
+| `current_user_is_admin()` | Client dùng để ẩn/hiện UI quản trị (không thay thế RLS). |
+| `rusi_register_device`, `rusi_get_my_devices`, `rusi_revoke_device`, `rusi_revoke_my_device`, `rusi_revoke_all_devices` | Device Guard, tối đa 2 thiết bị. |
+
+**Có trong database nhưng client chưa gọi** (chưa kiểm tra hàm nào còn chạy được): `rusi_grade_trki_exam`, `rusi_submit_srs_review`, `rusi_start_exam`, `rusi_get_exam_questions`, `rusi_save_exam_answers`, `rusi_submit_exam`, `rusi_get_exam_result`, `rusi_get_exam_feedback`, `rusi_publish_exam_version`, `rusi_award_xp`, `rusi_get_my_stats`, `rusi_create_order`, `rusi_record_payment`, `rusi_request_refund`, `rusi_finish_refund`, `rusi_submit_writing`, `rusi_submit_listening`, `rusi_submit_speaking`, `rusi_get_ai_feedback`, `rusi_claim_ai_job`, `rusi_finish_ai_job`, `rusi_fail_ai_job`, `rusi_start_vocab_session`, `rusi_record_vocab_review`, `rusi_create_jar`, `rusi_set_jar_word`, `rusi_set_timezone`, `rusi_admin_get_trki_questions`, `rusi_admin_upsert_trki_question`, `ingest_grammar_lesson`, `update_vocab_audio`, `activate_pro_from_paid_order`. Hàm hỗ trợ: `is_admin(user_id)`, `handle_new_user()` (tạo profile khi đăng ký), `rusi_mark_content_changed()` (trigger xuất bản).
+
+> Phần lớn RPC/schema chưa có file SQL trong repo (chỉ có 2 migration trong `supabase/migrations/`). Khi thêm hoặc đổi RPC/cột, viết migration mới, idempotent.
 
 ---
 
+### 7.4. Phân Quyền Row Level Security (RLS) — Hiện Trạng
+
+1. **Bảng nội dung** (`vocabularies`, `vocab_jars`, `jar_items`, `vocab_lessons`, `topic_articles`, `grammar_lessons`, `listening_*`, `speaking_lessons`, `writing_topics`, `writing_tasks`, `writing_task_vocab`, `trki_tests`, `packages`, `shop_products`, `blog_posts`):
+   - `SELECT`: công khai cho `anon` và `authenticated` (`trki_tests` chỉ khi `is_published = true`).
+   - Ghi: policy `Admins manage <bảng>` (`ALL`, điều kiện `is_admin(auth.uid())`).
+2. **`profiles`**: học viên đọc/sửa dòng của mình; admin toàn quyền. Trigger `private.rusi_validate_profile` chặn người không phải admin/`service_role` sửa `role`, `is_pro`, `pro_expires_at` (khi tạo mới luôn ép `student`, không PRO) và kiểm tra `timezone` là IANA hợp lệ.
+3. **`orders`**: học viên tạo đơn của mình (bắt buộc `status = 'pending'`, `paid_at`/`casso_trans_id` NULL, `amount >= 0`) và đọc đơn của mình; admin toàn quyền.
+4. **`user_progress`**: policy `Users manage own progress` cho phép `ALL` trên dòng của chính mình (xem 7.5).
+5. **`content_versions`**: `anon` đọc được (không nhạy cảm); `content_publish_state`: không ai ngoài hàm definer.
+6. **Schema `private`**: không expose qua Data API.
+
+**Nguyên tắc bắt buộc giữ**: học viên không được ghi trực tiếp `role`, `is_pro`, `xp_total`, giá, trạng thái thanh toán hoặc điểm thi; mọi thay đổi đó đi qua RPC.
+
+---
+
+### 7.5. Khoảng Cách Đã Biết Giữa Đặc Tả & Hệ Thống (đối chiếu 25/11/2026)
+
+| # | Vấn đề | Mức độ |
+|---|---|---|
+| 1 | `public.trki_tests.answers` (89 đề đã xuất bản có dữ liệu) đọc được bằng anon key qua Data API — vi phạm Zero-Answer Leak. Cần cân nhắc cả `raw_data` và `part1`–`part5`. | Nghiêm trọng |
+| 2 | `user_progress` cho học viên `ALL` trên dòng của mình → client tự ghi được `xp_total`, `streak_count`, `done_list`. | Cao |
+| 3 | `profiles`/`orders` có policy `rusi_read`/`rusi_update` kèm `private.rusi_session_ok()`, nhưng policy permissive được OR với policy cũ không có điều kiện này → kiểm tra phiên không có hiệu lực. | Trung bình |
+| 4 | `sync_my_progress` ghi vào các cột không tồn tại trong `profiles` → RPC lỗi khi chạy. | Trung bình |
+| 5 | `js/pages/page-speaking.js` upsert vào `user_speaking_progress` — bảng không tồn tại. | Thấp |
+| 6 | Thanh toán: đồng hồ 15 phút tính ở client; chưa có webhook Casso, kích hoạt PRO thủ công. | Trung bình |
+
+**Xử lý:** migration `supabase/migrations/20261125130000_security_hardening.sql` vá #1–#4 (view `trki_tests_public` xoá khoá đáp án phía server, bỏ quyền đọc trực tiếp `trki_tests`/`trki_question_bank`, view `trki_questions_public` chạy quyền chủ view, trigger `rusi_guard_user_progress`, sửa `sync_my_progress`, policy RESTRICTIVE `rusi_session_guard`). Client và `scripts/publish-content.js` đọc `trki_tests_public`. #5 đã xử lý bằng cách bỏ lệnh ghi `user_speaking_progress` trong `page-speaking.js`. #6 chưa xử lý: đơn chỉ được tạo sau khi học viên bấm "đã chuyển khoản" và admin kích hoạt thủ công, nên đồng hồ client không ảnh hưởng bảo mật; cần webhook Casso để tự động hoá.
+**Trạng thái (25/11/2026): migration đã có trong repo nhưng CHƯA áp dụng lên Supabase.**
 
 ## 8. QUY TẮC CỐT LÕI CHO AI CODING AGENT
 
@@ -967,14 +986,14 @@ Mọi thao tác can thiệp vào tài chính, bản quyền PRO, điểm số v�
    Khái niệm "7 Trụ cột" chỉ là thuật ngữ cấu trúc tài liệu nội bộ; **tuyệt đối không hiển thị từ "Trụ cột" ra màn hình học viên**. Chỉ gọi tên trực tiếp các module: *Từ Vựng, Luyện Viết, Luyện Nghe, Luyện Nói, Luyện Thi TRKI, Shop, Blog*.
 
 4. **Tuân thủ Quy chuẩn Header Navigation**:
-   Áp dụng nghiêm ngặt cấu trúc 3 vùng cân đối, chiều cao cố định (Desktop 68px, Tablet 64px, Mobile 60px) và menu ngăn kéo trượt `nav-open` theo quy chuẩn tại **Mục 3.3**. XP và Streak chỉ hiển thị trong dropdown tài khoản khi đã đăng nhập.
+   Áp dụng nghiêm ngặt cấu trúc 3 vùng cân đối, chiều cao cố định theo `--header-height` (Desktop 71px, ≤1024px 65px, ≤768px 61px) và menu ngăn kéo trượt `nav-open` theo quy chuẩn tại **Mục 3.3**. XP và Streak chỉ hiển thị trong dropdown tài khoản khi đã đăng nhập.
 
 5. **Theme Russian Winter Cool Blue**:
    Cố định giao diện Sáng (`data-theme="light"` và `data-season="winter"`), phong cách mùa đông nước Nga: Nền chính (`#eef4fb`), bề mặt thẻ (`#ffffff`), màu chữ chính (`#0f1f38`), màu đường viền (`#d2e0f0`), điểm nhấn Đỏ Crimson (`#c52233`) và Xanh Cobalt (`#1757a6`).
 
 6. **Quy chuẩn Deploy GitHub Pages & Cache-Busting Tự Động**:
    * Luôn duy trì tệp `.nojekyll` ở thư mục gốc để vô hiệu hóa Jekyll build.
-   * **Quy tắc phiên bản động**: Mỗi khi thay đổi file CSS/JS lõi (`styles.css`, `pages.js`, `app.js`...), phải tự động tăng số version query parameter (ví dụ: `?v=9.5`) trên toàn bộ 16 file HTML gọi đến để kích hoạt Cloudflare và trình duyệt làm mới cache tức thì.
+   * **Quy tắc phiên bản động**: HTML nạp `styles.min.css` — sửa `styles.css` xong phải chạy `node scripts/build_min_css.js`. Mỗi khi thay đổi file CSS/JS đã deploy (`styles.min.css`, `app.js`, `pages.js`, `js/pages/page-*.js`...), tăng `?v=` của file đó trên toàn bộ 16 file HTML; service worker `sw.js` cache-first theo `?v=`.
 
 7. **Bảo mật Git & Secret Hygiene**:
    Tuyệt đối không commit API secret key, Service role key, Database connection string hoặc thông tin nhạy cảm vào Git repository.
@@ -992,7 +1011,16 @@ Mọi thao tác can thiệp vào tài chính, bản quyền PRO, điểm số v�
     Pomodoro mini neo tại cụm Header top-right. Trợ lý AI Rusika neo dạng bong bóng nổi góc phải đáy màn hình (`bottom: 24px, right: 20px, z-index: 990`; tự động dâng lên `bottom: 84px` trên màn hình có thanh Bottom Bar cố định).
 
 12. **Quy Chuẩn Gamification (XP & Streak)**:
-    - **Completion-Only XP**: Chỉ cộng XP khi hoàn thành trọn vẹn phiên học (Flashcard Lọ: `+15 XP`; Shadowing $\ge 70\%$: `+10 XP`; Nghe hiểu $\ge 60\%$: `+20 XP`; Thi TRKI: `+30 XP`; Tả tranh: `+20 XP`).
+    - **Nguồn duy nhất cho số XP**: `RUSI_XP_RULES` trong `app.js`. Các con số XP nêu trong Mục 1 là mô tả cũ; khi lệch, theo bảng này.
+
+      | Khoá | XP | Khoá | XP |
+      |---|---|---|---|
+      | `VOCAB_CARD_REVIEW` | 10 | `SPEAKING_TOPIC_PASS` | 25 |
+      | `VOCAB_QUIZ_PASS` | 15 | `WRITING_SUBMIT` | 15 |
+      | `LISTENING_QUIZ_PASS` | 15 | `WRITING_PASS_BONUS` (≥66%) | 15 |
+      | `LISTENING_DICTATION_PASS` | 20 | `TRKI_SUBTEST_PASS` | 20 |
+      | `SPEAKING_ITEM_PASS` | 10 | `TRKI_FULL_PASS` | 50 |
+      | `STUDY_5MIN_DAILY` | 10 | | |
     - **Streak theo múi giờ cục bộ**: Một ngày chỉ được tính vào Streak khi có phát sinh XP thực tế. Tính khoảng cách `diffDays` dựa trên mốc ngày 00:00:00 UTC của timezone tài khoản (`diffDays = 1` tăng streak, `diffDays > 1` reset về 0).
 
 13. **Quy Chuẩn Typography & Dấu Ngoặc Kép Thống Nhất (Curly Double Quotes Standard)**:
@@ -1068,16 +1096,16 @@ Thư viện `rusi-icons.js` được nhúng tại thẻ `<head>` trên tất c�
 > Toàn bộ các tiêu chuẩn kỹ thuật dưới đây đã được nghiệm thu thực tế trên toàn bộ 16 trang webapp và bắt buộc phải được duy trì nghiêm ngặt trong mọi lần nâng cấp tiếp theo:
 
 1. **Kiến Trúc Offline-First & Graceful Degradation**:
-   Mọi trang (`vocabulary.html`, `listening.html`, `speaking.html`, `writing.html`, `mock-test.html`, `blog.html`, `shop.html`, `product-detail.html`) luôn có cơ chế fallback tự động về hằng số dữ liệu chuẩn trong `data.js` kết hợp bộ nhớ đệm `STORE` khi mạng chập chờn hoặc Supabase chưa phản hồi. Tuyệt đối không bao giờ để xảy ra tình trạng màn hình trắng.
+   Mọi trang (`vocabulary.html`, `listening.html`, `speaking.html`, `writing.html`, `mock-test.html`, `blog.html`, `shop.html`, `product-detail.html`) nạp nội dung qua `RusiDataLoader` (RAM → IndexedDB → file tĩnh, Mục 5); khi offline vẫn dùng bản cache trong IndexedDB và dữ liệu nhẹ trong `data.js`. Tuyệt đối không bao giờ để xảy ra tình trạng màn hình trắng.
 
 2. **Đồng Bộ Phiên Bản Cache-Busting Thống Nhất**:
-   100% 16 tệp HTML đồng bộ gọi cùng phiên bản cache-busting mới nhất (`styles.css?v=10.3`, `pages.js?v=10.2`, `app.js?v=8.9`, `data.js?v=10.0`, `rusi-icons.js?v=5.0`, `supabase-client.js?v=7.7`). Mọi thay đổi mã nguồn phải tự động tăng query parameter để Cloudflare và trình duyệt cập nhật tài nguyên lập tức.
+   100% 16 tệp HTML đồng bộ gọi cùng phiên bản cache-busting (ví dụ tại `index.html` ngày 25/11/2026: `styles.min.css?v=12.2`, `app.js?v=12.1`, `auth.js?v=12.1`, `data.js?v=12.2`, `supabase-client.js?v=12.1`, `rusi-icons.js?v=5.0`, `pomodoro.js?v=7.1`; `DATA_VERSION = 'v12.1'`; `sw.js` cache `rusi-static-v12.0`). Số version luôn lấy từ HTML, không chép từ tài liệu. Mọi thay đổi mã nguồn phải tự động tăng query parameter để Cloudflare và trình duyệt cập nhật tài nguyên lập tức.
 
 3. **Phòng Thi TRKI Zero-Answer Leak & Server-Side Grading**:
-   Đề thi công khai tuyệt đối không chứa đáp án đúng. Mọi bài thi thử TRKI đều chấm điểm tập trung tại server qua RPC `rusi_grade_trki_exam` đối chiếu với `private.exam_answer_keys`.
+   Đề thi công khai tuyệt đối không chứa đáp án đúng. Mọi bài thi thử TRKI đều chấm điểm tập trung tại server qua RPC `rusi_grade_trki_submission` (đáp án trong `trki_question_bank`, không expose qua view `trki_questions_public`). Hiện còn lỗ hổng `trki_tests.answers` — Mục 7.5.
 
 4. **Không Gian Luyện Nói YouTube Shadowing & Chấm WER Realtime**:
-   30 bộ bài học (24 video hoạt hình có timestamp + 6 bộ hội thoại thực tế). Trình phát YouTube 16:9 đồng bộ postMessage, đệm bù trễ (+0.4s) chống vấp âm, nhận diện giọng nói Web Speech `ru-RU`, thuật toán WER Levenshtein bóc tách từng từ đúng/sai và tô màu trực tiếp trên câu tiếng Nga.
+   28 bài trong `speaking_lessons` (số liệu 25/11/2026; gồm video hoạt hình có timestamp và bộ hội thoại thực tế). Trình phát YouTube 16:9 đồng bộ postMessage, đệm bù trễ (+0.4s) chống vấp âm, nhận diện giọng nói Web Speech `ru-RU`, thuật toán WER Levenshtein bóc tách từng từ đúng/sai và tô màu trực tiếp trên câu tiếng Nga.
 
 5. **Chuẩn Mực Responsive & Quy Tắc "More..." (Overflow Protection)**:
    * Mobile: 1 cột duy nhất, chiều cao Header cố định 60px, tap target $\ge 44 \times 44$px, font input $\ge 16$px (chống auto-zoom iOS), `overflow-x: hidden`.
@@ -1090,14 +1118,14 @@ Thư viện `rusi-icons.js` được nhúng tại thẻ `<head>` trên tất c�
    Trợ lý AI Mascot Rusika nổi (`#rusikaFloatingWidget`) tự động kích hoạt trên tất cả các trang bài học qua `bootApp()`. Popover Pomodoro mini tích hợp chân Header đóng chéo tự động với menu tài khoản.
 
 8. **Kiến Trúc Modular Data & Động Cơ 0-Egress IndexedDB Cache**:
-   - Dữ liệu nguyên khối 21.8MB đã được phân tách vĩnh viễn thành 14 tệp JSON độc lập tại `data/modules/*.json` (`vocab_jars.json`, `vocabularies.json`, `topic_articles.json`, `trki_bank.json`, `trki_questions.json`, `speaking_sets.json`...).
-   - `data.js` chỉ giữ phần core siêu nhẹ (~550KB, gzip ~90KB) và động cơ nạp dữ liệu thông minh `window.RusiDataLoader`.
-   - Quy trình nạp 3 tầng theo nhu cầu (On-Demand Lazy Loading): Kiểm tra RAM (0ms) -> Đọc IndexedDB (`rusi_offline_db`) trên máy học viên (0ms, 0 byte Egress) -> Tải file JSON tĩnh từ CDN. Sau lần tải đầu tiên, toàn bộ việc chuyển trang và học tập đạt chuẩn 0-Byte Network Egress.
-   - Script đồng bộ `scripts/sync-from-supabase.js`: Tuyệt đối không nhồi dữ liệu thô vào `data.js`. Khi đồng bộ từ Supabase về, script tự động ghi vào 14 tệp `data/modules/*.json`, tạo backup `data/supabase-backup.json`, và tự động kích hoạt `scripts/build_optimized_data_js.js` để tái tạo `data.js` siêu nhẹ.
-   - Chặn rò rỉ Egress Supabase Cloud: Mọi hàm tải bài học/đề thi tĩnh trong `pages.js` (`loadCloudJars`, `loadCloudListening`, `loadCloudSpeaking`, `loadCloudWriting`, `loadCloudTests`, `loadCloudPosts`, `loadCloudProducts`, `loadCloudPackages`) bắt buộc có guard kiểm tra bộ nhớ RAM/IndexedDB trước. Tuyệt đối không gửi các truy vấn nặng quét toàn bộ bảng (`select("*")`) về Supabase trên mỗi lượt tải trang để bảo vệ 100% hạn mức 5GB Egress hàng tháng của Supabase.
+   - Dữ liệu lớn nằm ở `data/modules/*.json` (15 file + `manifest.json`): `vocab_jars`, `vocabularies`, `vocab_lessons`, `topic_articles`, `grammar_lessons`, `speaking_sets`, `listening_lessons`, `writing_tasks`, `writing_topics`, `trki_index`, `trki_bank`, `trki_questions`, `blog_posts`, `shop_products`, `packages`.
+   - `data.js` chỉ giữ phần core nhẹ và động cơ nạp `window.RusiDataLoader`. Không nhồi lại dữ liệu lớn vào `data.js`.
+   - Nạp 3 tầng theo nhu cầu: RAM → IndexedDB (`rusi_offline_db`) → file JSON tĩnh; chỉ tải lại module có hash trong `manifest.json` thay đổi (Mục 5).
+   - Xuất bản bằng `scripts/publish-content.js` (tự động qua GitHub Actions, Mục 4.3). Script xoá mọi trường đáp án theo `ANSWER_KEYS`; `trki_questions.json` luôn `[]`; `npm test` kiểm tra lại. **Không** dùng `scripts/sync-from-supabase.js`.
+   - Chặn rò rỉ Egress: các hàm tải dữ liệu trong `js/pages/page-*.js` (`loadCloudPosts`, `loadCloudProducts`, `loadCloudPackages`...) chỉ truy vấn Supabase khi dữ liệu trong RAM/IndexedDB trống. Không thêm truy vấn `select("*")` không giới hạn chạy mỗi lượt tải trang.
 
 9. **Chuẩn Hóa Typography & Zero Guillemets Baseline**:
-   - 100% dữ liệu trong cơ sở dữ liệu Supabase Cloud, tệp sao lưu `data/supabase-backup.json`, 14 tệp module `data/modules/*.json`, và tệp từ điển `data/dict-ru-vi.json` đã loại bỏ hoàn toàn các ký tự `«` và `»`.
+   - 100% dữ liệu trong cơ sở dữ liệu Supabase Cloud, tệp sao lưu `data/supabase-backup.json`, các tệp module `data/modules/*.json`, và tệp từ điển `data/dict-ru-vi.json` đã loại bỏ hoàn toàn các ký tự `«` và `»`.
    - Toàn bộ trích dẫn và hội thoại hiển thị thống nhất bằng cặp dấu ngoặc kép cong `“Nội dung”` (U+201C / U+201D).
    - Duy trì quy trình kiểm định đối soát định kỳ và kiểm tra tự động trước mỗi lần release nhằm bảo đảm chỉ số guillemets tồn dư luôn bằng 0.
 
@@ -1179,9 +1207,9 @@ Thư viện `rusi-icons.js` được nhúng tại thẻ `<head>` trên tất c�
   - Khối nâng cấp hội viên trên mọi trang webapp (`index.html`, `mock-test.html`, `vocabulary.html`, `speaking.html`, `writing.html`, `shop.html`) phải hiển thị đồng bộ 3 nấc thời hạn: **1 Tháng** (Nước rút mùa thi), **3 Tháng** (Bứt phá mục tiêu — Phổ biến nhất), và **1 Năm** (Toàn diện du học — Tiết kiệm nhất).
   - Giá bán hiển thị rõ ràng cả giá ưu đãi và giá gốc gạch ngang tạo mỏ neo tâm lý minh bạch.
 * **Quy trình thanh toán VietQR 2.0 ma sát tối thiểu (Zero Friction Checkout)**:
-  - Nút bấm `[Nâng cấp ngay]` kích hoạt tức thì Modal thanh toán VietQR với mã QR động sinh theo đúng số tiền và nội dung chuyển khoản tự động (`RUSIPRO [Username] [Code]`).
+  - Nút bấm `[Nâng cấp ngay]` kích hoạt tức thì Modal thanh toán VietQR với mã QR động sinh theo đúng số tiền và nội dung chuyển khoản tự động (`RUSI_[timestamp]_[UserTag]`, Mục 2.3).
   - Hệ thống tự động sao chép số tài khoản và cú pháp chuyển khoản khi người học chạm vào màn hình trên thiết bị di động.
-  - Tự động kiểm tra trạng thái kích hoạt sau khi học viên bấm nút xác nhận thanh toán, phản hồi Toast thông báo chúc mừng và nâng cấp quyền hạn PRO ngay lập tức.
+  - Tự động kiểm tra trạng thái đơn mỗi 3 giây; khi đơn được kích hoạt (hiện do admin, Mục 2.3) thì hiện Toast và nâng quyền PRO ngay, không cần tải lại trang.
 * **Đảm bảo tính sẵn sàng cấp doanh nghiệp (Enterprise SLA & 0-Egress Architecture)**:
   - Toàn bộ tài nguyên bài học và đề thi được phân phối qua CDN tĩnh kết hợp nạp ngầm vào IndexedDB máy học viên, bảo đảm tốc độ tải trang dưới 1 giây và chi phí băng thông máy chủ xấp xỉ 0 đồng ngay cả khi lưu lượng người dùng tăng đột biến.
 

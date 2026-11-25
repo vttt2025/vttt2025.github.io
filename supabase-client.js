@@ -794,7 +794,8 @@
           var sb = getClient();
           if (!sb) return null;
           try {
-            var q = sb.from("trki_tests").select("*").eq("is_published", true);
+            // View đã xoá khoá đáp án phía server (bảng trki_tests chỉ admin đọc được)
+            var q = sb.from("trki_tests_public").select("*").eq("is_published", true);
             if (level && level !== "all") q = q.eq("level", level);
             var res = await withTimeout(q, 3500);
             if (res.error || !res.data) return null;

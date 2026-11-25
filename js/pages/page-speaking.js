@@ -1403,23 +1403,6 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
         STORE.set("speak_" + set.id + "_" + targetIdx, bestScore);
         STORE.set(todayKey, STORE.get(todayKey, 0) + 1);
 
-        // Đồng bộ điểm lên Supabase nếu có đăng nhập
-        if (typeof RusiAuth !== "undefined" && RusiAuth.getUser && typeof getSupabaseClient === "function") {
-          const u = RusiAuth.getUser();
-          const sb = getSupabaseClient();
-          if (u && sb) {
-            try {
-              sb.from("user_speaking_progress").upsert({
-                user_id: u.id,
-                lesson_id: set.id,
-                sentence_idx: currentSentenceIdx,
-                best_score: bestScore,
-                updated_at: new Date().toISOString()
-              }, { onConflict: "user_id,lesson_id,sentence_idx" }).then(() => {}).catch(() => {});
-            } catch (_) {}
-          }
-        }
-
         if (statusLbl) statusLbl.textContent = "Đã đánh giá xong";
         if (dotEl) {
           dotEl.className = "sp-result-dot " + (sim >= 80 ? "is-excellent" : sim >= 60 ? "is-good" : "is-retry");
