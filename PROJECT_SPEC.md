@@ -67,6 +67,9 @@
   * Chu kỳ giãn cách: Từ mới (Again = 5 thẻ, Hard = 6h, Good = 1 ngày, Easy = 3 ngày); Từ đã ôn (Hard x 2, Good x 3, Easy x 4).
   * Đánh giá 4 mức SRS trực tiếp trên Flashcard: `Again (Ôn lại)`, `Hard (Khó)`, `Good (Nhớ tốt)`, `Easy (Dễ)` đồng bộ trực tiếp vào tiến độ học (`Progress`) và thuật toán SRS.
   * Tự động lọc danh sách "Đến hạn hôm nay" (`dueCards`).
+  * Thuật toán thực tế là nhân hệ số cố định như trên (không phải SM-2, không có ease factor). `Again` (và `Hard` với từ mới) trả `requeue: true` → flashcard chèn lại thẻ sau `SRS_AGAIN_REINSERT_AFTER` (5) thẻ trong phiên.
+  * **Lưu trữ**: localStorage (`trki_srs` — thẻ có `updatedAt`, `resetAt`; `trki_srs_totalReviews/Correct`; `trki_vocab_mastered_words`; `trki_custom_jars`; `trki_quizlet_starred`). Mọi thay đổi các khóa này qua `STORE.set` đặt `trki_vocab_changed_at`.
+  * **Đồng bộ cloud** (`vocab-sync.js` → cột `user_progress.vocab_state`, migration `20261125190000_user_progress_vocab_state.sql`): khi tải trang chỉ đọc mốc `vocab_state->>updatedAt`; tải cả khối khi mốc cloud mới hơn `trki_vocab_synced_at`. Gộp từng thẻ theo `updatedAt`, bỏ thẻ cũ hơn `resetAt`; lọ/từ gắn sao/từ đã thuộc lấy bản cloud nếu máy không có thay đổi chưa gửi, ngược lại gộp hợp. Chỉ đẩy lên sau khi kéo về thành công. `Progress.syncToCloud` gom ghi `user_progress` (debounce 2 giây, ghi ngay khi ẩn tab/rời trang/đăng xuất qua `Progress.flushSync`).
 * **Hệ sinh thái chế độ học chuẩn Quizlet (`pages.js`)**:
   1. *Danh sách từ (Word List Grid)*: Bố cục lưới ô thẻ chi tiết, tra cứu 6 cách, lưu lọ cá nhân.
   2. *Thẻ ghi nhớ 3D (Flashcard)*: Lật thẻ xoay chiều, audio phát âm, thanh đánh giá SRS 4 mức, phím tắt `Space` và mũi tên.
@@ -522,8 +525,8 @@ Nội dung học nạp từ file tĩnh trên GitHub Pages; Supabase chỉ phục
 | Phân hệ | Tên Bảng (`public` / `private`) | Mục đích & Nghiệp vụ cốt lõi | Kiểu Khóa chính | Khóa ngoại & Liên kết |
 |---|---|---|:---:|---|
 | **I. Người dùng & Tiến độ** | `public.profiles` | Thông tin học viên, vai trò (Role), trạng thái bản quyền PRO | `id` (UUID) | FK `auth.users(id)` ON DELETE CASCADE |
-| | `public.user_progress` | Tổng XP, chuỗi ngày Streak, ngày học gần nhất, danh sách đã hoàn thành | `user_id` (UUID) | FK `profiles(id)` ON DELETE CASCADE |
-| | `public.user_vocab_progress` | Tiến độ Spaced Repetition (SM-2) theo từng từ vựng cá nhân | `user_id, vocab_id` | FK `profiles(id)`, FK `vocabularies(id)` |
+| | `public.user_progress` | Tổng XP, chuỗi ngày Streak, ngày học gần nhất, danh sách đã hoàn thành, tiến độ từ vựng (`vocab_state`) | `user_id` (UUID) | FK `profiles(id)` ON DELETE CASCADE |
+| | `public.user_vocab_progress` | Tiến độ Spaced Repetition (SM-2) theo từng từ vựng cá nhân — **client chưa dùng** (thẻ SRS khóa theo chữ, không theo `vocabularies.id`; tiến độ SRS nằm ở `user_progress.vocab_state`) | `user_id, vocab_id` | FK `profiles(id)`, FK `vocabularies(id)` |
 | **II. Từ vựng & Lọ từ vựng** | **`public.vocabularies`** | **Kho từ vựng tiếng Nga toàn diện (trọng âm, từ loại, 6 cách, ví dụ)** | `id` (UUID) | Độc lập (từ điển cốt lõi A1–C2) |
 | | `public.vocab_jars` | Danh mục 18 Lọ từ vựng hệ thống & các Lọ cá nhân tự tạo | `id` (UUID) | `owner_id` FK `profiles(id)` (NULL nếu là lọ hệ thống) |
 | | `public.jar_items` | Bảng liên kết nhiều-nhiều giữa Lọ từ vựng và Từ vựng | `jar_id, vocab_id` | FK `vocab_jars(id)`, FK `vocabularies(id)` |
@@ -577,6 +580,7 @@ Nội dung học nạp từ file tĩnh trên GitHub Pages; Supabase chỉ phục
    - `streak_count INT NOT NULL DEFAULT 0`: Số ngày học liên tiếp hiện tại.
    - `last_study_date DATE`: Ngày học gần nhất (tính theo timezone tài khoản).
    - `vocab_stats JSONB NOT NULL DEFAULT '{"mastered": 0, "learning": 0, "due": 0}'::jsonb`: Thống kê từ vựng hiển thị nhanh trên trang chủ.
+   - `vocab_state JSONB NOT NULL DEFAULT '{}'::jsonb` (CHECK ≤ 1.5 MB): Khối tiến độ từ vựng đồng bộ giữa thiết bị `{v, updatedAt, srs: {cards, resetAt}, totals, mastered_words, custom_jars, starred}` (xem `vocab-sync.js`).
    - `done_list JSONB NOT NULL DEFAULT '{"vocabDone": [], "listenDone": [], "speakDone": [], "writeDone": [], "trkiDone": []}'::jsonb`: Mảng ID các bài học đã hoàn thành của 5 kỹ năng.
    - `updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`.
 
@@ -1024,6 +1028,7 @@ Mọi thao tác can thiệp vào tài chính, bản quyền PRO, điểm số v�
       | `LISTENING_DICTATION_PASS` | 20 | `TRKI_SUBTEST_PASS` | 20 |
       | `SPEAKING_ITEM_PASS` | 10 | `TRKI_FULL_PASS` | 50 |
       | `STUDY_5MIN_DAILY` | 10 | | |
+    - **Chống cày XP (26/11/2026)**: XP mỗi bài chỉ trao lần đầu hoàn thành/đạt (Nói, Nghe hiểu, chép chính tả cả bài, Viết đạt, TRKI theo đề/phần, thẻ "đã thuộc" chỉ 1 lần/từ). Các chế độ luyện lặp của lọ từ (Flashcard, Học, Ghép thẻ, Gõ từ, Kiểm tra) tối đa 1 lần/ngày/lọ. Viết nộp chưa đạt: `WRITING_SUBMIT` tối đa 1 lần/đề/ngày. Chép chính tả không thưởng theo từng câu; câu dùng gợi ý (Tab) không tính. RPC chấm TRKI không cộng XP (client cộng theo bảng này). Mỗi lần nhận XP ghi đúng 1 dòng `practice_logs` (qua `Progress.markDone(..., { title, score, xp })`).
     - **Streak theo múi giờ cục bộ**: Một ngày chỉ được tính vào Streak khi có phát sinh XP thực tế. Tính khoảng cách `diffDays` dựa trên mốc ngày 00:00:00 UTC của timezone tài khoản (`diffDays = 1` tăng streak, `diffDays > 1` reset về 0).
 
 13. **Quy Chuẩn Typography & Dấu Ngoặc Kép Thống Nhất (Curly Double Quotes Standard)**:

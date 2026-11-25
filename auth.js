@@ -523,8 +523,8 @@
     async signOut() {
       // 1. Đồng bộ tiến trình lần cuối lên Supabase trước khi đăng xuất
       try {
-        if (typeof Progress !== "undefined" && typeof Progress.syncToCloud === "function") {
-          await Progress.syncToCloud();
+        if (typeof Progress !== "undefined" && typeof Progress.flushSync === "function") {
+          await Progress.flushSync();
         }
       } catch (_) {}
 

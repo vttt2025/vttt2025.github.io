@@ -401,6 +401,7 @@
     TOPIC_ARTICLES: { file: 'data/modules/topic_articles.json', assign: (d) => { _TOPIC_ARTICLES = d; window.TOPIC_ARTICLES = d; } },
     SPEAKING_SETS: { file: 'data/modules/speaking_sets.json', assign: (d) => { _SPEAKING_SETS = d; window.SPEAKING_SETS = d; } },
     LISTENING_LESSONS: { file: 'data/modules/listening_lessons.json', assign: (d) => { _LISTENING_LESSONS = d; window.LISTENING_LESSONS = d; } },
+    LISTENING_TOPICS: { file: 'data/modules/listening_topics.json', assign: (d) => { window.LISTENING_TOPICS = d; } },
     WRITING_TASKS: { file: 'data/modules/writing_tasks.json', assign: (d) => { _WRITING_TASKS = d; window.WRITING_TASKS = d; } },
     WRITING_TOPICS: { file: 'data/modules/writing_topics.json', assign: (d) => { _WRITING_TOPICS = d; window.WRITING_TOPICS = d; } },
     GRAMMAR_LESSONS: { file: 'data/modules/grammar_lessons.json', assign: (d) => { _GRAMMAR_LESSONS = d; window.GRAMMAR_LESSONS = d; } },
@@ -518,7 +519,7 @@
       } else if (page === 'mock-test' || routePath.includes('mock-test') || fileName.includes('trki') || routePath.includes('test')) {
         targetModules = ['TRKI_INDEX'];
       } else if (page === 'admin' || routePath.includes('admin') || routePath.includes('cms')) {
-        targetModules = ['VOCAB_JARS', 'TOPIC_ARTICLES', 'VOCABULARIES', 'TRKI_BANK', 'TRKI_QUESTION_BANK', 'SPEAKING_SETS', 'LISTENING_LESSONS', 'WRITING_TASKS', 'WRITING_TOPICS', 'GRAMMAR_LESSONS', 'VOCAB_LESSONS'];
+        targetModules = ['VOCAB_JARS', 'TOPIC_ARTICLES', 'VOCABULARIES', 'TRKI_BANK', 'TRKI_QUESTION_BANK', 'SPEAKING_SETS', 'LISTENING_LESSONS', 'LISTENING_TOPICS', 'WRITING_TASKS', 'WRITING_TOPICS', 'GRAMMAR_LESSONS', 'VOCAB_LESSONS'];
       }
 
       if (targetModules.length > 0) {

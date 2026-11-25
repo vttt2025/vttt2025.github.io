@@ -92,6 +92,7 @@ function initListeningPage() {
             for (let j = start; j < end; j++) sum += Math.abs(data[j]);
             env[i] = sum / (end - start);
           }
+          env.durationSec = audioBuf.duration; // để cắt đoạn [start_sec, end_sec] của một câu
           return env;
         } catch (err) {
           console.warn("[Listening] Không giải mã được audio để vẽ sóng:", err);
@@ -104,15 +105,23 @@ function initListeningPage() {
     return audioEnvelopeCache.get(url);
   };
 
-  const extractAudioPeaks = async (url, count) => {
+  // segment (tuỳ chọn) = { start, end } tính bằng giây: chỉ lấy sóng của đoạn đó trong file
+  const extractAudioPeaks = async (url, count, segment = null) => {
     if (!url || count <= 0) return null;
     const env = await loadAudioEnvelope(url);
     if (!env || !env.length) return null;
+    let from = 0;
+    let len = env.length;
+    if (segment && env.durationSec > 0 && segment.end > segment.start) {
+      from = Math.max(0, Math.min(env.length - 1, Math.floor((segment.start / env.durationSec) * env.length)));
+      const to = Math.max(from + 1, Math.min(env.length, Math.ceil((segment.end / env.durationSec) * env.length)));
+      len = to - from;
+    }
     const peaks = new Float32Array(count);
     let maxPeak = 0.0001;
     for (let i = 0; i < count; i++) {
-      const start = Math.floor((i * env.length) / count);
-      const end = Math.max(start + 1, Math.floor(((i + 1) * env.length) / count));
+      const start = from + Math.floor((i * len) / count);
+      const end = Math.max(start + 1, from + Math.floor(((i + 1) * len) / count));
       let sum = 0;
       for (let j = start; j < end; j++) sum += env[Math.min(j, env.length - 1)];
       const amp = sum / (end - start);
@@ -304,6 +313,7 @@ function initListeningPage() {
     let startTime = 0;
     let spokenText = "";
     let audioUrl = null;
+    let audioSegment = null; // { start, end } (giây) khi chỉ vẽ một câu trong file audio cả bài
     let activeCharIndex = -1;
     let currentProgress = 0;
     let targetProgress = 0;
@@ -330,7 +340,7 @@ function initListeningPage() {
     const updateProfile = async () => {
       const token = ++profileToken;
       if (audioUrl) {
-        const realPeaks = await extractAudioPeaks(audioUrl, barCount);
+        const realPeaks = await extractAudioPeaks(audioUrl, barCount, audioSegment);
         if (token !== profileToken) return;
         if (realPeaks && realPeaks.length === barCount) {
           profile = realPeaks;
@@ -586,10 +596,11 @@ function initListeningPage() {
     requestDraw();
 
     return {
-      setSpokenText: (text, soundUrl = null) => {
+      setSpokenText: (text, soundUrl = null, segment = null) => {
         spokenText = text || "";
         audioUrl = soundUrl || null;
-        durationSec = estimateDuration(spokenText);
+        audioSegment = segment;
+        durationSec = segment ? Math.max(0.3, segment.end - segment.start) : estimateDuration(spokenText);
         currentProgress = 0;
         targetProgress = 0;
         isCompleted = false;
@@ -597,11 +608,12 @@ function initListeningPage() {
         updateTimeDisplay();
         requestDraw();
       },
-      start: (text, estDuration = 3.0, soundUrl = null) => {
+      start: (text, estDuration = 3.0, soundUrl = null, segment = null) => {
         isPlaying = true;
         isCompleted = false;
         spokenText = text || "";
         audioUrl = soundUrl || null;
+        audioSegment = segment;
         durationSec = Math.max(0.9, estDuration || estimateDuration(spokenText));
         startTime = Date.now();
         currentProgress = 0;
@@ -684,6 +696,17 @@ function initListeningPage() {
 
   const icon = (name, size) => window.RusiIcons ? RusiIcons.get(name, { size }) : "";
   const lessonImage = (l) => l.image || l.image_url || LESSON_COVERS[l.category] || DEFAULT_LISTENING_COVER;
+
+  // Cùng điều kiện khoá như thẻ bài: bài PRO và tài khoản chưa PRO (RLS phía server vẫn là lớp chặn chính)
+  const isListeningLessonLocked = (l) => Boolean(l && (l.is_pro_only || l.is_pro))
+    && !(typeof Monetization !== "undefined" && Monetization.isPro());
+  const showListeningProGate = () => {
+    if (typeof Monetization === "undefined") return;
+    Monetization.showProGateModal(
+      "Nội dung nghe dành cho PRO",
+      "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao."
+    );
+  };
 
   const getListeningLessons = () => {
     if (cloudListening && cloudListening.length) return cloudListening;
@@ -810,7 +833,7 @@ function initListeningPage() {
             </div>
             <div class="rusi-card-header-main">
               <div class="rusi-card-title-row">
-                <h3 class="rusi-card-ru" title="${esc(l.title)} · ${esc(l.vi || "")}">${esc(l.title)}</h3>
+                <h3 class="rusi-card-ru" title="${esc(l.title)}${l.vi && l.vi !== l.translation_vi ? " · " + esc(l.vi) : ""}">${esc(l.title)}</h3>
                 ${isDone ? `
                   <span class="topic-status topic-status-completed" style="flex-shrink:0">
                     ${icon("check", 12)} Hoàn thành
@@ -849,12 +872,8 @@ function initListeningPage() {
       if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent(id || ""))) return;
       const lesson = all.find((x) => x.id === id);
       if (!lesson) return;
-      const isPro = Boolean(lesson.is_pro_only || lesson.is_pro);
-      if (isPro && !Monetization.isPro()) {
-        Monetization.showProGateModal(
-          "Nội dung nghe dành cho PRO",
-          "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao."
-        );
+      if (isListeningLessonLocked(lesson)) {
+        showListeningProGate();
         return;
       }
       if (currentMode === "dictation") {
@@ -2115,6 +2134,12 @@ function initListeningPage() {
     let playbackBaseTimeSec = 0;
 
     let compNativeAudio = null;
+    let compAudioFailed = false; // audio bài lỗi (404/abort) → các lần phát sau dùng giọng đọc máy
+    let pendingSeekPct = null;   // tua trên sóng trước khi audio có metadata: áp lại theo thời lượng thật
+    // Audio đã gọi play() nhưng listener loadedmetadata chưa chạy: currentTime còn là 0, vị trí tua đang nằm ở currentTimeSec
+    // (dùng cờ riêng vì readyState đổi sang 1 trước khi sự kiện loadedmetadata được phát)
+    let compSeekPending = false;
+    const compAudioPending = () => !!(compNativeAudio && compSeekPending);
     const recomputeTimeline = () => {
       timeline = [];
       let acc = 0;
@@ -2135,9 +2160,13 @@ function initListeningPage() {
         });
         acc = end + PAUSE_GAP_SEC;
       });
-      totalDurationSec = (lesson.duration_seconds && lesson.duration_seconds > 0)
+      // Ưu tiên thời lượng thật của file audio (dữ liệu duration_seconds có thể lệch so với MP3)
+      const realDur = compNativeAudio && isFinite(compNativeAudio.duration) && compNativeAudio.duration > 0
+        ? compNativeAudio.duration
+        : 0;
+      totalDurationSec = realDur || ((lesson.duration_seconds && lesson.duration_seconds > 0)
         ? lesson.duration_seconds
-        : Math.max(3.0, acc);
+        : Math.max(3.0, acc));
     };
     recomputeTimeline();
 
@@ -2179,8 +2208,9 @@ function initListeningPage() {
       if (!isPlaying) return;
       if (compNativeAudio && !compNativeAudio.paused) {
         try {
+          const pending = compAudioPending();
           compNativeAudio.pause();
-          currentTimeSec = compNativeAudio.currentTime;
+          if (!pending) currentTimeSec = compNativeAudio.currentTime;
         } catch (_) {}
       } else {
         const elapsed = (Date.now() - playbackStartTimestamp) / 1000;
@@ -2207,7 +2237,8 @@ function initListeningPage() {
       updatePlaybackUI();
     };
 
-    const playFromTime = (targetSec) => {
+    const playFromTime = (targetSec, seekPct = null) => {
+      pendingSeekPct = seekPct;
       stopSpeechAndTimers();
       recomputeTimeline();
 
@@ -2259,9 +2290,11 @@ function initListeningPage() {
         if (animFrameId) cancelAnimationFrame(animFrameId);
         const tick = () => {
           if (!isPlaying) return;
-          const cur = (compNativeAudio && !compNativeAudio.paused)
-            ? compNativeAudio.currentTime
-            : Math.min(totalDurationSec, playbackBaseTimeSec + (Date.now() - playbackStartTimestamp) / 1000);
+          const cur = compAudioPending()
+            ? currentTimeSec // chờ metadata: giữ nguyên vị trí tua để áp dụng khi audio nạp xong
+            : (compNativeAudio && !compNativeAudio.paused)
+              ? compNativeAudio.currentTime
+              : Math.min(totalDurationSec, playbackBaseTimeSec + (Date.now() - playbackStartTimestamp) / 1000);
           currentTimeSec = cur;
           if (compWaveform) compWaveform.setProgress(cur / totalDurationSec);
 
@@ -2289,19 +2322,40 @@ function initListeningPage() {
 
       startProgressTicker();
 
-      if (lesson.audio_url) {
+      if (lesson.audio_url && !compAudioFailed) {
         try {
           if (!compNativeAudio) {
             compNativeAudio = new Audio(lesson.audio_url);
+            compNativeAudio.onerror = () => onCompAudioFailed();
           }
           compNativeAudio.playbackRate = currentSpeed;
           const applyTime = () => { try { compNativeAudio.currentTime = currentTimeSec; } catch (_) {} };
           if (compNativeAudio.readyState >= 1) {
             applyTime();
           } else {
-            compNativeAudio.addEventListener("loadedmetadata", applyTime, { once: true });
+            compSeekPending = true;
+            compNativeAudio.addEventListener("loadedmetadata", () => {
+              if (!compSeekPending) return; // đã áp dụng bởi listener trước (tua nhiều lần khi đang nạp)
+              compSeekPending = false;
+              // Có thời lượng thật: tính lại tổng thời lượng, áp vị trí tua cuối cùng (kể cả tua nhiều lần khi đang nạp)
+              recomputeTimeline();
+              if (pendingSeekPct !== null) currentTimeSec = pendingSeekPct * totalDurationSec;
+              pendingSeekPct = null;
+              currentTimeSec = Math.min(currentTimeSec, totalDurationSec);
+              playbackBaseTimeSec = currentTimeSec;
+              playbackStartTimestamp = Date.now();
+              if (compWaveform) {
+                compWaveform.start(lines.map(l => l.text_ru || l.ru || "").join(" "), totalDurationSec, lesson.audio_url);
+                compWaveform.seek(currentTimeSec / totalDurationSec);
+                if (!isPlaying) compWaveform.pause();
+              }
+              applyTime();
+            }, { once: true });
           }
-          compNativeAudio.play().catch(() => {});
+          compNativeAudio.play().catch((err) => {
+            if (err && err.name === "AbortError") return; // pause() khi đang nạp — không phải lỗi
+            onCompAudioFailed(err);
+          });
           compNativeAudio.onended = () => {
             isPlaying = false;
             currentLineIdx = -1;
@@ -2393,6 +2447,31 @@ function initListeningPage() {
       updatePlaybackUI();
     };
 
+    // Audio bài không tải/phát được: đưa UI về trạng thái dừng, báo người dùng, chuyển sang giọng đọc máy nếu có
+    const onCompAudioFailed = (err) => {
+      if (compAudioFailed) return;
+      const mediaErr = compNativeAudio && compNativeAudio.error;
+      if (!mediaErr && err && err.name === "NotAllowedError") {
+        // Trình duyệt chặn tự phát (không phải lỗi file): chỉ dừng UI, lần bấm sau phát lại audio
+        console.warn("[Listening] Trình duyệt chặn phát audio:", err);
+        pauseAudio();
+        return;
+      }
+      compAudioFailed = true;
+      compSeekPending = false;
+      console.error("[Listening] Không tải được audio bài nghe:", lesson.audio_url, mediaErr || err);
+      const resumeSec = currentTimeSec;
+      isPlaying = false;
+      stopSpeechAndTimers();
+      if (compWaveform) compWaveform.pause();
+      updatePlaybackUI();
+      const canTts = typeof window !== "undefined" && window.speechSynthesis && typeof SpeechSynthesisUtterance !== "undefined";
+      toast(canTts
+        ? "Không tải được audio bài nghe — chuyển sang giọng đọc máy."
+        : "Không tải được audio bài nghe. Vui lòng thử lại sau.");
+      if (canTts) playFromTime(resumeSec);
+    };
+
     const initCompWaveform = () => {
       const wrap = host.querySelector("#compWaveformWrap");
       if (!wrap) return;
@@ -2403,7 +2482,7 @@ function initListeningPage() {
       compWaveform = createRealtimeWaveform(wrap, {
         onSeek: (pct) => {
           const targetSec = pct * totalDurationSec;
-          playFromTime(targetSec);
+          playFromTime(targetSec, pct);
         }
       });
       if (compWaveform) {
@@ -2634,9 +2713,10 @@ function initListeningPage() {
             if (p >= 70) {
               const passKey = lesson.id + "_comp";
               if (!Progress.doneList("listenDone").includes(passKey)) {
-                Progress.markDone("listenDone", passKey);
-                Progress.addXp(15);
-                toast("Chúc mừng! Đã hoàn thành bài nghe hiểu (+15 XP) 🎉");
+                const xp = (window.RUSI_XP_RULES && window.RUSI_XP_RULES.LISTENING_QUIZ_PASS) || 15;
+                Progress.markDone("listenDone", passKey, { title: lesson.title, score: p, xp });
+                Progress.addXp(xp);
+                toast(`Chúc mừng! Đã hoàn thành bài nghe hiểu (+${xp} XP) 🎉`);
               }
             } else {
               toast(`Bạn đạt ${cCount}/${questions.length} câu. Hãy xem giải thích và luyện tập thêm nhé!`);
@@ -2663,6 +2743,10 @@ function initListeningPage() {
         const nextLesBtn = quizCard.querySelector("#btnCompGoNextLesson");
         if (nextLesBtn && nextLesson) {
           nextLesBtn.onclick = () => {
+            if (isListeningLessonLocked(nextLesson)) {
+              showListeningProGate();
+              return;
+            }
             stopAudio();
             if (compWaveform) {
               try { compWaveform.destroy(); } catch (_) {}
@@ -2899,7 +2983,7 @@ function initListeningPage() {
       const skipBackBtn = host.querySelector("#btnCompSkipBack");
       if (skipBackBtn) {
         skipBackBtn.onclick = () => {
-          const cur = (compNativeAudio && !compNativeAudio.paused) ? compNativeAudio.currentTime : (isPlaying ? (playbackBaseTimeSec + (Date.now() - playbackStartTimestamp) / 1000) : currentTimeSec);
+          const cur = compAudioPending() ? currentTimeSec : (compNativeAudio && !compNativeAudio.paused) ? compNativeAudio.currentTime : (isPlaying ? (playbackBaseTimeSec + (Date.now() - playbackStartTimestamp) / 1000) : currentTimeSec);
           const targetSec = Math.max(0, cur - 5);
           playFromTime(targetSec);
         };
@@ -2909,7 +2993,7 @@ function initListeningPage() {
       const skipFwdBtn = host.querySelector("#btnCompSkipFwd");
       if (skipFwdBtn) {
         skipFwdBtn.onclick = () => {
-          const cur = (compNativeAudio && !compNativeAudio.paused) ? compNativeAudio.currentTime : (isPlaying ? (playbackBaseTimeSec + (Date.now() - playbackStartTimestamp) / 1000) : currentTimeSec);
+          const cur = compAudioPending() ? currentTimeSec : (compNativeAudio && !compNativeAudio.paused) ? compNativeAudio.currentTime : (isPlaying ? (playbackBaseTimeSec + (Date.now() - playbackStartTimestamp) / 1000) : currentTimeSec);
           const targetSec = Math.min(totalDurationSec, cur + 5);
           playFromTime(targetSec);
         };
@@ -2994,7 +3078,7 @@ function initListeningPage() {
         const text = l.text_ru || l.ru || "";
         return text && (text.includes(raw) || raw.includes(text));
       });
-      const vi = lineMatch ? (lineMatch.translation_vi || lineMatch.vi) : (lesson.vi || "");
+      const vi = lineMatch ? (lineMatch.translation_vi || lineMatch.vi) : "";
       const lineIdx = lineMatch ? lesson.lines.indexOf(lineMatch) : idx;
       return {
         idx,
@@ -3027,12 +3111,23 @@ function initListeningPage() {
     let rePracticeDone = new Set();
     let dictNativeAudio = null;
 
+    // XP mỗi câu chép chính tả: 0 — theo RUSI_XP_RULES chỉ thưởng LISTENING_DICTATION_PASS khi xong cả bài
+    const DICT_SENTENCE_XP = 0;
+
     const isSentenceDone = (idx) => {
       const key = `${lesson.id}_dict_${idx}`;
       return Progress.doneList("listenDone").includes(key);
     };
 
     let dictWaveform = null;
+    let dictPlayToken = 0;       // mỗi lần phát một token: callback của lần phát cũ (TTS bị cancel, audio cũ) bị bỏ qua
+    let dictCheckEnd = null;     // listener timeupdate của lần phát hiện tại (gỡ khi dừng)
+    const hintedSentences = new Set(); // câu đã dùng gợi ý (Tab) trong phiên này → không cộng XP câu
+
+    // Câu có mốc thời gian trong file audio cả bài → đoạn [start_sec, end_sec] để vẽ sóng và tính tiến độ
+    const getSentenceSegment = (s) => (s && typeof s.start_sec === "number" && typeof s.end_sec === "number" && s.end_sec > s.start_sec)
+      ? { start: s.start_sec, end: s.end_sec }
+      : null;
 
     const initDictWaveform = () => {
       const wrap = host.querySelector("#dictWaveformWrap");
@@ -3049,14 +3144,21 @@ function initListeningPage() {
       const s = sentences[currentSentenceIdx];
       if (dictWaveform && s && s.ru) {
         const soundUrl = (s.audio_url || s.audio) || null;
-        dictWaveform.setSpokenText(s.ru, soundUrl);
+        dictWaveform.setSpokenText(s.ru, soundUrl, getSentenceSegment(s));
       }
     };
 
     const stopAudio = () => {
+      dictPlayToken++;
+      if (progressTimer) {
+        cancelAnimationFrame(progressTimer);
+        progressTimer = null;
+      }
       if (dictNativeAudio) {
         try { dictNativeAudio.pause(); } catch (_) {}
+        if (dictCheckEnd) dictNativeAudio.removeEventListener("timeupdate", dictCheckEnd);
       }
+      dictCheckEnd = null;
       if (typeof window !== "undefined" && window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
@@ -3097,12 +3199,22 @@ function initListeningPage() {
       const charCount = s.ru.length;
       const estDurationSec = Math.max(0.9, Math.min(25, (charCount * 95 + wordCount * 110 + 200) / (speed * 1000)));
       const soundUrl = (s && (s.audio_url || s.audio)) || null;
+      const segment = soundUrl ? getSentenceSegment(s) : null;
       if (dictWaveform) {
-        dictWaveform.start(s.ru, estDurationSec, soundUrl);
+        dictWaveform.start(s.ru, segment ? (segment.end - segment.start) : estDurationSec, soundUrl, segment);
         if (fromPct > 0) dictWaveform.seek(fromPct);
       }
 
+      const playToken = ++dictPlayToken;
+      let playbackDone = false;
       const onPlaybackDone = () => {
+        // Chỉ xử lý 1 lần cho lần phát hiện tại (onend/onerror của TTS, audio ended/timeupdate)
+        if (playbackDone || playToken !== dictPlayToken) return;
+        playbackDone = true;
+        if (progressTimer) {
+          cancelAnimationFrame(progressTimer);
+          progressTimer = null;
+        }
         if (dictWaveform) dictWaveform.complete();
         isPlaying = false;
         const pCard = host.querySelector("#dictPlayerCard");
@@ -3170,6 +3282,26 @@ function initListeningPage() {
             }
           };
 
+          // Tiến độ sóng theo currentTime thật của audio trong đoạn câu
+          const trackProgress = () => {
+            progressTimer = null;
+            if (playToken !== dictPlayToken || hasEnded || fellBack) return;
+            if (dictWaveform && dictNativeAudio.readyState >= 1 && endT > startT) {
+              dictWaveform.setProgress((dictNativeAudio.currentTime - startT) / (endT - startT));
+            }
+            progressTimer = requestAnimationFrame(trackProgress);
+          };
+
+          // Audio lỗi: onerror và play().catch đều có thể xảy ra → chỉ chuyển sang TTS 1 lần
+          let fellBack = false;
+          const fallbackToSynthesis = () => {
+            if (fellBack || hasEnded || playToken !== dictPlayToken) return;
+            fellBack = true;
+            dictNativeAudio.removeEventListener("timeupdate", checkEnd);
+            speakWithSynthesis();
+          };
+
+          dictCheckEnd = checkEnd;
           dictNativeAudio.addEventListener("timeupdate", checkEnd);
           dictNativeAudio.onended = () => {
             if (!hasEnded) {
@@ -3178,14 +3310,13 @@ function initListeningPage() {
               onPlaybackDone();
             }
           };
-          dictNativeAudio.onerror = () => {
-            dictNativeAudio.removeEventListener("timeupdate", checkEnd);
-            speakWithSynthesis();
-          };
+          dictNativeAudio.onerror = () => fallbackToSynthesis();
 
-          dictNativeAudio.play().catch(() => {
-            speakWithSynthesis();
+          dictNativeAudio.play().catch((err) => {
+            if (err && err.name === "AbortError") return; // bị dừng/đổi nguồn khi đang nạp — không phải lỗi
+            fallbackToSynthesis();
           });
+          progressTimer = requestAnimationFrame(trackProgress);
           return;
         } catch (_) {
           speakWithSynthesis();
@@ -3230,6 +3361,7 @@ function initListeningPage() {
       }
       const targetInput = inputs[0];
       const expected = targetInput.dataset.expected || "";
+      hintedSentences.add(currentSentenceIdx);
       targetInput.value = expected;
       targetInput.classList.add("is-correct");
       targetInput.classList.remove("is-wrong");
@@ -3734,13 +3866,21 @@ function initListeningPage() {
       unlockedVocab[currentSentenceIdx] = true;
 
       // 2. Ghi nhận hoàn thành câu
+      let lessonRewardXp = 0; // > 0 khi lần này vừa hoàn thành cả bài (dù câu cuối làm xong trước)
       if (isRePracticing) {
         rePracticeDone.add(currentSentenceIdx);
       } else {
         const key = `${lesson.id}_dict_${currentSentenceIdx}`;
         if (!Progress.doneList("listenDone").includes(key)) {
-          Progress.markDone("listenDone", key);
-          Progress.addXp(10);
+          const sentenceXp = hintedSentences.has(currentSentenceIdx) ? 0 : DICT_SENTENCE_XP;
+          Progress.markDone("listenDone", key, { title: `${lesson.title} — câu ${currentSentenceIdx + 1}`, xp: sentenceXp });
+          if (sentenceXp) Progress.addXp(sentenceXp);
+        }
+        const lessonKey = `${lesson.id}_dict`;
+        if (!Progress.doneList("listenDone").includes(lessonKey) && sentences.every((_, i) => isSentenceDone(i))) {
+          lessonRewardXp = (window.RUSI_XP_RULES && window.RUSI_XP_RULES.LISTENING_DICTATION_PASS) || 20;
+          Progress.markDone("listenDone", lessonKey, { title: lesson.title, score: 100, xp: lessonRewardXp });
+          Progress.addXp(lessonRewardXp);
         }
       }
 
@@ -3760,7 +3900,9 @@ function initListeningPage() {
 
       clearTimeout(autoAdvanceTimeout);
       if (hasNext) {
-        toast(`Chính xác! Đang chuyển sang câu ${currentSentenceIdx + 2}/${sentences.length}... 🚀`);
+        toast(lessonRewardXp
+          ? `Xuất sắc! Bạn đã hoàn thành toàn bộ bài nghe chép chính tả! 🎉 (+${lessonRewardXp} XP)`
+          : `Chính xác! Đang chuyển sang câu ${currentSentenceIdx + 2}/${sentences.length}... 🚀`);
         autoAdvanceTimeout = setTimeout(() => {
           stopAudio();
           currentSentenceIdx++;
@@ -3784,10 +3926,10 @@ function initListeningPage() {
         } else {
           const allDone = sentences.every((_, i) => isSentenceDone(i));
           if (allDone) {
-            Progress.markDone("listenDone", `${lesson.id}_dict`);
-            Progress.markDone("listenDone", `${lesson.id}_dict_done`);
-            Progress.addXp(20);
-            toast("Xuất sắc! Bạn đã hoàn thành toàn bộ bài nghe chép chính tả! 🎉 (+20 XP)");
+            // Thưởng hoàn thành bài đã trao ở bước 2 (chỉ 1 lần); khoá cũ `<id>_dict_done` chỉ còn được đọc cho dữ liệu cũ
+            toast(lessonRewardXp
+              ? `Xuất sắc! Bạn đã hoàn thành toàn bộ bài nghe chép chính tả! 🎉 (+${lessonRewardXp} XP)`
+              : "Xuất sắc! Bạn đã hoàn thành toàn bộ bài nghe chép chính tả! 🎉");
           } else {
             toast("Bạn đã làm đến cuối bài nghe! Hãy hoàn thành các câu còn lại để nhận XP nhé.");
           }
@@ -4126,6 +4268,10 @@ function initListeningPage() {
         b.onclick = () => {
           const lessonId = b.dataset.lessonId;
           if (lessonId && lessonId !== lesson.id) {
+            if (isListeningLessonLocked(allLessons.find(l => l.id === lessonId))) {
+              showListeningProGate();
+              return;
+            }
             clearTimeout(autoAdvanceTimeout);
             stopAudio();
             if (closeAllPopoversHandler) {

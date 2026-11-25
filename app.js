@@ -146,15 +146,44 @@ const STORE = {
     }
   },
   set(key, val) {
+    if (!VOCAB_SYNC_KEYS.has(key)) {
+      this._write(key, val);
+      return;
+    }
+    // Ghi lại đúng giá trị cũ (vd. trang tự tạo lọ mặc định khi mở) không tính là thay đổi
+    let unchanged = false;
+    try {
+      const prev = localStorage.getItem("trki_" + key);
+      unchanged = (val === null || val === undefined) ? prev === null : prev === JSON.stringify(val);
+    } catch (_) {}
+    if (unchanged) return;
+    if (this._write(key, val)) {
+      // Đánh dấu tiến độ từ vựng đã đổi để vocab-sync.js đẩy lên cloud
+      this._write("vocab_changed_at", Date.now());
+      if (window.Progress && typeof window.Progress.syncToCloud === "function") window.Progress.syncToCloud();
+    }
+  },
+  /** Ghi thẳng vào localStorage (không đánh dấu thay đổi). Trả về false nếu ghi lỗi. */
+  _write(key, val) {
     try {
       if (val === null || val === undefined) {
         localStorage.removeItem("trki_" + key);
       } else {
         localStorage.setItem("trki_" + key, JSON.stringify(val));
       }
-    } catch (e) {}
+      return true;
+    } catch (e) {
+      console.error("[STORE] Không lưu được '" + key + "':", e);
+      if (!STORE._warnedWriteError && typeof toast === "function") {
+        STORE._warnedWriteError = true;
+        toast("Không lưu được tiến độ: bộ nhớ trình duyệt đã đầy hoặc bị chặn.");
+      }
+      return false;
+    }
   }
 };
+// Các khóa localStorage thuộc tiến độ từ vựng, được đồng bộ qua user_progress.vocab_state
+const VOCAB_SYNC_KEYS = new Set(["srs", "srs_totalReviews", "srs_totalCorrect", "vocab_mastered_words", "custom_jars", "quizlet_starred"]);
 window.STORE = STORE;
 
 // Chuẩn hóa ngày địa phương YYYY-MM-DD theo Spec Mục 8.12
@@ -303,15 +332,34 @@ const Progress = {
     this.checkStreakStatus();
   },
 
-  /**
-   * Đồng bộ tiến độ 2 chiều với Supabase
-   */
-  async syncToCloud(practiceLog = null) {
+  /** userId hợp lệ khi đã đăng nhập Supabase, ngược lại null. */
+  _cloudUserId() {
     const user = (window.Auth && window.Auth.user) || STORE.get("auth_user", null);
     const userId = user && (user.uid || user.id);
     const isUUID = userId && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId);
+    return (window.RusiSupabase && window.RusiSupabase.isReady() && isUUID) ? userId : null;
+  },
 
-    if (window.RusiSupabase && window.RusiSupabase.isReady() && isUUID) {
+  /**
+   * Đồng bộ tiến độ lên Supabase. Nhật ký luyện tập ghi ngay; bản tổng hợp user_progress
+   * được gom lại (debounce) để nhiều thay đổi liên tiếp chỉ tạo một lần ghi.
+   */
+  async syncToCloud(practiceLog = null) {
+    const userId = this._cloudUserId();
+    if (!userId) return;
+    if (practiceLog && window.RusiSupabase.userProgress && typeof window.RusiSupabase.userProgress.logPractice === "function") {
+      window.RusiSupabase.userProgress.logPractice(userId, practiceLog).catch(() => {});
+    }
+    clearTimeout(this._syncTimer);
+    this._syncTimer = setTimeout(() => { this.flushSync(); }, 2000);
+  },
+
+  /** Ghi ngay bản tổng hợp tiến độ (dùng khi rời trang, đăng xuất). */
+  async flushSync() {
+    clearTimeout(this._syncTimer);
+    this._syncTimer = null;
+    const userId = this._cloudUserId();
+    if (userId) {
       const streak = STORE.get("streak", 0);
       const xp = STORE.get("xp", 0);
       const doneList = {
@@ -322,25 +370,24 @@ const Progress = {
         trkiSubDone: STORE.get("trkiSubDone", []),
         vocabDone: STORE.get("vocabDone", [])
       };
-      const vocabStats = (typeof window.getSynchronizedVocabStats === "function") ? window.getSynchronizedVocabStats() : {};
+      const vocabStats = (typeof window.getSynchronizedVocabStats === "function") ? window.getSynchronizedVocabStats({ forCloud: true }) : {};
+      // Khối tiến độ từ vựng chỉ gửi khi đã kéo bản cloud về và có thay đổi (xem vocab-sync.js)
+      const vocabState = window.RusiVocabSync ? window.RusiVocabSync.payloadForPush() : null;
 
       // 1. Lưu hồ sơ tổng hợp vào user_progress
       if (window.RusiSupabase.userProgress && typeof window.RusiSupabase.userProgress.save === "function") {
-        window.RusiSupabase.userProgress.save(userId, {
+        const ok = await window.RusiSupabase.userProgress.save(userId, {
           xp_total: xp,
           streak_count: streak,
           last_study_date: getLocalDateString(),
           vocab_stats: vocabStats,
-          done_list: doneList
-        }).catch(() => {});
+          done_list: doneList,
+          vocab_state: vocabState
+        });
+        if (ok && vocabState) window.RusiVocabSync.markPushed(vocabState);
       }
 
-      // 2. Ghi nhật ký chi tiết vào practice_logs
-      if (practiceLog && window.RusiSupabase.userProgress && typeof window.RusiSupabase.userProgress.logPractice === "function") {
-        window.RusiSupabase.userProgress.logPractice(userId, practiceLog).catch(() => {});
-      }
-
-      // 3. Đồng bộ gamification vào profiles
+      // 2. Đồng bộ gamification vào profiles
       if (window.RusiSupabase.profile && typeof window.RusiSupabase.profile.syncGamification === "function") {
         const lvl = typeof MascotRusika !== "undefined" ? MascotRusika.getLevel(xp) : 1;
         window.RusiSupabase.profile.syncGamification(userId, streak, xp, lvl).catch(() => {});
@@ -374,6 +421,10 @@ const Progress = {
               const merged = Array.from(new Set([...localList, ...remoteList]));
               STORE.set(k, merged);
             });
+          }
+          // Tiến độ từ vựng: chỉ tải khối vocab_state khi bản cloud mới hơn lần đồng bộ trước
+          if (window.RusiVocabSync) {
+            await window.RusiVocabSync.pull(userId, remote.vocab_updated_at);
           }
           this.checkStreakStatus();
           updateHeaderChips();
@@ -1045,7 +1096,8 @@ const Monetization = {
     if (!user) return null;
     const proData = {
       active: true,
-      pkgId: STORE.get("pro_active_pkg", "pro_1y"),
+      // Gói đã xác nhận; nếu admin duyệt khi modal đã đóng thì dùng gói vừa đặt gần nhất
+      pkgId: STORE.get("pro_active_pkg", STORE.get("pro_pending_pkg", "pro_1y")),
       pkgTitle: "Gói PRO",
       expiresAt: user.pro_expires_at,
       isLifetime: !user.pro_expires_at,
@@ -1303,6 +1355,8 @@ const Monetization = {
     STORE.set("last_order_num", ordNum);
     const userTag = (user.email ? user.email.split("@")[0] : (user.name || "USER")).replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 8);
     const orderId = `RUSI_${Date.now()}_${userTag || "PRO"}`;
+    // Chỉ kiểm tra trạng thái đơn sau khi đơn đã được ghi lên server (tránh GET orders mỗi 3 giây khi chưa có đơn)
+    let orderSubmitted = false;
 
     let modal = document.getElementById("vietqrModal");
     if (!modal) {
@@ -1477,7 +1531,9 @@ const Monetization = {
             toast(result?.message || "Không thể ghi nhận đơn hàng. Vui lòng thử lại.");
             return;
           }
-          STORE.set("pro_active_pkg", currentPkg.id);
+          // Đơn mới CHỜ DUYỆT: chưa phải gói đang dùng — chỉ ghi "pro_active_pkg" khi đơn được xác nhận đã thanh toán
+          STORE.set("pro_pending_pkg", currentPkg.id);
+          orderSubmitted = true;
           clearInterval(Monetization._timerInterval);
           modal.innerHTML = `
             <div class="vietqr-card" style="max-width:540px">
@@ -1539,12 +1595,15 @@ const Monetization = {
         if (this._pollInterval) clearInterval(this._pollInterval);
         return;
       }
+      if (!orderSubmitted) return;
       try {
         if (window.RusiSupabase && window.RusiSupabase.orders && typeof window.RusiSupabase.orders.checkStatus === "function") {
           const res = await window.RusiSupabase.orders.checkStatus(orderId);
           if (res && String(res.status).toLowerCase() === "paid") {
             clearInterval(this._pollInterval);
             clearInterval(this._timerInterval);
+            const pendingPkg = STORE.get("pro_pending_pkg", null);
+            if (pendingPkg) STORE.set("pro_active_pkg", pendingPkg);
             await Monetization.setPro();
             toast("Đơn hàng đã được duyệt. Quyền PRO đã cập nhật.");
             modal.remove();
@@ -2522,7 +2581,7 @@ function renderUserArea() {
 /**
  * Hàm tính toán tiến độ học chuẩn xác, đồng bộ giữa SRS và danh sách từ đã thuộc (Req 5 & Spec Mục 1).
  */
-function getSynchronizedVocabStats() {
+function getSynchronizedVocabStats(opts = {}) {
   let stats = { newCount: 0, reviewing: 0, learning: 0, mastered: 0 };
   let dueCount = 0;
   let st = null;
@@ -2548,23 +2607,25 @@ function getSynchronizedVocabStats() {
   }
 
   const masteredWords = (typeof STORE !== "undefined") ? STORE.get("vocab_mastered_words", []) : [];
-  const srsMastered = (stats && stats.mastered) || 0;
-  const totalMastered = Math.max(masteredWords.length, srsMastered);
+  // So khớp không phân biệt hoa/thường và dấu nhấn
+  const normRu = (w) => String(w || "").replace(/[\u0300\u0301]/g, "").toLowerCase().trim();
 
   // Đếm từ mới trong phạm vi học tập thực tế của người dùng:
   // Thẻ isNew trong deck SRS + các từ người dùng đã lưu vào Lọ cá nhân / Lọ yêu thích
-  const masteredSet = new Set(masteredWords.map(w => (w || "").toLowerCase().trim()));
+  // Từ đã thuộc = hợp của danh sách "vocab_mastered_words" và thẻ SRS mastered (không đếm trùng)
+  const masteredSet = new Set((masteredWords || []).map(normRu).filter(Boolean));
   if (st && st.cards) {
     Object.values(st.cards).forEach(c => {
-      if (c.mastered && c.ru) masteredSet.add(c.ru.toLowerCase().trim());
+      if (c.mastered && c.ru) masteredSet.add(normRu(c.ru));
     });
   }
+  const totalMastered = masteredSet.size;
 
   const newWordsSet = new Set();
   if (st && st.cards) {
     Object.values(st.cards).forEach(c => {
       if ((c.isNew || c.repetitions === 0) && !c.mastered && c.ru) {
-        const k = c.ru.toLowerCase().trim();
+        const k = normRu(c.ru);
         if (!masteredSet.has(k)) newWordsSet.add(k);
       }
     });
@@ -2574,7 +2635,7 @@ function getSynchronizedVocabStats() {
   (customJars || []).forEach(j => {
     (j.words || []).forEach(w => {
       if (!w || !w.ru) return;
-      const k = w.ru.toLowerCase().trim();
+      const k = normRu(w.ru);
       if (!masteredSet.has(k) && !newWordsSet.has(k)) {
         newWordsSet.add(k);
       }
@@ -2582,8 +2643,9 @@ function getSynchronizedVocabStats() {
   });
 
   let calculatedNew = newWordsSet.size;
-  // Nếu người dùng mới tinh (chưa lưu từ nào vào Lọ cá nhân và chưa bắt đầu thẻ SRS), hiển thị 10 từ khởi đầu
-  if (calculatedNew === 0 && totalMastered === 0 && dueCount === 0) {
+  // Nếu người dùng mới tinh (chưa lưu từ nào vào Lọ cá nhân và chưa bắt đầu thẻ SRS), hiển thị 10 từ khởi đầu.
+  // Con số gợi ý này chỉ để hiển thị, không ghi lên cloud.
+  if (!opts.forCloud && calculatedNew === 0 && totalMastered === 0 && dueCount === 0) {
     calculatedNew = 10;
   }
 
@@ -3465,6 +3527,14 @@ window.RusiMarkdown = RusiMarkdown;
 
 // Universal Global Exports
 window.Progress = Progress;
+// Rời trang/ẩn tab khi còn lần ghi đang chờ → ghi ngay để không mất tiến độ
+const flushPendingProgress = () => {
+  if (Progress._syncTimer) Progress.flushSync();
+};
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") flushPendingProgress();
+});
+window.addEventListener("pagehide", flushPendingProgress);
 if (typeof MascotRusika !== "undefined") window.MascotRusika = MascotRusika;
 if (typeof AuthModal !== "undefined") window.AuthModal = AuthModal;
 if (typeof currentSeason !== "undefined") window.currentSeason = currentSeason;

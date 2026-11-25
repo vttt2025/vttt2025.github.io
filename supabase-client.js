@@ -1489,7 +1489,8 @@
             user_id: isValidUUID(order.userId) ? order.userId : null,
             package_id: order.packageId || null,
             amount: Number(order.amount) || 0,
-            amount_minor: (Number(order.amount) || 0) * 100,
+            // VND không có đơn vị lẻ: amount_minor = amount (khớp packages.price_minor; server ép lại theo gói)
+            amount_minor: Number(order.amount) || 0,
             currency: "VND",
             payment_method: order.paymentMethod || "VIETQR",
             status: "pending",
@@ -1553,7 +1554,8 @@
             order_code: code,
             user_id: isValidUUID(order.userId) ? order.userId : null,
             amount: Number(order.amount) || 0,
-            amount_minor: (Number(order.amount) || 0) * 100,
+            // VND không có đơn vị lẻ: amount_minor = amount (khớp packages.price_minor; server ép lại theo gói)
+            amount_minor: Number(order.amount) || 0,
             currency: "VND",
             payment_method: order.paymentMethod || "VIETQR",
             status: "pending",
@@ -1616,11 +1618,23 @@
         var sb = getClient();
         if (!sb || !userId || !isValidUUID(userId)) return null;
         try {
-          var res = await sb.from("user_progress").select("*").eq("user_id", userId).maybeSingle();
+          // Không tải cả vocab_state (có thể lớn) — chỉ lấy mốc thời gian để biết có cần kéo về không.
+          var res = await sb.from("user_progress")
+            .select("user_id,xp_total,streak_count,last_study_date,done_list,updated_at,vocab_updated_at:vocab_state->>updatedAt")
+            .eq("user_id", userId).maybeSingle();
           return res.data || null;
         } catch (_) {
           return null;
         }
+      },
+
+      /** Tải khối tiến độ từ vựng. Ném lỗi khi truy vấn hỏng để phía gọi không ghi đè dữ liệu trên cloud. */
+      getVocabState: async function (userId) {
+        var sb = getClient();
+        if (!sb || !userId || !isValidUUID(userId)) throw new Error("Supabase chưa sẵn sàng");
+        var res = await sb.from("user_progress").select("vocab_state").eq("user_id", userId).maybeSingle();
+        if (res.error) throw res.error;
+        return (res.data && res.data.vocab_state) || {};
       },
 
       save: async function (userId, data) {
@@ -1636,9 +1650,13 @@
             done_list: data.done_list || {},
             updated_at: new Date().toISOString()
           };
+          // Chỉ gửi vocab_state khi có — upsert không kèm cột sẽ giữ nguyên giá trị trên cloud.
+          if (data.vocab_state) row.vocab_state = data.vocab_state;
           var res = await sb.from("user_progress").upsert(row);
+          if (res.error) console.warn("[RusiSupabase] Lỗi lưu user_progress:", res.error);
           return !res.error;
-        } catch (_) {
+        } catch (err) {
+          console.warn("[RusiSupabase] Lỗi lưu user_progress:", err);
           return false;
         }
       },

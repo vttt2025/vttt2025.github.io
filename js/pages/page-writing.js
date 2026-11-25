@@ -748,7 +748,7 @@ function initWritingPage() {
             const tierBadge = isPro
               ? '<span class="user-tier-badge tier-pro" style="font-size:0.65rem;padding:1px 4px;margin-left:3px;border-radius:4px;font-weight:700">PRO</span>'
               : '<span class="user-tier-badge tier-free" style="font-size:0.65rem;padding:1px 4px;margin-left:3px;border-radius:4px;font-weight:700">Free</span>';
-            quotaText.innerHTML = `<span class="quota-txt"><b>${q.remaining}/${q.max_limit}</b> lượt ${tierBadge}</span>`;
+            quotaText.innerHTML = `<span class="quota-txt"><b>${Number(q.remaining) || 0}/${Number(q.max_limit) || 0}</b> lượt ${tierBadge}</span>`;
           } catch (_) {
             if (quotaBadge) {
               quotaBadge.classList.remove("is-off", "is-empty");
@@ -819,7 +819,7 @@ function initWritingPage() {
         const latinChars = text.match(/[a-zA-Z]/g) || [];
 
         if (cyrillicChars.length < 10) {
-          toast("Bài viết cần được viết bằng tiếng Nga (ký tự Cyrillic). Hãy sử dụng bàn phím ảo bên trên!");
+          toast("Bài viết cần được viết bằng tiếng Nga (ký tự Cyrillic).");
           return;
         }
 
@@ -908,87 +908,28 @@ function initWritingPage() {
                 }
               }
             } catch (aiErr) {
-              console.warn("Groq AI lỗi kết nối, chuyển sang bộ chấm cục bộ:", aiErr);
+              console.warn("Groq AI lỗi kết nối, không chấm được bài viết:", aiErr);
             }
           }
 
-          // Dự phòng cục bộ (Offline Fallback Rubric đối chiếu bài mẫu & mô tả tranh)
-          if (total === null || total === undefined) {
-            const uniqueWords = new Set(wordsArr.map(w => w.toLowerCase().replace(/[^а-яё]/gi, "")));
-
-            let grammarScore = 18;
-            if (latinChars.length === 0) grammarScore += 2;
-            if (sentences.length >= 2) grammarScore += 2;
-            const hasCapitalization = sentences.every(s => /^[А-ЯЁ«“"]/.test(s));
-            if (hasCapitalization) grammarScore += 1;
-            const hasVerbs = wordsArr.some(w => /(?:ет|ут|ют|ит|ат|ят|ал|ала|али|ть|ся|сь)$/i.test(w));
-            if (hasVerbs) grammarScore += 2;
-            grammarScore = Math.max(12, Math.min(25, grammarScore));
-
-            let lexisScore = 16;
-            const lexicalDiversity = wordsArr.length > 0 ? (uniqueWords.size / wordsArr.length) : 1;
-            if (lexicalDiversity >= 0.65) lexisScore += 2;
-            else if (lexicalDiversity >= 0.5) lexisScore += 1;
-            const usedHints = words.filter(hw => {
-              const wRu = (typeof hw === "object" && hw ? (hw.ru || hw.word) : String(hw)).toLowerCase().replace(/[^а-яё]/gi, "");
-              return wRu && text.toLowerCase().includes(wRu);
-            });
-            lexisScore += Math.min(5, usedHints.length * 1.5);
-            if (wordsArr.some(w => w.length >= 7)) lexisScore += 1;
-            lexisScore = Math.max(12, Math.min(25, Math.round(lexisScore)));
-
-            let structureScore = 18;
-            const connectors = ["и", "а", "но", "потому что", "поэтому", "когда", "если", "чтобы", "также", "потом", "затем", "так как"];
-            const foundConnectors = connectors.filter(c => text.toLowerCase().includes(c));
-            structureScore += Math.min(4, foundConnectors.length);
-            if (sentences.length >= 3) structureScore += 2;
-            structureScore = Math.max(12, Math.min(25, structureScore));
-
-            // Tiêu chí Nội dung & Độ sát thực tế ảnh (đối chiếu bài mẫu và từ vựng tranh):
-            let contentScore = 13;
-            const lengthRatio = count / minWords(t);
-            if (lengthRatio >= 1.0) contentScore += 3;
-
-            let modelMatches = 0;
-            if (modelAns) {
-              const modelWordsSet = new Set(
-                modelAns.toLowerCase().replace(/[^а-яё\s]/gi, " ").split(/\s+/).filter(w => w.length >= 3)
-              );
-              wordsArr.forEach(w => {
-                const clean = w.toLowerCase().replace(/[^а-яё]/gi, "");
-                if (clean.length >= 3 && modelWordsSet.has(clean)) modelMatches++;
-              });
-            }
-
-            if (modelMatches >= 5 || usedHints.length >= 3) contentScore += 7;
-            else if (modelMatches >= 3 || usedHints.length >= 2) contentScore += 4;
-            else if (modelMatches >= 1 || usedHints.length >= 1) contentScore += 2;
-
-            if (sentences.length >= 3) contentScore += 2;
-            contentScore = Math.max(10, Math.min(25, contentScore));
-
-            scores = [grammarScore, lexisScore, structureScore, contentScore];
-            total = scores.reduce((sum, score) => sum + score, 0);
-
-            if (isPicture) {
-              if (modelMatches >= 3 || usedHints.length >= 2) {
-                feedbackComment = `Bài viết bám sát bối cảnh bức tranh (${count} từ, ${sentences.length} câu). Bạn đã quan sát tốt các nhân vật và vận dụng thành công ${usedHints.length} từ vựng gợi ý của tranh. Tiếp tục trau chuốt thêm biến cách để bài viết hoàn hảo hơn nhé!`;
-              } else {
-                feedbackComment = `Bài viết đạt độ dài (${count} từ) nhưng chưa miêu tả sát các chi tiết nhân vật/hành động trong bức tranh so với bài mẫu. Hãy quan sát kỹ tranh và xem phần “Bài mẫu” để học cách miêu tả sinh động hơn nhé!`;
-              }
-            } else {
-              feedbackComment = `Bài viết hoàn thành tốt yêu cầu luyện dịch (${count} từ, ${sentences.length} câu hoàn chỉnh). Khả năng diễn đạt và liên kết câu mạch lạc.`;
-            }
-
-            if (latinChars.length > 0) {
-              feedbackComment += `\nLưu ý: Có xuất hiện một số ký tự Latinh trong bài, hãy kiểm tra lại bàn phím tiếng Nga nhé.`;
-            }
+          // Không chấm được bằng AI (lỗi mạng/timeout/phản hồi lỗi): báo lỗi, giữ nguyên bài viết, không chấm điểm/XP
+          if (total === null || total === undefined || !Number.isFinite(total)) {
+            if (scoreBox) scoreBox.classList.add("hidden");
+            toast("Không kết nối được máy chủ chấm AI nên chưa chấm được bài viết. Bài viết của bạn vẫn được giữ nguyên, vui lòng thử lại sau!");
+            return;
           }
 
           const isPassed = total >= 66;
-          const earnedXp = isPassed
-            ? ((typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.WRITING_SUBMIT : 15) + (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.WRITING_PASS_BONUS : 15))
-            : (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.WRITING_SUBMIT : 15);
+          // XP: chỉ cộng lần đầu đạt một đề; lần nộp chưa đạt chỉ cộng WRITING_SUBMIT tối đa 1 lần/đề/ngày
+          const xpRules = typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES : { WRITING_SUBMIT: 0, WRITING_PASS_BONUS: 0 };
+          const hasProgress = typeof Progress !== "undefined";
+          const alreadyDone = hasProgress && Progress.doneList("writeDone").map(String).includes(String(t.id));
+          const submitXpKey = `write_xp_${t.id}_${typeof getLocalDateString === "function" ? getLocalDateString() : new Date().toISOString().split("T")[0]}`;
+          let earnedXp = 0;
+          if (hasProgress && !alreadyDone) {
+            if (isPassed) earnedXp = xpRules.WRITING_SUBMIT + xpRules.WRITING_PASS_BONUS;
+            else if (!STORE.get(submitXpKey, false)) earnedXp = xpRules.WRITING_SUBMIT;
+          }
 
           scoreBox.innerHTML = `
             <div class="rusi-ai-review-card ${isPassed ? 'is-pass' : 'is-retry'}">
@@ -1003,11 +944,13 @@ function initWritingPage() {
                     <span><b>${count}</b> từ</span>
                     <span class="rusi-meta-dot">·</span>
                     <span><b>${sentences.length}</b> câu</span>
+                    ${earnedXp > 0 ? `
                     <span class="rusi-meta-dot">·</span>
                     <span class="rusi-xp-text">+${earnedXp} XP</span>
+                    ` : ""}
                     ${quotaInfo ? `
                       <span class="rusi-meta-dot">·</span>
-                      <span style="color:var(--primary);font-weight:700">${icon('bot-rusika', 13)} Còn ${quotaInfo.remaining}/${quotaInfo.max_limit} lượt</span>
+                      <span style="color:var(--primary);font-weight:700">${icon('bot-rusika', 13)} Còn ${Number(quotaInfo.remaining) || 0}/${Number(quotaInfo.max_limit) || 0} lượt</span>
                     ` : ""}
                   </div>
                 </div>
@@ -1049,23 +992,23 @@ function initWritingPage() {
               </div>
             </div>
           `;
-          if (typeof Progress !== "undefined") {
-            Progress.addXp(earnedXp, {
-              title: `Bài viết: ${t.title || t.id}`,
-              skill_type: "writing",
-              item_id: t.id,
-              score: total
-            });
+          if (hasProgress) {
+            const logTitle = `Bài viết: ${t.title || t.id}`;
             if (isPassed) {
-              Progress.markDone("writeDone", t.id, {
+              // markDone ghi 1 dòng practice_logs đầy đủ; addXp không kèm meta để tránh ghi dòng thứ 2
+              Progress.addXp(earnedXp);
+              Progress.markDone("writeDone", t.id, { title: logTitle, score: total, xp: earnedXp });
+            } else if (earnedXp > 0) {
+              STORE.set(submitXpKey, true);
+              Progress.addXp(earnedXp, {
                 skill_type: "writing",
-                item_id: t.id,
-                score: total,
-                xp_earned: earnedXp
+                item_id: String(t.id),
+                item_title: logTitle,
+                score: total
               });
             }
           }
-          toast(`AI Rusika đã phân tích và chấm xong bài viết (+${earnedXp} XP)!`);
+          toast(`AI Rusika đã phân tích và chấm xong bài viết${earnedXp > 0 ? ` (+${earnedXp} XP)` : ""}!`);
           updateQuotaDisplay();
           scoreBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
         } catch (submitErr) {

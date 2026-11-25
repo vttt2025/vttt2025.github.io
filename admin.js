@@ -1779,10 +1779,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       webUrl: "index.html",
       source: () => {
         const store = loadAdminStore();
-        return Array.isArray(store.USERS) ? store.USERS : [
-          { id: "usr_admin", email: "admin@rusitrki.com", full_name: "Tổng Quản Trị RUSI", role: "super_admin", is_pro: true, streak: 128, xp: 9500 },
-          { id: "usr_academic", email: "academic@rusitrki.com", full_name: "Quản trị Học thuật", role: "academic_admin", is_pro: true, streak: 45, xp: 4200 }
-        ];
+        // Không hiện tài khoản mẫu giả (id không phải UUID → lưu lỗi); danh sách thật có sau khi "Kéo" từ Cloud
+        return Array.isArray(store.USERS) ? store.USERS : [];
       },
       createDefault: () => ({
         id: generateUUID(),
@@ -1847,8 +1845,13 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     currentPage: 1,
     pageSize: 10,
     selectedRows: new Set(),
-    devMode: false
+    devMode: false,
+    autoPulled: {} // bộ sưu tập chỉ có trên Cloud đã tự kéo trong lần tải trang này
   };
+
+  // Bộ sưu tập không có file xuất bản tĩnh: dữ liệu chỉ có sau khi kéo từ Cloud.
+  // "auto": nhỏ → tự kéo khi mở danh sách (1 lần/lần tải trang); "manual": lớn (6.000+ câu) → nhắc bấm Kéo.
+  const CLOUD_ONLY_COLLECTIONS = { LISTENING_TOPICS: "auto", USERS: "auto", ORDERS: "auto", TRKI_QUESTION_BANK: "manual" };
 
   let _ramAdminStore = null;
   function invalidateAdminStoreCache() {
@@ -2028,8 +2031,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       image_url: ["image"],
       image: ["image_url"],
       min_words: ["minWords"],
-      translation_vi: ["vi"],
-      vi: ["translation_vi"],
+      // Không gộp vi ↔ translation_vi: ở Bài nghe "vi" là tiêu đề, "translation_vi" là bản dịch cả bài
       model_answer: ["sample_essay", "sample_text"],
       is_pro: ["is_pro_only"],
       is_pro_only: ["is_pro"]
@@ -2173,7 +2175,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           const k6 = it.word_with_stress != null ? String(it.word_with_stress).trim() : "";
           return k1 === targetId || k2 === targetId || k3 === targetId || k4 === targetId || k5 === targetId || k6 === targetId;
         });
-        State.currentDraft = item ? JSON.parse(JSON.stringify(stripSource(item))) : ((col && col.createDefault) ? col.createDefault() : {});
+        // Không tìm thấy → hiện "Không tìm thấy bản ghi" (renderDocumentEditor), KHÔNG âm thầm thành form tạo mới
+        // (bấm Lưu sẽ sinh bản ghi rác, vd. đơn hàng 'paid' không có user khi danh sách chưa được Kéo từ Cloud)
+        State.currentDraft = item ? JSON.parse(JSON.stringify(stripSource(item))) : null;
       }
     } else {
       State.currentDraft = null;
@@ -2513,6 +2517,14 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     const isTrashMode = State.filterSource === "trash";
     const allItems = isTrashMode ? getDeletedList(slug) : getMergedList(slug);
 
+    const cloudOnlyMode = CLOUD_ONLY_COLLECTIONS[slug];
+    let autoPulling = false;
+    if (cloudOnlyMode === "auto" && !isTrashMode && !State.autoPulled[slug] && typeof window.pullSingleCollection === "function") {
+      State.autoPulled[slug] = true;
+      autoPulling = true;
+      setTimeout(() => { window.pullSingleCollection(slug); }, 0);
+    }
+
     let filtered = allItems.filter((item) => {
       const q = State.searchQuery.toLowerCase();
       const textToSearch = [
@@ -2565,8 +2577,13 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         <tr>
           <td colspan="7" style="text-align:center;padding:48px 20px;color:var(--p-text-muted)">
             <div style="margin-bottom:8px;color:var(--p-text-muted)">${window.RusiIcons ? RusiIcons.get(isTrashMode ? "trash-2" : "search-icon", { size: 36 }) : ""}</div>
-            <div>${isTrashMode ? "Thùng rác trống. Không có tài liệu nào bị xóa." : "Không tìm thấy tài liệu nào phù hợp với bộ lọc hiện tại."}</div>
-            <button class="p-btn p-btn-secondary p-btn-sm" style="margin-top:12px" onclick="window.clearFilters()">Xóa bộ lọc</button>
+            ${!isTrashMode && cloudOnlyMode && allItems.length === 0 ? `
+              <div>${autoPulling ? "Đang kéo dữ liệu mới nhất từ Cloud..." : "Dữ liệu của mục này chỉ có trên Cloud."}</div>
+              ${autoPulling ? "" : `<button class="p-btn p-btn-primary p-btn-sm" style="margin-top:12px" onclick="window.pullSingleCollection('${escAttr(slug)}')">Kéo từ Cloud</button>`}
+            ` : `
+              <div>${isTrashMode ? "Thùng rác trống. Không có tài liệu nào bị xóa." : "Không tìm thấy tài liệu nào phù hợp với bộ lọc hiện tại."}</div>
+              <button class="p-btn p-btn-secondary p-btn-sm" style="margin-top:12px" onclick="window.clearFilters()">Xóa bộ lọc</button>
+            `}
           </td>
         </tr>
       `;
@@ -2703,8 +2720,10 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
             <button class="p-btn p-btn-danger p-btn-sm" id="btnBulkPermanentDelete" type="button" onclick="window.bulkPermanentDelete('${escAttr(slug)}')">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""} Xóa vĩnh viễn đã chọn</button>
           ` : `
             <button class="p-btn p-btn-danger p-btn-sm" id="btnBulkDelete" type="button">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""} Xoá mục đã chọn</button>
+            ${(col.fields || []).some((f) => /^(is_pro_only|is_pro|access_entitlement)$/.test(f.key)) ? `
             <button class="p-btn p-btn-secondary p-btn-sm" id="btnBulkMakePro" type="button">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 14 }) : ""} Đặt thành PRO</button>
             <button class="p-btn p-btn-secondary p-btn-sm" id="btnBulkMakeFree" type="button">${window.RusiIcons ? RusiIcons.get("award-badge", { size: 14 }) : ""} Đặt thành Miễn phí</button>
+            ` : ""}
           `}
         </div>
       </div>
@@ -7093,7 +7112,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           return {
             id: vId,
             word_with_stress: w || "сло́во",
-            word_normalized: cleanNorm || "слово",
+            // word_normalized là cột sinh tự động (generated) — không được gửi giá trị
             pos: doc.pos || doc.type || "сущ.",
             meaning_vi: doc.meaning_vi || doc.vi || "từ ngữ",
             level: doc.level || "A1",
@@ -8148,21 +8167,28 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       for (let idx = 0; idx < words.length; idx++) {
         const w = words[idx];
         if (!w) continue;
-        const wId = (w.id && isValidUUID(w.id)) ? w.id : generateUUID();
-        w.id = wId;
         const stressWord = String(w.word_with_stress || w.stress || w.ru || "").trim() || "сло́во";
         const cleanNorm = stripStressMarks(w.word_normalized || stressWord).toLowerCase();
+        const found = (typeof VOCABULARIES !== "undefined" && Array.isArray(VOCABULARIES))
+          ? VOCABULARIES.find(item => stripStressMarks(item.word_normalized || item.word_with_stress || "").toLowerCase() === cleanNorm)
+          : null;
+        const foundId = found && [found.id, found.uuid].find((x) => x && isValidUUID(x));
+        // Từ chưa có UUID nhưng đã có trong kho từ điển → dùng lại, chỉ gán vào lọ (không tạo bản trùng, không ghi đè)
+        const reuseExisting = !(w.id && isValidUUID(w.id)) && !!foundId;
+        const wId = (w.id && isValidUUID(w.id)) ? w.id : (foundId || generateUUID());
+        w.id = wId;
         let wAudio = w.audio_url || w.audio || null;
-        if (!wAudio && typeof VOCABULARIES !== "undefined" && Array.isArray(VOCABULARIES)) {
-          const found = VOCABULARIES.find(item => stripStressMarks(item.word_normalized || item.word_with_stress || "").toLowerCase() === cleanNorm);
-          if (found && found.audio_url) wAudio = found.audio_url;
-        }
+        if (!wAudio && found && found.audio_url) wAudio = found.audio_url;
         if (!seenVocabIds.has(wId)) {
           seenVocabIds.add(wId);
+          if (reuseExisting) {
+            itemsToInsert.push({ jar_id: jarId, vocab_id: wId, position: idx + 1 });
+            continue;
+          }
           wordsToUpsert.push({
             id: wId,
             word_with_stress: stressWord,
-            word_normalized: cleanNorm || "слово",
+            // word_normalized là cột sinh tự động (generated) — không được gửi giá trị
             meaning_vi: w.meaning_vi || w.vi || "",
             pos: w.pos || "сущ.",
             level: w.level || doc.level || "A1",
@@ -8358,6 +8384,23 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       };
     },
 
+    // Bản ghi tạo trong CMS có id cục bộ khác mã trên Cloud (code/UUID do toRow sinh lúc lưu).
+    // Tính lại dòng như lúc lưu để lấy đúng giá trị cột khoá upsert (conflict).
+    resolveConflictValue(slug, idKey) {
+      const mapping = this.MAPPINGS[slug];
+      if (!mapping || typeof mapping.toRow !== "function" || !mapping.conflict || mapping.conflict.includes(",")) return null;
+      const keyOf = (it) => it.id || it.slug || it.title;
+      const item = getDeletedList(slug).concat(getMergedList(slug)).find((it) => keyOf(it) === idKey);
+      if (!item) return null;
+      try {
+        const row = mapping.toRow(JSON.parse(JSON.stringify(stripSource(item))));
+        const v = row && row[mapping.conflict];
+        return (v === undefined || v === null || v === "") ? null : v;
+      } catch (_) {
+        return null;
+      }
+    },
+
     async deleteDoc(slug, idKey) {
       const mapping = this.MAPPINGS[slug];
       if (!mapping) return { ok: true, skipped: true };
@@ -8369,6 +8412,24 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       if (!authRes.ok) return { ok: false, message: authRes.message };
 
       try {
+        const conflictVal = this.resolveConflictValue(slug, idKey);
+        if (conflictVal !== null && conflictVal !== idKey) {
+          const { data: rows, error: cErr } = await sb.from(mapping.table).delete().eq(mapping.conflict, conflictVal).select("id");
+          if (cErr) {
+            console.error(`[SupabaseSyncEngine] Lỗi xoá bảng ${mapping.table}:`, cErr);
+            return { ok: false, error: cErr, message: cErr.message };
+          }
+          if (rows && rows.length > 0) {
+            if (slug === "VOCAB_JARS") {
+              try {
+                await sb.from("jar_items").delete().in("jar_id", rows.map((r) => r.id));
+              } catch (_) {}
+            }
+            return { ok: true, table: mapping.table };
+          }
+          // Không khớp theo cột khoá → thử cách tra mã cũ bên dưới
+        }
+
         let query = sb.from(mapping.table).delete();
         if (isValidUUID(idKey)) {
           if (mapping.deleteCol === "id") {
@@ -10133,6 +10194,17 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       try {
         let text = String(reader.result).trim();
         let cleaned = text.replace(/^\s*\/\/.*$/gm, "").trim();
+        // File do exportData() tạo: nhiều khối "const TEN = [...];" → ghép thành { TEN: [...] }
+        const blocks = cleaned.split(/^(?:const|let|var)\s+([A-Z_][A-Z0-9_]*)\s*=\s*/m);
+        if (blocks.length > 3) {
+          const obj = {};
+          for (let i = 1; i < blocks.length; i += 2) {
+            obj[blocks[i]] = JSON.parse(blocks[i + 1].trim().replace(/;\s*$/, ""));
+          }
+          importToStore(obj);
+          e.target.value = "";
+          return;
+        }
         if (cleaned.startsWith("const ") || cleaned.startsWith("var ") || cleaned.startsWith("let ") || cleaned.startsWith("window.")) {
           const jsonMatch = cleaned.match(/=\s*([\[{][\s\S]*);?\s*$/);
           if (jsonMatch) cleaned = jsonMatch[1].trim();

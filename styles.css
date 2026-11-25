@@ -36574,3 +36574,285 @@ body.cbt-resizing .cbt-gutter-handle {
   }
 }
 
+
+/* Luyện nói: vùng chạm ≥44px trên mobile/tablet và màn hình cảm ứng (AGENTS.md — Responsive).
+   Giữ kích thước hiển thị, mở rộng vùng bấm bằng ::after vô hình như .rusi-back-btn */
+@media (max-width: 1024px), (pointer: coarse) {
+  .sp-icon-btn,
+  .sp-vm-play-btn,
+  .sp-voice-memo-widget .sp-vm-btn-icon {
+    position: relative;
+  }
+  .sp-icon-btn::after,
+  .sp-vm-play-btn::after,
+  .sp-voice-memo-widget .sp-vm-btn-icon::after {
+    content: '';
+    position: absolute;
+    inset: -8px; /* nút 28–30px → ≥44px */
+  }
+  .sp-icon-btn::after {
+    inset: -4px; /* nút 36px → 44px, không đè vùng bấm của nút bên cạnh */
+  }
+  /* Nhóm nút của trang Nói cách nhau 8px để vùng bấm 44px của các nút không đè lên nhau */
+  .rusi-workspace-back-bar > div:last-child:has(> .sp-icon-btn) {
+    gap: 8px !important;
+  }
+  .btn-speak-action {
+    min-height: 44px;
+  }
+}
+
+/* Modal "Danh Sách Từ Vựng Tiến Độ" — dải tab (sửa hiển thị 2026-11-25) */
+.voc-pmodal-tab {
+  white-space: nowrap;
+  flex-shrink: 0;
+  gap: 2px; /* khoảng cách nhãn ↔ số đếm (đã có dấu cách); icon ↔ chữ do .voc-pmodal-tab-label lo */
+}
+.voc-pmodal-tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.voc-pmodal-tab:focus-visible {
+  outline: 2px solid var(--primary, #1757a6);
+  outline-offset: -2px;
+}
+/* Chữ tab đang chọn: tông đậm cho nền sáng (tương phản ≥4.5:1); gạch chân giữ màu gốc */
+.voc-pmodal-tab[data-tab="mastered"].active { color: #15803d; }
+.voc-pmodal-tab[data-tab="due"].active { color: #b45309; }
+[data-theme="dark"] .voc-pmodal-tab[data-tab="mastered"].active { color: var(--green, #16a34a); }
+[data-theme="dark"] .voc-pmodal-tab[data-tab="due"].active { color: var(--amber, #f59e0b); }
+/* Chỉ làm mờ mép phải khi dải tab thật sự tràn (JS đặt .is-overflowing) */
+.voc-progress-modal-tabs {
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+}
+.voc-progress-modal-tabs.is-overflowing {
+  mask-image: linear-gradient(to right, black 85%, transparent 100%) !important;
+  -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%) !important;
+}
+@media (max-width: 1024px) {
+  .voc-pmodal-tab {
+    min-height: 44px;
+  }
+}
+@media (max-width: 768px) {
+  /* Ô tìm kiếm ≥16px để iOS không tự phóng to */
+  #vocProgressSearchInput {
+    font-size: 16px !important;
+  }
+}
+/* Mobile hẹp: 3 tab chia đều, nhãn một dòng, số đếm thành dòng nhỏ bên dưới (bố cục có chủ đích, căn giữa) */
+@media (max-width: 420px) {
+  .voc-progress-modal-tabs {
+    gap: 4px;
+  }
+  .voc-pmodal-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    flex-direction: column !important;
+    gap: 2px;
+    padding: 6px 4px;
+  }
+  .voc-pmodal-tab .voc-pmodal-tab-label {
+    gap: 4px;
+  }
+  .voc-pmodal-count {
+    font-size: 0.72rem;
+    font-weight: 700;
+    line-height: 1.1;
+    opacity: 0.85;
+  }
+}
+
+/* =====================================================================
+   Vùng chạm ≥44px (kiểm chứng E2E 2026-11-25) — mobile/tablet và màn hình cảm ứng.
+   Đặt kích thước thật thay vì ::after: nhiều nút nằm trong vùng overflow nên hitbox ảo bị cắt.
+   ===================================================================== */
+@media (max-width: 1024px), (pointer: coarse) {
+  /* Thanh workspace dùng chung (Từ vựng, Nói, ...) */
+  .rusi-workspace-back-bar .rusi-back-btn,
+  .rusi-workspace-back-bar .quizlet-mode-btn,
+  .rusi-workspace-back-bar .sp-icon-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    height: 44px !important;
+  }
+  .rusi-workspace-back-bar .rusi-back-btn,
+  .rusi-workspace-back-bar .sp-icon-btn {
+    width: 44px !important;
+  }
+
+  /* Viết: hàng nút thao tác */
+  .writing-primary-actions .btn,
+  .writing-primary-actions .btn-primary.btn-submit,
+  .writing-quota-pill {
+    height: 44px !important;
+    min-height: 44px !important;
+    max-height: 44px !important;
+  }
+
+  /* Nghe: trình phát nghe hiểu & chép chính tả */
+  #btnCompSkipBack, #btnCompPlay, #btnCompReplay, #btnCompSpeed, #btnCompToggleTranscript,
+  #btnDictPrevSentence, #btnDictNextSentence, #btnDictPlay, #btnDictSpeed, #btnDictLoop,
+  #btnToggleHideResult {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .lis-dict-pct-btn,
+  .lis-dict-word-input {
+    min-height: 44px;
+  }
+
+  /* Từ vựng: nút chấm SRS, nút nghe ở chế độ Học */
+  .btn-srs-rate,
+  #btnLearnAudio {
+    min-height: 44px;
+  }
+
+  /* Phòng thi TRKI */
+  #btnExitTest, #btnToggleFullScreen {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  #btnSubmitTop, #btnFlagRight, #btnNextQ, #btnPrevQ {
+    min-height: 44px;
+  }
+
+  /* Thanh toán VietQR */
+  .vietqr-close {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .btn-confirm-vietqr {
+    min-height: 44px;
+  }
+  /* Nút "Chép" nằm trong hàng thông tin cao 20px: mở rộng vùng bấm bằng ::after để không vỡ bảng */
+  .vietqr-copy-btn {
+    position: relative;
+  }
+  .vietqr-copy-btn::after {
+    content: '';
+    position: absolute;
+    inset: -12px -4px;
+  }
+
+  /* Chiều rộng: các quy tắc cũ ép min/max-width bằng !important (và thanh lọ dùng 3 class) → cần độ ưu tiên cao hơn */
+  #btnCompSkipBack, #btnCompPlay, #btnCompReplay, #btnCompSpeed, #btnCompToggleTranscript,
+  #btnDictPrevSentence, #btnDictNextSentence, #btnDictPlay, #btnDictSpeed, #btnDictLoop,
+  #btnToggleHideResult {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+  .writing-primary-actions .btn:not(.btn-submit),
+  .writing-quota-pill {
+    min-width: 44px !important;
+  }
+  .writing-primary-actions .btn:not(.btn-submit) {
+    width: 44px !important;
+    max-width: 44px !important;
+  }
+  .rusi-workspace-back-bar.rusi-workspace-back-bar .rusi-back-btn.rusi-back-btn {
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+  }
+}
+@media (max-width: 768px) {
+  /* Mobile: ô hạn mức AI là nút icon vuông */
+  .writing-quota-pill {
+    width: 44px !important;
+    max-width: 44px !important;
+  }
+}
+
+/* Phòng thi TRKI ≤480px (chế độ thi): pill "ТРКИ-xx" bị đồng hồ đè vì vùng phải không co.
+   Ẩn nút Toàn màn hình (iOS Safari không hỗ trợ Fullscreen API cho trang web), thu gọn đồng hồ. */
+@media (max-width: 480px) {
+  .cbt-btn-fullscreen { display: none; }
+  .cbt-header-info { overflow: hidden; }
+  .cbt-header-left { gap: 8px; }
+  .cbt-clock-pill { padding: 4px 8px; gap: 5px; }
+}
+
+/* Danh sách từ trong lọ — cột 2 (.rusi-row-col-vi): câu ví dụ không đóng khung riêng,
+   hiển thị cùng kiểu với các dòng Cụm từ / Cấu trúc / Đồng nghĩa (cỡ chữ, khoảng cách như nhau). */
+.rusi-row-col-vi .rusi-row-ex-wrap,
+[data-theme="dark"] .rusi-row-col-vi .rusi-row-ex-wrap {
+  margin-top: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+.rusi-row-col-vi .rusi-row-ex,
+.rusi-row-col-vi .rusi-row-ex-vi {
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+.rusi-row-col-vi .rusi-row-ex-vi {
+  margin-top: 2px;
+}
+.rusi-row-col-vi .rusi-row-expanded-details {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+.rusi-row-col-vi .rusi-row-expanded-details > .rusi-row-extra-line:first-child {
+  margin-top: 0;
+}
+
+/* Danh sách từ (lọ từ vựng, từ vựng bài viết) — bản điện thoại:
+   hàng 1 = từ tiếng Nga + bộ nút hành động gọn ở góc phải; hàng 2 = nghĩa, ví dụ, chi tiết (trải hết chiều ngang).
+   Bỏ hàng nút riêng có gạch đứt và vùng cuộn ngang (vùng cuộn cắt mất hitbox ::after của nút). */
+@media (max-width: 768px) {
+  .rusi-row-main-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "ru actions"
+      "vi vi";
+    column-gap: 10px;
+    row-gap: 8px;
+    align-items: start;
+  }
+  .rusi-row-main-grid > .rusi-row-col-ru { grid-area: ru; min-width: 0; }
+  .rusi-row-main-grid > .rusi-row-col-vi { grid-area: vi; }
+  .rusi-row-main-grid > .rusi-row-col-actions {
+    grid-area: actions;
+    width: auto !important;
+    overflow: visible !important;
+    border-top: none !important;
+    padding-top: 0 !important;
+    justify-content: flex-end !important;
+    gap: 6px !important;
+  }
+  /* Nút 40px hiển thị + hitbox 2px mỗi phía = vùng chạm 44px */
+  .rusi-row-main-grid > .rusi-row-col-actions .rusi-action-icon-btn {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    position: relative !important;
+  }
+  .rusi-row-main-grid > .rusi-row-col-actions .rusi-action-icon-btn::after {
+    content: '' !important;
+    position: absolute !important;
+    inset: -2px !important;
+  }
+  .rusi-row-main-grid > .rusi-row-col-actions .rusi-action-icon-btn svg {
+    width: 16px !important;
+    height: 16px !important;
+  }
+}
+
+/* Bảng chọn câu nhanh trong phòng thi: ô 44px trên mobile/tablet/cảm ứng
+   (lưới đã giới hạn max-height 200px và tự cuộn → trang không dài thêm) */
+@media (max-width: 1024px), (pointer: coarse) {
+  .cbt-mini-chip {
+    height: 44px;
+    min-height: 44px;
+  }
+}

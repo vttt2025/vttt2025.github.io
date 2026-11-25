@@ -9,6 +9,8 @@ function initSpeakingPage() {
   const host = el("#speakHost");
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const icon = (name, size = 18) => (window.RusiIcons ? RusiIcons.get(name, { size }) : "");
+  // XP khi hoàn thành trọn một bài luyện nói — theo quy tắc chuẩn RUSI_XP_RULES (app.js)
+  const SPEAK_LESSON_XP = (typeof RUSI_XP_RULES !== "undefined" && RUSI_XP_RULES.SPEAKING_TOPIC_PASS) || 25;
 
   // Kiểm tra cảnh báo thiết bị & trình duyệt theo chuẩn DauEnglish
   if (typeof RusiAudioRecorder !== "undefined" && RusiAudioRecorder.getBrowserAdvice) {
@@ -90,8 +92,8 @@ function initSpeakingPage() {
         if (typeof window.requireAuth === "function" && !window.requireAuth("speaking.html?set=" + encodeURIComponent(targetId))) return true;
         const all = getSpeakingSets();
         const found = all.find(s => String(s.id).toLowerCase() === String(targetId).toLowerCase() || String(s.code || "").toLowerCase() === String(targetId).toLowerCase());
-        if (found && !canOpen(found)) {
-          if (window.Monetization && window.Monetization.openUpgradeModal) window.Monetization.openUpgradeModal("pro");
+        if (found && Boolean(found.is_pro_only || found.is_pro) && !Monetization.isPro()) {
+          Monetization.showProGateModal("Nội dung luyện nói dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn.");
           return false;
         }
         if (found) {
@@ -105,7 +107,9 @@ function initSpeakingPage() {
           return true;
         }
       }
-    } catch (_) {}
+    } catch (err) {
+      console.error("[Speaking] Không mở được bài từ link:", err);
+    }
     return false;
   };
 
@@ -530,7 +534,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       const pct = items.length > 0 ? Math.round((done / items.length) * 100) : 0;
       const compKey = "speak_completed_" + set.id;
       const isCompleted = Boolean(STORE.get(compKey, false));
-      return { done, avg, pct, scoredCount, isCompleted, xp: isCompleted ? 10 : 0 };
+      return { done, avg, pct, scoredCount, isCompleted, xp: isCompleted ? SPEAK_LESSON_XP : 0 };
     };
 
     const checkLessonCompletion = () => {
@@ -540,9 +544,10 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
         if (!STORE.get(compKey, false)) {
           STORE.set(compKey, true);
           if (typeof Progress !== "undefined" && typeof Progress.addXp === "function") {
-            Progress.markDone("speakDone", set.id);
-            Progress.addXp(10);
-            toast(`🎉 Chúc mừng! Bạn đã hoàn thành toàn bộ bài Shadowing với điểm TB ${stats.avg}%! Nhận +10 XP`);
+            // markDone ghi practice_logs kèm tên bài, điểm và XP; addXp không kèm meta để không ghi log trùng
+            Progress.markDone("speakDone", set.id, { title: set.title || set.id, score: stats.avg, xp: SPEAK_LESSON_XP });
+            Progress.addXp(SPEAK_LESSON_XP);
+            toast(`🎉 Chúc mừng! Bạn đã hoàn thành toàn bộ bài Shadowing với điểm TB ${stats.avg}%! Nhận +${SPEAK_LESSON_XP} XP`);
           }
         }
       }
@@ -1205,7 +1210,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
 
     const startRecording = async () => {
       // Kiểm tra khóa bài học dành cho PRO
-      if (set.is_pro_only && (typeof Monetization === "undefined" || !Monetization.isPro())) {
+      if ((set.is_pro_only || set.is_pro) && (typeof Monetization === "undefined" || !Monetization.isPro())) {
         Monetization.showProGateModal("Nội dung luyện nói dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn.");
         return;
       }
@@ -1281,20 +1286,28 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
             }
           });
 
+          // Gắn bản ghi vào câu lúc bắt đầu ghi (người học có thể đã chuyển câu khi bản ghi xong)
+          const memoIdx = recordingSentenceIdx;
+          const memoStart = voiceStartTime;
           audioRecorderInstance.done.then((blob) => {
             if (blob && blob.size > 800) {
-              if (userVoiceMemos[currentSentenceIdx]) {
-                try { URL.revokeObjectURL(userVoiceMemos[currentSentenceIdx].url); } catch (_) {}
+              if (userVoiceMemos[memoIdx]) {
+                try { URL.revokeObjectURL(userVoiceMemos[memoIdx].url); } catch (_) {}
               }
               const url = URL.createObjectURL(blob);
-              const durSec = Math.max(1, Math.round((Date.now() - voiceStartTime) / 1000));
-              userVoiceMemos[currentSentenceIdx] = { url, duration: durSec, blob };
-              renderVoiceMemoUI(currentSentenceIdx);
+              const durSec = Math.max(1, Math.round((Date.now() - memoStart) / 1000));
+              userVoiceMemos[memoIdx] = { url, duration: durSec, blob };
+              if (memoIdx === currentSentenceIdx) renderVoiceMemoUI(memoIdx);
             }
           });
         } catch (recErr) {
           console.warn("[RusiAudioRecorder] Mic access error:", recErr);
           toast(recErr.message || "Không thể mở microphone.");
+          // Không có nhận dạng giọng nói để chạy tiếp → trả nút ghi âm về trạng thái thường
+          if (!SR) {
+            stopRecording();
+            return;
+          }
         }
       }
 
@@ -1408,8 +1421,9 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
           dotEl.className = "sp-result-dot " + (sim >= 80 ? "is-excellent" : sim >= 60 ? "is-good" : "is-retry");
         }
 
-        renderPlaylist();
+        // Xét hoàn thành trước để ô "Kinh nghiệm" trong danh sách hiện đúng XP vừa nhận
         checkLessonCompletion();
+        renderPlaylist();
 
         // Tự động chuyển câu nếu bật chế độ Auto-Advance và đạt điểm tốt
         if (autoAdvance && sim >= 80 && currentSentenceIdx < items.length - 1) {
@@ -1514,7 +1528,12 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
 
     // Keyboard Shortcuts Listener
     const onWorkspaceKeydown = (e) => {
-      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      // Không chiếm tổ hợp phím của trình duyệt (Ctrl+R, Ctrl+T...) và không chặn gõ trong ô nhập liệu
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target;
+      if (t && t.closest && t.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]')) return;
+      // Space trên nút/link đang focus phải kích hoạt chính nút đó (người dùng bàn phím)
+      if (e.code === "Space" && t && t.closest && t.closest('button, a, [role="button"]')) return;
 
       if (e.code === "Space") {
         e.preventDefault();
@@ -1554,13 +1573,6 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       stopAudio();
       stopRecording();
       stopActiveVmAudio();
-      if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        try { mediaRecorder.stop(); } catch (_) {}
-      }
-      if (voiceStream) {
-        voiceStream.getTracks().forEach(t => t.stop());
-        voiceStream = null;
-      }
       Object.values(userVoiceMemos).forEach(m => {
         try { URL.revokeObjectURL(m.url); } catch (_) {}
       });

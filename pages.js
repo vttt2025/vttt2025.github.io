@@ -509,13 +509,6 @@ window.openAddToJarModal = function(wordData) {
     if (typeof STORE !== "undefined") {
       STORE.set("custom_jars", currentCustomJars);
     }
-    if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
-      window.RusiSupabase.jars.save(window.Auth.user.uid, newJar).then(() => {
-        let jars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
-        const idx = jars.findIndex(j => j.id === newJar.id || (newJar.uuid && j.id === newJar.uuid));
-        if (idx !== -1) { jars[idx] = newJar; STORE.set("custom_jars", jars); }
-      }).catch(() => {});
-    }
     sel.value = newJarId;
 
     const optList = modal.querySelector("#addJarOptionsList");
@@ -623,9 +616,6 @@ window.openAddToJarModal = function(wordData) {
 
     if (typeof STORE !== "undefined") {
       STORE.set("custom_jars", currentCustomJars);
-    }
-    if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
-      window.RusiSupabase.jars.save(window.Auth.user.uid, jar).catch(() => {});
     }
     if (typeof playQuizletSound === "function") playQuizletSound("correct");
     closeModal();
@@ -782,9 +772,6 @@ function openAddWordToJarModal(jarId, onSuccess) {
 
     if (typeof STORE !== "undefined") {
       STORE.set("custom_jars", customJars);
-    }
-    if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
-      window.RusiSupabase.jars.save(window.Auth.user.uid, jar).catch(() => {});
     }
     if (typeof playQuizletSound === "function") playQuizletSound("correct");
     closeModal();
@@ -953,6 +940,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
   let fShuffled = false;
   let fStarredOnly = false;
   let fCompleted = false;
+  let fXpAwarded = false; // +15 XP hoàn thành chỉ hiện khi lượt này thực sự được cộng
   let fAutoAudio = (typeof STORE !== "undefined") ? STORE.get("quizlet_auto_audio", true) : true;
 
   const renderFlashcardMode = () => {
@@ -974,12 +962,12 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           </div>
           <h2 style="margin:0 0 10px;font-size:1.85rem;color:var(--text, #0f1f38)">Chúc mừng bạn đã hoàn thành!</h2>
           <p style="color:var(--muted);font-size:1.08rem;margin:0 0 20px;line-height:1.55">
-            Bạn đã học xong toàn bộ <b>${fActiveWords.length}</b> thẻ từ vựng trong lọ này.
+            Bạn đã học xong toàn bộ <b>${new Set(fActiveWords.map(w => w.ru)).size}</b> thẻ từ vựng trong lọ này.
           </p>
 
-          <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;background:rgba(22,163,74,0.1);border:1px solid rgba(22,163,74,0.25);border-radius:999px;color:#16a34a;font-weight:700;font-size:0.95rem;margin-bottom:28px">
+          ${fXpAwarded ? `<div style="display:inline-flex;align-items:center;gap:8px;padding:8px 20px;background:rgba(22,163,74,0.1);border:1px solid rgba(22,163,74,0.25);border-radius:999px;color:#16a34a;font-weight:700;font-size:0.95rem;margin-bottom:28px">
             ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "⚡"} +15 XP Hoàn thành Thẻ ghi nhớ
-          </div>
+          </div>` : ""}
 
           <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
             <button type="button" class="btn btn-primary" id="btnFlashRestart">
@@ -1001,8 +989,10 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       `;
 
       pane.querySelector("#btnFlashRestart").onclick = () => {
+        fActiveWords = [...words]; // bỏ các thẻ chèn lại (Quên/Khó) của lượt trước
         fIdx = 0;
         fCompleted = false;
+        fXpAwarded = false;
         fFlipped = false;
         renderFlashcardMode();
       };
@@ -1013,6 +1003,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           fStarredOnly = true;
           fIdx = 0;
           fCompleted = false;
+          fXpAwarded = false;
           fFlipped = false;
           renderFlashcardMode();
         };
@@ -1135,10 +1126,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                   }
                 }
 
-                // Level CEFR nếu có
-                if (currentWord.level) {
-                  badges.push({ text: currentWord.level.trim().toUpperCase(), cls: "level" });
-                }
 
                 // TẦNG 2: CẤU TRÚC NGỮ PHÁP (STRUCTURES)
                 let structList = [];
@@ -1319,17 +1306,24 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       playQuizletSound("flip");
     };
 
+    // Đã chấm SRS mọi từ khác nhau của lượt học này chưa (thẻ chèn lại không tính riêng)
+    const fAllRated = () => {
+      const reviewed = STORE.get("flash_rev_" + jarId, []);
+      return fActiveWords.every(w => reviewed.includes(w.ru));
+    };
+
     // Hàm hiển thị màn hình hoàn thành chúc mừng kèm pháo giấy & âm thanh
     const showFlashcardCompletion = () => {
       fCompleted = true;
       const today = new Date().toDateString();
       const sessKey = "flash_done_" + jarId + "_" + today;
-      if (!STORE.get(sessKey, false)) {
+      if (!STORE.get(sessKey, false) && fAllRated()) {
         STORE.set(sessKey, true);
         STORE.set("flash_rev_" + jarId, []);
         if (typeof Progress !== "undefined") {
           Progress.markDone("vocabDone", jarId);
           Progress.addXp(15);
+          fXpAwarded = true;
         }
       }
 
@@ -1382,8 +1376,11 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         const rating = b.dataset.rate;
         if (typeof SRS !== "undefined" && typeof SRS.ensureCard === "function") {
           const cardId = SRS.ensureCard(currentWord);
-          if (typeof SRS.review === "function") {
-            SRS.review(cardId, rating);
+          const result = typeof SRS.review === "function" ? SRS.review(cardId, rating) : null;
+          // Quên/khó → cho thẻ xuất hiện lại sau vài thẻ nữa trong phiên này
+          if (result && result.requeue) {
+            const after = typeof SRS_AGAIN_REINSERT_AFTER === "number" ? SRS_AGAIN_REINSERT_AFTER : 5;
+            fActiveWords.splice(Math.min(fIdx + 1 + after, fActiveWords.length), 0, currentWord);
           }
           // Theo dõi tiến độ trong phiên học Flashcard: PHẢI HOÀN THÀNH HẾT THẺ MỚI CÓ ĐIỂM CỘNG
           let reviewed = STORE.get("flash_rev_" + jarId, []);
@@ -1392,7 +1389,8 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             STORE.set("flash_rev_" + jarId, reviewed);
           }
 
-          if (reviewed.length >= fActiveWords.length) {
+          // fActiveWords có thể chứa thẻ lặp lại (requeue) → so theo từ khác nhau
+          if (fAllRated()) {
             const today = new Date().toDateString();
             const sessKey = "flash_done_" + jarId + "_" + today;
             if (!STORE.get(sessKey, false)) {
@@ -1400,6 +1398,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               STORE.set("flash_rev_" + jarId, []); // reset cho các lượt ôn tập sau
               Progress.markDone("vocabDone", jarId);
               Progress.addXp(15);
+              fXpAwarded = true;
               toast("Chúc mừng! Bạn đã hoàn thành toàn bộ thẻ trong lọ từ vựng (+15 XP)!");
             }
           }
@@ -1450,6 +1449,12 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
   // Keyboard shortcut listener for Flashcards & List Preview (Spec 1, Dòng 50 & 64)
   const handleKeydown = (e) => {
+    // Bộ học đã bị thay (về hub / mở lọ khác) → gỡ listener cũ
+    if (!container.isConnected) {
+      document.removeEventListener("keydown", handleKeydown);
+      return;
+    }
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
     const isEditing = ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
     if (isEditing) return;
 
@@ -1505,7 +1510,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       }
     }
   };
-  document.removeEventListener("keydown", handleKeydown);
+  // Mỗi lần mở bộ học tạo hàm mới → gỡ listener của lần mở trước qua biến dùng chung
+  if (window.__quizletKeydown) document.removeEventListener("keydown", window.__quizletKeydown);
+  window.__quizletKeydown = handleKeydown;
   document.addEventListener("keydown", handleKeydown);
 
   /* ---------------- MODE 2: LEARN (4 OPTIONS) ---------------- */
@@ -1513,9 +1520,12 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
   let lIdx = 0;
   let lScore = 0;
   let lWrongWords = [];
+  let lIsRetry = false; // vòng "Ôn lại từ chưa nhớ" không cộng XP
+  let lKeydown = null;
 
   const startLearn = (customList = null) => {
     lQueue = customList ? [...customList] : qShuffleArray([...words]);
+    lIsRetry = Boolean(customList);
     lIdx = 0;
     lScore = 0;
     lWrongWords = [];
@@ -1531,9 +1541,15 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     if (!pane) return;
 
     if (lIdx >= lQueue.length) {
+      if (lKeydown) document.removeEventListener("keydown", lKeydown);
       const pct = Math.round((lScore / lQueue.length) * 100);
-      if (pct >= 70 && typeof Progress !== "undefined") {
+      // +15 XP tối đa 1 lần/ngày/lọ, không tính vòng ôn lại từ sai
+      const learnKey = "learn_done_" + jarId + "_" + new Date().toDateString();
+      let lXpAwarded = false;
+      if (pct >= 70 && !lIsRetry && typeof Progress !== "undefined" && !STORE.get(learnKey, false)) {
+        STORE.set(learnKey, true);
         Progress.addXp(15);
+        lXpAwarded = true;
       }
       pane.innerHTML = `
         <div class="quizlet-summary-box">
@@ -1541,7 +1557,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           <h2 style="margin:0 0 8px">Hoàn thành bài Học thông minh!</h2>
           <p style="color:var(--muted);font-size:1.1rem;margin:0 0 20px">
             Bạn đạt <b>${lScore}</b> / ${lQueue.length} câu chính xác (${pct}%)
-            ${pct >= 70 ? ` · <span style="color:#16a34a;font-weight:700">+15 XP ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""}</span>` : ""}
+            ${lXpAwarded ? ` · <span style="color:#16a34a;font-weight:700">+15 XP ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""}</span>` : ""}
           </p>
 
           <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
@@ -1603,6 +1619,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     const checkAnswer = (chosenOpt, btnElem) => {
       if (answered) return;
       answered = true;
+      document.removeEventListener("keydown", learnKeydown);
 
       const isCorrect = chosenOpt.trim().toLowerCase() === currentWord.vi.trim().toLowerCase();
       const fbBox = pane.querySelector("#learnFeedback");
@@ -1645,13 +1662,21 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     });
 
     const learnKeydown = (e) => {
-      if (currentMode !== "learn" || answered) return;
+      if (answered || !container.isConnected) {
+        document.removeEventListener("keydown", learnKeydown);
+        return;
+      }
+      if (currentMode !== "learn" || e.ctrlKey || e.metaKey || e.altKey) return;
+      const active = document.activeElement;
+      if (active && (["INPUT", "TEXTAREA", "SELECT"].includes(active.tagName) || active.isContentEditable)) return;
       if (["1", "2", "3", "4"].includes(e.key)) {
         const btn = pane.querySelector(`.learn-opt-btn[data-key="${e.key}"]`);
         if (btn) btn.click();
       }
     };
-    document.addEventListener("keydown", learnKeydown, { once: true });
+    if (lKeydown) document.removeEventListener("keydown", lKeydown);
+    lKeydown = learnKeydown;
+    document.addEventListener("keydown", learnKeydown);
   };
 
   /* ---------------- MODE 3: WRITE & SPELL ---------------- */
@@ -1672,7 +1697,12 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
     if (wIdx >= wQueue.length) {
       const pct = Math.round((wCorrect / wQueue.length) * 100);
-      if (pct >= 70 && typeof Progress !== "undefined") Progress.addXp(20);
+      // XP Gõ từ: tối đa 1 lần/ngày/lọ (cùng cách với learn_done_ / match_done_)
+      const writeKey = "write_done_" + jarId + "_" + new Date().toDateString();
+      if (pct >= 70 && typeof Progress !== "undefined" && !STORE.get(writeKey, false)) {
+        STORE.set(writeKey, true);
+        Progress.addXp(20);
+      }
       pane.innerHTML = `
         <div class="quizlet-summary-box">
           <div class="quizlet-summary-trophy">${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 48 }) : ""}</div>
@@ -1874,7 +1904,14 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 isNewRecord = true;
                 if (typeof STORE !== "undefined") STORE.set("quizlet_match_best_" + jarId, finalTime);
               }
-              if (typeof Progress !== "undefined") Progress.addXp(25);
+              // +25 XP tối đa 1 lần/ngày/lọ
+              const matchKey = "match_done_" + jarId + "_" + new Date().toDateString();
+              let matchXpAwarded = false;
+              if (typeof Progress !== "undefined" && !STORE.get(matchKey, false)) {
+                STORE.set(matchKey, true);
+                Progress.addXp(25);
+                matchXpAwarded = true;
+              }
 
               grid.style.display = "none";
               const vic = pane.querySelector("#matchVictory");
@@ -1886,7 +1923,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                   <p style="font-size:1.4rem;font-weight:800;color:var(--secondary);margin:10px 0">
                     ${window.RusiIcons ? RusiIcons.get("timer-clock", { size: 16 }) : ""} Thời gian: ${finalTime} giây
                   </p>
-                  <p style="color:var(--muted);margin-bottom:20px">+25 XP thưởng tốc độ ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""}</p>
+                  ${matchXpAwarded ? `<p style="color:var(--muted);margin-bottom:20px">+25 XP thưởng tốc độ ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""}</p>` : ""}
                   <div style="display:flex;gap:12px;justify-content:center">
                     <button class="btn btn-primary" id="btnMatchAgain">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 16 }) : ""} Chơi lại ván mới</button>
                     <button class="btn btn-soft" id="btnMatchToFlash">${window.RusiIcons ? RusiIcons.get("flashcards-layers", { size: 16 }) : ""} Về thẻ ghi nhớ</button>
@@ -2012,7 +2049,12 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       });
 
       const pct = Math.round((correct / questions.length) * 100);
-      if (pct >= 70 && typeof Progress !== "undefined") Progress.addXp(25);
+      // XP Kiểm tra: tối đa 1 lần/ngày/lọ (cùng cách với learn_done_ / match_done_)
+      const testKey = "test_done_" + jarId + "_" + new Date().toDateString();
+      if (pct >= 70 && typeof Progress !== "undefined" && !STORE.get(testKey, false)) {
+        STORE.set(testKey, true);
+        Progress.addXp(25);
+      }
 
       form.style.display = "none";
       const resBox = pane.querySelector("#testResultBox");
@@ -2068,7 +2110,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         list.push(ruWord);
         isMastered = true;
         if (typeof SRS !== "undefined" && typeof SRS.markMastered === "function") {
-          SRS.markMastered(norm);
+          // Truyền object từ đầy đủ (ru/vi/pos/ex) để thẻ SRS mới không thiếu nghĩa
+          const wordObj = words.find(w => (w.ru || "").toLowerCase().trim() === norm);
+          SRS.markMastered(wordObj || ruWord);
         }
       }
       if (typeof STORE !== "undefined") STORE.set("vocab_mastered_words", list);
@@ -2468,9 +2512,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               if (target && target.words) {
                 target.words = target.words.filter(w => (w.ru || "").trim() !== wordRu.trim());
                 STORE.set("custom_jars", jars);
-                if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
-                  window.RusiSupabase.jars.save(window.Auth.user.uid, target).catch(() => {});
-                }
                 toast(`Đã xóa từ “${wordRu}” khỏi lọ!`);
                 words = target.words;
                 previewWords = [...words];

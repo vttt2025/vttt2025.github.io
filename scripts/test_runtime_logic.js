@@ -120,7 +120,125 @@ state = SRS.getState();
 assert(state.cards[cid1].mastered === false, 'Card should be unmastered');
 passed++;
 
-console.log('✓ 2. SRS: Stress-mark normalization, cardId, markMastered/unmarkMastered verified.');
+// 2c. markMastered/unmarkMastered giữ vocab_mastered_words khớp với thẻ
+SRS.markMastered('собака');
+assert.deepStrictEqual(srsSandbox.STORE.get('vocab_mastered_words', []).length, 1, 'mastered list should contain the word');
+SRS.unmarkMastered('Соба́ка');
+assert.deepStrictEqual(srsSandbox.STORE.get('vocab_mastered_words', []), [], 'mastered list should be emptied');
+passed++;
+
+// 2d. Thẻ mang id srsd_<dk> vẫn được tìm theo chữ
+const dkId = SRS.ensureCard({ ru: 'кошка', vi: 'con mèo', dk: 'k1' });
+SRS.markMastered('кошка');
+state = SRS.getState();
+assert(state.cards[dkId].mastered === true, 'markMastered should resolve srsd_ card by word');
+assert(!state.cards[SRS.cardId({ ru: 'кошка' })], 'no duplicate srs_ card should be created');
+passed++;
+
+// 2d2. +10 XP chỉ cộng lần đầu thuộc; markMastered nhận object từ và giữ nghĩa
+{
+  let xp = 0;
+  srsSandbox.Progress = { addXp(n) { xp += n; } };
+  vm.runInContext('var Progress = globalThis.Progress;', srsSandbox);
+  SRS.markMastered({ ru: 'река́', vi: 'dòng sông', pos: 'сущ.' });
+  const rkId = SRS.cardId({ ru: 'река' });
+  assert.strictEqual(SRS.getState().cards[rkId].vi, 'dòng sông', 'card from word object keeps meaning');
+  SRS.unmarkMastered(rkId);
+  SRS.markMastered('река');
+  SRS.unmarkMastered('река');
+  SRS.markMastered({ ru: 'река', vi: 'dòng sông' });
+  assert.strictEqual(xp, 10, 'mastered XP awarded once per card');
+  delete srsSandbox.Progress;
+  vm.runInContext('Progress = undefined;', srsSandbox);
+  passed++;
+}
+
+// 2e. review(): requeue cho again/hard từ mới, ghi tổng lượt ôn, khoảng ôn đúng
+const rid = SRS.ensureCard({ ru: 'дом', vi: 'nhà' });
+let r = SRS.review(rid, 'again');
+assert(r.requeue === true && r.nextIntervalH === 0, 'again on new card should requeue');
+r = SRS.review(rid, 'good');
+assert(r.requeue === false && r.nextIntervalH === 24, 'good on new card = 24h');
+r = SRS.review(rid, 'good');
+assert(r.nextIntervalH === 72, 'good on review card = interval x3');
+assert(SRS.review(rid, 'bogus') === null, 'invalid rating should be ignored');
+assert.strictEqual(srsSandbox.STORE.get('srs_totalReviews', 0), 3, 'recordReview should count reviews');
+assert.strictEqual(srsSandbox.STORE.get('srs_totalCorrect', 0), 2, 'recordReview should count correct');
+assert(SRS.getState().cards[rid].updatedAt > 0, 'card should carry updatedAt');
+passed++;
+
+console.log('✓ 2. SRS: Stress-mark normalization, cardId, markMastered/unmarkMastered, review/requeue verified.');
+
+// ============================================================================
+// 2b. Test vocab-sync.js merge
+// ============================================================================
+{
+  const data = {};
+  const sb = { console };
+  sb.window = sb;
+  sb.CustomEvent = function () {};
+  sb.STORE = {
+    get(k, fb) { return k in data ? JSON.parse(data[k]) : fb; },
+    set(k, v) { this._write(k, v); data.vocab_changed_at = JSON.stringify(Date.now()); },
+    _write(k, v) { if (v === null || v === undefined) delete data[k]; else data[k] = JSON.stringify(v); return true; }
+  };
+  vm.createContext(sb);
+  vm.runInContext(fs.readFileSync('vocab-sync.js', 'utf8'), sb);
+  const VS = sb.window.RusiVocabSync;
+
+  // Máy mới có 1 thẻ + 1 lọ chưa từng đồng bộ; cloud có thẻ khác, thẻ trùng mới hơn và lọ khác
+  sb.STORE._write('srs', { cards: {
+    a: { id: 'a', ru: 'а', ex: 'пример', updatedAt: 100 },
+    b: { id: 'b', ru: 'б', updatedAt: 500, mastered: true }
+  } });
+  sb.STORE._write('custom_jars', [{ id: 'j1', words: [] }]);
+  VS._merge({
+    v: 1, updatedAt: 1000,
+    srs: { cards: { a: { id: 'a', ru: 'а', updatedAt: 200, interval: 24 }, c: { id: 'c', ru: 'в', updatedAt: 300 } }, resetAt: 0 },
+    totals: { reviews: 7, correct: 5 },
+    custom_jars: [{ id: 'j2', words: [] }], starred: [], mastered_words: []
+  });
+  const merged = sb.STORE.get('srs');
+  assert.strictEqual(merged.cards.a.interval, 24, 'newer remote card wins');
+  assert.strictEqual(merged.cards.a.ex, 'пример', 'local-only fields kept on merge');
+  assert(merged.cards.b && merged.cards.c, 'cards from both sides kept');
+  assert.deepStrictEqual(sb.STORE.get('custom_jars').map(j => j.id), ['j1', 'j2'], 'first sync unions jars');
+  assert.deepStrictEqual(sb.STORE.get('vocab_mastered_words'), ['б'], 'mastered cards added to mastered list');
+  assert.strictEqual(sb.STORE.get('srs_totalReviews'), 7, 'totals take max');
+  assert(VS.isDirty(), 'local had unsynced data → must push merged result');
+  passed++;
+
+  // resetAt từ cloud xoá các thẻ cũ hơn
+  sb.STORE._write('vocab_synced_at', 1000);
+  sb.STORE._write('vocab_changed_at', 1000);
+  VS._merge({ v: 1, updatedAt: 2000, srs: { cards: {}, resetAt: 400 }, custom_jars: [], starred: [], mastered_words: [] });
+  assert.deepStrictEqual(Object.keys(sb.STORE.get('srs').cards), ['b'], 'cards older than resetAt dropped');
+  assert.deepStrictEqual(sb.STORE.get('custom_jars'), [], 'clean local takes remote lists');
+  assert(!VS.isDirty(), 'clean local stays clean after pull');
+  assert.strictEqual(VS.payloadForPush(), null, 'never push before a successful pull');
+  passed++;
+
+  // Máy mới tự tạo "Lọ yêu thích" rỗng trước khi kéo về → không được đè lọ cùng id có từ trên cloud.
+  // Thẻ đã bỏ thuộc ở máy khác (updatedAt mới hơn) phải bị gỡ khỏi danh sách đã thuộc.
+  sb.STORE._write('vocab_synced_at', 0);
+  sb.STORE._write('vocab_changed_at', 3000);
+  sb.STORE._write('custom_jars', [{ id: 'custom-jar-default', words: [] }]);
+  sb.STORE._write('vocab_mastered_words', ['б']);
+  VS._merge({
+    v: 1, updatedAt: 4000,
+    srs: { cards: { b: { id: 'b', ru: 'б', updatedAt: 3500, mastered: false } }, resetAt: 0 },
+    custom_jars: [{ id: 'custom-jar-default', words: [{ ru: 'любовь' }] }], starred: [], mastered_words: []
+  });
+  assert.deepStrictEqual(sb.STORE.get('custom_jars')[0].words.map(w => w.ru), ['любовь'], 'default jar keeps cloud words');
+  assert.deepStrictEqual(sb.STORE.get('vocab_mastered_words'), [], 'unmastered card removes word from mastered list');
+  passed++;
+
+  // Thẻ gửi lên không mang câu ví dụ
+  const built = VS._build();
+  assert(!('ex' in (built.srs.cards.b || {})), 'payload strips ex');
+  passed++;
+  console.log('✓ 2b. vocab-sync: per-card merge, resetAt, first-sync union, push gating verified.');
+}
 
 // ============================================================================
 // 3. Test getRusiRouteParam in app.js

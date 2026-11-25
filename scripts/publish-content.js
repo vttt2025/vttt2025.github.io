@@ -146,7 +146,7 @@ const BUILDERS = {
         const ytId = row.youtube_id || row.video_youtube_id || (raw.youtube_video_id || '');
         return {
           id: row.code || row.id, lesson_uuid: row.id, code: row.code || row.id, topic_id: row.topic_id,
-          title: row.title, vi: row.vi || row.translation_vi || t.description || '',
+          title: row.title, vi: row.vi || t.description || '',
           translation_vi: row.translation_vi || row.vi || '', transcript_ru: row.transcript_ru || '',
           level: row.level || t.level || 'A1', level_name: row.level_name || ('Sơ cấp ' + (row.level || 'A1')),
           category: t.category || row.category || 'general', category_name: t.title || row.category_name || 'Luyện nghe hiểu',
@@ -157,6 +157,18 @@ const BUILDERS = {
           lines, questions, dictation, blanks: raw.blanks || [], vocab_items: row.vocab_items || [], raw_data: raw
         };
       });
+    }
+  },
+  // Chủ đề nghe: cùng dạng fromRow của CMS (admin.js MAPPINGS.LISTENING_TOPICS) — dùng cho danh sách và ô chọn chủ đề
+  'listening_topics.json': {
+    tables: ['listening_topics'],
+    async build(cfg) {
+      const rows = await api(cfg, 'listening_topics?select=id,code,title,level,category,description,icon,sort_order,is_pro_only&order=sort_order.asc');
+      return rows.map((row) => ({
+        id: row.code || row.id, uuid: row.id, code: row.code || row.id, title: row.title || '',
+        level: row.level || 'A1', category: row.category || 'airport', description: row.description || '',
+        icon: row.icon || 'headphones', sort_order: Number(row.sort_order) || 0, is_pro_only: Boolean(row.is_pro_only)
+      }));
     }
   },
   'speaking_sets.json': {

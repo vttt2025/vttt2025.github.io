@@ -149,6 +149,13 @@
               message: data.message || "Vui lòng đăng nhập để sử dụng tính năng chấm điểm AI."
             };
           }
+          console.warn("[RusiAI] Edge Function trả về kết quả không thành công:", data);
+          return {
+            success: false,
+            serverError: true,
+            status: res.status,
+            message: (data && (data.message || data.error)) || "Máy chủ AI chưa chấm được bài viết. Vui lòng thử lại sau."
+          };
         } else {
           let errData = null;
           try { errData = await res.json(); } catch (_) {}
@@ -244,16 +251,11 @@ ${modelAnswer ? `- BÀI VIẾT MẪU ĐẠT ĐIỂM TỐI ĐA TRKI: "${modelAnsw
             feedback: parsed.feedback || "Bài viết hoàn thành tốt."
           };
         } catch (err) {
-          console.warn("Lỗi parse JSON từ AI, dùng text phản hồi:", err);
+          console.warn("Lỗi parse JSON từ AI, coi như chấm thất bại:", err);
           return {
-            success: true,
-            total: 80,
-            grammar: 20,
-            lexis: 20,
-            structure: 20,
-            content: 20,
-            passed: true,
-            feedback: rawReply
+            success: false,
+            serverError: true,
+            message: "AI trả về kết quả không hợp lệ, chưa chấm được bài viết. Vui lòng thử lại sau."
           };
         }
       }

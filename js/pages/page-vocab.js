@@ -23,6 +23,7 @@ function initVocabPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
   window.exitSrsToVocab = showMainLayout;
+  let srsReviewSnapshot = null;
 
   const showSrsWorkspace = () => {
     if (window.setRusiDeepUrl) {
@@ -70,16 +71,14 @@ function initVocabPage() {
       }
     }
 
-    // Nếu chưa có thẻ đến hạn từ SRS, gom các từ cốt lõi từ các lọ để sẵn sàng học ngay
-    if (!reviewWords.length) {
-      allJars.forEach(j => {
-        if (j.raw && Array.isArray(j.raw.words)) {
-          j.raw.words.forEach(w => {
-            if (reviewWords.length < 30) reviewWords.push({ ...w });
-          });
-        }
-      });
-    }
+    // Không có thẻ đến hạn → hiện trạng thái trống (không lấy từ chưa đến hạn vào phiên ôn)
+    const hasDue = reviewWords.length > 0;
+    // Mốc để dựng lại khi dữ liệu cloud về trong lúc chưa chấm thẻ nào (xem trki:progress-updated)
+    srsReviewSnapshot = {
+      dueKey: reviewWords.map(w => w.id).join("|"),
+      reviewed: (typeof SRS !== "undefined" && SRS.getState) ? SRS.getState().today.reviewed : 0,
+      changedAt: STORE.get("vocab_changed_at", 0) // đổi khi học viên tự thao tác (chấm thẻ, đánh dấu thuộc...)
+    };
 
     // Mở trực tiếp không gian học Flashcard chuẩn y hệt như ở Lọ từ vựng (Chuẩn yêu cầu người dùng)
     document.body.classList.add("in-workspace");
@@ -95,10 +94,10 @@ function initVocabPage() {
             ${window.RusiIcons ? RusiIcons.get("arrow-left", { size: 18 }) : "←"}
           </button>
           <div class="rusi-workspace-info">
-            <span class="rusi-badge rusi-badge-cat">SRS</span>
+            <span class="rusi-badge rusi-badge-cat" data-srs-review="1">SRS</span>
             <span class="rusi-workspace-title">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 18 }) : ""} Ôn tập (${reviewWords.length} từ)</span>
           </div>
-          <div class="quizlet-mode-bar rusi-topbar-modes" id="rusiTopbarModes">
+          ${hasDue ? `<div class="quizlet-mode-bar rusi-topbar-modes" id="rusiTopbarModes">
             <button type="button" class="quizlet-mode-btn" data-mode="list" title="Danh sách từ (${reviewWords.length})">
               ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 16 }) : ""} <span class="btn-text">Danh sách (${reviewWords.length})</span>
             </button>
@@ -111,19 +110,27 @@ function initVocabPage() {
             <button type="button" class="quizlet-mode-btn" data-mode="match" title="Ghép từ">
               ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} <span class="btn-text">Ghép từ</span>
             </button>
-          </div>
+          </div>` : ""}
         </div>
 
         <div class="workspace" style="padding:14px 4px;border:none;background:transparent;box-shadow:none">
-          <div id="jarQuizletSuiteHost"></div>
+          ${hasDue ? `<div id="jarQuizletSuiteHost"></div>` : `
+          <div class="writing-empty-state vocab-empty-state topic-empty-state">
+            <span class="writing-empty-icon vocab-empty-icon">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 34 }) : ""}</span>
+            <h3>Không có từ nào tới hạn cần ôn tập hôm nay</h3>
+            <p>Tuyệt vời! Bạn đã hoàn thành tất cả các phiên ôn tập hôm nay.</p>
+            <button type="button" class="btn btn-primary" id="btnSrsEmptyToJars">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 16 }) : ""} Quay lại kho từ vựng</button>
+          </div>`}
         </div>
       `;
 
       el("#btnBackJars").onclick = () => {
         showMainLayout();
       };
+      const btnEmpty = el("#btnSrsEmptyToJars");
+      if (btnEmpty) btnEmpty.onclick = () => showMainLayout();
 
-      window.initQuizletSuite(el("#jarQuizletSuiteHost"), reviewWords, {
+      if (hasDue) window.initQuizletSuite(el("#jarQuizletSuiteHost"), reviewWords, {
         jarId: "srs_quick_review",
         jarTitle: "Ôn tập Spaced Repetition",
         initialMode: "flashcard",
@@ -228,10 +235,15 @@ function initVocabPage() {
 
     const shelfHost = el("#jarsShelfHost");
     if (shelfHost) {
+      const levelCounts = { A1: countA1, A2: countA2, B1: countB1, B2: countB2, C1: countC1, C2: countC2 };
       shelfHost.querySelectorAll(".level-tab").forEach(b => {
         const isActive = b.dataset.level === currentLevel;
         b.classList.toggle("level-tab-active", isActive);
         b.setAttribute("aria-selected", isActive ? "true" : "false");
+        // Ẩn cấp chưa có lọ nào (sau khi đã có dữ liệu) để dải tab không tràn mép trên mobile/tablet
+        // (CSS của .level-tab có display !important nên phải đặt kèm "important")
+        if (allItems.length && !isActive && !levelCounts[b.dataset.level]) b.style.setProperty("display", "none", "important");
+        else b.style.removeProperty("display");
       });
     }
 
@@ -652,9 +664,6 @@ function initVocabPage() {
             let jars = STORE.get("custom_jars", []);
             jars = jars.filter(j => j.id !== jId);
             STORE.set("custom_jars", jars);
-            if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
-              window.RusiSupabase.jars.delete(window.Auth.user.uid, jId).catch(() => {});
-            }
             toast(`Đã xóa lọ “${jName}”`);
             renderVocabCards();
           }
@@ -814,17 +823,17 @@ function initVocabPage() {
           </div>
 
           <!-- TABS THEO LEVEL-TAB STYLE -->
-          <div class="voc-progress-modal-tabs">
-            <button type="button" class="voc-pmodal-tab ${currentTab === "mastered" ? "active" : ""}" data-tab="mastered">
-              ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : "✓"} Đã thuộc (${masteredList.length})
+          <div class="voc-progress-modal-tabs" role="tablist" aria-label="Danh sách từ theo tiến độ">
+            <button type="button" class="voc-pmodal-tab ${currentTab === "mastered" ? "active" : ""}" data-tab="mastered" role="tab" aria-selected="${currentTab === "mastered"}" tabindex="${currentTab === "mastered" ? 0 : -1}">
+              <span class="voc-pmodal-tab-label">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : "✓"} Đã thuộc</span> <span class="voc-pmodal-count">(${masteredList.length})</span>
               ${currentTab === "mastered" ? '<span class="voc-pmodal-tab-indicator"></span>' : ""}
             </button>
-            <button type="button" class="voc-pmodal-tab ${currentTab === "due" ? "active" : ""}" data-tab="due">
-              ${window.RusiIcons ? RusiIcons.get("clock-time", { size: 16 }) : "⏰"} Cần ôn (${dueList.length})
+            <button type="button" class="voc-pmodal-tab ${currentTab === "due" ? "active" : ""}" data-tab="due" role="tab" aria-selected="${currentTab === "due"}" tabindex="${currentTab === "due" ? 0 : -1}">
+              <span class="voc-pmodal-tab-label">${window.RusiIcons ? RusiIcons.get("clock-time", { size: 16 }) : "⏰"} Cần ôn</span> <span class="voc-pmodal-count">(${dueList.length})</span>
               ${currentTab === "due" ? '<span class="voc-pmodal-tab-indicator"></span>' : ""}
             </button>
-            <button type="button" class="voc-pmodal-tab ${currentTab === "new" ? "active" : ""}" data-tab="new">
-              ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "✨"} Từ mới (${newList.length})
+            <button type="button" class="voc-pmodal-tab ${currentTab === "new" ? "active" : ""}" data-tab="new" role="tab" aria-selected="${currentTab === "new"}" tabindex="${currentTab === "new" ? 0 : -1}">
+              <span class="voc-pmodal-tab-label">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : "✨"} Từ mới</span> <span class="voc-pmodal-count">(${newList.length})</span>
               ${currentTab === "new" ? '<span class="voc-pmodal-tab-indicator"></span>' : ""}
             </button>
           </div>
@@ -894,13 +903,38 @@ function initVocabPage() {
       const btnClose = modal.querySelector("#closeProgressModal");
       if (btnClose) btnClose.onclick = () => modal.remove();
 
-      modal.querySelectorAll(".voc-pmodal-tab").forEach(tab => {
-        tab.onclick = () => {
-          currentTab = tab.dataset.tab;
-          searchTxt = "";
-          renderModalContent();
+      const selectTab = (tabKey) => {
+        currentTab = tabKey;
+        searchTxt = "";
+        renderModalContent();
+        // Modal được dựng lại → trả focus về tab vừa chọn (người dùng bàn phím không mất vị trí)
+        const activeTab = modal.querySelector(`.voc-pmodal-tab[data-tab="${tabKey}"]`);
+        if (activeTab) activeTab.focus();
+      };
+      const tabEls = Array.from(modal.querySelectorAll(".voc-pmodal-tab"));
+      tabEls.forEach((tab, i) => {
+        tab.onclick = () => selectTab(tab.dataset.tab);
+        tab.onkeydown = (e) => {
+          if (e.ctrlKey || e.metaKey || e.altKey) return;
+          let next = -1;
+          if (e.key === "ArrowRight") next = (i + 1) % tabEls.length;
+          else if (e.key === "ArrowLeft") next = (i - 1 + tabEls.length) % tabEls.length;
+          else if (e.key === "Home") next = 0;
+          else if (e.key === "End") next = tabEls.length - 1;
+          if (next < 0) return;
+          e.preventDefault();
+          selectTab(tabEls[next].dataset.tab);
         };
       });
+      // Chỉ làm mờ mép phải khi dải tab thật sự tràn (cuộn ngang được)
+      const tabBar = modal.querySelector(".voc-progress-modal-tabs");
+      if (tabBar) {
+        const markOverflow = () => tabBar.classList.toggle("is-overflowing", tabBar.scrollWidth - tabBar.clientWidth > 1 && tabBar.scrollLeft + tabBar.clientWidth < tabBar.scrollWidth - 1);
+        markOverflow();
+        tabBar.onscroll = markOverflow;
+        const activeTab = tabBar.querySelector(".voc-pmodal-tab.active");
+        if (activeTab && tabBar.scrollWidth > tabBar.clientWidth) activeTab.scrollIntoView({ block: "nearest", inline: "nearest" });
+      }
 
       const inpSearch = modal.querySelector("#vocProgressSearchInput");
       if (inpSearch) {
@@ -1082,9 +1116,6 @@ function initVocabPage() {
       };
       customJars.push(newJar);
       STORE.set("custom_jars", customJars);
-      if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
-        window.RusiSupabase.jars.save(window.Auth.user.uid, newJar).catch(() => {});
-      }
       toast("Đã tạo lọ từ vựng mới thành công!");
       closeModal();
       renderVocabHub();
@@ -1498,9 +1529,6 @@ const showTopicArticle = (jarId) => {
               let jars = STORE.get("custom_jars", []);
               jars = jars.filter(j => j.id !== jar.id);
               STORE.set("custom_jars", jars);
-              if (window.Auth && window.Auth.user && window.Auth.user.uid && window.RusiSupabase && window.RusiSupabase.jars) {
-                window.RusiSupabase.jars.delete(window.Auth.user.uid, jar.id).catch(() => {});
-              }
               toast(`Đã xóa lọ “${jar.name}” thành công!`);
               showMainLayout();
             }
@@ -1706,6 +1734,17 @@ const showTopicArticle = (jarId) => {
   window.addEventListener("trki:progress-updated", () => {
     if (typeof renderVocabSidebar === "function") {
       renderVocabSidebar();
+    }
+    // Đang ở phiên ôn SRS mà chưa chấm thẻ nào: dữ liệu cloud vừa về làm đổi thẻ đến hạn → dựng lại danh sách ôn
+    const detail = el("#jarDetailHost");
+    if (srsReviewSnapshot && detail && !detail.classList.contains("hidden") && detail.querySelector("[data-srs-review]") &&
+        typeof SRS !== "undefined" && SRS.getState) {
+      const st = SRS.getState();
+      const dueKey = SRS.getDueCards(st, 50).map(c => c.id).join("|");
+      if (st.today.reviewed === srsReviewSnapshot.reviewed && STORE.get("vocab_changed_at", 0) === srsReviewSnapshot.changedAt &&
+          dueKey !== srsReviewSnapshot.dueKey) {
+        showSrsWorkspace();
+      }
     }
   });
 

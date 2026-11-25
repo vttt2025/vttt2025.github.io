@@ -515,9 +515,7 @@ const SRS = {
   getState() {
     const fallback = {
       cards: {},          // { [cardId]: SRS_CARD }
-      sessionQueue: [],   // mảng cardId còn lại trong session hiện tại
-      sessionInserted: [],// các cardId vừa được chèn lại (Again) trong session
-      sessionDone: [],    // các cardId đã chấm trong session
+      resetAt: 0,         // mốc "Reset toàn bộ" — thẻ cũ hơn mốc này bị bỏ khi gộp dữ liệu cloud
       today: {
         date: new Date().toDateString(),
         reviewed: 0,
@@ -525,9 +523,10 @@ const SRS = {
         correct: 0
       }
     };
-    const v = STORE.get("srs", fallback);
+    const v = STORE.get("srs", fallback) || fallback;
+    if (!v.cards) v.cards = {};
     // Reset daily stats nếu sang ngày mới
-    if (v.today.date !== new Date().toDateString()) {
+    if (!v.today || v.today.date !== new Date().toDateString()) {
       v.today = { date: new Date().toDateString(), reviewed: 0, newLearned: 0, correct: 0 };
     }
     return v;
@@ -567,7 +566,8 @@ const SRS = {
         mastered: false,
         lastReview: 0,
         learningStep: 0,       // 0 = mới, 1 = đang học, 2 = đã thuộc
-        addedAt: Date.now()
+        addedAt: Date.now(),
+        updatedAt: Date.now()  // mốc sửa gần nhất — dùng để gộp dữ liệu giữa các thiết bị
       };
       this.saveState(state);
     }
@@ -577,8 +577,39 @@ const SRS = {
   /** Sinh id ổn định cho card. Từ ngoài từ điển đầy đủ dùng dk riêng để tránh trùng do mất dấu. */
   cardId(word) {
     if (word && word.dk) return "srsd_" + word.dk;
-    const cleanRu = (word && (word.ru || "")).replace(/[\u0300\u0301]/g, "").toLowerCase().trim();
+    const cleanRu = this._norm(word && word.ru);
     return "srs_" + cleanRu.replace(/[^а-яёa-z0-9]/gi, "_");
+  },
+
+  /** Chuẩn hoá từ để so khớp: bỏ dấu nhấn, viết thường, cắt khoảng trắng. */
+  _norm(ru) {
+    return String(ru || "").replace(/[\u0300\u0301]/g, "").toLowerCase().trim();
+  },
+
+  /**
+   * Tìm id thẻ đã có từ id hoặc chữ tiếng Nga. Thẻ của cùng một từ có thể mang id "srs_..." hoặc "srsd_<dk>",
+   * nên khi không khớp id thì so theo từ đã chuẩn hoá.
+   */
+  _resolveId(state, idOrWord) {
+    if (!idOrWord) return null;
+    if (state.cards[idOrWord]) return idOrWord;
+    const generated = this.cardId({ ru: idOrWord });
+    if (state.cards[generated]) return generated;
+    const norm = this._norm(idOrWord);
+    const found = Object.values(state.cards).find((c) => this._norm(c.ru) === norm);
+    return found ? found.id : null;
+  },
+
+  /** Giữ danh sách "vocab_mastered_words" khớp với cờ mastered của thẻ. */
+  _setMasteredWord(ru, mastered) {
+    if (!ru) return;
+    const list = STORE.get("vocab_mastered_words", []) || [];
+    const norm = this._norm(ru);
+    const idx = list.findIndex((w) => this._norm(w) === norm);
+    if (mastered && idx === -1) list.push(ru);
+    else if (!mastered && idx !== -1) list.splice(idx, 1);
+    else return;
+    STORE.set("vocab_mastered_words", list);
   },
 
   /** Tìm entry: pool SRS_WORDS trước, sau đó tra từ điển đầy đủ (nếu đã tải). */
@@ -598,6 +629,7 @@ const SRS = {
     const state = this.getState();
     const card = state.cards[id];
     // Reset về trạng thái "chưa thuộc, đến hạn ngay" nhưng GIỮ lịch sử nếu đã học
+    const wasMastered = card.mastered;
     if (card.mastered) {
       card.mastered = false;
       card.learningStep = 1;
@@ -605,7 +637,9 @@ const SRS = {
     }
     card.dueDate = Date.now();
     card.isNew = card.repetitions === 0;
+    card.updatedAt = Date.now();
     SRS.saveState(state);
+    if (wasMastered) this._setMasteredWord(card.ru, false);
     return { ok: true, id, word: w };
   },
 
@@ -663,196 +697,114 @@ const SRS = {
       .slice(0, limit);
   },
 
-  /** Khởi tạo queue cho session học: trộn từ tới hạn + từ mới. */
-  buildSession({ level = "all", newLimit = 8, dueLimit = 30 } = {}) {
-    let state = this.getState();
-    const due = this.getDueCards(state, dueLimit);
-    const news = this.getNewCards(state, level, newLimit);
-    const queue = [...due.map((c) => c.id), ...news.map((w) => this.ensureCard(w))];
-    state = this.getState();
-    state.sessionQueue = queue;
-    state.sessionInserted = [];
-    state.sessionDone = [];
-    state._sessionAwarded = false;
-    this.saveState(state);
-    return { queue: queue.map((id) => state.cards[id]), newCount: news.length, dueCount: due.length };
-  },
-
-  /** Lấy thẻ kế tiếp trong session. */
-  nextCard(state = this.getState()) {
-    while (state.sessionQueue.length > 0) {
-      const id = state.sessionQueue[0];
-      const card = state.cards[id];
-      if (!card || card.mastered) {
-        state.sessionQueue.shift();
-        continue;
-      }
-      return card;
-    }
-    return null;
-  },
-
   /**
    * Xử lý một lượt chấm điểm.
    * rating: 'again' | 'hard' | 'good' | 'easy'
-   * Trả về thông tin đã cập nhật (interval hours tiếp theo, dueDate, ...).
+   * Trả về thông tin đã cập nhật; requeue = true nghĩa là giao diện nên cho thẻ xuất hiện lại
+   * sau SRS_AGAIN_REINSERT_AFTER thẻ trong phiên hiện tại.
    */
   review(cardId, rating) {
+    if (!["again", "hard", "good", "easy"].includes(rating)) return null;
     const state = this.getState();
     const card = state.cards[cardId];
     if (!card || card.mastered) return null;
 
     const now = Date.now();
     let nextIntervalH = 0;
-    // Card được chèn lại vào queue (again / new+hard / new+easy) thì không bị
-    // shift khỏi đầu queue ở cuối hàm — nếu không thẻ cuối cùng sẽ bị mất.
-    let reinserted = false;
+    let requeue = false;
 
     if (card.isNew) {
-      // ---- TỪ MỚI ----
-      nextIntervalH = SRS_NEW_INTERVALS[rating];
       if (rating === "again") {
-        // Đánh dấu là đang học lại
-        card.isNew = true;
+        // Quên → vẫn là từ mới, xem lại trong phiên
         card.repetitions = 0;
         card.learningStep = 0;
         card.lapses++;
-        // Chèn lại vào queue, sau N thẻ nữa
-        this._reinsertAfter(state, cardId, SRS_AGAIN_REINSERT_AFTER);
-        reinserted = true;
-        nextIntervalH = 0;
-      } else if (rating === "good" || rating === "easy") {
-        // Good/Easy lần đầu: từ này được tính là "đã học", không chèn lại vào session
+        requeue = true;
+      } else {
         card.isNew = false;
-        card.learningStep = 2;
         card.repetitions = 1;
+        card.learningStep = rating === "hard" ? 1 : 2;
+        nextIntervalH = SRS_NEW_INTERVALS[rating];
         state.today.newLearned++;
-        if (rating === "easy") nextIntervalH = 72;
-      } else if (rating === "hard") {
-        // Hard lần đầu: chuyển sang trạng thái "đang học", chèn lại
-        card.isNew = false;
-        card.learningStep = 1;
-        card.repetitions = 1;
-        state.today.newLearned++;
-        this._reinsertAfter(state, cardId, 5);
-        reinserted = true;
+        // "Khó" với từ mới: nhắc lại 6 giờ nữa và cũng ôn lại thêm một lần trong phiên
+        if (rating === "hard") requeue = true;
       }
+    } else if (rating === "again") {
+      // Quên từ đã ôn → về trạng thái đang học, ôn lại sau 6 giờ và ngay trong phiên
+      nextIntervalH = 6;
+      card.lapses++;
+      card.learningStep = 1;
+      card.repetitions = 0;
+      requeue = true;
     } else {
-      // ---- TỪ ĐÃ ÔN ----
-      // Nhân khoảng thời gian hiện tại theo multiplier
-      const current = Math.max(card.interval, 1); // tối thiểu 1 giờ
-      let multiplier = SRS_REVIEW_MULTIPLIERS[rating];
-      nextIntervalH = current * multiplier;
-
-      if (rating === "again") {
-        // Quên: reset về 6 giờ và đánh dấu learning
-        nextIntervalH = 6;
-        card.lapses++;
-        card.learningStep = 1;
-        card.repetitions = 0;
-        // Đưa card trở lại learning session trong vài thẻ
-        this._reinsertAfter(state, cardId, SRS_AGAIN_REINSERT_AFTER);
-        reinserted = true;
-      } else if (rating === "hard") {
-        // Hard: nhưng không quên — để interval × 2, giữ learning nếu đang learning
-        if (card.learningStep === 1) card.learningStep = 2;
-        card.repetitions++;
-      } else if (rating === "good") {
-        card.learningStep = 2;
-        card.repetitions++;
-      } else if (rating === "easy") {
-        card.learningStep = 2;
-        card.repetitions++;
-      }
+      nextIntervalH = Math.max(card.interval, 1) * SRS_REVIEW_MULTIPLIERS[rating]; // tối thiểu 1 giờ
+      card.learningStep = 2;
+      card.repetitions++;
     }
 
-    // Cập nhật SRS fields
     card.interval = nextIntervalH;
     card.dueDate = now + nextIntervalH * 3600 * 1000;
     card.lastReview = now;
+    card.updatedAt = now;
 
-    // Daily stats
     state.today.reviewed++;
     if (rating === "good" || rating === "easy") state.today.correct++;
 
-    // Xóa khỏi queue đầu (đã xử lý xong) — bỏ qua nếu card vừa được chèn lại
-    if (!reinserted && state.sessionQueue[0] === cardId) state.sessionQueue.shift();
-    if (!reinserted && !state.sessionDone.includes(cardId)) state.sessionDone.push(cardId);
-
-    // Chỉ thưởng XP khi hoàn thành phiên học, không thưởng ở từng thẻ đơn lẻ
-    if (state.sessionQueue.length === 0 && (state.sessionDone || []).length > 0) {
-      if (!state._sessionAwarded) {
-        state._sessionAwarded = true;
-        if (typeof Progress !== "undefined" && typeof Progress.addXp === "function") Progress.addXp(15);
-        toast("Chúc mừng! Bạn đã hoàn thành phiên ôn tập Spaced Repetition (+15 XP)!");
-      }
-    }
-
     this.saveState(state);
+    this.recordReview(rating);
     return {
       card,
       nextIntervalH,
-      nextDueLabel: this.formatInterval(nextIntervalH)
+      nextDueLabel: this.formatInterval(nextIntervalH),
+      requeue
     };
   },
 
-  /** Đánh dấu Mastered — loại khỏi queue, không còn nhắc ôn. */
+  /**
+   * Đánh dấu Mastered — không còn nhắc ôn. Nhận id thẻ, chữ tiếng Nga hoặc object từ ({ ru, vi, pos, ex, ... }).
+   * +10 XP chỉ cộng lần đầu thẻ được thuộc (cờ xpAwarded giữ lại cả khi bỏ thuộc).
+   */
   markMastered(idOrWord) {
-    const state = this.getState();
-    let card = state.cards[idOrWord];
-    let cardId = idOrWord;
-    if (!card && typeof idOrWord === "string") {
-      const generatedId = this.cardId({ ru: idOrWord });
-      card = state.cards[generatedId];
-      if (card) {
-        cardId = generatedId;
-      } else {
-        const w = this.findWord(idOrWord) || { ru: idOrWord };
-        cardId = this.ensureCard(w);
-        const nextState = this.getState();
-        card = nextState.cards[cardId];
-        if (card) {
-          card.mastered = true;
-          card.learningStep = 2;
-          card.dueDate = Number.MAX_SAFE_INTEGER;
-          this.saveState(nextState);
-          if (typeof Progress !== "undefined" && typeof Progress.addXp === "function") Progress.addXp(10);
-          return;
-        }
-      }
+    const word = idOrWord && typeof idOrWord === "object" ? idOrWord : null;
+    const key = word ? word.ru : idOrWord;
+    let id = this._resolveId(this.getState(), key);
+    if (!id) {
+      if (typeof key !== "string" || !key.trim()) return;
+      id = this.ensureCard(word || this.findWord(key) || { ru: key });
     }
-    if (!card) return;
+    const state = this.getState();
+    const card = state.cards[id];
+    if (!card || card.mastered) return;
+    if (word) ["vi", "pos", "ex"].forEach((f) => { if (card[f] == null && word[f] != null) card[f] = word[f]; });
+    const awardXp = !card.xpAwarded;
     card.mastered = true;
+    card.xpAwarded = true;
     card.learningStep = 2;
     card.dueDate = Number.MAX_SAFE_INTEGER;
-    if (state.sessionQueue[0] === cardId) state.sessionQueue.shift();
-    if (!state.sessionDone.includes(cardId)) state.sessionDone.push(cardId);
-    if (typeof Progress !== "undefined" && typeof Progress.addXp === "function") Progress.addXp(10);
+    card.updatedAt = Date.now();
     this.saveState(state);
+    this._setMasteredWord(card.ru, true);
+    if (awardXp && typeof Progress !== "undefined" && typeof Progress.addXp === "function") Progress.addXp(10);
   },
 
   /** Hủy Mastered. */
   unmarkMastered(idOrWord) {
     const state = this.getState();
-    let card = state.cards[idOrWord];
-    if (!card && typeof idOrWord === "string") {
-      const generatedId = this.cardId({ ru: idOrWord });
-      card = state.cards[generatedId];
-    }
+    const id = this._resolveId(state, idOrWord);
+    const card = id && state.cards[id];
     if (!card) return;
     card.mastered = false;
     card.dueDate = Date.now();
+    card.updatedAt = Date.now();
     this.saveState(state);
+    this._setMasteredWord(card.ru, false);
   },
 
   /** Reset toàn bộ tiến độ SRS. */
   resetAll() {
     const state = this.getState();
     state.cards = {};
-    state.sessionQueue = [];
-    state.sessionInserted = [];
-    state.sessionDone = [];
-    state._sessionAwarded = false;
+    state.resetAt = Date.now();
     state.today = { date: new Date().toDateString(), reviewed: 0, newLearned: 0, correct: 0 };
     this.saveState(state);
   },
@@ -912,17 +864,6 @@ const SRS = {
     if (rating === "good" || rating === "easy") {
       STORE.set("srs_totalCorrect", STORE.get("srs_totalCorrect", 0) + 1);
     }
-  },
-
-  /** Chèn lại 1 card vào queue sau N thẻ nữa. */
-  _reinsertAfter(state, cardId, after) {
-    // Gỡ card khỏi queue (nếu đang ở vị trí 0 thì shift, nếu ở vị trí khác thì splice)
-    const idx = state.sessionQueue.indexOf(cardId);
-    if (idx !== -1) state.sessionQueue.splice(idx, 1);
-    // Chèn lại ở vị trí "after" trong queue mới (đã gỡ cardId nên vị trí chính xác)
-    const pos = Math.min(after, state.sessionQueue.length);
-    state.sessionQueue.splice(pos, 0, cardId);
-    if (!state.sessionInserted.includes(cardId)) state.sessionInserted.push(cardId);
   }
 };
 

@@ -1036,6 +1036,16 @@ function initMockTestPage() {
     });
 
     const totalQuestions = examItems.length;
+    // Bộ đếm "Câu x / N" chỉ đếm câu trắc nghiệm (khớp số câu ở màn briefing); bài Viết/Nói đếm riêng theo phần.
+    const mcqTotal = examItems.filter(it => it.type === "question").length;
+    const progressPillHtml = (idx) => {
+      const it = examItems[idx];
+      if (!it) return "";
+      if (it.type === "writing") return `Bài viết <b id="cbtCurrentNum">${it.qi + 1}</b> / ${it.part.writing_tasks.length}`;
+      if (it.type === "speaking") return `Bài nói <b id="cbtCurrentNum">${it.qi + 1}</b> / ${it.part.speaking_tasks.length}`;
+      const ordinal = examItems.slice(0, idx + 1).filter(x => x.type === "question").length;
+      return `Câu <b id="cbtCurrentNum">${ordinal}</b> / ${mcqTotal}`;
+    };
     if (totalQuestions === 0) {
       host.innerHTML = `
         <div style="padding:60px 24px;text-align:center;max-width:480px;margin:0 auto">
@@ -1096,7 +1106,7 @@ function initMockTestPage() {
 
           <div class="cbt-header-right">
             <div class="cbt-progress-badge" id="cbtProgressPill">
-              Câu <b id="cbtCurrentNum">1</b> / ${totalQuestions}
+              ${progressPillHtml(currentItemIndex)}
             </div>
             <button type="button" class="cbt-btn-fullscreen" id="btnToggleFullScreen" title="Toàn màn hình">
               ${icon("maximize", 15)} <span>Toàn màn hình</span>
@@ -1329,8 +1339,8 @@ function initMockTestPage() {
       if (topSubtest) {
         topSubtest.textContent = `Phần ${item.partIndex + 1}: ${part.vi || part.name}`;
       }
-      const curNum = el("#cbtCurrentNum");
-      if (curNum) curNum.textContent = String(currentItemIndex + 1);
+      const progressPill = el("#cbtProgressPill");
+      if (progressPill) progressPill.innerHTML = progressPillHtml(currentItemIndex);
 
       // 2. Cập nhật Bottom bar
       const btnPrev = el("#btnPrevQ");
@@ -1641,7 +1651,7 @@ function initMockTestPage() {
 
         rightBox.innerHTML = `
           <div class="cbt-question-header-line">
-            <span class="cbt-q-number-pill">${icon("help-circle", 15)} Câu ${currentItemIndex + 1} / ${totalQuestions} · ${esc(part.vi || part.name || "")}</span>
+            <span class="cbt-q-number-pill">${icon("help-circle", 15)} Câu ${examItems.slice(0, currentItemIndex + 1).filter(x => x.type === "question").length} / ${mcqTotal} · ${esc(part.vi || part.name || "")}</span>
             <button type="button" class="cbt-btn-flag-toggle ${isFlag ? 'is-flagged' : ''}" id="btnFlagRight" title="Đặt cờ xem lại (Phím F)">
               ${icon("flag", 14)} <span>${isFlag ? 'Đã đặt cờ' : 'Đặt cờ'}</span>
             </button>
@@ -1684,13 +1694,13 @@ function initMockTestPage() {
             </div>
           ` : `
             <div class="trki-practice-feedback" style="margin-top:20px;color:var(--muted)">
-              ${q._checkFailed ? 'Không thể kết nối máy chủ kiểm tra đáp án lúc này. Vui lòng thử chọn lại.' : 'Đang đối chiếu đáp án từ máy chủ...'}
+              ${q._proRequired ? 'Câu hỏi này thuộc đề dành cho PRO. Nâng cấp PRO để xem đáp án và giải thích.' : q._checkFailed ? 'Không thể kết nối máy chủ kiểm tra đáp án lúc này. Vui lòng thử chọn lại.' : 'Đang đối chiếu đáp án từ máy chủ...'}
             </div>
           `) : ""}
         `;
 
         // Chế độ Luyện tập: Kiểm tra đáp án 1 câu qua RPC bảo mật (Zero-Answer Leak)
-        if (isPractice && hasAnswered && !hasServerKey && !q._checking) {
+        if (isPractice && hasAnswered && !hasServerKey && !q._checking && !q._checkFailed) {
           q._checking = true;
           q._checkFailed = false;
           const checkCode = currentTest.code || currentTest.id;
@@ -1705,6 +1715,10 @@ function initMockTestPage() {
                 q.ex = res.explanation || "";
               } else {
                 q._checkFailed = true;
+                if (res && res.pro_required) {
+                  q._proRequired = true;
+                  if (typeof Monetization !== "undefined") Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
+                }
               }
               if (examItems[currentItemIndex] === item) renderQuestionAt(currentItemIndex);
             }).catch(() => {
@@ -2285,6 +2299,10 @@ function initMockTestPage() {
       : currentTest.parts;
 
     // Chấm thi Server-Side bảo mật qua RPC (Zero-Answer Leak — đồng bộ đúng offset khi thi từng phần)
+    // Client không có đáp án: nếu máy chủ không chấm được thì KHÔNG xét đạt/trượt và KHÔNG cộng XP.
+    let serverGraded = false;
+    let gradeFailMsg = "";
+    let gradeProRequired = false;
     if (window.RusiSupabase && window.RusiSupabase.questionBank && typeof window.RusiSupabase.questionBank.gradeSubmission === "function" && currentTest && (currentTest.code || currentTest.id)) {
       try {
         const timeSpent = timeSpentSec;
@@ -2305,6 +2323,7 @@ function initMockTestPage() {
         });
         const serverGradeResult = await window.RusiSupabase.questionBank.gradeSubmission(currentTest.code || currentTest.id, answersPayload, timeSpent);
         if (serverGradeResult && serverGradeResult.success && Array.isArray(serverGradeResult.reviews)) {
+          serverGraded = true;
           activeParts.forEach(p => {
             const base = partBaseOffsets.get(p.id) || 0;
             (p.questions || []).forEach((q, qi) => {
@@ -2316,9 +2335,17 @@ function initMockTestPage() {
             });
           });
         }
+        if (!serverGraded) gradeFailMsg = (serverGradeResult && serverGradeResult.message) || "";
+        if (!serverGraded && serverGradeResult && serverGradeResult.pro_required) gradeProRequired = true;
       } catch (errGrade) {
-        console.warn("[TRKI] Server grading error:", errGrade);
+        console.error("[TRKI] Server grading error:", errGrade);
+        gradeFailMsg = (errGrade && errGrade.message) || "";
       }
+    }
+    if (gradeProRequired) {
+      if (typeof Monetization !== "undefined") Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Đề thi này chỉ được chấm điểm cho tài khoản PRO. Nâng cấp lên gói PRO để được chấm điểm, xem đáp án và nhận XP.");
+    } else if (!serverGraded) {
+      toast("Chưa chấm được bài trên máy chủ" + (gradeFailMsg ? ": " + gradeFailMsg : "") + ". Kết quả bên dưới chưa được tính, vui lòng kiểm tra kết nối và làm lại.");
     }
 
     const detail = [];
@@ -2332,7 +2359,7 @@ function initMockTestPage() {
       questions.forEach((q, qi) => {
         total++;
         const given = answers[part.id + "_" + qi];
-        if (given === q.a) {
+        if (typeof q.a === "number" && given === q.a) {
           correct++;
           pc++;
         }
@@ -2362,7 +2389,11 @@ function initMockTestPage() {
 
     const pKeyStr = isSubset ? selectedPartList.join("-") : "full";
 
-    if (allSubtestsPassed) {
+    if (!serverGraded) {
+      examStatus = "pending";
+      statusBadgeText = "ĐÃ NỘP BÀI · CHƯA CHẤM ĐƯỢC";
+      statusDesc = "Máy chủ chấm thi chưa phản hồi nên kết quả này chưa được tính điểm và XP. Vui lòng kiểm tra kết nối mạng rồi làm lại bài.";
+    } else if (allSubtestsPassed) {
       examStatus = "pass";
       statusBadgeText = isSubset
         ? (activeParts.length === 1 ? `СДАНО · ĐẠT YÊU CẦU ${activeParts[0].vi}` : `СДАНО · ĐẠT YÊU CẦU (${activeParts.length} PHẦN)`)
@@ -2381,17 +2412,17 @@ function initMockTestPage() {
         ? (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.TRKI_SUBTEST_PASS : 20)
         : (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.TRKI_FULL_PASS : 50);
       if (typeof Progress !== "undefined") {
-        Progress.addXp(testXp, {
+        // XP chỉ cho lần đầu đạt đề/phần này (chặn cày XP); markDone ghi 1 dòng nhật ký kèm điểm và XP
+        const doneKind = isSubset ? "trkiSubDone" : "trkiDone";
+        const doneId = currentTest.id + (isSubset ? "_" + pKeyStr : "");
+        const earnedXp = Progress.doneList(doneKind).map(String).includes(String(doneId)) ? 0 : testXp;
+        if (earnedXp > 0) Progress.addXp(earnedXp);
+        Progress.markDone(doneKind, doneId, {
           title: `Khảo thí: ${currentTest.title}`,
           skill_type: "mock-test",
           item_id: currentTest.id + "_" + pKeyStr,
-          score: pct
-        });
-        Progress.markDone(isSubset ? "trkiSubDone" : "trkiDone", currentTest.id + (isSubset ? "_" + pKeyStr : ""), {
-          skill_type: "mock-test",
-          item_id: currentTest.id + "_" + pKeyStr,
           score: pct,
-          xp_earned: testXp
+          xp: earnedXp
         });
       }
     } else if (singleRetakeEligible) {
@@ -2523,7 +2554,7 @@ function initMockTestPage() {
         review.innerHTML += part.questions
           .map((q, qi) => {
             const given = answers[part.id + "_" + qi];
-            const ok = given === q.a;
+            const ok = typeof q.a === "number" && given === q.a;
             return `
           <div class="trki-review-row ${ok ? 'is-correct' : 'is-wrong'}">
             <div class="trki-review-row-header">
@@ -2600,15 +2631,37 @@ function initMockTestPage() {
       const activePart = sessionStorage.getItem("trki_active_part_id");
       const activeMode = sessionStorage.getItem("trki_exam_mode") || "exam";
       if (activeId) {
-        const found = bank.find(t => t.id === activeId);
         const partParam = (!activePart || activePart === "full")
           ? null
           : (activePart.includes(",") ? activePart.split(",") : [activePart]);
         const pKeyStr = partParam ? partParam.join("-") : "full";
         const storageKey = "trki_exam_" + activeId + "_" + pKeyStr + "_" + activeMode;
         const storedEndTime = parseInt(sessionStorage.getItem(storageKey + "_endTime") || "0", 10);
-        if (found && (activeMode === "practice" || storedEndTime > Date.now())) {
-          startTest(found, partParam, activeMode);
+        if (activeMode === "practice" || storedEndTime > Date.now()) {
+          // Chờ nạp đủ TRKI_BANK (mục lục TRKI_INDEX không có câu hỏi) rồi mới khôi phục, và khoá PRO như khi mở đề.
+          const resumeWhenLoaded = async () => {
+            if (window.RusiDataLoader && typeof window.RusiDataLoader.load === "function") {
+              const loadedFull = await window.RusiDataLoader.load("TRKI_BANK");
+              if (Array.isArray(loadedFull) && loadedFull.length) bank = loadedFull;
+            }
+            const found = bank.find(t => t.id === activeId);
+            if (!found) {
+              renderHub();
+              return;
+            }
+            const isPro = Boolean(found.is_pro_only || found.is_pro);
+            if (isPro && typeof Monetization !== "undefined" && !Monetization.isPro()) {
+              renderHub();
+              Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
+              return;
+            }
+            startTest(found, partParam, activeMode);
+          };
+          host.innerHTML = `<div style="padding:80px 24px;text-align:center;color:var(--muted)"><div class="rusi-skeleton-hero" style="max-width:520px;margin:0 auto 16px"></div><p>Đang tải nội dung đề thi...</p></div>`;
+          resumeWhenLoaded().catch((err) => {
+            console.error("[TRKI] Không khôi phục được phiên thi:", err);
+            renderHub();
+          });
           return true;
         }
       }
