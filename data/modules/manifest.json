@@ -25,7 +25,7 @@
    "v": "5e591395c4c0"
   },
   "trki_bank.json": {
-   "v": "2ca4c5eb4d82"
+   "v": "98b7695d214b"
   },
   "shop_products.json": {
    "v": "d8968435836d"
@@ -40,7 +40,7 @@
    "v": "6d4a8b0aa77b"
   },
   "trki_index.json": {
-   "v": "247b9a687f33"
+   "v": "c42d7a275157"
   },
   "trki_questions.json": {
    "v": "4f53cda18c2b"
@@ -59,11 +59,11 @@
   "writing_tasks": 1,
   "writing_task_vocab": 2,
   "writing_topics": 1,
-  "trki_tests": 31,
+  "trki_tests": 32,
   "shop_products": 1,
   "grammar_lessons": 1,
   "blog_posts": 2,
   "packages": 3
  },
- "generated_at": "2026-11-25T16:25:42.101Z"
+ "generated_at": "2026-11-25T17:03:00.737Z"
 }
