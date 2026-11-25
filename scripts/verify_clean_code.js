@@ -89,7 +89,8 @@ htmlFiles.forEach(file => {
   while ((match = linkRegex.exec(content)) !== null) {
     const href = match[1].split('?')[0];
     if (!href.startsWith('http') && !href.startsWith('//') && !href.startsWith('#') && !href.startsWith('data:')) {
-      if (!fs.existsSync(href)) {
+      // "/assets/..." = gốc site (gốc repo), không phải gốc ổ đĩa
+      if (!fs.existsSync(href.replace(/^\//, ''))) {
         errors.push(`[Thiếu tệp Link/CSS] ${file} tham chiếu tới "${href}" không tồn tại!`);
       }
     }
@@ -125,6 +126,49 @@ if (fs.existsSync('data.js')) {
   }
 }
 console.log('✓ Zero-Answer Leak & 0-Egress: Đáp án thi được bảo vệ, data.js đạt ngân sách.');
+
+// 3c. NỘI DUNG PRO: chạy hàm dựng module của publish-content.js trên dữ liệu giả (dòng PRO đầy đủ nội dung như anon
+// đọc được trước khi siết RLS + catalog metadata) — item PRO phải bị khoá, không còn trường nội dung; bài miễn phí giữ nguyên.
+{
+  const Shapes = require('../js/content-shapes.js');
+  const { assembleModule } = require('./publish-content.js');
+  const heavy = { sentences: [{ ru: 'Привет' }], items: [{ ru: 'Привет' }], lines: [{ text_ru: 'Да' }], questions: [{ q: 'Что?', options: ['a', 'b'] }],
+    raw_data: { items: [{ ru: 'x' }], parts: [{ id: 'p', questions: [{ q: 'x' }] }], model: 'Образец' }, prompt: 'Опишите', prompt_text: 'Опишите',
+    model_answer: 'Образец', sample_essay: 'Образец', tips: ['совет'], suggested_words: ['слово'], content_md: '# Текст', rules: [{ r: 1 }],
+    table_data: { a: 1 }, transcript_ru: 'Текст', translation_vi: 'Bản dịch', audio_url: 'https://x/a.mp3', youtube_id: 'abcdefghijk',
+    parts: [{ id: 'gram', name: 'Часть 1', questions: [{ q: 'x', options: ['a', 'b'] }] }], intro: 'Lời mở đầu', cultural_tip: 'Mẹo',
+    action_chains: [{ a: 1 }], dialogues: [{ d: 1 }], grammar_notes: [{ g: 1 }],
+    jar_items: [{ position: 1, vocabularies: { id: 'v1', word_normalized: 'слово', meaning_vi: 'từ' } }] };
+  const cases = [
+    ['vocab_jars.json', 'vocab_jars', { is_system: true, name: 'Lọ', created_at: '2026-01-01T00:00:00Z' }, { is_pro: true }, { is_pro: false }],
+    ['topic_articles.json', 'topic_articles', { title: 'Bài' }, {}, {}],
+    ['listening_lessons.json', 'listening_lessons', { title: 'Nghe', sort_order: 1 }, { is_pro_only: true }, { is_pro_only: false }],
+    ['speaking_sets.json', 'speaking_lessons', { title: 'Nói', sort_order: 1, icon: 'mic-speaking' }, { is_pro_only: true }, { is_pro_only: false }],
+    ['writing_tasks.json', 'writing_tasks', { title: 'Viết', sort_order: 1 }, { is_pro_only: true }, { is_pro_only: false }],
+    ['writing_topics.json', 'writing_topics', { title: 'Chủ đề', sort_order: 1 }, { is_pro_only: true }, { is_pro_only: false }],
+    ['grammar_lessons.json', 'grammar_lessons', { title: 'Ngữ pháp', order_index: 1 }, { is_pro_only: true }, { is_pro_only: false }],
+    ['trki_bank.json', 'trki_tests', { title: 'Đề', level: 'B1', is_published: true }, { is_pro_only: true }, { is_pro_only: false }]
+  ];
+  let proErrors = 0;
+  cases.forEach(([file, catKey, base, proFlag, freeFlag]) => {
+    const proRow = { ...base, ...heavy, ...proFlag, id: 'pro-1', code: 'pro_1' };
+    const freeRow = { ...base, ...heavy, ...freeFlag, id: 'free-1', code: 'free_1' };
+    const catRow = { ...base, ...proFlag, id: 'pro-1', code: 'pro_1', word_count: 1, sentence_count: 1, question_count: 1,
+      part_summaries: [{ id: 'gram', name: 'Часть 1', questionCount: 1 }] };
+    const out = assembleModule(file, [freeRow, proRow], { [catKey]: [catRow] }, { prevOrder: new Map(), articles: {} });
+    const items = Array.isArray(out) ? out : Object.values(out);
+    const locked = items.filter((it) => it.content_locked);
+    const leaks = Shapes.findLockedLeaks(file, out).concat(Shapes.findUnlockedPro(file, out));
+    const free = items.find((it) => !it.content_locked);
+    const leakedText = JSON.stringify(locked).match(/Привет|Опишите|Образец|# Текст|Bản dịch|Lời mở đầu|слово|a\.mp3|abcdefghijk/);
+    if (items.length !== 2 || locked.length !== 1 || leaks.length || leakedText || !free || free.code === 'pro_1') {
+      proErrors++;
+      errors.push(`[Nội dung PRO] ${file}: item PRO chưa khoá đúng (${leaks.join(', ') || (leakedText && leakedText[0]) || 'sai số item'})`);
+    }
+  });
+  if (!proErrors) passedChecks++;
+  console.log(`✓ Nội dung PRO: ${cases.length} module công khai chỉ chứa metadata cho bài PRO (kiểm tra trên dữ liệu giả).`);
+}
 
 // 4. KIỂM TRA RÀ SOÁT BẢO MẬT & DEAD CODE NGUY HIỂM
 const sensitivePatterns = [

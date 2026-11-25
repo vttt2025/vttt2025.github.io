@@ -215,7 +215,7 @@ function initSpeakingPage() {
       const isDone = Progress.doneList("speakDone").includes(s.id);
       const isPro = Boolean(s.is_pro_only || s.is_pro);
       const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
-      const sentenceCount = (s.items || s.sentences || (s.raw_data && s.raw_data.items) || []).length;
+      const sentenceCount = (s.items || s.sentences || (s.raw_data && s.raw_data.items) || []).length || s.sentence_count || 0;
       const countLabel = `${sentenceCount} câu ${currentMode === "shadowing" ? "shadowing" : "phản xạ"}`;
       const actionLabel = isDone ? "Đã hoàn thành" : (currentMode === "shadowing" ? "Vào luyện Shadowing" : "Vào luyện phản xạ");
       const iconKey = currentMode === "reflex" ? "zap-xp" : (s.icon || "mic-speaking");
@@ -372,6 +372,12 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       window.setRusiDeepUrl('/speaking/' + (mode || 'shadowing') + '/' + encodeURIComponent(set.id || set.code));
     }
     if (typeof window.requireAuth === "function" && !window.requireAuth("speaking.html?set=" + encodeURIComponent((set && (set.id || set.code)) || ""))) return;
+    // Bài PRO: file công khai chỉ có metadata — tải nội dung bằng phiên PRO rồi mở lại
+    if (set && set.content_locked && window.RusiProContent) {
+      window.RusiProContent.ensureFull("SPEAKING_SETS", set, { title: "Nội dung luyện nói dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn." })
+        .then((full) => { if (full && !full.content_locked) openSpeakingWorkspace(full, mode); });
+      return;
+    }
     document.body.classList.add("in-workspace");
     const todayKey = "speak_today_" + new Date().toDateString();
     const attemptsToday = STORE.get(todayKey, 0);

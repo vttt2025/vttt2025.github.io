@@ -2177,7 +2177,34 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         });
         // Không tìm thấy → hiện "Không tìm thấy bản ghi" (renderDocumentEditor), KHÔNG âm thầm thành form tạo mới
         // (bấm Lưu sẽ sinh bản ghi rác, vd. đơn hàng 'paid' không có user khi danh sách chưa được Kéo từ Cloud)
-        State.currentDraft = item ? JSON.parse(JSON.stringify(stripSource(item))) : null;
+        const lockKey = State.currentSlug + ":" + targetId;
+        State.lockedFailed = State.lockedFailed || new Set();
+        State.lockedLoaded = State.lockedLoaded || new Map();
+        if (item && item.content_locked && State.lockedLoaded.has(lockKey)) {
+          // getMergedList trả bản sao → dùng bản đầy đủ đã tải ở lượt trước
+          State.currentDraft = JSON.parse(JSON.stringify(stripSource(State.lockedLoaded.get(lockKey))));
+        } else if (item && item.content_locked && !State.lockedFailed.has(lockKey)) {
+          // Bài PRO trong file công khai chỉ có metadata → tải đủ nội dung từ Supabase rồi mới cho sửa
+          State.currentDraft = null;
+          State.lockedLoading = true;
+          const loader = window.RusiProContent && window.RusiProContent.ensureFull;
+          (loader ? loader(State.currentSlug, item, { admin: true }) : Promise.resolve(null)).then((full) => {
+            State.lockedLoading = false;
+            if (full && !full.content_locked) {
+              State.lockedLoaded.set(lockKey, full);
+              handleRoute();
+            }
+            else {
+              State.lockedFailed.add(lockKey); // không thử lại vô hạn; người dùng Kéo từ Cloud rồi tải lại trang
+              toast("Không tải được nội dung bài PRO để sửa — hãy Kéo từ Cloud rồi mở lại.", "error");
+              handleRoute();
+            }
+          });
+        } else if (item && item.content_locked) {
+          State.currentDraft = null; // đã tải thất bại: không cho sửa bản chỉ có metadata
+        } else {
+          State.currentDraft = item ? JSON.parse(JSON.stringify(stripSource(item))) : null;
+        }
       }
     } else {
       State.currentDraft = null;
@@ -2866,6 +2893,10 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     const col = COLLECTIONS[slug];
     if (!col) {
       container.innerHTML = `<div style="padding:40px;text-align:center">Collection không tồn tại. <a href="#dashboard">Quay lại Dashboard</a></div>`;
+      return;
+    }
+    if (!State.currentDraft && State.lockedLoading) {
+      container.innerHTML = `<div style="padding:48px 20px;text-align:center;color:var(--p-text-muted)">Đang tải nội dung bài PRO từ Supabase...</div>`;
       return;
     }
     if (!State.currentDraft) {
@@ -8237,6 +8268,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       if (slug === "TRKI_BANK" && trkiDocMissingAnswers(doc)) {
         return { ok: false, message: "Đề này là bản công khai đã xoá đáp án — hãy Kéo đề thi TRKI từ Cloud trước khi lưu." };
       }
+      // Bài PRO trong file công khai chỉ có metadata (content_locked) — lưu sẽ ghi đè nội dung thật bằng rỗng
+      if (doc && doc.content_locked) {
+        return { ok: false, message: "Bài PRO chưa tải đủ nội dung — hãy mở bài (CMS tự tải) hoặc Kéo từ Cloud trước khi lưu." };
+      }
 
       const sb = this.getClient();
       if (!sb) {
@@ -8299,6 +8334,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       if (slug === "USERS") {
         targetItems = targetItems.filter(it => it && isValidUUID(it.id));
       }
+      // Bài PRO chỉ có metadata (content_locked): không đẩy lên để khỏi ghi đè nội dung thật
+      const lockedCount = targetItems.filter(it => it && it.content_locked).length;
+      targetItems = targetItems.filter(it => !(it && it.content_locked));
+      if (lockedCount) console.warn(`[SupabaseSyncEngine] Bỏ qua ${lockedCount} bài PRO chưa tải đủ nội dung (${slug}).`);
       let skippedNoAnswers = 0;
       if (slug === "TRKI_BANK") {
         const before = targetItems.length;

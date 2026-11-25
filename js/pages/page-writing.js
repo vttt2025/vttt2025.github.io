@@ -416,6 +416,15 @@ function initWritingPage() {
       window.setRusiDeepUrl('/writing/bai_viet/' + encodeURIComponent(initialTask.id || initialTask.code || (topic && topic.key)));
     }
     if (typeof window.requireAuth === "function" && !window.requireAuth("writing.html?topic=" + encodeURIComponent((topic && (topic.key || topic.id || topic.title)) || ""))) return;
+    // Đề PRO: file công khai chỉ có metadata — tải nội dung mọi đề khoá của chủ đề bằng phiên PRO rồi mở lại
+    // (chưa PRO: chỉ xét đề đang mở, để vẫn mở được đề miễn phí trong chủ đề có đề PRO)
+    const isProUser = typeof Monetization !== "undefined" && Monetization.isPro();
+    const lockedTasks = (isProUser ? ((topic && topic.tasks) || []) : []).concat(initialTask || []).filter((task) => task && task.content_locked);
+    if (lockedTasks.length && window.RusiProContent) {
+      window.RusiProContent.ensureFullList("WRITING_TASKS", lockedTasks, { title: "Đề luyện viết dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ đề thi viết TRKI chuyên sâu và trợ lý AI chữa ngữ pháp không giới hạn." })
+        .then((ok) => { if (ok) openWorkspace(topic, initialTask); });
+      return;
+    }
     document.body.classList.add("in-workspace");
     let currentTask = initialTask;
 

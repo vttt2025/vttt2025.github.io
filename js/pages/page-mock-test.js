@@ -474,6 +474,13 @@ function initMockTestPage() {
       }
     }
 
+    // Đề PRO: file công khai chỉ có metadata — tải đề (đã xoá đáp án, view trki_tests_public) bằng phiên PRO
+    if (currentTest && currentTest.content_locked && window.RusiProContent) {
+      host.innerHTML = `<div style="padding:80px 24px;text-align:center;color:var(--muted)"><div class="rusi-skeleton-hero" style="max-width:520px;margin:0 auto 16px"></div><p>Đang tải nội dung đề thi...</p></div>`;
+      const full = await window.RusiProContent.ensureFull("TRKI_BANK", currentTest, { title: "Đề thi TRKI dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết." });
+      if (!full || full.content_locked) { renderHub(); return; }
+    }
+
     if (currentTest && currentTest.code && currentTest.code.startsWith("trki_zlat")) {
       if (!(currentTest.parts && currentTest.parts[0] && Array.isArray(currentTest.parts[0].questions) && currentTest.parts[0].questions.length > 0)) {
         await loadQBankIntoTest(currentTest);
@@ -818,6 +825,11 @@ function initMockTestPage() {
   const startTest = async (test = null, partId = null, mode = "exam") => {
     if (!requireExamLogin()) return;
     if (test) currentTest = test;
+    // Đề PRO (vd. khôi phục phiên thi): tải nội dung bằng phiên PRO trước khi vào phòng thi
+    if (currentTest && currentTest.content_locked && window.RusiProContent) {
+      const full = await window.RusiProContent.ensureFull("TRKI_BANK", currentTest, { title: "Đề thi TRKI dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết." });
+      if (!full || full.content_locked) { renderHub(); return; }
+    }
     activePartId = partId;
     examMode = mode || "exam";
 

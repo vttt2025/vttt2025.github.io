@@ -1182,6 +1182,12 @@ const showTopicArticle = (jarId) => {
 
     if (!item) { renderVocabHub(); return; }
     const jar = item.raw || item;
+    // Lọ/bài chủ đề PRO: file công khai chỉ có metadata — tải nội dung bằng phiên PRO rồi mở lại
+    if (!jar.is_preview && jar.content_locked && window.RusiProContent) {
+      window.RusiProContent.ensureFull("VOCAB_JARS", jar, { title: "Nội dung dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ bài học chủ đề chuyên sâu, tài liệu PDF và kho từ vựng nâng cao." })
+        .then((full) => { if (full && !full.content_locked) showTopicArticle(jarId); });
+      return;
+    }
 
     // Kiểm tra quyền truy cập PRO (bỏ qua khi đang xem trước CMS)
     if (!jar.is_preview && item.is_pro_only && !Monetization.isPro()) {
@@ -1427,6 +1433,12 @@ const showTopicArticle = (jarId) => {
     if (!jar) {
       console.warn("Không tìm thấy lọ từ vựng:", jarId);
       renderVocabHub();
+      return;
+    }
+    // Lọ PRO: file công khai chỉ có metadata — tải nội dung bằng phiên PRO rồi mở lại
+    if (jar.content_locked && window.RusiProContent) {
+      window.RusiProContent.ensureFull("VOCAB_JARS", jar, { title: "Nội dung dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng nâng cao và ôn tập không giới hạn." })
+        .then((full) => { if (full && !full.content_locked) showJarDetail(jarId, initialMode); });
       return;
     }
     if (!jar.words || !jar.words.length) {

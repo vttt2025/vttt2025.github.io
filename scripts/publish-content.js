@@ -18,9 +18,9 @@ const ROOT = path.join(__dirname, '..');
 const MODULES_DIR = path.join(ROOT, 'data', 'modules');
 const MANIFEST = path.join(MODULES_DIR, 'manifest.json');
 
-// Trường đáp án tuyệt đối không được xuất hiện trong file công khai của đề thi TRKI.
-const ANSWER_KEYS = new Set(['a', 'ex', 'ans', 'answer', 'answers', 'answer_key', 'official_key',
-  'correct_answer', 'correct_index', 'correct_option', 'correctIndex', 'explanation']);
+// Chuyển dòng DB → item dùng chung với trình duyệt (js/pro-content.js tải bài PRO cùng định dạng)
+const Shapes = require('../js/content-shapes.js');
+const { ANSWER_KEYS, SELECTS, stripAnswers, findAnswerKeys, sanitizeWord, formatArticle } = Shapes;
 
 function getConfig() {
   if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
@@ -53,74 +53,96 @@ async function apiAll(cfg, q, pageSize = 1000) {
   return all;
 }
 
+const fetchArticles = (cfg) => api(cfg, `topic_articles?select=${SELECTS.topic_articles}`);
+
 // ---------------------------------------------------------------------------
-// Chuyển đổi dữ liệu (giữ nguyên định dạng của scripts/sync-from-supabase.js)
+// Bài PRO: file công khai chỉ chứa metadata (`content_locked: true`), lấy từ public.rusi_pro_catalog()
+// (anon gọi được cả trước lẫn sau khi siết RLS). Nội dung tải sau bằng phiên PRO (js/pro-content.js).
 // ---------------------------------------------------------------------------
-function sanitizeWord(w) {
-  if (!w) return null;
-  const ex0 = (Array.isArray(w.examples) && w.examples[0]) ? w.examples[0] : null;
-  const rawWord = w.word_normalized || (w.word_with_stress ? w.word_with_stress.replace(/[̀́]/g, '') : '');
-  const stressWord = w.word_with_stress || w.word_normalized || '';
-  return {
-    id: w.id, ru: rawWord, stress: stressWord, word_with_stress: stressWord, word_normalized: rawWord,
-    vi: w.meaning_vi || '', meaning_vi: w.meaning_vi || '', pos: w.pos || '', gender: w.gender || '',
-    aspect: w.aspect || '', level: w.level || 'A1', audio: w.audio_url || '', audio_url: w.audio_url || '',
-    ex: ex0 ? (ex0.ru || '') : '', ex_vi: ex0 ? (ex0.vi || '') : '',
-    examples: Array.isArray(w.examples) ? w.examples : [],
-    ant: (Array.isArray(w.antonyms) && w.antonyms.length) ? w.antonyms.join(', ') : '',
-    antonyms: Array.isArray(w.antonyms) ? w.antonyms : [],
-    syn: (Array.isArray(w.synonyms) && w.synonyms.length) ? w.synonyms.join(', ') : '',
-    synonyms: Array.isArray(w.synonyms) ? w.synonyms : [],
-    structures: Array.isArray(w.structures) ? w.structures : [],
-    notes: w.notes || ''
-  };
+let _catalogPromise = null;
+function fetchProCatalog(cfg) {
+  if (!_catalogPromise) {
+    _catalogPromise = (async () => {
+      const res = await fetch(`${cfg.url}/rest/v1/rpc/rusi_pro_catalog`, {
+        method: 'POST', headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}`, 'Content-Type': 'application/json' }, body: '{}'
+      });
+      const text = await res.text();
+      egressBytes += Buffer.byteLength(text);
+      // Không có catalog thì KHÔNG xuất bản (tránh lộ nội dung PRO hoặc xoá bài PRO khỏi danh sách)
+      if (!res.ok) throw new Error(`rusi_pro_catalog HTTP ${res.status}: ${text.slice(0, 300)} — dừng xuất bản.`);
+      const cat = JSON.parse(text);
+      if (!cat || typeof cat !== 'object') throw new Error('rusi_pro_catalog trả dữ liệu không hợp lệ — dừng xuất bản.');
+      return cat;
+    })();
+  }
+  return _catalogPromise;
 }
 
-function formatArticle(art, fallbackLevel) {
-  return {
-    id: art.id, title: art.title, level: art.level || fallbackLevel || 'A1',
-    intro: art.intro || '', desc: art.intro || '',
-    culturalTip: art.cultural_tip || '', cultural_tip: art.cultural_tip || '',
-    audio_url: art.audio_url || '',
-    actionChains: Array.isArray(art.action_chains) ? art.action_chains : [],
-    action_chains: Array.isArray(art.action_chains) ? art.action_chains : [],
-    dialogues: Array.isArray(art.dialogues) ? art.dialogues : [],
-    grammarNotes: Array.isArray(art.grammar_notes) ? art.grammar_notes : [],
-    grammar_notes: Array.isArray(art.grammar_notes) ? art.grammar_notes : [],
-    content_md: art.content_md || ''
-  };
+// Khoá sắp xếp (như ORDER BY của truy vấn cũ, thêm code để thứ tự ổn định): null xếp cuối
+function compareKeys(a, b) {
+  for (let i = 0; i < a.length; i++) {
+    const x = a[i], y = b[i];
+    if (x === y) continue;
+    if (x == null) return 1;
+    if (y == null) return -1;
+    if (x < y) return -1;
+    if (x > y) return 1;
+  }
+  return 0;
 }
-
-const fetchArticles = (cfg) => api(cfg, 'topic_articles?select=*');
+const ts = (v) => (v ? Date.parse(v) : null);
+const PRO_MODULES = {
+  'topic_articles.json': { cat: 'topic_articles', key: (r) => [r.id], shape: (r) => formatArticle(r) },
+  'vocab_jars.json': { cat: 'vocab_jars', key: (r) => [ts(r.created_at), r.code || r.id], shape: (r, ctx) => Shapes.vocabJar(r, ctx.articles) },
+  'listening_lessons.json': { cat: 'listening_lessons', key: (r) => [r.sort_order, r.code || r.id], shape: (r) => Shapes.listeningLesson(r) },
+  'speaking_sets.json': { cat: 'speaking_lessons', key: (r) => [r.sort_order, r.code || r.id], shape: (r) => Shapes.speakingSet(r) },
+  'writing_tasks.json': { cat: 'writing_tasks', key: (r) => [r.sort_order, r.code || r.id], shape: (r) => Shapes.writingTask(r) },
+  'writing_topics.json': { cat: 'writing_topics', key: (r) => [r.sort_order, r.code || r.id], shape: (r) => Shapes.writingTopic(r) },
+  'grammar_lessons.json': { cat: 'grammar_lessons', key: (r) => [r.order_index, r.code || r.id], shape: (r) => Shapes.grammarLesson(r) },
+  'trki_bank.json': { cat: 'trki_tests', key: (r) => [r.level, r.code || r.id], shape: (r) => Shapes.trkiTest(r) }
+};
+// Thứ tự trong file đang xuất bản: dùng phân định các dòng trùng khoá sắp xếp để danh sách không bị xáo trộn
+function previousOrder(file) {
+  const prev = readJson(path.join(MODULES_DIR, file), null);
+  const ids = Array.isArray(prev) ? prev.map((it) => it && it.id) : (prev && typeof prev === 'object' ? Object.keys(prev) : []);
+  return new Map(ids.map((id, i) => [String(id), i]));
+}
+// rows: dòng đọc bằng anon (trước khi siết RLS còn gồm cả dòng PRO — bỏ đi theo id trong catalog)
+// ctx.prevOrder: Map id item → vị trí trong file cũ (mặc định đọc data/modules/<file>)
+function assembleModule(file, rows, catalog, ctx = {}) {
+  const conf = PRO_MODULES[file];
+  const proRows = catalog && catalog[conf.cat];
+  if (!Array.isArray(proRows)) throw new Error(`rusi_pro_catalog thiếu mục "${conf.cat}" — dừng xuất bản.`);
+  const prevOrder = ctx.prevOrder || previousOrder(file);
+  const entry = (r, item) => {
+    const k = conf.key(r);
+    const pos = prevOrder.get(String(item.id));
+    return { k: k.slice(0, -1).concat(pos === undefined ? null : pos, k[k.length - 1]), item };
+  };
+  const proIds = new Set(proRows.map((r) => String(r.id)));
+  const entries = rows.filter((r) => !proIds.has(String(r.id))).map((r) => entry(r, conf.shape(r, ctx)))
+    .concat(proRows.map((r) => entry(r, Shapes.lockedItem(file, r))));
+  const items = entries.sort((x, y) => compareKeys(x.k, y.k)).map((e) => e.item);
+  if (file !== 'topic_articles.json') return items;
+  const out = {};
+  items.forEach((a) => { out[a.id] = a; });
+  return out;
+}
 
 const BUILDERS = {
   'topic_articles.json': {
-    tables: ['topic_articles'],
+    tables: ['topic_articles', 'vocab_jars'],
     async build(cfg) {
-      const out = {};
-      (await fetchArticles(cfg)).forEach((a) => { out[a.id] = formatArticle(a); });
-      return out;
+      return assembleModule('topic_articles.json', await fetchArticles(cfg), await fetchProCatalog(cfg));
     }
   },
   'vocab_jars.json': {
     tables: ['vocab_jars', 'jar_items', 'vocabularies', 'topic_articles'],
     async build(cfg) {
-      const rawJars = await api(cfg, 'vocab_jars?select=id,code,name,level,icon,word_count,is_system,is_pro,jar_items(position,vocabularies(*))&is_system=eq.true&order=created_at.asc');
+      const rawJars = await api(cfg, `vocab_jars?select=${SELECTS.vocab_jars},created_at&is_system=eq.true&order=created_at.asc`);
       const articles = {};
       (await fetchArticles(cfg)).forEach((a) => { articles[a.id] = a; });
-      return rawJars.map((row) => {
-        const code = row.code || row.id;
-        const art = articles[code] || articles[row.id] || null;
-        const items = (Array.isArray(row.jar_items) ? row.jar_items : []).sort((a, b) => (a.position || 0) - (b.position || 0));
-        const words = items.map((it) => sanitizeWord(it.vocabularies)).filter(Boolean);
-        const article = art ? formatArticle(art, row.level) : null;
-        return {
-          id: code, code, uuid: row.id, name: row.name || code, title: row.name || code,
-          level: row.level || 'A1', desc: (article && article.intro) || '', icon: row.icon || 'archive-jar',
-          color: '#0039A6', word_count: words.length || row.word_count || 0, is_system: true,
-          is_pro: Boolean(row.is_pro), words, article
-        };
-      });
+      return assembleModule('vocab_jars.json', rawJars, await fetchProCatalog(cfg), { articles });
     }
   },
   'vocabularies.json': {
@@ -136,27 +158,8 @@ const BUILDERS = {
   'listening_lessons.json': {
     tables: ['listening_lessons', 'listening_topics', 'listening_lesson_vocab', 'vocabularies'],
     async build(cfg) {
-      const rows = await api(cfg, 'listening_lessons?select=*,topic:listening_topics(*),vocab_items:listening_lesson_vocab(sort_order,line_index,vocab:vocabularies(*))&order=sort_order.asc');
-      return rows.map((row) => {
-        const raw = row.raw_data || {};
-        const t = row.topic || {};
-        const lines = (Array.isArray(row.lines) && row.lines.length) ? row.lines : (raw.lines || []);
-        const questions = (Array.isArray(row.questions) && row.questions.length) ? row.questions : (raw.questions || []);
-        const dictation = (raw.dictation && raw.dictation.length) ? raw.dictation : (Array.isArray(lines) ? lines.map((l) => l.text_ru || l.ru || '').filter(Boolean) : []);
-        const ytId = row.youtube_id || row.video_youtube_id || (raw.youtube_video_id || '');
-        return {
-          id: row.code || row.id, lesson_uuid: row.id, code: row.code || row.id, topic_id: row.topic_id,
-          title: row.title, vi: row.vi || t.description || '',
-          translation_vi: row.translation_vi || row.vi || '', transcript_ru: row.transcript_ru || '',
-          level: row.level || t.level || 'A1', level_name: row.level_name || ('Sơ cấp ' + (row.level || 'A1')),
-          category: t.category || row.category || 'general', category_name: t.title || row.category_name || 'Luyện nghe hiểu',
-          part_type: 'part' + (row.part_number || 1), part_number: row.part_number || 1,
-          youtube_id: ytId, video_youtube_id: ytId, audio_url: row.audio_url || '',
-          duration_seconds: row.duration_seconds || 120, est_minutes: row.est_minutes || 12,
-          is_pro_only: Boolean(row.is_pro_only || t.is_pro_only),
-          lines, questions, dictation, blanks: raw.blanks || [], vocab_items: row.vocab_items || [], raw_data: raw
-        };
-      });
+      const rows = await api(cfg, `listening_lessons?select=${SELECTS.listening_lessons}&order=sort_order.asc`);
+      return assembleModule('listening_lessons.json', rows, await fetchProCatalog(cfg));
     }
   },
   // Chủ đề nghe: cùng dạng fromRow của CMS (admin.js MAPPINGS.LISTENING_TOPICS) — dùng cho danh sách và ô chọn chủ đề
@@ -174,94 +177,30 @@ const BUILDERS = {
   'speaking_sets.json': {
     tables: ['speaking_lessons'],
     async build(cfg) {
-      const rows = await api(cfg, 'speaking_lessons?select=*&order=sort_order.asc');
-      return rows.map((row) => {
-        const raw = row.raw_data || {};
-        const sentences = Array.isArray(row.sentences) && row.sentences.length ? row.sentences : (Array.isArray(row.items) && row.items.length ? row.items : (raw.items || []));
-        const ytId = row.youtube_id || raw.youtube_video_id || raw.youtubeId || (row.video_sample_url && row.video_sample_url.includes('youtube') ? (row.video_sample_url.match(/(?:embed\/|v=|watch\?v=)([a-zA-Z0-9_-]{11})/) || [])[1] : '');
-        return {
-          id: row.code || row.id, code: row.code || row.id, title: row.title, level: row.level || 'A1',
-          level_name: row.level_name || (row.level === 'B2' ? 'Nâng cao B2' : row.level === 'B1' ? 'Trung cấp B1' : row.level === 'A2' ? 'Cơ bản A2' : 'Sơ cấp A1'),
-          category: row.category || 'shadowing', category_name: row.category_name || 'Luyện nói Shadowing',
-          speaking_mode: row.speaking_mode || (row.category === 'speech_studio' || row.category === 'reflex' ? 'reflex' : 'shadowing'),
-          description: row.description || '', phonemeTarget: row.phoneme_target || '',
-          icon: row.icon || (ytId ? 'youtube' : 'mic-speaking'), is_pro_only: Boolean(row.is_pro_only),
-          sentences, items: sentences, youtube_id: ytId,
-          youtube_url: row.youtube_url || (ytId ? ('https://www.youtube.com/watch?v=' + ytId) : ''),
-          video_sample_url: row.video_sample_url || (ytId ? ('https://www.youtube.com/embed/' + ytId + '?enablejsapi=1&rel=0&modestbranding=1&playsinline=1') : ''),
-          start_sec: row.start_sec || 0, end_sec: row.end_sec || 0, sort_order: row.sort_order || 0, raw_data: raw
-        };
-      });
+      const rows = await api(cfg, `speaking_lessons?select=${SELECTS.speaking_lessons}&order=sort_order.asc`);
+      return assembleModule('speaking_sets.json', rows, await fetchProCatalog(cfg));
     }
   },
   'writing_tasks.json': {
     tables: ['writing_tasks', 'writing_topics', 'writing_task_vocab', 'vocabularies'],
     async build(cfg) {
-      const rows = await api(cfg, 'writing_tasks?select=*,topic:writing_topics(*),vocab_items:writing_task_vocab(sort_order,vocab:vocabularies(*))&order=sort_order.asc');
-      return rows.map((row) => {
-        const raw = row.raw_data || {};
-        let words;
-        if (Array.isArray(row.vocab_items) && row.vocab_items.length) {
-          words = row.vocab_items.filter((it) => it && it.vocab).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)).map(({ vocab: v }) => ({
-            id: v.id, ru: v.word_with_stress || v.word_normalized, word: v.word_with_stress || v.word_normalized,
-            word_normalized: v.word_normalized, vi: v.meaning_vi || '', pos: v.pos || '', level: v.level || '', audio_url: v.audio_url || ''
-          }));
-        } else {
-          words = (raw && Array.isArray(raw.suggested_words) && raw.suggested_words.length) ? raw.suggested_words : (Array.isArray(row.suggested_words) ? row.suggested_words : []);
-        }
-        let tips = [];
-        if (Array.isArray(row.tips) && row.tips.length) tips = row.tips;
-        else if (typeof row.tips === 'string' && row.tips.trim()) { try { tips = JSON.parse(row.tips); } catch (_) { tips = [row.tips]; } }
-        const topic = row.topic || {};
-        const model = row.model_answer || row.sample_essay || raw.model || '';
-        return {
-          id: row.code || row.id, code: row.code || row.id, title: row.title, level: row.level || topic.level || 'A1',
-          level_name: row.level_name || ('Sơ cấp ' + (row.level || 'A1')),
-          category: topic.category || row.category || 'picture',
-          category_name: topic.title || topic.category_name || row.category_name || 'Tả tranh & Giới thiệu',
-          prompt: row.prompt || row.prompt_text || '', prompt_text: row.prompt_text || row.prompt || '',
-          image_url: row.image_url || '', min_words: row.min_words || 20, suggested_words: words, tips,
-          sample_essay: model, model_answer: model, is_pro_only: Boolean(row.is_pro_only || topic.is_pro_only), raw_data: raw
-        };
-      });
+      const rows = await api(cfg, `writing_tasks?select=${SELECTS.writing_tasks}&order=sort_order.asc`);
+      return assembleModule('writing_tasks.json', rows, await fetchProCatalog(cfg));
     }
   },
   'writing_topics.json': {
     tables: ['writing_topics'],
     async build(cfg) {
-      const rows = await api(cfg, 'writing_topics?select=*&order=sort_order.asc');
-      return rows.map((w) => {
-        const raw = w.raw_data || {};
-        return {
-          id: w.code || w.id, code: w.code || w.id, title: w.title, level: w.level || 'A1',
-          level_name: w.level_name || ('Sơ cấp ' + (w.level || 'A1')), category: w.category || 'essay',
-          category_name: w.category_name || 'Chủ đề viết', prompt: w.prompt || '', vi: w.vi || '',
-          min_words: w.min_words || 25,
-          suggested_words: (Array.isArray(w.suggested_words) && w.suggested_words.length) ? w.suggested_words : (raw.suggested_words || []),
-          tips: (Array.isArray(w.tips) && w.tips.length) ? w.tips : (raw.tips || []),
-          model_answer: w.model_answer || (raw.model || ''), image_url: w.image_url || '', icon: w.icon || '📝',
-          sort_order: typeof w.sort_order === 'number' ? w.sort_order : 10, is_pro_only: Boolean(w.is_pro_only), raw_data: raw
-        };
-      });
+      const rows = await api(cfg, `writing_topics?select=${SELECTS.writing_topics}&order=sort_order.asc`);
+      return assembleModule('writing_topics.json', rows, await fetchProCatalog(cfg));
     }
   },
   'trki_bank.json': {
     tables: ['trki_tests'],
     async build(cfg) {
       // View đã xoá khoá đáp án phía server; bảng trki_tests không còn cho anon đọc
-      const rows = await api(cfg, 'trki_tests_public?select=*&order=level.asc');
-      return rows.map((t) => {
-        const raw = t.raw_data || {};
-        const parts = (Array.isArray(t.parts) && t.parts.length) ? t.parts : (raw.parts || t.sections || []);
-        return stripAnswers({
-          id: t.code || t.id, code: t.code || t.id, title: t.title, level: t.level || 'A1',
-          level_name: t.level_name || ('Trình độ ' + (t.level || 'A1')), category: t.category || 'full',
-          sub_test_type: t.sub_test_type || 'full', duration_min: t.duration_min || 45, pass_percent: t.pass_percent || 60,
-          is_pro_only: Boolean(t.is_pro_only), is_published: Boolean(t.is_published !== false), test_mode: t.test_mode || 'practice',
-          parts, part1: t.part1 || raw.part1, part2: t.part2 || raw.part2, part3: t.part3 || raw.part3,
-          part4: t.part4 || raw.part4, part5: t.part5 || raw.part5
-        });
-      });
+      const rows = await api(cfg, `trki_tests_public?select=${SELECTS.trki_tests_public}&order=level.asc`);
+      return assembleModule('trki_bank.json', rows, await fetchProCatalog(cfg));
     }
   },
   'shop_products.json': {
@@ -300,13 +239,8 @@ const BUILDERS = {
   'grammar_lessons.json': {
     tables: ['grammar_lessons'],
     async build(cfg) {
-      const rows = await api(cfg, 'grammar_lessons?select=*&order=order_index.asc');
-      return rows.map((g) => ({
-        id: g.code || g.id, code: g.code || g.id, title: g.title, level: g.level || 'A1', category: g.category || 'case',
-        topic: g.topic || 'Ngữ pháp cơ bản', vi: g.vi || '', summary: g.summary || g.vi || '', content_md: g.content_md || '',
-        rules: Array.isArray(g.rules) ? g.rules : [], table_data: g.table_data || {},
-        questions: Array.isArray(g.questions) ? g.questions : [], order_index: g.order_index || 0, is_pro_only: Boolean(g.is_pro_only)
-      }));
+      const rows = await api(cfg, `grammar_lessons?select=${SELECTS.grammar_lessons}&order=order_index.asc`);
+      return assembleModule('grammar_lessons.json', rows, await fetchProCatalog(cfg));
     }
   },
   'blog_posts.json': {
@@ -331,12 +265,9 @@ const LEVEL_NAMES = {
 };
 function buildTrkiIndex(bank) {
   return bank.map((t) => {
-    const parts = Array.isArray(t.parts) ? t.parts : [];
     // Đếm cả bài viết/nói như màn hình chuẩn bị phòng thi ("Tổng số câu hỏi") để thẻ đề và phòng thi khớp nhau
-    const partSummaries = parts.map((p) => ({
-      id: p.id, name: p.name, vi: p.vi,
-      questionCount: (p.questions || []).length || (p.writing_tasks || []).length || (p.speaking_tasks || []).length
-    }));
+    // Đề PRO bị khoá: tóm tắt phần thi lấy sẵn từ catalog (không có parts)
+    const partSummaries = t.content_locked ? (t.part_summaries || []) : Shapes.trkiPartSummaries(t.parts);
     const levelName = LEVEL_NAMES[t.level] || t.level_name;
     return {
       id: t.id, code: t.code, title: t.title, level: t.level, levelName, level_name: levelName,
@@ -346,17 +277,6 @@ function buildTrkiIndex(bank) {
       questionCount: partSummaries.reduce((a, p) => a + p.questionCount, 0), _isIndexOnly: true
     };
   });
-}
-
-function stripAnswers(value) {
-  return JSON.parse(JSON.stringify(value, (k, v) => (ANSWER_KEYS.has(k) ? undefined : v)));
-}
-function findAnswerKeys(value, found = new Set()) {
-  if (Array.isArray(value)) value.forEach((v) => findAnswerKeys(v, found));
-  else if (value && typeof value === 'object') {
-    for (const [k, v] of Object.entries(value)) { if (ANSWER_KEYS.has(k)) found.add(k); findAnswerKeys(v, found); }
-  }
-  return found;
 }
 
 const hashOf = (text) => crypto.createHash('sha256').update(text).digest('hex').slice(0, 12);
@@ -393,6 +313,11 @@ async function main() {
     const leaked = outputs[f] ? [...findAnswerKeys(outputs[f])] : [];
     if (leaked.length) throw new Error(`[Zero-Answer Leak] ${f} còn trường đáp án: ${leaked.join(', ')} — dừng xuất bản.`);
   }
+  // Nội dung PRO: item PRO phải bị khoá và item khoá không còn trường nội dung
+  for (const [f, data] of Object.entries(outputs)) {
+    const leaks = Shapes.findLockedLeaks(f, data).concat(Shapes.findUnlockedPro(f, data));
+    if (leaks.length) throw new Error(`[PRO Leak] ${f}: ${leaks.slice(0, 10).join(', ')} — dừng xuất bản.`);
+  }
   // Chống xoá trắng ngân hàng đề khi API trả rỗng do lỗi quyền đọc (trki_tests_public) — kiểm tra trước khi ghi file nào
   const bankFile = path.join(MODULES_DIR, 'trki_bank.json');
   if (Array.isArray(outputs['trki_bank.json']) && !outputs['trki_bank.json'].length && readJson(bankFile, []).length) {
@@ -425,4 +350,4 @@ async function main() {
 if (require.main === module) {
   main().catch((err) => { console.error(err.message || err); process.exit(1); });
 }
-module.exports = { BUILDERS, buildTrkiIndex, stripAnswers, findAnswerKeys, ANSWER_KEYS };
+module.exports = { BUILDERS, buildTrkiIndex, assembleModule, stripAnswers, findAnswerKeys, ANSWER_KEYS };

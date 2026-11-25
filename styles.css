@@ -36856,3 +36856,42 @@ body.cbt-resizing .cbt-gutter-handle {
     min-height: 44px;
   }
 }
+
+/* Từ vựng: các nút còn dưới 44px (kiểm chứng trên rusitrki.com 26/11/2026) */
+@media (max-width: 1024px), (pointer: coarse) {
+  #btnViewArticleFromJar,
+  #qAddJarBack,
+  #btnPrintTopicArticle,
+  #btnOpenJarFromArticleTop {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+  /* Thẻ lọ ở hub: nút "Lọ từ vựng" và nút tròn "Xem bài học chủ đề" (≤768px đã có, mở rộng tới tablet) */
+  .topic-text-btn,
+  .btn-jar-list {
+    min-height: 44px !important;
+  }
+  .topic-circle-btn,
+  .btn-topic-article,
+  .rusi-card.rusi-card-compact .btn-topic-article.btn-topic-article,
+  .rusi-card .topic-circle-btn.topic-circle-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+  /* Danh sách từ trên tablet (bố cục desktop): nút hành động 44px */
+  .rusi-row-col-actions .rusi-action-icon-btn.rusi-action-icon-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+  /* Màn ôn SRS khi không có thẻ đến hạn; hub: Xem thêm, Tạo lọ mới, Học flashcard ở thẻ lọ cá nhân */
+  #btnSrsEmptyToJars,
+  .rusi-load-more-btn,
+  #btnSidebarCreateJar,
+  .voc-user-jar-card-actions .btn {
+    min-height: 44px !important;
+  }
+}
+/* Dải tab cấp độ ở hub từ vựng: 4 tab vừa khít 390px (tránh tràn 6px trong khung cuộn) */
+@media (max-width: 420px) {
+  .level-tabs { gap: 4px; }
+}

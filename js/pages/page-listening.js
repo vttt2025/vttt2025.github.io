@@ -802,8 +802,8 @@ function initListeningPage() {
         : (Array.isArray(l.dictation) && l.dictation.length > 0 && l.dictation.every((_, i) => Progress.doneList("listenDone").includes(l.id + "_dict_" + i)));
       const isPro = Boolean(l.is_pro_only || l.is_pro);
       const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
-      const qCount = (l.questions && l.questions.length) ? l.questions.length : (l.lines && l.lines.length) ? l.lines.length : 4;
-      const dictCount = (l.dictation && l.dictation.length) || 0;
+      const qCount = (l.questions && l.questions.length) ? l.questions.length : (l.lines && l.lines.length) ? l.lines.length : (l.question_count || l.line_count || 4);
+      const dictCount = (l.dictation && l.dictation.length) || l.dictation_count || 0;
       const countLabel = currentMode === "comprehension" ? `${qCount} câu hỏi` : `${dictCount} câu chính tả`;
       const actionLabel = isDone ? "Đã hoàn thành" : (currentMode === "comprehension" ? "Vào luyện nghe hiểu" : "Vào chép chính tả");
 
@@ -2089,6 +2089,13 @@ function initListeningPage() {
    * Bố cục 3/7: 3 phần menu câu hỏi bên trái, 7 phần phát audio & trắc nghiệm
    * ===================================================================== */
   const openComprehensionWorkspace = (lesson) => {
+    // Bài PRO: file công khai chỉ có metadata — tải nội dung bằng phiên PRO rồi mở lại
+    if (lesson && lesson.content_locked && window.RusiProContent) {
+      if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent(lesson.id || ""))) return;
+      window.RusiProContent.ensureFull("LISTENING_LESSONS", lesson, { title: "Nội dung nghe dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao." })
+        .then((full) => { if (full && !full.content_locked) openComprehensionWorkspace(full); });
+      return;
+    }
     if (window.setRusiDeepUrl && lesson) {
       window.setRusiDeepUrl('/listening/bai_hoc/' + encodeURIComponent(lesson.id || lesson.code));
     }
@@ -3042,6 +3049,13 @@ function initListeningPage() {
 
 
   const openDictationWorkspace = (lesson) => {
+    // Bài PRO: file công khai chỉ có metadata — tải nội dung bằng phiên PRO rồi mở lại
+    if (lesson && lesson.content_locked && window.RusiProContent) {
+      if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent(lesson.id || ""))) return;
+      window.RusiProContent.ensureFull("LISTENING_LESSONS", lesson, { title: "Nội dung nghe dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao." })
+        .then((full) => { if (full && !full.content_locked) openDictationWorkspace(full); });
+      return;
+    }
     if (window.setRusiDeepUrl && lesson) {
       window.setRusiDeepUrl('/listening/dictation/' + encodeURIComponent(lesson.id || lesson.code));
     }
