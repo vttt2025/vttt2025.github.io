@@ -1,16 +1,16 @@
 {
  "modules": {
   "topic_articles.json": {
-   "v": "32a4edae397d"
+   "v": "6a89e6dd04f6"
   },
   "vocab_jars.json": {
-   "v": "8157f061cdf6"
+   "v": "2f07938128c2"
   },
   "vocabularies.json": {
    "v": "52fad8279b9a"
   },
   "vocab_lessons.json": {
-   "v": "d2eec6eacb06"
+   "v": "8082041272ca"
   },
   "listening_lessons.json": {
    "v": "d24131165051"
@@ -25,7 +25,7 @@
    "v": "5e591395c4c0"
   },
   "trki_bank.json": {
-   "v": "9ae5fa7c771c"
+   "v": "0bb679e2f3fb"
   },
   "shop_products.json": {
    "v": "d8968435836d"
@@ -40,18 +40,18 @@
    "v": "6d4a8b0aa77b"
   },
   "trki_index.json": {
-   "v": "1caf3485ffe2"
+   "v": "a8cc795f344c"
   },
   "trki_questions.json": {
    "v": "4f53cda18c2b"
   }
  },
  "sources": {
-  "topic_articles": 3,
+  "topic_articles": 4,
   "vocab_jars": 1,
   "jar_items": 1,
   "vocabularies": 1,
-  "vocab_lessons": 1,
+  "vocab_lessons": 2,
   "listening_lessons": 1,
   "listening_topics": 1,
   "listening_lesson_vocab": 1,
@@ -59,11 +59,11 @@
   "writing_tasks": 1,
   "writing_task_vocab": 1,
   "writing_topics": 1,
-  "trki_tests": 1,
+  "trki_tests": 28,
   "shop_products": 1,
   "grammar_lessons": 1,
   "blog_posts": 1,
   "packages": 3
  },
- "generated_at": "2026-11-25T04:47:31.574Z"
+ "generated_at": "2026-11-25T13:40:08.040Z"
 }
