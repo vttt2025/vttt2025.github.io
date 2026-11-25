@@ -7,6 +7,9 @@ import edge_tts
 ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaHRkd2ppaG5sYXhyYml0bWNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1ODk5MjgsImV4cCI6MjEwODE2NTkyOH0.qMGTYhVyoyht7jrBCSN2VczeqShmsBedC-Qdg_C5-FI"
 STORAGE_UPLOAD_BASE = "https://nrhtdwjihnlaxrbitmcf.supabase.co/storage/v1/object/vocab-audio/"
 STORAGE_PUBLIC_BASE = "https://nrhtdwjihnlaxrbitmcf.supabase.co/storage/v1/object/public/vocab-audio/"
+# Bucket vocab-audio chỉ cho admin ghi: đặt RUSI_ADMIN_JWT = access_token của tài khoản admin
+# (đăng nhập admin.html → DevTools → localStorage "sb-nrhtdwjihnlaxrbitmcf-auth-token" → access_token, hết hạn sau ~1 giờ).
+ADMIN_JWT = os.environ.get("RUSI_ADMIN_JWT", "").strip()
 
 async def process_word(word, session, semaphore, results, progress):
     async with semaphore:
@@ -27,7 +30,7 @@ async def process_word(word, session, semaphore, results, progress):
             upload_url = f"{STORAGE_UPLOAD_BASE}{filename}"
             headers = {
                 "apikey": ANON_KEY,
-                "Authorization": f"Bearer {ANON_KEY}",
+                "Authorization": f"Bearer {ADMIN_JWT}",
                 "Content-Type": "audio/mpeg",
                 "x-upsert": "true"
             }
@@ -50,6 +53,8 @@ async def process_word(word, session, semaphore, results, progress):
                 print(f"AI TTS Progress: {progress[0]}/{progress[1]} words processed ({(progress[0]/progress[1]*100):.1f}%)", end='\r')
 
 async def main():
+    if not ADMIN_JWT:
+        raise SystemExit("Thiếu biến môi trường RUSI_ADMIN_JWT (JWT tài khoản admin) — bucket vocab-audio chỉ cho admin ghi.")
     with open('still_missing_words.json', 'r', encoding='utf-8') as f:
         words = json.load(f)
 

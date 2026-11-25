@@ -12,8 +12,9 @@
 --    super_admin; CMS chỉ cho chọn student/teacher/academic_admin/super_admin).
 -- 4. Bỏ quyền TRUNCATE/REFERENCES/TRIGGER mặc định của anon/authenticated trên bảng public.
 -- 5. Index: bỏ index trùng, thêm index cho truy vấn client (tìm từ vựng ILIKE, câu hỏi theo đề).
--- Không đụng: rusi_grade_trki_submission / rusi_check_trki_question (trang thi thử có thể dùng khi
--- chưa đăng nhập — cần quyết định sản phẩm trước khi thu hồi của anon).
+-- 6. Thi thử bắt buộc đăng nhập: rusi_grade_trki_submission / rusi_check_trki_question chỉ cho
+--    authenticated (anon gọi được thì dò được đáp án từng câu). Client chặn ở page-mock-test.js.
+-- Giữ update_vocab_audio cho authenticated: hàm tự kiểm tra is_admin(), scripts audio gọi bằng JWT admin.
 -- =============================================================================
 
 -- ---------- 1 & 2. Thu hồi quyền gọi RPC ----------
@@ -44,8 +45,7 @@ begin
     'public.rusi_submit_listening(uuid, bigint, uuid, jsonb)',
     'public.rusi_submit_speaking(uuid, uuid, uuid, integer)',
     'public.rusi_submit_srs_review(uuid, smallint)',
-    'public.rusi_submit_writing(uuid, uuid, text)',
-    'public.update_vocab_audio(jsonb)'
+    'public.rusi_submit_writing(uuid, uuid, text)'
   ] loop
     if to_regprocedure(v_sig) is not null then
       execute format('revoke execute on function %s from public, anon, authenticated', v_sig);
@@ -76,3 +76,9 @@ create index if not exists idx_vocab_meaning_trgm on public.vocabularies using g
 -- questionBank.getByTest / getAll: lọc test_code hoặc level + sub_test, sắp theo order_index
 create index if not exists idx_trki_qb_test_order on public.trki_question_bank (test_code, order_index);
 create index if not exists idx_trki_qb_level_sub_order on public.trki_question_bank (level, sub_test, order_index);
+
+-- ---------- 6. Thi thử bắt buộc đăng nhập ----------
+revoke execute on function public.rusi_grade_trki_submission(text, jsonb, integer) from public, anon;
+revoke execute on function public.rusi_check_trki_question(text, integer, integer) from public, anon;
+grant execute on function public.rusi_grade_trki_submission(text, jsonb, integer) to authenticated;
+grant execute on function public.rusi_check_trki_question(text, integer, integer) to authenticated;

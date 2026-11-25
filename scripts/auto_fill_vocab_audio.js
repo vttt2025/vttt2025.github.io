@@ -23,6 +23,9 @@ const { execSync } = require('child_process');
 const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yaHRkd2ppaG5sYXhyYml0bWNmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI1ODk5MjgsImV4cCI6MjEwODE2NTkyOH0.qMGTYhVyoyht7jrBCSN2VczeqShmsBedC-Qdg_C5-FI";
 const SUPABASE_URL = "https://nrhtdwjihnlaxrbitmcf.supabase.co";
 const STORAGE_UPLOAD_BASE = `${SUPABASE_URL}/storage/v1/object/vocab-audio/`;
+// RPC update_vocab_audio chỉ cho admin: đặt RUSI_ADMIN_JWT = access_token của tài khoản admin
+// (đăng nhập admin.html → DevTools → localStorage "sb-nrhtdwjihnlaxrbitmcf-auth-token" → access_token, hết hạn sau ~1 giờ).
+const ADMIN_JWT = (process.env.RUSI_ADMIN_JWT || '').trim();
 const STORAGE_PUBLIC_BASE = `${SUPABASE_URL}/storage/v1/object/public/vocab-audio/`;
 const MAP_PATH = path.join(__dirname, '..', 'data', 'wikimedia_audio_map.json');
 
@@ -171,6 +174,10 @@ async function generateAndUploadAIAudio(words) {
 
 async function updateSupabaseCloud(updates) {
   if (!updates || updates.length === 0) return 0;
+  if (!ADMIN_JWT) {
+    console.warn('Bỏ qua cập nhật audio_url lên Supabase: thiếu RUSI_ADMIN_JWT (JWT tài khoản admin).');
+    return 0;
+  }
   const rpcUrl = `${SUPABASE_URL}/rest/v1/rpc/update_vocab_audio`;
   const BATCH_SIZE = 500;
   let total = 0;
@@ -181,7 +188,7 @@ async function updateSupabaseCloud(updates) {
       method: 'POST',
       headers: {
         'apikey': ANON_KEY,
-        'Authorization': `Bearer ${ANON_KEY}`,
+        'Authorization': `Bearer ${ADMIN_JWT}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ p_updates: chunk })

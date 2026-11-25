@@ -436,10 +436,22 @@ function initMockTestPage() {
     }
   };
 
+  // Thi thử bắt buộc đăng nhập: RPC chấm bài (rusi_grade_trki_submission / rusi_check_trki_question)
+  // chỉ cấp cho tài khoản đã đăng nhập.
+  const requireExamLogin = () => {
+    if (typeof Monetization === "undefined" || typeof Monetization.getCurrentUser !== "function") return true;
+    const user = Monetization.getCurrentUser();
+    const isGuest = user && (String(user.id || user.uid || "").startsWith("guest_") || user.isGuest);
+    if (user && !isGuest) return true;
+    Monetization.showAuthRequiredModal("Đăng nhập để vào phòng thi", "Bạn cần đăng nhập để làm bài thi thử TRKI và lưu kết quả chấm điểm.");
+    return false;
+  };
+
   /* =====================================================================
    * GIAI ĐOẠN 1: CỬA SỔ THÔNG BÁO BÀI THI & KIỂM TRA THIẾT BỊ (BRIEFING)
    * ===================================================================== */
   const openExamBriefing = async (test, partId = null, mode = "exam") => {
+    if (!requireExamLogin()) return;
     if (window.setRusiDeepUrl && test) {
       window.setRusiDeepUrl('/mock-test/de_thi/' + encodeURIComponent(test.id || test.code));
     }
@@ -805,6 +817,7 @@ function initMockTestPage() {
    * GIAI ĐOẠN 2: BẮT ĐẦU TÍNH GIỜ & KHỞI TẠO PHIÊN THI (START TEST)
    * ===================================================================== */
   const startTest = async (test = null, partId = null, mode = "exam") => {
+    if (!requireExamLogin()) return;
     if (test) currentTest = test;
     activePartId = partId;
     examMode = mode || "exam";

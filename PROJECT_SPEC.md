@@ -926,6 +926,9 @@ Mọi thao tác can thiệp vào tài chính, bản quyền PRO, điểm số v�
 |---|---|
 | `rusi_grade_trki_submission(p_test_code, p_user_answers, p_time_spent_sec)` | Chấm bài thi TRKI. Đáp án đọc từ `trki_question_bank.correct_index`; nếu đề chưa có trong bank thì đọc JSON `trki_tests`. Trả điểm, đúng/sai từng câu và giải thích. |
 | `rusi_check_trki_question(p_test_code, p_question_index, p_user_choice)` | Kiểm tra một câu (chế độ luyện từng câu). |
+
+> Thi thử bắt buộc đăng nhập: hai RPC chấm thi chỉ cấp cho `authenticated` (migration `20261125150000_permissions_cleanup.sql`); `page-mock-test.js` mở modal đăng nhập trước khi vào phòng thi. Bucket `vocab-audio` chỉ admin được ghi (`20261125160000_lock_vocab_audio_bucket.sql`); scripts audio dùng biến môi trường `RUSI_ADMIN_JWT`.
+
 | `rusi_activate_order(p_order_code, p_casso_ref)` | Chỉ admin/`service_role`. Đặt `orders.status = 'paid'`, cộng hạn PRO nối tiếp hạn hiện tại theo `packages.duration_months`/`duration_days` (NULL nếu `is_lifetime`), ghi `private.audit_logs`. |
 | `sync_my_progress(p_streak, p_xp, p_mascot_level)` | Đồng bộ streak/XP. ⚠ Hàm cập nhật các cột `profiles.streak_count`, `xp_points`, `mascot_level`, `last_study_date` — không tồn tại trong `profiles` (Mục 7.5). |
 | `rusi_sync_jar_words(p_jar_id, p_words)` | Đồng bộ từ trong lọ cá nhân. |
