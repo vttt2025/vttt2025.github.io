@@ -817,8 +817,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           key: "content_md",
           label: "Nội dung bài học chuyên sâu (.md Markdown)",
           type: "markdown",
-          required: true,
-          help: "Soạn thảo toàn bộ nội dung bài học bằng Markdown: Tiêu đề (#, ##), chuỗi hành động, bảng từ vựng 4 cột, hội thoại, mẹo ghi nhớ (> [!TIP], > [!NOTE], > [!WARNING])."
+          required: true
         }
       ]
     },
