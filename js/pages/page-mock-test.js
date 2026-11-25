@@ -15,8 +15,7 @@ function initMockTestPage() {
     ["B1", "TRKI-1"],
     ["B2", "TRKI-2"],
     ["C1", "TRKI-3"],
-    ["C2", "TRKI-4"],
-    ["VNZh", "ВЖ"]
+    ["C2", "TRKI-4"]
   ];
 
   const MODE_INFO = {
