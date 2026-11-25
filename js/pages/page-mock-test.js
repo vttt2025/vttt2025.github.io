@@ -509,7 +509,7 @@ function initMockTestPage() {
           </div>
 
           <div class="cbt-header-center">
-            <div class="cbt-clock-pill" style="font-size:0.95rem;color:var(--primary)">
+            <div class="cbt-clock-pill cbt-practice-pill" style="font-size:0.95rem;color:var(--primary)">
               ${icon(isPractice ? "target" : "graduation-cap", 16)}
               <span>${isPractice ? "Luyện tập tự do" : "Mô phỏng khảo thí CBT"}</span>
             </div>
@@ -528,11 +528,13 @@ function initMockTestPage() {
             <div class="cbt-briefing-card">
               <div class="cbt-briefing-hero">
                 <div class="cbt-briefing-eyebrow">
-                  ${icon("shield-anti-cheat", 14)} HỆ THỐNG KHẢO THÍ CHUẨN QUỐC TẾ LIÊN BANG NGA
+                  ${isPractice ? `${icon("target", 14)} CHẾ ĐỘ LUYỆN TẬP TỰ DO` : `${icon("shield-anti-cheat", 14)} HỆ THỐNG KHẢO THÍ CHUẨN QUỐC TẾ LIÊN BANG NGA`}
                 </div>
                 <h1 class="cbt-briefing-heading">${esc(currentTest.title)}</h1>
                 <p class="cbt-briefing-lead">
-                  Cấp độ <b>ТРКИ-${currentTest.level}</b> · Bài kiểm tra khảo thí mô phỏng cấu trúc kỳ thi quốc gia ТРКИ (TORFL). Vui lòng kiểm tra cấu trúc bài thi và thiết bị âm thanh, micro trước khi bắt đầu.
+                  ${isPractice
+                    ? `Cấp độ <b>ТРКИ-${currentTest.level}</b> · Luyện tập theo cấu trúc đề ТРКИ (TORFL), không giới hạn thời gian. Chọn đáp án là thấy ngay đúng/sai và giải thích. Bạn có thể chọn riêng từng phần muốn luyện bên dưới.`
+                    : `Cấp độ <b>ТРКИ-${currentTest.level}</b> · Bài kiểm tra khảo thí mô phỏng cấu trúc kỳ thi quốc gia ТРКИ (TORFL). Vui lòng kiểm tra cấu trúc bài thi và thiết bị âm thanh, micro trước khi bắt đầu.`}
                 </p>
               </div>
 
@@ -560,15 +562,19 @@ function initMockTestPage() {
               <div class="cbt-subtest-overview-box">
                 <div class="cbt-box-header-title">
                   <span>${icon("list", 16)} CẤU TRÚC CÁC PHÂN MÔN KHẢO THÍ</span>
-                  <span style="font-size:0.78rem;color:var(--muted)">Chuẩn CEFR Châu Âu & Nga</span>
+                  <span style="font-size:0.78rem;color:var(--muted)">${isPractice ? "Bấm để chọn phần muốn luyện" : "Chuẩn CEFR Châu Âu & Nga"}</span>
                 </div>
                 <div class="cbt-subtest-items-grid">
-                  ${activeParts.map((p, pIdx) => {
+                  ${(isPractice ? (currentTest.parts || []) : activeParts).map((p, pIdx) => {
                     const qCount = (p.questions ? p.questions.length : (p.writing_tasks ? p.writing_tasks.length : (p.speaking_tasks ? p.speaking_tasks.length : 0)));
                     const dur = p.durationMin || p.duration_min || Math.round(examDurationMin / activeParts.length);
+                    const included = activeParts.includes(p);
+                    const rowTag = isPractice ? "label" : "div";
+                    const rowStyle = isPractice ? ` style="display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;cursor:pointer;${included ? "" : "opacity:0.55;"}"` : "";
                     return `
-                      <div class="cbt-subtest-row-item">
+                      <${rowTag} class="cbt-subtest-row-item"${rowStyle}>
                         <div class="cbt-row-left">
+                          ${isPractice ? `<input type="checkbox" class="cbt-part-pick" data-part-id="${esc(p.id)}" ${included ? "checked" : ""} style="width:18px;height:18px;flex-shrink:0;accent-color:var(--primary)">` : ""}
                           <span class="cbt-part-circle-num">${pIdx + 1}</span>
                           <div>
                             <span class="cbt-row-title-ru ru">${esc(p.name || "Субтест " + (pIdx + 1))}</span>
@@ -580,7 +586,7 @@ function initMockTestPage() {
                           <span>•</span>
                           <span>${dur} phút</span>
                         </div>
-                      </div>
+                      </${rowTag}>
                     `;
                   }).join("")}
                 </div>
@@ -621,7 +627,7 @@ function initMockTestPage() {
               <div class="cbt-launch-row">
                 <button type="button" class="cbt-btn-start-now" id="btnStartExamNow">
                   ${icon("play-control", 18)}
-                  <span>BẮT ĐẦU LÀM BÀI THI ${isPractice ? "LUYỆN TẬP" : "CHÍNH THỨC"} ➜</span>
+                  <span>${isPractice ? "BẮT ĐẦU LUYỆN TẬP" : "BẮT ĐẦU LÀM BÀI THI CHÍNH THỨC"} ➜</span>
                 </button>
               </div>
             </div>
@@ -779,6 +785,20 @@ function initMockTestPage() {
       cleanupHardwareTests();
       startTest(currentTest, activePartId, examMode);
     };
+
+    // 6. Luyện tập: chọn phần muốn luyện (dùng lại cơ chế thi từng phần qua activePartId)
+    host.querySelectorAll(".cbt-part-pick").forEach((cb) => {
+      cb.onchange = () => {
+        const ids = Array.from(host.querySelectorAll(".cbt-part-pick:checked")).map((x) => x.dataset.partId);
+        if (!ids.length) {
+          cb.checked = true;
+          toast("Cần chọn ít nhất 1 phần để luyện tập.");
+          return;
+        }
+        cleanupHardwareTests();
+        openExamBriefing(currentTest, ids.length === (currentTest.parts || []).length ? null : ids.join(","), "practice");
+      };
+    });
   };
 
   /* =====================================================================
@@ -825,6 +845,9 @@ function initMockTestPage() {
       try { sessionStorage.setItem(storageKey + "_endTime", String(storedEndTime)); } catch(e) {}
     }
     timeLeft = Math.max(0, Math.floor((storedEndTime - now) / 1000));
+    try {
+      if (!sessionStorage.getItem(storageKey + "_startTime")) sessionStorage.setItem(storageKey + "_startTime", String(now));
+    } catch(e) {}
 
     // Khôi phục câu trả lời nếu đã lưu
     answers = {};
@@ -1049,7 +1072,7 @@ function initMockTestPage() {
 
           <div class="cbt-header-center">
             ${isPractice ? `
-              <div class="cbt-clock-pill" style="color:var(--primary);font-size:0.95rem">
+              <div class="cbt-clock-pill cbt-practice-pill" style="color:var(--primary);font-size:0.95rem" title="Luyện tập tự do" aria-label="Luyện tập tự do">
                 ${icon("sparkles-clean", 16)} <span>Luyện tập tự do</span>
               </div>
             ` : `
@@ -1589,6 +1612,8 @@ function initMockTestPage() {
         const hasAnswered = (userAns !== undefined);
         const hasServerKey = (typeof q.a === "number");
         const isCorrect = hasAnswered && hasServerKey && (userAns === q.a);
+        // Luyện tập: đã hiện đáp án đúng thì khoá câu, không cho chọn lại để "sửa" điểm.
+        const isLocked = isPractice && hasAnswered && hasServerKey;
 
         const rawOpts = normalizeOptions(q.options);
         if (!sessionOptionOrders[id] || sessionOptionOrders[id].length !== rawOpts.length) {
@@ -1623,7 +1648,7 @@ function initMockTestPage() {
                 cardClass += " selected";
               }
               return `
-                <button type="button" class="${cardClass}" data-oi="${oi}" role="radio" aria-checked="${userAns === oi ? 'true' : 'false'}">
+                <button type="button" class="${cardClass}" data-oi="${oi}" role="radio" aria-checked="${userAns === oi ? 'true' : 'false'}"${isLocked ? ' disabled aria-disabled="true"' : ''}>
                   <span class="cbt-choice-circle-letter">${letters[lIdx] || (lIdx + 1)}</span>
                   <span class="cbt-choice-body-text ru">${esc(optText)}</span>
                   <span class="cbt-choice-kbd-hint">[${lIdx + 1}]</span>
@@ -1640,9 +1665,10 @@ function initMockTestPage() {
                 </span>
                 ${!isCorrect ? `<span class="feedback-correct-answer">Đáp án đúng: <b class="ru" style="color:var(--green)">${esc(rawOpts[q.a] || q._correctAnswer || "")}</b></span>` : ''}
               </div>
+              ${q.ex ? `
               <div class="feedback-ex">
-                <b>Giải thích:</b> ${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}
-              </div>
+                <b>Giải thích:</b> ${esc(q.ex)}
+              </div>` : ''}
             </div>
           ` : `
             <div class="trki-practice-feedback" style="margin-top:20px;color:var(--muted)">
@@ -1683,6 +1709,7 @@ function initMockTestPage() {
         // Bắt sự kiện chọn đáp án
         rightBox.querySelectorAll(".cbt-choice-card").forEach(optBtn => {
           optBtn.onclick = () => {
+            if (isLocked) return;
             const oi = parseInt(optBtn.dataset.oi, 10);
             answers[id] = oi;
             q._checkFailed = false;
@@ -1873,7 +1900,8 @@ function initMockTestPage() {
         else if (key === "3" || key === "c") selectedOrderIndex = 2;
         else if (key === "4" || key === "d") selectedOrderIndex = 3;
 
-        if (selectedOrderIndex >= 0 && selectedOrderIndex < order.length) {
+        const practiceLocked = isPractice && answers[item.id] !== undefined && typeof q.a === "number";
+        if (selectedOrderIndex >= 0 && selectedOrderIndex < order.length && !practiceLocked) {
           e.preventDefault();
           const oi = order[selectedOrderIndex];
           answers[item.id] = oi;
@@ -2120,6 +2148,7 @@ function initMockTestPage() {
           sessionStorage.removeItem("trki_exam_mode");
           if (currentTest && currentTest.id) {
             sessionStorage.removeItem(storageKey + "_endTime");
+            sessionStorage.removeItem(storageKey + "_startTime");
             sessionStorage.removeItem(storageKey + "_answers");
             sessionStorage.removeItem(storageKey + "_flagged");
           }
@@ -2151,9 +2180,9 @@ function initMockTestPage() {
           <div style="margin-bottom:12px;color:var(--secondary)">
             ${icon("check-circle-correct", 48)}
           </div>
-          <h3 style="font-size:1.3rem;font-weight:800;color:var(--text);margin-bottom:8px">XÁC NHẬN NỘP BÀI THI</h3>
+          <h3 style="font-size:1.3rem;font-weight:800;color:var(--text);margin-bottom:8px">${isPractice ? "HOÀN THÀNH BÀI LUYỆN TẬP?" : "XÁC NHẬN NỘP BÀI THI"}</h3>
           <p style="color:var(--muted);font-size:0.92rem;margin-bottom:18px">
-            Vui lòng kiểm tra lại tiến độ làm bài trước khi kết thúc phiên thi khảo thí CBT.
+            ${isPractice ? "Kiểm tra lại các câu chưa làm trước khi xem kết quả luyện tập." : "Vui lòng kiểm tra lại tiến độ làm bài trước khi kết thúc phiên thi khảo thí CBT."}
           </p>
           
           <div style="background:var(--bg);border-radius:12px;padding:14px 18px;margin-bottom:20px;text-align:left;border:1px solid var(--border)">
@@ -2184,7 +2213,7 @@ function initMockTestPage() {
               Tiếp tục làm bài
             </button>
             <button type="button" class="btn btn-primary" id="btnConfirmSubmit" style="height:44px;font-weight:800;background:var(--secondary);border-color:var(--secondary)">
-              Nộp bài ngay
+              ${isPractice ? "Xem kết quả" : "Nộp bài ngay"}
             </button>
           </div>
         </div>
@@ -2200,10 +2229,7 @@ function initMockTestPage() {
 
     const topSub = el("#btnSubmitTop");
     if (topSub) {
-      topSub.onclick = () => {
-        if (examMode === "exam") openSubmitConfirmModal();
-        else submit();
-      };
+      topSub.onclick = () => openSubmitConfirmModal();
     }
 
     // Khởi tạo câu hỏi đầu tiên
@@ -2218,11 +2244,18 @@ function initMockTestPage() {
     clearInterval(timer);
 
     const storageKey = getExamStorageKey();
+    const isPracticeMode = examMode === "practice";
+    let timeSpentSec = 0;
+    try {
+      const startedAt = parseInt(sessionStorage.getItem(storageKey + "_startTime") || "0", 10);
+      if (startedAt > 0) timeSpentSec = Math.max(0, Math.round((Date.now() - startedAt) / 1000));
+    } catch(e) {}
     try {
       sessionStorage.removeItem("trki_active_exam_id");
       sessionStorage.removeItem("trki_active_part_id");
       if (currentTest && currentTest.id) {
         sessionStorage.removeItem(storageKey + "_endTime");
+        sessionStorage.removeItem(storageKey + "_startTime");
         sessionStorage.removeItem(storageKey + "_answers");
         sessionStorage.removeItem(storageKey + "_flagged");
         sessionStorage.removeItem(storageKey + "_opt_orders");
@@ -2242,8 +2275,7 @@ function initMockTestPage() {
     // Chấm thi Server-Side bảo mật qua RPC (Zero-Answer Leak — đồng bộ đúng offset khi thi từng phần)
     if (window.RusiSupabase && window.RusiSupabase.questionBank && typeof window.RusiSupabase.questionBank.gradeSubmission === "function" && currentTest && (currentTest.code || currentTest.id)) {
       try {
-        const durationM = currentTest.duration_min || currentTest.durationMin || 45;
-        const timeSpent = Math.max(0, durationM * 60 - (typeof timeLeft === "number" ? timeLeft : 0));
+        const timeSpent = timeSpentSec;
         const answersPayload = {};
         let fullIdx = 0;
         const partBaseOffsets = new Map();
@@ -2283,6 +2315,8 @@ function initMockTestPage() {
     activeParts.forEach((part) => {
       let pc = 0;
       const questions = Array.isArray(part.questions) ? part.questions : [];
+      // Phần Viết/Nói chưa có chấm tự động: không tính vào điều kiện đạt.
+      if (!questions.length) return;
       questions.forEach((q, qi) => {
         total++;
         const given = answers[part.id + "_" + qi];
@@ -2305,13 +2339,14 @@ function initMockTestPage() {
     const requiredPassPct = currentTest.pass_percent || currentTest.passPercent || 66;
 
     // Check TRKI Official Passing Standards
-    const allSubtestsPassed = detail.every(d => d.pct >= requiredPassPct);
+    const ungradedParts = activeParts.filter(p => !(Array.isArray(p.questions) && p.questions.length));
+    const allSubtestsPassed = detail.length > 0 && detail.every(d => d.pct >= requiredPassPct);
     const failedParts = detail.filter(d => d.pct < requiredPassPct);
-    const singleRetakeEligible = !isSubset && failedParts.length === 1 && failedParts[0].pct >= 60;
+    const singleRetakeEligible = !isPracticeMode && !isSubset && failedParts.length === 1 && failedParts[0].pct >= 60;
 
     let examStatus = "fail";
     let statusBadgeText = `НЕ СДАНО (CHƯA ĐẠT · Chuẩn ≥ ${requiredPassPct}%)`;
-    let statusDesc = "Theo chuẩn ТРКИ, bạn cần đạt tối thiểu 66% để đạt yêu cầu. Hãy rà soát lại các câu sai bên dưới để ôn luyện bổ sung.";
+    let statusDesc = `Theo chuẩn ТРКИ, bạn cần đạt tối thiểu ${requiredPassPct}% để đạt yêu cầu. Hãy rà soát lại các câu sai bên dưới để ôn luyện bổ sung.`;
 
     const pKeyStr = isSubset ? selectedPartList.join("-") : "full";
 
@@ -2322,9 +2357,16 @@ function initMockTestPage() {
         : `СДАНО · ĐẠT CHỨNG CHỈ ТРКИ ${currentTest.level}`;
       statusDesc = isSubset
         ? `Chúc mừng! Bạn đã hoàn thành tốt các phân môn đã chọn với tỷ lệ đạt ${pct}%. Bạn có thể tiếp tục luyện các phần khác hoặc thi toàn diện!`
-        : `Chúc mừng! Bạn đã vượt qua tất cả các phân môn khảo thí với điểm số ≥ 66% theo chuẩn quốc gia Liên bang Nga.`;
-      const testXp = isSubset
-        ? (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.TRKI_SUBTEST : 20)
+        : `Chúc mừng! Bạn đã vượt qua tất cả các phân môn khảo thí với điểm số ≥ ${requiredPassPct}% theo chuẩn quốc gia Liên bang Nga.`;
+      if (!isPracticeMode && !isSubset && ungradedParts.length) {
+        statusBadgeText = `СДАНО PHẦN TRẮC NGHIỆM · VIẾT/NÓI CHƯA CHẤM`;
+      }
+      if (isPracticeMode) {
+        statusBadgeText = `HOÀN THÀNH BÀI LUYỆN TẬP · ĐẠT ${pct}%`;
+      }
+      // Luyện tập chỉ nhận mức XP của bài thi từng phần, kể cả khi làm cả đề.
+      const testXp = (isSubset || isPracticeMode)
+        ? (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.TRKI_SUBTEST_PASS : 20)
         : (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.TRKI_FULL_PASS : 50);
       if (typeof Progress !== "undefined") {
         Progress.addXp(testXp, {
@@ -2354,6 +2396,12 @@ function initMockTestPage() {
         });
       }
     } else {
+      if (!detail.length) {
+        examStatus = "pending";
+        statusBadgeText = "ĐÃ NỘP BÀI · PHẦN VIẾT/NÓI CHƯA CHẤM ĐIỂM";
+      } else if (isPracticeMode) {
+        statusBadgeText = `KẾT QUẢ LUYỆN TẬP · ${pct}% (CHUẨN ≥ ${requiredPassPct}%)`;
+      }
       if (typeof Progress !== "undefined") {
         Progress.syncToCloud({
           skill_type: "mock-test",
@@ -2412,7 +2460,7 @@ function initMockTestPage() {
             </div>
           </div>
 
-          ${detail.length > 0 ? `
+          ${(detail.length > 0 || ungradedParts.length > 0) ? `
             <div class="trki-subtest-compact-grid">
               ${detail.map((d) => `
                 <div class="trki-subtest-compact-item ${d.passed ? 'is-pass' : 'is-fail'}">
@@ -2422,6 +2470,14 @@ function initMockTestPage() {
                   </div>
                   <div class="trki-subtest-compact-track">
                     <div class="trki-subtest-compact-fill ${d.passed ? 'pass' : 'fail'}" style="width:${d.pct}%"></div>
+                  </div>
+                </div>
+              `).join("")}
+              ${ungradedParts.map((p) => `
+                <div class="trki-subtest-compact-item">
+                  <div class="trki-subtest-compact-row">
+                    <span class="trki-subtest-compact-name">${esc(p.vi || p.name || "")}</span>
+                    <span class="trki-subtest-compact-score">Chưa chấm</span>
                   </div>
                 </div>
               `).join("")}
@@ -2479,13 +2535,14 @@ function initMockTestPage() {
                 </div>
               `}
             </div>
+            ${q.ex ? `
             <div class="trki-review-expl">
               <span class="trki-expl-icon">${typeof RusiIcons !== "undefined" ? RusiIcons.get("lightbulb", { size: 16 }) : "💡"}</span>
               <div class="trki-expl-content">
                 <b class="trki-expl-title">Giải thích:</b>
-                <span class="trki-expl-text">${esc(q.ex || "Áp dụng cấu trúc ngữ pháp chuẩn theo bảng biến cách.")}</span>
+                <span class="trki-expl-text">${esc(q.ex)}</span>
               </div>
-            </div>
+            </div>` : ""}
           </div>`;
           })
           .join("");

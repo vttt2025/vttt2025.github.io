@@ -939,11 +939,12 @@
         var sb = getClient();
         if (!sb || !testCode) return null;
         try {
-          var res = await sb.rpc("rusi_check_trki_question", {
+          // Giới hạn chờ: request treo thì báo lỗi để học viên chọn lại, không kẹt "Đang đối chiếu..." mãi
+          var res = await withTimeout(sb.rpc("rusi_check_trki_question", {
             p_test_code: testCode,
             p_question_index: questionIndex,
             p_user_choice: userChoice
-          });
+          }), 8000);
           if (res.error) {
             console.warn("[RusiSupabase] Lỗi RPC kiểm tra câu hỏi TRKI:", res.error);
             return null;
