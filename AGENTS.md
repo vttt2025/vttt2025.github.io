@@ -24,7 +24,7 @@ Nền tảng luyện thi chứng chỉ tiếng Nga ТРКИ. Web tĩnh (HTML + J
 ## Quy tắc bất khả xâm phạm
 
 1. **Không tự ý sửa nội dung trên web** (tiêu đề, câu chữ, mô tả, bài viết, từ vựng, đề thi) trừ khi người dùng yêu cầu đích danh. Sửa CSS/JS/responsive thì giữ nguyên 100% chữ và dữ liệu.
-2. **Phân quyền chỉ dựa vào role phía server** (`profiles.role`: `student`, `teacher`, `admin`, `super_admin`) và RLS. Không bao giờ cấp quyền theo email, domain email hay cờ trong `localStorage`. Kiểm tra ở client chỉ để ẩn/hiện UI.
+2. **Phân quyền chỉ dựa vào role phía server** (`profiles.role`: `student`, `teacher`, `academic_admin`, `super_admin`; quyền admin = `is_admin()`: `academic_admin`, `super_admin`) và RLS. Không bao giờ cấp quyền theo email, domain email hay cờ trong `localStorage`. Kiểm tra ở client chỉ để ẩn/hiện UI.
 3. **Zero-Answer Leak:** không đưa đáp án đúng (`correct_option`, `answer_key`...) xuống client; chấm thi qua RPC `rusi_grade_trki_submission`; client đọc đề/câu hỏi qua view `trki_tests_public`, `trki_questions_public`.
 4. **Không secret trong code:** chỉ dùng Supabase anon key; không service role key, token, mật khẩu.
 

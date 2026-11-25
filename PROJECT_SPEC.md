@@ -565,7 +565,7 @@ Nội dung học nạp từ file tĩnh trên GitHub Pages; Supabase chỉ phục
    - `id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE`: Mã định danh học viên khớp với Supabase Auth.
    - `full_name TEXT`: Họ tên hiển thị.
    - `avatar_url TEXT`: Đường dẫn ảnh đại diện.
-   - `role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'teacher', 'admin', 'super_admin'))`: Phân quyền quản trị vai trò trực tiếp, không cần tách bảng phụ.
+   - `role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'teacher', 'academic_admin', 'super_admin'))`: Phân quyền quản trị vai trò trực tiếp, không cần tách bảng phụ. `public.is_admin()` coi `academic_admin` và `super_admin` là admin.
    - `is_pro BOOLEAN NOT NULL DEFAULT false`: Cờ bản quyền kích hoạt tức thì cho Frontend.
    - `pro_expires_at TIMESTAMPTZ`: Thời hạn bản quyền PRO (NULL = vô thời hạn/chưa kích hoạt).
    - `timezone TEXT NOT NULL DEFAULT 'Asia/Ho_Chi_Minh'`: Múi giờ chuẩn IANA dùng tính toán ngày học Streak.
