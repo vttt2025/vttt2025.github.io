@@ -333,7 +333,8 @@
     return _dbPromise;
   }
 
-  async function getFromIDB(key) {
+  // version === null: không đọc được manifest (offline) → chấp nhận bản cache bất kỳ (offline-first)
+  async function getFromIDB(key, version) {
     const db = await openIndexedDB();
     if (!db) return null;
     return new Promise((resolve) => {
@@ -343,7 +344,7 @@
         const req = store.get(key);
         req.onsuccess = () => {
           const res = req.result;
-          if (res && res.version === DATA_VERSION && res.data) {
+          if (res && res.data && (version === null || res.version === version)) {
             resolve(res.data);
           } else {
             resolve(null);
@@ -356,14 +357,40 @@
     });
   }
 
-  async function saveToIDB(key, data) {
+  async function saveToIDB(key, data, version) {
     const db = await openIndexedDB();
     if (!db) return;
     try {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
-      store.put({ key, version: DATA_VERSION, data, cachedAt: Date.now() });
+      store.put({ key, version, data, cachedAt: Date.now() });
     } catch (_) {}
+  }
+
+  // Manifest phiên bản từng module do scripts/publish-content.js ghi sau mỗi lần admin xuất bản.
+  // Tải 1 lần mỗi trang (~1KB, từ GitHub Pages, không tốn egress Supabase), bỏ qua cache HTTP.
+  let _manifestPromise = null;
+  function getManifest() {
+    if (!_manifestPromise) {
+      _manifestPromise = (async () => {
+        try {
+          const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+          const timer = ctrl ? setTimeout(() => ctrl.abort(), 2500) : null;
+          const res = await fetch(getAppRoot() + 'data/modules/manifest.json?t=' + Date.now(), { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
+          if (timer) clearTimeout(timer);
+          return res.ok ? await res.json() : null;
+        } catch (_) {
+          return null;
+        }
+      })();
+    }
+    return _manifestPromise;
+  }
+
+  // Phiên bản của module = DATA_VERSION (đổi tay khi muốn xoá mọi cache) + hash nội dung trong manifest
+  function moduleVersion(manifest, conf) {
+    const entry = manifest && manifest.modules && manifest.modules[conf.file.split('/').pop()];
+    return entry && entry.v ? DATA_VERSION + '-' + entry.v : DATA_VERSION;
   }
 
   // 4. DANH MỤC CÁC MODULE NẠP THEO NHU CẦU (MODULE REGISTRY)
@@ -429,9 +456,12 @@
       }
 
       const promise = (async () => {
-        // Bước 1: Thử đọc từ IndexedDB của máy học viên (0 byte Egress!)
+        const manifest = await getManifest();
+        const version = moduleVersion(manifest, conf);
+
+        // Bước 1: Thử đọc từ IndexedDB của máy học viên (0 byte Egress!) — chỉ khi đúng phiên bản manifest
         try {
-          const cached = await getFromIDB(moduleKey);
+          const cached = await getFromIDB(moduleKey, manifest ? version : null);
           if (hasValidData(cached)) {
             conf.assign(cached);
             return cached;
@@ -440,13 +470,13 @@
 
         // Bước 2: Tải file JSON tĩnh độc lập từ server / Cloudflare CDN (Root-aware)
         try {
-          const res = await fetch(getAppRoot() + conf.file + '?v=' + DATA_VERSION);
+          const res = await fetch(getAppRoot() + conf.file + '?v=' + version);
           if (res.ok) {
             const data = await res.json();
             conf.assign(data);
             _loadedModules.add(moduleKey);
             // Lưu vào IndexedDB cho các lần truy cập tiếp theo (Offline-first)
-            saveToIDB(moduleKey, data);
+            saveToIDB(moduleKey, data, version);
             return data;
           }
         } catch (err) {

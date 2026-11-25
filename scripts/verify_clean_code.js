@@ -99,14 +99,21 @@ htmlFiles.forEach(file => {
 console.log(`✓ Tài nguyên HTML: 16/16 tệp HTML có đường dẫn chính xác 100%.`);
 
 // 3b. KIỂM TRA BẢO VỆ ĐÁP ÁN THI (ZERO-ANSWER LEAK) & KÍCH THƯỚC DATA.JS
-const trkiBankPath = path.join('data', 'modules', 'trki_bank.json');
-if (fs.existsSync(trkiBankPath)) {
-  const trkiRaw = fs.readFileSync(trkiBankPath, 'utf8');
-  if (trkiRaw.includes('"official_key"')) {
-    errors.push('[Bảo mật Zero-Answer Leak] Phát hiện "official_key" còn tồn tại trong data/modules/trki_bank.json!');
+// Dùng chung danh sách trường đáp án với scripts/publish-content.js (xuất bản tự động)
+const { findAnswerKeys } = require('./publish-content.js');
+for (const f of ['trki_bank.json', 'trki_index.json', 'trki_questions.json']) {
+  const p = path.join('data', 'modules', f);
+  if (!fs.existsSync(p)) continue;
+  const leaked = [...findAnswerKeys(JSON.parse(fs.readFileSync(p, 'utf8')))];
+  if (leaked.length) {
+    errors.push(`[Bảo mật Zero-Answer Leak] data/modules/${f} còn trường đáp án: ${leaked.join(', ')}`);
   } else {
     passedChecks++;
   }
+}
+const qbPath = path.join('data', 'modules', 'trki_questions.json');
+if (fs.existsSync(qbPath) && fs.readFileSync(qbPath, 'utf8').trim() !== '[]') {
+  errors.push('[Bảo mật Zero-Answer Leak] data/modules/trki_questions.json phải luôn là [] (chấm thi qua RPC server-side).');
 }
 if (fs.existsSync('data.js')) {
   const dataJsSize = fs.statSync('data.js').size;

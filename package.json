@@ -5,7 +5,8 @@
   "scripts": {
     "auto-audio": "node scripts/auto_fill_vocab_audio.js",
     "sync-audio": "node scripts/auto_fill_vocab_audio.js",
-    "sync": "node scripts/sync-from-supabase.js",
+    "sync": "node scripts/publish-content.js --all",
+    "publish-content": "node scripts/publish-content.js",
     "test": "node scripts/verify_clean_code.js",
     "verify": "node scripts/verify_clean_code.js"
   },

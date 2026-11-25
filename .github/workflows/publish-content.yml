@@ -1,0 +1,74 @@
+# Tự động xuất bản nội dung admin sửa trên Supabase lên website (data/modules/*.json).
+# Kích hoạt: trigger Supabase gửi repository_dispatch "content-changed" (xem
+# supabase/migrations/20261125090000_content_publish_trigger.sql), hoặc chạy tay trên tab Actions.
+name: Publish content
+
+on:
+  repository_dispatch:
+    types: [content-changed]
+  workflow_dispatch:
+    inputs:
+      all:
+        description: "Tạo lại toàn bộ module (bỏ qua so sánh bộ đếm)"
+        type: boolean
+        default: false
+
+# Gộp các lần lưu liên tiếp: lần chạy mới huỷ lần đang chờ; chỉ bản cuối cùng xuất bản.
+concurrency:
+  group: publish-content
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Chờ admin lưu xong (gộp nhiều lần lưu)
+        if: github.event_name == 'repository_dispatch'
+        run: sleep 90
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Tạo lại module đã thay đổi
+        run: node scripts/publish-content.js ${{ inputs.all && '--all' || '' }}
+
+      - name: Kiểm tra Zero-Answer Leak & cú pháp
+        run: npm test
+
+      - name: Commit & push
+        id: commit
+        run: |
+          if git diff --quiet -- data/modules; then
+            echo "Không có thay đổi nội dung."
+            exit 0
+          fi
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+          git config user.name "rusi-content-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/modules
+          git commit -m "chore(content): publish $(git diff --cached --name-only | xargs -n1 basename | tr '\n' ' ')"
+          for i in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}" && exit 0
+            sleep 5
+          done
+          exit 1
+
+      # Push bằng GITHUB_TOKEN có thể không tự kích hoạt Pages (chế độ "Deploy from a branch"): yêu cầu build.
+      - name: Yêu cầu GitHub Pages build lại
+        if: steps.commit.outputs.pushed == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -fsS -X POST \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages/builds"

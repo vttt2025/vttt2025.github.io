@@ -10,6 +10,8 @@ Nền tảng luyện thi chứng chỉ tiếng Nga ТРКИ. Web tĩnh (HTML + J
 - Chạy local: `python server.py [port]` (mặc định 8000, có SPA fallback + no-cache).
 - Kiểm tra trước khi xong việc: `npm test` (cú pháp JS, JSON, đường dẫn HTML, Zero-Answer Leak, secret) và `node scripts/test_runtime_logic.js`.
 - Sửa `styles.css` → chạy `node scripts/build_min_css.js` (HTML nạp `styles.min.css?v=...`; tăng `v` khi cần phá cache).
+- Sửa file JS/CSS đã deploy → tăng `?v=` của file đó trong mọi `.html` (service worker `sw.js` cache-first theo `?v=`).
+- Xuất bản nội dung tay: `npm run publish-content` (chỉ module đổi) / `npm run sync` (= `--all`). Không dùng `scripts/sync-from-supabase.js` (cũ, làm lộ đáp án).
 
 ## Bản đồ code
 
@@ -29,9 +31,11 @@ Nền tảng luyện thi chứng chỉ tiếng Nga ТРКИ. Web tĩnh (HTML + J
 ## Dữ liệu & 0-Egress (quota Supabase 5GB/tháng)
 
 - Dữ liệu lớn nằm trong `data/modules/*.json`, nạp theo trang qua `RusiDataLoader.prepareForCurrentPage()` / `load(key)` (RAM → IndexedDB `rusi_offline_db` → file tĩnh). Không nhồi lại vào `data.js`.
+- **Xuất bản tự động:** admin lưu → trigger `rusi_publish_content` tăng `public.content_versions` và gửi `repository_dispatch` (token Vault `github_publish_token`) → `.github/workflows/publish-content.yml` chạy `scripts/publish-content.js` (chỉ kéo bảng đổi) → commit `data/modules/*.json` + `manifest.json`. Trình duyệt đọc `manifest.json` (no-store) và chỉ tải lại module đổi hash. Không sửa tay file trong `data/modules/` (bị ghi đè lần xuất bản sau) — sửa trên Supabase/admin. Đổi `DATA_VERSION` trong `data.js` chỉ khi cần xoá mọi cache.
+- Không bao giờ ghi đáp án vào file công khai: `trki_questions.json` luôn `[]`; `trki_bank.json` bị xoá mọi trường đáp án (`ANSWER_KEYS` trong `publish-content.js`, kiểm tra lại trong `npm test`).
 - Không thêm truy vấn quét cả bảng (`select("*")` không giới hạn) chạy lúc tải trang hay warmup. Supabase dùng cho Auth, tiến độ người dùng, đơn hàng, RPC chấm thi.
 - Nội dung PRO khóa bằng `Monetization.isPro()` **và** RLS.
-- Migration SQL nằm trong `supabase/migrations/` (hiện có Device Guard: bảng `user_device_sessions` + RPC `rusi_*device*`). Phần lớn schema/RPC khác (`current_user_is_admin`, `rusi_grade_trki_exam`...) chưa có file SQL. Khi thêm hoặc đổi RPC/cột, ghi migration mới, idempotent; không đoán kiểu cột — tra `PROJECT_SPEC.md`.
+- Migration SQL nằm trong `supabase/migrations/` (Device Guard; trigger xuất bản nội dung). Phần lớn schema/RPC khác (`current_user_is_admin`, `rusi_grade_trki_exam`...) chưa có file SQL. Khi thêm hoặc đổi RPC/cột, ghi migration mới, idempotent; không đoán kiểu cột — tra `PROJECT_SPEC.md`.
 
 ## Cách làm việc
 
