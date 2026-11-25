@@ -49,15 +49,15 @@
  "sources": {
   "topic_articles": 4,
   "vocab_jars": 1,
-  "jar_items": 1,
+  "jar_items": 2,
   "vocabularies": 1,
   "vocab_lessons": 2,
   "listening_lessons": 1,
   "listening_topics": 1,
-  "listening_lesson_vocab": 1,
+  "listening_lesson_vocab": 2,
   "speaking_lessons": 1,
   "writing_tasks": 1,
-  "writing_task_vocab": 1,
+  "writing_task_vocab": 2,
   "writing_topics": 1,
   "trki_tests": 29,
   "shop_products": 1,
@@ -65,5 +65,5 @@
   "blog_posts": 2,
   "packages": 3
  },
- "generated_at": "2026-11-25T15:46:22.406Z"
+ "generated_at": "2026-11-25T16:20:49.315Z"
 }
