@@ -381,16 +381,17 @@ async function main() {
     const leaked = outputs[f] ? [...findAnswerKeys(outputs[f])] : [];
     if (leaked.length) throw new Error(`[Zero-Answer Leak] ${f} còn trường đáp án: ${leaked.join(', ')} — dừng xuất bản.`);
   }
+  // Chống xoá trắng ngân hàng đề khi API trả rỗng do lỗi quyền đọc (trki_tests_public) — kiểm tra trước khi ghi file nào
+  const bankFile = path.join(MODULES_DIR, 'trki_bank.json');
+  if (Array.isArray(outputs['trki_bank.json']) && !outputs['trki_bank.json'].length && readJson(bankFile, []).length) {
+    throw new Error('trki_bank.json: Supabase trả về 0 đề trong khi bản hiện tại có dữ liệu — dừng xuất bản (kiểm tra quyền đọc trki_tests_public).');
+  }
 
   const changedFiles = [];
   for (const [f, data] of Object.entries(outputs)) {
     const text = JSON.stringify(data);
     const file = path.join(MODULES_DIR, f);
     const prev = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
-    // Chống xoá trắng module khi API trả rỗng do lỗi quyền/RLS (trki_questions.json cố ý luôn rỗng)
-    if (f !== 'trki_questions.json' && Array.isArray(data) && !data.length && prev && prev !== '[]') {
-      throw new Error(`${f}: Supabase trả về 0 dòng trong khi bản hiện tại có dữ liệu — dừng xuất bản (kiểm tra RLS/quyền đọc).`);
-    }
     manifest.modules[f] = { v: hashOf(text) };
     if (prev !== text) {
       changedFiles.push(f);

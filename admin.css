@@ -1595,6 +1595,7 @@ body.payload-body {
 
   .payload-sidebar {
     transform: translateX(-100%);
+    z-index: 210;
   }
 
   .payload-sidebar.open {
@@ -4050,8 +4051,6 @@ body.payload-body {
 
   .payload-topbar-right > div {
     max-width: 64vw;
-    overflow-x: auto;
-    scrollbar-width: none;
   }
 }
 
@@ -4065,6 +4064,22 @@ body.payload-body {
   .payload-topbar-right > div {
     max-width: calc(100vw - 108px);
     gap: 5px !important;
+  }
+
+  .p-btn-icon,
+  .payload-menu-toggle {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .payload-kebab-item {
+    min-height: 44px;
+  }
+
+  .payload-table-check input[type="checkbox"],
+  .row-checkbox {
+    width: 22px;
+    height: 22px;
   }
 
   .payload-topbar-right .p-pill,

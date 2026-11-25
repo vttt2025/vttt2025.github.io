@@ -177,3 +177,12 @@ drop policy if exists rusi_read on public.user_vocab_progress;
 drop policy if exists rusi_session_guard on public.user_vocab_progress;
 create policy rusi_session_guard on public.user_vocab_progress as restrictive for all to authenticated
   using (private.rusi_session_ok()) with check (private.rusi_session_ok());
+
+-- ---------- 6. Kích hoạt PRO cả khi admin tạo đơn mới ở trạng thái 'paid' ----------
+-- Trước đây trigger chỉ chạy BEFORE UPDATE nên đơn INSERT thẳng 'paid' (CMS) không mở PRO.
+-- Hàm activate_pro_from_paid_order dùng COALESCE(OLD.status, '') nên an toàn với INSERT (OLD = NULL).
+-- Học viên không thể tự INSERT đơn 'paid' (policy "Users can create own orders" bắt buộc 'pending').
+drop trigger if exists trg_activate_pro_from_paid_order on public.orders;
+create trigger trg_activate_pro_from_paid_order
+  before insert or update on public.orders
+  for each row execute function public.activate_pro_from_paid_order();
