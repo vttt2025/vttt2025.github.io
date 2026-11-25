@@ -1,7 +1,7 @@
 {
  "modules": {
   "topic_articles.json": {
-   "v": "c05437380f21"
+   "v": "d73a0a975a6a"
   },
   "vocab_jars.json": {
    "v": "02ca0f1ab11a"
@@ -10,7 +10,7 @@
    "v": "52fad8279b9a"
   },
   "vocab_lessons.json": {
-   "v": "8082041272ca"
+   "v": "bf3b044aae2c"
   },
   "listening_lessons.json": {
    "v": "d24131165051"
@@ -47,11 +47,11 @@
   }
  },
  "sources": {
-  "topic_articles": 10,
+  "topic_articles": 14,
   "vocab_jars": 1,
   "jar_items": 2,
   "vocabularies": 1,
-  "vocab_lessons": 2,
+  "vocab_lessons": 3,
   "listening_lessons": 1,
   "listening_topics": 1,
   "listening_lesson_vocab": 2,
@@ -65,5 +65,5 @@
   "blog_posts": 2,
   "packages": 3
  },
- "generated_at": "2026-11-25T17:26:49.474Z"
+ "generated_at": "2026-11-25T17:30:17.015Z"
 }
