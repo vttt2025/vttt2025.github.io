@@ -30411,57 +30411,6 @@ body.has-bottom-bar .rusika-floating-widget {
   display: block;
 }
 
-/* Lớp phủ màn hình video ban đầu (chỉ hiển thị icon YouTube ở giữa màn hình) */
-.sp-video-cover {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: #0b1120;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  cursor: pointer;
-  z-index: 2;
-  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s ease;
-}
-
-.sp-video-cover.is-playing {
-  opacity: 0;
-  pointer-events: none;
-  visibility: hidden;
-}
-
-/* Nút Icon YouTube chính giữa màn hình */
-.sp-yt-center-play {
-  background: transparent;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), filter 0.22s ease;
-  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.5));
-}
-
-.sp-yt-center-play:hover {
-  transform: scale(1.12);
-  filter: drop-shadow(0 8px 24px rgba(255, 0, 0, 0.55));
-}
-
-.sp-yt-center-play:active {
-  transform: scale(0.96);
-}
-
-.sp-yt-center-svg {
-  display: block;
-  width: 68px;
-  height: 48px;
-  transition: all 0.2s ease;
-}
-
 /* Bảng điều khiển tối giản tích hợp làm hàng trên cùng bên trong sp-hero-card */
 .sp-controls-dock {
   display: flex;
@@ -31175,10 +31124,6 @@ body.has-bottom-bar .rusika-floating-widget {
   .sp-video-body {
     border-radius: 16px;
   }
-  .sp-yt-center-svg {
-    width: 58px;
-    height: 41px;
-  }
   .sp-hero-card {
     padding: 20px 16px;
     border-radius: 16px;
@@ -31492,15 +31437,6 @@ body.has-bottom-bar .rusika-floating-widget {
 
 #spWsGrid .sp-video-body {
   border-radius: inherit;
-}
-
-#spWsGrid .sp-yt-center-play {
-  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.28));
-}
-
-#spWsGrid .sp-yt-center-play:hover {
-  transform: scale(1.05);
-  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.35));
 }
 
 #spWsGrid #spHeroCard {
