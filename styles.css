@@ -15318,20 +15318,6 @@ img, video, iframe {
   .rusi-shadow-bottom-bar {
     justify-content: center;
     padding: 8px 10px;
-    /* 4 nút (Câu trước, Nghe lại, Luyện nói, Câu tiếp) xếp lưới 2×2 thay vì tràn mép */
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-  .rusi-bot-left,
-  .rusi-bot-center {
-    display: contents;
-  }
-  .rusi-shadow-bottom-bar .btn {
-    width: 100%;
-    min-height: 44px;
-    justify-content: center;
-    white-space: normal;
   }
   .rusi-bot-right {
     display: none;
@@ -16028,13 +16014,6 @@ body[data-page="writing"] main.container {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 38px;
-}
-
-/* Trang nghe có 3 chế độ (Nghe hiểu, Chép chính tả, Xem video) → 3 cột trên desktop */
-@media (min-width: 1025px) {
-  .listening-mode-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 .writing-mode-card {
