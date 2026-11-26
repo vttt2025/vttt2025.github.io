@@ -66,8 +66,9 @@ function initSpeakingPage() {
   let cloudSpeaking = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("speaking:all") : null;
 
   const getSpeakingSets = () => {
-    if (cloudSpeaking && cloudSpeaking.length) return cloudSpeaking;
+    // Ưu tiên module (có thẻ PRO dạng khoá); danh sách lấy thẳng từ bảng bị RLS bỏ bài PRO nên chỉ dùng khi module trống
     if (typeof window !== "undefined" && window.SPEAKING_SETS && window.SPEAKING_SETS.length) return window.SPEAKING_SETS;
+    if (cloudSpeaking && cloudSpeaking.length) return cloudSpeaking;
     if (typeof SPEAKING_SETS !== "undefined" && Array.isArray(SPEAKING_SETS) && SPEAKING_SETS.length) return SPEAKING_SETS;
     return [];
   };
@@ -123,8 +124,13 @@ function initSpeakingPage() {
   };
 
   const loadCloudSpeaking = async () => {
-    // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có bài luyện nói trong RAM/IndexedDB
+    // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có bài luyện nói trong RAM/IndexedDB/file module
     if (window.SPEAKING_SETS && window.SPEAKING_SETS.length > 0) return;
+    // Chờ module nạp xong trước (đúng thứ tự như trang Nghe) — chỉ truy vấn bảng khi module thật sự trống
+    if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("SPEAKING_SETS")) {
+      try { await window.RusiDataLoader.load("SPEAKING_SETS"); } catch (err) { console.warn("[Speaking] Lỗi nạp module SPEAKING_SETS:", err); }
+      if (window.SPEAKING_SETS && window.SPEAKING_SETS.length > 0) return;
+    }
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
       try {
         const remote = await window.RusiSupabase.speaking.getAll();

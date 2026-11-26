@@ -159,7 +159,8 @@ const STORE = {
     if (unchanged) return;
     if (this._write(key, val)) {
       // Đánh dấu tiến độ từ vựng đã đổi để vocab-sync.js đẩy lên cloud
-      this._write("vocab_changed_at", Date.now());
+      // Luôn > mốc đã đồng bộ (mốc này có thể đến từ đồng hồ máy khác) để thay đổi không bị coi là "cũ"
+      this._write("vocab_changed_at", Math.max(Date.now(), (Number(this.get("vocab_synced_at", 0)) || 0) + 1));
       if (window.Progress && typeof window.Progress.syncToCloud === "function") window.Progress.syncToCloud();
     }
   },

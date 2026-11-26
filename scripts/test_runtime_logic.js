@@ -206,6 +206,14 @@ console.log('✓ 2. SRS: Stress-mark normalization, cardId, markMastered/unmarkM
   assert.deepStrictEqual(sb.STORE.get('vocab_mastered_words'), ['б'], 'mastered cards added to mastered list');
   assert.strictEqual(sb.STORE.get('srs_totalReviews'), 7, 'totals take max');
   assert(VS.isDirty(), 'local had unsynced data → must push merged result');
+  // Máy kia nhanh giờ 10 phút: bản gộp vẫn phải được đẩy lên (CHANGED > SYNCED dù đồng hồ máy này chậm hơn)
+  {
+    const savedSynced = sb.STORE.get('vocab_synced_at', 0), savedChanged = sb.STORE.get('vocab_changed_at', 0);
+    sb.STORE._write('vocab_synced_at', 1); sb.STORE._write('vocab_changed_at', 5);
+    VS._merge({ v: 1, updatedAt: Date.now() + 600000, srs: { cards: {}, resetAt: 0 }, custom_jars: [], starred: [], mastered_words: [] });
+    assert(VS.isDirty(), 'remote clock ahead → merged local changes still marked dirty');
+    sb.STORE._write('vocab_synced_at', savedSynced); sb.STORE._write('vocab_changed_at', savedChanged);
+  }
   passed++;
 
   // resetAt từ cloud xoá các thẻ cũ hơn

@@ -8460,9 +8460,11 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           }
           if (rows && rows.length > 0) {
             if (slug === "VOCAB_JARS") {
-              try {
-                await sb.from("jar_items").delete().in("jar_id", rows.map((r) => r.id));
-              } catch (_) {}
+              const { error: itemsErr } = await sb.from("jar_items").delete().in("jar_id", rows.map((r) => r.id));
+              if (itemsErr) {
+                console.error("[SupabaseSyncEngine] Đã xoá lọ nhưng chưa xoá được từ trong jar_items:", itemsErr);
+                return { ok: false, error: itemsErr, message: "Đã xoá lọ nhưng chưa xoá được danh sách từ: " + itemsErr.message };
+              }
             }
             return { ok: true, table: mapping.table };
           }

@@ -709,8 +709,9 @@ function initListeningPage() {
   };
 
   const getListeningLessons = () => {
-    if (cloudListening && cloudListening.length) return cloudListening;
+    // Ưu tiên module (có thẻ PRO dạng khoá); danh sách lấy thẳng từ bảng bị RLS bỏ bài PRO nên chỉ dùng khi module trống
     if (typeof window !== "undefined" && window.LISTENING_LESSONS && window.LISTENING_LESSONS.length) return window.LISTENING_LESSONS;
+    if (cloudListening && cloudListening.length) return cloudListening;
     if (typeof LISTENING_LESSONS !== "undefined" && Array.isArray(LISTENING_LESSONS) && LISTENING_LESSONS.length) return LISTENING_LESSONS;
     return [];
   };

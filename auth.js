@@ -194,9 +194,17 @@
       // Tính năng Device Guard chỉ bảo vệ tài khoản PRO tránh chia sẻ lậu
       if (!this.user.is_pro) return true;
 
-      if (this._isVerifyingDevice) return true;
-      this._isVerifyingDevice = true;
+      // Đang có lượt kiểm tra chạy dở → trả về chính lượt đó (người gọi như pro-content.js cần chờ phiên được gắn thiết bị)
+      if (this._deviceGuardPromise) return this._deviceGuardPromise;
+      this._deviceGuardPromise = this._runDeviceGuard();
+      try {
+        return await this._deviceGuardPromise;
+      } finally {
+        this._deviceGuardPromise = null;
+      }
+    },
 
+    async _runDeviceGuard() {
       const info = getDeviceInfo();
       try {
         const res = await window.RusiSupabase.deviceGuard.register(info);
@@ -211,8 +219,6 @@
       } catch (e) {
         console.warn("[DeviceGuard] Lỗi xác thực thiết bị:", e);
         return true;
-      } finally {
-        this._isVerifyingDevice = false;
       }
     },
 

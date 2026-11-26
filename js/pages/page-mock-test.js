@@ -1706,7 +1706,7 @@ function initMockTestPage() {
             </div>
           ` : `
             <div class="trki-practice-feedback" style="margin-top:20px;color:var(--muted)">
-              ${q._proRequired ? 'Câu hỏi này thuộc đề dành cho PRO. Nâng cấp PRO để xem đáp án và giải thích.' : q._checkFailed ? 'Không thể kết nối máy chủ kiểm tra đáp án lúc này. Vui lòng thử chọn lại.' : 'Đang đối chiếu đáp án từ máy chủ...'}
+              ${q._proRequired ? ((typeof Monetization !== "undefined" && Monetization.isPro()) ? 'Phiên đăng nhập trên thiết bị này chưa được xác nhận PRO. Tải lại trang hoặc đăng xuất bớt thiết bị cũ rồi chọn lại đáp án.' : 'Câu hỏi này thuộc đề dành cho PRO. Nâng cấp PRO để xem đáp án và giải thích.') : q._checkFailed ? 'Không thể kết nối máy chủ kiểm tra đáp án lúc này. Vui lòng thử chọn lại.' : 'Đang đối chiếu đáp án từ máy chủ...'}
             </div>
           `) : ""}
         `;
@@ -1729,7 +1729,11 @@ function initMockTestPage() {
                 q._checkFailed = true;
                 if (res && res.pro_required) {
                   q._proRequired = true;
-                  if (typeof Monetization !== "undefined") Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
+                  // Đã PRO mà server vẫn từ chối → phiên chưa gắn thiết bị (Device Guard), không phải chưa mua PRO
+                  if (typeof Monetization !== "undefined" && Monetization.isPro()) {
+                    toast("Phiên đăng nhập trên thiết bị này chưa được xác nhận PRO (tài khoản PRO dùng tối đa 2 thiết bị). Vui lòng tải lại trang hoặc đăng xuất bớt thiết bị cũ.");
+                    if (window.Auth && typeof window.Auth.verifyDeviceGuard === "function") window.Auth.verifyDeviceGuard();
+                  } else if (typeof Monetization !== "undefined") Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết.");
                 }
               }
               if (examItems[currentItemIndex] === item) renderQuestionAt(currentItemIndex);
@@ -2354,7 +2358,11 @@ function initMockTestPage() {
         gradeFailMsg = (errGrade && errGrade.message) || "";
       }
     }
-    if (gradeProRequired) {
+    if (gradeProRequired && typeof Monetization !== "undefined" && Monetization.isPro()) {
+      // Đã PRO mà server từ chối → phiên chưa gắn thiết bị (Device Guard)
+      toast("Phiên đăng nhập trên thiết bị này chưa được xác nhận PRO (tài khoản PRO dùng tối đa 2 thiết bị). Vui lòng tải lại trang hoặc đăng xuất bớt thiết bị cũ.");
+      if (window.Auth && typeof window.Auth.verifyDeviceGuard === "function") window.Auth.verifyDeviceGuard();
+    } else if (gradeProRequired) {
       if (typeof Monetization !== "undefined") Monetization.showProGateModal("Đề thi TRKI dành cho PRO", "Đề thi này chỉ được chấm điểm cho tài khoản PRO. Nâng cấp lên gói PRO để được chấm điểm, xem đáp án và nhận XP.");
     } else if (!serverGraded) {
       toast("Chưa chấm được bài trên máy chủ" + (gradeFailMsg ? ": " + gradeFailMsg : "") + ". Kết quả bên dưới chưa được tính, vui lòng kiểm tra kết nối và làm lại.");

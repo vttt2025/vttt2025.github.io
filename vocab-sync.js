@@ -123,7 +123,8 @@
 
     writeQuiet(SYNCED, remote.updatedAt || 0);
     // Máy này có thay đổi chưa gửi → đánh dấu để đẩy bản đã gộp lên
-    writeQuiet(CHANGED, localDirty ? Date.now() : (remote.updatedAt || 0));
+    // Mốc thay đổi phải > SYNCED (= updatedAt của máy khác, có thể lệch giờ) để bản đã gộp chắc chắn được đẩy lên
+    writeQuiet(CHANGED, localDirty ? Math.max(Date.now(), (remote.updatedAt || 0) + 1) : (remote.updatedAt || 0));
   }
 
   async function pull(userId, remoteUpdatedAt) {
