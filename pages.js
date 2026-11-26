@@ -787,6 +787,8 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
   const jarId = options.jarId || "jar-default";
   const jarTitle = options.jarTitle || "Lọ từ vựng";
   const isCustomJar = Boolean(options.isCustomJar);
+  // Mốc XP "1 lần/ngày/lọ": mọi lọ tự tạo dùng chung 1 lượt (tạo nhiều lọ nhỏ không nhân XP)
+  const xpJarId = isCustomJar ? "custom" : jarId;
   const onWordListChange = options.onWordListChange;
 
   const getWordType = (w) => {
@@ -1318,7 +1320,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     const showFlashcardCompletion = () => {
       fCompleted = true;
       const today = new Date().toDateString();
-      const sessKey = "flash_done_" + jarId + "_" + today;
+      const sessKey = "flash_done_" + xpJarId + "_" + today;
       if (!STORE.get(sessKey, false) && fAllRated()) {
         STORE.set(sessKey, true);
         STORE.set("flash_rev_" + jarId, []);
@@ -1394,7 +1396,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           // fActiveWords có thể chứa thẻ lặp lại (requeue) → so theo từ khác nhau
           if (fAllRated()) {
             const today = new Date().toDateString();
-            const sessKey = "flash_done_" + jarId + "_" + today;
+            const sessKey = "flash_done_" + xpJarId + "_" + today;
             if (!STORE.get(sessKey, false)) {
               STORE.set(sessKey, true);
               STORE.set("flash_rev_" + jarId, []); // reset cho các lượt ôn tập sau
@@ -1546,7 +1548,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       if (lKeydown) document.removeEventListener("keydown", lKeydown);
       const pct = Math.round((lScore / lQueue.length) * 100);
       // +15 XP tối đa 1 lần/ngày/lọ, không tính vòng ôn lại từ sai
-      const learnKey = "learn_done_" + jarId + "_" + new Date().toDateString();
+      const learnKey = "learn_done_" + xpJarId + "_" + new Date().toDateString();
       let lXpAwarded = false;
       if (pct >= 70 && !lIsRetry && typeof Progress !== "undefined" && !STORE.get(learnKey, false)) {
         STORE.set(learnKey, true);
@@ -1700,7 +1702,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     if (wIdx >= wQueue.length) {
       const pct = Math.round((wCorrect / wQueue.length) * 100);
       // XP Gõ từ: tối đa 1 lần/ngày/lọ (cùng cách với learn_done_ / match_done_)
-      const writeKey = "write_done_" + jarId + "_" + new Date().toDateString();
+      const writeKey = "write_done_" + xpJarId + "_" + new Date().toDateString();
       if (pct >= 70 && typeof Progress !== "undefined" && !STORE.get(writeKey, false)) {
         STORE.set(writeKey, true);
         Progress.addXp(20);
@@ -1907,7 +1909,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
                 if (typeof STORE !== "undefined") STORE.set("quizlet_match_best_" + jarId, finalTime);
               }
               // +25 XP tối đa 1 lần/ngày/lọ
-              const matchKey = "match_done_" + jarId + "_" + new Date().toDateString();
+              const matchKey = "match_done_" + xpJarId + "_" + new Date().toDateString();
               let matchXpAwarded = false;
               if (typeof Progress !== "undefined" && !STORE.get(matchKey, false)) {
                 STORE.set(matchKey, true);
@@ -2052,7 +2054,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
       const pct = Math.round((correct / questions.length) * 100);
       // XP Kiểm tra: tối đa 1 lần/ngày/lọ (cùng cách với learn_done_ / match_done_)
-      const testKey = "test_done_" + jarId + "_" + new Date().toDateString();
+      const testKey = "test_done_" + xpJarId + "_" + new Date().toDateString();
       if (pct >= 70 && typeof Progress !== "undefined" && !STORE.get(testKey, false)) {
         STORE.set(testKey, true);
         Progress.addXp(25);

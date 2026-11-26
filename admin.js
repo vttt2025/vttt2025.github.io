@@ -984,7 +984,10 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
       singular: "Bài nghe",
       icon: "headphones",
       webUrl: "listening.html",
-      source: () => (window.LISTENING_LESSONS || []),
+      // Bản module hiển thị danh mục/mô tả của chủ đề; CMS phải sửa giá trị riêng của bài (own_*) để lưu không ghi đè cột của bài
+      source: () => (window.LISTENING_LESSONS || []).map((l) => (l && "own_category" in l)
+        ? { ...l, category: l.own_category || l.category, category_name: l.own_category_name || l.category_name, vi: l.own_vi || l.vi }
+        : l),
       desc: "Bài luyện nghe hiểu và nghe chép chính tả thống nhất kèm audio Supabase Storage (listening-audio) và trắc nghiệm.",
       createDefault: () => {
         const lisCode = "lis_" + Date.now().toString().slice(-4);
@@ -8731,6 +8734,34 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     }
   };
   window.SupabaseSyncEngine = SupabaseSyncEngine;
+
+  // Sau khi ghi nội dung lên Cloud: kiểm tra tín hiệu xuất bản tới GitHub có thành công không (thiếu token / token hết hạn
+  // trước đây không ai thấy, web không cập nhật). Gom nhiều lần lưu liên tiếp thành một lần kiểm tra.
+  let publishCheckTimer = null;
+  function schedulePublishCheck() {
+    clearTimeout(publishCheckTimer);
+    publishCheckTimer = setTimeout(async () => {
+      const sb = SupabaseSyncEngine.getClient();
+      if (!sb) return;
+      const { data, error } = await sb.rpc("rusi_publish_status");
+      if (error) { console.warn("[Publish] Không đọc được trạng thái xuất bản:", error); return; }
+      if (!data || data.pending) return;
+      const failed = data.error || data.error_msg || (data.status_code && (data.status_code < 200 || data.status_code >= 300));
+      if (failed) {
+        const detail = data.error || data.error_msg || ("GitHub trả mã " + data.status_code);
+        console.error("[Publish] Gửi tín hiệu xuất bản thất bại:", data);
+        toast("Đã lưu lên Cloud nhưng chưa xuất bản được lên web (" + detail + "). Kiểm tra token github_publish_token.", "error");
+      }
+    }, 15000);
+  }
+  ["upsertDoc", "deleteDoc", "syncCollectionBatch"].forEach((name) => {
+    const orig = SupabaseSyncEngine[name];
+    SupabaseSyncEngine[name] = async function (...args) {
+      const res = await orig.apply(this, args);
+      if (res && res.ok !== false && !res.skipped) schedulePublishCheck();
+      return res;
+    };
+  });
 
   window.triggerMediaUpload = function (fieldKey) {
     const sb = window.SupabaseSyncEngine && window.SupabaseSyncEngine.getClient ? window.SupabaseSyncEngine.getClient() : null;

@@ -107,7 +107,9 @@
       youtube_id: ytId, video_youtube_id: ytId, audio_url: row.audio_url || '',
       duration_seconds: row.duration_seconds || 120, est_minutes: row.est_minutes || 12,
       is_pro_only: Boolean(row.is_pro_only || t.is_pro_only),
-      lines, questions, dictation, blanks: raw.blanks || [], vocab_items: row.vocab_items || [], raw_data: raw
+      lines, questions, dictation, blanks: raw.blanks || [], vocab_items: row.vocab_items || [], raw_data: raw,
+      // Giá trị riêng của bài trong DB (category/category_name/vi ở trên ưu tiên của chủ đề) — CMS sửa các giá trị này
+      own_category: row.category || null, own_category_name: row.category_name || null, own_vi: row.vi || null
     };
   }
 

@@ -913,15 +913,19 @@
       /**
        * Chấm điểm bài thi TRKI bảo mật qua Database RPC (Zero-Answer Leak)
        */
-      gradeSubmission: async function (testCode, answers, timeSpentSec) {
+      gradeSubmission: async function (testCode, answers, timeSpentSec, opts) {
         var sb = getClient();
         if (!sb || !testCode) return null;
         try {
-          var res = await sb.rpc("rusi_grade_trki_submission", {
+          var params = {
             p_test_code: testCode,
             p_user_answers: answers || {},
             p_time_spent_sec: timeSpentSec || 0
-          });
+          };
+          // opts.questionIndices: chỉ chấm các câu này (thi từng phần); opts.record=false: không lưu kết quả (luyện tập)
+          if (opts && Array.isArray(opts.questionIndices)) params.p_question_indices = opts.questionIndices;
+          if (opts && opts.record === false) params.p_record = false;
+          var res = await sb.rpc("rusi_grade_trki_submission", params);
           if (res.error) {
             console.warn("[RusiSupabase] Lỗi RPC chấm thi TRKI:", res.error);
             return null;

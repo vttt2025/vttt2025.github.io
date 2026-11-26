@@ -129,7 +129,7 @@
   }
 
   /** Khởi tạo trang Auth */
-  function initAuthPage() {
+  async function initAuthPage() {
     saveRedirectFromUrl();
     updateCrossLinks();
 
@@ -150,7 +150,12 @@
     }
 
     // 1. Kiểm tra trạng thái đăng nhập hiện tại
-    const currentUser = (window.Auth && window.Auth.user) || store.get("auth_user", null);
+    let currentUser = (window.Auth && window.Auth.user) || store.get("auth_user", null);
+    // Bộ nhớ đệm có thể còn tài khoản đã hết phiên (vd. bị thu hồi thiết bị) → xác nhận phiên với Supabase trước
+    if (currentUser && !isGuestUser(currentUser) && window.Auth && typeof window.Auth.isReady === "function") {
+      try { await window.Auth.isReady(); } catch (e) { console.warn("[AuthPage] Không kiểm tra được phiên đăng nhập:", e); }
+      currentUser = window.Auth.user || null;
+    }
 
     if (currentUser && !isGuestUser(currentUser)) {
       const banner = document.getElementById("alreadyLoggedInBanner");

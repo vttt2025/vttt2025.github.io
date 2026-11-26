@@ -159,11 +159,16 @@ let r = SRS.review(rid, 'again');
 assert(r.requeue === true && r.nextIntervalH === 0, 'again on new card should requeue');
 r = SRS.review(rid, 'good');
 assert(r.requeue === false && r.nextIntervalH === 24, 'good on new card = 24h');
+// Thẻ đã tới hạn (lần ôn trước cách đây 24 giờ) → nhân khoảng ôn
+{ const st = SRS.getState(); st.cards[rid].lastReview = Date.now() - 24 * 3600000; st.cards[rid].dueDate = Date.now() - 1000; SRS.saveState(st); }
 r = SRS.review(rid, 'good');
 assert(r.nextIntervalH === 72, 'good on review card = interval x3');
+// Ôn sớm ngay sau đó (chưa tới hạn) → không đẩy lịch ôn xa thêm
+r = SRS.review(rid, 'good');
+assert(r.nextIntervalH === 72, 'early review must not multiply the interval again');
 assert(SRS.review(rid, 'bogus') === null, 'invalid rating should be ignored');
-assert.strictEqual(srsSandbox.STORE.get('srs_totalReviews', 0), 3, 'recordReview should count reviews');
-assert.strictEqual(srsSandbox.STORE.get('srs_totalCorrect', 0), 2, 'recordReview should count correct');
+assert.strictEqual(srsSandbox.STORE.get('srs_totalReviews', 0), 4, 'recordReview should count reviews');
+assert.strictEqual(srsSandbox.STORE.get('srs_totalCorrect', 0), 3, 'recordReview should count correct');
 assert(SRS.getState().cards[rid].updatedAt > 0, 'card should carry updatedAt');
 passed++;
 

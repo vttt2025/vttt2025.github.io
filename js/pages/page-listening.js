@@ -2100,10 +2100,11 @@ function initListeningPage() {
         .then((full) => { if (full && !full.content_locked) openComprehensionWorkspace(full); });
       return;
     }
+    if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent((lesson && lesson.id) || ""))) return;
+    // Đổi URL sau khi qua kiểm tra đăng nhập (không để URL bài học khi bị chuyển sang trang đăng nhập)
     if (window.setRusiDeepUrl && lesson) {
       window.setRusiDeepUrl('/listening/bai_hoc/' + encodeURIComponent(lesson.id || lesson.code));
     }
-    if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent((lesson && lesson.id) || ""))) return;
     currentLesson = lesson;
     document.body.classList.add("in-workspace");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -3060,10 +3061,11 @@ function initListeningPage() {
         .then((full) => { if (full && !full.content_locked) openDictationWorkspace(full); });
       return;
     }
+    if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent((lesson && lesson.id) || ""))) return;
+    // Đổi URL sau khi qua kiểm tra đăng nhập (không để URL bài học khi bị chuyển sang trang đăng nhập)
     if (window.setRusiDeepUrl && lesson) {
       window.setRusiDeepUrl('/listening/dictation/' + encodeURIComponent(lesson.id || lesson.code));
     }
-    if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent((lesson && lesson.id) || ""))) return;
     currentLesson = lesson;
     document.body.classList.add("in-workspace");
     window.scrollTo({ top: 0, behavior: "smooth" });

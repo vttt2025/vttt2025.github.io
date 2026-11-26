@@ -896,6 +896,9 @@ function initMockTestPage() {
       answers = {};
     }
 
+    // Khôi phục số lần rời màn hình (tải lại trang không xoá vi phạm)
+    try { tabSwitches = examMode === "exam" ? (parseInt(sessionStorage.getItem(storageKey + "_tabs") || "0", 10) || 0) : 0; } catch (e) { tabSwitches = 0; }
+
     // Khôi phục cờ đánh dấu
     flagged = {};
     try {
@@ -930,6 +933,13 @@ function initMockTestPage() {
         if (!started) return;
         if (document.hidden) {
           tabSwitches++;
+          try { sessionStorage.setItem(storageKey + "_tabs", String(tabSwitches)); } catch (e) {}
+          // Vi phạm lần 3: nộp bài ngay như thông báo, không chờ người thi bấm nút
+          if (tabSwitches >= 3) {
+            toast("Bạn đã vi phạm quá 3 lần. Hệ thống tự động nộp bài thi ngay bây giờ!");
+            submit();
+            return;
+          }
           showAntiCheatAlert();
         }
       };
@@ -2350,7 +2360,10 @@ function initMockTestPage() {
             fullIdx++;
           });
         });
-        const serverGradeResult = await window.RusiSupabase.questionBank.gradeSubmission(currentTest.code || currentTest.id, answersPayload, timeSpent);
+        // Thi từng phần: chỉ chấm (và chỉ nhận đáp án) các câu của phần đã chọn; luyện tập: không lưu kết quả
+        const questionIndices = isSubset ? [] : null;
+        if (isSubset) activeParts.forEach(p => { const base = partBaseOffsets.get(p.id) || 0; (p.questions || []).forEach((q, qi) => questionIndices.push(base + qi)); });
+        const serverGradeResult = await window.RusiSupabase.questionBank.gradeSubmission(currentTest.code || currentTest.id, answersPayload, timeSpent, { questionIndices, record: !isPracticeMode });
         if (serverGradeResult && serverGradeResult.success && Array.isArray(serverGradeResult.reviews)) {
           serverGraded = true;
           activeParts.forEach(p => {
@@ -2382,6 +2395,7 @@ function initMockTestPage() {
           sessionStorage.removeItem(storageKey + "_answers");
           sessionStorage.removeItem(storageKey + "_flagged");
           sessionStorage.removeItem(storageKey + "_opt_orders");
+          sessionStorage.removeItem(storageKey + "_tabs");
         }
       } catch(e) {}
     }

@@ -738,7 +738,11 @@ const SRS = {
       card.repetitions = 0;
       requeue = true;
     } else {
-      nextIntervalH = Math.max(card.interval, 1) * SRS_REVIEW_MULTIPLIERS[rating]; // tối thiểu 1 giờ
+      // Ôn sớm (chưa tới hạn, vd. lướt lại cả lọ nhiều lần trong ngày): nhân theo thời gian thực đã trôi qua
+      // kể từ lần ôn trước, không nhân cả khoảng cũ → lịch ôn không bị đẩy xa hàng tháng; khoảng không bị rút ngắn.
+      const elapsedH = card.lastReview ? (now - card.lastReview) / 3600000 : card.interval;
+      const baseH = now < card.dueDate ? Math.min(card.interval, elapsedH) : card.interval;
+      nextIntervalH = Math.max(card.interval, Math.max(baseH, 1) * SRS_REVIEW_MULTIPLIERS[rating]); // tối thiểu 1 giờ
       card.learningStep = 2;
       card.repetitions++;
     }
