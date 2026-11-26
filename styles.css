@@ -14767,6 +14767,192 @@ img, video, iframe {
   line-height: 1.3;
 }
 
+/* RusiYtPlayer — ẩn giao diện YouTube, điều khiển bằng thanh của RUSI (js/rusi-yt-player.js) */
+.rusi-yt .rusi-yt-frame {
+  pointer-events: none;
+}
+
+.rusi-yt-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  cursor: pointer;
+  background: transparent;
+}
+
+.rusi-yt-poster {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background-color: #090d16;
+  background-size: cover;
+  background-position: center;
+}
+
+.rusi-yt-poster::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(9, 13, 22, 0.35);
+}
+
+.rusi-yt-poster-play {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: transform 0.18s ease;
+}
+
+.rusi-yt-poster:hover .rusi-yt-poster-play {
+  transform: scale(1.06);
+}
+
+.rusi-yt-poster-msg {
+  position: relative;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.rusi-yt-poster-msg:empty {
+  display: none;
+}
+
+/* Ảnh bìa hiện lại tức thì khi dừng (che bảng "Video khác"), chỉ mờ dần khi mở ra sau lúc YouTube hết nháy giao diện */
+.rusi-yt.is-revealed .rusi-yt-poster {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.rusi-yt.is-loading .rusi-yt-poster-play,
+.rusi-yt.is-playing:not(.is-revealed) .rusi-yt-poster-play {
+  animation: rusiYtPulse 1s ease-in-out infinite;
+}
+
+@keyframes rusiYtPulse {
+  50% { opacity: 0.55; transform: scale(0.94); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rusi-yt.is-loading .rusi-yt-poster-play,
+  .rusi-yt.is-playing:not(.is-revealed) .rusi-yt-poster-play {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+.rusi-yt.is-error .rusi-yt-poster {
+  cursor: default;
+}
+
+.rusi-yt.is-error .rusi-yt-poster-play {
+  display: none;
+}
+
+/* Trình duyệt chặn phát hoặc API lỗi: trả quyền chạm cho video gốc */
+.rusi-yt.needs-tap .rusi-yt-frame,
+.rusi-yt.is-native .rusi-yt-frame {
+  pointer-events: auto;
+}
+
+.rusi-yt.needs-tap .rusi-yt-shield,
+.rusi-yt.needs-tap .rusi-yt-poster,
+.rusi-yt.is-native .rusi-yt-shield,
+.rusi-yt.is-native .rusi-yt-poster {
+  display: none;
+}
+
+.rusi-yt-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.rusi-yt-bar[hidden] {
+  display: none;
+}
+
+.rusi-yt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.rusi-yt-btn:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.rusi-yt-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.rusi-yt-btn[data-act="toggle"] {
+  background: var(--primary);
+  color: #fff;
+}
+
+.rusi-yt-btn[data-act="toggle"]:hover:not(:disabled) {
+  background: var(--primary);
+  filter: brightness(1.08);
+}
+
+.rusi-yt-btn-txt {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.rusi-yt-seek {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  margin: 0;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+.rusi-yt-time {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  font-weight: 600;
+}
+
 /* Video Meta Bar */
 .rusi-video-meta-bar {
   display: flex;
@@ -15132,6 +15318,20 @@ img, video, iframe {
   .rusi-shadow-bottom-bar {
     justify-content: center;
     padding: 8px 10px;
+    /* 4 nút (Câu trước, Nghe lại, Luyện nói, Câu tiếp) xếp lưới 2×2 thay vì tràn mép */
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .rusi-bot-left,
+  .rusi-bot-center {
+    display: contents;
+  }
+  .rusi-shadow-bottom-bar .btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+    white-space: normal;
   }
   .rusi-bot-right {
     display: none;
@@ -15828,6 +16028,13 @@ body[data-page="writing"] main.container {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   margin-bottom: 38px;
+}
+
+/* Trang nghe có 3 chế độ (Nghe hiểu, Chép chính tả, Xem video) → 3 cột trên desktop */
+@media (min-width: 1025px) {
+  .listening-mode-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .writing-mode-card {

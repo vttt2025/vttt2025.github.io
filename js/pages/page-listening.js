@@ -27,6 +27,11 @@ function initListeningPage() {
       title: "Nghe chép chính tả",
       subtitle: "Nghe từng câu, rèn luyện bắt âm chuẩn và gõ lại tiếng Nga chính xác",
       icon: "edit-3"
+    },
+    video: {
+      title: "Xem video",
+      subtitle: "Xem video tiếng Nga, nói nhại theo từng câu và làm trắc nghiệm",
+      icon: "film"
     }
   };
 
@@ -747,16 +752,17 @@ function initListeningPage() {
 
   // Bài PRO trong file công khai chỉ có metadata (dictation: [], dictation_count > 0)
   const getDictationCount = (l) => (Array.isArray(l.dictation) && l.dictation.length) || Number(l.dictation_count) || 0;
+  // Chế độ video luyện theo từng câu thoại → cần câu thoại (bài PRO bị khóa chỉ có line_count)
+  const getLineCount = (l) => (Array.isArray(l.lines) && l.lines.length) || Number(l.line_count) || 0;
+  const lessonFitsMode = (l) => {
+    if (currentMode === "dictation") return getDictationCount(l) > 0;
+    if (currentMode === "video") return getLineCount(l) > 0;
+    return true;
+  };
 
   const filteredLessons = () => {
     const all = getListeningLessons();
-    return all.filter((l) => {
-      if (l.level !== currentLevel) return false;
-      if (currentMode === "dictation") {
-        return getDictationCount(l) > 0;
-      }
-      return true;
-    });
+    return all.filter((l) => l.level === currentLevel && lessonFitsMode(l));
   };
 
   const renderListeningCards = () => {
@@ -777,13 +783,7 @@ function initListeningPage() {
 
     const all = getListeningLessons();
     LEVELS.forEach(([level]) => {
-      const count = all.filter((l) => {
-        if (l.level !== level) return false;
-        if (currentMode === "dictation") {
-          return getDictationCount(l) > 0;
-        }
-        return true;
-      }).length;
+      const count = all.filter((l) => l.level === level && lessonFitsMode(l)).length;
       const countNode = host.querySelector(`[data-listening-count="${level}"]`);
       if (countNode) countNode.textContent = count;
     });
@@ -803,13 +803,15 @@ function initListeningPage() {
     gridHost.innerHTML = items.map((l) => {
       const isDone = currentMode === "comprehension"
         ? (Progress.doneList("listenDone").includes(l.id + "_comp") || Progress.doneList("listenDone").includes(l.id + "_check") || Progress.doneList("listenDone").includes(l.id + "_video"))
-        : (getDictationCount(l) > 0 && Array.from({ length: getDictationCount(l) }).every((_, i) => Progress.doneList("listenDone").includes(l.id + "_dict_" + i)));
+        : currentMode === "video"
+          ? Progress.doneList("listenDone").includes(l.id + "_video")
+          : (getDictationCount(l) > 0 && Array.from({ length: getDictationCount(l) }).every((_, i) => Progress.doneList("listenDone").includes(l.id + "_dict_" + i)));
       const isPro = Boolean(l.is_pro_only || l.is_pro);
       const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
       const qCount = (l.questions && l.questions.length) ? l.questions.length : (l.lines && l.lines.length) ? l.lines.length : (l.question_count || l.line_count || 4);
       const dictCount = (l.dictation && l.dictation.length) || l.dictation_count || 0;
-      const countLabel = currentMode === "comprehension" ? `${qCount} câu hỏi` : `${dictCount} câu chính tả`;
-      const actionLabel = isDone ? "Đã hoàn thành" : (currentMode === "comprehension" ? "Vào luyện nghe hiểu" : "Vào chép chính tả");
+      const countLabel = currentMode === "comprehension" ? `${qCount} câu hỏi` : currentMode === "video" ? `${getLineCount(l)} câu shadowing` : `${dictCount} câu chính tả`;
+      const actionLabel = isDone ? "Đã hoàn thành" : (currentMode === "comprehension" ? "Vào luyện nghe hiểu" : currentMode === "video" ? "Vào xem video" : "Vào chép chính tả");
 
       const getListeningIconKey = (item) => {
         const cat = ((item.category || "") + " " + (item.id || "")).toLowerCase();
@@ -822,7 +824,7 @@ function initListeningPage() {
         if (cat.includes("shopping") || cat.includes("shop")) return "shopping-cart";
         if (cat.includes("restaurant") || cat.includes("food")) return "utensils";
         if (item.icon && window.RusiIcons && RusiIcons.has && RusiIcons.has(item.icon)) return item.icon;
-        return currentMode === "dictation" ? "edit-3" : "headphones";
+        return currentMode === "dictation" ? "edit-3" : currentMode === "video" ? "film" : "headphones";
       };
 
       const iconKey = getListeningIconKey(l);
@@ -882,6 +884,8 @@ function initListeningPage() {
       }
       if (currentMode === "dictation") {
         openDictationWorkspace(lesson);
+      } else if (currentMode === "video") {
+        openVideoWorkspace(lesson);
       } else {
         openComprehensionWorkspace(lesson);
       }
@@ -963,6 +967,25 @@ function initListeningPage() {
   };
 
   const fmtTime = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
+  // Lối vào chế độ "Xem video": tải nội dung PRO, kiểm tra đăng nhập, đổi URL rồi mở workspace video
+  const openVideoWorkspace = (lesson) => {
+    if (lesson && lesson.content_locked && window.RusiProContent) {
+      if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?mode=video&id=" + encodeURIComponent(lesson.id || ""))) return;
+      window.RusiProContent.ensureFull("LISTENING_LESSONS", lesson, { title: "Nội dung nghe dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao." })
+        .then((full) => { if (full && !full.content_locked) openVideoWorkspace(full); });
+      return;
+    }
+    if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?mode=video&id=" + encodeURIComponent((lesson && lesson.id) || ""))) return;
+    if (!lesson || !Array.isArray(lesson.lines) || !lesson.lines.length) {
+      toast("Bài nghe này chưa có câu thoại để luyện với video.");
+      return;
+    }
+    if (window.setRusiDeepUrl) {
+      window.setRusiDeepUrl('/listening/bai_hoc/' + encodeURIComponent(lesson.id || lesson.code));
+    }
+    openListeningWorkspace(lesson, "video");
+  };
 
   const openListeningWorkspace = (lesson, initialMode = "video") => {
     currentLesson = lesson;
@@ -1072,6 +1095,8 @@ function initListeningPage() {
           paneVideo.style.pointerEvents = "";
           paneVideo.style.visibility = "";
         } else {
+          // Rời tab video: tạm dừng để video không phát tiếng khi đang ở chế độ khác
+          if (paneVideo._rusiVideo) paneVideo._rusiVideo.pause();
           paneVideo.classList.add("panel-hidden-video");
           paneVideo.style.position = "absolute";
           paneVideo.style.left = "-9999px";
@@ -1147,10 +1172,10 @@ function initListeningPage() {
     });
 
     // Speed pills in header
-    host.querySelectorAll(".ws-head [data-sp]").forEach((b) => {
+    host.querySelectorAll(".rusi-workspace-controls [data-sp]").forEach((b) => {
       b.addEventListener("click", () => {
         currentSpeed = parseFloat(b.dataset.sp);
-        host.querySelectorAll(".ws-head [data-sp]").forEach((s) => s.classList.remove("active"));
+        host.querySelectorAll(".rusi-workspace-controls [data-sp]").forEach((s) => s.classList.remove("active"));
         b.classList.add("active");
 
         // Sync with video speed pills if present
@@ -1158,20 +1183,14 @@ function initListeningPage() {
           s.classList.toggle("active", parseFloat(s.dataset.sp) === currentSpeed);
         });
 
-        const iframe = host.querySelector("#lisYtIframe");
-        if (iframe && iframe.contentWindow) {
-          iframe.contentWindow.postMessage(JSON.stringify({
-            event: "command",
-            func: "setPlaybackRate",
-            args: [currentSpeed]
-          }), "*");
-        }
+        const videoPane = host.querySelector("#lisPane_video");
+        if (videoPane && videoPane._rusiVideo) videoPane._rusiVideo.setRate(currentSpeed);
 
         toast(`Tốc độ đọc: ${currentSpeed}x`);
       });
     });
 
-    // Subtitle toggle button in ws-head
+    // Subtitle toggle button in workspace header
     const subBtn = el("#btnToggleSub");
     if (subBtn) {
       subBtn.onclick = () => {
@@ -1204,11 +1223,18 @@ function initListeningPage() {
       B2: { youtubeId: "e6lFvAQp0LE", startSec: 15, endSec: 255, durationLabel: "4 phút (240 giây)" }
     };
 
-    const vConfig = lesson.video || defaultVideos[lesson.level] || defaultVideos.A1;
+    // Video riêng của bài (admin nhập youtube_id) được ưu tiên; không có mới dùng video mặc định theo trình độ
+    const ownYtId = (lesson.video && lesson.video.youtubeId) || lesson.youtube_id || lesson.video_youtube_id || "";
+    const hasOwnVideo = Boolean(ownYtId);
+    const vConfig = lesson.video || (hasOwnVideo ? { youtubeId: ownYtId } : null) || defaultVideos[lesson.level] || defaultVideos.A1;
     const ytId = vConfig.youtubeId || "e6lFvAQp0LE";
-    const start = vConfig.startSec || 15;
-    const end = vConfig.endSec || 195;
-    const durationLabel = vConfig.durationLabel || `${Math.round((end - start) / 60)} phút`;
+    const start = hasOwnVideo ? (Number(vConfig.startSec) || 0) : (vConfig.startSec || 15);
+    const end = hasOwnVideo ? (Number(vConfig.endSec) || 0) : (vConfig.endSec || 195);
+    const durationLabel = vConfig.durationLabel || (end > start ? `${Math.round((end - start) / 60)} phút` : "Cả video");
+    // Phụ đề trên video chỉ hiện khi câu thoại có mốc thời gian theo chính video của bài (video mặc định không khớp lời thoại)
+    const lineStart = (l) => Number(l && (l.start_sec ?? l.startSec ?? l.start));
+    const lineEnd = (l) => Number(l && (l.end_sec ?? l.endSec ?? l.end));
+    const syncSubs = hasOwnVideo && lesson.lines.length > 0 && lesson.lines.every((l) => Number.isFinite(lineStart(l)));
 
     const videoQuestions = (lesson.video && lesson.video.questions) || [
       {
@@ -1276,17 +1302,11 @@ function initListeningPage() {
           <!-- LEFT COLUMN: VIDEO + ACTIVE SENTENCE CARD + QUIZ -->
           <div class="rusi-shadow-left-col">
             <!-- YOUTUBE VIDEO 16:9 CONTAINER WITH SUBTITLE OVERLAY -->
-            <div class="rusi-shadow-video-wrap">
-              <iframe
-                id="lisYtIframe"
-                src="https://www.youtube-nocookie.com/embed/${ytId}?start=${start}&end=${end}&enablejsapi=1&rel=0&modestbranding=1"
-                title="Russian Shadowing Video"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen>
-              </iframe>
+            <div class="rusi-shadow-video-wrap" id="lisVideoWrap">
+              <!-- Iframe + ảnh bìa + thanh điều khiển do RusiYtPlayer.mount() tạo (ẩn giao diện YouTube) -->
 
               <!-- SUBTITLE OVERLAY (RUSI style) -->
-              <div class="rusi-shadow-sub-overlay" id="rusiSubOverlay">
+              <div class="rusi-shadow-sub-overlay" id="rusiSubOverlay"${syncSubs ? "" : " hidden"}>
                 <p class="sub-ru ru" id="rusiSubRu">${esc(curLine.ru)}</p>
                 <p class="sub-vi ${showSub && curLine.vi ? "" : "hidden"}" id="rusiSubVi">${esc(curLine.vi || "")}</p>
               </div>
@@ -1316,7 +1336,7 @@ function initListeningPage() {
               <div class="rusi-sentence-card-head">
                 <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                   <span class="rusi-badge-sentence" id="rusiCurSentenceIdx">Câu 1 / ${totalSentences}</span>
-                  <span class="rusi-speaker-pill" id="rusiCurSpeaker" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""} ${esc(curLine.who)}</span>
+                  <span class="rusi-speaker-pill" id="rusiCurSpeaker" style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""} ${esc(curLine.who || curLine.speaker)}</span>
                   <span id="rusiCurScoreBadgeWrap">
                     ${curScore !== undefined ? `
                       <span class="rusi-score-badge ${curScore >= 70 ? "pass" : "retry"}">
@@ -1429,7 +1449,7 @@ function initListeningPage() {
                   <button type="button" class="rusi-sentence-item ${isActive ? "active" : ""}" data-sentence-idx="${idx}">
                     <div class="rusi-item-idx ${isActive ? "active" : ""}">#${idx + 1}</div>
                     <div class="rusi-item-body">
-                      <div class="rusi-item-speaker">${esc(l.who)}</div>
+                      <div class="rusi-item-speaker">${esc(l.who || l.speaker)}</div>
                       <div class="rusi-item-ru ru">${esc(l.ru)}</div>
                       <div class="rusi-item-vi ${showSub && l.vi ? "" : "hidden"}">${esc(l.vi || "")}</div>
                     </div>
@@ -1476,10 +1496,44 @@ function initListeningPage() {
       </div>
     `;
 
+    // Trình phát YouTube của RUSI (ẩn giao diện YouTube, điều khiển qua IFrame API)
+    const showSubLine = (idx) => {
+      const l = lesson.lines[idx];
+      const overlay = mb.querySelector("#rusiSubOverlay");
+      if (overlay) overlay.style.visibility = l ? "" : "hidden";
+      if (!l) return;
+      const subRu = mb.querySelector("#rusiSubRu");
+      if (subRu) subRu.textContent = l.ru;
+      const subVi = mb.querySelector("#rusiSubVi");
+      if (subVi) {
+        subVi.textContent = l.vi || "";
+        subVi.classList.toggle("hidden", !showSub || !l.vi);
+      }
+    };
+    const ytCtl = window.RusiYtPlayer ? window.RusiYtPlayer.mount(mb.querySelector("#lisVideoWrap"), {
+      videoId: ytId,
+      start,
+      end,
+      rate: localSpeed,
+      title: lesson.title,
+      onTime: syncSubs ? (t) => {
+        const idx = lesson.lines.findIndex((l, i) => {
+          const s = lineStart(l);
+          const nextS = lineStart(lesson.lines[i + 1]);
+          const e = Number.isFinite(lineEnd(l)) ? lineEnd(l) : (Number.isFinite(nextS) ? nextS : s + 6);
+          return t >= s && t < e;
+        });
+        showSubLine(idx);
+      } : null
+    }) : null;
+    if (!ytCtl) console.warn("[Listening] Không khởi tạo được trình phát video", ytId);
+    mb._rusiVideo = ytCtl; // switchMode / tốc độ ở thanh đầu trang điều khiển qua đây
+
     // Play active sentence with repeat and waveform animation
     const playCurrentSentence = () => {
       const curLine = lesson.lines[activeSentenceIdx];
       if (!curLine) return;
+      if (ytCtl) ytCtl.pause(); // tránh video và giọng đọc phát chồng lên nhau
       const waveBox = mb.querySelector("#shadowWaveBox");
       if (waveBox) waveBox.classList.add("active");
 
@@ -1519,7 +1573,7 @@ function initListeningPage() {
       if (idxEl) idxEl.textContent = `Câu ${activeSentenceIdx + 1} / ${totalSentences}`;
 
       const speakerEl = mb.querySelector("#rusiCurSpeaker");
-      if (speakerEl) speakerEl.innerHTML = (window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : "") + " " + esc(curLine.who);
+      if (speakerEl) speakerEl.innerHTML = (window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : "") + " " + esc(curLine.who || curLine.speaker);
 
       const badgeWrap = mb.querySelector("#rusiCurScoreBadgeWrap");
       if (badgeWrap) {
@@ -1757,18 +1811,11 @@ function initListeningPage() {
           btn.classList.add("active");
 
           // Sync with header speed pills
-          host.querySelectorAll(".ws-head [data-sp]").forEach((s) => {
+          host.querySelectorAll(".rusi-workspace-controls [data-sp]").forEach((s) => {
             s.classList.toggle("active", parseFloat(s.dataset.sp) === localSpeed);
           });
 
-          const iframe = mb.querySelector("#lisYtIframe");
-          if (iframe && iframe.contentWindow) {
-            iframe.contentWindow.postMessage(JSON.stringify({
-              event: "command",
-              func: "setPlaybackRate",
-              args: [localSpeed]
-            }), "*");
-          }
+          if (ytCtl) ytCtl.setRate(localSpeed);
           toast(`Tốc độ phát: ${localSpeed}x`);
         };
       });
@@ -1884,7 +1931,7 @@ function initListeningPage() {
       .map(
         (l) => `
       <div class="dialogue-line">
-        <span class="who">${esc(l.who)}</span>
+        <span class="who">${esc(l.who || l.speaker)}</span>
         <span class="line-ru ru">${esc(l.ru)}
           <button class="btn btn-outline btn-sm speak-line" style="margin-left:8px;padding:2px 10px">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""}</button>
         </span>
@@ -4354,7 +4401,7 @@ function initListeningPage() {
       const urlParams = new URLSearchParams(window.location.search);
       const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || urlParams.get(k);
       const modeParam = (getParam("mode") || "").toLowerCase();
-      if (modeParam === "dictation" || modeParam === "comprehension") {
+      if (modeParam === "dictation" || modeParam === "comprehension" || modeParam === "video") {
         currentMode = modeParam;
       }
       const targetId = getParam("id") || getParam("lesson");
@@ -4369,6 +4416,7 @@ function initListeningPage() {
             return false;
           }
           if (currentMode === "dictation") openDictationWorkspace(found);
+          else if (currentMode === "video") openVideoWorkspace(found);
           else openComprehensionWorkspace(found);
           return true;
         }
