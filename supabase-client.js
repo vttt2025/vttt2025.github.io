@@ -945,11 +945,11 @@
         if (!sb || !testCode) return null;
         try {
           // Giới hạn chờ: request treo thì báo lỗi để học viên chọn lại, không kẹt "Đang đối chiếu..." mãi
-          var res = await withTimeout(sb.rpc("rusi_check_trki_question", {
-            p_test_code: testCode,
-            p_question_index: questionIndex,
-            p_user_choice: userChoice
-          }), 8000);
+          // Câu chọn nhiều đáp án: gửi mảng chỉ số qua p_user_choices
+          var params = Array.isArray(userChoice)
+            ? { p_test_code: testCode, p_question_index: questionIndex, p_user_choices: userChoice }
+            : { p_test_code: testCode, p_question_index: questionIndex, p_user_choice: userChoice };
+          var res = await withTimeout(sb.rpc("rusi_check_trki_question", params), 8000);
           if (res.error) {
             console.warn("[RusiSupabase] Lỗi RPC kiểm tra câu hỏi TRKI:", res.error);
             return null;

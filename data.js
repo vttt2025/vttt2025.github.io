@@ -89,7 +89,7 @@
     "is_popular": false,
     "features": [
       "Tất cả quyền lợi của gói 3 Tháng",
-      "Mở khóa toàn bộ 11 đề Luyện viết tự luận (Письмо) chấm AI không giới hạn",
+      "Mở khóa toàn bộ 11 đề Luyện viết tự luận (Письмо) với 20 lượt chấm AI mỗi ngày",
       "Đặc quyền kho 5.000+ từ vựng & phân tích ngữ pháp chuyên sâu",
       "Tặng bộ cẩm nang sinh tồn & kinh nghiệm du học Nga",
       "Ưu tiên hỗ trợ kỹ thuật và học thuật 1-1",

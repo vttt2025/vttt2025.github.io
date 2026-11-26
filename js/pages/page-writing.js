@@ -196,7 +196,7 @@ function initWritingPage() {
     if (isPro && !Monetization.isPro()) {
       Monetization.showProGateModal(
         "Đề luyện viết dành cho PRO",
-        "Nâng cấp lên gói PRO để mở khóa toàn bộ đề thi viết TRKI chuyên sâu và trợ lý AI chữa ngữ pháp không giới hạn."
+        "Nâng cấp lên gói PRO để mở khóa toàn bộ đề thi viết TRKI chuyên sâu và trợ lý AI chữa ngữ pháp 20 lượt mỗi ngày."
       );
       return false;
     }
@@ -424,7 +424,7 @@ function initWritingPage() {
     const isProUser = typeof Monetization !== "undefined" && Monetization.isPro();
     const lockedTasks = (isProUser ? ((topic && topic.tasks) || []) : []).concat(initialTask || []).filter((task) => task && task.content_locked);
     if (lockedTasks.length && window.RusiProContent) {
-      window.RusiProContent.ensureFullList("WRITING_TASKS", lockedTasks, { title: "Đề luyện viết dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ đề thi viết TRKI chuyên sâu và trợ lý AI chữa ngữ pháp không giới hạn." })
+      window.RusiProContent.ensureFullList("WRITING_TASKS", lockedTasks, { title: "Đề luyện viết dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ đề thi viết TRKI chuyên sâu và trợ lý AI chữa ngữ pháp 20 lượt mỗi ngày." })
         .then((ok) => { if (ok) openWorkspace(topic, initialTask); });
       return;
     }

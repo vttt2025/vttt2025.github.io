@@ -1225,7 +1225,7 @@ const Monetization = {
         popular: false,
         features: [
           "Tất cả quyền lợi của gói 3 Tháng",
-          "Mở khóa toàn bộ 11 đề Luyện viết tự luận (Письмо) chấm AI không giới hạn",
+          "Mở khóa toàn bộ 11 đề Luyện viết tự luận (Письмо) với 20 lượt chấm AI mỗi ngày",
           "Đặc quyền kho 5.000+ từ vựng & phân tích ngữ pháp chuyên sâu",
           "Tặng bộ cẩm nang sinh tồn & kinh nghiệm du học Nga",
           "Ưu tiên hỗ trợ kỹ thuật và học thuật 1-1",
@@ -1258,7 +1258,7 @@ const Monetization = {
       document.body.appendChild(modal);
     }
 
-    const defaultDesc = "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng B1–B2, đề thi thử ТРКИ chuẩn quốc tế, bài luyện nghe video thực tế, AI chấm bài tự luận và nhận diện phát âm không giới hạn.";
+    const defaultDesc = "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng B1–B2, đề thi thử ТРКИ chuẩn quốc tế, bài luyện nghe video thực tế, AI chấm bài tự luận (20 lượt mỗi ngày) và nhận diện phát âm không giới hạn.";
     const descText = customDesc || defaultDesc;
     const user = this.getCurrentUser();
 
@@ -1532,7 +1532,7 @@ const Monetization = {
                 ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} Tôi đã chuyển khoản xong
               </button>
               <div class="vietqr-guarantee">
-                ${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 13 }) : ""} Đối soát tự động 24/7 · Kích hoạt ngay lập tức
+                ${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 13 }) : ""} Kích hoạt sau khi đối soát, trong giờ làm việc
               </div>
             </div>
           </div>

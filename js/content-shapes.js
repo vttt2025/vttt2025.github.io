@@ -15,7 +15,7 @@
 
   // Trường đáp án tuyệt đối không được xuất hiện trong file công khai của đề thi TRKI.
   const ANSWER_KEYS = new Set(['a', 'ex', 'ans', 'answer', 'answers', 'answer_key', 'official_key',
-    'correct_answer', 'correct_index', 'correct_option', 'correctIndex', 'explanation']);
+    'correct_answer', 'correct_index', 'correct_indices', 'correct_option', 'correctIndex', 'explanation']);
 
   function stripAnswers(value) {
     return JSON.parse(JSON.stringify(value, (k, v) => (ANSWER_KEYS.has(k) ? undefined : v)));

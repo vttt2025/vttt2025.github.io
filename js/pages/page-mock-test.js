@@ -379,6 +379,24 @@ function initMockTestPage() {
     return [];
   };
 
+  // Câu "chọn TẤT CẢ phương án đúng" (q.multi): đáp án là mảng chỉ số gốc; đúng khi chọn đủ và đúng mọi phương án.
+  // q.aMulti chỉ có sau khi máy chủ chấm/kiểm tra (Zero-Answer Leak).
+  const isMultiQ = (q) => Boolean(q && q.multi);
+  const hasAnswerKey = (q) => (isMultiQ(q) ? Array.isArray(q.aMulti) : typeof q.a === "number");
+  const isAnswerCorrect = (q, given) => {
+    if (!isMultiQ(q)) return typeof q.a === "number" && given === q.a;
+    if (!Array.isArray(q.aMulti) || !Array.isArray(given) || given.length !== q.aMulti.length) return false;
+    return q.aMulti.every((i) => given.includes(i));
+  };
+  const optionTexts = (opts, idxs) => (Array.isArray(idxs) ? idxs : [idxs]).map((i) => (opts || [])[i]).filter((s) => s !== undefined && s !== "").join(" / ");
+  // Câu chọn nhiều: bật/tắt một phương án; bỏ chọn hết thì coi như chưa làm
+  const toggleMultiAnswer = (answers, id, oi) => {
+    const cur = Array.isArray(answers[id]) ? answers[id].slice() : [];
+    const at = cur.indexOf(oi);
+    if (at >= 0) cur.splice(at, 1); else cur.push(oi);
+    if (cur.length) answers[id] = cur.sort((x, y) => x - y); else delete answers[id];
+  };
+
   // Fetch câu hỏi từ trki_question_bank và merge vào parts của test (Bug #1 fix)
   const loadQBankIntoTest = async (test) => {
     if (!test || !test.code) return;
@@ -402,6 +420,7 @@ function initMockTestPage() {
           q: r.prompt || r.question_text || "",
           options: normalizeOptions(r.options),
           a: typeof r.correct_index === "number" ? r.correct_index : undefined,
+          multi: r.question_type === "multi_select" || undefined,
           ex: r.explanation || "",
           topic: r.topic || ""
         }));
@@ -1668,9 +1687,12 @@ function initMockTestPage() {
       if (item.type === "question") {
         const q = item.q;
         const userAns = answers[id];
-        const hasAnswered = (userAns !== undefined);
-        const hasServerKey = (typeof q.a === "number");
-        const isCorrect = hasAnswered && hasServerKey && (userAns === q.a);
+        const multi = isMultiQ(q);
+        const selSet = multi ? (Array.isArray(userAns) ? userAns : []) : null;
+        // Câu chọn nhiều (luyện tập): chỉ đối chiếu khi học viên bấm "Kiểm tra đáp án"
+        const hasAnswered = multi ? (selSet.length > 0 && (!isPractice || Boolean(q._checkRequested))) : (userAns !== undefined);
+        const hasServerKey = hasAnswerKey(q);
+        const isCorrect = hasAnswered && hasServerKey && isAnswerCorrect(q, userAns);
         // Luyện tập: đã hiện đáp án đúng thì khoá câu, không cho chọn lại để "sửa" điểm.
         const isLocked = isPractice && hasAnswered && hasServerKey;
 
@@ -1695,26 +1717,30 @@ function initMockTestPage() {
           </div>
 
           <div class="cbt-q-prompt-text ru">${formattedPrompt}</div>
+          ${multi ? `<div class="cbt-multi-hint" style="margin:6px 0 10px;font-size:0.9rem;font-weight:600;color:var(--primary,#2563eb)">Chọn TẤT CẢ phương án đúng (có thể nhiều hơn 1 phương án).</div>` : ""}
 
-          <div class="cbt-options-card-list" role="radiogroup" aria-label="Các lựa chọn đáp án">
+          <div class="cbt-options-card-list" role="${multi ? 'group' : 'radiogroup'}" aria-label="Các lựa chọn đáp án">
             ${order.map((oi, lIdx) => {
               const optText = rawOpts[oi] || "";
+              const isSel = multi ? selSet.includes(oi) : userAns === oi;
               let cardClass = "cbt-choice-card";
               if (isPractice && hasAnswered && hasServerKey) {
-                if (oi === q.a) cardClass += " correct";
-                else if (oi === userAns && !isCorrect) cardClass += " wrong";
-              } else if (userAns === oi) {
+                const isKey = multi ? q.aMulti.includes(oi) : oi === q.a;
+                if (isKey) cardClass += " correct";
+                else if (isSel && !isCorrect) cardClass += " wrong";
+              } else if (isSel) {
                 cardClass += " selected";
               }
               return `
-                <button type="button" class="${cardClass}" data-oi="${oi}" role="radio" aria-checked="${userAns === oi ? 'true' : 'false'}"${isLocked ? ' disabled aria-disabled="true"' : ''}>
-                  <span class="cbt-choice-circle-letter">${letters[lIdx] || (lIdx + 1)}</span>
+                <button type="button" class="${cardClass}" data-oi="${oi}" role="${multi ? 'checkbox' : 'radio'}" aria-checked="${isSel ? 'true' : 'false'}"${isLocked ? ' disabled aria-disabled="true"' : ''}>
+                  <span class="cbt-choice-circle-letter"${multi ? ' style="border-radius:6px"' : ''}>${letters[lIdx] || (lIdx + 1)}</span>
                   <span class="cbt-choice-body-text ru">${esc(optText)}</span>
                   <span class="cbt-choice-kbd-hint">[${lIdx + 1}]</span>
                 </button>
               `;
             }).join("")}
           </div>
+          ${multi && isPractice && !hasAnswered && selSet.length ? `<button type="button" class="btn btn-primary" id="btnCheckMulti" style="margin-top:14px;min-height:44px">Kiểm tra đáp án</button>` : ""}
 
           ${isPractice && hasAnswered ? (hasServerKey ? `
             <div class="trki-practice-feedback ${isCorrect ? 'is-correct' : 'is-wrong'}" style="margin-top:20px">
@@ -1722,7 +1748,7 @@ function initMockTestPage() {
                 <span class="feedback-badge ${isCorrect ? 'badge-correct' : 'badge-wrong'}">
                   ${isCorrect ? '✓ Đúng' : '✕ Sai'}
                 </span>
-                ${!isCorrect ? `<span class="feedback-correct-answer">Đáp án đúng: <b class="ru" style="color:var(--green)">${esc(rawOpts[q.a] || q._correctAnswer || "")}</b></span>` : ''}
+                ${!isCorrect ? `<span class="feedback-correct-answer">Đáp án đúng: <b class="ru" style="color:var(--green)">${esc((multi ? optionTexts(rawOpts, q.aMulti) : rawOpts[q.a]) || q._correctAnswer || "")}</b></span>` : ''}
               </div>
               ${q.ex ? `
               <div class="feedback-ex">
@@ -1746,8 +1772,9 @@ function initMockTestPage() {
           if (typeof checkFn === "function") {
             checkFn(checkCode, qIdx, userAns).then((res) => {
               q._checking = false;
-              if (res && res.found && typeof res.correct_index === "number") {
+              if (res && res.found && typeof res.correct_index === "number" && (!multi || Array.isArray(res.correct_indices))) {
                 q.a = res.correct_index;
+                if (multi) q.aMulti = res.correct_indices;
                 q._correctAnswer = res.correct_answer || "";
                 q.ex = res.explanation || "";
               } else {
@@ -1774,11 +1801,18 @@ function initMockTestPage() {
         }
 
         // Bắt sự kiện chọn đáp án
+        const btnCheckMulti = rightBox.querySelector("#btnCheckMulti");
+        if (btnCheckMulti) btnCheckMulti.onclick = () => {
+          q._checkRequested = true;
+          q._checkFailed = false;
+          renderQuestionAt(currentItemIndex);
+        };
         rightBox.querySelectorAll(".cbt-choice-card").forEach(optBtn => {
           optBtn.onclick = () => {
             if (isLocked) return;
             const oi = parseInt(optBtn.dataset.oi, 10);
-            answers[id] = oi;
+            if (multi) toggleMultiAnswer(answers, id, oi);
+            else answers[id] = oi;
             q._checkFailed = false;
             try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(e) {}
             refreshMatrixCounts();
@@ -1971,11 +2005,13 @@ function initMockTestPage() {
         else if (key === "4" || key === "d") selectedOrderIndex = 3;
         else if (key === "5" || key === "e") selectedOrderIndex = 4;
 
-        const practiceLocked = isPractice && answers[item.id] !== undefined && typeof q.a === "number";
+        const multi = isMultiQ(q);
+        const practiceLocked = isPractice && answers[item.id] !== undefined && hasAnswerKey(q) && (!multi || Boolean(q._checkRequested));
         if (selectedOrderIndex >= 0 && selectedOrderIndex < order.length && !practiceLocked) {
           e.preventDefault();
           const oi = order[selectedOrderIndex];
-          answers[item.id] = oi;
+          if (multi) toggleMultiAnswer(answers, item.id, oi);
+          else answers[item.id] = oi;
           q._checkFailed = false;
           try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(err) {}
           refreshMatrixCounts();
@@ -2373,6 +2409,7 @@ function initMockTestPage() {
               const rev = serverGradeResult.reviews[base + qi];
               if (rev && typeof rev.correct_index === "number") {
                 q.a = rev.correct_index;
+                if (Array.isArray(rev.correct_indices)) q.aMulti = rev.correct_indices;
                 q.ex = rev.explanation || q.ex || "";
               }
             });
@@ -2421,7 +2458,7 @@ function initMockTestPage() {
       questions.forEach((q, qi) => {
         total++;
         const given = answers[part.id + "_" + qi];
-        if (typeof q.a === "number" && given === q.a) {
+        if (isAnswerCorrect(q, given)) {
           correct++;
           pc++;
         }
@@ -2618,7 +2655,7 @@ function initMockTestPage() {
         review.innerHTML += part.questions
           .map((q, qi) => {
             const given = answers[part.id + "_" + qi];
-            const ok = typeof q.a === "number" && given === q.a;
+            const ok = isAnswerCorrect(q, given);
             return `
           <div class="trki-review-row ${ok ? 'is-correct' : 'is-wrong'}">
             <div class="trki-review-row-header">
@@ -2633,12 +2670,12 @@ function initMockTestPage() {
             <div class="trki-review-answers-grid">
               <div class="trki-review-ans-col">
                 <span class="trki-ans-label">Bạn chọn:</span>
-                <span class="trki-ans-val ru ${ok ? 'pass' : 'fail'}">${given !== undefined ? esc(q.options[given]) : "— bỏ trống —"}</span>
+                <span class="trki-ans-val ru ${ok ? 'pass' : 'fail'}">${given !== undefined ? esc(optionTexts(q.options, given)) : "— bỏ trống —"}</span>
               </div>
               ${ok ? "" : `
                 <div class="trki-review-ans-col">
                   <span class="trki-ans-label">Đáp án đúng:</span>
-                  <span class="trki-ans-val ru pass">${esc(q.options[q.a])}</span>
+                  <span class="trki-ans-val ru pass">${esc(isMultiQ(q) ? optionTexts(q.options, q.aMulti) : q.options[q.a])}</span>
                 </div>
               `}
             </div>

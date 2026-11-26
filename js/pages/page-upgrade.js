@@ -216,7 +216,7 @@ function initUpgradePage() {
         <div style="text-align:center">
           <span class="section-kicker">KÍCH HOẠT TỨC THÌ</span>
           <h2 style="font-size:1.6rem;font-weight:800;color:var(--text);margin-bottom:6px">Quy Trình 3 Bước Kích Hoạt Tự Động</h2>
-          <p style="color:var(--muted);font-size:0.92rem">Không cần chụp biên lai hay chờ duyệt thủ công. Hệ thống đối soát tự động 24/7.</p>
+          <p style="color:var(--muted);font-size:0.92rem">Chuyển khoản đúng nội dung để được kích hoạt nhanh nhất.</p>
         </div>
 
         <div class="steps-grid">
@@ -245,8 +245,8 @@ function initUpgradePage() {
       <div class="guarantees-grid">
         <div class="guarantee-card">
           <div class="guarantee-icon">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 28 }) : ""}</div>
-          <div class="guarantee-title">Kích Hoạt Tức Thì</div>
-          <div class="guarantee-desc">Tự động 24/7 kể cả ban đêm và ngày nghỉ.</div>
+          <div class="guarantee-title">Kích Hoạt Nhanh</div>
+          <div class="guarantee-desc">Kích hoạt sau khi đối soát, trong giờ làm việc.</div>
         </div>
         <div class="guarantee-card">
           <div class="guarantee-icon">${window.RusiIcons ? RusiIcons.get("shield-anti-cheat", { size: 28 }) : ""}</div>
@@ -296,7 +296,7 @@ function initUpgradePage() {
               <i>+</i>
             </button>
             <div class="faq-answer">
-              <p>• <b>Gói 1 Tháng (399.000đ)</b>: Phù hợp nhất cho học viên ôn thi nước rút trong 2–4 tuần trước ngày thi thật.<br/>• <b>Gói 3 Tháng (899.000đ - Tiết kiệm 25%)</b>: Lựa chọn phổ biến nhất để hoàn thành trọn vẹn 1 cấp độ (A1→A2 hoặc A2→B1) hoặc ôn thi học phần đại học.<br/>• <b>Gói 1 Năm (1.899.000đ - Tiết kiệm 60%)</b>: Đồng hành trọn vẹn 1 năm Khoa dự bị (Подфак) tại Nga hoặc cả năm học chuyên ngành đại học, hỗ trợ chấm bài viết luận AI không giới hạn.</p>
+              <p>• <b>Gói 1 Tháng (399.000đ)</b>: Phù hợp nhất cho học viên ôn thi nước rút trong 2–4 tuần trước ngày thi thật.<br/>• <b>Gói 3 Tháng (899.000đ - Tiết kiệm 25%)</b>: Lựa chọn phổ biến nhất để hoàn thành trọn vẹn 1 cấp độ (A1→A2 hoặc A2→B1) hoặc ôn thi học phần đại học.<br/>• <b>Gói 1 Năm (1.899.000đ - Tiết kiệm 60%)</b>: Đồng hành trọn vẹn 1 năm Khoa dự bị (Подфак) tại Nga hoặc cả năm học chuyên ngành đại học, hỗ trợ chấm bài viết luận AI 20 lượt mỗi ngày.</p>
             </div>
           </div>
           <div class="faq-item">
