@@ -371,7 +371,8 @@
             { v: "multiple_choice", l: "Trắc nghiệm chọn 1 trong 4 (Multiple Choice)" },
             { v: "fill_in_blank", l: "Điền từ vào chỗ trống (Fill in Blank)" },
             { v: "matching", l: "Nối cặp từ / câu (Matching)" },
-            { v: "sentence_ordering", l: "Sắp xếp câu (Sentence Ordering)" }
+            { v: "sentence_ordering", l: "Sắp xếp câu (Sentence Ordering)" },
+            { v: "multi_select", l: "Chọn nhiều đáp án đúng (Multi Select)" }
           ],
           defaultValue: "multiple_choice"
         },
@@ -391,6 +392,7 @@
           ],
           defaultValue: 0
         },
+        { key: "correct_indices", label: "Các đáp án đúng (chỉ cho dạng Chọn nhiều đáp án)", type: "text", placeholder: "Ví dụ: 0,2", help: "Số thứ tự phương án đúng, bắt đầu từ 0, cách nhau dấu phẩy. Học viên phải chọn đủ và đúng mọi phương án mới được điểm." },
         { key: "correct_answer", label: "Từ/câu đáp án đúng", type: "text", placeholder: "Ví dụ: по-русски" },
         { key: "explanation", label: "Giải thích đáp án & Căn cứ ngữ pháp", type: "textarea", rows: 3, placeholder: "Ví dụ: Động từ читать đi với trạng từ chỉ ngôn ngữ по-русски." },
         { key: "topic", label: "Chuyên điểm ngữ pháp / Chủ đề", type: "text", placeholder: "Ví dụ: Đại từ quan hệ, Biến cách Cách 2, Thể động từ..." },
@@ -2367,7 +2369,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       primaryBtn = `<a class="p-btn p-btn-primary p-btn-sm" href="#collection/${State.currentSlug}/create">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Tạo mới</a>`;
       secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncWeb" type="button" title="Đồng bộ vào runtime web">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} Đẩy về Web</button>`;
       if (SupabaseSyncEngine && SupabaseSyncEngine.hasMapping(State.currentSlug)) {
-        secondaryBtn += `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncCloudSingle" type="button" title="Đẩy toàn bộ collection này lên Supabase">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Lưu Cloud</button>`;
+        secondaryBtn += `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncCloudSingle" type="button" title="Đẩy các bản sửa chưa lưu của collection này lên Supabase">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Lưu Cloud</button>`;
       }
     } else if (State.currentRoute === "editor") {
       const mapping = SupabaseSyncEngine && SupabaseSyncEngine.MAPPINGS[State.currentSlug];
@@ -5928,8 +5930,17 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
       `;
     }
 
+    // Đề có câu trong Ngân hàng câu hỏi: máy chủ lấy câu hỏi từ ngân hàng khi lưu (sửa câu ở đây bị bỏ qua)
+    const bankManaged = (Array.isArray(draft.parts) ? draft.parts : []).some((p) => p && (p.sub_test ||
+      (Array.isArray(p.questions) && p.questions.some((q) => q && q.code))));
+    const bankNotice = bankManaged ? `
+        <div role="note" style="padding:10px 12px;border-radius:10px;border:1px solid var(--p-warning,#f59e0b);background:var(--p-surface-subtle,#fffbeb);font-size:13px;line-height:1.5">
+          <strong>Câu hỏi của đề này lấy từ Ngân hàng câu hỏi TRKI.</strong> Sửa, thêm, ẩn câu hoặc đáp án ở mục Ngân hàng câu hỏi (mã đề <code>${esc(draft.code || draft.id || "")}</code>); đề tự cập nhật. Sửa câu ở đây sẽ không được lưu — chỉ tên phần, thời gian, mô tả... được lưu.
+        </div>` : "";
+
     return `
       <div style="display:flex;flex-direction:column;gap:16px">
+        ${bankNotice}
         <!-- Subtests Navigation Bar -->
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--p-surface-subtle,#f9fafb);padding:10px 12px;border-radius:10px;border:1px solid var(--p-border-subtle,#e5e7eb)">
           ${tabsHtml}
@@ -7062,11 +7073,21 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const tagsArr = Array.isArray(doc.tags)
             ? doc.tags
             : (typeof doc.tags === "string" ? doc.tags.split("\n").map(s => s.trim()).filter(Boolean) : []);
-          const correctIdx = Number(doc.correct_index != null ? doc.correct_index : 0);
-          const correctAns = doc.correct_answer || (opts[correctIdx] || "");
+          let correctIdx = Number(doc.correct_index != null ? doc.correct_index : 0);
+          let correctAns = doc.correct_answer || (opts[correctIdx] || "");
           const orderIdx = Number(doc.order_index != null ? doc.order_index : (doc.question_number != null ? doc.question_number : 1));
           const rawQType = String(doc.question_type || "multiple_choice").trim();
           const dbQType = rawQType === "fill_in" ? "fill_in_blank" : (rawQType === "true_false" ? "multiple_choice" : rawQType);
+          let correctIndices = null;
+          if (dbQType === "multi_select") {
+            const raw = Array.isArray(doc.correct_indices) ? doc.correct_indices : String(doc.correct_indices || "").split(/[\s,;]+/);
+            correctIndices = Array.from(new Set(raw.filter((x) => String(x).trim() !== "").map(Number))).sort((a, b) => a - b);
+            if (!correctIndices.length || correctIndices.some((i) => !Number.isInteger(i) || i < 0 || i >= opts.length)) {
+              throw new Error(`Câu chọn nhiều đáp án: ô "Các đáp án đúng" phải là số thứ tự phương án (0 đến ${opts.length - 1}), cách nhau dấu phẩy.`);
+            }
+            correctIdx = correctIndices[0];
+            correctAns = correctIndices.map((i) => opts[i]).join(" / ");
+          }
           return {
             id: qId,
             code: doc.code || ("TRKI_Q_" + Date.now().toString().slice(-4)),
@@ -7084,6 +7105,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             image_url: doc.image_url || null,
             options: opts,
             correct_index: correctIdx,
+            correct_indices: correctIndices,
             correct_answer: correctAns,
             explanation: doc.explanation || null,
             topic: doc.topic || null,
@@ -7114,6 +7136,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           image_url: row.image_url || "",
           options: Array.isArray(row.options) ? row.options : [],
           correct_index: row.correct_index != null ? Number(row.correct_index) : 0,
+          correct_indices: Array.isArray(row.correct_indices) ? row.correct_indices.join(",") : "",
           correct_answer: row.correct_answer || "",
           explanation: row.explanation || "",
           topic: row.topic || "",
@@ -8284,8 +8307,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             notes: w.notes ?? w.note ?? null,
             structures: Array.isArray(w.structures) ? w.structures : [],
             examples: Array.isArray(w.examples) ? w.examples : (w.ex ? [{ ru: w.ex, vi: w.ex_vi || "" }] : []),
-            audio_url: wAudio,
-            updated_at: new Date().toISOString()
+            audio_url: wAudio
           });
           itemsToInsert.push({
             jar_id: jarId,
@@ -8359,7 +8381,26 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
 
         if (error) {
           console.error(`[SupabaseSyncEngine] Lỗi upsert bảng ${mapping.table}:`, error);
-          return { ok: false, error, message: error.message || "Lỗi Supabase" };
+          return { ok: false, conflict: error.code === "RS409", error, message: error.message || "Lỗi Supabase" };
+        }
+
+        // Mốc phiên bản mới cho lần lưu sau + dữ liệu máy chủ đã dựng lại
+        const saved = data && data[0];
+        if (saved && saved.updated_at && slug !== "USERS" && slug !== "ORDERS") doc.__cloud_updated_at = saved.updated_at;
+        if (slug === "TRKI_BANK" && saved) {
+          // Câu hỏi của đề có ngân hàng được máy chủ lấy lại từ ngân hàng → giữ bản cục bộ giống Cloud
+          ["parts", "sections", "part1", "part2", "part3", "part4", "part5"].forEach((k) => {
+            if (saved[k] !== undefined) doc[k] = saved[k];
+          });
+        }
+        if (slug === "TRKI_QUESTION_BANK" && saved && saved.id) {
+          // Máy chủ có thể đánh số lại order_index sau câu lệnh (trigger dựng lại parts) → đọc lại
+          const { data: fresh, error: freshErr } = await sb.from(mapping.table).select("order_index, updated_at").eq("id", saved.id).maybeSingle();
+          if (freshErr) console.warn("[SupabaseSyncEngine] Không đọc lại được thứ tự câu sau khi lưu:", freshErr);
+          else if (fresh) {
+            doc.order_index = fresh.order_index;
+            doc.__cloud_updated_at = fresh.updated_at;
+          }
         }
 
         // Đồng bộ gương song song cho các bảng liên kết và kiểm tra lỗi tường minh
@@ -8600,23 +8641,19 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       let totalSuccess = 0;
       let totalErrors = 0;
       let firstError = "";
-      // ORDERS/USERS chỉ được ghi qua sửa từng bản ghi (tránh ghi đè trạng thái thanh toán/PRO mới hơn trên server)
-      const slugs = Object.keys(this.MAPPINGS).filter(s => s !== "ORDERS" && s !== "USERS");
+      const slugs = this.pushableSlugs();
 
       for (let i = 0; i < slugs.length; i++) {
         const slug = slugs[i];
         const mapping = this.MAPPINGS[slug];
-        const items = getMergedList(slug).map(stripSource);
 
         if (typeof onProgress === "function") {
-          onProgress({ index: i + 1, totalSlugs: slugs.length, slug, label: mapping.label, status: "syncing", current: 0, total: items.length });
+          onProgress({ index: i + 1, totalSlugs: slugs.length, slug, label: mapping.label, status: "syncing", current: 0, total: this.countUnsynced(slug) });
         }
 
-        const batchRes = await this.syncCollectionBatch(sb, slug, items, {
-          onChunkDone: (processed, total) => {
-            if (typeof onProgress === "function") {
-              onProgress({ index: i + 1, totalSlugs: slugs.length, slug, label: mapping.label, status: "syncing", current: processed, total });
-            }
+        const batchRes = await this.pushUnsynced(slug, (processed, total) => {
+          if (typeof onProgress === "function") {
+            onProgress({ index: i + 1, totalSlugs: slugs.length, slug, label: mapping.label, status: "syncing", current: processed, total });
           }
         });
 
@@ -8633,6 +8670,52 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       }
 
       return { ok: totalErrors === 0, totalSuccess, totalErrors, firstError, results };
+    },
+
+    // ORDERS/USERS chỉ được ghi qua sửa từng bản ghi (tránh ghi đè trạng thái thanh toán/PRO mới hơn trên server)
+    pushableSlugs() {
+      return Object.keys(this.MAPPINGS).filter(s => s !== "ORDERS" && s !== "USERS");
+    },
+
+    countUnsynced(slug) {
+      return (loadAdminStore()[slug] || []).filter((it) => it && it.__unsynced).length;
+    },
+
+    // Đẩy lên Cloud CHỈ các bản sửa cục bộ chưa lưu được (__unsynced) — không đẩy lại bản đã tải về,
+    // để bản cũ trên máy không ghi đè dữ liệu mới hơn trên Cloud. Lưu từng bản (có kiểm tra phiên bản).
+    async pushUnsynced(slug, onItem) {
+      const keyOf = (it) => it.id || it.code || it.slug || it.title;
+      const pending = (loadAdminStore()[slug] || []).filter((it) => it && it.__unsynced);
+      let synced = 0;
+      let errors = 0;
+      let conflicts = 0;
+      let firstError = "";
+      for (const it of pending) {
+        const localKey = keyOf(it);
+        const doc = stripSource(JSON.parse(JSON.stringify(it)));
+        delete doc.__unsynced;
+        const res = await this.upsertDoc(slug, doc, { skipAuthCheck: true });
+        if (res.ok) {
+          synced++;
+          const store = loadAdminStore();
+          const idx = (store[slug] || []).findIndex((x) => x && keyOf(x) === localKey);
+          if (idx >= 0) {
+            const entry = { ...store[slug][idx] };
+            delete entry.__unsynced;
+            if (doc.uuid) entry.uuid = doc.uuid;
+            if (doc.__cloud_updated_at) entry.__cloud_updated_at = doc.__cloud_updated_at;
+            store[slug][idx] = entry;
+            saveAdminStore(store);
+          }
+        } else {
+          errors++;
+          if (res.conflict) conflicts++;
+          if (!firstError) firstError = `${localKey}: ${res.message || "Lỗi"}`;
+        }
+        if (typeof onItem === "function") onItem(synced + errors, pending.length);
+      }
+      if (conflicts) firstError = `${conflicts} bản bị Cloud từ chối vì Cloud có bản mới hơn — mở từng bản và Lưu để chọn giữ hay tải bản mới. ` + firstError;
+      return { total: pending.length, synced, errors, conflicts, firstError };
     },
 
     async fetchAllTableRows(sb, table, select = "*", pageSize = 1000) {
@@ -8753,6 +8836,29 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     }
   };
   window.SupabaseSyncEngine = SupabaseSyncEngine;
+
+  // Chống ghi đè bản cũ: nhớ updated_at của dòng Cloud lúc tải về (__cloud_updated_at) và gửi lại khi lưu.
+  // Máy chủ (trigger rusi_00_stale_guard) từ chối (lỗi RS409) nếu dòng đã được sửa sau mốc đó.
+  // Bản không có mốc (lấy từ file công khai / kéo bằng CMS cũ) thì không gửi updated_at → không kiểm tra được.
+  Object.keys(SupabaseSyncEngine.MAPPINGS).forEach((slug) => {
+    if (slug === "USERS" || slug === "ORDERS") return;
+    const m = SupabaseSyncEngine.MAPPINGS[slug];
+    const origFromRow = m.fromRow;
+    const origToRow = m.toRow;
+    m.fromRow = (row) => {
+      const doc = origFromRow(row);
+      if (doc && row && row.updated_at) doc.__cloud_updated_at = row.updated_at;
+      return doc;
+    };
+    m.toRow = (doc) => {
+      const row = origToRow(doc);
+      if (row && typeof row === "object") {
+        if (doc && doc.__cloud_updated_at) row.updated_at = doc.__cloud_updated_at;
+        else delete row.updated_at;
+      }
+      return row;
+    };
+  });
 
   // Sau khi ghi nội dung lên Cloud: kiểm tra tín hiệu xuất bản tới GitHub có thành công không (thiếu token / token hết hạn
   // trước đây không ai thấy, web không cập nhật). Gom nhiều lần lưu liên tiếp thành một lần kiểm tra.
@@ -9211,6 +9317,16 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             saveAdminStore(syncedStore);
           }
           toast(`Đã lưu & đồng bộ thành công lên Supabase (bảng ${syncRes.table})!`, "success");
+        } else if (syncRes.conflict) {
+          cloudSuccess = false;
+          const reload = confirm(syncRes.message + "\n\nOK: bỏ bản sửa của bạn và tải bản mới nhất từ Cloud.\nHuỷ: giữ bản sửa trên máy này (CHƯA lưu lên Cloud).");
+          if (reload) {
+            State.savedSnapshot = JSON.stringify(State.currentDraft);
+            restoreButtons(false);
+            await reloadDocFromCloud(slug, data, preSyncKey);
+            return;
+          }
+          toast("Bản sửa vẫn nằm trên máy này, CHƯA lưu lên Cloud.", "warning");
         } else {
           cloudSuccess = false;
           toast(`Lưu cục bộ OK, nhưng LƯU LÊN CLOUD THẤT BẠI (${SupabaseSyncEngine.MAPPINGS[slug].table}): ${syncRes.message}`, "error");
@@ -9246,6 +9362,45 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     } else {
       navigateTo(`#collection/${slug}`);
     }
+  }
+
+  // Cloud từ chối lưu vì có bản mới hơn → thay bản trên máy bằng bản Cloud rồi mở lại trình soạn
+  async function reloadDocFromCloud(slug, doc, localKey) {
+    const mapping = SupabaseSyncEngine.MAPPINGS[slug];
+    const sb = SupabaseSyncEngine.getClient();
+    let keyVal = null;
+    try {
+      const row = mapping.toRow(JSON.parse(JSON.stringify(doc)));
+      keyVal = row && !mapping.conflict.includes(",") ? row[mapping.conflict] : null;
+    } catch (_) { keyVal = null; }
+    if (!sb || keyVal === null || keyVal === undefined || keyVal === "") {
+      toast("Không xác định được bản ghi trên Cloud — hãy Kéo từ Cloud bộ sưu tập này.", "error");
+      return false;
+    }
+    let selectQuery = "*";
+    if (slug === "VOCAB_JARS") selectQuery = "*, jar_items(position, vocabularies(*))";
+    else if (slug === "VOCABULARIES") selectQuery = "*, jar_items(jar_id)";
+    const { data: row, error } = await sb.from(mapping.table).select(selectQuery).eq(mapping.conflict, keyVal).maybeSingle();
+    if (error || !row) {
+      toast("Không tải được bản mới nhất từ Cloud: " + ((error && error.message) || "không tìm thấy bản ghi"), "error");
+      return false;
+    }
+    const fresh = mapping.fromRow(row);
+    const keyOf = (it) => it.id || it.code || it.slug || it.title;
+    const store = loadAdminStore();
+    store[slug] = store[slug] || [];
+    const idx = store[slug].findIndex((it) => it && (keyOf(it) === localKey || (fresh.uuid && it.uuid === fresh.uuid)));
+    const entry = { ...fresh, __admin: true, __fromSupabase: true };
+    if (idx >= 0) store[slug][idx] = entry;
+    else store[slug].push(entry);
+    saveAdminStore(store);
+    syncDataToWeb();
+    renderSidebarLists();
+    toast("Đã tải bản mới nhất từ Cloud. Hãy sửa lại trên bản này.", "success");
+    const newHash = `#collection/${slug}/edit/${keyOf(fresh)}`;
+    if (window.location.hash === newHash) handleRoute();
+    else window.location.hash = newHash;
+    return true;
   }
 
   // Thùng rác: giữ bản sao đầy đủ của tài liệu trong admin store để khôi phục được
@@ -9904,7 +10059,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
           <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.openSupabaseModal()">${window.RusiIcons ? RusiIcons.get("settings-gear", { size: 14 }) : ""} Cấu hình Anon Key</button>
-          <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.syncAllToSupabase()">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Đẩy toàn bộ lên Supabase (Push All)</button>
+          <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.syncAllToSupabase()">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Đẩy bản sửa chưa lưu lên Supabase</button>
           <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.pullAllFromSupabase()">${window.RusiIcons ? RusiIcons.get("cloud-download", { size: 14 }) : ""} Kéo toàn bộ về Web (Pull All)</button>
           <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="window.refreshSupabaseStats()">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 14 }) : ""} Làm mới số lượng</button>
         </div>
@@ -9966,6 +10121,13 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       return;
     }
 
+    const pendingTotal = SupabaseSyncEngine.pushableSlugs().reduce((n, s) => n + SupabaseSyncEngine.countUnsynced(s), 0);
+    if (!pendingTotal) {
+      toast("Không có bản sửa nào chưa lưu lên Cloud. Mọi bản sửa đã được lưu ngay khi bấm Lưu.", "info");
+      return;
+    }
+    if (!confirm(`Đẩy ${pendingTotal} bản sửa chưa lưu lên Cloud?\nChỉ các bản sửa trên máy này chưa lưu được mới được đẩy; bản nào Cloud đã có thay đổi mới hơn sẽ bị từ chối.`)) return;
+
     const box = document.getElementById("sbSyncProgressBox");
     const pTitle = document.getElementById("sbProgressTitle");
     const pPercent = document.getElementById("sbProgressPercent");
@@ -9975,7 +10137,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     if (box) box.style.display = "block";
     if (pTitle) pTitle.textContent = "Đang đẩy dữ liệu lên Supabase Cloud...";
 
-    toast("Bắt đầu đồng bộ 8 bảng lên Supabase Cloud...");
+    toast(`Bắt đầu đẩy ${pendingTotal} bản sửa chưa lưu lên Supabase Cloud...`);
 
     const res = await SupabaseSyncEngine.syncAllCollections((prog) => {
       const pct = Math.round((prog.index / prog.totalSlugs) * 100);
@@ -10065,9 +10227,14 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       toast(authRes.message, "error");
       return;
     }
+    const pendingCount = SupabaseSyncEngine.countUnsynced(slug);
+    if (!pendingCount) {
+      toast(`Không có bản sửa ${mapping.label} nào chưa lưu lên Cloud.`, "info");
+      return;
+    }
+    if (!confirm(`Đẩy ${pendingCount} bản sửa ${mapping.label} chưa lưu lên Cloud?\nChỉ các bản sửa trên máy này chưa lưu được mới được đẩy; bản nào Cloud đã có thay đổi mới hơn sẽ bị từ chối.`)) return;
     toast(`Đang đẩy ${mapping.label} lên Supabase Cloud...`, "info");
-    const items = getMergedList(slug).map(stripSource);
-    const res = await SupabaseSyncEngine.syncCollectionBatch(sb, slug, items);
+    const res = await SupabaseSyncEngine.pushUnsynced(slug);
     if (res.errors === 0) {
       toast(`Đã đồng bộ thành công ${res.synced}/${res.total} bản ghi ${mapping.label} lên bảng [${mapping.table}]!`, "success");
     } else if (res.synced === 0) {
