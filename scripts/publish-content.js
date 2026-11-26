@@ -148,7 +148,7 @@ const BUILDERS = {
   'vocabularies.json': {
     tables: ['vocabularies'],
     async build(cfg) {
-      return (await apiAll(cfg, 'vocabularies?select=*&order=word_normalized.asc')).map(sanitizeWord).filter(Boolean);
+      return (await apiAll(cfg, 'vocabularies?select=*&order=word_normalized.asc,id.asc')).map(sanitizeWord).filter(Boolean);
     }
   },
   'vocab_lessons.json': {
@@ -287,6 +287,7 @@ async function main() {
   const dryRun = process.argv.includes('--dry-run');
   const cfg = getConfig();
   const manifest = readJson(MANIFEST, { modules: {}, sources: {} });
+  const prevManifest = JSON.stringify({ modules: manifest.modules, sources: manifest.sources });
 
   let versions = null;
   try {
@@ -340,8 +341,12 @@ async function main() {
     if (!manifest.modules[f]) manifest.modules[f] = { v: hashOf(fs.readFileSync(path.join(MODULES_DIR, f), 'utf8')) };
   }
   if (versions) manifest.sources = { ...manifest.sources, ...versions };
-  manifest.generated_at = new Date().toISOString();
-  if (!dryRun) fs.writeFileSync(MANIFEST, JSON.stringify(manifest, null, 1) + '\n');
+  // Chỉ ghi manifest khi phiên bản module hoặc bộ đếm bảng đổi: chỉ đổi generated_at sẽ tạo commit thừa mỗi lần chạy.
+  // (Vẫn ghi bộ đếm mới dù nội dung y nguyên để lần sau không kéo lại các bảng đó — tiết kiệm egress Supabase.)
+  if (JSON.stringify({ modules: manifest.modules, sources: manifest.sources }) !== prevManifest) {
+    manifest.generated_at = new Date().toISOString();
+    if (!dryRun) fs.writeFileSync(MANIFEST, JSON.stringify(manifest, null, 1) + '\n');
+  }
 
   console.log(`File đã thay đổi: ${changedFiles.join(', ') || '(không có)'}${dryRun ? ' [dry-run, chưa ghi]' : ''}`);
   console.log(`Egress Supabase lần chạy này: ${(egressBytes / 1024).toFixed(0)} KB`);

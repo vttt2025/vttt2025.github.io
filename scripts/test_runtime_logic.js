@@ -241,6 +241,28 @@ console.log('✓ 2. SRS: Stress-mark normalization, cardId, markMastered/unmarkM
   assert.deepStrictEqual(sb.STORE.get('vocab_mastered_words'), [], 'unmastered card removes word from mastered list');
   passed++;
 
+  // Gộp 3 chiều với BASE: mục máy này xoá không quay lại, mục máy khác thêm được giữ, mục máy này thêm được giữ
+  {
+    sb.STORE._write('vocab_synced_at', 5000);
+    sb.STORE._write('vocab_changed_at', 6000);
+    sb.STORE._write('vocab_sync_base', { custom_jars: [{ id: 'j1', words: [{ ru: 'a' }, { ru: 'b' }] }, { id: 'jdel', words: [] }], starred: ['x', 'y'], mastered_words: [] });
+    sb.STORE._write('custom_jars', [{ id: 'j1', words: [{ ru: 'a' }, { ru: 'c' }] }, { id: 'jnew', words: [] }]);
+    sb.STORE._write('quizlet_starred', ['y', 'z']);
+    sb.STORE._write('vocab_mastered_words', []);
+    VS._merge({
+      v: 1, updatedAt: 7000, srs: { cards: {}, resetAt: 0 },
+      custom_jars: [{ id: 'j1', words: [{ ru: 'a' }, { ru: 'b' }, { ru: 'd' }] }, { id: 'jdel', words: [] }, { id: 'jremote', words: [] }],
+      starred: ['x', 'y', 'w'], mastered_words: []
+    });
+    const jars = sb.STORE.get('custom_jars');
+    assert.deepStrictEqual(jars.map(j => j.id).sort(), ['j1', 'jnew', 'jremote'], '3-way: deleted jar stays deleted, both sides\' new jars kept');
+    assert.deepStrictEqual(jars.find(j => j.id === 'j1').words.map(w => w.ru).sort(), ['a', 'c', 'd'], '3-way: words merged inside jar');
+    assert.deepStrictEqual(sb.STORE.get('quizlet_starred').sort(), ['w', 'y', 'z'], '3-way: unstarred word not resurrected');
+    assert(VS.isDirty(), '3-way merge result must be pushed');
+    assert.strictEqual(VS.payloadForPush('someone-else'), null, 'never push for an account that was not pulled');
+  }
+  passed++;
+
   // Thẻ gửi lên không mang câu ví dụ
   const built = VS._build();
   assert(!('ex' in (built.srs.cards.b || {})), 'payload strips ex');

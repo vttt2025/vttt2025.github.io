@@ -7338,6 +7338,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         conflict: "code",
         deleteCol: "id",
         label: "Bài học ngữ pháp",
+        // Cột → trường item: item không mang trường nào (vd. bản từ file module công khai) thì giữ giá trị trên Cloud (fetchPreservedRows)
+        preserveIfAbsent: { examples: ["examples"], publication_status: ["publication_status", "is_published"] },
         idKey: (doc) => doc.id || doc.code,
         toRow: (doc) => {
           const codeVal = String(doc.code || doc.id || ("grammar_" + Date.now().toString().slice(-4))).trim();
@@ -7369,7 +7371,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         fromRow: (row) => {
           const mdContent = row.content_md || row.content || "";
           return {
-            id: row.id,
+            id: row.code || row.id,
             uuid: row.id,
             code: row.code || row.id,
             level: row.level || "A1",
@@ -7436,6 +7438,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         conflict: "code",
         deleteCol: "code",
         label: "Bài luyện nghe & chính tả",
+        preserveIfAbsent: { sort_order: ["sort_order"], lesson_type: ["lesson_type"] },
         idKey: (doc) => doc.code || doc.id,
         toRow: (doc) => {
           const lesUuid = (doc.lesson_uuid && isValidUUID(doc.lesson_uuid)) ? doc.lesson_uuid : ((doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID()));
@@ -7638,6 +7641,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         conflict: "code",
         deleteCol: "code",
         label: "Bài luyện viết (Tả tranh & Dịch)",
+        preserveIfAbsent: {
+          topic_id: ["topic_id"], task_type: ["task_type"], source_text: ["source_text"], ai_prompt: ["ai_prompt"],
+          sort_order: ["sort_order"], publication_status: ["publication_status"]
+        },
         idKey: (doc) => doc.code || doc.id,
         toRow: (doc) => {
           const modelText = doc.model_answer ?? doc.sample_essay ?? doc.model ?? doc.sample_text ?? "";
@@ -8186,6 +8193,39 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       }
     },
 
+    // Item lấy từ file module công khai thiếu một số cột (sort_order, task_type...) → toRow điền giá trị mặc định
+    // và ghi đè giá trị thật trên Cloud. Đọc các cột đó của đúng những dòng cần (theo khoá conflict, lô 50) để giữ lại.
+    async fetchPreservedRows(sb, slug, docs) {
+      const mapping = this.MAPPINGS[slug];
+      const preserve = mapping && mapping.preserveIfAbsent;
+      const byKey = new Map();
+      if (!preserve) return byKey;
+      const cols = Object.keys(preserve);
+      const keys = Array.from(new Set(docs
+        .filter((d) => d && cols.some((c) => preserve[c].every((f) => d[f] === undefined)))
+        .map((d) => String(d[mapping.conflict] || d.id || "").trim())
+        .filter(Boolean)));
+      for (let i = 0; i < keys.length; i += 50) {
+        const { data, error } = await sb.from(mapping.table).select([mapping.conflict].concat(cols).join(",")).in(mapping.conflict, keys.slice(i, i + 50));
+        if (error) throw new Error("Không đọc được dữ liệu hiện có trên Cloud để giữ nguyên các cột thiếu: " + error.message);
+        (data || []).forEach((r) => byKey.set(String(r[mapping.conflict]).trim(), r));
+      }
+      return byKey;
+    },
+
+    // Gán lại giá trị Cloud cho các cột mà item không mang trường tương ứng (dòng mới: giữ mặc định của toRow)
+    applyPreserved(slug, doc, row, byKey) {
+      const mapping = this.MAPPINGS[slug];
+      const preserve = mapping && mapping.preserveIfAbsent;
+      if (!preserve || !row) return row;
+      const existing = byKey.get(String(row[mapping.conflict]).trim());
+      if (!existing) return row;
+      Object.keys(preserve).forEach((col) => {
+        if (preserve[col].every((f) => doc[f] === undefined)) row[col] = existing[col];
+      });
+      return row;
+    },
+
     async syncJarRelations(sb, jarId, doc) {
       if (!jarId || !isValidUUID(jarId)) return { ok: true };
       const words = Array.isArray(doc.words) ? doc.words : null;
@@ -8246,15 +8286,24 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         }
       }
 
-      const { error: delErr } = await sb.from("jar_items").delete().eq("jar_id", jarId);
-      if (delErr) {
-        return { ok: false, error: delErr, message: "Lỗi cập nhật jar_items (xóa cũ): " + delErr.message };
-      }
-
+      // Ghi danh sách mới trước (khoá chính jar_id,vocab_id), rồi mới xoá các từ không còn trong lọ:
+      // nếu ghi lỗi, lọ vẫn giữ danh sách cũ thay vì bị xoá trắng rồi xuất bản lên web.
       if (itemsToInsert.length > 0) {
-        const { error: insErr } = await sb.from("jar_items").insert(itemsToInsert);
+        const { error: insErr } = await sb.from("jar_items").upsert(itemsToInsert, { onConflict: "jar_id,vocab_id" });
         if (insErr) {
           return { ok: false, error: insErr, message: "Lỗi cập nhật jar_items (gán mới): " + insErr.message };
+        }
+      }
+
+      const { data: currentItems, error: curErr } = await sb.from("jar_items").select("vocab_id").eq("jar_id", jarId);
+      if (curErr) {
+        return { ok: false, error: curErr, message: "Lỗi cập nhật jar_items (đọc danh sách cũ): " + curErr.message };
+      }
+      const staleIds = (currentItems || []).map((r) => r.vocab_id).filter((id) => !seenVocabIds.has(id));
+      for (let i = 0; i < staleIds.length; i += 100) {
+        const { error: delErr } = await sb.from("jar_items").delete().eq("jar_id", jarId).in("vocab_id", staleIds.slice(i, i + 100));
+        if (delErr) {
+          return { ok: false, error: delErr, message: "Lỗi cập nhật jar_items (xóa cũ): " + delErr.message };
         }
       }
 
@@ -8285,7 +8334,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
 
       try {
         await this.resolveExistingIds(sb, slug, [doc]);
-        const row = mapping.toRow(doc);
+        const preserved = await this.fetchPreservedRows(sb, slug, [doc]);
+        const row = this.applyPreserved(slug, doc, mapping.toRow(doc), preserved);
         const { data, error } = await sb
           .from(mapping.table)
           .upsert(row, { onConflict: mapping.conflict })
@@ -8359,9 +8409,11 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       for (let i = 0; i < targetItems.length; i += BATCH_SIZE) {
         const chunk = targetItems.slice(i, i + BATCH_SIZE);
         await this.resolveExistingIds(sb, slug, chunk);
-        const rows = chunk.map(it => mapping.toRow(it));
 
         try {
+          // Lỗi đọc dòng hiện có → catch bên dưới thử từng mục (upsertDoc báo lỗi), không ghi giá trị mặc định
+          const preserved = await this.fetchPreservedRows(sb, slug, chunk);
+          const rows = chunk.map(it => this.applyPreserved(slug, it, mapping.toRow(it), preserved));
           const { data: upsertedRows, error } = await sb
             .from(mapping.table)
             .upsert(rows, { onConflict: mapping.conflict })
@@ -8571,6 +8623,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         const { data, error } = await sb
           .from(table)
           .select(select)
+          .order("id") // phân trang cần thứ tự ổn định, nếu không có thể trùng/sót dòng giữa các trang
           .range(from, to);
         if (error) {
           console.warn(`[SupabaseSyncEngine] Lỗi phân trang bảng ${table} (offset ${from}):`, error.message);
@@ -8632,7 +8685,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
               const idKey = mapping.idKey(doc);
               if (!idKey) return;
 
-              const idx = store[slug].findIndex((x) => mapping.idKey(x) === idKey);
+              const idx = store[slug].findIndex((x) => mapping.idKey(x) === idKey || (doc.uuid && x.uuid === doc.uuid)); // cùng dòng Cloud dù mã cục bộ cũ khác (vd. ngữ pháp trước đây dùng id = id dòng thay vì code)
               if (idx >= 0 && store[slug][idx].__unsynced) {
                 // Bản sửa cục bộ chưa lưu được lên Cloud → giữ nguyên, không ghi đè
                 keptLocal++;
@@ -9157,6 +9210,22 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     if (item) store[slug].push({ ...stripSource(item), __admin: true, __edited: true });
   }
 
+  // Bài PRO trong file công khai chỉ có metadata (content_locked): phải tải đủ nội dung vào bản sao Thùng rác
+  // TRƯỚC khi xoá dòng Cloud, nếu không Thùng rác chỉ còn metadata, khôi phục bị upsertDoc chặn → mất bài.
+  // Trả false nếu không tải được (khi đó không được xoá). Gọi sau keepTrashCopy.
+  async function ensureTrashCopyFull(store, slug, idKey) {
+    if (slug === "TRKI_BANK") return true; // đề thiếu đáp án: trashKeepsCloudRow giữ nguyên dòng Cloud
+    if (!SupabaseSyncEngine || !SupabaseSyncEngine.hasMapping(slug)) return true; // không xoá trên Cloud
+    const list = store[slug] || [];
+    const idx = list.findIndex((it) => (it.id || it.slug || it.title) === idKey);
+    if (idx < 0 || !list[idx].content_locked) return true;
+    const loader = window.RusiProContent && window.RusiProContent.ensureFull;
+    const full = loader ? await loader(slug, { ...list[idx] }, { admin: true }) : null;
+    if (!full || full.content_locked) return false;
+    list[idx] = { ...full, __admin: true, __edited: true };
+    return true;
+  }
+
   // Đề TRKI có bản trong CMS là bản công khai đã xoá đáp án: xoá dòng Cloud khi bỏ vào Thùng rác
   // sẽ mất đáp án vĩnh viễn (khôi phục bị upsertDoc chặn) → chỉ ẩn trong CMS, không xoá Cloud.
   function trashKeepsCloudRow(slug, idKey) {
@@ -9223,6 +9292,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     store.__deleted[slug] = store.__deleted[slug] || [];
     // Giữ bản sao đầy đủ trong store để Thùng rác khôi phục được (getMergedList đã ẩn id nằm trong __deleted)
     keepTrashCopy(store, slug, idKey);
+    if (!(await ensureTrashCopyFull(store, slug, idKey))) {
+      toast(`Không xoá "${idKey}": chưa tải được nội dung đầy đủ của bài PRO để giữ trong Thùng rác — hãy Kéo từ Cloud rồi thử lại.`, "error");
+      return;
+    }
     if (!store.__deleted[slug].includes(idKey)) {
       store.__deleted[slug].push(idKey);
     }
@@ -9420,16 +9493,29 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     if (State.selectedRows.size === 0) return;
     if (!confirm(`Bạn có chắc chắn muốn xoá ${State.selectedRows.size} tài liệu đã chọn?`)) return;
 
-    const ids = Array.from(State.selectedRows);
     const store = loadAdminStore();
     store.__deleted = store.__deleted || {};
     store.__deleted[slug] = store.__deleted[slug] || [];
 
-    ids.forEach((id) => {
+    // Bài PRO không tải được nội dung đầy đủ → bỏ qua (không đưa vào Thùng rác, không xoá Cloud)
+    const ids = [];
+    const lockedFailed = [];
+    for (const id of Array.from(State.selectedRows)) {
+      const before = Array.isArray(store[slug]) ? store[slug].slice() : store[slug];
       // Giữ bản sao trong store để Thùng rác khôi phục được
       keepTrashCopy(store, slug, id);
+      if (!(await ensureTrashCopyFull(store, slug, id))) {
+        store[slug] = before; // bỏ bản sao chỉ có metadata vừa thêm
+        lockedFailed.push(id);
+        continue;
+      }
+      ids.push(id);
       if (!store.__deleted[slug].includes(id)) store.__deleted[slug].push(id);
-    });
+    }
+    if (lockedFailed.length) {
+      toast(`Không xoá ${lockedFailed.length} bài PRO chưa tải được nội dung đầy đủ (${lockedFailed.join(", ")}) — hãy Kéo từ Cloud rồi thử lại.`, "error");
+      if (!ids.length) return;
+    }
 
     saveAdminStore(store);
     syncDataToWeb();
@@ -9981,7 +10067,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const doc = mapping.fromRow(row);
           const idKey = mapping.idKey(doc);
           if (!idKey) return;
-          const idx = store[slug].findIndex((x) => mapping.idKey(x) === idKey);
+          const idx = store[slug].findIndex((x) => mapping.idKey(x) === idKey || (doc.uuid && x.uuid === doc.uuid)); // cùng dòng Cloud dù mã cục bộ cũ khác (vd. ngữ pháp trước đây dùng id = id dòng thay vì code)
           if (idx >= 0 && store[slug][idx].__unsynced) {
             keptLocal++;
             return;

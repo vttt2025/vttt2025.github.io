@@ -546,7 +546,8 @@ const SRS = {
    */
   ensureCard(word) {
     const state = this.getState();
-    const id = this.cardId(word);
+    // Từ không có dk (vd. từ trong lọ) có thể đã có thẻ "srsd_<dk>" của cùng từ → dùng thẻ đó, không tạo thẻ trùng
+    const id = word && word.dk ? this.cardId(word) : (this._resolveId(state, word && word.ru) || this.cardId(word));
     if (!state.cards[id]) {
       state.cards[id] = {
         id,

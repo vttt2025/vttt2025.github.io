@@ -334,7 +334,10 @@ function initWritingPage() {
     });
   };
 
+  let openWritingIds = null; // id đề/chủ đề đang mở trong workspace (dùng cho nút Back của trình duyệt)
+
   const renderHub = () => {
+    openWritingIds = null;
     if (window.setRusiDeepUrl) {
       window.setRusiDeepUrl('/writing');
     }
@@ -425,6 +428,7 @@ function initWritingPage() {
         .then((ok) => { if (ok) openWorkspace(topic, initialTask); });
       return;
     }
+    openWritingIds = [initialTask && initialTask.id, initialTask && initialTask.code, topic && topic.key];
     document.body.classList.add("in-workspace");
     let currentTask = initialTask;
 
@@ -854,6 +858,8 @@ function initWritingPage() {
           let scores = [0, 0, 0, 0];
           let feedbackComment = "";
           let quotaInfo = null;
+          let isFallback = false; // máy chủ trả điểm ước tính (không gọi được AI)
+          const FALLBACK_NOTE = "Đây là điểm ước tính tự động, chưa được AI chấm.";
 
           const modelAns = modelAnswer(t);
           const taskTipsList = taskTips(t);
@@ -910,6 +916,7 @@ function initWritingPage() {
                 }
 
                 if (aiRes.success) {
+                  isFallback = Boolean(aiRes.fallback);
                   total = Number(aiRes.total);
                   scores = [Number(aiRes.grammar) || 0, Number(aiRes.lexis) || 0, Number(aiRes.structure) || 0, Number(aiRes.content) || 0];
                   feedbackComment = aiRes.feedback;
@@ -928,7 +935,8 @@ function initWritingPage() {
             return;
           }
 
-          const isPassed = total >= 66;
+          // Điểm fallback (máy chủ không gọi được AI) chỉ là ước tính: không tính đạt, không thưởng điểm đạt/markDone
+          const isPassed = !isFallback && total >= 66;
           // XP: chỉ cộng lần đầu đạt một đề; lần nộp chưa đạt chỉ cộng WRITING_SUBMIT tối đa 1 lần/đề/ngày
           const xpRules = typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES : { WRITING_SUBMIT: 0, WRITING_PASS_BONUS: 0 };
           const hasProgress = typeof Progress !== "undefined";
@@ -947,7 +955,7 @@ function initWritingPage() {
                 <div class="rusi-ai-eval-lead">
                   <div class="rusi-ai-status-pill ${isPassed ? 'pass' : 'retry'}">
                     ${icon(isPassed ? 'check-circle-correct' : 'alert-triangle', 15)}
-                    <span>${isPassed ? 'Đạt yêu cầu' : 'Chưa đạt (Cần ≥ 66 điểm)'}</span>
+                    <span>${isFallback ? 'Điểm ước tính' : (isPassed ? 'Đạt yêu cầu' : 'Chưa đạt (Cần ≥ 66 điểm)')}</span>
                   </div>
                   <div class="rusi-ai-meta-line">
                     <span><b>${count}</b> từ</span>
@@ -998,6 +1006,7 @@ function initWritingPage() {
                 <div class="rusi-ai-feedback-content">
                   ${esc(feedbackComment)}
                 </div>
+                ${isFallback ? `<div class="rusi-ai-meta-line">${icon('alert-triangle', 13)} <span>${FALLBACK_NOTE}</span></div>` : ""}
               </div>
             </div>
           `;
@@ -1017,7 +1026,7 @@ function initWritingPage() {
               });
             }
           }
-          toast(`AI Rusika đã phân tích và chấm xong bài viết${earnedXp > 0 ? ` (+${earnedXp} XP)` : ""}!`);
+          toast(isFallback ? FALLBACK_NOTE : `AI Rusika đã phân tích và chấm xong bài viết${earnedXp > 0 ? ` (+${earnedXp} XP)` : ""}!`);
           updateQuotaDisplay();
           scoreBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
         } catch (submitErr) {
@@ -1110,6 +1119,22 @@ function initWritingPage() {
     } catch (_) {}
     return false;
   };
+
+  // Nút Back trình duyệt/Android: URL đổi (pushState) nhưng workspace vẫn mở → chạy đúng thao tác của nút Back trong trang
+  if (window._rusiWritePopHandler) window.removeEventListener("popstate", window._rusiWritePopHandler);
+  window._rusiWritePopHandler = () => {
+    if (!openWritingIds || !document.body.classList.contains("in-workspace")) return;
+    const ids = openWritingIds.filter(Boolean).map((v) => String(v).toLowerCase());
+    let urlIds = [];
+    try {
+      urlIds = window.location.pathname.split("/").concat(Array.from(new URLSearchParams(window.location.search).values()))
+        .map((v) => { try { return decodeURIComponent(v).toLowerCase(); } catch (_) { return String(v).toLowerCase(); } });
+    } catch (_) {}
+    if (ids.some((id) => urlIds.includes(id))) return;
+    const backBtn = host.querySelector("#writingBack");
+    if (backBtn) backBtn.click();
+  };
+  window.addEventListener("popstate", window._rusiWritePopHandler);
 
   if (!checkUrlTask()) {
     renderHub();

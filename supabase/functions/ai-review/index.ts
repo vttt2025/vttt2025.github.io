@@ -78,6 +78,7 @@ function fallbackReview(
     content,
     passed: total >= 66,
     feedback,
+    fallback: true, // điểm ước tính tự động, không phải AI chấm — client không thưởng điểm đạt
   };
 }
 
@@ -255,8 +256,22 @@ ${modelAnswer ? `- BÀI VIẾT MẪU ĐẠT ĐIỂM TỐI ĐA TRKI: "${modelAnsw
 ${text}
 """`;
 
-    const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    // Hạn mức đã bị trừ ở bước 2 → lỗi mạng/timeout trả kết quả fallback (có cờ fallback) thay vì lỗi 500
+    const fallbackResponse = () =>
+      new Response(
+        JSON.stringify({
+          success: true,
+          ...fallbackReview(text, level, minWords, modelAnswer),
+          quota: quotaInfo,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+
+    let groqRes: Response;
+    try {
+      groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
+      signal: AbortSignal.timeout(10000), // client (ai-service.js) huỷ ở 12s
       headers: {
         Authorization: `Bearer ${GROQ_API_KEY}`,
         "Content-Type": "application/json",
@@ -272,25 +287,21 @@ ${text}
         response_format: { type: "json_object" },
       }),
     });
-
-    if (!groqRes.ok) {
-      const errText = await groqRes.text();
-      console.warn(`Groq API Error (${groqRes.status}): ${errText}`);
-      return new Response(
-        JSON.stringify({
-          success: true,
-          ...fallbackReview(text, level, minWords, modelAnswer),
-          quota: quotaInfo,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    } catch (fetchErr) {
+      console.warn("Groq API timeout/lỗi mạng, dùng bộ chấm fallback:", fetchErr);
+      return fallbackResponse();
     }
 
-    const groqData = await groqRes.json();
-    const rawReply = groqData.choices?.[0]?.message?.content || "";
+    if (!groqRes.ok) {
+      const errText = await groqRes.text().catch(() => "");
+      console.warn(`Groq API Error (${groqRes.status}): ${errText}`);
+      return fallbackResponse();
+    }
 
     let evaluation;
     try {
+      const groqData = await groqRes.json();
+      const rawReply = groqData.choices?.[0]?.message?.content || "";
       const cleaned = rawReply.replace(/```json/gi, "").replace(/```/g, "").trim();
       evaluation = JSON.parse(cleaned);
       const numOr = (val: unknown, fb: number) => {
@@ -302,9 +313,10 @@ ${text}
       evaluation.structure = Math.max(0, Math.min(25, numOr(evaluation.structure, 18)));
       evaluation.content = Math.max(0, Math.min(25, numOr(evaluation.content, 18)));
       const computedSum = evaluation.grammar + evaluation.lexis + evaluation.structure + evaluation.content;
-      evaluation.total = Math.max(0, Math.min(100, numOr(evaluation.total, computedSum)));
-      evaluation.passed =
-        evaluation.passed !== undefined ? Boolean(evaluation.passed) : evaluation.total >= 66;
+      // Tổng tính phía server từ 4 tiêu chí (không tin total/passed của model)
+      evaluation.total = Math.max(0, Math.min(100, computedSum));
+      evaluation.passed = evaluation.total >= 66;
+      evaluation.fallback = false;
     } catch {
       evaluation = fallbackReview(text, level, minWords, modelAnswer);
     }

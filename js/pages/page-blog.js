@@ -26,6 +26,11 @@ function initBlogPage() {
     }
   };
   loadCloudPosts();
+  // Bản đã xuất bản (data/modules) — BLOG_POSTS trong data.js chỉ là bản dự phòng khi chưa tải được
+  if (window.RusiDataLoader) {
+    window.RusiDataLoader.load("BLOG_POSTS").then((d) => { if (d && d.length && !(cloudPosts && cloudPosts.length)) renderBlog(); })
+      .catch((err) => console.warn("[RusiDataLoader] Lỗi nạp bài blog:", err));
+  }
 
   const renderBlog = () => {
     const posts = (cloudPosts && cloudPosts.length) ? cloudPosts : (typeof BLOG_POSTS !== "undefined" ? BLOG_POSTS : []);

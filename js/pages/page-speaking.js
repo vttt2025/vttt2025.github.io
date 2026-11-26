@@ -308,7 +308,10 @@ function initSpeakingPage() {
     }, { remainingCount, unit: "bài" });
   };
 
+  let openSpeakingSet = null; // bài đang mở trong workspace (dùng cho nút Back của trình duyệt)
+
   const renderHub = () => {
+    openSpeakingSet = null;
     if (window.setRusiDeepUrl) {
       window.setRusiDeepUrl('/speaking');
     }
@@ -383,9 +386,6 @@ function initSpeakingPage() {
   };
 
 const openSpeakingWorkspace = (set, mode = currentMode) => {
-    if (window.setRusiDeepUrl && set) {
-      window.setRusiDeepUrl('/speaking/' + (mode || 'shadowing') + '/' + encodeURIComponent(set.id || set.code));
-    }
     if (typeof window.requireAuth === "function" && !window.requireAuth("speaking.html?set=" + encodeURIComponent((set && (set.id || set.code)) || ""))) return;
     // Bài PRO: file công khai chỉ có metadata — tải nội dung bằng phiên PRO rồi mở lại
     if (set && set.content_locked && window.RusiProContent) {
@@ -393,6 +393,10 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
         .then((full) => { if (full && !full.content_locked) openSpeakingWorkspace(full, mode); });
       return;
     }
+    if (window.setRusiDeepUrl && set) {
+      window.setRusiDeepUrl('/speaking/' + (mode || 'shadowing') + '/' + encodeURIComponent(set.id || set.code));
+    }
+    openSpeakingSet = set;
     document.body.classList.add("in-workspace");
     const todayKey = "speak_today_" + new Date().toDateString();
     const attemptsToday = STORE.get(todayKey, 0);
@@ -445,6 +449,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
     let currentSentenceIdx = 0;
     let recordingSentenceIdx = null;
     let autoAdvanceTimer = null;
+    let loopReplayTimer = null; // hẹn giờ phát lại câu khi bật lặp
     let currentSpeed = 1.0;
     let loopMode = 0; // 0: Tắt, 3: 3 lần, 5: 5 lần
     let loopRemaining = 0;
@@ -995,6 +1000,8 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
     };
 
     const stopAudio = () => {
+      if (loopReplayTimer) { clearTimeout(loopReplayTimer); loopReplayTimer = null; }
+      if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
       stopVideoSegment();
       clearKaraoke();
       if (typeof window !== "undefined" && window.speechSynthesis) {
@@ -1018,6 +1025,11 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
         stopVideoSegment();
         stopAudio();
         return;
+      }
+      if (!isAutoLoop) {
+        loopRemaining = loopMode;
+        const pill = el("#spLoopPill");
+        if (pill && loopMode > 0) pill.textContent = `${loopMode}x`;
       }
 
       stopAudio();
@@ -1083,7 +1095,8 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
             const pill = el("#spLoopPill");
             if (pill) pill.textContent = `${loopRemaining}x`;
             stopVideoSegment();
-            setTimeout(() => {
+            loopReplayTimer = setTimeout(() => {
+              loopReplayTimer = null;
               playCurrentSentence(true);
             }, 450);
           } else if (loopRemaining === 1) {
@@ -1122,7 +1135,8 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
               const pill = el("#spLoopPill");
               if (pill) pill.textContent = `${loopRemaining}x`;
               stopAudio();
-              setTimeout(() => {
+              loopReplayTimer = setTimeout(() => {
+                loopReplayTimer = null;
                 playCurrentSentence(true);
               }, 600);
             } else if (loopRemaining === 1) {
@@ -1151,6 +1165,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
     const loadSentence = (idx) => {
       if (isRecording) stopRecording();
       if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
+      if (loopReplayTimer) { clearTimeout(loopReplayTimer); loopReplayTimer = null; }
       if (idx < 0 || idx >= items.length) return;
       currentSentenceIdx = idx;
       const it = items[idx];
@@ -1229,6 +1244,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       if (wf) wf.classList.add("is-live");
     };
 
+    let recordStartToken = 0; // tăng mỗi lần bắt đầu/dừng ghi âm → bỏ phiên cũ khi người dùng dừng trong lúc chờ mic
     const startRecording = async () => {
       // Kiểm tra khóa bài học dành cho PRO
       if ((set.is_pro_only || set.is_pro) && (typeof Monetization === "undefined" || !Monetization.isPro())) {
@@ -1292,6 +1308,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
 
       recordingSentenceIdx = currentSentenceIdx;
       voiceStartTime = Date.now();
+      const startToken = ++recordStartToken;
 
       // 1. Khởi động Hardware Audio Recorder (WAV 16kHz PCM + VAD theo chuẩn DauEnglish)
       if (typeof RusiAudioRecorder !== "undefined" && RusiAudioRecorder.startAudioRecording) {
@@ -1306,6 +1323,13 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
               if (isRecording) stopRecording();
             }
           });
+
+          // Người học đã dừng / rời bài trong lúc chờ quyền mic → huỷ bản ghi, không chạy nhận dạng
+          if (startToken !== recordStartToken || !isRecording) {
+            try { audioRecorderInstance.cancel(); } catch (_) {}
+            audioRecorderInstance = null;
+            return;
+          }
 
           // Gắn bản ghi vào câu lúc bắt đầu ghi (người học có thể đã chuyển câu khi bản ghi xong)
           const memoIdx = recordingSentenceIdx;
@@ -1322,6 +1346,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
             }
           });
         } catch (recErr) {
+          if (startToken !== recordStartToken || !isRecording) return;
           console.warn("[RusiAudioRecorder] Mic access error:", recErr);
           toast(recErr.message || "Không thể mở microphone.");
           // Không có nhận dạng giọng nói để chạy tiếp → trả nút ghi âm về trạng thái thường
@@ -1405,6 +1430,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       clearSilenceTimer();
       if (!isRecording && !recognitionInstance && !audioRecorderInstance) return;
       isRecording = false;
+      recordStartToken++;
 
       const btnMic = el("#btnRecordMic");
       if (btnMic) btnMic.classList.remove("is-recording");
@@ -1448,7 +1474,9 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
 
         // Tự động chuyển câu nếu bật chế độ Auto-Advance và đạt điểm tốt
         if (autoAdvance && sim >= 80 && currentSentenceIdx < items.length - 1) {
-          setTimeout(() => {
+          if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
+          autoAdvanceTimer = setTimeout(() => {
+            autoAdvanceTimer = null;
             loadSentence(currentSentenceIdx + 1);
             playCurrentSentence();
           }, 1500);
@@ -1593,6 +1621,9 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
     el("#btnBackSpList").onclick = () => {
       stopAudio();
       stopRecording();
+      // stopRecording có thể vừa hẹn tự chuyển câu → huỷ sau khi dừng ghi âm
+      if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
+      if (loopReplayTimer) { clearTimeout(loopReplayTimer); loopReplayTimer = null; }
       stopActiveVmAudio();
       Object.values(userVoiceMemos).forEach(m => {
         try { URL.revokeObjectURL(m.url); } catch (_) {}
@@ -1698,6 +1729,22 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
     renderPlaylist();
     loadSentence(0);
   };
+
+  // Nút Back trình duyệt/Android: URL đổi (pushState) nhưng workspace vẫn mở → chạy đúng thao tác của nút Back trong trang
+  if (window._rusiSpeakPopHandler) window.removeEventListener("popstate", window._rusiSpeakPopHandler);
+  window._rusiSpeakPopHandler = () => {
+    if (!openSpeakingSet || !document.body.classList.contains("in-workspace")) return;
+    const ids = [openSpeakingSet.id, openSpeakingSet.code].filter(Boolean).map((v) => String(v).toLowerCase());
+    let urlIds = [];
+    try {
+      urlIds = window.location.pathname.split("/").concat(Array.from(new URLSearchParams(window.location.search).values()))
+        .map((v) => { try { return decodeURIComponent(v).toLowerCase(); } catch (_) { return String(v).toLowerCase(); } });
+    } catch (_) {}
+    if (ids.some((id) => urlIds.includes(id))) return;
+    const backBtn = el("#btnBackSpList");
+    if (backBtn) backBtn.click();
+  };
+  window.addEventListener("popstate", window._rusiSpeakPopHandler);
 
   renderHub();
   checkUrlSet();

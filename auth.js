@@ -192,7 +192,8 @@
         return true;
       }
       // Tính năng Device Guard chỉ bảo vệ tài khoản PRO tránh chia sẻ lậu
-      if (!this.user.is_pro) return true;
+      // PRO đã hết hạn coi như tài khoản thường
+      if (!this.user.is_pro || (this.user.pro_expires_at && new Date(this.user.pro_expires_at).getTime() < Date.now())) return true;
 
       // Đang có lượt kiểm tra chạy dở → trả về chính lượt đó (người gọi như pro-content.js cần chờ phiên được gắn thiết bị)
       if (this._deviceGuardPromise) return this._deviceGuardPromise;
@@ -379,6 +380,14 @@
     },
 
     async _hydrateUser(supabaseUser) {
+      // Phiên của tài khoản trước kết thúc không qua nút Đăng xuất (thu hồi thiết bị, hết hạn) hoặc đổi sang tài khoản khác
+      // → xoá tiến độ của tài khoản trước trên máy, tránh gộp nhầm sang tài khoản mới
+      const prev = getStore().get("auth_user", null);
+      const prevUid = prev && prev.uid;
+      if (prevUid && !String(prevUid).startsWith("guest_") && prevUid !== (supabaseUser ? supabaseUser.id : null)) {
+        if (typeof Progress !== "undefined" && Progress._syncTimer) { clearTimeout(Progress._syncTimer); Progress._syncTimer = null; }
+        clearBrowserUserData({ keepSession: !!supabaseUser });
+      }
       if (!supabaseUser) {
         this.user = null;
         getStore().set("auth_user", null);
@@ -545,7 +554,8 @@
       const client = getClient();
       if (client) {
         try {
-          await client.auth.signOut();
+          // Chỉ đăng xuất thiết bị này; không thu hồi phiên ở các thiết bị khác
+          await client.auth.signOut({ scope: "local" });
         } catch (e) {
           console.warn("[Auth] Lỗi Supabase signOut:", e);
         }
@@ -563,7 +573,9 @@
    * Xóa sạch toàn bộ dữ liệu người dùng trên trình duyệt (localStorage, sessionStorage, in-memory)
    * Đảm bảo tính riêng tư, bảo mật tuyệt đối, chống rò rỉ tiến trình học sang tài khoản khác.
    */
-  function clearBrowserUserData() {
+  function clearBrowserUserData(opts) {
+    // opts.keepSession: giữ phiên Supabase (sb-*) của tài khoản vừa đăng nhập
+    const keepSession = Boolean(opts && opts.keepSession);
     try {
       try { localStorage.removeItem("trki_sb_service_key"); } catch (_) {}
       try {
@@ -586,8 +598,7 @@
         if (
           key.startsWith("trki_") ||
           key.startsWith("rusi_cache:") ||
-          key.startsWith("sb-") ||
-          key.startsWith("supabase.auth.") ||
+          (!keepSession && (key.startsWith("sb-") || key.startsWith("supabase.auth."))) ||
           key === "auth_user" ||
           key === "auth_redirect" ||
           key === "rusi_groq_api_key" ||

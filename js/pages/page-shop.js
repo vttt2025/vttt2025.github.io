@@ -28,6 +28,11 @@ function initShopPage() {
     }
   };
   loadCloudProducts();
+  // Bản đã xuất bản (data/modules) — SHOP_PRODUCTS trong data.js chỉ là bản dự phòng khi chưa tải được
+  if (window.RusiDataLoader) {
+    window.RusiDataLoader.load("SHOP_PRODUCTS").then((d) => { if (d && d.length && !(cloudProducts && cloudProducts.length)) renderShop(); })
+      .catch((err) => console.warn("[RusiDataLoader] Lỗi nạp sản phẩm:", err));
+  }
 
   const saveCart = () => {
     STORE.set("shop_cart", cart);

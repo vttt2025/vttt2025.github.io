@@ -5,8 +5,10 @@ function rusiNormalize(str) {
     .toString()
     .toLowerCase()
     .replace(/ё/g, "е")
+    .replace(/й/g, "\u0000") // giữ й: NFD tách й thành и + dấu U+0306, bước bỏ dấu sẽ biến й thành и
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u0000/g, "й")
     .trim();
 }
 
@@ -1773,8 +1775,8 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     pane.querySelectorAll(".cyrillic-key").forEach(kBtn => {
       kBtn.onclick = () => {
         const char = kBtn.dataset.char;
-        const start = inp.selectionStart || inp.value.length;
-        const end = inp.selectionEnd || inp.value.length;
+        const start = inp.selectionStart ?? inp.value.length;
+        const end = inp.selectionEnd ?? inp.value.length;
         const val = inp.value;
         inp.value = val.substring(0, start) + char + val.substring(end);
         inp.focus();

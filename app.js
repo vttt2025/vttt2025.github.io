@@ -360,7 +360,21 @@ const Progress = {
     clearTimeout(this._syncTimer);
     this._syncTimer = null;
     const userId = this._cloudUserId();
+    // Chưa kéo bản cloud của đúng tài khoản này về → không ghi, tránh đè done_list/streak trên cloud bằng bản máy cũ.
+    // Thay đổi vẫn nằm trên máy và được đẩy lên sau khi syncFromCloud xong.
+    if (userId && this._pulledUid !== userId) return;
     if (userId) {
+      // Gộp thay đổi từ thiết bị/tab khác kể từ lần kéo trước (vd. tab mở lâu) rồi mới ghi đè bản tổng hợp
+      try {
+        const remote = await window.RusiSupabase.userProgress.get(userId);
+        if (remote) this._applyRemote(remote);
+        if (remote && window.RusiVocabSync && window.RusiVocabSync.isDirty()) {
+          await window.RusiVocabSync.refresh(userId, remote.vocab_updated_at);
+        }
+      } catch (err) {
+        console.warn("[RusiSupabase] Không đọc được tiến độ trên cloud, hoãn đồng bộ:", err);
+        return;
+      }
       const streak = STORE.get("streak", 0);
       const xp = STORE.get("xp", 0);
       const doneList = {
@@ -373,14 +387,15 @@ const Progress = {
       };
       const vocabStats = (typeof window.getSynchronizedVocabStats === "function") ? window.getSynchronizedVocabStats({ forCloud: true }) : {};
       // Khối tiến độ từ vựng chỉ gửi khi đã kéo bản cloud về và có thay đổi (xem vocab-sync.js)
-      const vocabState = window.RusiVocabSync ? window.RusiVocabSync.payloadForPush() : null;
+      const vocabState = window.RusiVocabSync ? window.RusiVocabSync.payloadForPush(userId) : null;
 
       // 1. Lưu hồ sơ tổng hợp vào user_progress
       if (window.RusiSupabase.userProgress && typeof window.RusiSupabase.userProgress.save === "function") {
         const ok = await window.RusiSupabase.userProgress.save(userId, {
           xp_total: xp,
           streak_count: streak,
-          last_study_date: getLocalDateString(),
+          // Ngày chuỗi học đã được tính (không phải "hôm nay"): ghi sớm ngày hôm nay khi chuỗi chưa +1 sẽ khiến server không nhận +1
+          last_study_date: STORE.get("lastStreakDay", "") || getLocalDateString(),
           vocab_stats: vocabStats,
           done_list: doneList,
           vocab_state: vocabState
@@ -396,6 +411,31 @@ const Progress = {
     }
   },
 
+  /** Gộp bản tổng hợp trên cloud vào máy. Trả true nếu máy có dữ liệu cloud chưa có (cần đẩy lên). */
+  _applyRemote(remote) {
+    let needPush = false;
+    const localXp = STORE.get("xp", 0);
+    if (typeof remote.xp_total === "number" && remote.xp_total > localXp) STORE.set("xp", remote.xp_total);
+    else if (localXp > (Number(remote.xp_total) || 0)) needPush = true;
+    const localStreak = STORE.get("streak", 0);
+    if (typeof remote.streak_count === "number" && remote.streak_count > localStreak) STORE.set("streak", remote.streak_count);
+    else if (localStreak > (Number(remote.streak_count) || 0)) needPush = true;
+    // Chỉ nhận ngày học trên cloud khi mới hơn bản máy (ngày cũ hơn sẽ khiến chuỗi bị +1 lần nữa trong cùng ngày)
+    if (remote.last_study_date) {
+      if (remote.last_study_date > STORE.get("lastStreakDay", "")) STORE.set("lastStreakDay", remote.last_study_date);
+      if (remote.last_study_date > STORE.get("lastXpDay", "")) STORE.set("lastXpDay", remote.last_study_date);
+    }
+    const remoteDone = (remote.done_list && typeof remote.done_list === "object") ? remote.done_list : {};
+    ["listenDone", "speakDone", "writeDone", "trkiDone", "trkiSubDone", "vocabDone"].forEach(k => {
+      const localList = STORE.get(k, []);
+      const remoteList = Array.isArray(remoteDone[k]) ? remoteDone[k] : [];
+      const merged = Array.from(new Set([...localList, ...remoteList]));
+      if (merged.length !== localList.length) STORE.set(k, merged);
+      if (merged.length > remoteList.length) needPush = true;
+    });
+    return needPush;
+  },
+
   async syncFromCloud() {
     const user = (window.Auth && window.Auth.user) || STORE.get("auth_user", null);
     const userId = user && (user.uid || user.id);
@@ -404,33 +444,17 @@ const Progress = {
     if (window.RusiSupabase && window.RusiSupabase.isReady() && isUUID && window.RusiSupabase.userProgress) {
       try {
         const remote = await window.RusiSupabase.userProgress.get(userId);
-        if (remote) {
-          if (typeof remote.xp_total === "number" && remote.xp_total > STORE.get("xp", 0)) {
-            STORE.set("xp", remote.xp_total);
-          }
-          if (typeof remote.streak_count === "number" && remote.streak_count > STORE.get("streak", 0)) {
-            STORE.set("streak", remote.streak_count);
-          }
-          if (remote.last_study_date) {
-            STORE.set("lastStreakDay", remote.last_study_date);
-            STORE.set("lastXpDay", remote.last_study_date);
-          }
-          if (remote.done_list && typeof remote.done_list === "object") {
-            ["listenDone", "speakDone", "writeDone", "trkiDone", "trkiSubDone", "vocabDone"].forEach(k => {
-              const localList = STORE.get(k, []);
-              const remoteList = Array.isArray(remote.done_list[k]) ? remote.done_list[k] : [];
-              const merged = Array.from(new Set([...localList, ...remoteList]));
-              STORE.set(k, merged);
-            });
-          }
-          // Tiến độ từ vựng: chỉ tải khối vocab_state khi bản cloud mới hơn lần đồng bộ trước
-          if (window.RusiVocabSync) {
-            await window.RusiVocabSync.pull(userId, remote.vocab_updated_at);
-          }
-          this.checkStreakStatus();
-          updateHeaderChips();
-          window.dispatchEvent(new CustomEvent("trki:progress-updated"));
+        // Máy này có tiến độ cloud chưa có (vd. học khi chưa đăng nhập, hay ghi bị hoãn) → đẩy lên sau khi gộp
+        const needPush = remote ? this._applyRemote(remote) : true;
+        this._pulledUid = userId;
+        // Tiến độ từ vựng: chỉ tải khối vocab_state khi bản cloud mới hơn lần đồng bộ trước
+        if (window.RusiVocabSync) {
+          await window.RusiVocabSync.pull(userId, remote ? remote.vocab_updated_at : 0);
         }
+        if (needPush) this.syncToCloud();
+        this.checkStreakStatus();
+        updateHeaderChips();
+        window.dispatchEvent(new CustomEvent("trki:progress-updated"));
       } catch (err) {
         console.warn("[RusiSupabase] Lỗi đồng bộ tiến độ từ cloud:", err);
       }

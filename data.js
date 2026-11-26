@@ -393,6 +393,23 @@
     return entry && entry.v ? DATA_VERSION + '-' + entry.v : DATA_VERSION;
   }
 
+  // Manifest không về kịp (mạng chậm) nên trang đã dùng tạm bản cache cũ trong IndexedDB: tải lại manifest ở nền,
+  // nếu module đã có phiên bản mới thì tải file và cập nhật IndexedDB (lần mở trang sau dùng bản mới).
+  // Không thay dữ liệu trong RAM giữa chừng để khỏi lệch với trang đang hiển thị.
+  async function refreshStaleCache(moduleKey, conf) {
+    try {
+      if (!(await getManifest())) _manifestPromise = null; // lượt trước hết giờ/lỗi → thử lại
+      const manifest = await getManifest();
+      if (!manifest) return; // vẫn offline
+      const version = moduleVersion(manifest, conf);
+      if (hasValidData(await getFromIDB(moduleKey, version))) return; // cache đã đúng phiên bản
+      const res = await fetch(getAppRoot() + conf.file + '?v=' + version);
+      if (res.ok) await saveToIDB(moduleKey, await res.json(), version);
+    } catch (err) {
+      console.warn('[RusiDataLoader] Không làm mới được cache module ' + moduleKey + ':', err);
+    }
+  }
+
   // 4. DANH MỤC CÁC MODULE NẠP THEO NHU CẦU (MODULE REGISTRY)
   const MODULE_REGISTRY = {
     VOCAB_JARS: { file: 'data/modules/vocab_jars.json', assign: (d) => { _VOCAB_JARS = d; window.VOCAB_JARS = d; } },
@@ -407,7 +424,11 @@
     GRAMMAR_LESSONS: { file: 'data/modules/grammar_lessons.json', assign: (d) => { _GRAMMAR_LESSONS = d; window.GRAMMAR_LESSONS = d; } },
     TRKI_INDEX: { file: 'data/modules/trki_index.json', assign: (d) => { _TRKI_INDEX = d; window.TRKI_INDEX = d; } },
     TRKI_BANK: { file: 'data/modules/trki_bank.json', assign: (d) => { _TRKI_BANK = d; window.TRKI_BANK = d; } },
-    TRKI_QUESTION_BANK: { file: 'data/modules/trki_questions.json', assign: (d) => { _TRKI_QUESTION_BANK = d; window.TRKI_QUESTION_BANK = d; } }
+    TRKI_QUESTION_BANK: { file: 'data/modules/trki_questions.json', assign: (d) => { _TRKI_QUESTION_BANK = d; window.TRKI_QUESTION_BANK = d; } },
+    // builtIn: window.* đã có sẵn bản dự phòng trong file này → vẫn tải bản đã xuất bản (admin sửa trên CMS)
+    PACKAGES: { file: 'data/modules/packages.json', builtIn: true, assign: (d) => { window.PACKAGES = d; } },
+    SHOP_PRODUCTS: { file: 'data/modules/shop_products.json', builtIn: true, assign: (d) => { window.SHOP_PRODUCTS = d; } },
+    BLOG_POSTS: { file: 'data/modules/blog_posts.json', builtIn: true, assign: (d) => { window.BLOG_POSTS = d; } }
   };
 
   const _loadingPromises = {};
@@ -438,7 +459,8 @@
     // Kiểm tra xem module đã có trong bộ nhớ RAM chưa
     isLoaded(moduleKey) {
       if (typeof window === 'undefined') return false;
-      return _loadedModules.has(moduleKey) || hasValidData(window[moduleKey]);
+      const conf = MODULE_REGISTRY[moduleKey];
+      return _loadedModules.has(moduleKey) || (!(conf && conf.builtIn) && hasValidData(window[moduleKey]));
     },
 
     // Nạp 1 module theo quy trình: RAM -> IndexedDB (0ms) -> Network JSON
@@ -465,6 +487,8 @@
           const cached = await getFromIDB(moduleKey, manifest ? version : null);
           if (hasValidData(cached)) {
             conf.assign(cached);
+            _loadedModules.add(moduleKey);
+            if (!manifest) refreshStaleCache(moduleKey, conf);
             return cached;
           }
         } catch (_) {}

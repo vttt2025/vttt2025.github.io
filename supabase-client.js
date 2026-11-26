@@ -1617,15 +1617,13 @@
       get: async function (userId) {
         var sb = getClient();
         if (!sb || !userId || !isValidUUID(userId)) return null;
-        try {
-          // Không tải cả vocab_state (có thể lớn) — chỉ lấy mốc thời gian để biết có cần kéo về không.
-          var res = await sb.from("user_progress")
-            .select("user_id,xp_total,streak_count,last_study_date,done_list,updated_at,vocab_updated_at:vocab_state->>updatedAt")
-            .eq("user_id", userId).maybeSingle();
-          return res.data || null;
-        } catch (_) {
-          return null;
-        }
+        // Không tải cả vocab_state (có thể lớn) — chỉ lấy mốc thời gian để biết có cần kéo về không.
+        var res = await sb.from("user_progress")
+          .select("user_id,xp_total,streak_count,last_study_date,done_list,updated_at,vocab_updated_at:vocab_state->>updatedAt")
+          .eq("user_id", userId).maybeSingle();
+        // Lỗi truy vấn → ném lỗi (không trả null như "chưa có dữ liệu") để phía gọi không ghi đè cloud
+        if (res.error) throw res.error;
+        return res.data || null;
       },
 
       /** Tải khối tiến độ từ vựng. Ném lỗi khi truy vấn hỏng để phía gọi không ghi đè dữ liệu trên cloud. */

@@ -7,7 +7,8 @@
  *  - Chỉ đẩy lên sau khi đã kéo bản cloud trong lần tải trang này (tránh máy mới ghi đè dữ liệu cũ).
  *  - Chỉ tải khối vocab_state khi mốc updatedAt trên cloud mới hơn lần đồng bộ trước (tiết kiệm egress).
  *  - Thẻ SRS gộp từng thẻ theo updatedAt; mốc resetAt bỏ các thẻ cũ hơn lần "Reset toàn bộ".
- *  - Lọ cá nhân / từ gắn sao / từ đã thuộc: bản mới hơn thắng; lần đồng bộ đầu tiên thì gộp hợp.
+ *  - Lọ cá nhân / từ gắn sao / từ đã thuộc: gộp 3 chiều so với bản cloud lần đồng bộ trước (BASE) — giữ mục máy khác
+ *    thêm, bỏ mục máy này đã xoá; chưa có BASE (lần đầu) thì gộp hợp.
  * Cần app.js (STORE, Progress) và supabase-client.js.
  * ===================================================================== */
 (function () {
@@ -15,7 +16,8 @@
 
   const CHANGED = "vocab_changed_at";
   const SYNCED = "vocab_synced_at";
-  let pulled = false;
+  const BASE = "vocab_sync_base"; // bản danh sách trên cloud ở lần đồng bộ trước
+  let pulledUid = null; // tài khoản đã kéo bản cloud trong lần tải trang này
 
   const read = (k, fb) => STORE.get(k, fb);
   // Ghi không đánh dấu thay đổi (dữ liệu vừa lấy từ cloud)
@@ -51,6 +53,22 @@
     };
   }
 
+  /** Gộp 3 chiều: bản cloud + mục máy này thêm (không có trong base) − mục máy này đã xoá (có trong base). */
+  function merge3(localList, remoteList, baseList, keyFn, mergeItem) {
+    const baseMap = new Map(baseList.map((x) => [keyFn(x), x]));
+    const localMap = new Map(localList.map((x) => [keyFn(x), x]));
+    const remoteKeys = new Set(remoteList.map(keyFn));
+    const out = [];
+    remoteList.forEach((r) => {
+      const k = keyFn(r);
+      const l = localMap.get(k);
+      if (!l) { if (!baseMap.has(k)) out.push(r); return; } // có trong base mà máy này không còn → đã xoá
+      out.push(mergeItem ? mergeItem(l, r, baseMap.get(k)) : l);
+    });
+    localList.forEach((l) => { const k = keyFn(l); if (!remoteKeys.has(k) && !baseMap.has(k)) out.push(l); });
+    return out;
+  }
+
   function unionBy(localList, remoteList, keyFn) {
     const seen = new Set(localList.map(keyFn));
     return localList.concat(remoteList.filter((x) => !seen.has(keyFn(x))));
@@ -65,6 +83,17 @@
       return { ...r, ...l, words: unionBy(arr(l.words), arr(r.words), (w) => norm(w && w.ru)) };
     });
     return unionBy(merged, remoteJars, (j) => (j && j.id) || JSON.stringify(j));
+  }
+
+  const jarKey = (j) => (j && j.id) || JSON.stringify(j);
+  const wordKey = (w) => norm(w && w.ru);
+  function mergeJars3(localJars, remoteJars, baseJars) {
+    return merge3(localJars, remoteJars, baseJars, jarKey, (l, r, b) =>
+      ({ ...r, ...l, words: b ? merge3(arr(l.words), arr(r.words), arr(b.words), wordKey) : unionBy(arr(l.words), arr(r.words), wordKey) }));
+  }
+
+  function saveBase(src) {
+    writeQuiet(BASE, { custom_jars: arr(src.custom_jars), starred: arr(src.starred), mastered_words: arr(src.mastered_words) });
   }
 
   function merge(remote) {
@@ -96,17 +125,26 @@
     writeQuiet("srs_totalCorrect", Math.max(read("srs_totalCorrect", 0), Number(totals.correct) || 0));
 
     // 3. Lọ cá nhân, từ gắn sao, từ đã thuộc.
-    // merge() chỉ chạy khi cloud đã đổi kể từ lần đồng bộ trước. Nếu máy này cũng có thay đổi chưa gửi
-    // (hoặc đồng bộ lần đầu) thì gộp hợp để không mất dữ liệu bên nào; ngược lại lấy bản cloud.
+    // merge() chỉ chạy khi cloud đã đổi kể từ lần đồng bộ trước. Nếu máy này cũng có thay đổi chưa gửi thì gộp 3 chiều
+    // với bản cloud lần trước (BASE): giữ mục máy khác thêm, bỏ mục máy này đã xoá. Chưa có BASE (lần đầu) → gộp hợp.
+    // Máy này không có thay đổi → lấy bản cloud.
+    const base = lastSynced ? read(BASE, null) : null;
     const lists = [
-      ["custom_jars", arr(remote.custom_jars), mergeJars],
-      ["quizlet_starred", arr(remote.starred), (l, r) => unionBy(l, r, norm)],
-      ["vocab_mastered_words", arr(remote.mastered_words), (l, r) => unionBy(l, r, norm)]
+      ["custom_jars", arr(remote.custom_jars), "custom_jars", mergeJars, mergeJars3, jarKey],
+      ["quizlet_starred", arr(remote.starred), "starred", (l, r) => unionBy(l, r, norm), null, norm],
+      ["vocab_mastered_words", arr(remote.mastered_words), "mastered_words", (l, r) => unionBy(l, r, norm), null, norm]
     ];
-    lists.forEach(([key, remoteList, mergeFn]) => {
+    lists.forEach(([key, remoteList, baseKey, unionFn, merge3Fn, keyFn]) => {
       const localList = arr(read(key, []));
-      writeQuiet(key, localDirty ? mergeFn(localList, remoteList) : remoteList);
+      let next = remoteList;
+      if (localDirty) {
+        if (!base) next = unionFn(localList, remoteList);
+        else if (merge3Fn) next = merge3Fn(localList, remoteList, arr(base[baseKey]));
+        else next = merge3(localList, remoteList, arr(base[baseKey]), keyFn);
+      }
+      writeQuiet(key, next);
     });
+    saveBase({ custom_jars: arr(remote.custom_jars), starred: arr(remote.starred), mastered_words: arr(remote.mastered_words) });
 
     // Từ có thẻ SRS: cờ mastered của thẻ (gộp theo updatedAt) quyết định có trong danh sách đã thuộc hay không
     const cardMastered = new Map();
@@ -127,6 +165,15 @@
     writeQuiet(CHANGED, localDirty ? Math.max(Date.now(), (remote.updatedAt || 0) + 1) : (remote.updatedAt || 0));
   }
 
+  /** Kéo và gộp bản cloud nếu mới hơn lần đồng bộ trước (không tự đẩy lên). Ném lỗi khi tải hỏng. */
+  async function refresh(userId, remoteUpdatedAt) {
+    const remoteStamp = Number(remoteUpdatedAt) || 0;
+    if (remoteStamp && remoteStamp > read(SYNCED, 0)) {
+      const remote = await window.RusiSupabase.userProgress.getVocabState(userId);
+      if (remote && remote.v) merge(remote);
+    }
+  }
+
   async function pull(userId, remoteUpdatedAt) {
     try {
       const remoteStamp = Number(remoteUpdatedAt) || 0;
@@ -137,7 +184,7 @@
         // Dữ liệu cũ từ trước khi có đồng bộ → cần đẩy lên lần đầu
         writeQuiet(CHANGED, Date.now());
       }
-      pulled = true;
+      pulledUid = userId;
       if (isDirty()) {
         window.Progress.syncToCloud();
       }
@@ -154,13 +201,15 @@
 
   window.RusiVocabSync = {
     pull,
+    refresh,
     isDirty,
-    /** Khối cần gửi, hoặc null nếu chưa kéo về hay không có thay đổi. */
-    payloadForPush() {
-      return pulled && isDirty() ? build() : null;
+    /** Khối cần gửi, hoặc null nếu chưa kéo bản cloud của đúng tài khoản này về hay không có thay đổi. */
+    payloadForPush(userId) {
+      return pulledUid && pulledUid === userId && isDirty() ? build() : null;
     },
     markPushed(payload) {
       if (payload && payload.updatedAt > read(SYNCED, 0)) writeQuiet(SYNCED, payload.updatedAt);
+      if (payload) saveBase(payload);
     },
     _merge: merge,
     _build: build

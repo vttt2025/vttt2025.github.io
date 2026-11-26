@@ -278,11 +278,13 @@ function initVocabPage() {
         const lessonsCount = Math.ceil(wordsCount / 10) || 1;
         const topicDesc = item.desc || `${wordsCount} từ vựng cốt lõi · ${lessonsCount} bài học`;
 
-        const masteredSet = new Set((typeof STORE !== "undefined") ? STORE.get("vocab_mastered_words", []) : []);
+        // So khớp không phân biệt hoa thường/dấu nhấn (danh sách đã thuộc lưu từ như viết, vd. "Москва")
+        const normWord = (s) => String(s || "").replace(/[\u0300\u0301]/g, "").trim().toLowerCase();
+        const masteredSet = new Set(((typeof STORE !== "undefined") ? STORE.get("vocab_mastered_words", []) : []).map(normWord));
         let masteredInJar = 0;
         if (Array.isArray(item.words) && item.words.length > 0) {
           item.words.forEach(w => {
-            const k = (w.ru || "").trim().toLowerCase();
+            const k = normWord(w.ru);
             if (masteredSet.has(k)) masteredInJar++;
           });
         }
@@ -291,7 +293,7 @@ function initVocabPage() {
 
         return `
           <!-- GIAO DIỆN THẺ TỐI GIẢN CHUẨN MỚI .rusi-card-compact (Đồng bộ toàn hệ thống, không có thanh tiến độ) -->
-          <article class="rusi-card rusi-card-compact ${isFinished ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-vocab-id="${item.id}" data-kind="jar" data-pro="${isPro}">
+          <article class="rusi-card rusi-card-compact ${isFinished ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-vocab-id="${esc(item.id)}" data-kind="jar" data-pro="${isPro}">
             <div class="rusi-card-header">
               <div class="rusi-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
                 ${window.RusiIcons ? RusiIcons.get(item.icon || "archive-jar", { size: 24 }) : ""}
@@ -323,10 +325,10 @@ function initVocabPage() {
                     ${window.RusiIcons ? RusiIcons.get("lock-pro", { size: 16 }) : ""}
                   </span>
                 ` : `
-                  <button type="button" class="btn-jar-list topic-text-btn" data-jar-id="${item.id}" title="Mở danh sách Lọ từ vựng để học Flashcard Spaced Repetition">
+                  <button type="button" class="btn-jar-list topic-text-btn" data-jar-id="${esc(item.id)}" title="Mở danh sách Lọ từ vựng để học Flashcard Spaced Repetition">
                     ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 14 }) : ""} Lọ từ vựng
                   </button>
-                  <button type="button" class="btn-topic-article topic-circle-btn" data-jar-id="${item.id}" title="Xem bài học chủ đề">
+                  <button type="button" class="btn-topic-article topic-circle-btn" data-jar-id="${esc(item.id)}" title="Xem bài học chủ đề">
                     ${window.RusiIcons ? RusiIcons.get("arrow-right", { size: 16 }) : ""}
                   </button>
                 `}
@@ -873,19 +875,19 @@ function initVocabPage() {
                   </div>
 
                   <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-                    <button type="button" class="btn btn-soft btn-sm btn-pmodal-speak" data-ru="${w.ru}" data-audio="${esc(w.audio_url || w.audio || '')}" style="width:36px;height:36px;padding:0;border-radius:10px;display:grid;place-items:center;cursor:pointer" title="Nghe phát âm">
+                    <button type="button" class="btn btn-soft btn-sm btn-pmodal-speak" data-ru="${esc(w.ru)}" data-audio="${esc(w.audio_url || w.audio || '')}" style="width:36px;height:36px;padding:0;border-radius:10px;display:grid;place-items:center;cursor:pointer" title="Nghe phát âm">
                       ${window.RusiIcons ? RusiIcons.get("volume-high", { size: 16 }) : "🔊"}
                     </button>
                     ${currentTab === "mastered" ? `
-                      <button type="button" class="btn btn-soft btn-sm btn-pmodal-unmaster" data-ru="${w.ru}" style="padding:6px 10px;font-size:0.8rem;border-radius:8px;color:var(--muted);cursor:pointer" title="Bỏ khỏi danh sách đã thuộc để tiếp tục ôn tập">
+                      <button type="button" class="btn btn-soft btn-sm btn-pmodal-unmaster" data-ru="${esc(w.ru)}" style="padding:6px 10px;font-size:0.8rem;border-radius:8px;color:var(--muted);cursor:pointer" title="Bỏ khỏi danh sách đã thuộc để tiếp tục ôn tập">
                         Hủy thuộc
                       </button>
                     ` : currentTab === "due" ? `
-                      <button type="button" class="btn btn-primary btn-sm btn-pmodal-study-one" data-ru="${w.ru}" style="padding:6px 12px;font-size:0.8rem;font-weight:700;border-radius:8px;cursor:pointer">
+                      <button type="button" class="btn btn-primary btn-sm btn-pmodal-study-one" data-ru="${esc(w.ru)}" style="padding:6px 12px;font-size:0.8rem;font-weight:700;border-radius:8px;cursor:pointer">
                         Ôn ngay
                       </button>
                     ` : `
-                      <button type="button" class="btn btn-outline btn-sm btn-pmodal-add-queue" data-ru="${w.ru}" style="padding:6px 10px;font-size:0.8rem;border-radius:8px;cursor:pointer">
+                      <button type="button" class="btn btn-outline btn-sm btn-pmodal-add-queue" data-ru="${esc(w.ru)}" style="padding:6px 10px;font-size:0.8rem;border-radius:8px;cursor:pointer">
                         + Học từ này
                       </button>
                     `}
@@ -979,8 +981,8 @@ function initVocabPage() {
           list = list.filter(w => (w || "").toLowerCase().trim() !== normRu);
           if (typeof STORE !== "undefined") STORE.set("vocab_mastered_words", list);
           if (typeof SRS !== "undefined" && typeof SRS.unmarkMastered === "function") {
-            const cardKey = typeof SRS.cardId === "function" ? SRS.cardId({ ru: normRu }) : normRu;
-            SRS.unmarkMastered(cardKey);
+            // Truyền chữ tiếng Nga: unmarkMastered tự tìm thẻ dù id là "srs_..." hay "srsd_<dk>"
+            SRS.unmarkMastered(ru);
           }
           if (typeof Progress !== "undefined" && typeof Progress.syncToCloud === "function") {
             Progress.syncToCloud();
@@ -1719,9 +1721,13 @@ const showTopicArticle = (jarId) => {
         quizEngine(body, found.quiz, {
           onFinish: (pct) => {
             if (pct >= 60) {
+              // XP chỉ cộng lần đầu hoàn thành bài (nút "Làm lại" không được cộng lặp)
+              const firstTime = !(STORE.get("vocabDone", []) || []).includes(found.id);
               Progress.markDone("vocabDone", found.id);
-              Progress.addXp(20);
-              toast("Chúc mừng! Bạn đã hoàn thành bài học từ vựng (+20 XP)");
+              if (firstTime) {
+                Progress.addXp(20);
+                toast("Chúc mừng! Bạn đã hoàn thành bài học từ vựng (+20 XP)");
+              }
             }
           }
         });

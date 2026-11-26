@@ -36349,6 +36349,15 @@ body.cbt-resizing .cbt-gutter-handle {
     border-bottom: 1.5px solid var(--border, #e2e8f0);
     padding: 14px 16px;
   }
+  .cbt-workspace-split.cbt-mode-focus .cbt-split-left {
+    width: 100% !important;
+    min-width: 0;
+    max-width: 100%;
+    border-right: none;
+  }
+  .cbt-workspace-split.cbt-mode-focus .cbt-question-box-wrap {
+    padding: 16px 12px;
+  }
   .cbt-split-right {
     width: 100% !important;
     height: auto !important;

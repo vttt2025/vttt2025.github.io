@@ -29,6 +29,11 @@ function initUpgradePage() {
     }
   };
   loadCloudPackages();
+  // Bản đã xuất bản (data/modules) — PACKAGES trong data.js chỉ là bản dự phòng khi chưa tải được
+  if (window.RusiDataLoader) {
+    window.RusiDataLoader.load("PACKAGES").then((d) => { if (d && d.length) render(); })
+      .catch((err) => console.warn("[RusiDataLoader] Lỗi nạp gói cước:", err));
+  }
 
   const render = () => {
     const user = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);

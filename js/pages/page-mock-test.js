@@ -48,6 +48,7 @@ function initMockTestPage() {
   let timeLeft = 0;
   let timer = null;
   let started = false;
+  let submitting = false; // chặn nộp bài 2 lần (hết giờ + bấm nộp, vi phạm + bấm nộp...)
   let tabSwitches = 0;
   let visibilityHandler = null;
   // Dọn audio + phím tắt của phòng thi hiện tại (gán trong renderTestRoom, gọi khi nộp bài / render lại).
@@ -76,6 +77,8 @@ function initMockTestPage() {
       }
       if (targetId) {
         const found = bank.find(t => t.id === targetId || t.code === targetId);
+        // Đang có phiên thi dở của chính đề này (tải lại trang) → để checkResumeActiveExam khôi phục
+        if (found && sessionStorage.getItem("trki_active_exam_id") === found.id) return false;
         if (found) {
           const isPro = Boolean(found.is_pro_only || found.is_pro);
           if (isPro && typeof Monetization !== "undefined" && !Monetization.isPro()) {
@@ -199,7 +202,7 @@ function initMockTestPage() {
         const iconKey = examMode === "practice" ? "target" : (t.icon || "graduation-cap");
 
         return `
-          <article class="rusi-card rusi-card-compact trki-topic-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-trki-id="${t.id}" tabindex="0">
+          <article class="rusi-card rusi-card-compact trki-topic-card ${isDone ? 'topic-completed' : ''} ${isPro ? 'topic-pro' : ''} ${isPro && !isUnlocked ? 'topic-locked' : ''}" data-trki-id="${esc(t.id)}" tabindex="0">
             <div class="rusi-card-header">
               <div class="rusi-card-icon" style="background:rgba(23,87,166,0.08);color:var(--primary)">
                 ${icon(iconKey, 24)}
@@ -216,7 +219,7 @@ function initMockTestPage() {
                   ` : ""}
                 </div>
                 <div class="rusi-card-subinfo">
-                  <span>${t.level}</span>
+                  <span>${esc(t.level)}</span>
                   <span class="rusi-card-sep">•</span>
                   <span class="rusi-card-count">${countLabel}</span>
                 </div>
@@ -230,7 +233,7 @@ function initMockTestPage() {
                     ${icon("lock-pro", 16) || icon("lock", 16)}
                   </span>
                 ` : `
-                  <button type="button" class="btn-trki-action topic-text-btn" data-trki-id="${t.id}" title="${actionLabel}">
+                  <button type="button" class="btn-trki-action topic-text-btn" data-trki-id="${esc(t.id)}" title="${actionLabel}">
                     ${actionLabel} ${icon("arrow-right", 14)}
                   </button>
                 `}
@@ -384,15 +387,24 @@ function initMockTestPage() {
       const rows = await window.RusiSupabase.questionBank.getByTest(test.code);
       if (!rows || !rows.length) return;
       const mapped = rows
-        .sort((x, y) => (x.order_index || 0) - (y.order_index || 0))
+        // Cùng thứ tự & cùng tập câu với RPC chấm (rusi_grade_trki_submission): sub_test, order_index, id; không lọc bớt câu
+        .sort((x, y) => {
+          const subRank = (s) => ({ lexis_grammar: 1, grammar: 1, reading: 2, listening: 3, writing: 4, speaking: 5 }[s] || 9);
+          const d = subRank(x.sub_test) - subRank(y.sub_test);
+          if (d) return d;
+          const o = (x.order_index || 0) - (y.order_index || 0);
+          if (o) return o;
+          if (typeof x.id === "number" && typeof y.id === "number") return x.id - y.id;
+          const xi = String(x.id), yi = String(y.id);
+          return xi < yi ? -1 : (xi > yi ? 1 : 0);
+        })
         .map(r => ({
           q: r.prompt || r.question_text || "",
           options: normalizeOptions(r.options),
           a: typeof r.correct_index === "number" ? r.correct_index : undefined,
           ex: r.explanation || "",
           topic: r.topic || ""
-        }))
-        .filter(r => r.q && r.options.length >= 2);
+        }));
       if (!mapped.length) return;
       const existingCount = (test.parts && test.parts[0] && Array.isArray(test.parts[0].questions)) ? test.parts[0].questions.length : 0;
       if (!Array.isArray(test.parts) || !test.parts.length) {
@@ -519,7 +531,7 @@ function initMockTestPage() {
             </button>
             <div class="cbt-header-info">
               <div class="cbt-header-title-row">
-                <span class="cbt-level-pill">ТРКИ-${currentTest.level}</span>
+                <span class="cbt-level-pill">ТРКИ-${esc(currentTest.level)}</span>
                 <span class="cbt-test-name-text" title="${esc(currentTest.title)}">${esc(currentTest.title)}</span>
               </div>
               <span class="cbt-subtest-label">${isPractice ? "Chế độ: Luyện tập tự do" : "Kỳ thi mô phỏng khảo thí CBT chuẩn quốc tế"}</span>
@@ -551,8 +563,8 @@ function initMockTestPage() {
                 <h1 class="cbt-briefing-heading">${esc(currentTest.title)}</h1>
                 <p class="cbt-briefing-lead">
                   ${isPractice
-                    ? `Cấp độ <b>ТРКИ-${currentTest.level}</b> · Luyện tập theo cấu trúc đề ТРКИ (TORFL), không giới hạn thời gian. Chọn đáp án là thấy ngay đúng/sai và giải thích. Bạn có thể chọn riêng từng phần muốn luyện bên dưới.`
-                    : `Cấp độ <b>ТРКИ-${currentTest.level}</b> · Bài kiểm tra khảo thí mô phỏng cấu trúc kỳ thi quốc gia ТРКИ (TORFL). Vui lòng kiểm tra cấu trúc bài thi và thiết bị âm thanh, micro trước khi bắt đầu.`}
+                    ? `Cấp độ <b>ТРКИ-${esc(currentTest.level)}</b> · Luyện tập theo cấu trúc đề ТРКИ (TORFL), không giới hạn thời gian. Chọn đáp án là thấy ngay đúng/sai và giải thích. Bạn có thể chọn riêng từng phần muốn luyện bên dưới.`
+                    : `Cấp độ <b>ТРКИ-${esc(currentTest.level)}</b> · Bài kiểm tra khảo thí mô phỏng cấu trúc kỳ thi quốc gia ТРКИ (TORFL). Vui lòng kiểm tra cấu trúc bài thi và thiết bị âm thanh, micro trước khi bắt đầu.`}
                 </p>
               </div>
 
@@ -836,6 +848,7 @@ function initMockTestPage() {
     cleanupHardwareTests();
     document.body.classList.add("in-workspace", "cbt-fullscreen-mode");
     started = true;
+    submitting = false;
     tabSwitches = 0;
 
     // Bug #1 fix: Nạp câu hỏi từ trki_question_bank nếu test có code trki_zlat_*
@@ -864,7 +877,8 @@ function initMockTestPage() {
     const now = Date.now();
     let storedEndTime = 0;
     try { storedEndTime = parseInt(sessionStorage.getItem(storageKey + "_endTime") || "0", 10); } catch(e) {}
-    if (!storedEndTime || storedEndTime <= now) {
+    // Thi thật: giờ đã hết (tải lại sau giờ nộp) thì giữ nguyên để bộ đếm tự nộp bài ngay, không cấp lại giờ mới
+    if (!storedEndTime || (storedEndTime <= now && examMode !== "exam")) {
       storedEndTime = now + examDurationMin * 60 * 1000;
       try { sessionStorage.setItem(storageKey + "_endTime", String(storedEndTime)); } catch(e) {}
     }
@@ -1097,7 +1111,7 @@ function initMockTestPage() {
             </button>
             <div class="cbt-header-info">
               <div class="cbt-header-title-row">
-                <span class="cbt-level-pill">ТРКИ-${currentTest.level}</span>
+                <span class="cbt-level-pill">ТРКИ-${esc(currentTest.level)}</span>
                 <span class="cbt-test-name-text" title="${esc(currentTest.title)}">${esc(currentTest.title)}</span>
               </div>
               <span class="cbt-subtest-label" id="cbtTopSubtestName">Phần 1</span>
@@ -1396,9 +1410,10 @@ function initMockTestPage() {
           if (currentRenderedPartId !== part.id) stopCbtAudio();
           renderLeftPaneGrammarRoadmap(item);
           currentRenderedPartId = part.id;
-        } else if (currentRenderedPartId !== part.id) {
+        } else if (currentRenderedPartId !== part.id + "|" + (part.text ? "" : (qPassage || ""))) {
+          // Khoá = phần + đoạn văn riêng của câu (nếu có) → đổi đoạn văn trong cùng phần vẫn vẽ lại cột trái
           stopCbtAudio();
-          currentRenderedPartId = part.id;
+          currentRenderedPartId = part.id + "|" + (part.text ? "" : (qPassage || ""));
 
           if (isReading) {
             // Phần ĐỌC HIỂU (ЧТЕНИЕ)
@@ -1865,6 +1880,7 @@ function initMockTestPage() {
                 stream.getTracks().forEach(t => t.stop());
                 activeMicStream = null;
                 answers[id] = true;
+                try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(e) {}
                 refreshMatrixCounts();
               };
               recorder.start();
@@ -1927,6 +1943,8 @@ function initMockTestPage() {
       // Không chặn phím tắt trình duyệt/hệ điều hành (Ctrl+C, Ctrl+F, Cmd+A...).
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (typeof e.key !== "string") return;
+      // Đang mở hộp xác nhận nộp bài / cảnh báo vi phạm: không chọn đáp án phía sau
+      if (document.getElementById("cbtSubmitModal") || document.getElementById("antiCheatModal")) return;
 
       const key = e.key.toLowerCase();
       const item = examItems[currentItemIndex];
@@ -2279,6 +2297,12 @@ function initMockTestPage() {
   };
 
   const submit = async () => {
+    if (submitting) return;
+    submitting = true;
+    ["cbtSubmitModal", "antiCheatModal"].forEach((mid) => {
+      const m = document.getElementById(mid);
+      if (m) m.remove();
+    });
     runWorkspaceTeardown();
     document.body.classList.remove("cbt-fullscreen-mode");
 
@@ -2291,17 +2315,6 @@ function initMockTestPage() {
     try {
       const startedAt = parseInt(sessionStorage.getItem(storageKey + "_startTime") || "0", 10);
       if (startedAt > 0) timeSpentSec = Math.max(0, Math.round((Date.now() - startedAt) / 1000));
-    } catch(e) {}
-    try {
-      sessionStorage.removeItem("trki_active_exam_id");
-      sessionStorage.removeItem("trki_active_part_id");
-      if (currentTest && currentTest.id) {
-        sessionStorage.removeItem(storageKey + "_endTime");
-        sessionStorage.removeItem(storageKey + "_startTime");
-        sessionStorage.removeItem(storageKey + "_answers");
-        sessionStorage.removeItem(storageKey + "_flagged");
-        sessionStorage.removeItem(storageKey + "_opt_orders");
-      }
     } catch(e) {}
     if (visibilityHandler) {
       document.removeEventListener("visibilitychange", visibilityHandler);
@@ -2357,6 +2370,20 @@ function initMockTestPage() {
         console.error("[TRKI] Server grading error:", errGrade);
         gradeFailMsg = (errGrade && errGrade.message) || "";
       }
+    }
+    // Chỉ xoá bài làm đã lưu khi máy chủ chấm xong; chấm lỗi thì giữ lại để làm lại/nộp lại không mất câu trả lời.
+    if (serverGraded) {
+      try {
+        sessionStorage.removeItem("trki_active_exam_id");
+        sessionStorage.removeItem("trki_active_part_id");
+        if (currentTest && currentTest.id) {
+          sessionStorage.removeItem(storageKey + "_endTime");
+          sessionStorage.removeItem(storageKey + "_startTime");
+          sessionStorage.removeItem(storageKey + "_answers");
+          sessionStorage.removeItem(storageKey + "_flagged");
+          sessionStorage.removeItem(storageKey + "_opt_orders");
+        }
+      } catch(e) {}
     }
     if (gradeProRequired && typeof Monetization !== "undefined" && Monetization.isPro()) {
       // Đã PRO mà server từ chối → phiên chưa gắn thiết bị (Device Guard)
@@ -2433,8 +2460,10 @@ function initMockTestPage() {
         : (typeof RUSI_XP_RULES !== "undefined" ? RUSI_XP_RULES.TRKI_FULL_PASS : 50);
       if (typeof Progress !== "undefined") {
         // XP chỉ cho lần đầu đạt đề/phần này (chặn cày XP); markDone ghi 1 dòng nhật ký kèm điểm và XP
-        const doneKind = isSubset ? "trkiSubDone" : "trkiDone";
-        const doneId = currentTest.id + (isSubset ? "_" + pKeyStr : "");
+        // Luyện tập cả đề ghi vào trkiSubDone (id_full) để không chặn XP/nhãn hoàn thành của lần thi thật (trkiDone)
+        const usePartDone = isSubset || isPracticeMode;
+        const doneKind = usePartDone ? "trkiSubDone" : "trkiDone";
+        const doneId = currentTest.id + (usePartDone ? "_" + pKeyStr : "");
         const earnedXp = Progress.doneList(doneKind).map(String).includes(String(doneId)) ? 0 : testXp;
         if (earnedXp > 0) Progress.addXp(earnedXp);
         Progress.markDone(doneKind, doneId, {
@@ -2489,7 +2518,7 @@ function initMockTestPage() {
           </button>
           <div class="cbt-title-group">
             <div class="cbt-title-row">
-              <span class="cbt-part-badge">ТРКИ-${currentTest.level}</span>
+              <span class="cbt-part-badge">ТРКИ-${esc(currentTest.level)}</span>
               <span class="cbt-exam-title">${esc(currentTest.title)}</span>
             </div>
             <span class="cbt-subtest-name">Kết quả khảo thí & Giải thích đáp án chi tiết</span>
@@ -2510,7 +2539,7 @@ function initMockTestPage() {
             <div class="trki-eval-top-info">
               <div class="trki-eval-status-pill ${examStatus === 'pass' ? 'pass' : examStatus === 'retake' ? 'retake' : 'fail'}">
                 ${window.RusiIcons ? RusiIcons.get(examStatus === "pass" ? "check-circle-correct" : examStatus === "retake" ? "rotate-ccw" : "alert-triangle", { size: 15 }) : ""}
-                <span>${statusBadgeText}</span>
+                <span>${esc(statusBadgeText)}</span>
               </div>
               <h2 class="trki-eval-title">${esc(currentTest.title)}</h2>
               <p class="trki-eval-subtitle">
@@ -2657,7 +2686,8 @@ function initMockTestPage() {
         const pKeyStr = partParam ? partParam.join("-") : "full";
         const storageKey = "trki_exam_" + activeId + "_" + pKeyStr + "_" + activeMode;
         const storedEndTime = parseInt(sessionStorage.getItem(storageKey + "_endTime") || "0", 10);
-        if (activeMode === "practice" || storedEndTime > Date.now()) {
+        // Thi thật đã hết giờ khi tải lại: vẫn khôi phục để startTest tự nộp các câu đã lưu (không cấp lại giờ mới)
+        if (activeMode === "practice" || storedEndTime > 0) {
           // Chờ nạp đủ TRKI_BANK (mục lục TRKI_INDEX không có câu hỏi) rồi mới khôi phục, và khoá PRO như khi mở đề.
           const resumeWhenLoaded = async () => {
             if (window.RusiDataLoader && typeof window.RusiDataLoader.load === "function") {

@@ -745,12 +745,15 @@ function initListeningPage() {
   };
   loadCloudListening();
 
+  // Bài PRO trong file công khai chỉ có metadata (dictation: [], dictation_count > 0)
+  const getDictationCount = (l) => (Array.isArray(l.dictation) && l.dictation.length) || Number(l.dictation_count) || 0;
+
   const filteredLessons = () => {
     const all = getListeningLessons();
     return all.filter((l) => {
       if (l.level !== currentLevel) return false;
       if (currentMode === "dictation") {
-        return Array.isArray(l.dictation) && l.dictation.length > 0;
+        return getDictationCount(l) > 0;
       }
       return true;
     });
@@ -777,7 +780,7 @@ function initListeningPage() {
       const count = all.filter((l) => {
         if (l.level !== level) return false;
         if (currentMode === "dictation") {
-          return Array.isArray(l.dictation) && l.dictation.length > 0;
+          return getDictationCount(l) > 0;
         }
         return true;
       }).length;
@@ -800,7 +803,7 @@ function initListeningPage() {
     gridHost.innerHTML = items.map((l) => {
       const isDone = currentMode === "comprehension"
         ? (Progress.doneList("listenDone").includes(l.id + "_comp") || Progress.doneList("listenDone").includes(l.id + "_check") || Progress.doneList("listenDone").includes(l.id + "_video"))
-        : (Array.isArray(l.dictation) && l.dictation.length > 0 && l.dictation.every((_, i) => Progress.doneList("listenDone").includes(l.id + "_dict_" + i)));
+        : (getDictationCount(l) > 0 && Array.from({ length: getDictationCount(l) }).every((_, i) => Progress.doneList("listenDone").includes(l.id + "_dict_" + i)));
       const isPro = Boolean(l.is_pro_only || l.is_pro);
       const isUnlocked = !isPro || (typeof Monetization !== "undefined" && Monetization.isPro());
       const qCount = (l.questions && l.questions.length) ? l.questions.length : (l.lines && l.lines.length) ? l.lines.length : (l.question_count || l.line_count || 4);
@@ -3893,9 +3896,11 @@ function initListeningPage() {
         }
         const lessonKey = `${lesson.id}_dict`;
         if (!Progress.doneList("listenDone").includes(lessonKey) && sentences.every((_, i) => isSentenceDone(i))) {
-          lessonRewardXp = (window.RUSI_XP_RULES && window.RUSI_XP_RULES.LISTENING_DICTATION_PASS) || 20;
+          // Mọi câu đều đã mở bằng gợi ý → không thưởng XP cả bài
+          const allHinted = hintedSentences.size >= sentences.length;
+          lessonRewardXp = allHinted ? 0 : ((window.RUSI_XP_RULES && window.RUSI_XP_RULES.LISTENING_DICTATION_PASS) || 20);
           Progress.markDone("listenDone", lessonKey, { title: lesson.title, score: 100, xp: lessonRewardXp });
-          Progress.addXp(lessonRewardXp);
+          if (lessonRewardXp) Progress.addXp(lessonRewardXp);
         }
       }
 
@@ -4369,6 +4374,22 @@ function initListeningPage() {
     } catch (_) {}
     return false;
   };
+
+  // Nút Back trình duyệt/Android: URL đổi (pushState) nhưng workspace vẫn mở → chạy đúng thao tác của nút Back trong trang
+  if (window._rusiListenPopHandler) window.removeEventListener("popstate", window._rusiListenPopHandler);
+  window._rusiListenPopHandler = () => {
+    if (!currentLesson || !document.body.classList.contains("in-workspace")) return;
+    const ids = [currentLesson.id, currentLesson.code].filter(Boolean).map((v) => String(v).toLowerCase());
+    let urlIds = [];
+    try {
+      urlIds = window.location.pathname.split("/").concat(Array.from(new URLSearchParams(window.location.search).values()))
+        .map((v) => { try { return decodeURIComponent(v).toLowerCase(); } catch (_) { return String(v).toLowerCase(); } });
+    } catch (_) {}
+    if (ids.some((id) => urlIds.includes(id))) return;
+    const backBtn = host.querySelector("#btnDictBack, #btnCompBack, #btnBackLisList");
+    if (backBtn) backBtn.click();
+  };
+  window.addEventListener("popstate", window._rusiListenPopHandler);
 
   if (!checkUrlLesson()) {
     renderHub();

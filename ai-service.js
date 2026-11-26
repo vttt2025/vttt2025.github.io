@@ -131,6 +131,7 @@
               content: Number(data.content) || 0,
               passed: data.passed !== undefined ? Boolean(data.passed) : (Number(data.total) >= 66),
               feedback: data.feedback || "Bài viết đã được AI phân tích.",
+              fallback: Boolean(data.fallback),
               quota: data.quota || null
             };
           } else if (data && data.limitReached) {
