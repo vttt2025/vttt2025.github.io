@@ -1959,7 +1959,7 @@ function initMockTestPage() {
       const key = e.key.toLowerCase();
       const item = examItems[currentItemIndex];
 
-      // Phím 1, 2, 3, 4 hoặc a, b, c, d chọn đáp án
+      // Phím 1–5 hoặc a–e chọn đáp án (169 câu có 5 phương án; "f" dành cho đặt cờ)
       if (item && item.type === "question") {
         const q = item.q;
         const rawOpts = normalizeOptions(q.options);
@@ -1969,6 +1969,7 @@ function initMockTestPage() {
         else if (key === "2" || key === "b") selectedOrderIndex = 1;
         else if (key === "3" || key === "c") selectedOrderIndex = 2;
         else if (key === "4" || key === "d") selectedOrderIndex = 3;
+        else if (key === "5" || key === "e") selectedOrderIndex = 4;
 
         const practiceLocked = isPractice && answers[item.id] !== undefined && typeof q.a === "number";
         if (selectedOrderIndex >= 0 && selectedOrderIndex < order.length && !practiceLocked) {
