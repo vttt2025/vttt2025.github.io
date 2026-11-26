@@ -6,6 +6,13 @@
 
 function initSpeakingPage() {
   const el = window.el || function(sel) { return document.querySelector(sel); };
+  // Ghi nhớ tham số điều hướng NGAY khi khởi động: renderHub() gọi setRusiDeepUrl('/speaking') trên tên miền thật,
+  // làm mất ?set= / ?mode= / ?level= trước khi checkUrlSet() kịp đọc (localhost không đổi URL nên không thấy lỗi)
+  const initialRoute = (() => {
+    const sp = new URLSearchParams(window.location.search);
+    const read = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || sp.get(k);
+    return { mode: read("mode"), level: read("level"), set: read("set"), id: read("id") };
+  })();
   const host = el("#speakHost");
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const icon = (name, size = 18) => (window.RusiIcons ? RusiIcons.get(name, { size }) : "");
@@ -78,7 +85,7 @@ function initSpeakingPage() {
   const checkUrlSet = () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || urlParams.get(k);
+      const getParam = (k) => initialRoute[k] || (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || urlParams.get(k);
       const modeParam = (getParam("mode") || "").toLowerCase();
       if (modeParam === "shadowing" || modeParam === "reflex") {
         currentMode = modeParam;
@@ -93,6 +100,7 @@ function initSpeakingPage() {
         const all = getSpeakingSets();
         const found = all.find(s => String(s.id).toLowerCase() === String(targetId).toLowerCase() || String(s.code || "").toLowerCase() === String(targetId).toLowerCase());
         if (found && Boolean(found.is_pro_only || found.is_pro) && !Monetization.isPro()) {
+          initialRoute.set = initialRoute.id = null; // hiện modal PRO 1 lần
           Monetization.showProGateModal("Nội dung luyện nói dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn.");
           return false;
         }
@@ -103,6 +111,7 @@ function initSpeakingPage() {
             currentMode = "shadowing";
           }
           currentLevel = found.level || currentLevel;
+          initialRoute.set = initialRoute.id = null; // đã mở: không tự mở lại khi dữ liệu tải xong muộn
           openSpeakingWorkspace(found, currentMode);
           return true;
         }
