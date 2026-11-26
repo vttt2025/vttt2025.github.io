@@ -420,29 +420,66 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       return m ? m[1] : "";
     };
 
-    const ytId = parseYoutubeId(set);
+    // ID YouTube luôn gồm đúng 11 ký tự [A-Za-z0-9_-]; giá trị khác bị bỏ qua để không chèn chuỗi lạ vào src
+    const ytIdRaw = String(parseYoutubeId(set) || "").trim();
+    const ytId = /^[A-Za-z0-9_-]{11}$/.test(ytIdRaw) ? ytIdRaw : "";
     const hasVideo = Boolean(ytId);
+    const YT_ORIGIN = "https://www.youtube-nocookie.com";
     let ytVideoUrl = "";
     if (hasVideo) {
-      const startQ = (set.start_sec || (set.video && set.video.startSec)) ? `&start=${set.start_sec || set.video.startSec}` : "";
-      const endQ = (set.end_sec || (set.video && set.video.endSec)) ? `&end=${set.end_sec || set.video.endSec}` : "";
+      const setStart = Math.floor(Number(set.start_sec || (set.video && set.video.startSec)) || 0);
+      const setEnd = Math.floor(Number(set.end_sec || (set.video && set.video.endSec)) || 0);
+      const startQ = setStart > 0 ? `&start=${setStart}` : "";
+      const endQ = setEnd > 0 ? `&end=${setEnd}` : "";
       const hasValidOrigin = typeof window !== "undefined" && window.location.origin && window.location.origin !== "null" && !window.location.origin.startsWith("file:");
       const originQ = hasValidOrigin ? `&origin=${encodeURIComponent(window.location.origin)}` : "";
-      ytVideoUrl = `https://www.youtube.com/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1${startQ}${endQ}${originQ}`;
+      ytVideoUrl = `${YT_ORIGIN}/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1${startQ}${endQ}${originQ}`;
     }
 
-    // Gửi lệnh an toàn tới YouTube Iframe Player
+    // Trạng thái YouTube IFrame API (YT.Player): biết player sẵn sàng, đọc thời điểm phát thật
+    let ytPlayer = null;
+    let ytReady = false;
+    let ytApiFailed = false;   // không tải được API → điều khiển bằng postMessage, thời gian ước lượng
+    let ytVideoBroken = false; // video lỗi/không cho nhúng → dùng giọng đọc máy
+    let ytPendingPlay = false; // người dùng bấm phát khi player chưa sẵn sàng
+
+    const loadYtIframeApi = () => {
+      if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
+      if (window._rusiYtApiPromise) return window._rusiYtApiPromise;
+      window._rusiYtApiPromise = new Promise((resolve, reject) => {
+        const prevReady = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = () => {
+          if (typeof prevReady === "function") {
+            try { prevReady(); } catch (err) { console.warn("[Speaking] onYouTubeIframeAPIReady", err); }
+          }
+          resolve(window.YT);
+        };
+        const s = document.createElement("script");
+        s.src = "https://www.youtube.com/iframe_api";
+        s.async = true;
+        s.onerror = () => {
+          window._rusiYtApiPromise = null;
+          reject(new Error("Không tải được YouTube IFrame API"));
+        };
+        document.head.appendChild(s);
+      });
+      return window._rusiYtApiPromise;
+    };
+
+    // Gửi lệnh tới YouTube player (API nếu sẵn sàng, ngược lại postMessage tới đúng origin của iframe)
     const sendYtCommand = (func, args = []) => {
-      const ytPlayer = el("#spYoutubePlayer");
-      if (ytPlayer && ytPlayer.contentWindow) {
+      const list = Array.isArray(args) ? args : [args];
+      if (ytReady && ytPlayer && typeof ytPlayer[func] === "function") {
+        try { ytPlayer[func](...list); } catch (err) { console.warn("[Speaking] YouTube " + func, err); }
+        return;
+      }
+      if (!ytApiFailed) return; // API đang tải: lệnh phát được giữ lại qua ytPendingPlay
+      const frame = el("#spYoutubePlayer");
+      if (frame && frame.contentWindow) {
         try {
-          ytPlayer.contentWindow.postMessage(JSON.stringify({ event: "listening" }), "*");
-          ytPlayer.contentWindow.postMessage(JSON.stringify({
-            event: "command",
-            func: func,
-            args: Array.isArray(args) ? args : [args]
-          }), "*");
-        } catch (_) {}
+          frame.contentWindow.postMessage(JSON.stringify({ event: "listening" }), YT_ORIGIN);
+          frame.contentWindow.postMessage(JSON.stringify({ event: "command", func, args: list }), YT_ORIGIN);
+        } catch (err) { console.warn("[Speaking] YouTube postMessage " + func, err); }
       }
     };
 
@@ -456,7 +493,6 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
     let isRecording = false;
     let isPlaying = false;
     let isTranslationVisible = true;
-    let isVideoVisible = false;
     let autoAdvance = false;
     let isSidebarHidden = false;
     let recognitionInstance = null;
@@ -631,7 +667,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
                 ${icon("chevron-left", 18)}
               </button>
 
-              <!-- Nút tốc độ phát âm (0.8x, 1.0x, 1.2x) -->
+              <!-- Nút tốc độ phát âm (0.75x, 1.0x, 1.25x) -->
               <button type="button" class="sp-ctrl-btn" id="btnSpeedToggle" title="Tốc độ phát âm" aria-label="Tốc độ">
                 <span class="sp-speed-badge" id="spSpeedBadge">1.0x</span>
               </button>
@@ -769,18 +805,21 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
         if (p.length === 2) return p[0] * 60 + p[1];
         if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2];
       }
-      const baseStart = Number(set.start_sec || (set.video && set.video.startSec)) || 0;
-      return Math.round(baseStart + idx * 8);
+      // Không có mốc thời gian → không đoán (câu này sẽ phát bằng giọng đọc máy)
+      return null;
     };
 
     const getItemEndSec = (idx) => {
+      const start = getItemSec(idx);
+      if (start === null) return null;
       const it = items[idx];
-      if (!it) return getItemSec(idx) + 5;
       if (typeof it.end_sec === "number") return it.end_sec;
       if (typeof it.endSec === "number") return it.endSec;
       if (typeof it.end === "number") return it.end;
-      if (typeof it.duration === "number") return getItemSec(idx) + it.duration;
-      return getItemSec(idx) + 6;
+      if (typeof it.duration === "number") return start + it.duration;
+      const nextStart = getItemSec(idx + 1);
+      if (nextStart !== null && nextStart > start) return nextStart;
+      return start + 6;
     };
 
     let segmentTimer = null;
@@ -788,9 +827,11 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
     const stopVideoSegment = () => {
       if (segmentTimer) {
         clearTimeout(segmentTimer);
+        clearInterval(segmentTimer);
         segmentTimer = null;
       }
-      sendYtCommand("pauseVideo", []);
+      ytPendingPlay = false;
+      if (hasVideo) sendYtCommand("pauseVideo", []);
       isPlaying = false;
       const btnPlay = el("#btnPlayModel");
       if (btnPlay) {
@@ -798,13 +839,6 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
         const ic = el("#spPlayIcon");
         if (ic) ic.innerHTML = icon("volume-high", 20);
       }
-    };
-
-    // Tự động nhảy video đến thời điểm của câu
-    const seekVideoToSentence = (idx) => {
-      if (!hasVideo) return;
-      const sec = getItemSec(idx);
-      sendYtCommand("seekTo", [sec, true]);
     };
 
     // Bảng chuẩn hóa số tiếng Nga (Google STT thường trả về dạng chữ số 1, 2, 20...)
@@ -1035,6 +1069,16 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       stopAudio();
       stopRecording();
 
+      const segStart = getItemSec(currentSentenceIdx);
+      const useVideo = hasVideo && !ytVideoBroken && segStart !== null;
+
+      // Player chưa sẵn sàng: giữ yêu cầu, onReady sẽ phát lại (không gửi lệnh vào iframe chưa nghe)
+      if (useVideo && !ytReady && !ytApiFailed) {
+        ytPendingPlay = true;
+        toast("Video đang tải, sẽ phát ngay khi sẵn sàng...");
+        return;
+      }
+
       isPlaying = true;
       const btnPlay = el("#btnPlayModel");
       if (btnPlay) {
@@ -1043,23 +1087,21 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
         if (ic) ic.innerHTML = icon("pause", 20);
       }
 
-      if (hasVideo) {
+      if (useVideo) {
         // 1. Phân hệ YouTube: Phát đoạn theo start - end
-        const start = getItemSec(currentSentenceIdx);
+        const start = segStart;
         const end = getItemEndSec(currentSentenceIdx);
-        // Bù thêm 400ms đệm tránh YouTube đang tải buffering bị ngắt cụt câu
-        const durationSec = (Math.max(1.0, end - start) / currentSpeed) + 0.4;
+        const segLen = Math.max(1.0, end - start);
 
         sendYtCommand("setPlaybackRate", [currentSpeed]);
         sendYtCommand("seekTo", [start, true]);
         sendYtCommand("playVideo", []);
 
-        // Khởi động Karaoke Highlight từng từ (theo mảng it.w hoặc ước lượng đều theo độ dài từ)
+        // Karaoke: mốc bắt đầu mỗi từ tính theo giây trong video (it.w hoặc chia theo độ dài từ)
         clearKaraoke();
-        const playStartTime = Date.now();
         const wordSpans = Array.from(document.querySelectorAll("#spTargetRu .sp-target-word"));
-        const wordTimestamps = (Array.isArray(it.w) && it.w.length > 0)
-          ? it.w.map(t => (t - start) / currentSpeed)
+        const wordTimes = (Array.isArray(it.w) && it.w.length > 0)
+          ? it.w.map(Number)
           : (() => {
               if (wordSpans.length === 0) return [];
               const totalChars = wordSpans.reduce((sum, sp) => sum + sp.textContent.length, 0) || 1;
@@ -1067,29 +1109,76 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
               return wordSpans.map(sp => {
                 const frac = accum / totalChars;
                 accum += sp.textContent.length;
-                return frac * durationSec;
+                return start + frac * segLen;
               });
             })();
-
-        karaokeTimer = setInterval(() => {
-          if (!isPlaying) { clearKaraoke(); return; }
-          const elapsed = (Date.now() - playStartTime) / 1000;
+        const highlightAt = (videoSec) => {
           let activeIdx = -1;
-          for (let wI = 0; wI < wordTimestamps.length; wI++) {
-            if (elapsed >= wordTimestamps[wI]) {
-              activeIdx = wI;
-            } else {
-              break;
-            }
+          for (let wI = 0; wI < wordTimes.length; wI++) {
+            if (videoSec >= wordTimes[wI]) activeIdx = wI;
+            else break;
           }
           wordSpans.forEach((sp, idx) => {
             sp.classList.toggle("sp-karaoke-active", idx === activeIdx);
           });
-        }, 80);
+        };
 
-        if (segmentTimer) clearTimeout(segmentTimer);
-        segmentTimer = setTimeout(() => {
+        if (segmentTimer) { clearTimeout(segmentTimer); clearInterval(segmentTimer); segmentTimer = null; }
+
+        if (ytReady && ytPlayer) {
+          // Theo dõi thời điểm phát thật của video → dừng đúng mốc kể cả khi đang tải chậm
+          const startedAt = Date.now();
+          const maxWaitMs = (segLen / currentSpeed) * 3000 + 15000;
+          let settled = false; // đã thực sự phát trong đoạn của câu (bỏ qua thời điểm cũ trước khi tua)
+          segmentTimer = setInterval(() => {
+            if (!isPlaying) return;
+            let state = -1;
+            let t = start;
+            try {
+              state = ytPlayer.getPlayerState();
+              t = Number(ytPlayer.getCurrentTime()) || 0;
+            } catch (err) {
+              console.warn("[Speaking] YouTube player state", err);
+            }
+            if (state === 1 && t >= start - 0.5 && t <= end + 0.5) settled = true;
+            if (settled) {
+              highlightAt(t);
+              if (t >= end || state === 0) { finishVideoSegment(); return; }
+              if (state === 2) { stopVideoSegment(); clearKaraoke(); return; } // người dùng tự tạm dừng trong khung video
+            } else if (state === 0) {
+              finishVideoSegment();
+              return;
+            }
+            if (!settled && Date.now() - startedAt > 3000 && (state === -1 || state === 5)) {
+              // iOS/Safari chặn tự phát khi chưa chạm vào video lần nào
+              stopVideoSegment();
+              clearKaraoke();
+              toast("Trình duyệt chưa cho phát video. Chạm vào video một lần rồi thử lại.");
+              return;
+            }
+            if (Date.now() - startedAt > maxWaitMs) finishVideoSegment();
+          }, 100);
+        } else {
+          // Dự phòng khi không tải được IFrame API: ước lượng theo đồng hồ
+          // Bù thêm 400ms đệm tránh YouTube đang tải buffering bị ngắt cụt câu
+          const durationSec = (segLen / currentSpeed) + 0.4;
+          const playStartTime = Date.now();
+          karaokeTimer = setInterval(() => {
+            if (!isPlaying) { clearKaraoke(); return; }
+            highlightAt(start + ((Date.now() - playStartTime) / 1000) * currentSpeed);
+          }, 80);
+          segmentTimer = setTimeout(finishVideoSegment, Math.round(durationSec * 1000));
+        }
+
+      } else {
+        playSentenceTts(it);
+      }
+    };
+
+    // Kết thúc một đoạn video: lặp lại nếu còn lượt, ngược lại dừng
+    const finishVideoSegment = () => {
           if (!isPlaying) return;
+          clearKaraoke();
           if (loopRemaining > 1) {
             loopRemaining--;
             const pill = el("#spLoopPill");
@@ -1107,10 +1196,10 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
           } else {
             stopVideoSegment();
           }
-        }, Math.round(durationSec * 1000));
+    };
 
-      } else {
-        // 2. Phân hệ bài nói thông thường: Phát âm giọng đọc tiếng Nga chuẩn qua Web SpeechSynthesis
+    // 2. Phân hệ bài nói thông thường (hoặc câu không có mốc video): giọng đọc tiếng Nga qua Web SpeechSynthesis
+    const playSentenceTts = (it) => {
         const textToSpeak = (it.ru || it.text_ru || it.text || "").trim();
         if (!textToSpeak) {
           stopAudio();
@@ -1158,7 +1247,6 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
           toast("Trình duyệt không hỗ trợ phát âm — hãy dùng Google Chrome hoặc Microsoft Edge.");
           stopAudio();
         }
-      }
     };
 
     // Nạp câu hiện hành vào sân khấu
@@ -1565,14 +1653,10 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       if (btn) btn.classList.toggle("is-active", !isSidebarHidden);
     };
 
-    // Xử lý phát video qua YouTube IFrame API
+    // Phím V: phát tiếp video tự do (không theo đoạn câu)
     const handlePlayVideo = () => {
-      const ytPlayer = el("#spYoutubePlayer");
-      if (ytPlayer && ytPlayer.contentWindow) {
-        try {
-          ytPlayer.contentWindow.postMessage(JSON.stringify({ event: "command", func: "playVideo", args: "" }), "*");
-        } catch (_) {}
-      }
+      if (!hasVideo) return;
+      sendYtCommand("playVideo", []);
     };
 
     // Keyboard Shortcuts Listener
@@ -1628,6 +1712,11 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       Object.values(userVoiceMemos).forEach(m => {
         try { URL.revokeObjectURL(m.url); } catch (_) {}
       });
+      if (ytPlayer) {
+        try { ytPlayer.destroy(); } catch (err) { console.warn("[Speaking] YouTube destroy", err); }
+        ytPlayer = null;
+        ytReady = false;
+      }
       document.removeEventListener("keydown", onWorkspaceKeydown);
       document.body.classList.remove("in-workspace");
       if (typeof window !== "undefined" && window.history && window.history.replaceState) {
@@ -1642,11 +1731,6 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
     };
 
     // Đăng ký các nút điều khiển
-    if (el("#btnPlayCenterYt")) el("#btnPlayCenterYt").onclick = handlePlayVideo;
-    const vCoverEl = el("#spVideoCover");
-    if (vCoverEl) {
-      vCoverEl.onclick = () => handlePlayVideo();
-    }
     el("#btnPlayModel").onclick = () => playCurrentSentence();
     el("#btnRecordMic").onclick = startRecording;
     el("#btnSpeedToggle").onclick = toggleSpeed;
@@ -1718,11 +1802,53 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       if (!isTranslationVisible) toggleTranslation();
     };
 
-    // Thiết lập kết nối ban đầu với YouTube Player
+    // Gắn YouTube IFrame API vào iframe sẵn có; lỗi tải API → dự phòng postMessage
     if (hasVideo) {
-      setTimeout(() => {
-        sendYtCommand("listening", []);
-      }, 500);
+      const frame = el("#spYoutubePlayer");
+      const onApiUnavailable = (err) => {
+        console.warn("[Speaking] YouTube IFrame API không dùng được, chuyển sang chế độ dự phòng", err);
+        ytApiFailed = true;
+        if (ytPendingPlay && frame && frame.isConnected) {
+          ytPendingPlay = false;
+          playCurrentSentence(true);
+        }
+      };
+      let apiTimeout = null;
+      Promise.race([
+        loadYtIframeApi(),
+        new Promise((_, reject) => {
+          apiTimeout = setTimeout(() => reject(new Error("Hết thời gian tải YouTube IFrame API")), 10000);
+        })
+      ]).then((YT) => {
+        clearTimeout(apiTimeout);
+        if (!frame || !frame.isConnected) return; // đã rời workspace
+        ytPlayer = new YT.Player(frame, {
+          host: YT_ORIGIN,
+          events: {
+            onReady: () => {
+              if (!frame.isConnected) return;
+              ytReady = true;
+              if (ytPendingPlay) {
+                ytPendingPlay = false;
+                playCurrentSentence(true);
+              }
+            },
+            onError: (e) => {
+              // 2: ID sai, 5: lỗi HTML5, 100: video bị xoá, 101/150: chủ video không cho nhúng
+              console.warn("[Speaking] YouTube player error", e && e.data);
+              ytVideoBroken = true;
+              const wasPlaying = isPlaying || ytPendingPlay;
+              stopVideoSegment();
+              clearKaraoke();
+              toast("Video không phát được — chuyển sang giọng đọc mẫu.");
+              if (wasPlaying) playCurrentSentence(true);
+            }
+          }
+        });
+      }).catch((err) => {
+        clearTimeout(apiTimeout);
+        onApiUnavailable(err);
+      });
     }
 
     // Khởi chạy câu đầu tiên & playlist
