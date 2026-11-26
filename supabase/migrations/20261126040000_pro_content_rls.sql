@@ -178,6 +178,10 @@ create or replace view public.trki_questions_public with (security_invoker = fal
     is_pro_only,
     created_at,
     updated_at
-   from public.trki_question_bank
+   from public.trki_question_bank q
   where is_published = true
-    and (not coalesce(is_pro_only, false) or public.rusi_has_pro());
+    -- PRO nếu chính câu gắn cờ PRO HOẶC câu thuộc một đề PRO (cờ PRO thường chỉ đặt ở đề)
+    and ((not coalesce(q.is_pro_only, false)
+          and not exists (select 1 from public.trki_tests t
+                          where (t.code = q.test_code or t.id = q.test_code) and coalesce(t.is_pro_only, false)))
+         or public.rusi_has_pro());
