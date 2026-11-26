@@ -315,7 +315,8 @@ const authPageCode = fs.readFileSync('auth-page.js', 'utf8');
 const authSandbox = {
   window: {},
   document: { readyState: 'complete', body: { dataset: { page: 'login' } }, addEventListener: () => {}, getElementById: () => null, querySelector: () => null, querySelectorAll: () => [] },
-  location: { origin: 'https://rusitrki.com', search: '', hash: '' },
+  location: { origin: 'https://rusitrki.com', href: 'https://rusitrki.com/login.html', search: '', hash: '' },
+  URL,
   URLSearchParams,
   console: console
 };
@@ -334,6 +335,10 @@ assert.strictEqual(getRedirectTarget('javascript:alert(1)'), 'index.html');
 assert.strictEqual(getRedirectTarget('data:text/html,test'), 'index.html');
 assert.strictEqual(getRedirectTarget('https://evil.com/phish'), 'index.html');
 assert.strictEqual(getRedirectTarget('//evil.com'), 'index.html');
+// Biến thể trình duyệt chuẩn hoá (tab/xuống dòng, backslash) cũng phải bị chặn
+for (const t of ['java\tscript:alert(1)', '\tjavascript:alert(1)', '/\t/evil.com', '\t//evil.com', '/\\evil.com', 'java\nscript:alert(1)']) {
+  assert.strictEqual(getRedirectTarget(t), 'index.html', 'must block ' + JSON.stringify(t));
+}
 // Valid relative redirects
 assert.strictEqual(getRedirectTarget('mock-test.html?test=123'), 'mock-test.html?test=123');
 assert.strictEqual(getRedirectTarget('vocabulary.html'), 'vocabulary.html');

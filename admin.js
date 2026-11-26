@@ -8004,17 +8004,30 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         deleteCol: "id",
         label: "Học viên & Quản trị",
         idKey: (doc) => doc.id,
-        toRow: (doc) => ({
-          id: (doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID(),
-          full_name: doc.full_name || doc.name || "",
-          avatar_url: doc.avatar_url || null,
-          timezone: doc.timezone || "Asia/Ho_Chi_Minh",
-          role: doc.role || "student",
-          is_pro: parseBool(doc.is_pro, false),
-          pro_expires_at: doc.pro_expires_at ? new Date(doc.pro_expires_at).toISOString() : null,
-          updated_at: new Date().toISOString()
-        }),
+        toRow: (doc) => {
+          const row = {
+            id: (doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID(),
+            full_name: doc.full_name || doc.name || "",
+            avatar_url: doc.avatar_url || null,
+            timezone: doc.timezone || "Asia/Ho_Chi_Minh",
+            updated_at: new Date().toISOString()
+          };
+          // Quyền PRO / vai trò chỉ gửi khi admin thật sự sửa: bản đã tải có thể cũ (đơn vừa được kích hoạt sau khi tải danh sách)
+          // → lưu tên cũng ghi đè hạn PRO cũ, học viên mất thời gian đã trả tiền.
+          const snap = doc._loaded || null;
+          const role = doc.role || "student";
+          const isPro = parseBool(doc.is_pro, false);
+          const proExp = doc.pro_expires_at ? new Date(doc.pro_expires_at).toISOString() : null;
+          const snapExp = snap && snap.pro_expires_at ? new Date(snap.pro_expires_at).toISOString() : null;
+          if (!snap || role !== snap.role) row.role = role;
+          if (!snap || isPro !== snap.is_pro || proExp !== snapExp) {
+            row.is_pro = isPro;
+            row.pro_expires_at = proExp;
+          }
+          return row;
+        },
         fromRow: (row) => ({
+          _loaded: { role: row.role || "student", is_pro: Boolean(row.is_pro), pro_expires_at: row.pro_expires_at || "" },
           id: row.id,
           email: row.email || "",
           full_name: row.full_name || "",
@@ -8417,6 +8430,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           // Lỗi đọc dòng hiện có → catch bên dưới thử từng mục (upsertDoc báo lỗi), không ghi giá trị mặc định
           const preserved = await this.fetchPreservedRows(sb, slug, chunk);
           const rows = chunk.map(it => this.applyPreserved(slug, it, mapping.toRow(it), preserved));
+          // supabase-js upsert mảng: cột thiếu ở một dòng bị ghi NULL → lô có tập cột khác nhau (vd. hồ sơ không đổi quyền PRO)
+          // thì lưu từng mục (nhánh catch) để không xoá dữ liệu
+          const colSig = (r) => Object.keys(r).sort().join(",");
+          if (rows.some((r) => colSig(r) !== colSig(rows[0]))) throw Object.assign(new Error("Các dòng có tập cột khác nhau — lưu từng mục"), { mixedColumns: true });
           const { data: upsertedRows, error } = await sb
             .from(mapping.table)
             .upsert(rows, { onConflict: mapping.conflict })
@@ -8453,8 +8470,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             }
           }
         } catch (err) {
-          console.warn(`[syncCollectionBatch] Ngoại lệ batch ${slug} ${i}:`, err);
-          if (!firstError) firstError = err.message || String(err);
+          if (!err.mixedColumns) {
+            console.warn(`[syncCollectionBatch] Ngoại lệ batch ${slug} ${i}:`, err);
+            if (!firstError) firstError = err.message || String(err);
+          }
           for (const it of chunk) {
             const res = await this.upsertDoc(slug, it, { skipAuthCheck: true });
             if (res.ok) synced++;

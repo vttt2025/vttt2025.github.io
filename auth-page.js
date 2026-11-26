@@ -77,7 +77,15 @@
     if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/i.test(target) || target.startsWith("//") || target.startsWith("\\")) {
       target = "index.html";
     }
-    return target;
+    // Kiểm tra bằng chính bộ phân tích URL của trình duyệt (bắt cả biến thể có tab/xuống dòng như "java%09script:",
+    // "/%09/evil.com", "/\\evil.com"): chỉ cho chuyển tới trang cùng tên miền, giữ lại path + query + hash
+    try {
+      const u = new URL(target, window.location.href);
+      if ((u.protocol !== "http:" && u.protocol !== "https:") || u.origin !== window.location.origin) return "index.html";
+      return target; // cùng tên miền: trình duyệt phân giải chuỗi này ra đúng URL vừa kiểm
+    } catch (_) {
+      return "index.html";
+    }
   }
 
   /** Lưu lại redirect param nếu có trên URL */

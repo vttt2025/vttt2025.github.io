@@ -1,4 +1,14 @@
 
+// Chống clickjacking: GitHub Pages không gửi được header X-Frame-Options / CSP frame-ancestors (meta CSP bỏ qua chỉ thị này)
+// → trang bị nhúng trong iframe của site khác thì thoát ra cửa sổ chính, không được thì ẩn trang.
+if (window.top !== window.self) {
+  let rusiSameOriginFrame = false; // CMS xem trước trang bằng iframe cùng tên miền → cho phép
+  try { rusiSameOriginFrame = window.top.location.origin === window.location.origin; } catch (_) {}
+  if (!rusiSameOriginFrame) {
+    try { window.top.location.href = window.self.location.href; } catch (_) { document.documentElement.style.display = "none"; }
+  }
+}
+
 // Universal DOM Helpers (Phòng ngừa lỗi ReferenceError trên mọi trang)
 window.el = window.el || function(sel) { return document.querySelector(sel); };
 window.getRusiAppRoot = function() {
@@ -1375,13 +1385,26 @@ const Monetization = {
     let normId = (pkgId || "pro_3m").toLowerCase();
     let currentPkg = pkgs.find((p) => (p.id || "").toLowerCase() === normId) || pkgs[1] || pkgs[0];
 
-    // Tạo mã đơn có gắn nhận diện học viên
-    let ordNum = STORE.get("last_order_num", 1092) + 1;
-    STORE.set("last_order_num", ordNum);
-    const userTag = (user.email ? user.email.split("@")[0] : (user.name || "USER")).replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 8);
-    const orderId = `RUSI_${Date.now()}_${userTag || "PRO"}`;
-    // Chỉ kiểm tra trạng thái đơn sau khi đơn đã được ghi lên server (tránh GET orders mỗi 3 giây khi chưa có đơn)
-    let orderSubmitted = false;
+    // Đơn được ghi lên server ngay khi hiện mã QR (mỗi gói một đơn trong phiên này): học viên chuyển khoản rồi đóng tab
+    // vẫn có đơn để đối soát. Mã đơn (nội dung CK), số tiền và hạn do server quyết định.
+    const orderByPkg = {};
+    const ensureOrder = async (pkg) => {
+      const key = pkg.id;
+      if (orderByPkg[key] && !orderByPkg[key].error) return;
+      orderByPkg[key] = { loading: true };
+      const res = await window.RusiSupabase?.orders?.createPending({ userId: user.uid, packageId: pkg.id });
+      if (res && res.ok && res.data && res.data.order_code) {
+        orderByPkg[key] = {
+          code: res.data.order_code,
+          amount: Number(res.data.amount) || pkg.price,
+          expiresAt: Date.parse(res.data.expires_at) || (Date.now() + 24 * 3600 * 1000)
+        };
+      } else {
+        orderByPkg[key] = { error: (res && res.message) || "Không tạo được mã thanh toán. Vui lòng kiểm tra kết nối và thử lại." };
+        console.error("[Thanh toán] Không tạo được đơn hàng:", res);
+      }
+      if (modal.isConnected && currentPkg.id === key) renderModalContent();
+    };
 
     let modal = document.getElementById("vietqrModal");
     if (!modal) {
@@ -1391,18 +1414,29 @@ const Monetization = {
       document.body.appendChild(modal);
     }
 
-    // Thời gian phiên thanh toán 15 phút tính theo timestamp client (PROJECT_SPEC line 192)
-    const endTime = Date.now() + 15 * 60 * 1000;
-    let timeLeft = 15 * 60;
+    // Hạn thanh toán = hạn của đơn trên server (24 giờ kể từ khi tạo)
+    const orderTimeLeft = () => {
+      const ord = orderByPkg[currentPkg.id];
+      return ord && ord.expiresAt ? Math.max(0, Math.floor((ord.expiresAt - Date.now()) / 1000)) : null;
+    };
     if (this._timerInterval) clearInterval(this._timerInterval);
     if (this._pollInterval) clearInterval(this._pollInterval);
 
     const renderModalContent = () => {
-      const qrUrl = `https://img.vietqr.io/image/vietinbank-108873919999-compact2.png?amount=${currentPkg.price}&addInfo=${orderId}&accountName=RUSI%20TRKI%20PLATFORM`;
+      const ord = orderByPkg[currentPkg.id] || {};
+      const orderReady = Boolean(ord.code);
+      const orderId = ord.code || "";
+      const payAmount = orderReady ? ord.amount : currentPkg.price;
+      const timeLeft = orderTimeLeft();
+      const qrUrl = orderReady
+        ? `https://img.vietqr.io/image/vietinbank-108873919999-compact2.png?amount=${payAmount}&addInfo=${encodeURIComponent(orderId)}&accountName=RUSI%20TRKI%20PLATFORM`
+        : "";
       const formatTime = (sec) => {
-        const m = Math.floor(sec / 60).toString().padStart(2, "0");
+        if (sec === null || sec === undefined) return "--:--";
+        const h = Math.floor(sec / 3600);
+        const m = Math.floor((sec % 3600) / 60).toString().padStart(2, "0");
         const s = (sec % 60).toString().padStart(2, "0");
-        return `${m}:${s}`;
+        return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
       };
 
       modal.innerHTML = `
@@ -1441,7 +1475,9 @@ const Monetization = {
           <!-- CỘT 1: ẢNH QR & ĐỒNG HỒ PHIÊN -->
           <div class="vietqr-scan-card">
             <div class="vietqr-scan-box">
-              <img class="vietqr-img" id="vietqrImgTag" src="${qrUrl}" alt="VietQR Thanh toán Rusi TRKI" />
+              ${orderReady
+                ? `<img class="vietqr-img" id="vietqrImgTag" src="${qrUrl}" alt="VietQR Thanh toán Rusi TRKI" />`
+                : `<div class="vietqr-img" style="display:grid;place-items:center;text-align:center;padding:16px;color:var(--muted)">${ord.error ? esc(ord.error) : "Đang tạo mã thanh toán..."}</div>`}
             </div>
             <div class="vietqr-scan-meta">
               <div class="vietqr-timer-badge">
@@ -1477,22 +1513,22 @@ const Monetization = {
               <div class="vietqr-info-row">
                 <span class="lbl">Số tiền</span>
                 <span class="val vietqr-amount-val">
-                  <b>${currentPkg.price.toLocaleString("vi-VN")} đ</b>
-                  <button class="vietqr-copy-btn" data-copy="${currentPkg.price}" type="button" title="Sao chép số tiền">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 13 }) : ""} Chép</button>
+                  <b>${payAmount.toLocaleString("vi-VN")} đ</b>
+                  <button class="vietqr-copy-btn" data-copy="${payAmount}" type="button" title="Sao chép số tiền">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 13 }) : ""} Chép</button>
                 </span>
               </div>
               <div class="vietqr-info-row">
                 <span class="lbl">Nội dung CK</span>
                 <span class="val">
-                  <code class="vietqr-memo-code">${orderId}</code>
-                  <button class="vietqr-copy-btn" data-copy="${orderId}" type="button" title="Sao chép nội dung">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 13 }) : ""} Chép</button>
+                  <code class="vietqr-memo-code">${orderReady ? esc(orderId) : "..."}</code>
+                  <button class="vietqr-copy-btn" data-copy="${esc(orderId)}" type="button" title="Sao chép nội dung"${orderReady ? "" : " disabled"}>${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 13 }) : ""} Chép</button>
                 </span>
               </div>
             </div>
 
             <!-- NÚT KÍCH HOẠT & CAM KẾT AN TOÀN -->
             <div class="vietqr-action-box">
-              <button class="btn-confirm-vietqr" id="btnConfirmPaid" type="button">
+              <button class="btn-confirm-vietqr" id="btnConfirmPaid" type="button"${orderReady && timeLeft !== 0 ? "" : " disabled"}>
                 ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} Tôi đã chuyển khoản xong
               </button>
               <div class="vietqr-guarantee">
@@ -1518,6 +1554,7 @@ const Monetization = {
           if (found && found.id !== currentPkg.id) {
             currentPkg = found;
             renderModalContent();
+            ensureOrder(found);
           }
         };
       });
@@ -1538,27 +1575,13 @@ const Monetization = {
         };
       });
 
-      // Ghi nhận đơn Supabase ở trạng thái chờ quản trị xác nhận.
+      // Đơn đã có trên server từ lúc hiện mã QR — nút này chỉ chuyển sang màn hình chờ quản trị xác nhận.
       const confirmBtn = document.getElementById("btnConfirmPaid");
       if (confirmBtn) {
         confirmBtn.onclick = async () => {
-          confirmBtn.disabled = true;
-          confirmBtn.innerHTML = `<span class="vietqr-spinner"></span> Đang ghi nhận đơn hàng...`;
-          const result = await window.RusiSupabase?.orders?.createPending({
-            id: orderId,
-            userId: user.uid,
-            packageId: currentPkg.id,
-            amount: currentPkg.price
-          });
-          if (!result?.ok) {
-            confirmBtn.disabled = false;
-            confirmBtn.innerHTML = `${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} Tôi đã chuyển khoản xong (Gửi duyệt)`;
-            toast(result?.message || "Không thể ghi nhận đơn hàng. Vui lòng thử lại.");
-            return;
-          }
-          // Đơn mới CHỜ DUYỆT: chưa phải gói đang dùng — chỉ ghi "pro_active_pkg" khi đơn được xác nhận đã thanh toán
+          if (!orderReady) return;
+          // Đơn CHỜ DUYỆT: chưa phải gói đang dùng — chỉ ghi "pro_active_pkg" khi đơn được xác nhận đã thanh toán
           STORE.set("pro_pending_pkg", currentPkg.id);
-          orderSubmitted = true;
           clearInterval(Monetization._timerInterval);
           modal.innerHTML = `
             <div class="vietqr-card" style="max-width:540px">
@@ -1568,7 +1591,7 @@ const Monetization = {
                 <p>Đơn của <b>${esc(user.name || user.email)}</b> đang chờ quản trị xác nhận.</p>
                 <div class="vietqr-success-box">
                   <div class="vietqr-success-row"><span>Gói đăng ký:</span><b>${esc(currentPkg.title)}</b></div>
-                  <div class="vietqr-success-row"><span>Mã giao dịch:</span><code>${orderId}</code></div>
+                  <div class="vietqr-success-row"><span>Mã giao dịch:</span><code>${esc(orderId)}</code></div>
                   <div class="vietqr-success-row"><span>Trạng thái:</span><b>CHỜ DUYỆT</b></div>
                 </div>
                 <button class="btn btn-primary btn-lg" id="btnVietQrFinish" style="width:100%;margin-top:20px">
@@ -1586,15 +1609,18 @@ const Monetization = {
     };
 
     renderModalContent();
+    ensureOrder(currentPkg);
 
-    // Đồng hồ đếm ngược phiên chính xác theo client timestamp (PROJECT_SPEC line 192)
+    // Đồng hồ đếm ngược tới hạn của đơn trên server
     this._timerInterval = setInterval(() => {
-      timeLeft = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+      const timeLeft = orderTimeLeft();
+      if (timeLeft === null) return;
       const disp = document.getElementById("vietqrTimerDisplay");
       if (disp) {
-        const m = Math.floor(timeLeft / 60).toString().padStart(2, "0");
+        const h = Math.floor(timeLeft / 3600);
+        const m = Math.floor((timeLeft % 3600) / 60).toString().padStart(2, "0");
         const s = (timeLeft % 60).toString().padStart(2, "0");
-        disp.textContent = `${m}:${s}`;
+        disp.textContent = h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
       }
       if (timeLeft <= 0) {
         clearInterval(this._timerInterval);
@@ -1620,15 +1646,20 @@ const Monetization = {
         if (this._pollInterval) clearInterval(this._pollInterval);
         return;
       }
-      if (!orderSubmitted) return;
+      // Kiểm tra mọi đơn đã tạo trong phiên (học viên có thể đổi gói sau khi đã chuyển khoản)
+      const codes = Object.keys(orderByPkg).filter((k) => orderByPkg[k] && orderByPkg[k].code);
+      if (!codes.length) return;
       try {
         if (window.RusiSupabase && window.RusiSupabase.orders && typeof window.RusiSupabase.orders.checkStatus === "function") {
-          const res = await window.RusiSupabase.orders.checkStatus(orderId);
-          if (res && String(res.status).toLowerCase() === "paid") {
+          let paidPkg = null;
+          for (const k of codes) {
+            const res = await window.RusiSupabase.orders.checkStatus(orderByPkg[k].code);
+            if (res && String(res.status).toLowerCase() === "paid") { paidPkg = k; break; }
+          }
+          if (paidPkg) {
             clearInterval(this._pollInterval);
             clearInterval(this._timerInterval);
-            const pendingPkg = STORE.get("pro_pending_pkg", null);
-            if (pendingPkg) STORE.set("pro_active_pkg", pendingPkg);
+            STORE.set("pro_active_pkg", paidPkg);
             await Monetization.setPro();
             toast("Đơn hàng đã được duyệt. Quyền PRO đã cập nhật.");
             modal.remove();
