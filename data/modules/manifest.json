@@ -25,7 +25,7 @@
    "v": "e5144e3be4ae"
   },
   "trki_bank.json": {
-   "v": "196fc70481fc"
+   "v": "e5b8e42cb4d4"
   },
   "shop_products.json": {
    "v": "d8968435836d"
@@ -62,11 +62,11 @@
   "writing_tasks": 1,
   "writing_task_vocab": 2,
   "writing_topics": 1,
-  "trki_tests": 34,
+  "trki_tests": 35,
   "shop_products": 1,
   "grammar_lessons": 1,
   "blog_posts": 9,
   "packages": 3
  },
- "generated_at": "2026-11-26T04:31:45.108Z"
+ "generated_at": "2026-11-26T04:38:36.357Z"
 }
