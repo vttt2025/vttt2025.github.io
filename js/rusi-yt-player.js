@@ -291,6 +291,9 @@
           onStateChange: (e) => {
             if (destroyed) return;
             const state = e && e.data;
+            // has-started: đã phát → lúc dừng giữ khung hình hiện tại; is-ended: hết video → che màn hình gợi ý của YouTube
+            if (state === 1) wrap.classList.add("has-started");
+            wrap.classList.toggle("is-ended", state === 0);
             if (state === 1) {
               wrap.classList.remove("is-loading", "needs-tap");
               setPlayingUi(true);

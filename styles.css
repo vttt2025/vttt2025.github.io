@@ -14772,6 +14772,22 @@ img, video, iframe {
   pointer-events: none;
 }
 
+/* Iframe cao hơn khung (mỗi mép thêm 18%, tối thiểu 72px vì giao diện YouTube gần như cố định theo px):
+   YouTube đặt video 16:9 vào giữa, tiêu đề (mép trên) và icon link / "Video khác" / logo YouTube (mép dưới)
+   rơi vào hai dải thừa bị cắt đi; hình video vẫn đủ khung. */
+.rusi-yt .rusi-yt-frame,
+.rusi-yt #spYoutubePlayer {
+  top: calc(-1 * max(18%, 72px));
+  height: calc(100% + 2 * max(18%, 72px));
+}
+
+/* Giao diện YouTube gốc (API lỗi) cần thanh điều khiển ở mép dưới → không cắt */
+.rusi-yt.is-native .rusi-yt-frame,
+.rusi-yt.is-native #spYoutubePlayer {
+  top: 0;
+  height: 100%;
+}
+
 .rusi-yt-shield {
   position: absolute;
   inset: 0;
@@ -14835,12 +14851,18 @@ img, video, iframe {
   display: none;
 }
 
-/* Ảnh bìa hiện lại tức thì khi dừng (che bảng "Video khác"), chỉ mờ dần khi mở ra sau lúc YouTube hết nháy giao diện */
+/* Ảnh bìa chỉ mờ dần khi mở ra sau lúc YouTube hết nháy giao diện */
 .rusi-yt.is-revealed .rusi-yt-poster {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
   transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+/* Đã phát rồi thì lúc dừng giữ khung hình hiện tại (controls=0 không hiện bảng "Video khác");
+   ảnh bìa chỉ còn che trước lần phát đầu và khi hết video */
+.rusi-yt.has-started:not(.is-playing):not(.is-ended):not(.is-error) .rusi-yt-poster {
+  display: none;
 }
 
 .rusi-yt.is-loading .rusi-yt-poster-play,

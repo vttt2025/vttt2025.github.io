@@ -455,6 +455,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
     };
 
     let currentSentenceIdx = 0;
+    let playingSentenceIdx = -1; // câu đang phát (để phân biệt "bấm lại để dừng" với "chuyển câu")
     let recordingSentenceIdx = null;
     let autoAdvanceTimer = null;
     let loopReplayTimer = null; // hẹn giờ phát lại câu khi bật lặp
@@ -794,14 +795,16 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
 
     let segmentTimer = null;
 
-    const stopVideoSegment = () => {
+    // keepVideoPlaying: chuyển thẳng sang câu khác khi video đang chạy → không tạm dừng
+    // (mỗi lần dừng rồi phát lại, YouTube hiện lại icon ⏸ và lớp nền tối giữa khung hình)
+    const stopVideoSegment = (keepVideoPlaying = false) => {
       if (segmentTimer) {
         clearTimeout(segmentTimer);
         clearInterval(segmentTimer);
         segmentTimer = null;
       }
       ytPendingPlay = false;
-      if (hasVideo) sendYtCommand("pauseVideo", []);
+      if (hasVideo && !keepVideoPlaying) sendYtCommand("pauseVideo", []);
       isPlaying = false;
       const btnPlay = el("#btnPlayModel");
       if (btnPlay) {
@@ -1003,10 +1006,10 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       document.querySelectorAll("#spTargetRu .sp-target-word").forEach(w => w.classList.remove("sp-karaoke-active"));
     };
 
-    const stopAudio = () => {
+    const stopAudio = (keepVideoPlaying = false) => {
       if (loopReplayTimer) { clearTimeout(loopReplayTimer); loopReplayTimer = null; }
       if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
-      stopVideoSegment();
+      stopVideoSegment(keepVideoPlaying);
       clearKaraoke();
       if (typeof window !== "undefined" && window.speechSynthesis) {
         try { window.speechSynthesis.cancel(); } catch (e) {}
@@ -1025,7 +1028,8 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       const it = items[currentSentenceIdx];
       if (!it) return;
 
-      if (isPlaying && !isAutoLoop) {
+      // Bấm lại đúng câu đang phát = tạm dừng; chuyển sang câu khác (←/→, danh sách) = phát câu mới
+      if (isPlaying && !isAutoLoop && playingSentenceIdx === currentSentenceIdx) {
         stopVideoSegment();
         stopAudio();
         return;
@@ -1036,11 +1040,14 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
         if (pill && loopMode > 0) pill.textContent = `${loopMode}x`;
       }
 
-      stopAudio();
-      stopRecording();
-
       const segStart = getItemSec(currentSentenceIdx);
       const useVideo = hasVideo && !ytVideoBroken && segStart !== null;
+
+      // Đang phát video mà chuyển sang câu khác cũng phát bằng video → tua thẳng, không tạm dừng giữa chừng
+      const videoWasPlaying = isPlaying && playingSentenceIdx !== -1 && hasVideo && !ytVideoBroken
+        && getItemSec(playingSentenceIdx) !== null;
+      stopAudio(useVideo && videoWasPlaying);
+      stopRecording();
 
       // Player chưa sẵn sàng: giữ yêu cầu, onReady sẽ phát lại (không gửi lệnh vào iframe chưa nghe)
       if (useVideo && !ytReady && !ytApiFailed) {
@@ -1050,6 +1057,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       }
 
       isPlaying = true;
+      playingSentenceIdx = currentSentenceIdx;
       const btnPlay = el("#btnPlayModel");
       if (btnPlay) {
         btnPlay.classList.add("is-playing");
