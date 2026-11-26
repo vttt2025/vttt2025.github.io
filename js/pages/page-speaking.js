@@ -423,48 +423,19 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
     // ID YouTube luôn gồm đúng 11 ký tự [A-Za-z0-9_-]; giá trị khác bị bỏ qua để không chèn chuỗi lạ vào src
     const ytIdRaw = String(parseYoutubeId(set) || "").trim();
     const ytId = /^[A-Za-z0-9_-]{11}$/.test(ytIdRaw) ? ytIdRaw : "";
-    const hasVideo = Boolean(ytId);
+    // Video do RusiYtPlayer (js/rusi-yt-player.js) dựng: ẩn giao diện YouTube, điều khiển qua IFrame API
+    const hasVideo = Boolean(ytId) && Boolean(window.RusiYtPlayer);
     const YT_ORIGIN = "https://www.youtube-nocookie.com";
-    let ytVideoUrl = "";
-    if (hasVideo) {
-      const setStart = Math.floor(Number(set.start_sec || (set.video && set.video.startSec)) || 0);
-      const setEnd = Math.floor(Number(set.end_sec || (set.video && set.video.endSec)) || 0);
-      const startQ = setStart > 0 ? `&start=${setStart}` : "";
-      const endQ = setEnd > 0 ? `&end=${setEnd}` : "";
-      const hasValidOrigin = typeof window !== "undefined" && window.location.origin && window.location.origin !== "null" && !window.location.origin.startsWith("file:");
-      const originQ = hasValidOrigin ? `&origin=${encodeURIComponent(window.location.origin)}` : "";
-      ytVideoUrl = `${YT_ORIGIN}/embed/${ytId}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1${startQ}${endQ}${originQ}`;
-    }
+    const setStartSec = Math.floor(Number(set.start_sec || (set.video && set.video.startSec)) || 0);
+    const setEndSec = Math.floor(Number(set.end_sec || (set.video && set.video.endSec)) || 0);
 
     // Trạng thái YouTube IFrame API (YT.Player): biết player sẵn sàng, đọc thời điểm phát thật
+    let ytCtl = null;          // bộ điều khiển RusiYtPlayer
     let ytPlayer = null;
     let ytReady = false;
     let ytApiFailed = false;   // không tải được API → điều khiển bằng postMessage, thời gian ước lượng
     let ytVideoBroken = false; // video lỗi/không cho nhúng → dùng giọng đọc máy
     let ytPendingPlay = false; // người dùng bấm phát khi player chưa sẵn sàng
-
-    const loadYtIframeApi = () => {
-      if (window.YT && window.YT.Player) return Promise.resolve(window.YT);
-      if (window._rusiYtApiPromise) return window._rusiYtApiPromise;
-      window._rusiYtApiPromise = new Promise((resolve, reject) => {
-        const prevReady = window.onYouTubeIframeAPIReady;
-        window.onYouTubeIframeAPIReady = () => {
-          if (typeof prevReady === "function") {
-            try { prevReady(); } catch (err) { console.warn("[Speaking] onYouTubeIframeAPIReady", err); }
-          }
-          resolve(window.YT);
-        };
-        const s = document.createElement("script");
-        s.src = "https://www.youtube.com/iframe_api";
-        s.async = true;
-        s.onerror = () => {
-          window._rusiYtApiPromise = null;
-          reject(new Error("Không tải được YouTube IFrame API"));
-        };
-        document.head.appendChild(s);
-      });
-      return window._rusiYtApiPromise;
-    };
 
     // Gửi lệnh tới YouTube player (API nếu sẵn sàng, ngược lại postMessage tới đúng origin của iframe)
     const sendYtCommand = (func, args = []) => {
@@ -652,9 +623,8 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
           ${hasVideo ? `
             <!-- KHUNG VIDEO BÀI HỌC YOUTUBE (TỶ LỆ 16:9 CHUẨN, RÕ NÉT, TƯƠNG TÁC TRỰC TIẾP) -->
             <section class="sp-video-card" id="spVideoCard">
-              <div class="sp-video-body" id="spVideoBody">
-                <iframe id="spYoutubePlayer" src="${ytVideoUrl}" title="${esc(set.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen style="width:100%;height:100%;border:0;display:block;"></iframe>
-              </div>
+              <!-- Iframe + ảnh bìa do RusiYtPlayer.mount() tạo (ẩn giao diện YouTube) -->
+              <div class="sp-video-body" id="spVideoBody"></div>
             </section>
           ` : ""}
 
@@ -1150,9 +1120,10 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
               return;
             }
             if (!settled && Date.now() - startedAt > 3000 && (state === -1 || state === 5)) {
-              // iOS/Safari chặn tự phát khi chưa chạm vào video lần nào
+              // iOS/Safari chặn tự phát khi chưa chạm vào video lần nào → bỏ lớp che để chạm thẳng vào video
               stopVideoSegment();
               clearKaraoke();
+              if (ytCtl) ytCtl.allowDirectTap();
               toast("Trình duyệt chưa cho phát video. Chạm vào video một lần rồi thử lại.");
               return;
             }
@@ -1712,11 +1683,12 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       Object.values(userVoiceMemos).forEach(m => {
         try { URL.revokeObjectURL(m.url); } catch (_) {}
       });
-      if (ytPlayer) {
-        try { ytPlayer.destroy(); } catch (err) { console.warn("[Speaking] YouTube destroy", err); }
-        ytPlayer = null;
-        ytReady = false;
+      if (ytCtl) {
+        ytCtl.destroy();
+        ytCtl = null;
       }
+      ytPlayer = null;
+      ytReady = false;
       document.removeEventListener("keydown", onWorkspaceKeydown);
       document.body.classList.remove("in-workspace");
       if (typeof window !== "undefined" && window.history && window.history.replaceState) {
@@ -1802,53 +1774,47 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       if (!isTranslationVisible) toggleTranslation();
     };
 
-    // Gắn YouTube IFrame API vào iframe sẵn có; lỗi tải API → dự phòng postMessage
+    // Dựng video bằng RusiYtPlayer (ẩn giao diện YouTube); trang tự điều khiển theo câu nên ẩn thanh điều khiển chung.
+    // Lỗi tải API → RusiYtPlayer trả giao diện YouTube gốc, trang dùng dự phòng postMessage.
     if (hasVideo) {
-      const frame = el("#spYoutubePlayer");
-      const onApiUnavailable = (err) => {
-        console.warn("[Speaking] YouTube IFrame API không dùng được, chuyển sang chế độ dự phòng", err);
-        ytApiFailed = true;
-        if (ytPendingPlay && frame && frame.isConnected) {
-          ytPendingPlay = false;
-          playCurrentSentence(true);
-        }
-      };
-      let apiTimeout = null;
-      Promise.race([
-        loadYtIframeApi(),
-        new Promise((_, reject) => {
-          apiTimeout = setTimeout(() => reject(new Error("Hết thời gian tải YouTube IFrame API")), 10000);
-        })
-      ]).then((YT) => {
-        clearTimeout(apiTimeout);
-        if (!frame || !frame.isConnected) return; // đã rời workspace
-        ytPlayer = new YT.Player(frame, {
-          host: YT_ORIGIN,
-          events: {
-            onReady: () => {
-              if (!frame.isConnected) return;
-              ytReady = true;
-              if (ytPendingPlay) {
-                ytPendingPlay = false;
-                playCurrentSentence(true);
-              }
-            },
-            onError: (e) => {
-              // 2: ID sai, 5: lỗi HTML5, 100: video bị xoá, 101/150: chủ video không cho nhúng
-              console.warn("[Speaking] YouTube player error", e && e.data);
-              ytVideoBroken = true;
-              const wasPlaying = isPlaying || ytPendingPlay;
-              stopVideoSegment();
-              clearKaraoke();
-              toast("Video không phát được — chuyển sang giọng đọc mẫu.");
-              if (wasPlaying) playCurrentSentence(true);
-            }
+      ytCtl = window.RusiYtPlayer.mount(el("#spVideoBody"), {
+        videoId: ytId,
+        start: setStartSec,
+        end: setEndSec,
+        rate: currentSpeed,
+        title: set.title,
+        frameId: "spYoutubePlayer",
+        showBar: false,
+        revealDelayMs: 0, // câu chỉ 6–9 giây → thấy hình ngay, chấp nhận giao diện YouTube nháy đầu câu
+        onReady: (player) => {
+          ytPlayer = player;
+          ytReady = true;
+          if (ytPendingPlay) {
+            ytPendingPlay = false;
+            playCurrentSentence(true);
           }
-        });
-      }).catch((err) => {
-        clearTimeout(apiTimeout);
-        onApiUnavailable(err);
+        },
+        onError: (code) => {
+          // 2: ID sai, 5: lỗi HTML5, 100: video bị xoá, 101/150: chủ video không cho nhúng
+          console.warn("[Speaking] YouTube player error", code);
+          ytVideoBroken = true;
+          const wasPlaying = isPlaying || ytPendingPlay;
+          stopVideoSegment();
+          clearKaraoke();
+          toast("Video không phát được — chuyển sang giọng đọc mẫu.");
+          if (wasPlaying) playCurrentSentence(true);
+        },
+        onApiFail: (err) => {
+          console.warn("[Speaking] YouTube IFrame API không dùng được, chuyển sang chế độ dự phòng", err);
+          ytApiFailed = true;
+          if (ytPendingPlay) {
+            ytPendingPlay = false;
+            // đợi iframe gốc tải lại rồi mới gửi lệnh postMessage
+            setTimeout(() => { if (el("#spYoutubePlayer")) playCurrentSentence(true); }, 1500);
+          }
+        }
       });
+      if (!ytCtl) console.warn("[Speaking] Không khởi tạo được trình phát video", ytId);
     }
 
     // Khởi chạy câu đầu tiên & playlist

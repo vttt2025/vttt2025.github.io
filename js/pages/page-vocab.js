@@ -235,15 +235,10 @@ function initVocabPage() {
 
     const shelfHost = el("#jarsShelfHost");
     if (shelfHost) {
-      const levelCounts = { A1: countA1, A2: countA2, B1: countB1, B2: countB2, C1: countC1, C2: countC2 };
       shelfHost.querySelectorAll(".level-tab").forEach(b => {
         const isActive = b.dataset.level === currentLevel;
         b.classList.toggle("level-tab-active", isActive);
         b.setAttribute("aria-selected", isActive ? "true" : "false");
-        // Ẩn cấp chưa có lọ nào (sau khi đã có dữ liệu) để dải tab không tràn mép trên mobile/tablet
-        // (CSS của .level-tab có display !important nên phải đặt kèm "important")
-        if (allItems.length && !isActive && !levelCounts[b.dataset.level]) b.style.setProperty("display", "none", "important");
-        else b.style.removeProperty("display");
       });
     }
 
