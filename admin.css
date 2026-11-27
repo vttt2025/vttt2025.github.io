@@ -5192,3 +5192,48 @@ body.payload-body {
   background: var(--p-surface-elevated) !important;
   color: var(--p-text-muted) !important;
 }
+
+/* =========================================================================
+ * Bảng trong vùng soạn thảo: không bẻ chữ giữa từ (vùng soạn đặt word-break: break-word cho cả bảng).
+ * Điện thoại: cột tối thiểu 150px, bảng rộng hơn khung thì cuộn ngang trong .notion-table-wrapper.
+ * ========================================================================= */
+.notion-interactive-table th,
+.notion-interactive-table td,
+.p-md-preview-body .rusi-md-table th,
+.p-md-preview-body .rusi-md-table td {
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+@media (max-width: 768px) {
+  .notion-interactive-table th,
+  .notion-interactive-table td,
+  .p-md-preview-body .rusi-md-table th,
+  .p-md-preview-body .rusi-md-table td {
+    min-width: 150px;
+  }
+
+  /* Thanh trên cùng: chỉ giữ trang hiện tại, cắt chữ bằng "…" (không đủ chỗ cho cả đường dẫn) */
+  .payload-topbar-left {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .payload-breadcrumbs {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .payload-breadcrumbs > :not(.active) {
+    display: none;
+  }
+  .payload-breadcrumbs > .payload-crumb-item.active {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .payload-breadcrumbs > .payload-crumb-item.active svg {
+    vertical-align: -3px;
+    margin-right: 6px;
+  }
+}
