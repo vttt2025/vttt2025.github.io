@@ -171,6 +171,8 @@ function initWritingPage() {
     return "Từ vựng gợi ý cho bài viết";
   };
   const taskImage = (task) => task.image_url || (taskMode(task) === "picture" ? PICTURE_FALLBACK : TRANSLATION_FALLBACK);
+  // URL đưa vào url('...') của CSS: mã hoá ký tự có thể đóng chuỗi/hàm
+  const cssUrl = (url) => String(url || "").replace(/['"()\\\s]/g, (c) => encodeURIComponent(c));
   const topicKey = (task) => task.topicKey || task.category || task.category_name || task.categoryName || task.id;
   const topicName = (task) => task.topicName || task.categoryName || task.category_name || task.title;
 
@@ -494,7 +496,7 @@ function initWritingPage() {
                   </div>
                 </div>
 
-                <figure class="writing-prompt-figure">
+                <figure class="writing-prompt-figure" style="--writing-img:url('${esc(cssUrl(taskImage(t)))}')">
                   <img src="${esc(taskImage(t))}" alt="${esc(t.title)}" />
                 </figure>
               ` : `
