@@ -38042,3 +38042,53 @@ body.cbt-resizing .cbt-app-portal .cbt-gutter-handle { background: var(--cbt-acc
 /* Link chuyển Đăng nhập ⇄ Đăng ký */
 [data-theme="dark"] body #linkToSignup,
 [data-theme="dark"] body #linkToLogin { color: #7fb2ef; }
+
+/* Bài học chủ đề từ vựng + nội dung Markdown (.rusi-md-*, dùng chung blog/CMS).
+   Chỉ áp dụng trên màn hình — bản in / Xuất PDF giữ nền trắng chữ đen. */
+@media screen {
+  [data-theme="dark"] body .topic-article-container { background: var(--surface); border-color: var(--border); }
+  [data-theme="dark"] body .topic-article-hero { border-bottom-color: rgba(255, 255, 255, 0.08); }
+  [data-theme="dark"] body .topic-article-eyebrow { background: rgba(91, 155, 230, 0.14); color: #9cc4f3; }
+  [data-theme="dark"] body .topic-article-title,
+  [data-theme="dark"] body .topic-article-sec-title { color: #f1f5f9; }
+  [data-theme="dark"] body .topic-article-sec-title { border-bottom-color: rgba(255, 255, 255, 0.08); }
+  [data-theme="dark"] body .topic-article-desc,
+  [data-theme="dark"] body .topic-article-meta-row { color: #a9b6c8; }
+  [data-theme="dark"] body .topic-article-markdown-body { background: rgba(255, 255, 255, 0.02); border-color: rgba(255, 255, 255, 0.08); box-shadow: none; }
+  [data-theme="dark"] body .topic-vocab-table-wrapper { background: transparent; border-color: rgba(255, 255, 255, 0.1); }
+  [data-theme="dark"] body .topic-vocab-table th { background: rgba(255, 255, 255, 0.05); color: #cbd5e1; border-bottom-color: rgba(255, 255, 255, 0.12); }
+  [data-theme="dark"] body .topic-vocab-table td { border-bottom-color: rgba(255, 255, 255, 0.06); }
+  [data-theme="dark"] body .topic-vocab-table tr:hover td { background: rgba(255, 255, 255, 0.03); }
+  [data-theme="dark"] body .topic-article-footer-cta { background: linear-gradient(135deg, rgba(91, 155, 230, 0.12) 0%, rgba(19, 29, 46, 0.9) 100%); border-color: rgba(91, 155, 230, 0.3); }
+  /* h3 có màu inline (#0f1f38) trong page-vocab.js → cần !important */
+  [data-theme="dark"] body .topic-article-footer-cta-info h3 { color: #f1f5f9 !important; }
+  [data-theme="dark"] body .topic-article-footer-cta-info p { color: #a9b6c8; }
+
+  [data-theme="dark"] body .rusi-md-rendered { color: #cbd5e1; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-h1,
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-h2,
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-h3 { color: #f1f5f9; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-h4 { color: #e2e8f0; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-h2 { border-bottom-color: rgba(255, 255, 255, 0.1); }
+  [data-theme="dark"] body .rusi-md-rendered strong { color: #f1f5f9; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-quote { background: rgba(255, 255, 255, 0.04); color: #e2e8f0; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-callout-note { background: rgba(91, 155, 230, 0.1); border-color: rgba(91, 155, 230, 0.3); color: #cfe2fb; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-callout-tip { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3); color: #a7f3d0; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-callout-important { background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.32); color: #fde68a; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-callout-warning { background: rgba(220, 38, 38, 0.1); border-color: rgba(220, 38, 38, 0.32); color: #fecaca; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-callout-note strong,
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-callout-tip strong,
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-callout-important strong,
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-callout-warning strong { color: inherit; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-hr { background: rgba(255, 255, 255, 0.1); }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-inline-code { background: rgba(255, 255, 255, 0.06); color: #fca5a5; border-color: rgba(255, 255, 255, 0.1); }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-quote-highlight,
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-link { color: #7fb2ef; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-link:hover { color: #ff8a95; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-img-caption { color: #8796ab; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-table { background: transparent; }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-table th { background: rgba(255, 255, 255, 0.05); color: #f1f5f9; border-bottom-color: rgba(255, 255, 255, 0.14); }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-table td { color: #cbd5e1; border-bottom-color: rgba(255, 255, 255, 0.06); }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-table tr:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
+  [data-theme="dark"] body .rusi-md-rendered .rusi-md-table tr:hover { background: rgba(255, 255, 255, 0.04); }
+}
