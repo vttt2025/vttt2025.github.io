@@ -1785,9 +1785,11 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
     // Dựng video bằng RusiYtPlayer (ẩn giao diện YouTube); trang tự điều khiển theo câu nên ẩn thanh điều khiển chung.
     // Lỗi tải API → RusiYtPlayer trả giao diện YouTube gốc, trang dùng dự phòng postMessage.
     if (hasVideo) {
+      // Bài không đặt start_sec → bắt đầu ngay ở câu đầu tiên, bỏ qua đoạn mở đầu của video
+      const firstSentenceSec = getItemSec(0);
       ytCtl = window.RusiYtPlayer.mount(el("#spVideoBody"), {
         videoId: ytId,
-        start: setStartSec,
+        start: setStartSec || (firstSentenceSec > 0 ? Math.floor(firstSentenceSec) : 0),
         end: setEndSec,
         rate: currentSpeed,
         title: set.title,
