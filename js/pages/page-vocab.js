@@ -1295,8 +1295,8 @@ const showTopicArticle = (jarId) => {
           <span class="rusi-workspace-title">${window.RusiIcons ? RusiIcons.get(jar.icon || "archive-jar", { size: 20 }) : ""} ${esc(jar.name)}</span>
         </div>
         <div class="topic-article-top-actions">
-          <button type="button" class="btn btn-outline btn-sm is-pro-action" id="btnPrintTopicArticle" title="${isUserPro ? "Xuất PDF / In bài học (PRO)" : "Xuất PDF bài học (Dành riêng cho Hội viên PRO)"}">
-            ${isUserPro ? (window.RusiIcons ? RusiIcons.get("download", { size: 15 }) : "") : (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 15 }) : "")} <span class="btn-text">Xuất PDF</span>
+          <button type="button" class="btn btn-outline btn-sm is-pro-action" id="btnPrintTopicArticle" title="${isUserPro ? "Lưu bài học (PDF / In) — PRO" : "Lưu bài học (Dành riêng cho Hội viên PRO)"}">
+            ${isUserPro ? (window.RusiIcons ? RusiIcons.get("download", { size: 15 }) : "") : (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 15 }) : "")} <span class="btn-text">Lưu bài học</span>
             <span class="rusi-pro-mini-badge" style="font-size:0.62rem;font-weight:800;background:linear-gradient(135deg,#facc15,#eab308);color:#78350f;padding:1px 5px;border-radius:4px;margin-left:4px">PRO</span>
           </button>
           <button type="button" class="btn btn-primary btn-sm" id="btnOpenJarFromArticleTop" title="Xem lọ từ vựng (${words.length} từ)">
@@ -1401,7 +1401,7 @@ const showTopicArticle = (jarId) => {
         if (!isPro) {
           if (typeof Monetization !== "undefined" && typeof Monetization.showProGateModal === "function") {
             Monetization.showProGateModal(
-              "Tính năng Xuất PDF dành riêng cho Hội viên PRO",
+              "Tính năng Lưu bài học dành riêng cho Hội viên PRO",
               "Nâng cấp lên gói PRO để tải xuống và in toàn bộ tài liệu bài học chủ đề tiếng Nga định dạng PDF chuẩn A4 chất lượng cao từ RUSI TRKI."
             );
           } else {

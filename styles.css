@@ -38118,3 +38118,46 @@ body.cbt-resizing .cbt-app-portal .cbt-gutter-handle { background: var(--cbt-acc
   background-size: 200% 100%;
   border-color: rgba(255, 255, 255, 0.08);
 }
+
+/* =====================================================================
+   IN / LƯU BÀI HỌC (PDF) — nhẹ và luôn nền sáng
+   - js/theme.js chuyển tạm về giao diện Sáng khi in (beforeprint/afterprint).
+   - Ẩn lớp phủ cố định (hiệu ứng mùa, Pomodoro, chat Rusika, khung chờ tải): phần tử position:fixed
+     bị vẽ lại trên MỌI trang A4 → dựng bản in chậm.
+   - Bỏ nền gradient cố định của trang (background-attachment: fixed vẽ lại từng trang).
+   - Tắt chuyển động, hiệu ứng làm mờ khi in.
+   ===================================================================== */
+@media print {
+  .season-fx,
+  .pomo-popover-dropdown,
+  .rusika-floating-widget,
+  .rusika-chat-overlay,
+  .rusi-skeleton-hub,
+  #toast,
+  .toast {
+    display: none !important;
+  }
+  html,
+  html body,
+  html body[data-page],
+  html[data-theme] body[data-page] {
+    background: #ffffff !important;
+    background-image: none !important;
+    background-attachment: scroll !important;
+    color: #0f172a !important;
+  }
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+/* Đang chuẩn bị in: không chạy chuyển màu khi đổi tạm sang giao diện Sáng */
+html.rusi-printing *,
+html.rusi-printing *::before,
+html.rusi-printing *::after {
+  transition: none !important;
+}

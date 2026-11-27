@@ -77,6 +77,32 @@
   // Đổi ở tab khác → áp theo
   window.addEventListener("storage", function (e) { if (e.key === KEY) apply(); });
 
+  // In / Lưu bài học (PDF): luôn in giao diện Sáng dù đang dùng Tối, in xong trả lại (không đổi lựa chọn đã lưu)
+  var printing = false;
+  function beforePrint() {
+    if (printing) return;
+    printing = true;
+    document.documentElement.classList.add("rusi-printing");
+    document.documentElement.setAttribute("data-theme", "light");
+    document.documentElement.style.colorScheme = "light";
+    if (document.body) document.body.setAttribute("data-theme", "light");
+  }
+  function afterPrint() {
+    if (!printing) return;
+    printing = false;
+    document.documentElement.classList.remove("rusi-printing");
+    apply();
+  }
+  window.addEventListener("beforeprint", beforePrint);
+  window.addEventListener("afterprint", afterPrint);
+  // Trình duyệt cũ không có beforeprint/afterprint: theo dõi media print
+  var printMq = window.matchMedia ? window.matchMedia("print") : null;
+  if (printMq) {
+    var onPrintMq = function (e) { if (e.matches) beforePrint(); else afterPrint(); };
+    if (printMq.addEventListener) printMq.addEventListener("change", onPrintMq);
+    else if (printMq.addListener) printMq.addListener(onPrintMq);
+  }
+
   window.RusiTheme = { getMode: getMode, setMode: setMode, cycle: cycle, apply: apply, bind: bind, resolved: function () { return resolved(getMode()); } };
   apply();
 })();
