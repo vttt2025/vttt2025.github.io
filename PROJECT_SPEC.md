@@ -996,7 +996,7 @@ Mọi thao tác can thiệp vào tài chính, bản quyền PRO, điểm số v�
    Áp dụng nghiêm ngặt cấu trúc 3 vùng cân đối, chiều cao cố định theo `--header-height` (Desktop 71px, ≤1024px 65px, ≤768px 61px) và menu ngăn kéo trượt `nav-open` theo quy chuẩn tại **Mục 3.3**. XP và Streak chỉ hiển thị trong dropdown tài khoản khi đã đăng nhập.
 
 5. **Theme Russian Winter Cool Blue**:
-   Cố định giao diện Sáng (`data-theme="light"` và `data-season="winter"`), phong cách mùa đông nước Nga: Nền chính (`#eef4fb`), bề mặt thẻ (`#ffffff`), màu chữ chính (`#0f1f38`), màu đường viền (`#d2e0f0`), điểm nhấn Đỏ Crimson (`#c52233`) và Xanh Cobalt (`#1757a6`).
+   Giao diện Sáng / Tối / Theo hệ thống (mặc định Sáng; nút ở header đổi vòng Sáng → Tối → Theo hệ thống): `js/theme.js` nạp đồng bộ trong `<head>` mọi trang học viên, đặt `data-theme` trên `<html>` + `<body>`, lưu lựa chọn ở `localStorage["rusi_theme"]`; nút đổi ở header (`#themeToggleBtn`). Màu tối: token chung `[data-theme="dark"] body` cuối `styles.css` (nền `#0a0f19`, thẻ `#131d2e`, nhấn `#2f6fc4`). Trang admin giữ cơ chế riêng. `data-season="winter"` cố định. Giao diện Sáng, phong cách mùa đông nước Nga: Nền chính (`#eef4fb`), bề mặt thẻ (`#ffffff`), màu chữ chính (`#0f1f38`), màu đường viền (`#d2e0f0`), điểm nhấn Đỏ Crimson (`#c52233`) và Xanh Cobalt (`#1757a6`).
 
 6. **Quy chuẩn Deploy GitHub Pages & Cache-Busting Tự Động**:
    * Luôn duy trì tệp `.nojekyll` ở thư mục gốc để vô hiệu hóa Jekyll build.

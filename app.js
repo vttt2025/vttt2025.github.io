@@ -2083,15 +2083,16 @@ function currentSeason() {
   return "winter";
 }
 
-/** Giao diện Sáng cố định (Russian Winter Cool Blue) */
+/** Giao diện Sáng / Tối / Theo hệ thống — do js/theme.js quản lý (thiếu file đó thì giữ Sáng như trước) */
 function applyLightTheme() {
-  if (typeof document !== "undefined") {
+  if (typeof document === "undefined") return;
+  if (window.RusiTheme && typeof window.RusiTheme.apply === "function") {
+    window.RusiTheme.apply();
+  } else {
     if (document.documentElement) document.documentElement.setAttribute("data-theme", "light");
-    if (document.body) {
-      document.body.setAttribute("data-theme", "light");
-      document.body.dataset.season = "winter";
-    }
+    if (document.body) document.body.setAttribute("data-theme", "light");
   }
+  if (document.body) document.body.dataset.season = "winter";
 }
 
 function applySeason(season = "winter") {
@@ -2267,6 +2268,7 @@ function renderHeader() {
           <span class="header-pomo-dot" id="headerPomoDot" aria-hidden="true"></span>
           <span class="header-pomo-time" id="headerPomoTime">25:00</span>
         </button>
+        <button type="button" class="theme-toggle-btn" id="themeToggleBtn"></button>
         <div id="userArea" class="user-area"></div>
         <button class="menu-button" id="mobileMenuBtn" type="button" aria-label="Mở menu" aria-expanded="false">
           <span></span>
@@ -2275,6 +2277,10 @@ function renderHeader() {
       </div>
     </div>
   </header>`;
+
+  const themeBtn = document.getElementById("themeToggleBtn");
+  if (themeBtn && window.RusiTheme) window.RusiTheme.bind(themeBtn);
+  else if (themeBtn) themeBtn.remove();
 
   const mobileBtn = document.getElementById("mobileMenuBtn");
   const nav = document.getElementById("mainNav");

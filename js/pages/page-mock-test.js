@@ -526,12 +526,15 @@ function initMockTestPage() {
       ? (currentTest.parts || []).filter(p => selectedPartList.includes(p.id))
       : (currentTest.parts || []);
 
-    const totalQuestions = activeParts.reduce((acc, p) => {
-      if (p && Array.isArray(p.questions)) return acc + p.questions.length;
-      if (p && Array.isArray(p.writing_tasks)) return acc + p.writing_tasks.length;
-      if (p && Array.isArray(p.speaking_tasks)) return acc + p.speaking_tasks.length;
-      return acc;
-    }, 0);
+    // Số câu/bài của một phần: phần Viết/Nói có thể kèm "questions: []" rỗng — khi đó đếm bài viết/nói (khớp phòng thi)
+    const partItemCount = (p) => {
+      if (!p) return 0;
+      if (Array.isArray(p.questions) && p.questions.length) return p.questions.length;
+      if (Array.isArray(p.writing_tasks) && p.writing_tasks.length) return p.writing_tasks.length;
+      if (Array.isArray(p.speaking_tasks) && p.speaking_tasks.length) return p.speaking_tasks.length;
+      return 0;
+    };
+    const totalQuestions = activeParts.reduce((acc, p) => acc + partItemCount(p), 0);
 
     const examDurationMin = isSubset
       ? activeParts.reduce((acc, p) => acc + (p.durationMin || 15), 0)
@@ -615,7 +618,7 @@ function initMockTestPage() {
                 </div>
                 <div class="cbt-subtest-items-grid">
                   ${(isPractice ? (currentTest.parts || []) : activeParts).map((p, pIdx) => {
-                    const qCount = (p.questions ? p.questions.length : (p.writing_tasks ? p.writing_tasks.length : (p.speaking_tasks ? p.speaking_tasks.length : 0)));
+                    const qCount = partItemCount(p);
                     const dur = p.durationMin || p.duration_min || Math.round(examDurationMin / activeParts.length);
                     const included = activeParts.includes(p);
                     const rowTag = isPractice ? "label" : "div";
