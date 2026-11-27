@@ -16,7 +16,7 @@
    "v": "3849a1148d69"
   },
   "speaking_sets.json": {
-   "v": "98cdf4d82e4f"
+   "v": "b9efc9a12cf4"
   },
   "writing_tasks.json": {
    "v": "e73ad6a68815"
@@ -58,7 +58,7 @@
   "listening_lessons": 1,
   "listening_topics": 1,
   "listening_lesson_vocab": 2,
-  "speaking_lessons": 23,
+  "speaking_lessons": 34,
   "writing_tasks": 1,
   "writing_task_vocab": 2,
   "writing_topics": 1,
@@ -68,5 +68,5 @@
   "blog_posts": 14,
   "packages": 4
  },
- "generated_at": "2026-11-27T10:36:36.828Z"
+ "generated_at": "2026-11-27T11:36:16.837Z"
 }
