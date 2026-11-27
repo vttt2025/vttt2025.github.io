@@ -25,7 +25,7 @@
    "v": "e5144e3be4ae"
   },
   "trki_bank.json": {
-   "v": "a642a5ebdb79"
+   "v": "0478d19f0198"
   },
   "shop_products.json": {
    "v": "d8968435836d"
@@ -50,7 +50,7 @@
   }
  },
  "sources": {
-  "topic_articles": 15,
+  "topic_articles": 16,
   "vocab_jars": 2,
   "jar_items": 5,
   "vocabularies": 3,
@@ -62,11 +62,11 @@
   "writing_tasks": 1,
   "writing_task_vocab": 3,
   "writing_topics": 1,
-  "trki_tests": 108,
+  "trki_tests": 121,
   "shop_products": 1,
-  "grammar_lessons": 2,
+  "grammar_lessons": 3,
   "blog_posts": 14,
   "packages": 4
  },
- "generated_at": "2026-11-27T18:10:56.274Z"
+ "generated_at": "2026-11-27T18:15:06.773Z"
 }
