@@ -1299,8 +1299,8 @@ const showTopicArticle = (jarId) => {
             ${isUserPro ? (window.RusiIcons ? RusiIcons.get("download", { size: 15 }) : "") : (window.RusiIcons ? RusiIcons.get("lock-pro", { size: 15 }) : "")} <span class="btn-text">Lưu bài học</span>
             <span class="rusi-pro-mini-badge" style="font-size:0.62rem;font-weight:800;background:linear-gradient(135deg,#facc15,#eab308);color:#78350f;padding:1px 5px;border-radius:4px;margin-left:4px">PRO</span>
           </button>
-          <button type="button" class="btn btn-primary btn-sm" id="btnOpenJarFromArticleTop" title="Xem lọ từ vựng (${words.length} từ)">
-            ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 15 }) : ""} <span class="btn-text">Xem lọ từ vựng (${words.length} từ)</span>
+          <button type="button" class="btn btn-primary btn-sm" id="btnOpenJarFromArticleTop" title="Mở lọ từ vựng (${words.length} từ) để học flashcard">
+            ${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 15 }) : ""} <span class="btn-text">Lọ từ vựng · ${words.length}</span>
           </button>
         </div>
       </div>
@@ -1367,14 +1367,12 @@ const showTopicArticle = (jarId) => {
         <!-- MỤC XEM LỌ TỪ VỰNG & LUYỆN FLASHCARD -->
         <section class="topic-article-footer-cta no-print">
           <div class="topic-article-footer-cta-info">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-              <span style="color:var(--russia-blue, #1757a6)">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 24 }) : ""}</span>
-              <h3 style="margin:0;font-size:1.15rem;color:#0f1f38">Lọ từ vựng “${esc(jar.name)}”</h3>
-            </div>
-            <p>Đã sẵn sàng ghi nhớ bền vững ${words.length} từ vựng với mô hình Lọ Từ Vựng và Flashcard Spaced Repetition?</p>
+            <span class="topic-cta-icon">${window.RusiIcons ? RusiIcons.get("archive-jar", { size: 20 }) : ""}</span>
+            <h3>Lọ từ vựng “${esc(jar.name)}”</h3>
+            <span class="topic-cta-count">${words.length} từ</span>
           </div>
-          <button type="button" class="btn btn-primary" id="btnOpenJarFromArticleBottom" style="white-space:nowrap;font-weight:700;padding:12px 22px">
-            ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Mở Lọ &amp; Học Flashcard (${words.length} từ) →
+          <button type="button" class="btn btn-primary" id="btnOpenJarFromArticleBottom">
+            ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Học flashcard →
           </button>
         </section>
 

@@ -21484,21 +21484,54 @@ body[data-page="upgrade"] main.container {
 
 .topic-article-footer-cta {
   background: linear-gradient(135deg, #f0f7ff 0%, #e2effc 100%);
-  border: 1.5px solid #bfdbfe;
-  border-radius: 16px;
-  padding: 24px 28px;
+  border: 1px solid #bfdbfe;
+  border-radius: 14px;
+  padding: 14px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  margin-top: 36px;
+  gap: 16px;
+  margin-top: 32px;
+}
+
+/* Một dòng: icon · tên lọ · số từ */
+.topic-article-footer-cta-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.topic-article-footer-cta-info .topic-cta-icon {
+  display: inline-flex;
+  color: var(--russia-blue, #1757a6);
+  flex-shrink: 0;
 }
 
 .topic-article-footer-cta-info h3 {
-  margin: 0 0 6px 0;
-  font-size: 18px;
+  margin: 0;
+  font-size: 1rem;
   font-weight: 700;
+  color: #0f1f38;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.topic-article-footer-cta-info .topic-cta-count {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
   color: #1757a6;
+  background: rgba(23, 87, 166, 0.08);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.topic-article-footer-cta .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-weight: 700;
 }
 
 .topic-article-footer-cta-info p {
@@ -21608,10 +21641,12 @@ body[data-page="upgrade"] main.container {
   .topic-article-footer-cta {
     flex-direction: column;
     align-items: stretch;
-    text-align: center;
+    gap: 12px;
   }
   .topic-article-footer-cta button {
     width: 100%;
+    justify-content: center;
+    min-height: 44px;
   }
   .topic-article-nav-bar {
     padding: 10px 12px;
@@ -38068,6 +38103,8 @@ body.cbt-resizing .cbt-app-portal .cbt-gutter-handle { background: var(--cbt-acc
   /* h3 có màu inline (#0f1f38) trong page-vocab.js → cần !important */
   [data-theme="dark"] body .topic-article-footer-cta-info h3 { color: #f1f5f9 !important; }
   [data-theme="dark"] body .topic-article-footer-cta-info p { color: #a9b6c8; }
+  [data-theme="dark"] body .topic-article-footer-cta-info .topic-cta-icon { color: #7fb2ef; }
+  [data-theme="dark"] body .topic-article-footer-cta-info .topic-cta-count { color: #9cc4f3; background: rgba(91, 155, 230, 0.16); }
 
   [data-theme="dark"] body .rusi-md-rendered { color: #cbd5e1; }
   [data-theme="dark"] body .rusi-md-rendered .rusi-md-h1,
