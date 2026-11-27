@@ -38017,3 +38017,28 @@ body.cbt-resizing .cbt-app-portal .cbt-gutter-handle { background: var(--cbt-acc
 [data-theme="dark"] body .trki-eval-status-pill.retake { background: rgba(245, 158, 11, 0.16); color: #fcd34d; border-color: rgba(245, 158, 11, 0.4); }
 [data-theme="dark"] body .manage-pro-status-tag,
 [data-theme="dark"] body .manage-pro-expiry-days { color: #34d399; }
+
+/* Thẻ giá ở trang chủ (#pricing) — cùng kiểu thẻ tối của trang Gói PRO */
+[data-theme="dark"] body .pricing-card,
+[data-theme="dark"] #pricing .pricing-card {
+  background: linear-gradient(155deg, rgba(23, 38, 62, 0.8) 0%, rgba(15, 24, 40, 0.9) 100%) !important;
+  border-color: rgba(96, 165, 250, 0.22) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] body .pricing-card:hover,
+[data-theme="dark"] #pricing .pricing-card:hover {
+  border-color: rgba(96, 165, 250, 0.45) !important;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme="dark"] body .pricing-card.popular,
+[data-theme="dark"] #pricing .pricing-card.popular {
+  background: linear-gradient(165deg, rgba(30, 58, 138, 0.5) 0%, rgba(15, 23, 42, 0.95) 100%) !important;
+  border-color: #3b82f6 !important;
+}
+[data-theme="dark"] #pricing .pricing-features li,
+[data-theme="dark"] #pricing .pricing-features li span { color: #cbd5e1 !important; }
+[data-theme="dark"] #pricing .pricing-old { color: #8796ab !important; }
+/* Link chuyển Đăng nhập ⇄ Đăng ký */
+[data-theme="dark"] body #linkToSignup,
+[data-theme="dark"] body #linkToLogin { color: #7fb2ef; }
