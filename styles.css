@@ -38198,3 +38198,200 @@ html.rusi-printing *::before,
 html.rusi-printing *::after {
   transition: none !important;
 }
+
+/* =====================================================================
+ * THANH LỌ TỪ VỰNG (rusiQuizletBackBar): tên lọ sát nút quay lại,
+ * 4 chế độ gom thành thanh chọn liền (segmented), nút bài học tách bằng vạch.
+ * ===================================================================== */
+.rusi-workspace-back-bar.rusi-quizlet-bar .rusi-workspace-info {
+  flex: 1 1 auto !important;
+  justify-content: flex-start !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  margin: 0 0 0 4px !important;
+}
+.rusi-workspace-back-bar.rusi-quizlet-bar .rusi-workspace-title {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-width: 0 !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+.rusi-workspace-back-bar.rusi-quizlet-bar .rusi-workspace-title svg {
+  flex-shrink: 0;
+  color: var(--primary, #1757a6);
+}
+.rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes {
+  gap: 2px !important;
+  padding: 3px !important;
+  background: #eef2f7 !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+}
+.rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .quizlet-mode-btn,
+.rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .rusi-top-btn {
+  height: 34px !important;
+  min-height: 34px !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  background: transparent !important;
+  color: #475569 !important;
+  box-shadow: none !important;
+  font-weight: 600 !important;
+}
+.rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .quizlet-mode-btn:hover,
+.rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .rusi-top-btn:hover {
+  background: rgba(255, 255, 255, 0.75) !important;
+  color: #0f1f38 !important;
+}
+.rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .quizlet-mode-btn.active {
+  background: #ffffff !important;
+  color: var(--primary, #1757a6) !important;
+  font-weight: 700 !important;
+  box-shadow: 0 1px 3px rgba(15, 31, 56, 0.12), 0 0 0 1px rgba(15, 31, 56, 0.04) !important;
+}
+.rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .rusi-top-btn {
+  width: 34px !important;
+  min-width: 34px !important;
+  padding: 0 !important;
+  margin-left: 5px !important;
+  justify-content: center !important;
+  position: relative !important;
+}
+.rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .rusi-top-btn::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 8px;
+  bottom: 8px;
+  width: 1px;
+  background: #cbd5e1;
+  pointer-events: none;
+}
+/* Mobile/tablet/cảm ứng: giữ vùng chạm 44px, bỏ bớt đệm để chừa chỗ cho tên lọ */
+@media (max-width: 1024px), (pointer: coarse) {
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes {
+    padding: 2px !important;
+    gap: 0 !important;
+  }
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .quizlet-mode-btn,
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .rusi-top-btn {
+    width: 44px !important;
+    min-width: 44px !important;
+    height: 44px !important;
+    min-height: 44px !important;
+    flex: 0 0 44px !important;
+    border-radius: 10px !important;
+  }
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .rusi-top-btn {
+    margin-left: 3px !important;
+  }
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .rusi-top-btn::before {
+    left: -2px;
+    top: 12px;
+    bottom: 12px;
+  }
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .quizlet-mode-btn::after,
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .rusi-top-btn::after {
+    content: none !important;
+  }
+}
+@media screen and (max-width: 768px) {
+  .rusi-workspace-back-bar.rusi-quizlet-bar {
+    gap: 4px !important;
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-workspace-info {
+    margin-left: 0 !important;
+  }
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-workspace-title {
+    display: block !important;
+    font-size: 0.85rem !important;
+  }
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-workspace-title svg {
+    display: none !important;
+  }
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes {
+    border: 0 !important;
+  }
+}
+[data-theme="dark"] body .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+[data-theme="dark"] body .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .quizlet-mode-btn,
+[data-theme="dark"] body .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .rusi-top-btn {
+  color: #a9b6c8 !important;
+}
+[data-theme="dark"] body .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .quizlet-mode-btn:hover,
+[data-theme="dark"] body .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .rusi-top-btn:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] body .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .quizlet-mode-btn.active {
+  background: rgba(91, 155, 230, 0.22) !important;
+  color: #e6f0fd !important;
+  box-shadow: inset 0 0 0 1px rgba(91, 155, 230, 0.35) !important;
+}
+[data-theme="dark"] body .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes .rusi-top-btn::before {
+  background: rgba(255, 255, 255, 0.12);
+}
+[data-theme="dark"] body .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-workspace-title svg {
+  color: #7fb2ef;
+}
+
+/* =====================================================================
+ * FLASHCARD: mặt trước hỏi "Chưa thuộc / Đã thuộc", lật thẻ mới chấm Quên/Khó/Tốt/Dễ
+ * ===================================================================== */
+.qcard-answer-zone:not(.is-flipped) .qcard-srs-rating-bar { display: none !important; }
+.qcard-answer-zone.is-flipped .qcard-know-bar { display: none; }
+.qcard-know-bar {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 16px auto 0;
+  max-width: 860px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.btn-know {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.btn-know-no {
+  background: var(--surface, #fff);
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+.btn-know-no:hover { background: #fef2f2; border-color: #ef4444; }
+.btn-know-yes {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
+}
+.btn-know-yes:hover { background: #d1fae5; border-color: #10b981; }
+.btn-know:focus-visible { outline: 2px solid var(--primary, #1757a6); outline-offset: 2px; }
+@media (max-width: 480px) {
+  .qcard-know-bar { gap: 8px; }
+  .btn-know { min-height: 44px; font-size: 0.9rem; padding: 8px 10px; }
+}
+[data-theme="dark"] body .btn-know-no { background: rgba(229, 72, 77, 0.08); border-color: rgba(229, 72, 77, 0.35); color: #fca5a5; }
+[data-theme="dark"] body .btn-know-no:hover { background: rgba(229, 72, 77, 0.16); border-color: rgba(229, 72, 77, 0.55); }
+[data-theme="dark"] body .btn-know-yes { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.35); color: #6ee7b7; }
+[data-theme="dark"] body .btn-know-yes:hover { background: rgba(16, 185, 129, 0.18); border-color: rgba(16, 185, 129, 0.55); }

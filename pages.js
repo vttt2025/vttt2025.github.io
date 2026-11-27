@@ -950,6 +950,12 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
   let fXpAwarded = false; // +15 XP hoàn thành chỉ hiện khi lượt này thực sự được cộng
   let fAutoAudio = (typeof STORE !== "undefined") ? STORE.get("quizlet_auto_audio", true) : true;
 
+  // Mặt trước hiện "Chưa thuộc / Đã thuộc", mặt sau hiện Quên/Khó/Tốt/Dễ
+  const syncAnswerZone = () => {
+    const zone = panes.flashcard && panes.flashcard.querySelector("#qAnswerZone");
+    if (zone) zone.classList.toggle("is-flipped", fFlipped);
+  };
+
   const renderFlashcardMode = () => {
     const pane = panes.flashcard;
     if (!pane) return;
@@ -1287,6 +1293,17 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         </div>
       </div>
 
+      <!-- Mặt trước: hỏi Đã thuộc / Chưa thuộc; lật thẻ rồi mới chấm Quên/Khó/Tốt/Dễ -->
+      <div class="qcard-answer-zone ${fFlipped ? "is-flipped" : ""}" id="qAnswerZone">
+      <div class="qcard-know-bar">
+        <button type="button" class="btn-know btn-know-no" id="qKnowNo" title="Chưa thuộc — lật thẻ xem nghĩa rồi tự chấm (Phím Space)">
+          ${window.RusiIcons ? RusiIcons.get("x", { size: 16 }) : ""} Chưa thuộc
+        </button>
+        <button type="button" class="btn-know btn-know-yes" id="qKnowYes" title="Đã thuộc — đánh dấu thuộc và sang thẻ tiếp">
+          ${window.RusiIcons ? RusiIcons.get("check", { size: 16 }) : ""} Đã thuộc
+        </button>
+      </div>
+
       <!-- SRS SPACED REPETITION RATING BAR: Căn đều 860px chuẩn card -->
       <div class="qcard-srs-rating-bar" style="margin:16px auto 0;max-width:860px;width:100%;box-sizing:border-box">
         <button type="button" class="btn-srs-rate btn-srs-again" data-rate="again" title="Chưa nhớ - Ôn lại">
@@ -1302,6 +1319,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           <span style="display:inline-flex;align-items:center;gap:4px">${window.RusiIcons ? RusiIcons.get("star", { size: 14 }) : ""} Dễ</span>
         </button>
       </div>
+      </div>
     `;
 
     // Bind card flip
@@ -1310,7 +1328,19 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       if (e.target.closest("button")) return;
       fFlipped = !fFlipped;
       card.classList.toggle("flipped", fFlipped);
+      syncAnswerZone();
       playQuizletSound("flip");
+    };
+
+    // Chưa thuộc → lật thẻ, hiện 4 nút chấm SRS
+    pane.querySelector("#qKnowNo").onclick = (e) => {
+      e.stopPropagation();
+      if (!fFlipped) {
+        fFlipped = true;
+        card.classList.add("flipped");
+        playQuizletSound("flip");
+      }
+      syncAnswerZone();
     };
 
     // Đã chấm SRS mọi từ khác nhau của lượt học này chưa (thẻ chèn lại không tính riêng)
@@ -1389,26 +1419,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
             const after = typeof SRS_AGAIN_REINSERT_AFTER === "number" ? SRS_AGAIN_REINSERT_AFTER : 5;
             fActiveWords.splice(Math.min(fIdx + 1 + after, fActiveWords.length), 0, currentWord);
           }
-          // Theo dõi tiến độ trong phiên học Flashcard: PHẢI HOÀN THÀNH HẾT THẺ MỚI CÓ ĐIỂM CỘNG
-          let reviewed = STORE.get("flash_rev_" + jarId, []);
-          if (!reviewed.includes(currentWord.ru)) {
-            reviewed.push(currentWord.ru);
-            STORE.set("flash_rev_" + jarId, reviewed);
-          }
-
-          // fActiveWords có thể chứa thẻ lặp lại (requeue) → so theo từ khác nhau
-          if (fAllRated()) {
-            const today = new Date().toDateString();
-            const sessKey = "flash_done_" + xpJarId + "_" + today;
-            if (!STORE.get(sessKey, false)) {
-              STORE.set(sessKey, true);
-              STORE.set("flash_rev_" + jarId, []); // reset cho các lượt ôn tập sau
-              Progress.markDone("vocabDone", jarId);
-              Progress.addXp(15);
-              fXpAwarded = true;
-              toast("Chúc mừng! Bạn đã hoàn thành toàn bộ thẻ trong lọ từ vựng (+15 XP)!");
-            }
-          }
+          trackFlashReviewed();
         }
         if (fIdx < fActiveWords.length - 1) {
           playQuizletSound(rating === "again" ? "wrong" : "correct");
@@ -1416,6 +1427,42 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         nextCard();
       };
     });
+
+    // Theo dõi tiến độ trong phiên học Flashcard: PHẢI HOÀN THÀNH HẾT THẺ MỚI CÓ ĐIỂM CỘNG
+    function trackFlashReviewed() {
+      let reviewed = STORE.get("flash_rev_" + jarId, []);
+      if (!reviewed.includes(currentWord.ru)) {
+        reviewed.push(currentWord.ru);
+        STORE.set("flash_rev_" + jarId, reviewed);
+      }
+
+      // fActiveWords có thể chứa thẻ lặp lại (requeue) → so theo từ khác nhau
+      if (fAllRated()) {
+        const today = new Date().toDateString();
+        const sessKey = "flash_done_" + xpJarId + "_" + today;
+        if (!STORE.get(sessKey, false)) {
+          STORE.set(sessKey, true);
+          STORE.set("flash_rev_" + jarId, []); // reset cho các lượt ôn tập sau
+          Progress.markDone("vocabDone", jarId);
+          Progress.addXp(15);
+          fXpAwarded = true;
+          toast("Chúc mừng! Bạn đã hoàn thành toàn bộ thẻ trong lọ từ vựng (+15 XP)!");
+        }
+      }
+    }
+
+    // Đã thuộc → đánh dấu thuộc (như nút ✓ ở Danh sách), tính là đã học thẻ này, sang thẻ tiếp
+    pane.querySelector("#qKnowYes").onclick = (e) => {
+      e.stopPropagation();
+      if (typeof SRS !== "undefined" && typeof SRS.markMastered === "function") {
+        SRS.markMastered(withJar(currentWord));
+        trackFlashReviewed();
+        if (typeof Progress !== "undefined" && typeof Progress.syncToCloud === "function") Progress.syncToCloud();
+        window.dispatchEvent(new CustomEvent("trki:progress-updated"));
+      }
+      if (fIdx < fActiveWords.length - 1) playQuizletSound("correct");
+      nextCard();
+    };
 
 
     // Audio
@@ -1494,6 +1541,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       if (card) {
         fFlipped = !fFlipped;
         card.classList.toggle("flipped", fFlipped);
+        syncAnswerZone();
         playQuizletSound("flip");
       }
     } else if (e.code === "ArrowRight") {
