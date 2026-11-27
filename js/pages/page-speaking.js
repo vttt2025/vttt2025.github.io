@@ -1784,6 +1784,37 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
 
     // Dựng video bằng RusiYtPlayer (ẩn giao diện YouTube); trang tự điều khiển theo câu nên ẩn thanh điều khiển chung.
     // Lỗi tải API → RusiYtPlayer trả giao diện YouTube gốc, trang dùng dự phòng postMessage.
+    // Video chạy tự do (bấm ảnh bìa/khung video, phím V): đổi câu trên sân khấu theo thời điểm phát và chạy chữ đỏ.
+    // Khi trang tự phát một câu (isPlaying) thì playCurrentSentence đã lo karaoke → bỏ qua.
+    const syncFreePlay = (t) => {
+      if (isPlaying || isRecording || ytVideoBroken || !ytPlayer) return;
+      // Chỉ theo video khi nó thật sự đang chạy: lúc dừng sau một câu, mốc có thể đã chạm câu kế → không được tự đổi câu
+      let state = -1;
+      try { state = ytPlayer.getPlayerState(); } catch (_) {}
+      if (state !== 1) return;
+      let idx = -1;
+      for (let i = 0; i < items.length; i++) {
+        const s = getItemSec(i);
+        if (s === null || t < s) continue;
+        if (t < getItemEndSec(i)) { idx = i; break; }
+      }
+      if (idx === -1) { clearKaraoke(); return; } // khoảng lặng giữa hai câu: giữ câu cũ, tắt chữ đỏ
+      if (idx !== currentSentenceIdx) loadSentence(idx);
+      const s = getItemSec(idx);
+      const segLen = Math.max(1.0, getItemEndSec(idx) - s);
+      const it = items[idx];
+      const spans = Array.from(document.querySelectorAll("#spTargetRu .sp-target-word"));
+      const totalChars = spans.reduce((sum, sp) => sum + sp.textContent.length, 0) || 1;
+      let accum = 0;
+      let active = -1;
+      spans.forEach((sp, i) => {
+        const wt = (Array.isArray(it.w) && it.w.length > i) ? Number(it.w[i]) : s + (accum / totalChars) * segLen;
+        accum += sp.textContent.length;
+        if (t >= wt) active = i;
+      });
+      spans.forEach((sp, i) => sp.classList.toggle("sp-karaoke-active", i === active));
+    };
+
     if (hasVideo) {
       // Bài không đặt start_sec → bắt đầu ngay ở câu đầu tiên, bỏ qua đoạn mở đầu của video
       const firstSentenceSec = getItemSec(0);
@@ -1795,6 +1826,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
         title: set.title,
         frameId: "spYoutubePlayer",
         showBar: false,
+        onTime: syncFreePlay,
         revealDelayMs: 0, // câu chỉ 6–9 giây → thấy hình ngay, chấp nhận giao diện YouTube nháy đầu câu
         onReady: (player) => {
           ytPlayer = player;
