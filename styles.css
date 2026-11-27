@@ -37648,6 +37648,7 @@ body.cbt-resizing .cbt-app-portal .cbt-gutter-handle { background: var(--cbt-acc
    ========================================================================== */
 [data-theme="dark"] {
   color-scheme: dark;
+  background-color: #0a0f19; /* nền <html> tối ngay từ khung hình đầu và khi cuộn quá đầu/cuối trang */
 }
 [data-theme="dark"] body {
   --bg: #0a0f19;
@@ -38101,3 +38102,15 @@ body.cbt-resizing .cbt-app-portal .cbt-gutter-handle { background: var(--cbt-acc
 [data-theme="dark"] body .qcard-ex-box { background: rgba(255, 255, 255, 0.04) !important; border-color: rgba(255, 255, 255, 0.1) !important; }
 [data-theme="dark"] body .qcard-ex-wrap { background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.12); }
 [data-theme="dark"] body .qcard-details-grid { background: rgba(255, 255, 255, 0.03); }
+
+/* Khung chờ tải (skeleton) khi chuyển trang: gradient trắng gây "nổi trắng" ở chế độ tối */
+[data-theme="dark"] body .rusi-skeleton-hero,
+[data-theme="dark"] body .rusi-skeleton-tab {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 75%);
+  background-size: 200% 100%;
+}
+[data-theme="dark"] body .rusi-skeleton-card {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.025) 25%, rgba(255, 255, 255, 0.06) 50%, rgba(255, 255, 255, 0.025) 75%);
+  background-size: 200% 100%;
+  border-color: rgba(255, 255, 255, 0.08);
+}
