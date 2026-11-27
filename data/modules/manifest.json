@@ -1,19 +1,19 @@
 {
  "modules": {
   "topic_articles.json": {
-   "v": "7ef5286dd27d"
+   "v": "7443b0a5faee"
   },
   "vocab_jars.json": {
-   "v": "8be15e6a095f"
+   "v": "b59334db7a54"
   },
   "vocabularies.json": {
-   "v": "52fad8279b9a"
+   "v": "89978c80c94a"
   },
   "vocab_lessons.json": {
-   "v": "bf3b044aae2c"
+   "v": "b4ed69326b7e"
   },
   "listening_lessons.json": {
-   "v": "3849a1148d69"
+   "v": "6aadd5378fd8"
   },
   "speaking_sets.json": {
    "v": "b9efc9a12cf4"
@@ -25,7 +25,7 @@
    "v": "e5144e3be4ae"
   },
   "trki_bank.json": {
-   "v": "a1d33e57853f"
+   "v": "a642a5ebdb79"
   },
   "shop_products.json": {
    "v": "d8968435836d"
@@ -50,23 +50,23 @@
   }
  },
  "sources": {
-  "topic_articles": 14,
-  "vocab_jars": 1,
-  "jar_items": 2,
-  "vocabularies": 1,
-  "vocab_lessons": 3,
+  "topic_articles": 15,
+  "vocab_jars": 2,
+  "jar_items": 5,
+  "vocabularies": 3,
+  "vocab_lessons": 4,
   "listening_lessons": 1,
   "listening_topics": 1,
-  "listening_lesson_vocab": 2,
+  "listening_lesson_vocab": 3,
   "speaking_lessons": 34,
   "writing_tasks": 1,
-  "writing_task_vocab": 2,
+  "writing_task_vocab": 3,
   "writing_topics": 1,
-  "trki_tests": 55,
+  "trki_tests": 108,
   "shop_products": 1,
-  "grammar_lessons": 1,
+  "grammar_lessons": 2,
   "blog_posts": 14,
   "packages": 4
  },
- "generated_at": "2026-11-27T15:22:53.655Z"
+ "generated_at": "2026-11-27T18:10:56.274Z"
 }
