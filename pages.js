@@ -327,7 +327,7 @@ window.openAddToJarModal = function(wordData) {
     return;
   }
   const vi = (wordData.vi || wordData.meaning || "").trim();
-  const stress = wordData.stress || ru;
+  const stress = rusiStressCase(wordData.stress || ru, ru);
   const note = wordData.note || wordData.pos || wordData.trans || "";
   const ex = wordData.ex || "";
   const ex_vi = wordData.ex_vi || "";
@@ -664,30 +664,46 @@ function openAddWordToJarModal(jarId, onSuccess) {
         </div>
       </div>
 
-      <div style="display:flex;flex-direction:column;gap:11px;margin-bottom:16px">
-        <label style="display:block">
-          <span style="font-size:0.825rem;font-weight:700;color:var(--text,#0f1f38);display:block;margin-bottom:4px">Từ tiếng Nga (*):</span>
-          <input type="text" id="newWordRu" class="add-jar-input" placeholder="Ví dụ: спасибо" autocomplete="off" />
+      <div class="add-word-form">
+        <div class="add-word-row">
+          <label class="add-word-field">
+            <span class="add-word-label">Từ tiếng Nga (*)</span>
+            <input type="text" id="newWordRu" class="add-jar-input" placeholder="Ví dụ: спасибо" autocomplete="off" lang="ru" />
+          </label>
+          <label class="add-word-field">
+            <span class="add-word-label">Trọng âm (tùy chọn)</span>
+            <input type="text" id="newWordStress" class="add-jar-input" placeholder="Ví dụ: спаси́бо" autocomplete="off" lang="ru" />
+          </label>
+        </div>
+        <div class="add-word-lookup" id="newWordLookupStatus" role="status" aria-live="polite"></div>
+
+        <div class="add-word-row">
+          <label class="add-word-field">
+            <span class="add-word-label">Nghĩa tiếng Việt (*)</span>
+            <input type="text" id="newWordVi" class="add-jar-input" placeholder="Ví dụ: cảm ơn" autocomplete="off" />
+          </label>
+          <div class="add-word-field">
+            <span class="add-word-label" id="newWordPosLabel">Từ loại</span>
+            <select id="newWordPos" class="add-jar-input" aria-labelledby="newWordPosLabel">
+              <option value="">— Chọn từ loại —</option>
+              ${(window.RusiVocabLookup ? RusiVocabLookup.POS_OPTIONS : []).map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+
+        <label class="add-word-field">
+          <span class="add-word-label">Câu ví dụ tiếng Nga</span>
+          <input type="text" id="newWordEx" class="add-jar-input" placeholder="Ví dụ: Большое спасибо за помощь!" autocomplete="off" lang="ru" />
         </label>
 
-        <label style="display:block">
-          <span style="font-size:0.825rem;font-weight:700;color:var(--text,#0f1f38);display:block;margin-bottom:4px">Trọng âm (tùy chọn):</span>
-          <input type="text" id="newWordStress" class="add-jar-input" placeholder="Ví dụ: спасибо́" autocomplete="off" />
+        <label class="add-word-field">
+          <span class="add-word-label">Dịch câu ví dụ (tiếng Việt)</span>
+          <input type="text" id="newWordExVi" class="add-jar-input" placeholder="Ví dụ: Cảm ơn rất nhiều vì đã giúp đỡ!" autocomplete="off" />
         </label>
 
-        <label style="display:block">
-          <span style="font-size:0.825rem;font-weight:700;color:var(--text,#0f1f38);display:block;margin-bottom:4px">Nghĩa tiếng Việt (*):</span>
-          <input type="text" id="newWordVi" class="add-jar-input" placeholder="Ví dụ: cảm ơn" autocomplete="off" />
-        </label>
-
-        <label style="display:block">
-          <span style="font-size:0.825rem;font-weight:700;color:var(--text,#0f1f38);display:block;margin-bottom:4px">Từ loại / Ghi chú:</span>
-          <input type="text" id="newWordNote" class="add-jar-input" placeholder="Ví dụ: thán từ lịch sự" autocomplete="off" />
-        </label>
-
-        <label style="display:block">
-          <span style="font-size:0.825rem;font-weight:700;color:var(--text,#0f1f38);display:block;margin-bottom:4px">Câu ví dụ thực tế:</span>
-          <input type="text" id="newWordEx" class="add-jar-input" placeholder="Ví dụ: Большое спасибо за помощь!" autocomplete="off" />
+        <label class="add-word-field">
+          <span class="add-word-label">Ghi chú (tùy chọn)</span>
+          <input type="text" id="newWordNote" class="add-jar-input" placeholder="Ví dụ: dùng trong giao tiếp lịch sự" autocomplete="off" />
         </label>
       </div>
 
@@ -706,6 +722,72 @@ function openAddWordToJarModal(jarId, onSuccess) {
     setTimeout(() => ruInput.focus(), 60);
   }
 
+  // Tự điền từ dữ liệu hệ thống khi học viên nhập xong từ tiếng Nga (rời ô / Enter).
+  // Chỉ điền ô còn trống hoặc ô do hệ thống điền trước đó — không ghi đè chữ học viên tự gõ.
+  const lookup = window.RusiVocabLookup;
+  const statusEl = m.querySelector("#newWordLookupStatus");
+  const autoFields = {
+    stress: m.querySelector("#newWordStress"),
+    vi: m.querySelector("#newWordVi"),
+    pos: m.querySelector("#newWordPos"),
+    ex: m.querySelector("#newWordEx"),
+    ex_vi: m.querySelector("#newWordExVi")
+  };
+  Object.values(autoFields).forEach(f => {
+    f.addEventListener("input", () => { delete f.dataset.auto; });
+    f.addEventListener("change", () => { delete f.dataset.auto; if (f._rusiSync) f._rusiSync(); });
+  });
+  if (lookup && typeof lookup.enhancePosSelect === "function") lookup.enhancePosSelect(autoFields.pos);
+  const setStatus = (text, kind) => {
+    statusEl.textContent = text;
+    statusEl.dataset.kind = kind || "";
+  };
+  let lookedUp = "";
+  let lookupSeq = 0;
+  const runLookup = async () => {
+    if (!lookup) return;
+    const ru = (ruInput.value || "").trim();
+    const key = lookup.norm(ru);
+    if (key === lookedUp) return;
+    lookedUp = key;
+    const seq = ++lookupSeq;
+    // Đổi sang từ khác → bỏ các giá trị hệ thống đã điền cho từ trước
+    Object.values(autoFields).forEach(f => { if (f.dataset.auto) { f.value = ""; delete f.dataset.auto; if (f._rusiSync) f._rusiSync(); } });
+    if (!key) { setStatus("", ""); return; }
+    setStatus("Đang tìm trong từ điển hệ thống…", "loading");
+    let found = null;
+    try {
+      found = await lookup.find(ru);
+    } catch (err) {
+      console.warn("[AddWord] Lỗi tra từ điển:", err);
+    }
+    if (seq !== lookupSeq || !m.isConnected) return;
+    if (!found) {
+      setStatus("Không có trong từ điển hệ thống — hãy tự nhập các ô còn lại.", "miss");
+      return;
+    }
+    const values = {
+      stress: found.stress && lookup.norm(found.stress) === key ? found.stress : "",
+      vi: found.vi,
+      pos: lookup.posValue(found),
+      ex: stripQuotes(found.ex || ""),
+      ex_vi: stripQuotes(found.ex_vi || "")
+    };
+    let filled = 0;
+    Object.keys(autoFields).forEach(k => {
+      const f = autoFields[k];
+      if (!values[k] || (f.value && !f.dataset.auto)) return;
+      f.value = values[k];
+      f.dataset.auto = "1";
+      if (f._rusiSync) f._rusiSync();
+      filled++;
+    });
+    setStatus(filled ? "Đã tự điền từ từ điển hệ thống — bạn có thể sửa lại." : "Từ có trong từ điển hệ thống.", "hit");
+  };
+  ruInput.addEventListener("change", runLookup);
+  ruInput.addEventListener("blur", runLookup);
+  if (lookup) lookup.preload();
+
   const closeModal = () => {
     document.removeEventListener("keydown", onKey);
     m.remove();
@@ -716,6 +798,12 @@ function openAddWordToJarModal(jarId, onSuccess) {
       closeModal();
     } else if (e.key === "Enter") {
       e.preventDefault();
+      // Enter ở ô từ tiếng Nga: tra từ rồi chuyển sang ô nghĩa thay vì lưu ngay
+      if (document.activeElement === ruInput) {
+        runLookup();
+        m.querySelector("#newWordVi").focus();
+        return;
+      }
       m.querySelector("#saveAddWord").click();
     }
   };
@@ -731,6 +819,8 @@ function openAddWordToJarModal(jarId, onSuccess) {
     const vi = (m.querySelector("#newWordVi").value || "").trim();
     const note = (m.querySelector("#newWordNote").value || "").trim();
     const ex = (m.querySelector("#newWordEx").value || "").trim();
+    const ex_vi = (m.querySelector("#newWordExVi").value || "").trim();
+    const posSel = window.RusiVocabLookup ? RusiVocabLookup.parsePos(m.querySelector("#newWordPos").value) : { pos: "", gender: "", aspect: "" };
 
     if (!ru) { if (typeof toast === "function") toast("Vui lòng nhập từ tiếng Nga"); return; }
     if (!vi) { if (typeof toast === "function") toast("Vui lòng nhập nghĩa tiếng Việt"); return; }
@@ -760,8 +850,12 @@ function openAddWordToJarModal(jarId, onSuccess) {
       ru,
       stress,
       vi,
+      pos: posSel.pos,
+      gender: posSel.gender,
+      aspect: posSel.aspect,
       note,
-      ex
+      ex,
+      ex_vi
     };
 
     if (existingIdx >= 0) {
@@ -829,7 +923,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     ...w,
     id: w.id || w.vocab_id || "w-" + idx,
     ru: (w.ru || "").trim(),
-    stress: (w.stress || w.ru || "").trim(),
+    stress: rusiStressCase(w.stress || w.ru || "", w.ru),
     vi: (w.vi || w.meaning || "").trim(),
     note: (w.note || w.notes || w.trans || "").trim(),
     notes: (w.notes || w.note || "").trim(),

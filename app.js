@@ -2049,6 +2049,28 @@ function shuffle(arr) {
   return a;
 }
 
+/**
+ * Chữ có dấu trọng âm hiển thị theo đúng chữ hoa/thường của từ gốc.
+ * Dữ liệu cũ hay ghi stress viết hoa đầu ("Мо́ре") trong khi ru là "море" → danh sách lẫn hoa/thường.
+ * Chỉ đổi khi hai chuỗi trùng nhau sau khi bỏ dấu (không ép khi stress là dạng khác của từ).
+ */
+function rusiStressCase(stress, ru) {
+  const st = String(stress || "").trim();
+  const base = String(ru || "").trim();
+  if (!st || !base) return st || base;
+  const plain = st.replace(/[̀́]/g, "");
+  if (plain === base || plain.toLowerCase() !== base.toLowerCase()) return st;
+  let out = "";
+  let j = 0;
+  for (const ch of st) {
+    if (ch === "́" || ch === "̀") { out += ch; continue; }
+    const r = base[j++];
+    out += (r !== undefined && r !== ch && r.toLowerCase() === ch.toLowerCase()) ? r : ch;
+  }
+  return out;
+}
+window.rusiStressCase = rusiStressCase;
+
 function esc(s) {
   if (s === null || s === undefined) return "";
   return String(s).replace(/[&<>"']/g, (c) => ({

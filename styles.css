@@ -15,6 +15,41 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Chữ Kirin + dấu trọng âm (U+0301) lấy từ PT Sans: Inter đặt dấu trọng âm lệch sang chữ kế tiếp ("Моʹре").
+   Đặt 'Rusi Cyrillic' trước Inter trong mọi font-family; chữ Việt/Latin vẫn dùng Inter. */
+@font-face {
+  font-family: 'Rusi Cyrillic';
+  font-style: normal;
+  font-weight: 100 549;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ptsans/v18/jizaRExUiTo99u79D0aExdGM.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Rusi Cyrillic';
+  font-style: normal;
+  font-weight: 550 1000;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ptsans/v18/jizfRExUiTo99u79B_mh0OqtLQ0Z.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Rusi Cyrillic';
+  font-style: italic;
+  font-weight: 100 549;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ptsans/v18/jizYRExUiTo99u79D0e0w8mIEDQ.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Rusi Cyrillic';
+  font-style: italic;
+  font-weight: 550 1000;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ptsans/v18/jizdRExUiTo99u79D0e8fOydKxUdwzM.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
 :root {
   --font-ru: 'PT Sans', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
   --bg: #eef4fb; /* Russian Winter Cool Blue - sắc xanh mùa đông Nga */
@@ -59,7 +94,7 @@ html {
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   background: var(--bg);
   color: var(--text);
   line-height: 1.65;
@@ -423,7 +458,7 @@ button {
 }
 
 .page-hero h1 {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(2rem, 4.2vw, 2.9rem);
   letter-spacing: -0.025em;
   font-weight: 800;
@@ -6221,7 +6256,7 @@ body.rusika-chat-open .rusika-floating-widget {
   gap: 10px;
   text-decoration: none;
   color: var(--russia-navy);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, Arial, sans-serif;
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.6px;
@@ -6235,7 +6270,7 @@ body.rusika-chat-open .rusika-floating-widget {
   place-items: center;
   width: 36px;
   height: 36px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', sans-serif;
   font-size: 20px;
   font-weight: 800;
   display: grid;
@@ -6970,7 +7005,7 @@ body.rusika-chat-open .rusika-floating-widget {
   text-transform: uppercase;
   align-items: center;
   gap: 10px;
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, sans-serif;
   font-size: 12px;
   font-weight: 700;
   display: inline-flex;
@@ -6992,7 +7027,7 @@ body.rusika-chat-open .rusika-floating-widget {
 .hero h1 {
   letter-spacing: -0.005em;
   margin: 24px 0 20px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(36px, 4.8vw, 60px);
   line-height: 1.25;
   font-weight: 800;
@@ -7022,7 +7057,7 @@ body.rusika-chat-open .rusika-floating-widget {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-weight: 700;
   font-size: 1rem;
   border-radius: 14px;
@@ -7198,7 +7233,7 @@ body.rusika-chat-open .rusika-floating-widget {
   display: block;
 }
 .photo-overlay strong {
-  font-family: 'Inter', -apple-system, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, sans-serif;
   font-size: 26px;
   color: #fff;
 }
@@ -7230,7 +7265,7 @@ body.rusika-chat-open .rusika-floating-widget {
 .russian-word {
   letter-spacing: normal;
   margin-top: 24px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 40px;
   font-weight: 800;
   color: #fff;
@@ -7307,7 +7342,7 @@ body.rusika-chat-open .rusika-floating-widget {
 .progress-number {
   color: var(--russia-red);
   margin-left: auto;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', sans-serif;
   font-size: 20px;
   font-weight: 800;
 }
@@ -7403,7 +7438,7 @@ body.rusika-chat-open .rusika-floating-widget {
   border: 0;
 }
 .proof-strip strong {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', sans-serif;
   font-size: 28px;
   font-weight: 800;
 }
@@ -7582,7 +7617,7 @@ body.rusika-chat-open .rusika-floating-widget {
 .hub-heading h2 {
   letter-spacing: -0.015em;
   margin: 16px 0 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(34px, 4.2vw, 54px);
   line-height: 1.22;
   font-weight: 800;
@@ -7643,7 +7678,7 @@ body.rusika-chat-open .rusika-floating-widget {
 }
 .hub-index {
   color: #9aa6b3;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', sans-serif;
   font-size: 10px;
   font-weight: 700;
   position: absolute;
@@ -7696,7 +7731,7 @@ body.rusika-chat-open .rusika-floating-widget {
 .hub-card h3 {
   letter-spacing: normal;
   margin: 7px 0 9px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 21px;
   font-weight: 800;
 }
@@ -7763,7 +7798,7 @@ body.rusika-chat-open .rusika-floating-widget {
 .faq-intro h2 {
   letter-spacing: -0.015em;
   margin: 16px 0 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(32px, 4.2vw, 52px);
   line-height: 1.22;
   font-weight: 800;
@@ -7823,7 +7858,7 @@ body.rusika-chat-open .rusika-floating-widget {
   place-items: center;
   width: 52px;
   height: 52px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', sans-serif;
   font-size: 15px;
   font-weight: 800;
   display: grid;
@@ -7842,7 +7877,7 @@ body.rusika-chat-open .rusika-floating-widget {
 }
 .course-number {
   color: #aaa7a0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', sans-serif;
   font-size: 12px;
   font-weight: 700;
 }
@@ -7864,7 +7899,7 @@ body.rusika-chat-open .rusika-floating-widget {
 .course-card h3 {
   letter-spacing: normal;
   margin: 10px 0 12px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 22px;
   font-weight: 800;
 }
@@ -7899,7 +7934,7 @@ body.rusika-chat-open .rusika-floating-widget {
   justify-content: space-between;
   align-items: center;
   padding: 12px 0 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 700;
   display: flex;
@@ -8003,7 +8038,7 @@ body.rusika-chat-open .rusika-floating-widget {
 }
 .dialog {
   margin: 16px 0 5px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', sans-serif;
   font-size: 28px;
   font-weight: 800;
   color: #fff;
@@ -8153,7 +8188,7 @@ body.rusika-chat-open .rusika-floating-widget {
 }
 .method-copy h2 {
   color: #fff;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(1.75rem, 3.2vw, 2.35rem) !important;
   line-height: 1.25 !important;
   font-weight: 700 !important;
@@ -8174,7 +8209,7 @@ body.rusika-chat-open .rusika-floating-widget {
 .method-list > div > span {
   color: #ef6572;
   padding-top: 3px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', sans-serif;
   font-size: 11px;
   font-weight: 800;
 }
@@ -8293,7 +8328,7 @@ body.rusika-chat-open .rusika-floating-widget {
   letter-spacing: normal;
   max-width: 760px;
   margin: 12px auto 26px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(17px, 1.9vw, 21px);
   line-height: 1.72;
   font-weight: 500;
@@ -8439,7 +8474,7 @@ body.rusika-chat-open .rusika-floating-widget {
   color: var(--russia-blue);
   align-items: center;
   gap: 10px;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', sans-serif;
   font-size: 13px;
   font-weight: 700;
   display: inline-flex;
@@ -8458,7 +8493,7 @@ body.rusika-chat-open .rusika-floating-widget {
   gap: 24px;
   width: 100%;
   padding: 24px 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', sans-serif;
   font-size: 16px;
   font-weight: 700;
   display: flex;
@@ -8541,7 +8576,7 @@ body.rusika-chat-open .rusika-floating-widget {
   z-index: 2;
   letter-spacing: -0.015em;
   margin: 20px 0 14px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: clamp(38px, 4.8vw, 64px);
   line-height: 1.18;
   font-weight: 800;
@@ -8575,7 +8610,7 @@ body.rusika-chat-open .rusika-floating-widget {
   border: 1px solid #38363e;
   border-radius: 20px;
   place-items: center;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', sans-serif;
   font-size: 35px;
   font-weight: 800;
   display: grid;
@@ -8673,7 +8708,7 @@ footer .footer-inner {
 
 .footer-brand-text {
   color: #ffffff !important;
-  font-family: 'Inter', -apple-system, sans-serif !important;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, sans-serif !important;
   font-size: 22px !important;
   font-weight: 800 !important;
   letter-spacing: -0.5px !important;
@@ -9998,7 +10033,7 @@ footer > small {
   border-radius: 0 !important;
   font-size: 2.2rem;
   font-weight: 900;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   color: var(--russia-blue, #1757a6);
   opacity: 0.45;
   line-height: 1;
@@ -11726,7 +11761,7 @@ img, video, iframe {
 }
 
 .rusi-card-ru {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.18rem;
   font-weight: 800;
   color: var(--russia-navy);
@@ -14281,7 +14316,7 @@ img, video, iframe {
 }
 
 .rusi-card.rusi-card-compact .rusi-card-ru {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 1.05rem !important;
   font-weight: 700 !important;
   color: var(--russia-navy);
@@ -18705,7 +18740,7 @@ body[data-page="writing"].in-workspace main.container {
 }
 
 .cbt-passage-text {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 1rem;
   line-height: 1.75;
   color: var(--text);
@@ -19951,7 +19986,7 @@ body[data-page="shop"] .page-hero h1,
 body[data-page="blog"] .page-hero h1,
 body[data-page="how-to-study"] .page-hero h1,
 .page-hero h1 {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   color: var(--text) !important;
   font-weight: 700 !important;
   font-size: clamp(1.75rem, 3.2vw, 2.5rem) !important;
@@ -19994,7 +20029,7 @@ body[data-page="how-to-study"] .page-hero h1 span,
 }
 
 .page-main-hero-title {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   font-size: clamp(1.75rem, 3.2vw, 2.5rem) !important;
   font-weight: 700 !important;
   line-height: 1.22 !important;
@@ -20105,7 +20140,7 @@ body[data-page="how-to-study"] .page-hero h1 span,
 }
 
 .level-tab span.level-code {
-  font-family: Inter, sans-serif;
+  font-family: 'Rusi Cyrillic', Inter, sans-serif;
   font-weight: 800;
   font-size: 24px;
   line-height: 1;
@@ -20206,7 +20241,7 @@ body[data-page="how-to-study"] .page-hero h1 span,
 
 .topic-number {
   color: #64748b !important;
-  font-family: Inter, sans-serif;
+  font-family: 'Rusi Cyrillic', Inter, sans-serif;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -20320,7 +20355,7 @@ body[data-page="how-to-study"] .page-hero h1 span,
 .topic-card .topic-title,
 .topic-card h3 {
   margin: 0 0 3px 0 !important;
-  font-family: Inter, sans-serif !important;
+  font-family: 'Rusi Cyrillic', Inter, sans-serif !important;
   font-size: 15.5px !important;
   font-weight: 700 !important;
   color: #0f1f38 !important;
@@ -20859,7 +20894,7 @@ body[data-page="upgrade"] .upgrade-kicker {
 }
 
 body[data-page="upgrade"] .upgrade-hero h1 {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
   font-size: clamp(1.75rem, 3.2vw, 2.5rem) !important;
   font-weight: 700 !important;
   line-height: 1.22 !important;
@@ -21014,18 +21049,18 @@ body[data-page="upgrade"] .pricing-features .chk,
 
 /* Upgrade Comparison Table Typography */
 body[data-page="upgrade"] .comparison-section {
-  font-family: 'Be Vietnam Pro', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-family: 'Rusi Cyrillic', 'Be Vietnam Pro', 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
 }
 
 body[data-page="upgrade"] .comparison-section h2 {
-  font-family: 'Plus Jakarta Sans', 'Be Vietnam Pro', 'Inter', sans-serif !important;
+  font-family: 'Rusi Cyrillic', 'Plus Jakarta Sans', 'Be Vietnam Pro', 'Inter', sans-serif !important;
   color: #102a4c !important;
   font-weight: 800 !important;
   letter-spacing: -0.035em !important;
 }
 
 body[data-page="upgrade"] .comparison-section p {
-  font-family: 'Be Vietnam Pro', 'Inter', sans-serif !important;
+  font-family: 'Rusi Cyrillic', 'Be Vietnam Pro', 'Inter', sans-serif !important;
   color: #53657a !important;
   font-size: 1rem !important;
   font-weight: 450 !important;
@@ -24236,7 +24271,7 @@ body.has-bottom-bar .rusika-floating-widget {
 }
 
 .level-tab span.level-code {
-  font-family: Inter, sans-serif !important;
+  font-family: 'Rusi Cyrillic', Inter, sans-serif !important;
   font-weight: 800 !important;
   font-size: 24px !important;
   line-height: 1 !important;
@@ -24337,7 +24372,7 @@ body.has-bottom-bar .rusika-floating-widget {
 
 .topic-number {
   color: #64748b !important;
-  font-family: Inter, monospace, sans-serif !important;
+  font-family: 'Rusi Cyrillic', Inter, monospace, sans-serif !important;
   font-size: 13px !important;
   font-weight: 800 !important;
   letter-spacing: 0.5px !important;
@@ -24407,7 +24442,7 @@ body.has-bottom-bar .rusika-floating-widget {
 
 .topic-card-text .topic-title {
   margin: 0 0 4px 0 !important;
-  font-family: Inter, sans-serif !important;
+  font-family: 'Rusi Cyrillic', Inter, sans-serif !important;
   font-size: 16px !important;
   font-weight: 700 !important;
   color: #0f1f38 !important;
@@ -24759,7 +24794,7 @@ body.has-bottom-bar .rusika-floating-widget {
   font-size: 0.88rem;
   color: #1e293b;
   line-height: 1.45;
-  font-family: Inter, sans-serif;
+  font-family: 'Rusi Cyrillic', Inter, sans-serif;
 }
 
 [data-theme="dark"] .wd-wikt-defs li {
@@ -24879,7 +24914,7 @@ body.has-bottom-bar .rusika-floating-widget {
   box-shadow: 0 4px 20px rgba(16, 42, 76, 0.03);
   box-sizing: border-box;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -34839,7 +34874,7 @@ body.cbt-fullscreen-mode {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--text, #0f172a);
   box-sizing: border-box;
 }
@@ -38395,3 +38430,182 @@ html.rusi-printing *::after {
 [data-theme="dark"] body .btn-know-no:hover { background: rgba(229, 72, 77, 0.16); border-color: rgba(229, 72, 77, 0.55); }
 [data-theme="dark"] body .btn-know-yes { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.35); color: #6ee7b7; }
 [data-theme="dark"] body .btn-know-yes:hover { background: rgba(16, 185, 129, 0.18); border-color: rgba(16, 185, 129, 0.55); }
+
+/* =====================================================================
+ * Cửa sổ "Thêm từ mới vào Lọ": 2 cột trên máy tính, tự điền từ từ điển hệ thống
+ * ===================================================================== */
+#addWordToJarModal .add-jar-box {
+  max-width: 560px;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+}
+.add-word-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.add-word-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.add-word-field {
+  display: block;
+  min-width: 0;
+}
+.add-word-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: var(--text, #0f1f38);
+}
+select.add-jar-input {
+  cursor: pointer;
+  padding-right: 30px;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2353657a' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+}
+.add-word-lookup {
+  margin-top: -6px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--muted, #53657a);
+}
+.add-word-lookup:empty { display: none; }
+.add-word-lookup[data-kind="hit"] { color: #047857; }
+.add-word-lookup[data-kind="miss"] { color: #b45309; }
+.add-jar-input[data-auto="1"] {
+  background-color: #f0f9ff;
+  border-color: #bae6fd;
+}
+@media (max-width: 560px) {
+  .add-word-row { grid-template-columns: 1fr; }
+  select.add-jar-input { font-size: 16px; min-height: 44px; }
+}
+[data-theme="dark"] select.add-jar-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a9b6c8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+}
+[data-theme="dark"] .add-jar-input[data-auto="1"] {
+  background-color: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+[data-theme="dark"] .add-word-lookup[data-kind="hit"] { color: #6ee7b7; }
+[data-theme="dark"] .add-word-lookup[data-kind="miss"] { color: #fcd34d; }
+
+/* Danh sách thả xuống tự vẽ (từ loại) — js/vocab-lookup.js enhancePosSelect */
+.rusi-select { position: relative; }
+.rusi-select-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+  min-height: 40px;
+}
+.rusi-select-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rusi-select-value-abbr {
+  margin-left: 4px;
+  font-size: 0.8em;
+  color: var(--muted, #53657a);
+}
+.rusi-select-placeholder { color: var(--muted, #53657a); opacity: 0.85; }
+.rusi-select-chevron {
+  flex-shrink: 0;
+  color: var(--muted, #53657a);
+  transition: transform 0.15s ease;
+}
+.rusi-select-btn[aria-expanded="true"] .rusi-select-chevron { transform: rotate(180deg); }
+.rusi-select-btn[aria-expanded="true"] {
+  border-color: var(--primary, #1757a6);
+  box-shadow: 0 0 0 3px rgba(23, 87, 166, 0.14);
+}
+.rusi-select-btn[data-auto="1"] {
+  background-color: #f0f9ff;
+  border-color: #bae6fd;
+}
+.rusi-select-pop {
+  position: fixed;
+  z-index: 10050;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #d2e0f0);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px -8px rgba(16, 42, 76, 0.22), 0 2px 6px rgba(16, 42, 76, 0.06);
+  box-sizing: border-box;
+}
+.rusi-select-pop[hidden] { display: none; }
+.rusi-select-group + .rusi-select-group,
+.rusi-select-clear + .rusi-select-group {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid var(--border, #e2e8f0);
+}
+.rusi-select-group-label {
+  padding: 6px 10px 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted, #53657a);
+}
+.rusi-select-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text, #0f1f38);
+  cursor: pointer;
+  user-select: none;
+}
+.rusi-select-clear { color: var(--muted, #53657a); }
+.rusi-select-opt-abbr {
+  flex-shrink: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted, #53657a);
+  background: var(--bg-soft, #f1f5f9);
+  padding: 2px 7px;
+  border-radius: 6px;
+}
+.rusi-select-opt.is-active { background: var(--primary-soft, #e3effc); }
+.rusi-select-opt[aria-selected="true"] { color: var(--primary, #1757a6); font-weight: 700; }
+.rusi-select-opt[aria-selected="true"] .rusi-select-opt-abbr { color: var(--primary, #1757a6); background: rgba(23, 87, 166, 0.1); }
+@media (max-width: 560px), (pointer: coarse) {
+  .rusi-select-btn { min-height: 44px; font-size: 16px; }
+  .rusi-select-opt { min-height: 44px; }
+}
+[data-theme="dark"] .rusi-select-btn[data-auto="1"] {
+  background-color: rgba(56, 189, 248, 0.08);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+[data-theme="dark"] .rusi-select-pop {
+  background: #131d2e;
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.6);
+}
+[data-theme="dark"] .rusi-select-group + .rusi-select-group,
+[data-theme="dark"] .rusi-select-clear + .rusi-select-group { border-top-color: rgba(255, 255, 255, 0.08); }
+[data-theme="dark"] .rusi-select-opt { color: #e2e8f0; }
+[data-theme="dark"] .rusi-select-opt-abbr { background: rgba(255, 255, 255, 0.06); color: #a9b6c8; }
+[data-theme="dark"] .rusi-select-opt.is-active { background: rgba(91, 155, 230, 0.16); }
+[data-theme="dark"] .rusi-select-opt[aria-selected="true"] { color: #9cc4f3; }
+[data-theme="dark"] .rusi-select-opt[aria-selected="true"] .rusi-select-opt-abbr { color: #9cc4f3; background: rgba(91, 155, 230, 0.16); }

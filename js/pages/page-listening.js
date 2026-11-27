@@ -2045,7 +2045,7 @@ function initListeningPage() {
         })
         .map((item) => ({
           ru: item.vocab.word_normalized || item.vocab.word_with_stress,
-          stress: item.vocab.word_with_stress || item.vocab.word_normalized,
+          stress: rusiStressCase(item.vocab.word_with_stress || item.vocab.word_normalized, item.vocab.word_normalized),
           vi: item.vocab.meaning_vi,
           pos: item.vocab.pos || "слов.",
           audio: item.vocab.audio_url || null

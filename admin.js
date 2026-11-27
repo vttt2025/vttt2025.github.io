@@ -10776,6 +10776,18 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
   }
 
   function initTheme() {
+    // Dùng chung lựa chọn Sáng / Tối / Theo hệ thống với trang học viên (js/theme.js đặt data-theme cho cả html và body)
+    if (window.RusiTheme) {
+      let legacy = null;
+      try { legacy = localStorage.getItem(THEME_KEY); if (legacy) localStorage.removeItem(THEME_KEY); } catch (e) { legacy = null; }
+      let hasShared = false;
+      try { hasShared = !!localStorage.getItem("rusi_theme"); } catch (e) { hasShared = false; }
+      if (legacy && !hasShared) window.RusiTheme.setMode(legacy); // giữ lựa chọn cũ của CMS
+      else window.RusiTheme.apply();
+      const btn = document.getElementById("btnToggleTheme");
+      if (btn) window.RusiTheme.bind(btn);
+      return;
+    }
     const savedTheme = localStorage.getItem(THEME_KEY) || "light";
     document.documentElement.setAttribute("data-theme", savedTheme);
 

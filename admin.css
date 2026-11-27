@@ -4,6 +4,41 @@
  * High-Craft, Modern, Anti-Slop Interface
  */
 
+/* Chữ Kirin + dấu trọng âm (U+0301) lấy từ PT Sans: Inter đặt dấu trọng âm lệch sang chữ kế tiếp ("Моʹре").
+   Đặt 'Rusi Cyrillic' trước Inter trong mọi font-family; chữ Việt/Latin vẫn dùng Inter. */
+@font-face {
+  font-family: 'Rusi Cyrillic';
+  font-style: normal;
+  font-weight: 100 549;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ptsans/v18/jizaRExUiTo99u79D0aExdGM.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Rusi Cyrillic';
+  font-style: normal;
+  font-weight: 550 1000;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ptsans/v18/jizfRExUiTo99u79B_mh0OqtLQ0Z.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Rusi Cyrillic';
+  font-style: italic;
+  font-weight: 100 549;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ptsans/v18/jizYRExUiTo99u79D0e0w8mIEDQ.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+@font-face {
+  font-family: 'Rusi Cyrillic';
+  font-style: italic;
+  font-weight: 550 1000;
+  font-display: swap;
+  src: url(https://fonts.gstatic.com/s/ptsans/v18/jizdRExUiTo99u79D0e8fOydKxUdwzM.woff2) format('woff2');
+  unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
+}
+
 :root {
   /* ========================================================================
      PAYLOAD STUDIO — DEEP SLATE PRO THEME (DEFAULT DARK)
@@ -61,7 +96,7 @@
   --p-radius-xl: 16px;
   --p-radius-full: 9999px;
 
-  --p-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --p-font: 'Rusi Cyrillic', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --p-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --p-sidebar-width: 270px;
@@ -5012,4 +5047,148 @@ body.payload-body {
   .p-md-editor-wrap .notion-slash-kbd {
     display: none;
   }
+}
+
+/* =========================================================================
+ * CHẾ ĐỘ TỐI — vùng soạn nội dung (bài học, ngữ pháp, blog) và các hộp xem trước.
+ * Nhiều rule phía trên viết cứng màu sáng (#0f172a, #f8fafc...) với specificity cao
+ * (.notion-canvas div:not(...)) nên dùng !important cho màu chữ / nền.
+ * ========================================================================= */
+:root,
+[data-theme="light"] {
+  --p-surface-subtle: #f9fafb;
+}
+[data-theme="dark"] {
+  --p-surface-subtle: var(--p-surface-elevated);
+}
+
+[data-theme="dark"] .p-btn-primary,
+[data-theme="dark"] .p-btn-primary:hover,
+[data-theme="dark"] .p-btn-primary:active {
+  color: #0b1324;
+}
+
+[data-theme="dark"] .notion-view-modes,
+[data-theme="dark"] .p-md-modes {
+  background: var(--p-surface-hover) !important;
+}
+[data-theme="dark"] .notion-view-btn,
+[data-theme="dark"] .p-md-mode-btn {
+  color: var(--p-text-muted) !important;
+}
+[data-theme="dark"] .notion-stress-punct:hover {
+  background: var(--p-surface-hover);
+  border-color: var(--p-border-strong);
+}
+
+/* Chữ trong vùng soạn / xem trước */
+[data-theme="dark"] .notion-canvas,
+[data-theme="dark"] .notion-canvas p,
+[data-theme="dark"] .notion-canvas div:not(.notion-table-wrapper):not(.notion-table-toolbar):not(.notion-callout-block):not(.notion-ui-helper),
+[data-theme="dark"] .notion-canvas li,
+[data-theme="dark"] .p-md-preview-body,
+[data-theme="dark"] .p-md-preview-body .rusi-md-p,
+[data-theme="dark"] .p-md-preview-body li,
+[data-theme="dark"] .rusi-md-rendered .rusi-md-p,
+[data-theme="dark"] .rusi-md-rendered li {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .notion-canvas .rusi-md-h1,
+[data-theme="dark"] .notion-canvas .rusi-md-h2,
+[data-theme="dark"] .notion-canvas .rusi-md-h3,
+[data-theme="dark"] .notion-canvas .rusi-md-h4,
+[data-theme="dark"] .notion-canvas h1,
+[data-theme="dark"] .notion-canvas h2,
+[data-theme="dark"] .notion-canvas h3,
+[data-theme="dark"] .notion-canvas h4,
+[data-theme="dark"] .notion-canvas strong,
+[data-theme="dark"] .p-md-preview-body .rusi-md-h1,
+[data-theme="dark"] .p-md-preview-body .rusi-md-h2,
+[data-theme="dark"] .p-md-preview-body .rusi-md-h3,
+[data-theme="dark"] .p-md-preview-body .rusi-md-h4,
+[data-theme="dark"] .p-md-preview-body strong,
+[data-theme="dark"] .rusi-md-rendered .rusi-md-h1,
+[data-theme="dark"] .rusi-md-rendered .rusi-md-h2,
+[data-theme="dark"] .rusi-md-rendered .rusi-md-h3,
+[data-theme="dark"] .rusi-md-rendered .rusi-md-h4,
+[data-theme="dark"] .rusi-md-rendered strong {
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .notion-canvas .rusi-md-h2,
+[data-theme="dark"] .p-md-preview-body .rusi-md-h2,
+[data-theme="dark"] .rusi-md-rendered .rusi-md-h2 {
+  border-bottom-color: rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme="dark"] .rusi-quote-highlight {
+  color: #7fb2ef !important;
+}
+[data-theme="dark"] .rusi-md-quote {
+  background: rgba(255, 255, 255, 0.04) !important;
+  color: #e2e8f0 !important;
+}
+[data-theme="dark"] .rusi-md-divider,
+[data-theme="dark"] .rusi-md-hr {
+  background: rgba(255, 255, 255, 0.1) !important;
+}
+[data-theme="dark"] .rusi-md-inline-code {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #fca5a5 !important;
+}
+
+/* Khối chú thích (callout) */
+[data-theme="dark"] .rusi-md-callout-note { background: rgba(91, 155, 230, 0.1) !important; border-color: rgba(91, 155, 230, 0.3) !important; color: #cfe2fb !important; }
+[data-theme="dark"] .rusi-md-callout-tip { background: rgba(16, 185, 129, 0.1) !important; border-color: rgba(16, 185, 129, 0.3) !important; color: #a7f3d0 !important; }
+[data-theme="dark"] .rusi-md-callout-important { background: rgba(245, 158, 11, 0.1) !important; border-color: rgba(245, 158, 11, 0.32) !important; color: #fde68a !important; }
+[data-theme="dark"] .rusi-md-callout-warning { background: rgba(220, 38, 38, 0.1) !important; border-color: rgba(220, 38, 38, 0.32) !important; color: #fecaca !important; }
+[data-theme="dark"] .rusi-md-callout div,
+[data-theme="dark"] .rusi-md-callout p,
+[data-theme="dark"] .rusi-md-callout strong {
+  color: inherit !important;
+}
+
+/* Bảng */
+[data-theme="dark"] .notion-table-wrapper,
+[data-theme="dark"] .topic-vocab-table-wrapper,
+[data-theme="dark"] .rusi-md-table {
+  background: transparent !important;
+  border-color: var(--p-border-strong) !important;
+}
+[data-theme="dark"] .notion-table-wrapper th,
+[data-theme="dark"] .topic-vocab-table-wrapper th,
+[data-theme="dark"] .rusi-md-table th {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #e2e8f0 !important;
+  border-color: var(--p-border-strong) !important;
+}
+[data-theme="dark"] .notion-table-wrapper td,
+[data-theme="dark"] .topic-vocab-table-wrapper td,
+[data-theme="dark"] .rusi-md-table td {
+  color: #cbd5e1 !important;
+  border-color: var(--p-border) !important;
+}
+[data-theme="dark"] .notion-table-toolbar {
+  background: var(--p-surface-elevated) !important;
+  border-color: var(--p-border) !important;
+}
+[data-theme="dark"] .notion-tbl-btn {
+  background: var(--p-surface) !important;
+  border-color: var(--p-border-strong) !important;
+  color: var(--p-text-muted) !important;
+}
+[data-theme="dark"] .notion-tbl-btn:hover {
+  background: var(--p-primary-soft) !important;
+  border-color: var(--p-primary-border) !important;
+  color: var(--p-primary) !important;
+}
+[data-theme="dark"] .notion-tbl-btn.btn-del-tbl {
+  color: var(--p-danger) !important;
+  border-color: var(--p-danger-border) !important;
+}
+[data-theme="dark"] .notion-tbl-btn.btn-del-tbl:hover {
+  background: var(--p-danger-soft) !important;
+}
+
+[data-theme="dark"] .p-md-statusbar {
+  background: var(--p-surface-elevated) !important;
+  color: var(--p-text-muted) !important;
 }

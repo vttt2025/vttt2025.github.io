@@ -53,7 +53,7 @@ function initVocabPage() {
               ...orig,
               ...c,
               ru: c.ru || orig.ru,
-              stress: c.stress || orig.stress || c.ru || orig.ru,
+              stress: rusiStressCase(c.stress || orig.stress || c.ru || orig.ru, c.ru || orig.ru),
               vi: c.vi || orig.vi,
               pos: c.pos || orig.pos || "",
               gender: c.gender || orig.gender || "",
@@ -724,7 +724,8 @@ function initVocabPage() {
       const seenRu = new Set();
       const customJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
 
-      // Tên lọ chứa từ, cho thẻ SRS cũ chưa ghi jarTitle (lọ cá nhân ưu tiên, rồi lọ hệ thống)
+      // Danh sách chỉ gồm từ học viên học trong các lọ (lọ cá nhân ưu tiên, rồi lọ hệ thống).
+      // Thẻ SRS không thuộc lọ nào (bộ từ khởi đầu, từ lọ cũ đã đổi) không hiện — dữ liệu SRS vẫn giữ nguyên.
       const jarOfWord = new Map();
       const indexJarWords = (jar) => (jar.words || []).forEach(w => {
         const k = w && normKey(w.ru);
@@ -733,6 +734,11 @@ function initVocabPage() {
       (customJars || []).forEach(jar => { if (jar && jar.name) indexJarWords(jar); });
       try { getVocabJars().forEach(jar => { if (jar && jar.name) indexJarWords(jar); }); }
       catch (e) { console.warn("Không dựng được bảng từ → lọ hệ thống:", e); }
+      // Thẻ cũ dạng cặp "студе́нт — студе́нтка" khớp theo vế đầu khi lọ chỉ còn "студент"
+      const jarNameOf = (ru) => {
+        const k = normKey(ru);
+        return jarOfWord.get(k) || jarOfWord.get(k.split(/\s+[—–-]\s+/)[0]) || "";
+      };
 
       // Từ trong SRS cards của người dùng
       if (srsState && srsState.cards) {
@@ -740,15 +746,17 @@ function initVocabPage() {
           if (!c || !c.ru) return;
           const k = normKey(c.ru);
           if (seenRu.has(k)) return;
+          const jarName = jarNameOf(c.ru);
+          if (!jarName) return;
           seenRu.add(k);
 
           const wordItem = {
             ru: c.ru,
-            stress: c.stress || c.ru,
+            stress: rusiStressCase(c.stress || c.ru, c.ru),
             vi: c.vi || "",
             pos: c.pos || "",
             level: c.level || "A1",
-            jarTitle: c.jarTitle || jarOfWord.get(k) || "Lộ trình SRS"
+            jarTitle: c.jarTitle || jarName
           };
 
           if (c.mastered || masteredSet.has(k)) {
@@ -771,7 +779,7 @@ function initVocabPage() {
 
           const wordItem = {
             ru: w.ru,
-            stress: w.stress || w.ru,
+            stress: rusiStressCase(w.stress || w.ru, w.ru),
             vi: w.vi || "",
             pos: w.pos || "",
             level: w.level || jar.level || "custom",
@@ -788,23 +796,14 @@ function initVocabPage() {
         });
       });
 
-      // Bổ sung các từ người dùng đã đánh dấu thuộc nhưng chưa có trong danh sách trên
+      // Bổ sung các từ người dùng đã đánh dấu thuộc (chưa có thẻ SRS) — chỉ khi từ thuộc một lọ
       masteredSet.forEach(ruKey => {
-        if (!seenRu.has(ruKey)) {
-          seenRu.add(ruKey);
-          masteredList.push({ ru: ruKey, vi: "Từ đã thuộc", jarTitle: "Đã lưu" });
-        }
+        if (seenRu.has(ruKey)) return;
+        const jarName = jarNameOf(ruKey);
+        if (!jarName) return;
+        seenRu.add(ruKey);
+        masteredList.push({ ru: ruKey, vi: "Từ đã thuộc", jarTitle: jarName });
       });
-
-      // Nếu người dùng mới tinh (chưa lưu từ nào vào Lọ cá nhân và chưa có thẻ trong deck),
-      // hiển thị danh sách từ mới gợi ý khởi đầu (10 từ A1)
-      if (newList.length === 0 && masteredList.length === 0 && dueList.length === 0) {
-        if (typeof SRS_WORDS !== "undefined" && Array.isArray(SRS_WORDS)) {
-          SRS_WORDS.slice(0, 10).forEach(w => {
-            newList.push({ ...w, jarTitle: "Gợi ý khởi đầu (A1)" });
-          });
-        }
-      }
 
       let activeList = currentTab === "mastered" ? masteredList : currentTab === "due" ? dueList : newList;
       if (searchTxt) {
