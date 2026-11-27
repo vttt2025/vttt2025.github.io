@@ -688,8 +688,10 @@ function initVocabPage() {
     const renderModalContent = () => {
       // 1. Phân loại theo tiến độ:
       // Tập hợp các từ đã thuộc (Mastered)
+      // Khoá so khớp: bỏ dấu nhấn như SRS._norm để "собака" và "соба́ка" là một từ
+      const normKey = (ru) => String(ru || "").replace(/[\u0300\u0301]/g, "").toLowerCase().trim();
       const masteredListRaw = (typeof STORE !== "undefined") ? STORE.get("vocab_mastered_words", []) : [];
-      const masteredSet = new Set(masteredListRaw.map(r => (r || "").toLowerCase().trim()));
+      const masteredSet = new Set(masteredListRaw.map(normKey));
 
       let srsState = null;
       if (typeof SRS !== "undefined" && SRS.getState) {
@@ -698,7 +700,7 @@ function initVocabPage() {
       if (srsState && srsState.cards) {
         Object.values(srsState.cards).forEach(c => {
           if (c.mastered && c.ru) {
-            masteredSet.add(c.ru.toLowerCase().trim());
+            masteredSet.add(normKey(c.ru));
           }
         });
       }
@@ -709,7 +711,7 @@ function initVocabPage() {
       if (srsState && srsState.cards) {
         Object.values(srsState.cards).forEach(c => {
           if (!c.mastered && c.dueDate <= now && c.ru) {
-            dueSet.add(c.ru.toLowerCase().trim());
+            dueSet.add(normKey(c.ru));
           }
         });
       }
@@ -720,12 +722,23 @@ function initVocabPage() {
       const dueList = [];
       const newList = [];
       const seenRu = new Set();
+      const customJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
+
+      // Tên lọ chứa từ, cho thẻ SRS cũ chưa ghi jarTitle (lọ cá nhân ưu tiên, rồi lọ hệ thống)
+      const jarOfWord = new Map();
+      const indexJarWords = (jar) => (jar.words || []).forEach(w => {
+        const k = w && normKey(w.ru);
+        if (k && !jarOfWord.has(k)) jarOfWord.set(k, jar.name);
+      });
+      (customJars || []).forEach(jar => { if (jar && jar.name) indexJarWords(jar); });
+      try { getVocabJars().forEach(jar => { if (jar && jar.name) indexJarWords(jar); }); }
+      catch (e) { console.warn("Không dựng được bảng từ → lọ hệ thống:", e); }
 
       // Từ trong SRS cards của người dùng
       if (srsState && srsState.cards) {
         Object.values(srsState.cards).forEach(c => {
           if (!c || !c.ru) return;
-          const k = c.ru.toLowerCase().trim();
+          const k = normKey(c.ru);
           if (seenRu.has(k)) return;
           seenRu.add(k);
 
@@ -735,7 +748,7 @@ function initVocabPage() {
             vi: c.vi || "",
             pos: c.pos || "",
             level: c.level || "A1",
-            jarTitle: c.jarTitle || "Lộ trình SRS"
+            jarTitle: c.jarTitle || jarOfWord.get(k) || "Lộ trình SRS"
           };
 
           if (c.mastered || masteredSet.has(k)) {
@@ -749,11 +762,10 @@ function initVocabPage() {
       }
 
       // Từ trong Lọ cá nhân / Lọ yêu thích của người dùng (custom_jars)
-      const customJars = (typeof STORE !== "undefined") ? STORE.get("custom_jars", []) : [];
       (customJars || []).forEach(jar => {
         (jar.words || []).forEach(w => {
           if (!w || !w.ru) return;
-          const k = w.ru.toLowerCase().trim();
+          const k = normKey(w.ru);
           if (seenRu.has(k)) return;
           seenRu.add(k);
 

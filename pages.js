@@ -786,6 +786,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
   if (!container) return;
   const jarId = options.jarId || "jar-default";
   const jarTitle = options.jarTitle || "Lọ từ vựng";
+  // Tên lọ ghi lên thẻ SRS (phiên ôn SRS "srs_..." không phải lọ nên không ghi)
+  const srsJarTitle = options.jarTitle && !String(jarId).startsWith("srs_") ? options.jarTitle : null;
+  const withJar = (w) => (srsJarTitle && w && typeof w === "object" ? { ...w, jarTitle: srsJarTitle } : w);
   const isCustomJar = Boolean(options.isCustomJar);
   // Mốc XP "1 lần/ngày/lọ": mọi lọ tự tạo dùng chung 1 lượt (tạo nhiều lọ nhỏ không nhân XP)
   const xpJarId = isCustomJar ? "custom" : jarId;
@@ -1379,7 +1382,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         e.stopPropagation();
         const rating = b.dataset.rate;
         if (typeof SRS !== "undefined" && typeof SRS.ensureCard === "function") {
-          const cardId = SRS.ensureCard(currentWord);
+          const cardId = SRS.ensureCard(withJar(currentWord));
           const result = typeof SRS.review === "function" ? SRS.review(cardId, rating) : null;
           // Quên/khó → cho thẻ xuất hiện lại sau vài thẻ nữa trong phiên này
           if (result && result.requeue) {
@@ -2116,7 +2119,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         if (typeof SRS !== "undefined" && typeof SRS.markMastered === "function") {
           // Truyền object từ đầy đủ (ru/vi/pos/ex) để thẻ SRS mới không thiếu nghĩa
           const wordObj = words.find(w => (w.ru || "").toLowerCase().trim() === norm);
-          SRS.markMastered(wordObj || ruWord);
+          SRS.markMastered(withJar(wordObj) || ruWord);
         }
       }
       if (typeof STORE !== "undefined") STORE.set("vocab_mastered_words", list);

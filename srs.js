@@ -558,6 +558,7 @@ const SRS = {
         level: word.level,
         dk: word.dk || null,
         dir: word.dir || "ru-vi",
+        jarTitle: word.jarTitle || null, // lọ nơi thẻ được tạo — nhãn trong danh sách tiến độ
         // SRS fields
         interval: 0,           // giờ
         repetitions: 0,        // số lần ôn thành công liên tiếp
@@ -570,6 +571,11 @@ const SRS = {
         addedAt: Date.now(),
         updatedAt: Date.now()  // mốc sửa gần nhất — dùng để gộp dữ liệu giữa các thiết bị
       };
+      this.saveState(state);
+    } else if (word && word.jarTitle && !state.cards[id].jarTitle) {
+      // Thẻ cũ chưa ghi lọ: bổ sung khi học lại từ một lọ
+      state.cards[id].jarTitle = word.jarTitle;
+      state.cards[id].updatedAt = Date.now();
       this.saveState(state);
     }
     return id;
@@ -780,7 +786,7 @@ const SRS = {
     const state = this.getState();
     const card = state.cards[id];
     if (!card || card.mastered) return;
-    if (word) ["vi", "pos", "ex"].forEach((f) => { if (card[f] == null && word[f] != null) card[f] = word[f]; });
+    if (word) ["vi", "pos", "ex", "jarTitle"].forEach((f) => { if (card[f] == null && word[f] != null) card[f] = word[f]; });
     const awardXp = !card.xpAwarded;
     card.mastered = true;
     card.xpAwarded = true;

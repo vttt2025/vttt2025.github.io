@@ -34161,6 +34161,12 @@ body.index-personalized #indexUserProgressHost {
   border-color: rgba(23, 87, 166, 0.3);
 }
 
+/* Chừa chỗ cho thẻ nhấc lên khi hover: vùng cuộn (overflow) cắt viền trên thẻ đầu / bóng thẻ cuối */
+.voc-progress-words-list {
+  padding-top: 4px;
+  padding-bottom: 8px;
+}
+
 .voc-pmodal-word {
   font-size: 1.08rem;
   font-weight: 700;
@@ -36775,6 +36781,16 @@ body.cbt-resizing .cbt-gutter-handle {
 .voc-pmodal-tab[data-tab="due"].active { color: #b45309; }
 [data-theme="dark"] .voc-pmodal-tab[data-tab="mastered"].active { color: var(--green, #16a34a); }
 [data-theme="dark"] .voc-pmodal-tab[data-tab="due"].active { color: var(--amber, #f59e0b); }
+/* Không cuộn dọc: overflow-x:auto kéo overflow-y thành auto, gạch chân bottom:-2px làm tràn → hiện thanh cuộn dọc.
+   Đường kẻ dưới vẽ bằng inset shadow để gạch chân (bottom:0) vẫn đè lên nó mà không tràn khỏi khung. */
+.voc-progress-modal-tabs {
+  overflow-y: hidden;
+  border-bottom: none;
+  box-shadow: inset 0 -2px 0 var(--border);
+}
+.voc-progress-modal-tabs .voc-pmodal-tab-indicator {
+  bottom: 0;
+}
 /* Chỉ làm mờ mép phải khi dải tab thật sự tràn (JS đặt .is-overflowing) */
 .voc-progress-modal-tabs {
   mask-image: none !important;
