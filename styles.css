@@ -37784,7 +37784,11 @@ body.cbt-resizing .cbt-app-portal .cbt-gutter-handle { background: var(--cbt-acc
 [data-theme="dark"] body .bpost-body { color: #cbd5e1; }
 [data-theme="dark"] body .bpost-meta-row { color: #a9b6c8; border-bottom-color: var(--border); }
 [data-theme="dark"] body .bpost-body blockquote { background: rgba(255, 255, 255, 0.04); color: #e2e8f0; }
-[data-theme="dark"] body .bpost-container > section > h3 { color: #f1f5f9 !important; }
+[data-theme="dark"] body #postDetailHost > section > h3 { color: #f1f5f9 !important; }
+/* Hộp tác giả cuối bài (màu inline trong blog-post.html) */
+[data-theme="dark"] body .bpost-article > div[style*="background:#f8fafc"] { background: rgba(255, 255, 255, 0.04) !important; border-color: rgba(255, 255, 255, 0.1) !important; }
+[data-theme="dark"] body .bpost-article > div[style*="background:#f8fafc"] div[style*="color:#0f172a"] { color: #f1f5f9 !important; }
+[data-theme="dark"] body .bpost-article > div[style*="background:#f8fafc"] p { color: #a9b6c8 !important; }
 [data-theme="dark"] body .rusi-back-btn { color: #9cc4f3; }
 
 /* Đăng nhập / Đăng ký */
