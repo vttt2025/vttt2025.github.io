@@ -39119,3 +39119,71 @@ select.add-jar-input {
     padding-right: 52px;
   }
 }
+
+/* ==========================================================================
+   LỌ TỪ — CHẾ ĐỘ GÕ TỪ (renderWriteMode) & THANH 5 CHẾ ĐỘ RESPONSIVE
+   ========================================================================== */
+.quizlet-write-box .write-input {
+  min-width: 0;
+  background: var(--bg, #ffffff);
+  color: var(--text, #0f1f38);
+  box-sizing: border-box;
+}
+.quizlet-write-box .write-prompt-meaning {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 1024px), (pointer: coarse) {
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes {
+    padding-right: 2px !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+  }
+  #btnWriteSpeak,
+  #btnWriteSubmit,
+  #btnWriteNext,
+  #btnWriteRestart,
+  #btnWriteToFlash {
+    min-height: 44px;
+  }
+  .quizlet-write-box .cyrillic-key {
+    min-width: 44px;
+    min-height: 44px;
+    padding: 6px 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+@media (max-width: 768px) {
+  .quizlet-write-box {
+    padding: 20px 14px;
+  }
+  .quizlet-write-box .write-prompt-meaning {
+    font-size: 1.3rem;
+    line-height: 1.35;
+  }
+  .quizlet-write-box .write-input-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .quizlet-write-box .write-input,
+  .quizlet-write-box #btnWriteSubmit {
+    width: 100%;
+    min-height: 46px;
+    justify-content: center;
+  }
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-shrink: 1 !important;
+    padding-right: 2px !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+  }
+  .rusi-workspace-back-bar.rusi-quizlet-bar .rusi-topbar-modes::-webkit-scrollbar {
+    display: none !important;
+  }
+}

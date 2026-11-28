@@ -107,6 +107,9 @@ function initVocabPage() {
             <button type="button" class="quizlet-mode-btn" data-mode="learn" title="Trắc nghiệm">
               ${window.RusiIcons ? RusiIcons.get("brain", { size: 16 }) : ""} <span class="btn-text">Trắc nghiệm</span>
             </button>
+            <button type="button" class="quizlet-mode-btn" data-mode="write" title="Gõ từ & Chính tả">
+              ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 16 }) : ""} <span class="btn-text">Gõ từ</span>
+            </button>
             <button type="button" class="quizlet-mode-btn" data-mode="match" title="Ghép từ">
               ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} <span class="btn-text">Ghép từ</span>
             </button>
@@ -1492,7 +1495,7 @@ const showTopicArticle = (jarId) => {
             <span class="rusi-workspace-title">${window.RusiIcons ? RusiIcons.get(jar.icon || "archive-jar", { size: 18 }) : ""} ${esc(jar.name)}</span>
           </div>
 
-          <!-- 4 CHẾ ĐỘ HỌC TẬP GOM TRỰC TIẾP VÀO 1 DÒNG TOP BAR DUY NHẤT -->
+          <!-- 5 CHẾ ĐỘ HỌC TẬP GOM TRỰC TIẾP VÀO 1 DÒNG TOP BAR DUY NHẤT -->
           <div class="quizlet-mode-bar rusi-topbar-modes" id="rusiTopbarModes">
             <button type="button" class="quizlet-mode-btn ${initialMode === "list" ? "active" : ""}" data-mode="list" title="Danh sách từ (${(jar.words || []).length})">
               ${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 16 }) : ""} <span class="btn-text">Danh sách (${(jar.words || []).length})</span>
@@ -1502,6 +1505,9 @@ const showTopicArticle = (jarId) => {
             </button>
             <button type="button" class="quizlet-mode-btn ${initialMode === "learn" ? "active" : ""}" data-mode="learn" title="Trắc nghiệm">
               ${window.RusiIcons ? RusiIcons.get("brain", { size: 16 }) : ""} <span class="btn-text">Trắc nghiệm</span>
+            </button>
+            <button type="button" class="quizlet-mode-btn ${initialMode === "write" ? "active" : ""}" data-mode="write" title="Gõ từ & Chính tả">
+              ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 16 }) : ""} <span class="btn-text">Gõ từ</span>
             </button>
             <button type="button" class="quizlet-mode-btn ${initialMode === "match" ? "active" : ""}" data-mode="match" title="Ghép từ">
               ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} <span class="btn-text">Ghép từ</span>
