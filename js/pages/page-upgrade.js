@@ -70,8 +70,9 @@ function initUpgradePage() {
         </div>
 
         ${isPro ? `
-          <div class="upgrade-pro-active-box">
+          <div class="upgrade-pro-active-box" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             <span>${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Gói đang dùng: <b>${esc(proInfo ? proInfo.pkgTitle : "PRO")}</b> (${esc((proInfo && proInfo.expiresFormatted) || "Đang kích hoạt")})</span>
+            <button type="button" class="btn btn-sm btn-outline" id="btnUpgradeManagePro" style="min-height:44px">Quản lý gói</button>
           </div>
         ` : `
           <div class="upgrade-discount-countdown">
@@ -354,7 +355,8 @@ function initUpgradePage() {
       };
     });
 
-    const manageBtn = host.querySelector("#btnManageUpgradePage");
+    // Id riêng: #btnManageUpgradePage là link trong modal Quản lý gói (app.js) — trùng id sẽ làm modal bắt nhầm nút
+    const manageBtn = host.querySelector("#btnUpgradeManagePro");
     if (manageBtn) {
       manageBtn.onclick = () => {
         if (typeof Monetization !== "undefined") {

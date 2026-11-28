@@ -1117,6 +1117,18 @@ const Monetization = {
       activatedAt: null
     };
 
+    // Tên gói thật: chỉ khi đã biết chắc gói đang dùng (đơn đã xác nhận), không đoán theo gói mặc định
+    const confirmedPkgId = STORE.get("pro_active_pkg", null);
+    const confirmedPkg = confirmedPkgId && Array.isArray(window.PACKAGES) ? window.PACKAGES.find((p) => p && p.id === confirmedPkgId) : null;
+    if (confirmedPkg && (confirmedPkg.title || confirmedPkg.name)) proData.pkgTitle = confirmedPkg.title || confirmedPkg.name;
+
+    // Số ngày còn lại (làm tròn lên; 0 = hết hạn trong hôm nay)
+    let daysRemaining = null;
+    if (proData.expiresAt && !proData.isLifetime) {
+      const ms = new Date(proData.expiresAt).getTime() - Date.now();
+      if (Number.isFinite(ms)) daysRemaining = Math.max(0, Math.ceil(ms / 86400000));
+    }
+
     let expiresFormatted = "Đang kích hoạt";
     if (proData.isLifetime || proData.pkgId === "pro_vip") {
       expiresFormatted = "Vĩnh viễn (Trọn đời)";
@@ -1133,6 +1145,7 @@ const Monetization = {
       pkgTitle: proData.pkgTitle || "Gói PRO",
       expiresAt: proData.expiresAt,
       expiresFormatted,
+      daysRemaining,
       isLifetime: Boolean(proData.isLifetime || proData.pkgId === "pro_vip"),
       activatedAt: proData.activatedAt
     };
@@ -1610,8 +1623,10 @@ const Monetization = {
         }
         const confirmBtnEl = document.getElementById("btnConfirmPaid");
         if (confirmBtnEl) {
-          confirmBtnEl.disabled = true;
-          confirmBtnEl.textContent = "Phiên thanh toán đã hết hạn";
+          // Mã hết hạn → tạo đơn mới ngay trong modal (PROJECT_SPEC: nút [Tạo mã thanh toán mới])
+          confirmBtnEl.disabled = false;
+          confirmBtnEl.textContent = "Tạo mã thanh toán mới";
+          confirmBtnEl.onclick = () => this.openUpgradeModal(currentPkg.id);
         }
         modal.querySelectorAll("[data-pkg-select]").forEach(b => b.disabled = true);
         toast("Phiên thanh toán đã hết hạn — Vui lòng tạo lại mã đơn mới.");
