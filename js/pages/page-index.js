@@ -20,7 +20,23 @@ function initIndexPage() {
     diagBtn.onclick = () => {
       if (typeof window.openDiagnosticTestModal === "function") {
         window.openDiagnosticTestModal();
+        return;
       }
+      // Modal bài test nằm trong page-shop.js (trang chủ không nạp sẵn) → nạp khi bấm lần đầu
+      if (diagBtn.dataset.loading) return;
+      diagBtn.dataset.loading = "1";
+      const s = document.createElement("script");
+      s.src = (typeof window.getRusiAppRoot === "function" ? window.getRusiAppRoot() : "") + "js/pages/page-shop.js?v=12.1";
+      s.onload = () => {
+        delete diagBtn.dataset.loading;
+        if (typeof window.openDiagnosticTestModal === "function") window.openDiagnosticTestModal();
+      };
+      s.onerror = () => {
+        delete diagBtn.dataset.loading;
+        console.error("[Diagnostic] Không tải được page-shop.js");
+        if (typeof toast === "function") toast("Không tải được bài kiểm tra, vui lòng thử lại.");
+      };
+      document.head.appendChild(s);
     };
   }
 
