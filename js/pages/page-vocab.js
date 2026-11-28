@@ -25,7 +25,7 @@ function initVocabPage() {
   window.exitSrsToVocab = showMainLayout;
   let srsReviewSnapshot = null;
 
-  const showSrsWorkspace = () => {
+  const showSrsWorkspace = (focusRu = null) => {
     if (window.setRusiDeepUrl) {
       window.setRusiDeepUrl('/vocabulary/srs');
     }
@@ -45,7 +45,14 @@ function initVocabPage() {
     if (typeof SRS !== "undefined" && SRS.getState) {
       try {
         const st = SRS.getState();
-        const dueCards = SRS.getDueCards(st, 50);
+        let dueCards = SRS.getDueCards(st, 50) || [];
+        // "Ôn ngay" một từ cụ thể: từ đó đứng đầu phiên (kể cả khi nằm ngoài 50 thẻ đến hạn đầu tiên)
+        if (focusRu && typeof SRS._norm === "function") {
+          const fNorm = SRS._norm(focusRu);
+          const fIdx = dueCards.findIndex(c => SRS._norm(c.ru) === fNorm);
+          const focusCard = fIdx >= 0 ? dueCards[fIdx] : Object.values(st.cards || {}).find(c => c && SRS._norm(c.ru) === fNorm && !c.mastered);
+          if (focusCard) dueCards = [focusCard].concat(dueCards.filter((c, i) => i !== fIdx));
+        }
         if (dueCards && dueCards.length) {
           reviewWords = dueCards.map(c => {
             const orig = wordMap.get((c.ru || "").toLowerCase().trim()) || {};
@@ -983,8 +990,10 @@ function initVocabPage() {
           const ru = btn.dataset.ru;
           if (!ru) return;
           let list = (typeof STORE !== "undefined") ? STORE.get("vocab_mastered_words", []) : [];
-          const normRu = ru.toLowerCase().trim();
-          list = list.filter(w => (w || "").toLowerCase().trim() !== normRu);
+          // So khớp như SRS._norm (bỏ dấu trọng âm) — không thì hủy thuộc từ có dấu nhấn thất bại âm thầm
+          const normWord = (w) => (typeof SRS !== "undefined" && typeof SRS._norm === "function") ? SRS._norm(w) : String(w || "").replace(/[\u0300\u0301]/g, "").toLowerCase().trim();
+          const normRu = normWord(ru);
+          list = list.filter(w => normWord(w) !== normRu);
           if (typeof STORE !== "undefined") STORE.set("vocab_mastered_words", list);
           if (typeof SRS !== "undefined" && typeof SRS.unmarkMastered === "function") {
             // Truyền chữ tiếng Nga: unmarkMastered tự tìm thẻ dù id là "srs_..." hay "srsd_<dk>"
@@ -1003,7 +1012,8 @@ function initVocabPage() {
         btn.onclick = (e) => {
           e.stopPropagation();
           modal.remove();
-          if (typeof showSrsWorkspace === "function") showSrsWorkspace();
+          // Ôn ngay đúng từ vừa bấm: đưa từ đó lên đầu phiên ôn
+          if (typeof showSrsWorkspace === "function") showSrsWorkspace(btn.dataset.ru || null);
         };
       });
 
@@ -1508,7 +1518,7 @@ const showTopicArticle = (jarId) => {
             </button>
             ${isCustom ? `
               <button type="button" class="btn btn-outline btn-sm rusi-top-btn" id="btnAddWordCustom" title="Thêm từ mới">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"}</button>
-              <button type="button" class="btn btn-soft btn-sm rusi-top-btn" id="btnDeleteCustomJar" style="color:var(--red)" title="Xóa lọ này">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""}</button>
+              ${jar.id !== "custom-jar-default" ? `<button type="button" class="btn btn-soft btn-sm rusi-top-btn" id="btnDeleteCustomJar" style="color:var(--red)" title="Xóa lọ này">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 14 }) : ""}</button>` : ""}
             ` : `
               <button type="button" class="btn btn-soft btn-sm rusi-top-btn" id="btnViewArticleFromJar" title="Xem bài học chủ đề">${window.RusiIcons ? RusiIcons.get("book-open", { size: 14 }) : ""}</button>
             `}
@@ -1543,6 +1553,7 @@ const showTopicArticle = (jarId) => {
         const btnDel = el("#btnDeleteCustomJar");
         if (btnDel) {
           btnDel.onclick = () => {
+            if (jar.id === "custom-jar-default") return; // Lọ yêu thích mặc định: không cho xoá
             if (confirm(`Bạn có chắc muốn xóa lọ “${jar.name}” không?`)) {
               let jars = STORE.get("custom_jars", []);
               jars = jars.filter(j => j.id !== jar.id);
