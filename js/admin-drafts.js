@@ -23,7 +23,7 @@
   const A = () => window.RusiAdmin || {};
   const S = () => window.State || {};
   const sbClient = () => (window.SupabaseSyncEngine && window.SupabaseSyncEngine.getClient ? window.SupabaseSyncEngine.getClient() : null);
-  const esc = (s) => (A().esc ? A().esc(s) : String(s == null ? "" : s));
+  const esc = (s) => (A().esc ? A().esc(s) : String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])));
   const k2 = (collection, docKey) => `${collection}|${docKey}`;
   const fmtTime = (iso) => {
     if (!iso) return "";

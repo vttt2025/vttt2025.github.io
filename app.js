@@ -2490,8 +2490,8 @@ function renderUserArea() {
     : `<span class="user-avatar user-avatar-fallback ${isPro ? "is-pro" : ""}">${esc(initials)}</span>`;
   const shortName = (user.name || "Học viên").split(/\s+/)[0];
 
-  const adminEmails = (window.ADMIN_EMAILS || []).map((e) => String(e).toLowerCase().trim());
-  const isAdmin = user.email && adminEmails.includes(String(user.email).toLowerCase().trim());
+  // Chỉ để ẩn/hiện link CMS: theo role phía server (profiles.role), không theo email; quyền thật do RLS/is_admin() kiểm tra
+  const isAdmin = ["academic_admin", "super_admin"].includes(String(user.role || "").toLowerCase().trim());
 
   host.innerHTML = `
     <div class="user-area-authenticated">
