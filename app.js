@@ -984,39 +984,17 @@ const MascotRusika = {
 
       const reply = this.generateAiReply(text);
 
-      // Thưởng +5 XP khi học tập tương tác cùng AI
-      const newXp = xp + 5;
-      STORE.set("xp", newXp);
-      const newLvl = this.getLevel(newXp);
-      const levelUp = newLvl > oldLvl;
-
+      // Chat với Rusika không cộng XP (XP chỉ đến từ hoạt động học có kiểm chứng)
       const aiMsg = document.createElement("div");
       aiMsg.className = "chat-msg msg-ai";
       aiMsg.innerHTML = `
-        <div class="msg-avatar">${this.getSvg(newLvl, season, 32)}</div>
+        <div class="msg-avatar">${this.getSvg(oldLvl, season, 32)}</div>
         <div class="msg-bubble">
           <div class="reply-title"><b>${esc(reply.title)}</b></div>
           <div class="reply-text">${reply.text.replace(/\n/g, "<br>")}</div>
-          <div class="reply-xp-tag">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 14 }) : ""} +5 XP tương tác học cùng Rusika! (Tổng: ${newXp} XP)</div>
         </div>
       `;
       messages.appendChild(aiMsg);
-
-      // Nếu lên cấp -> Bắn pháo hoa chúc mừng tiến hóa
-      if (levelUp) {
-        const evoInfo = this.getLevelInfo(newXp);
-        const evoMsg = document.createElement("div");
-        evoMsg.className = "chat-msg msg-levelup";
-        evoMsg.innerHTML = `
-          <div class="levelup-card">
-            <div class="levelup-cat">${this.getSvg(newLvl, season, 64)}</div>
-            <div class="levelup-title">${window.RusiIcons ? RusiIcons.get("trophy-reward", { size: 24 }) : ""} CHÚC MỪNG! MÈO RUSIKA ĐÃ TIẾN HÓA! ${window.RusiIcons ? RusiIcons.get("trophy-reward", { size: 24 }) : ""}</div>
-            <div class="levelup-desc">Bạn đã đạt <b>${newXp} XP</b> và mở khóa <b>${esc(evoInfo.title)}</b>! ${esc(evoInfo.badge)}</div>
-          </div>
-        `;
-        messages.appendChild(evoMsg);
-        if (typeof toast === "function") toast(`Mèo Rusika đã tiến hóa lên Cấp ${newLvl}!`);
-      }
 
       this.updateAllViews();
       messages.scrollTop = messages.scrollHeight;
