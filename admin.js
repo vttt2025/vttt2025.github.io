@@ -4,10 +4,9 @@
  * Architecture based on Payload CMS (payloadcms.com) v3 Open Source:
  * - Reactive State Engine (State.currentDraft with two-way binding)
  * - Complete Array Builder Suite (TRKI Parts, Vocab Words, Listening Dialogs, Speaking Sets)
- * - Hash Router (Dashboard, Collection List, Document 2-Column Editor, Globals, API Explorer, Supabase Sync)
+ * - Hash Router (Dashboard, Collection List, Document 2-Column Editor, Supabase Sync)
  * - Payload Table with Search, Level/PRO Filters, Bulk Operations, Pagination
  * - Payload 3.0 Live Preview Split Drawer with context URL injection
- * - Interactive REST API & Schema Explorer with live JSON viewer & cURL generator
  * - Supabase Cloud PostgreSQL Sync & In-place Runtime Mutation (window.mergeAdminData)
  * - Full Mobile/Tablet Responsiveness & "More..." Kebab Overflow Pattern
  */
@@ -2217,14 +2216,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       }
       return { route: "list", slug: parts[1], searchQuery, hashPath: hash };
     }
-    if (parts[0] === "globals" && parts[1]) {
-      return { route: "globals", slug: parts[1] };
-    }
     if (parts[0] === "supabase-sync") {
       return { route: "supabase-sync" };
-    }
-    if (parts[0] === "api-explorer") {
-      return { route: "api-explorer" };
     }
     if (parts[0] === "monitor") {
       return { route: "monitor" };
@@ -2373,12 +2366,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       if (window.RusiAdminMonitor) window.RusiAdminMonitor.render(container);
     } else if (State.currentRoute === "grading") {
       if (window.RusiAdminGrading) window.RusiAdminGrading.render(container);
-    } else if (State.currentRoute === "globals") {
-      renderGlobalsView(container, State.currentSlug);
     } else if (State.currentRoute === "supabase-sync") {
       renderSupabaseSyncView(container);
-    } else if (State.currentRoute === "api-explorer") {
-      renderApiExplorer(container);
     }
 
     closeMobileSidebar();
@@ -2442,9 +2431,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
       if (State.currentRoute === "dashboard" && target === "dashboard") isActive = true;
       else if ((State.currentRoute === "list" || State.currentRoute === "editor") && target === `collection:${State.currentSlug}`) isActive = true;
-      else if (State.currentRoute === "globals" && target === `globals:${State.currentSlug}`) isActive = true;
       else if (State.currentRoute === "supabase-sync" && target === "supabase-sync") isActive = true;
-      else if (State.currentRoute === "api-explorer" && target === "api-explorer") isActive = true;
       else if (State.currentRoute === "monitor" && target === "monitor") isActive = true;
       else if (State.currentRoute === "grading" && target === "grading") isActive = true;
 
@@ -2479,23 +2466,11 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         ${sep}
         <span class="payload-crumb-item active">${title} ${statusPill}</span>
       `;
-    } else if (State.currentRoute === "globals") {
-      nav.innerHTML = `
-        <a class="payload-crumb-item" href="#dashboard">${homeIcon} Dashboard</a>
-        ${sep}
-        <span class="payload-crumb-item active">Cấu hình hệ thống</span>
-      `;
     } else if (State.currentRoute === "supabase-sync") {
       nav.innerHTML = `
         <a class="payload-crumb-item" href="#dashboard">${homeIcon} Dashboard</a>
         ${sep}
         <span class="payload-crumb-item active">Supabase Cloud Engine</span>
-      `;
-    } else if (State.currentRoute === "api-explorer") {
-      nav.innerHTML = `
-        <a class="payload-crumb-item" href="#dashboard">${homeIcon} Dashboard</a>
-        ${sep}
-        <span class="payload-crumb-item active">REST API & Schema Explorer</span>
       `;
     } else if (State.currentRoute === "monitor") {
       nav.innerHTML = `
@@ -10272,60 +10247,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
   }
 
   // =========================================================================
-  // 12. VIEW 5: REST API & SCHEMA EXPLORER
-  // =========================================================================
-
-  function renderApiExplorer(container) {
-    const origin = window.location.origin;
-    let cardsHtml = "";
-
-    COLLECTION_KEYS.forEach((key) => {
-      const col = COLLECTIONS[key];
-      const items = getMergedList(key);
-      const restPath = `/api/${col.slug.toLowerCase().replace(/_/g, "-")}`;
-
-      cardsHtml += `
-        <div style="background:var(--p-surface-elevated);border:1px solid var(--p-border);border-radius:var(--p-radius-lg);padding:18px;margin-bottom:16px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <span class="p-pill p-pill-info" style="font-size:11px">GET</span>
-              <code style="font-size:14px;font-weight:700">${restPath}</code>
-              <span class="p-pill p-pill-neutral">${items.length} tài liệu</span>
-            </div>
-            <div style="display:flex;gap:6px">
-              <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="navigator.clipboard.writeText('curl -X GET ${origin}${restPath}');window.toast('Đã copy cURL command!')">Copy cURL</button>
-              <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.downloadCollectionJson('${col.slug}')">${window.RusiIcons ? RusiIcons.get("cloud-download", { size: 14 }) : ""} Tải JSON</button>
-              <button class="p-btn p-btn-ghost p-btn-sm" type="button" onclick="document.getElementById('apiJson_${col.slug}').style.display = document.getElementById('apiJson_${col.slug}').style.display === 'none' ? 'block' : 'none'">Xem JSON ${window.RusiIcons ? RusiIcons.get("chevron-down", { size: 12 }) : ""}</button>
-            </div>
-          </div>
-          <p style="font-size:12.5px;color:var(--p-text-muted);margin:0 0 10px 0">${esc(col.desc || "REST endpoint simulation.")}</p>
-          <div id="apiJson_${col.slug}" style="display:none;margin-top:10px">
-            <textarea class="payload-code-editor" style="min-height:160px" readonly>${esc(JSON.stringify({ total: items.length, docs: items.map(stripSource) }, null, 2))}</textarea>
-          </div>
-        </div>
-      `;
-    });
-
-    container.innerHTML = `
-      <div style="margin-bottom:24px">
-        <h1 style="font-size:24px;font-weight:800;margin:0 0 6px 0;display:flex;align-items:center;gap:10px">${window.RusiIcons ? RusiIcons.get("waveform-audio", { size: 24 }) : ""} Payload REST API & Schema Explorer</h1>
-        <p style="color:var(--p-text-muted);font-size:13.5px;margin:0">Mô phỏng các điểm cuối REST và GraphQL của Payload CMS. Hỗ trợ truy vấn dữ liệu từ xa cho ứng dụng Mobile hoặc Web bên ngoài.</p>
-      </div>
-
-      <div>
-        ${cardsHtml}
-      </div>
-    `;
-  }
-
-  window.downloadCollectionJson = function (slug) {
-    const items = getMergedList(slug).map(stripSource);
-    const content = JSON.stringify(items, null, 2);
-    downloadFile(`rusitrki-${slug.toLowerCase()}.json`, content, "application/json");
-  };
-
-  // =========================================================================
-  // 13. VIEW 6: SUPABASE CLOUD & GLOBALS
+  // 13. VIEW 6: SUPABASE CLOUD
   // =========================================================================
 
   function renderSupabaseSyncView(container) {
@@ -10642,191 +10564,6 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     } catch (err) {
       toast(`Lỗi kéo dữ liệu: ${err.message}`, "error");
     }
-  };
-
-  function renderGlobalsView(container, slug) {
-    const store = loadAdminStore();
-    const settings = store.__siteSettings || {
-      site_title: "RUSI TRKI — Nền tảng Ôn thi & Du học Nga",
-      slogan: "Chinh phục tiếng Nga từ số 0 đến B2",
-      contact_zalo: "0988.xxx.xxx",
-      contact_email: "support@rusitrki.com",
-      social_telegram: "https://t.me/rusitrki",
-      social_facebook: "https://facebook.com/rusitrki",
-      social_youtube: "https://youtube.com/@rusitrki",
-      bank_name: "MB Bank (Quân Đội)",
-      bank_account: "0988888888",
-      bank_holder: "RUSI TRKI VIETNAM",
-      transfer_syntax: "RUSI PRO {user_id}",
-      banner_enabled: true,
-      banner_text: "🔥 Ưu đãi 50% Gói PRO Chinh phục TRKI B2 - Mở khóa toàn bộ ngân hàng đề thi!",
-      banner_link: "upgrade.html",
-      rusika_greeting: "Привет! Hôm nay bạn muốn chinh phục bài học nào cùng Rusika?",
-      rusika_motivation: "Mỗi ngày 15 phút, chứng chỉ TRKI nằm trong tầm tay bạn!",
-      xp_per_lesson: 15,
-      streak_milestone_bonus: 50,
-      pomodoro_work_mins: 25,
-      pomodoro_break_mins: 5
-    };
-
-    container.innerHTML = `
-      <div style="margin-bottom:24px">
-        <h1 style="font-size:24px;font-weight:800;margin:0 0 6px 0;display:flex;align-items:center;gap:10px">${window.RusiIcons ? RusiIcons.get("settings-gear", { size: 24 }) : ""} Cấu hình Hệ thống Toàn diện (Globals)</h1>
-        <p style="color:var(--p-text-muted);font-size:13.5px;margin:0">Cấu hình thông tin thương hiệu, tài khoản VietQR, thanh thông báo banner và trợ lý AI Mèo Rusika.</p>
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:20px;max-width:960px;">
-        <!-- Card 1: Thương hiệu & Liên hệ -->
-        <div class="payload-doc-card">
-          <h2 style="font-size:16px;font-weight:700;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--p-border-subtle, rgba(0,0,0,0.08))">
-            ${window.RusiIcons ? RusiIcons.get("globe", { size: 18 }) : "🌐"} 1. Thương hiệu &amp; Kênh liên hệ
-          </h2>
-          <div class="p-form-row">
-            <div>
-              <label class="p-label">Tên Website:</label>
-              <input type="text" class="p-input" id="cfgSiteTitle" value="${escAttr(settings.site_title || '')}" />
-            </div>
-            <div>
-              <label class="p-label">Khẩu hiệu Slogan:</label>
-              <input type="text" class="p-input" id="cfgSlogan" value="${escAttr(settings.slogan || '')}" />
-            </div>
-          </div>
-          <div class="p-form-row" style="margin-top:12px">
-            <div>
-              <label class="p-label">Hotline / Zalo hỗ trợ:</label>
-              <input type="text" class="p-input" id="cfgZalo" value="${escAttr(settings.contact_zalo || '')}" />
-            </div>
-            <div>
-              <label class="p-label">Email hỗ trợ:</label>
-              <input type="text" class="p-input" id="cfgEmail" value="${escAttr(settings.contact_email || '')}" />
-            </div>
-          </div>
-          <div class="p-form-row" style="margin-top:12px">
-            <div>
-              <label class="p-label">Kênh Telegram:</label>
-              <input type="text" class="p-input" id="cfgTelegram" value="${escAttr(settings.social_telegram || '')}" placeholder="https://t.me/..." />
-            </div>
-            <div>
-              <label class="p-label">Facebook Fanpage:</label>
-              <input type="text" class="p-input" id="cfgFacebook" value="${escAttr(settings.social_facebook || '')}" placeholder="https://facebook.com/..." />
-            </div>
-          </div>
-        </div>
-
-        <!-- Card 2: Tài khoản VietQR & Ngân hàng -->
-        <div class="payload-doc-card">
-          <h2 style="font-size:16px;font-weight:700;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--p-border-subtle, rgba(0,0,0,0.08))">
-            ${window.RusiIcons ? RusiIcons.get("credit-card", { size: 18 }) : "💳"} 2. Cổng thanh toán &amp; Tài khoản VietQR
-          </h2>
-          <div class="p-form-row">
-            <div>
-              <label class="p-label">Ngân hàng:</label>
-              <input type="text" class="p-input" id="cfgBankName" value="${escAttr(settings.bank_name || '')}" placeholder="MB Bank, Vietcombank..." />
-            </div>
-            <div>
-              <label class="p-label">Số tài khoản:</label>
-              <input type="text" class="p-input" id="cfgBankAccount" value="${escAttr(settings.bank_account || '')}" />
-            </div>
-            <div>
-              <label class="p-label">Tên chủ tài khoản:</label>
-              <input type="text" class="p-input" id="cfgBankHolder" value="${escAttr(settings.bank_holder || '')}" />
-            </div>
-          </div>
-          <div style="margin-top:12px">
-            <label class="p-label">Cú pháp chuyển khoản mẫu:</label>
-            <input type="text" class="p-input" id="cfgTransferSyntax" value="${escAttr(settings.transfer_syntax || 'RUSI PRO {user_id}')}" />
-            <div class="p-help">Hệ thống sẽ thay thế <code>{user_id}</code> bằng mã học viên tương ứng khi tạo mã QR VietQR.</div>
-          </div>
-        </div>
-
-        <!-- Card 3: Thanh thông báo đầu trang (Announcement Banner) -->
-        <div class="payload-doc-card">
-          <h2 style="font-size:16px;font-weight:700;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--p-border-subtle, rgba(0,0,0,0.08))">
-            ${window.RusiIcons ? RusiIcons.get("bell", { size: 18 }) : "📢"} 3. Thanh thông báo khuyến mãi (Announcement Banner)
-          </h2>
-          <div style="margin-bottom:12px">
-            <label style="display:inline-flex;align-items:center;gap:8px;font-weight:600;cursor:pointer">
-              <input type="checkbox" id="cfgBannerEnabled" ${settings.banner_enabled ? "checked" : ""} style="width:18px;height:18px" />
-              <span>Hiển thị thanh thông báo khuyến mãi ở đầu toàn bộ các trang</span>
-            </label>
-          </div>
-          <div class="p-form-group">
-            <label class="p-label">Nội dung thông báo:</label>
-            <input type="text" class="p-input" id="cfgBannerText" value="${escAttr(settings.banner_text || '')}" placeholder="Ví dụ: 🔥 Ưu đãi 50% Gói PRO Chinh phục TRKI B2..." />
-          </div>
-          <div class="p-form-group">
-            <label class="p-label">Link chuyển hướng khi click:</label>
-            <input type="text" class="p-input" id="cfgBannerLink" value="${escAttr(settings.banner_link || 'upgrade.html')}" placeholder="upgrade.html hoặc https://..." />
-          </div>
-        </div>
-
-        <!-- Card 4: Trợ lý ảo AI Mèo Rusika & Gamification -->
-        <div class="payload-doc-card">
-          <h2 style="font-size:16px;font-weight:700;margin:0 0 16px 0;display:flex;align-items:center;gap:8px;padding-bottom:10px;border-bottom:1px solid var(--p-border-subtle, rgba(0,0,0,0.08))">
-            ${window.RusiIcons ? RusiIcons.get("cat-mascot", { size: 18 }) : "🐱"} 4. Trợ lý AI Mèo Rusika &amp; Gamification (XP / Streak)
-          </h2>
-          <div class="p-form-group">
-            <label class="p-label">Lời chào mặc định của Mèo Rusika:</label>
-            <input type="text" class="p-input" id="cfgRusikaGreeting" value="${escAttr(settings.rusika_greeting || '')}" />
-          </div>
-          <div class="p-form-group">
-            <label class="p-label">Khẩu hiệu động viên hàng ngày:</label>
-            <input type="text" class="p-input" id="cfgRusikaMotivation" value="${escAttr(settings.rusika_motivation || '')}" />
-          </div>
-          <div class="p-form-row">
-            <div>
-              <label class="p-label">Điểm thưởng XP mỗi bài học:</label>
-              <input type="number" class="p-input" id="cfgXpPerLesson" value="${escAttr(settings.xp_per_lesson || 15)}" />
-            </div>
-            <div>
-              <label class="p-label">Thưởng chuỗi Streak 7 ngày (XP):</label>
-              <input type="number" class="p-input" id="cfgStreakBonus" value="${escAttr(settings.streak_milestone_bonus || 50)}" />
-            </div>
-            <div>
-              <label class="p-label">Thời gian Pomodoro (phút):</label>
-              <input type="number" class="p-input" id="cfgPomodoroMins" value="${escAttr(settings.pomodoro_work_mins || 25)}" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Submit Button -->
-        <div style="display:flex;justify-content:flex-end">
-          <button class="p-btn p-btn-primary p-btn-lg" type="button" onclick="window.saveSiteSettings()">${window.RusiIcons ? RusiIcons.get("save", { size: 16 }) : ""} Lưu toàn bộ cấu hình hệ thống</button>
-        </div>
-      </div>
-    `;
-  }
-
-  window.saveSiteSettings = function () {
-    const store = loadAdminStore();
-    const settings = {
-      site_title: document.getElementById("cfgSiteTitle")?.value || "",
-      slogan: document.getElementById("cfgSlogan")?.value || "",
-      contact_zalo: document.getElementById("cfgZalo")?.value || "",
-      contact_email: document.getElementById("cfgEmail")?.value || "",
-      social_telegram: document.getElementById("cfgTelegram")?.value || "",
-      social_facebook: document.getElementById("cfgFacebook")?.value || "",
-      bank_name: document.getElementById("cfgBankName")?.value || "",
-      bank_account: document.getElementById("cfgBankAccount")?.value || "",
-      bank_holder: document.getElementById("cfgBankHolder")?.value || "",
-      transfer_syntax: document.getElementById("cfgTransferSyntax")?.value || "RUSI PRO {user_id}",
-      banner_enabled: Boolean(document.getElementById("cfgBannerEnabled")?.checked),
-      banner_text: document.getElementById("cfgBannerText")?.value || "",
-      banner_link: document.getElementById("cfgBannerLink")?.value || "upgrade.html",
-      rusika_greeting: document.getElementById("cfgRusikaGreeting")?.value || "",
-      rusika_motivation: document.getElementById("cfgRusikaMotivation")?.value || "",
-      xp_per_lesson: parseInt(document.getElementById("cfgXpPerLesson")?.value, 10) || 15,
-      streak_milestone_bonus: parseInt(document.getElementById("cfgStreakBonus")?.value, 10) || 50,
-      pomodoro_work_mins: parseInt(document.getElementById("cfgPomodoroMins")?.value, 10) || 25
-    };
-    store.__siteSettings = settings;
-    saveAdminStore(store);
-    try {
-      localStorage.setItem("rusi_site_settings", JSON.stringify(settings));
-    } catch (_) {}
-    window.SITE_SETTINGS = settings;
-    syncDataToWeb();
-    toast("Đã lưu toàn bộ cấu hình hệ thống thành công!");
   };
 
   // =========================================================================

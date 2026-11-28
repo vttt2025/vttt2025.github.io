@@ -1322,27 +1322,6 @@ body.payload-body {
   gap: 4px;
 }
 
-/* Code / JSON Editor */
-.payload-code-editor {
-  width: 100%;
-  font-family: var(--p-font-mono);
-  font-size: 12.5px;
-  line-height: 1.6;
-  background: #060911;
-  color: #a5b4fc;
-  border: 1px solid var(--p-border);
-  border-radius: var(--p-radius);
-  padding: 16px;
-  min-height: 380px;
-  resize: vertical;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
-}
-
-.payload-code-editor:focus {
-  outline: none;
-  border-color: var(--p-border-focus);
-}
-
 /* ==========================================================================
    VIEW 4: LIVE PREVIEW DRAWER (SIGNATURE PAYLOAD 3.0 STUDIO)
    ========================================================================== */
