@@ -37,11 +37,40 @@ function initWritingPage() {
   ];
 
   const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+  const isPreviewUrl = Boolean(urlParams && urlParams.get("preview") === "1");
   const initialMode = (urlParams && urlParams.get("mode")) ? urlParams.get("mode") : "picture";
   let currentMode = MODE_INFO[initialMode] ? initialMode : "picture";
   let cloudWriting = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("writing:all") : null;
 
   const icon = (name, size) => window.RusiIcons ? RusiIcons.get(name, { size }) : "";
+  const readWritingPreviewDraft = (targetId) => {
+    if (!isPreviewUrl) return null;
+    try {
+      const raw = sessionStorage.getItem("rusi_live_preview_draft") || localStorage.getItem("rusi_live_preview_draft");
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || parsed.slug !== "WRITING_TASKS" || !parsed.doc || typeof parsed.doc !== "object") return null;
+      const d = parsed.doc;
+      const docKey = String(parsed.docId || d.id || d.code || "").trim();
+      if (targetId && docKey && docKey !== String(targetId) && String(d.id || "") !== String(targetId) && String(d.code || "") !== String(targetId)) {
+        return null;
+      }
+      const cloned = JSON.parse(JSON.stringify(d));
+      cloned.id = cloned.id || cloned.code || targetId || "preview-writing";
+      cloned.code = cloned.code || cloned.id;
+      cloned.title = cloned.title || "Bản nháp luyện viết";
+      cloned.level = cloned.level || "A1";
+      cloned.prompt = cloned.prompt || cloned.prompt_text || "";
+      cloned.vi = cloned.vi || cloned.prompt_vi || "";
+      cloned.minWords = Number(cloned.minWords || cloned.min_words || 35) || 35;
+      cloned.content_locked = false;
+      cloned._isPreview = true;
+      return cloned;
+    } catch (err) {
+      console.warn("[LivePreview] Không đọc được bản nháp bài viết:", err);
+      return null;
+    }
+  };
   const getTasks = () => {
     if (cloudWriting && cloudWriting.length) return cloudWriting;
     if (typeof window !== "undefined" && window.WRITING_TASKS && window.WRITING_TASKS.length) return window.WRITING_TASKS;
@@ -417,14 +446,15 @@ function initWritingPage() {
   };
 
   const openWorkspace = (topic, initialTask) => {
-    if (window.setRusiDeepUrl && initialTask) {
+    const isPreviewSession = Boolean(initialTask && initialTask._isPreview);
+    if (!isPreviewSession && window.setRusiDeepUrl && initialTask) {
       window.setRusiDeepUrl('/writing/bai_viet/' + encodeURIComponent(initialTask.id || initialTask.code || (topic && topic.key)));
     }
-    if (typeof window.requireAuth === "function" && !window.requireAuth("writing.html?topic=" + encodeURIComponent((topic && (topic.key || topic.id || topic.title)) || ""))) return;
+    if (!isPreviewSession && typeof window.requireAuth === "function" && !window.requireAuth("writing.html?topic=" + encodeURIComponent((topic && (topic.key || topic.id || topic.title)) || ""))) return;
     // Đề PRO: file công khai chỉ có metadata — tải nội dung mọi đề khoá của chủ đề bằng phiên PRO rồi mở lại
     // (chưa PRO: chỉ xét đề đang mở, để vẫn mở được đề miễn phí trong chủ đề có đề PRO)
     const isProUser = typeof Monetization !== "undefined" && Monetization.isPro();
-    const lockedTasks = (isProUser ? ((topic && topic.tasks) || []) : []).concat(initialTask || []).filter((task) => task && task.content_locked);
+    const lockedTasks = isPreviewSession ? [] : (isProUser ? ((topic && topic.tasks) || []) : []).concat(initialTask || []).filter((task) => task && task.content_locked);
     if (lockedTasks.length && window.RusiProContent) {
       window.RusiProContent.ensureFullList("WRITING_TASKS", lockedTasks, { title: "Đề luyện viết dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ đề thi viết TRKI chuyên sâu và trợ lý AI chữa ngữ pháp 20 lượt mỗi ngày." })
         .then((ok) => { if (ok) openWorkspace(topic, initialTask); });
@@ -436,6 +466,7 @@ function initWritingPage() {
 
     const renderTask = () => {
       const t = currentTask;
+      const isPreviewTask = Boolean(isPreviewSession || (t && t._isPreview));
       const words = taskWords(t);
       const tips = taskTips(t);
       host.innerHTML = `
@@ -487,6 +518,15 @@ function initWritingPage() {
             <div class="writing-sidebar-scrim" id="writingSidebarScrim"></div>
 
             <section class="writing-practice-panel" data-writing-task="${esc(t.id)}">
+              ${isPreviewTask ? `
+                <div class="topic-preview-badge-row" role="status" style="margin-bottom:16px">
+                  <span aria-hidden="true">${icon("eye", 18) || "👁️"}</span>
+                  <div style="min-width:0;flex:1">
+                    <strong>Chế độ Xem trước CMS (Live Preview)</strong>
+                    <div style="font-size:0.8rem;opacity:0.9;font-weight:400">Đang hiển thị bản nháp chưa xuất bản từ CMS. Chế độ xem trước không lưu bài viết, tiến độ, XP hay gửi chấm AI.</div>
+                  </div>
+                </div>
+              ` : ""}
               ${taskMode(t) === "picture" ? `
                 <div class="writing-prompt-box">
                   <div class="writing-prompt-copy">
@@ -515,7 +555,7 @@ function initWritingPage() {
                 </div>
               </div>
 
-              <textarea class="write-area ru writing-input-textarea" placeholder="Пишите здесь...">${esc(STORE.get("write_" + t.id, ""))}</textarea>
+              <textarea class="write-area ru writing-input-textarea" placeholder="Пишите здесь...">${esc(isPreviewTask ? "" : STORE.get("write_" + t.id, ""))}</textarea>
               <div class="write-meta">
                 <span class="word-count">0 từ / tối thiểu ${minWords(t)} từ</span>
                 <span>${icon("check-circle-correct", 14)} Tự động lưu trên trình duyệt</span>
@@ -646,7 +686,7 @@ function initWritingPage() {
         area.value = area.value.slice(0, start) + text + area.value.slice(end);
         area.focus();
         area.selectionStart = area.selectionEnd = start + text.length;
-        STORE.set("write_" + t.id, area.value);
+        if (!isPreviewTask) STORE.set("write_" + t.id, area.value);
         updateCount();
       };
 
@@ -692,7 +732,7 @@ function initWritingPage() {
       }
 
       area.oninput = () => {
-        STORE.set("write_" + t.id, area.value);
+        if (!isPreviewTask) STORE.set("write_" + t.id, area.value);
         updateCount();
       };
       updateCount();
@@ -739,6 +779,15 @@ function initWritingPage() {
         const quotaBadge = panel.querySelector("#writingAiQuotaBadge");
         const quotaText = panel.querySelector("#writingAiQuotaText");
         if (!quotaText) return;
+        if (isPreviewTask) {
+          quotaText.innerHTML = `<span class="quota-txt" style="color:var(--muted)">Xem trước</span>`;
+          if (quotaBadge) {
+            quotaBadge.classList.remove("is-active", "is-empty");
+            quotaBadge.classList.add("is-off");
+            quotaBadge.title = "Chế độ Xem trước CMS: không gọi AI và không trừ lượt";
+          }
+          return;
+        }
         const curUser = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
         const isPro = typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : Boolean(curUser?.is_pro);
         if (!curUser) {
@@ -799,6 +848,10 @@ function initWritingPage() {
       }
 
       panel.querySelector(".btn-submit").onclick = async () => {
+        if (isPreviewTask) {
+          toast("Chế độ Xem trước CMS: không gửi chấm AI và không lưu tiến độ hay XP.");
+          return;
+        }
         const curUser = (window.Auth && window.Auth.user) || (typeof STORE !== "undefined" ? STORE.get("auth_user", null) : null);
         const isPro = typeof Monetization !== "undefined" && typeof Monetization.isPro === "function" ? Monetization.isPro() : Boolean(curUser?.is_pro);
 
@@ -1066,6 +1119,7 @@ function initWritingPage() {
   };
 
   const loadCloudWriting = async () => {
+    if (isPreviewUrl && document.body.classList.contains("in-workspace")) return;
     // 0-Egress rule: Nạp từ RAM/IndexedDB/CDN JSON trước, bỏ qua truy vấn Supabase nếu đã có đề viết
     if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("WRITING_TASKS")) {
       await window.RusiDataLoader.loadMultiple(["WRITING_TASKS", "WRITING_TOPICS"]);
@@ -1097,6 +1151,21 @@ function initWritingPage() {
     try {
       const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || (urlParams ? urlParams.get(k) : null);
       const targetTask = getParam("task") || getParam("id") || getParam("topic");
+      if (isPreviewUrl) {
+        const draftTask = readWritingPreviewDraft(targetTask);
+        if (draftTask) {
+          const mode = taskMode(draftTask);
+          currentMode = mode;
+          currentLevel = draftTask.level || currentLevel;
+          const previewTopic = {
+            key: draftTask.category || "preview",
+            name: draftTask.categoryName || draftTask.title || "Luyện viết",
+            tasks: [draftTask]
+          };
+          openWorkspace(previewTopic, draftTask);
+          return true;
+        }
+      }
       if (targetTask) {
         const allTasks = getTasks();
         const found = allTasks.find(t => t.id === targetTask || t.code === targetTask || (t.category && t.category === targetTask));
