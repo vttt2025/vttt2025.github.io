@@ -39326,6 +39326,10 @@ select.add-jar-input {
   .writing-cyr-key--space {
     grid-column: span 2;
   }
+  /* Hàng chức năng (Aa ␣ ⌫) luôn bắt đầu dòng mới, không dính sau chữ cuối */
+  .writing-cyr-key[data-action="shift"] {
+    grid-column-start: 1;
+  }
 }
 
 /* ==========================================================================
