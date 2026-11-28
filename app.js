@@ -1783,9 +1783,9 @@ const Monetization = {
             </div>
             <div class="manage-pro-btn-group">
               <button class="btn btn-outline btn-sm" id="btnCloseManageProBtn" type="button">Đóng</button>
-              <a class="btn btn-primary btn-sm" id="btnManageUpgradePage" href="upgrade.html" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">
+              ${proInfo.isLifetime ? "" : `<a class="btn btn-primary btn-sm" id="btnManageUpgradePage" href="upgrade.html" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px">
                 ${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 15 }) : ""} Gia hạn / Nâng cấp gói
-              </a>
+              </a>`}
             </div>
           </div>
         </div>

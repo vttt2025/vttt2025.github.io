@@ -116,6 +116,8 @@ function initUpgradePage() {
       <div class="pricing-grid" style="margin-bottom:60px">
         ${pkgs.map((pkg) => {
           const isCurrent = isPro && proInfo && (pkg.id || "").toLowerCase() === (proInfo.pkgId || "").toLowerCase();
+          // PRO trọn đời: không cần mua/gia hạn → ẩn nút "Kích hoạt ngay" (chỉ giao diện, không đổi logic thanh toán)
+          const hideBuy = Boolean(isPro && proInfo && proInfo.isLifetime);
           return `
           <div class="pricing-card ${pkg.popular ? "popular" : ""} ${isCurrent ? "is-current" : ""}">
             ${isCurrent ? `<div class="pricing-current-badge">GÓI ĐANG DÙNG</div>` : (pkg.popular ? `<div class="pricing-popular-badge" style="display:inline-flex;align-items:center;gap:5px">${window.RusiIcons ? RusiIcons.get("sparkles-clean", { size: 13 }) : ""} PHỔ BIẾN NHẤT</div>` : (pkg.id === "pro_1y" ? `<div class="pricing-popular-badge" style="background:linear-gradient(135deg, #10b981, #059669);display:inline-flex;align-items:center;gap:5px">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 13 }) : ""} GIÁ TRỊ CAO NHẤT</div>` : "")) }
@@ -135,7 +137,7 @@ function initUpgradePage() {
               <button class="btn btn-outline" disabled style="width:100%;background:rgba(16,185,129,0.1);color:#059669;border-color:#10b981;cursor:default;font-weight:800">
                 ${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Gói bạn đang sử dụng
               </button>
-            ` : `
+            ` : hideBuy ? "" : `
               <button class="btn ${pkg.popular ? "btn-primary" : "btn-outline"} btn-select-upgrade" data-pkg="${pkg.id}" style="width:100%;${pkg.popular ? "background:var(--secondary);border-color:var(--secondary);color:#fff" : ""}">
                 ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} Kích hoạt ngay
               </button>
