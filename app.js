@@ -3016,6 +3016,8 @@ function bindAuthToHeader() {
   const page = document.body ? document.body.dataset.page : "";
   const isStudyPage = STUDY_PAGES.some(p => page === p || (window.location && window.location.pathname.includes(p)));
   if (!isStudyPage) return;
+  // Xem trước nội dung từ CMS (?preview=1): không đếm thời gian học, không cộng XP/streak chuyên cần
+  try { if (new URLSearchParams(window.location.search).get("preview") === "1") return; } catch (_) {}
 
   const todayStr = (typeof getLocalDateString === "function") ? getLocalDateString() : new Date().toISOString().split("T")[0];
   const timeKey = "study_secs_" + todayStr;

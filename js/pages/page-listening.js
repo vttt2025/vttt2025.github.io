@@ -3226,7 +3226,14 @@ function initListeningPage() {
     let dictPlayToken = 0;       // mỗi lần phát một token: callback của lần phát cũ (TTS bị cancel, audio cũ) bị bỏ qua
     let dictCheckEnd = null;     // listener timeupdate của lần phát hiện tại (gỡ khi dừng)
     const hintedSentences = new Set(); // câu đã dùng gợi ý (Tab) trong phiên này → không cộng XP câu
-    const revealedSentences = new Set(); // câu đã bấm "Xem đáp án" → XP cả bài giảm theo tỉ lệ
+    // Câu đã bấm "Xem đáp án" → XP cả bài giảm theo tỉ lệ. Lưu theo bài để tải lại trang không xoá được;
+    // xoá khi hoàn thành bài hoặc bấm Luyện lại. Xem trước CMS: chỉ giữ trong RAM.
+    const revealedKey = "lis_dict_revealed_" + lesson.id;
+    const savedRevealed = isPreviewLesson ? [] : STORE.get(revealedKey, []);
+    const revealedSentences = new Set(Array.isArray(savedRevealed) ? savedRevealed.filter((i) => Number.isInteger(i)) : []);
+    const saveRevealed = () => {
+      if (!isPreviewLesson) STORE.set(revealedKey, revealedSentences.size ? Array.from(revealedSentences) : null);
+    };
 
     // Câu có mốc thời gian trong file audio cả bài → đoạn [start_sec, end_sec] để vẽ sóng và tính tiến độ
     const getSentenceSegment = (s) => (s && typeof s.start_sec === "number" && typeof s.end_sec === "number" && s.end_sec > s.start_sec)
@@ -3998,6 +4005,8 @@ function initListeningPage() {
           lessonRewardXp = allHinted ? 0 : Math.round(baseXp * (1 - revealedRatio));
           Progress.markDone("listenDone", lessonKey, { title: lesson.title, score: 100, xp: lessonRewardXp });
           if (lessonRewardXp) Progress.addXp(lessonRewardXp);
+          revealedSentences.clear();
+          saveRevealed();
         }
       }
 
@@ -4090,6 +4099,8 @@ function initListeningPage() {
           isRePracticing = true;
           showCompletedReview = false;
           rePracticeDone.clear();
+          revealedSentences.clear();
+          saveRevealed();
           currentSentenceIdx = 0;
           showAnswer = false;
           toast("Bắt đầu luyện tập lại bài học! 🎧");
@@ -4347,6 +4358,7 @@ function initListeningPage() {
           showAnswer = !showAnswer;
           if (showAnswer && !(isRePracticing ? rePracticeDone.has(currentSentenceIdx) : isSentenceDone(currentSentenceIdx))) {
             revealedSentences.add(currentSentenceIdx);
+            saveRevealed();
           }
           const box = host.querySelector("#dictInlineResult");
           if (box) box.classList.toggle("hidden", !showAnswer);

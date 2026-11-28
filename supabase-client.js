@@ -11,7 +11,7 @@
  *   - window.RusiSupabase.testConnection()
  *   - window.RusiSupabase.profile: { get, upsert, updateGamification }
  *   - window.RusiSupabase.jars: { getAll, save, delete, syncAll }
- *   - window.RusiSupabase.tests: { getPublished, saveResult, getHistory }
+ *   - window.RusiSupabase.tests: { getPublished }
  *   - window.RusiSupabase.questionBank: { getAll, getByTest, getRandom }
  *   - window.RusiSupabase.auth: { signInGoogle, signInEmail, signUpEmail, signOut, getSession }
  *   - window.RusiSupabase.orders: { createPending, checkStatus, createShopPending }
@@ -745,27 +745,6 @@
             return null;
           }
         });
-      },
-
-      saveResult: async function (userId, testId, resultData) {
-        var sb = getClient();
-        if (!sb || !userId || !isValidUUID(userId)) return false;
-        try {
-          var payload = {
-            user_id: userId,
-            exam_id: testId,
-            score_percent: Number(resultData.score || resultData.scorePercent) || 0,
-            passed: Boolean(resultData.passed),
-            section_scores: resultData.sectionScores || {},
-            user_answers: resultData.answers || resultData.userAnswers || {},
-            time_spent_sec: Number(resultData.timeSpent || resultData.timeSpentSeconds) || 0,
-            submitted_at: new Date().toISOString()
-          };
-          var res = await sb.from("trki_submissions").insert(payload);
-          return !res.error;
-        } catch (_) {
-          return false;
-        }
       }
     },
 
