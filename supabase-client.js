@@ -14,7 +14,7 @@
  *   - window.RusiSupabase.tests: { getPublished, saveResult, getHistory }
  *   - window.RusiSupabase.questionBank: { getAll, getByTest, getRandom }
  *   - window.RusiSupabase.auth: { signInGoogle, signInEmail, signUpEmail, signOut, getSession }
- *   - window.RusiSupabase.orders: { createPending, checkStatus, getMine }
+ *   - window.RusiSupabase.orders: { createPending, checkStatus, createShopPending }
  */
 
 (function () {
@@ -677,55 +677,6 @@
      * 2.1 KHO TỪ VỰNG THEO CHỦ ĐỀ & TỪ ĐIỂN (VOCABULARIES)
      * ========================================================================= */
     vocabularies: {
-      getByTopic: async function (topicId) {
-        return RusiSupabase.vocabularies.getByTopicCode(topicId);
-      },
-
-      getByTopicCode: async function (topicCode) {
-        if (!topicCode) return [];
-        return RusiCache.withCache("vocab:topic_code:" + topicCode, async function () {
-          var sb = getClient();
-          if (!sb) return [];
-          try {
-            var jarQ = sb.from("vocab_jars")
-              .select("id, code, jar_items(position, vocabularies(*))");
-            if (isValidUUID(topicCode)) {
-              jarQ = jarQ.or("id.eq." + topicCode + ",code.eq." + topicCode);
-            } else {
-              jarQ = jarQ.eq("code", topicCode);
-            }
-            var jarRes = await withTimeout(jarQ.maybeSingle(), 3500);
-            if (jarRes.error || !jarRes.data) return [];
-            var items = jarRes.data.jar_items || [];
-            items.sort(function (a, b) { return (a.position || 0) - (b.position || 0); });
-            return items.map(function (it) {
-              return mapVocabRow(it.vocabularies, it.position);
-            }).filter(Boolean);
-          } catch (_) {
-            return [];
-          }
-        });
-      },
-
-      getAll: async function (level) {
-        var cacheKey = "vocabularies:all:" + (level || "all");
-        return RusiCache.withCache(cacheKey, async function () {
-          var sb = getClient();
-          if (!sb) return [];
-          try {
-            var q = sb.from("vocabularies").select("*").order("word_normalized", { ascending: true });
-            if (level && level !== "all") q = q.eq("level", level);
-            var res = await withTimeout(q, 4000);
-            if (res.error || !res.data) return [];
-            return res.data.map(function (row, idx) {
-              return mapVocabRow(row, idx + 1);
-            });
-          } catch (_) {
-            return [];
-          }
-        });
-      },
-
       search: async function (keyword) {
         var sb = getClient();
         if (!sb || !keyword) return [];
@@ -742,50 +693,6 @@
         } catch (_) {
           return [];
         }
-      }
-    },
-
-    /* =========================================================================
-     * 2.2 BÀI HỌC CHỦ ĐỀ CHUYÊN SÂU (TOPIC ARTICLES)
-     * ========================================================================= */
-    topicArticles: {
-      getAll: async function () {
-        return RusiCache.withCache("topic_articles:all", async function () {
-          var sb = getClient();
-          if (!sb) return [];
-          try {
-            var res = await withTimeout(sb.from("topic_articles").select("*").order("id", { ascending: true }), 3500);
-            if (res.error || !res.data) return [];
-            return res.data.map(function (art) {
-              return {
-                id: art.id,
-                title: art.title,
-                level: art.level || "A1",
-                intro: art.intro || "",
-                desc: art.intro || "",
-                culturalTip: art.cultural_tip || "",
-                cultural_tip: art.cultural_tip || "",
-                audio_url: art.audio_url || "",
-                actionChains: Array.isArray(art.action_chains) ? art.action_chains : [],
-                action_chains: Array.isArray(art.action_chains) ? art.action_chains : [],
-                dialogues: Array.isArray(art.dialogues) ? art.dialogues : [],
-                grammarNotes: Array.isArray(art.grammar_notes) ? art.grammar_notes : [],
-                grammar_notes: Array.isArray(art.grammar_notes) ? art.grammar_notes : [],
-                content_md: art.content_md || "",
-                content_markdown: art.content_md || "",
-                content: art.content_md || ""
-              };
-            });
-          } catch (_) {
-            return [];
-          }
-        });
-      },
-
-      getById: async function (articleId) {
-        if (!articleId) return null;
-        var all = await RusiSupabase.topicArticles.getAll();
-        return all.find(function (a) { return a.id === articleId; }) || null;
       }
     },
 
@@ -1104,27 +1011,6 @@
             return null;
           }
         });
-      },
-
-      getTopics: async function (level) {
-        var cacheKey = "listening_topics:" + (level || "all");
-        return RusiCache.withCache(cacheKey, async function () {
-          var sb = getClient();
-          if (!sb) return null;
-          try {
-            var q = sb
-              .from("listening_topics")
-              .select("*, lessons:listening_lessons(*, vocab_items:listening_lesson_vocab(sort_order, line_index, vocab:vocabularies(*)))")
-              .order("sort_order", { ascending: true });
-            if (level && level !== "all") q = q.eq("level", level);
-            var res = await withTimeout(q, 4000);
-            if (res.error || !res.data) return null;
-            return res.data;
-          } catch (e) {
-            console.warn("[RusiSupabase] Lỗi lấy chủ đề nghe:", e);
-            return null;
-          }
-        });
       }
     },
 
@@ -1411,42 +1297,6 @@
     },
 
     /* =========================================================================
-     * 9. BÀI HỌC NGỮ PHÁP (GRAMMAR LESSONS)
-     * ========================================================================= */
-    grammar: {
-      getAll: async function () {
-        return RusiCache.withCache("grammar:all", async function () {
-          var sb = getClient();
-          if (!sb) return null;
-          try {
-            var res = await sb.from("grammar_lessons").select("*").order("order_index", { ascending: true });
-            if (res.error || !res.data) return null;
-            return res.data.map(function (row) {
-              return {
-                id: row.id,
-                code: row.code || row.id,
-                title: row.title,
-                level: row.level || "A1",
-                category: row.category || row.topic || "",
-                summary: row.summary || "",
-                content_md: row.content_md || "",
-                order_index: row.order_index || 0,
-                vi: row.vi || row.title,
-                topic: row.topic || row.category || "",
-                rules: Array.isArray(row.rules) ? row.rules : [],
-                table: row.table_data || {},
-                questions: Array.isArray(row.questions) ? row.questions : []
-              };
-            });
-          } catch (e) {
-            console.warn("[RusiSupabase] Lỗi lấy bài ngữ pháp:", e);
-            return null;
-          }
-        });
-      }
-    },
-
-    /* =========================================================================
      * 10. GÓI DỊCH VỤ & KHÓA HỌC PRO (PACKAGES)
      * ========================================================================= */
     packages: {
@@ -1542,17 +1392,6 @@
         }
       },
 
-      getMine: async function () {
-        var sb = getClient();
-        if (!sb) return [];
-        try {
-          var res = await sb.from("orders").select("*").order("created_at", { ascending: false });
-          return res.error ? [] : (res.data || []);
-        } catch (_) {
-          return [];
-        }
-      },
-
       createShopPending: async function (order) {
         var sb = getClient();
         if (!sb || !order) {
@@ -1585,39 +1424,6 @@
           return { ok: false, message: error.message, error: error };
         }
       }
-    },
-
-    /* =========================================================================
-     * 11B. TRUY XUẤT DỮ LIỆU PHÂN HỆ ĐỒNG BỘ (fetchModuleData)
-     * ========================================================================= */
-    fetchModuleData: async function (moduleKey) {
-      if (!moduleKey) return null;
-      var k = String(moduleKey).toLowerCase().trim();
-      if (k === "speaking" || k === "speaking_sets" || k === "speaking_lessons") {
-        return await RusiSupabase.speaking.getAll();
-      }
-      if (k === "listening" || k === "listening_lessons") {
-        return await RusiSupabase.listening.getAll();
-      }
-      if (k === "writing" || k === "writing_tasks" || k === "writing_topics") {
-        return await RusiSupabase.writing.getAll();
-      }
-      if (k === "trki" || k === "tests" || k === "trki_bank") {
-        return await RusiSupabase.tests.getPublished();
-      }
-      if (k === "vocab" || k === "jars" || k === "vocab_jars") {
-        return await RusiSupabase.jars.getSystemJars();
-      }
-      if (k === "vocabularies" || k === "words") {
-        return await RusiSupabase.vocabularies.getAll();
-      }
-      if (k === "articles" || k === "topic_articles") {
-        return await RusiSupabase.topicArticles.getAll();
-      }
-      if (k === "grammar" || k === "grammar_lessons") {
-        return await RusiSupabase.grammar.getAll();
-      }
-      return null;
     },
 
     /* =========================================================================

@@ -187,6 +187,21 @@ jsFiles.forEach(file => {
 });
 console.log(`✓ Kiểm tra bảo mật: Không có mã bí mật (Secret Keys) bị lộ.`);
 
+// 5. 0-EGRESS: truy vấn đọc trong supabase-client.js phải có giới hạn (.limit/.range/.eq/.in/.single/.maybeSingle)
+// Ngoại lệ khai báo kèm lý do trong scripts/check_unbounded_queries.js (ALLOWLIST)
+{
+  const { checkUnboundedQueries } = require('./check_unbounded_queries.js');
+  const { violations, stale } = checkUnboundedQueries('supabase-client.js');
+  violations.forEach((v) => errors.push(`[0-Egress] ${v}`));
+  stale.forEach((k) => errors.push(`[0-Egress] ALLOWLIST thừa trong scripts/check_unbounded_queries.js (không còn truy vấn khớp): ${k}`));
+  if (!violations.length && !stale.length) {
+    passedChecks++;
+    console.log('✓ 0-Egress: Truy vấn đọc trong supabase-client.js đều có giới hạn hoặc nằm trong danh sách cho phép.');
+  } else {
+    console.log(`✗ 0-Egress: ${violations.length + stale.length} lỗi truy vấn không giới hạn (xem cuối báo cáo).`);
+  }
+}
+
 // TỔNG KẾT
 console.log('\n------------------------------------------------------');
 if (errors.length > 0) {
