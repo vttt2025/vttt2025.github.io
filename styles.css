@@ -39200,3 +39200,12 @@ select.add-jar-input {
   .cbt-app-portal .cbt-portal-header:has(.cbt-practice-part-pick) .cbt-header-left { flex: 0 0 auto; }
   .cbt-practice-part-pick select { max-width: 150px; padding-left: 8px; }
 }
+
+/* Chép chính tả: nút Gợi ý / Đáp án / Ẩn kết quả đủ vùng chạm 44px trên điện thoại & màn cảm ứng */
+@media (pointer: coarse) {
+  .lis-dict-tool-btn { min-height: 44px; }
+  .lis-dict-tool-btn.is-icon-only { min-width: 44px; }
+}
+@media (max-width: 640px) {
+  .lis-dict-tool-btn { width: 44px !important; min-width: 44px !important; height: 44px !important; }
+}
