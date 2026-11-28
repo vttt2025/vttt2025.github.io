@@ -440,6 +440,7 @@ function initMockTestPage() {
   let activeMicStream = null;
   let activeAudioCtx = null;
   let micAnimFrame = null;
+  let sampleAudio = null; // âm thanh mẫu (file phần Nghe) khi kiểm tra loa ở màn giới thiệu
   const cleanupHardwareTests = () => {
     if (window._mockTestSpeakRecorder) {
       try { if (window._mockTestSpeakRecorder.state !== "inactive") window._mockTestSpeakRecorder.stop(); } catch(_) {}
@@ -460,6 +461,10 @@ function initMockTestPage() {
     if (micAnimFrame) {
       cancelAnimationFrame(micAnimFrame);
       micAnimFrame = null;
+    }
+    if (sampleAudio) {
+      try { sampleAudio.pause(); } catch(_) {}
+      sampleAudio = null;
     }
     if (typeof window !== "undefined" && window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -518,6 +523,12 @@ function initMockTestPage() {
       }
     }
 
+    // Luyện tập: bỏ màn giới thiệu, vào thẳng câu hỏi (Luyện thi vẫn qua màn giới thiệu + kiểm tra loa/micro)
+    if (examMode === "practice") {
+      startTest(currentTest, activePartId, "practice");
+      return;
+    }
+
     const isPractice = (examMode === "practice");
     const selectedPartList = getExamPartList();
     const isSubset = Boolean(selectedPartList && selectedPartList.length > 0 && selectedPartList.length < (currentTest.parts || []).length);
@@ -541,29 +552,23 @@ function initMockTestPage() {
       : (currentTest.duration_min || currentTest.durationMin || (activeParts.length ? activeParts.reduce((acc, p) => acc + (p.durationMin || p.duration_min || 0), 0) : 0) || 60);
 
     const passPct = currentTest.pass_percent || currentTest.passPercent || 66;
+    const hasSpeakingPart = activeParts.some(p => Array.isArray(p.speaking_tasks) && p.speaking_tasks.length);
+    // Âm thanh mẫu để kiểm tra loa: lấy file thật của phần Nghe trong đề (không có thì dùng giọng đọc trình duyệt)
+    const sampleAudioUrl = (activeParts.find(p => p && p.audio_url) || {}).audio_url || "";
 
     // RENDER TOÀN MÀN HÌNH KHÔNG XUNG ĐỘT (CBT PORTAL SUITE)
     host.innerHTML = `
       <div class="cbt-app-portal" id="cbtPortalRoot">
-        <!-- TOP BAR DÀI RỘNG TRÊN ĐỈNH THAY THẾ HEADER WEBSITE -->
-        <header class="cbt-portal-header" role="banner">
+        <!-- TOP BAR MÀN GIỚI THIỆU: 1 dòng, căn theo bề rộng thẻ giới thiệu (chế độ đã ghi ở đầu thẻ) -->
+        <header class="cbt-portal-header cbt-portal-header--briefing" role="banner">
           <div class="cbt-header-left">
             <button type="button" class="cbt-btn-icon" id="btnBriefingBack" title="Quay lại danh sách đề thi" aria-label="Quay lại danh sách đề thi">
               ${icon("arrow-left", 18)}
             </button>
             <div class="cbt-header-info">
               <div class="cbt-header-title-row">
-                <span class="cbt-level-pill">ТРКИ-${esc(currentTest.level)}</span>
                 <span class="cbt-test-name-text" title="${esc(currentTest.title)}">${esc(currentTest.title)}</span>
               </div>
-              <span class="cbt-subtest-label">${isPractice ? "Chế độ: Luyện tập tự do" : "Kỳ thi mô phỏng khảo thí CBT chuẩn quốc tế"}</span>
-            </div>
-          </div>
-
-          <div class="cbt-header-center">
-            <div class="cbt-clock-pill cbt-practice-pill" style="font-size:0.95rem;color:var(--primary)">
-              ${icon(isPractice ? "target" : "graduation-cap", 16)}
-              <span>${isPractice ? "Luyện tập tự do" : "Mô phỏng khảo thí CBT"}</span>
             </div>
           </div>
 
@@ -580,7 +585,7 @@ function initMockTestPage() {
             <div class="cbt-briefing-card">
               <div class="cbt-briefing-hero">
                 <div class="cbt-briefing-eyebrow">
-                  ${isPractice ? `${icon("target", 14)} CHẾ ĐỘ LUYỆN TẬP TỰ DO` : `${icon("shield-anti-cheat", 14)} HỆ THỐNG KHẢO THÍ CHUẨN QUỐC TẾ LIÊN BANG NGA`}
+                  ${isPractice ? `${icon("target", 14)} CHẾ ĐỘ LUYỆN TẬP TỰ DO` : `${icon("shield-anti-cheat", 14)} THI THỬ MÔ PHỎNG ТРКИ`}
                 </div>
                 <h1 class="cbt-briefing-heading">${esc(currentTest.title)}</h1>
                 <p class="cbt-briefing-lead">
@@ -606,7 +611,7 @@ function initMockTestPage() {
                 </div>
                 <div class="cbt-summary-cell">
                   <div class="cbt-summary-num">≥ ${passPct}%</div>
-                  <div class="cbt-summary-txt">Chuẩn đạt (Сдано)</div>
+                  <div class="cbt-summary-txt">Chuẩn đạt mỗi phần</div>
                 </div>
               </div>
 
@@ -614,11 +619,14 @@ function initMockTestPage() {
               <div class="cbt-subtest-overview-box">
                 <div class="cbt-box-header-title">
                   <span>${icon("list", 16)} CẤU TRÚC CÁC PHÂN MÔN KHẢO THÍ</span>
-                  <span style="font-size:0.78rem;color:var(--muted)">${isPractice ? "Bấm để chọn phần muốn luyện" : "Chuẩn CEFR Châu Âu & Nga"}</span>
+                  ${isPractice ? `<span style="font-size:0.78rem;color:var(--muted)">Bấm để chọn phần muốn luyện</span>` : ""}
                 </div>
                 <div class="cbt-subtest-items-grid">
                   ${(isPractice ? (currentTest.parts || []) : activeParts).map((p, pIdx) => {
                     const qCount = partItemCount(p);
+                    // Phần Viết/Nói đếm theo "bài"; tên phần thường kèm "(70 câu)" → bỏ khi hiển thị vì cột phải đã ghi số
+                    const isTaskPart = !(Array.isArray(p.questions) && p.questions.length) && ((p.writing_tasks || []).length || (p.speaking_tasks || []).length);
+                    const viLabel = String(p.vi || "").replace(/\s*\(\s*\d+\s*(câu|bài)\s*\)\s*$/i, "");
                     const dur = p.durationMin || p.duration_min || Math.round(examDurationMin / activeParts.length);
                     const included = activeParts.includes(p);
                     const rowTag = isPractice ? "label" : "div";
@@ -628,14 +636,14 @@ function initMockTestPage() {
                         <div class="cbt-row-left">
                           ${isPractice ? `<input type="checkbox" class="cbt-part-pick" data-part-id="${esc(p.id)}" ${included ? "checked" : ""} style="width:18px;height:18px;flex-shrink:0;accent-color:var(--primary)">` : ""}
                           <span class="cbt-part-circle-num">${pIdx + 1}</span>
-                          <div>
+                          <div class="cbt-row-titles">
                             <span class="cbt-row-title-ru ru">${esc(p.name || "Субтест " + (pIdx + 1))}</span>
-                            <span class="cbt-row-title-vi"> — ${esc(p.vi || "")}</span>
+                            ${viLabel ? `<span class="cbt-row-title-vi">${esc(viLabel)}</span>` : ""}
                           </div>
                         </div>
                         <div class="cbt-row-right">
-                          <span>${qCount} câu</span>
-                          <span>•</span>
+                          <span>${qCount} ${isTaskPart ? "bài" : "câu"}</span>
+                          <span class="cbt-row-dot" aria-hidden="true">·</span>
                           <span>${dur} phút</span>
                         </div>
                       </${rowTag}>
@@ -649,7 +657,7 @@ function initMockTestPage() {
                 <!-- 1. KIỂM TRA LOA / TAI NGHE -->
                 <div class="cbt-hw-card">
                   <div class="cbt-hw-title-row">
-                    ${icon("volume-2", 18)} <span>Kiểm tra Loa / Tai nghe</span>
+                    <span class="cbt-hw-icon">${icon("volume-2", 16)}</span> <span>Kiểm tra Loa / Tai nghe</span>
                   </div>
                   <p class="cbt-hw-desc">Nghe đoạn thoại phát âm tiếng Nga bản xứ để đảm bảo âm lượng phần Nghe hiểu rõ ràng.</p>
                   <div class="cbt-hw-action-line">
@@ -660,10 +668,11 @@ function initMockTestPage() {
                   </div>
                 </div>
 
-                <!-- 2. KIỂM TRA MICROPHONE -->
+                <!-- 2. KIỂM TRA MICROPHONE (chỉ khi đề có phần Nói) -->
+                ${hasSpeakingPart ? `
                 <div class="cbt-hw-card">
                   <div class="cbt-hw-title-row">
-                    ${icon("mic-speaking", 18)} <span>Kiểm tra Microphone</span>
+                    <span class="cbt-hw-icon">${icon("mic-speaking", 16)}</span> <span>Kiểm tra Microphone</span>
                   </div>
                   <p class="cbt-hw-desc">Bấm kiểm tra và nói thử vào micro: <i>«Здравствуйте!»</i> để kiểm tra độ nhạy.</p>
                   <div class="cbt-hw-action-line">
@@ -672,14 +681,29 @@ function initMockTestPage() {
                     </button>
                     <span class="cbt-status-pill-check idle" id="micStatusBadge">Chưa kiểm tra</span>
                   </div>
+                  <div class="cbt-mic-meter" id="cbtMicMeter" hidden aria-hidden="true"><span id="cbtMicLevel"></span></div>
                 </div>
+                ` : ""}
               </div>
+
+              ${isPractice ? "" : `
+              <!-- QUY ĐỊNH PHÒNG THI: báo trước khi đồng hồ chạy -->
+              <div class="cbt-exam-rules" role="note" aria-label="Quy định phòng thi">
+                <div class="cbt-exam-rules-title">${icon("shield-anti-cheat", 15)} Quy định phòng thi</div>
+                <ul>
+                  <li>${icon("timer-clock", 15)} <span>Đồng hồ chạy liên tục <b>${examDurationMin} phút</b>, không tạm dừng. Hết giờ, bài tự nộp.</span></li>
+                  <li>${icon("alert-triangle", 15)} <span>Rời màn hình bài thi (chuyển tab, thu nhỏ trình duyệt) <b>3 lần</b>, bài tự nộp.</span></li>
+                  <li>${icon("log-out", 15)} <span>Thoát khỏi phòng thi giữa chừng sẽ không lưu kết quả.</span></li>
+                  <li>${icon("maximize", 15)} <span>Nên bật Toàn màn hình và dùng tai nghe.</span></li>
+                </ul>
+              </div>
+              `}
 
               <!-- NÚT BẮT ĐẦU LÀM BÀI CHÍNH -->
               <div class="cbt-launch-row">
                 <button type="button" class="cbt-btn-start-now" id="btnStartExamNow">
-                  ${icon("play-control", 18)}
-                  <span>${isPractice ? "BẮT ĐẦU LUYỆN TẬP" : "BẮT ĐẦU LÀM BÀI THI CHÍNH THỨC"} ➜</span>
+                  <span>${isPractice ? "Bắt đầu luyện tập" : "Bắt đầu làm bài"}</span>
+                  ${icon("arrow-right", 18)}
                 </button>
               </div>
             </div>
@@ -718,51 +742,67 @@ function initMockTestPage() {
     let isSpeakerPlaying = false;
 
     if (btnSpeaker) {
+      const setSpeakerBtn = (ic, label) => {
+        btnSpeaker.innerHTML = `${icon(ic, 14)} <span>${label}</span>`;
+        if (window.RusiIcons) RusiIcons.replace(btnSpeaker);
+      };
+      const setSpeakerBadge = (cls, html) => {
+        speakerBadge.className = "cbt-status-pill-check " + cls;
+        speakerBadge.innerHTML = html;
+        if (window.RusiIcons) RusiIcons.replace(speakerBadge);
+      };
+      const stopSample = () => {
+        if (sampleAudio) { try { sampleAudio.pause(); } catch(_) {} sampleAudio = null; }
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        isSpeakerPlaying = false;
+      };
+      // Phát xong: hỏi học viên có nghe rõ không — chỉ báo đạt khi chính học viên xác nhận
+      const askHeard = () => {
+        stopSample();
+        setSpeakerBtn("play-control", "Phát lại");
+        setSpeakerBadge("ask", `Nghe rõ chưa? <button type="button" class="cbt-hw-confirm" id="btnSpeakerHeard">${icon("check", 13)} Nghe rõ</button>`);
+        const ok = speakerBadge.querySelector("#btnSpeakerHeard");
+        if (ok) ok.onclick = () => setSpeakerBadge("ok", `${icon("check-circle-correct", 13)} Âm thanh tốt`);
+      };
+      const failSample = () => {
+        stopSample();
+        setSpeakerBtn("play-control", "Thử lại");
+        setSpeakerBadge("warn", "Không phát được âm thanh — kiểm tra loa / tai nghe");
+      };
+      const speakFallback = () => {
+        if (!window.speechSynthesis || typeof SpeechSynthesisUtterance === "undefined") { failSample(); return; }
+        const u = new SpeechSynthesisUtterance("Здравствуйте! Это проверка звука в системе тестирования РУСИ ТРКИ. Вы готовы начать экзамен?");
+        u.lang = "ru-RU";
+        u.rate = 0.9;
+        if (typeof pickVoice === "function") {
+          const v = pickVoice("ru-RU");
+          if (v) u.voice = v;
+        }
+        u.onend = () => { if (isSpeakerPlaying) askHeard(); };
+        u.onerror = () => { if (isSpeakerPlaying) failSample(); };
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+      };
+
       btnSpeaker.onclick = () => {
         if (isSpeakerPlaying) {
-          if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
-          isSpeakerPlaying = false;
-          btnSpeaker.innerHTML = `${icon("play-control", 14)} <span>Phát âm thanh mẫu</span>`;
-          if (window.RusiIcons) RusiIcons.replace(btnSpeaker);
+          stopSample();
+          setSpeakerBtn("play-control", "Phát âm thanh mẫu");
           return;
         }
-
-        const testPhrase = "Здравствуйте! Это проверка звука в системе тестирования РУСИ ТРКИ. Вы готовы начать экзамен?";
         isSpeakerPlaying = true;
-        btnSpeaker.innerHTML = `${icon("pause-control", 14)} <span>Đang phát...</span>`;
-        if (window.RusiIcons) RusiIcons.replace(btnSpeaker);
-
-        if (typeof window !== "undefined" && "speechSynthesis" in window && window.speechSynthesis) {
-          window.speechSynthesis.cancel();
-          const u = new SpeechSynthesisUtterance(testPhrase);
-          u.lang = "ru-RU";
-          u.rate = 0.9;
-          if (typeof pickVoice === "function") {
-            const v = pickVoice("ru-RU");
-            if (v) u.voice = v;
-          }
-          u.onend = () => {
-            isSpeakerPlaying = false;
-            btnSpeaker.innerHTML = `${icon("check", 14)} <span>Phát lại</span>`;
-            speakerBadge.className = "cbt-status-pill-check ok";
-            speakerBadge.innerHTML = `${icon("check-circle-correct", 13)} Âm thanh tốt ✓`;
-            if (window.RusiIcons) RusiIcons.replace(host);
-          };
-          u.onerror = () => {
-            isSpeakerPlaying = false;
-            btnSpeaker.innerHTML = `${icon("play-control", 14)} <span>Phát lại</span>`;
-            speakerBadge.className = "cbt-status-pill-check ok";
-            speakerBadge.innerHTML = `${icon("check-circle-correct", 13)} Âm thanh sẵn sàng ✓`;
-            if (window.RusiIcons) RusiIcons.replace(host);
-          };
-          window.speechSynthesis.speak(u);
+        setSpeakerBtn("pause-control", "Đang phát...");
+        setSpeakerBadge("idle", "Đang phát…");
+        if (sampleAudioUrl) {
+          // Phát khoảng 10 giây đầu của file phần Nghe trong đề
+          const a = new Audio(sampleAudioUrl);
+          sampleAudio = a;
+          a.onended = () => { if (sampleAudio === a) askHeard(); };
+          a.onerror = () => { if (sampleAudio === a) speakFallback(); };
+          a.ontimeupdate = () => { if (sampleAudio === a && a.currentTime >= 10) askHeard(); };
+          a.play().catch(() => { if (sampleAudio === a) speakFallback(); });
         } else {
-          setTimeout(() => {
-            isSpeakerPlaying = false;
-            speakerBadge.className = "cbt-status-pill-check ok";
-            speakerBadge.innerHTML = `${icon("check-circle-correct", 13)} Âm thanh sẵn sàng ✓`;
-            if (window.RusiIcons) RusiIcons.replace(host);
-          }, 1500);
+          speakFallback();
         }
       };
     }
@@ -770,11 +810,15 @@ function initMockTestPage() {
     // 4. Microphone Test Event (Web Audio Analyser)
     const btnMic = el("#btnTestMic");
     const micBadge = el("#micStatusBadge");
+    const micMeter = el("#cbtMicMeter");
+    const micLevel = el("#cbtMicLevel");
 
     if (btnMic) {
       btnMic.onclick = async () => {
         if (activeMicStream) {
           cleanupHardwareTests();
+          if (micMeter) micMeter.hidden = true;
+          btnMic.classList.remove("active");
           btnMic.innerHTML = `${icon("mic-speaking", 14)} <span>Kiểm tra lại Micro</span>`;
           if (window.RusiIcons) RusiIcons.replace(btnMic);
           return;
@@ -795,6 +839,7 @@ function initMockTestPage() {
 
             const dataArray = new Uint8Array(analyser.frequencyBinCount);
             btnMic.classList.add("active");
+            if (micMeter) micMeter.hidden = false;
             btnMic.innerHTML = `${icon("mic-speaking", 14)} <span>Đang lắng nghe...</span>`;
 
             let hasDetectedVoice = false;
@@ -807,6 +852,7 @@ function initMockTestPage() {
               }
               const avg = sum / dataArray.length;
               const pct = Math.min(100, Math.round((avg / 128) * 100));
+              if (micLevel) micLevel.style.width = pct + "%";
 
               if (pct > 15 && !hasDetectedVoice) {
                 hasDetectedVoice = true;
@@ -1094,15 +1140,14 @@ function initMockTestPage() {
     });
 
     const totalQuestions = examItems.length;
-    // Bộ đếm "Câu x / N" chỉ đếm câu trắc nghiệm (khớp số câu ở màn briefing); bài Viết/Nói đếm riêng theo phần.
-    const mcqTotal = examItems.filter(it => it.type === "question").length;
+    // Bộ đếm "Câu x / N" theo thứ tự trong cả đề (khớp số trên Bảng câu hỏi và "N câu" ở màn briefing);
+    // bài Viết/Nói ghi thêm thứ tự trong phần.
     const progressPillHtml = (idx) => {
       const it = examItems[idx];
       if (!it) return "";
       if (it.type === "writing") return `Bài viết <b id="cbtCurrentNum">${it.qi + 1}</b> / ${it.part.writing_tasks.length}`;
       if (it.type === "speaking") return `Bài nói <b id="cbtCurrentNum">${it.qi + 1}</b> / ${it.part.speaking_tasks.length}`;
-      const ordinal = examItems.slice(0, idx + 1).filter(x => x.type === "question").length;
-      return `Câu <b id="cbtCurrentNum">${ordinal}</b> / ${mcqTotal}`;
+      return `Câu <b id="cbtCurrentNum">${idx + 1}</b> / ${totalQuestions}`;
     };
     if (totalQuestions === 0) {
       host.innerHTML = `
@@ -1143,7 +1188,6 @@ function initMockTestPage() {
             </button>
             <div class="cbt-header-info">
               <div class="cbt-header-title-row">
-                <span class="cbt-level-pill">ТРКИ-${esc(currentTest.level)}</span>
                 <span class="cbt-test-name-text" title="${esc(currentTest.title)}">${esc(currentTest.title)}</span>
               </div>
               <span class="cbt-subtest-label" id="cbtTopSubtestName">Phần 1</span>
@@ -1395,7 +1439,9 @@ function initMockTestPage() {
       // 1. Cập nhật Top bar
       const topSubtest = el("#cbtTopSubtestName");
       if (topSubtest) {
-        topSubtest.textContent = `Phần ${item.partIndex + 1}: ${part.vi || part.name}`;
+        // Tên phần thường đã có "Phần N." → không thêm tiền tố lần nữa ("Phần 3: Phần 3. …")
+        const partLabel = part.vi || part.name || "";
+        topSubtest.textContent = /^Phần\s*\d/i.test(partLabel) ? partLabel : `Phần ${item.partIndex + 1}: ${partLabel}`;
       }
       const progressPill = el("#cbtProgressPill");
       if (progressPill) progressPill.innerHTML = progressPillHtml(currentItemIndex);
@@ -1658,7 +1704,7 @@ function initMockTestPage() {
                 <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:10px">
                   Học viên đọc kỹ yêu cầu của từng chủ đề ở cột bên phải và nhập trực tiếp văn bản tiếng Nga vào ô soạn thảo.
                 </p>
-                <div style="font-size:0.82rem;color:var(--primary);font-weight:700">
+                <div class="cbt-guide-duration">
                   Thời lượng phần thi: ${part.durationMin || 25} phút
                 </div>
               </div>
@@ -1674,7 +1720,7 @@ function initMockTestPage() {
                 <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:10px">
                   Nghe câu hỏi hoặc đọc tình huống bên phải, chuẩn bị ý và bấm nút ghi âm microphone để luyện phản xạ nói tiếng Nga.
                 </p>
-                <div style="font-size:0.82rem;color:var(--secondary);font-weight:700">
+                <div class="cbt-guide-duration">
                   Thời lượng phần thi: ${part.durationMin || 15} phút
                 </div>
               </div>
@@ -1713,7 +1759,7 @@ function initMockTestPage() {
 
         rightBox.innerHTML = `
           <div class="cbt-question-header-line">
-            <span class="cbt-q-number-pill">${icon("help-circle", 15)} Câu ${examItems.slice(0, currentItemIndex + 1).filter(x => x.type === "question").length} / ${mcqTotal} · ${esc(part.vi || part.name || "")}</span>
+            <span class="cbt-q-number-pill">${icon("help-circle", 15)} Câu ${currentItemIndex + 1} / ${totalQuestions} · ${esc(part.vi || part.name || "")}</span>
             <button type="button" class="cbt-btn-flag-toggle ${isFlag ? 'is-flagged' : ''}" id="btnFlagRight" title="Đặt cờ xem lại (Phím F)">
               ${icon("flag", 14)} <span>${isFlag ? 'Đã đặt cờ' : 'Đặt cờ'}</span>
             </button>
