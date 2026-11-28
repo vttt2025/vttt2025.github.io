@@ -7142,7 +7142,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             <div style="font-weight:700;font-size:14.5px">Danh sách câu thoại Shadowing (${(items || []).length} câu)</div>
             <div style="font-size:12px;color:var(--p-text-muted)">Khớp theo mốc thời gian phụ đề video YouTube</div>
           </div>
-          <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="if(State.currentDraft) { State.currentDraft.items = Array.isArray(State.currentDraft.items) ? State.currentDraft.items : []; State.currentDraft.items.push({ id: Date.now(), who: 'Người nói', startSec: 0, endSec: 5, start: 0, end: 5, ru: '', text_ru: '', text_stressed: '', vi: '', translation_vi: '' }); State.currentDraft.sentences = State.currentDraft.items; refreshStructureTab(); }">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu thoại</button>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end">
+            <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="if (typeof window.openImportSpeakingTranscriptModal === 'function') window.openImportSpeakingTranscriptModal(); else window.toast('Chưa tải được công cụ nhập phụ đề, hãy tải lại trang.', 'error');" title="Dán hoặc chọn file phụ đề SRT / VTT / JSON">${window.RusiIcons ? RusiIcons.get("upload", { size: 14 }) : ""} Nhập phụ đề</button>
+            <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="if(State.currentDraft) { State.currentDraft.items = Array.isArray(State.currentDraft.items) ? State.currentDraft.items : []; State.currentDraft.items.push({ id: Date.now(), who: 'Người nói', startSec: 0, endSec: 5, start: 0, end: 5, ru: '', text_ru: '', text_stressed: '', vi: '', translation_vi: '' }); State.currentDraft.sentences = State.currentDraft.items; refreshStructureTab(); }">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu thoại</button>
+          </div>
         </div>
         <div class="payload-array-items">
           ${rowsHtml || '<div style="padding:20px;text-align:center;color:var(--p-text-muted)">Chưa có câu thoại nào. Bấm "+ Thêm câu thoại" để tạo.</div>'}
