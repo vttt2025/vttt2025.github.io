@@ -47,6 +47,55 @@ function initListeningPage() {
   let showSub = true;
   let currentLesson = null;
   let cloudListening = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("listening:all") : null;
+  const initialListeningParams = (() => {
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      const read = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || sp.get(k);
+      return {
+        preview: sp.get("preview") === "1",
+        mode: (read("mode") || "").toLowerCase(),
+        id: read("id") || read("lesson") || ""
+      };
+    } catch (_) {
+      return { preview: false, mode: "", id: "" };
+    }
+  })();
+  const readListeningPreviewDraft = (targetId) => {
+    if (!initialListeningParams.preview) return null;
+    try {
+      const raw = sessionStorage.getItem("rusi_live_preview_draft") || localStorage.getItem("rusi_live_preview_draft");
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || parsed.slug !== "LISTENING_LESSONS" || !parsed.doc || typeof parsed.doc !== "object") return null;
+      const d = parsed.doc;
+      const docKey = String(parsed.docId || d.id || d.code || "").trim();
+      if (targetId && docKey && docKey !== String(targetId) && String(d.id || "") !== String(targetId) && String(d.code || "") !== String(targetId)) {
+        return null;
+      }
+      const cloned = JSON.parse(JSON.stringify(d));
+      cloned.id = cloned.id || cloned.code || targetId || "preview-listening";
+      cloned.code = cloned.code || cloned.id;
+      cloned.title = cloned.title || "Bản nháp luyện nghe";
+      cloned.level = cloned.level || "A1";
+      cloned.lines = Array.isArray(cloned.lines) ? cloned.lines : [];
+      cloned.questions = Array.isArray(cloned.questions) ? cloned.questions : [];
+      cloned.content_locked = false;
+      cloned._isPreview = true;
+      return cloned;
+    } catch (err) {
+      console.warn("[LivePreview] Không đọc được bản nháp bài nghe:", err);
+      return null;
+    }
+  };
+  const listeningPreviewBannerHtml = () => `
+    <div class="topic-preview-badge-row" role="status" style="margin:12px 16px 0">
+      <span aria-hidden="true">${window.RusiIcons ? RusiIcons.get("eye", { size: 18 }) : "👁️"}</span>
+      <div style="min-width:0;flex:1">
+        <strong>Chế độ Xem trước CMS (Live Preview)</strong>
+        <div style="font-size:0.8rem;opacity:0.9;font-weight:400">Đang hiển thị bản nháp chưa xuất bản từ CMS. Chế độ xem trước không lưu tiến độ, XP hay ghi nhớ trình duyệt.</div>
+      </div>
+    </div>
+  `;
   /**
    * BỘ TẠO SÓNG ÂM REALTIME THEO ÂM THANH THỰC (RUSI REALTIME AUDIO WAVEFORM)
    * - Hoàn toàn không phụ thuộc CDN bên ngoài
@@ -728,6 +777,7 @@ function initListeningPage() {
   const lessonAuthTarget = (id, mode = currentMode) => "listening.html?" + (mode === "dictation" ? "mode=dictation&" : "") + "id=" + encodeURIComponent(id || "");
 
   const loadCloudListening = async () => {
+    if (initialListeningParams.preview && (currentLesson || readListeningPreviewDraft(initialListeningParams.id))) return;
     // 0-Egress rule: Nạp từ RAM/IndexedDB/CDN JSON trước, bỏ qua truy vấn Supabase nếu đã có dữ liệu
     if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("LISTENING_LESSONS")) {
       await window.RusiDataLoader.load("LISTENING_LESSONS");
@@ -1650,7 +1700,7 @@ function initListeningPage() {
         const sim = similarity(heard, curLine.ru);
 
         scores[activeSentenceIdx] = sim;
-        STORE.set("lis_shadow_" + lesson.id + "_" + activeSentenceIdx, sim);
+        if (!lesson._isPreview) STORE.set("lis_shadow_" + lesson.id + "_" + activeSentenceIdx, sim);
 
         if (scoreRingWrap) {
           scoreRingWrap.innerHTML = `<div class="score-ring ${sim >= 80 ? "" : sim >= 50 ? "mid" : "low"}" title="Độ chính xác">${sim}%</div>`;
@@ -1674,11 +1724,15 @@ function initListeningPage() {
 
         // Award XP if first time passed
         if (sim >= 70) {
-          const passKey = lesson.id + "_shadow_" + activeSentenceIdx;
-          if (!Progress.doneList("listenDone").includes(passKey)) {
-            Progress.markDone("listenDone", passKey);
-            Progress.addXp(10);
-            toast("Tuyệt vời! Phát âm chuẩn (+10 XP)");
+          if (lesson._isPreview) {
+            toast(`Chế độ Xem trước CMS: đạt ${sim}% (không lưu tiến độ hay cộng XP).`);
+          } else {
+            const passKey = lesson.id + "_shadow_" + activeSentenceIdx;
+            if (!Progress.doneList("listenDone").includes(passKey)) {
+              Progress.markDone("listenDone", passKey);
+              Progress.addXp(10);
+              toast("Tuyệt vời! Phát âm chuẩn (+10 XP)");
+            }
           }
         }
 
@@ -1847,12 +1901,16 @@ function initListeningPage() {
             if (answeredCount === videoQuestions.length) {
               const pct = (correctCount / videoQuestions.length) * 100;
               if (pct >= 60) {
-                const key = lesson.id + "_video";
-                if (!Progress.doneList("listenDone").includes(key)) {
-                  Progress.addXp(20);
-                  Progress.markDone("listenDone", key);
+                if (lesson._isPreview) {
+                  toast(`Chế độ Xem trước CMS: đúng ${correctCount}/${videoQuestions.length} câu (không lưu tiến độ hay cộng XP).`);
+                } else {
+                  const key = lesson.id + "_video";
+                  if (!Progress.doneList("listenDone").includes(key)) {
+                    Progress.addXp(20);
+                    Progress.markDone("listenDone", key);
+                  }
+                  toast(`Xuất sắc! Bạn trả lời đúng ${correctCount}/${videoQuestions.length} câu (+20 XP)!`);
                 }
-                toast(`Xuất sắc! Bạn trả lời đúng ${correctCount}/${videoQuestions.length} câu (+20 XP)!`);
               } else {
                 toast(`Bạn đạt ${correctCount}/${videoQuestions.length} câu. Hãy xem lại video để hiểu rõ hơn nhé!`);
               }
@@ -1939,9 +1997,13 @@ function initListeningPage() {
         if (good) ok++;
       });
       if (ok === lesson.blanks.length) {
-        if (!Progress.doneList("listenDone").includes(lesson.id + "_blank")) Progress.addXp(15);
-        Progress.markDone("listenDone", lesson.id + "_blank");
-        toast("Xuất sắc! Điền đúng 100% (+15 XP)");
+        if (lesson._isPreview) {
+          toast("Chế độ Xem trước CMS: điền đúng 100% (không lưu tiến độ hay cộng XP).");
+        } else {
+          if (!Progress.doneList("listenDone").includes(lesson.id + "_blank")) Progress.addXp(15);
+          Progress.markDone("listenDone", lesson.id + "_blank");
+          toast("Xuất sắc! Điền đúng 100% (+15 XP)");
+        }
       } else {
         toast(`${ok}/${lesson.blanks.length} đúng — nghe lại nhé!`);
       }
@@ -2106,16 +2168,17 @@ function initListeningPage() {
    * Bố cục 3/7: 3 phần menu câu hỏi bên trái, 7 phần phát audio & trắc nghiệm
    * ===================================================================== */
   const openComprehensionWorkspace = (lesson) => {
+    const isPreviewLesson = Boolean(lesson && lesson._isPreview);
     // Bài PRO: file công khai chỉ có metadata — tải nội dung bằng phiên PRO rồi mở lại
-    if (lesson && lesson.content_locked && window.RusiProContent) {
+    if (!isPreviewLesson && lesson && lesson.content_locked && window.RusiProContent) {
       if (typeof window.requireAuth === "function" && !window.requireAuth(lessonAuthTarget(lesson.id || "", "comprehension"))) return;
       window.RusiProContent.ensureFull("LISTENING_LESSONS", lesson, { title: "Nội dung nghe dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao." })
         .then((full) => { if (full && !full.content_locked) openComprehensionWorkspace(full); });
       return;
     }
-    if (typeof window.requireAuth === "function" && !window.requireAuth(lessonAuthTarget((lesson && lesson.id) || "", "comprehension"))) return;
+    if (!isPreviewLesson && typeof window.requireAuth === "function" && !window.requireAuth(lessonAuthTarget((lesson && lesson.id) || "", "comprehension"))) return;
     // Đổi URL sau khi qua kiểm tra đăng nhập (không để URL bài học khi bị chuyển sang trang đăng nhập)
-    if (window.setRusiDeepUrl && lesson) {
+    if (!isPreviewLesson && window.setRusiDeepUrl && lesson) {
       window.setRusiDeepUrl('/listening/bai_hoc/' + encodeURIComponent(lesson.id || lesson.code));
     }
     currentLesson = lesson;
@@ -2735,7 +2798,9 @@ function initListeningPage() {
             const cCount = questions.filter((q, i) => userAnswers[i] === q.a).length;
             const p = Math.round((cCount / questions.length) * 100);
 
-            if (p >= 70) {
+            if (isPreviewLesson) {
+              toast(`Chế độ Xem trước CMS: đúng ${cCount}/${questions.length} câu (${p}%) — không lưu tiến độ hay cộng XP.`);
+            } else if (p >= 70) {
               const passKey = lesson.id + "_comp";
               if (!Progress.doneList("listenDone").includes(passKey)) {
                 const xp = (window.RUSI_XP_RULES && window.RUSI_XP_RULES.LISTENING_QUIZ_PASS) || 15;
@@ -2817,6 +2882,7 @@ function initListeningPage() {
               <span class="lis-dict-menu-badge">${questions.length}</span>
             </button>
           </div>
+          ${isPreviewLesson ? listeningPreviewBannerHtml() : ""}
 
           <!-- BỐ CỤC LƯỚI 3/7: 3 PHẦN DANH SÁCH BÀI LUYỆN BÊN TRÁI, 7 PHẦN LÀM BÀI BÊN PHẢI -->
           <div class="lis-dict-workspace-grid">
@@ -3067,16 +3133,17 @@ function initListeningPage() {
 
 
   const openDictationWorkspace = (lesson) => {
+    const isPreviewLesson = Boolean(lesson && lesson._isPreview);
     // Bài PRO: file công khai chỉ có metadata — tải nội dung bằng phiên PRO rồi mở lại
-    if (lesson && lesson.content_locked && window.RusiProContent) {
+    if (!isPreviewLesson && lesson && lesson.content_locked && window.RusiProContent) {
       if (typeof window.requireAuth === "function" && !window.requireAuth(lessonAuthTarget(lesson.id || "", "dictation"))) return;
       window.RusiProContent.ensureFull("LISTENING_LESSONS", lesson, { title: "Nội dung nghe dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao." })
         .then((full) => { if (full && !full.content_locked) openDictationWorkspace(full); });
       return;
     }
-    if (typeof window.requireAuth === "function" && !window.requireAuth(lessonAuthTarget((lesson && lesson.id) || "", "dictation"))) return;
+    if (!isPreviewLesson && typeof window.requireAuth === "function" && !window.requireAuth(lessonAuthTarget((lesson && lesson.id) || "", "dictation"))) return;
     // Đổi URL sau khi qua kiểm tra đăng nhập (không để URL bài học khi bị chuyển sang trang đăng nhập)
-    if (window.setRusiDeepUrl && lesson) {
+    if (!isPreviewLesson && window.setRusiDeepUrl && lesson) {
       window.setRusiDeepUrl('/listening/dictation/' + encodeURIComponent(lesson.id || lesson.code));
     }
     currentLesson = lesson;
@@ -3084,7 +3151,9 @@ function initListeningPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
 
     // Lấy danh sách các bài luyện trong cùng cấp độ để hiển thị ở Sidebar (Req 11)
-    let allLessons = (typeof getListeningLessons === "function" ? getListeningLessons() : []).filter(l => l.level === (lesson.level || "A1"));
+    let allLessons = isPreviewLesson
+      ? [lesson]
+      : (typeof getListeningLessons === "function" ? getListeningLessons() : []).filter(l => l.level === (lesson.level || "A1"));
     if (!allLessons.length && lesson) {
       allLessons = [lesson];
     } else if (lesson && !allLessons.some(l => l.id === lesson.id)) {
@@ -3092,7 +3161,7 @@ function initListeningPage() {
     }
 
     const isLessonDone = (item) => {
-      if (!item || !item.id) return false;
+      if (isPreviewLesson || !item || !item.id) return false;
       const list = Progress.doneList("listenDone") || [];
       if (list.includes(item.id) || list.includes(item.id + "_dict") || list.includes(item.id + "_dict_done")) return true;
       const sList = (Array.isArray(item.dictation) && item.dictation.length > 0)
@@ -3148,6 +3217,7 @@ function initListeningPage() {
     const DICT_SENTENCE_XP = 0;
 
     const isSentenceDone = (idx) => {
+      if (isPreviewLesson) return rePracticeDone.has(idx);
       const key = `${lesson.id}_dict_${idx}`;
       return Progress.doneList("listenDone").includes(key);
     };
@@ -3437,6 +3507,7 @@ function initListeningPage() {
               <span class="lis-dict-menu-badge">${allLessons.length}</span>
             </button>
           </div>
+          ${isPreviewLesson ? listeningPreviewBannerHtml() : ""}
 
           <!-- Bố cục 3/7: 3 phần bên trái danh sách bài luyện, 7 phần bên phải làm bài -->
           <div class="lis-dict-workspace-grid">
@@ -3908,7 +3979,7 @@ function initListeningPage() {
 
       // 2. Ghi nhận hoàn thành câu
       let lessonRewardXp = 0; // > 0 khi lần này vừa hoàn thành cả bài (dù câu cuối làm xong trước)
-      if (isRePracticing) {
+      if (isPreviewLesson || isRePracticing) {
         rePracticeDone.add(currentSentenceIdx);
       } else {
         const key = `${lesson.id}_dict_${currentSentenceIdx}`;
@@ -4381,6 +4452,10 @@ function initListeningPage() {
     quizEngine(mb, lesson.questions, {
       onFinish: (pct) => {
         if (pct >= 60) {
+          if (lesson._isPreview) {
+            toast("Chế độ Xem trước CMS: hoàn thành bài trắc nghiệm (không lưu tiến độ hay cộng XP).");
+            return;
+          }
           const key = lesson.id + "_check";
           if (!Progress.doneList("listenDone").includes(key)) Progress.addXp(15);
           Progress.markDone("listenDone", key);
@@ -4394,11 +4469,27 @@ function initListeningPage() {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || urlParams.get(k);
-      const modeParam = (getParam("mode") || "").toLowerCase();
+      const modeParam = (getParam("mode") || initialListeningParams.mode || "").toLowerCase();
       if (modeParam === "dictation" || modeParam === "comprehension") {
         currentMode = modeParam;
       }
-      const targetId = overrideId || getParam("id") || getParam("lesson");
+      const targetId = overrideId || getParam("id") || getParam("lesson") || initialListeningParams.id;
+      if (initialListeningParams.preview) {
+        const draftLesson = readListeningPreviewDraft(targetId);
+        if (draftLesson) {
+          const preferDictation = modeParam === "dictation" || (
+            modeParam !== "comprehension" && (
+              String(draftLesson.category || "").toLowerCase() === "dictation" ||
+              (Array.isArray(draftLesson.dictation) && draftLesson.dictation.length > 0 && !(Array.isArray(draftLesson.questions) && draftLesson.questions.length > 0))
+            )
+          );
+          currentMode = preferDictation ? "dictation" : "comprehension";
+          currentLevel = draftLesson.level || currentLevel;
+          if (preferDictation) openDictationWorkspace(draftLesson);
+          else openComprehensionWorkspace(draftLesson);
+          return true;
+        }
+      }
       if (targetId) {
         if (typeof window.requireAuth === "function" && !window.requireAuth(lessonAuthTarget(targetId))) return true;
         const all = typeof getListeningLessons === "function" ? getListeningLessons() : [];

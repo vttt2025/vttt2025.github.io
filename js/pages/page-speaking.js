@@ -11,7 +11,7 @@ function initSpeakingPage() {
   const initialRoute = (() => {
     const sp = new URLSearchParams(window.location.search);
     const read = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || sp.get(k);
-    return { mode: read("mode"), level: read("level"), set: read("set"), id: read("id") };
+    return { mode: read("mode"), level: read("level"), set: read("set"), id: read("id"), preview: sp.get("preview") === "1" };
   })();
   const host = el("#speakHost");
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -83,6 +83,32 @@ function initSpeakingPage() {
     return cat === "shadowing" || (!cat && cat !== "speech_studio" && cat !== "reflex" && cat !== "conversation");
   };
 
+  const readSpeakingPreviewDraft = (targetId) => {
+    if (!initialRoute.preview) return null;
+    try {
+      const raw = sessionStorage.getItem("rusi_live_preview_draft") || localStorage.getItem("rusi_live_preview_draft");
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || parsed.slug !== "SPEAKING_SETS" || !parsed.doc || typeof parsed.doc !== "object") return null;
+      const d = parsed.doc;
+      const docKey = String(parsed.docId || d.id || d.code || "").trim();
+      if (targetId && docKey && docKey !== String(targetId) && String(d.id || "") !== String(targetId) && String(d.code || "") !== String(targetId)) {
+        return null;
+      }
+      const cloned = JSON.parse(JSON.stringify(d));
+      cloned.id = cloned.id || cloned.code || targetId || "preview-speaking";
+      cloned.code = cloned.code || cloned.id;
+      cloned.title = cloned.title || "Bản nháp luyện nói";
+      cloned.level = cloned.level || "A1";
+      cloned.content_locked = false;
+      cloned._isPreview = true;
+      return cloned;
+    } catch (err) {
+      console.warn("[LivePreview] Không đọc được bản nháp bài nói:", err);
+      return null;
+    }
+  };
+
   const checkUrlSet = () => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
@@ -96,6 +122,16 @@ function initSpeakingPage() {
         currentLevel = lvlParam;
       }
       const targetId = getParam("set") || getParam("id");
+      if (initialRoute.preview) {
+        const draftSet = readSpeakingPreviewDraft(targetId);
+        if (draftSet) {
+          currentMode = matchesSpeakingMode(draftSet, "reflex") ? "reflex" : "shadowing";
+          currentLevel = draftSet.level || currentLevel;
+          initialRoute.set = initialRoute.id = null;
+          openSpeakingWorkspace(draftSet, currentMode);
+          return true;
+        }
+      }
       if (targetId) {
         if (typeof window.requireAuth === "function" && !window.requireAuth("speaking.html?set=" + encodeURIComponent(targetId))) return true;
         const all = getSpeakingSets();
@@ -124,10 +160,11 @@ function initSpeakingPage() {
   };
 
   const loadCloudSpeaking = async () => {
+    if (initialRoute.preview && readSpeakingPreviewDraft(initialRoute.set || initialRoute.id)) return;
     // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có bài luyện nói trong RAM/IndexedDB/file module
     if (window.SPEAKING_SETS && window.SPEAKING_SETS.length > 0) return;
     // Chờ module nạp xong trước (đúng thứ tự như trang Nghe) — chỉ truy vấn bảng khi module thật sự trống
-    if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("SPEAKING_SETS")) {
+    if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("SPEAKING_SETS") && !(initialRoute.preview && readSpeakingPreviewDraft(initialRoute.set || initialRoute.id))) {
       try { await window.RusiDataLoader.load("SPEAKING_SETS"); } catch (err) { console.warn("[Speaking] Lỗi nạp module SPEAKING_SETS:", err); }
       if (window.SPEAKING_SETS && window.SPEAKING_SETS.length > 0) return;
     }
@@ -150,7 +187,7 @@ function initSpeakingPage() {
   };
   loadCloudSpeaking();
 
-  if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("SPEAKING_SETS")) {
+  if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("SPEAKING_SETS") && !(initialRoute.preview && readSpeakingPreviewDraft(initialRoute.set || initialRoute.id))) {
     window.RusiDataLoader.load("SPEAKING_SETS").then(() => {
       if (!document.body.classList.contains("in-workspace")) {
         if (!checkUrlSet()) {
@@ -386,18 +423,30 @@ function initSpeakingPage() {
   };
 
 const openSpeakingWorkspace = (set, mode = currentMode) => {
-    if (typeof window.requireAuth === "function" && !window.requireAuth("speaking.html?set=" + encodeURIComponent((set && (set.id || set.code)) || ""))) return;
+    const isPreviewSet = Boolean(set && set._isPreview);
+    if (!isPreviewSet && typeof window.requireAuth === "function" && !window.requireAuth("speaking.html?set=" + encodeURIComponent((set && (set.id || set.code)) || ""))) return;
     // Bài PRO: file công khai chỉ có metadata — tải nội dung bằng phiên PRO rồi mở lại
-    if (set && set.content_locked && window.RusiProContent) {
+    if (!isPreviewSet && set && set.content_locked && window.RusiProContent) {
       window.RusiProContent.ensureFull("SPEAKING_SETS", set, { title: "Nội dung luyện nói dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn." })
         .then((full) => { if (full && !full.content_locked) openSpeakingWorkspace(full, mode); });
       return;
     }
-    if (window.setRusiDeepUrl && set) {
+    if (!isPreviewSet && window.setRusiDeepUrl && set) {
       window.setRusiDeepUrl('/speaking/' + (mode || 'shadowing') + '/' + encodeURIComponent(set.id || set.code));
     }
     openSpeakingSet = set;
     document.body.classList.add("in-workspace");
+    const previewScores = {};
+    const getSentenceScore = (idx) => (isPreviewSet
+      ? (Object.prototype.hasOwnProperty.call(previewScores, idx) ? previewScores[idx] : null)
+      : STORE.get("speak_" + set.id + "_" + idx, null));
+    const setSentenceScore = (idx, val) => {
+      if (isPreviewSet) {
+        previewScores[idx] = val;
+        return;
+      }
+      STORE.set("speak_" + set.id + "_" + idx, val);
+    };
     const todayKey = "speak_today_" + new Date().toDateString();
     const attemptsToday = STORE.get(todayKey, 0);
     const items = (Array.isArray(set.sentences) && set.sentences.length) ? set.sentences : ((Array.isArray(set.items) && set.items.length) ? set.items : ((set.raw_data && set.raw_data.items) || []));
@@ -557,7 +606,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       let totalScore = 0;
       let scoredCount = 0;
       items.forEach((_, idx) => {
-        const sc = STORE.get("speak_" + set.id + "_" + idx, null);
+        const sc = getSentenceScore(idx);
         if (sc !== null) {
           totalScore += sc;
           scoredCount++;
@@ -567,11 +616,12 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       const avg = scoredCount > 0 ? Math.round(totalScore / scoredCount) : 0;
       const pct = items.length > 0 ? Math.round((done / items.length) * 100) : 0;
       const compKey = "speak_completed_" + set.id;
-      const isCompleted = Boolean(STORE.get(compKey, false));
+      const isCompleted = isPreviewSet ? false : Boolean(STORE.get(compKey, false));
       return { done, avg, pct, scoredCount, isCompleted, xp: isCompleted ? SPEAK_LESSON_XP : 0 };
     };
 
     const checkLessonCompletion = () => {
+      if (isPreviewSet) return;
       const stats = getStats();
       if (stats.scoredCount >= items.length && items.length > 0 && stats.avg >= 70) {
         const compKey = "speak_completed_" + set.id;
@@ -614,6 +664,16 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
           </button>
         </div>
       </div>
+
+      ${isPreviewSet ? `
+        <div class="topic-preview-badge-row" role="status" style="margin:12px 16px 0">
+          <span aria-hidden="true">${icon("eye", 18) || "👁️"}</span>
+          <div style="min-width:0;flex:1">
+            <strong>Chế độ Xem trước CMS (Live Preview)</strong>
+            <div style="font-size:0.8rem;opacity:0.9;font-weight:400">Đang hiển thị bản nháp chưa xuất bản từ CMS. Chế độ xem trước không lưu điểm luyện nói, tiến độ hay XP.</div>
+          </div>
+        </div>
+      ` : ""}
 
       <!-- WORKSPACE CONTAINER (KHÔNG GIAN LUYỆN NÓI MỞ RỘNG) -->
       <div class="sp-ws-grid ${!hasVideo ? "sp-ws-no-video" : ""}" id="spWsGrid">
@@ -961,7 +1021,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
       if (!hostList) return;
 
       hostList.innerHTML = items.map((it, idx) => {
-        const sc = STORE.get("speak_" + set.id + "_" + idx, null);
+        const sc = getSentenceScore(idx);
         const isDone = sc !== null && sc >= 70;
         const numStr = String(idx + 1).padStart(2, "0");
         const isActive = idx === currentSentenceIdx;
@@ -1248,7 +1308,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
 
       // Hiển thị điểm đã lưu của câu (nếu có)
       const resBar = el("#spSpeechResultBar");
-      const prevScore = STORE.get("speak_" + set.id + "_" + idx, null);
+      const prevScore = getSentenceScore(idx);
 
       if (resBar) {
         if (prevScore !== null) {
@@ -1314,12 +1374,12 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
     let recordStartToken = 0; // tăng mỗi lần bắt đầu/dừng ghi âm → bỏ phiên cũ khi người dùng dừng trong lúc chờ mic
     const startRecording = async () => {
       // Kiểm tra khóa bài học dành cho PRO
-      if ((set.is_pro_only || set.is_pro) && (typeof Monetization === "undefined" || !Monetization.isPro())) {
+      if (!isPreviewSet && (set.is_pro_only || set.is_pro) && (typeof Monetization === "undefined" || !Monetization.isPro())) {
         Monetization.showProGateModal("Nội dung luyện nói dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nói chuyên sâu kèm trợ lý AI sửa phát âm chuẩn.");
         return;
       }
       // Hạn mức thực hành miễn phí trong ngày (đủ để học viên hoàn thành trọn vẹn bài học 25-30 câu)
-      if (typeof Monetization !== "undefined" && !Monetization.isPro()) {
+      if (!isPreviewSet && typeof Monetization !== "undefined" && !Monetization.isPro()) {
         const used = STORE.get(todayKey, 0);
         if (used >= 30) {
           Monetization.showProGateModal("Lượt luyện nói hôm nay đã hết", "Bạn đã dùng hết 30 lượt luyện nói miễn phí hôm nay. Nâng cấp lên gói PRO để mở khóa AI chấm âm vị không giới hạn số lượt.");
@@ -1538,9 +1598,10 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
         const werResult = computeWordErrorRate(targetText, lastHeardText);
         const sim = werResult ? werResult.accuracy : 0;
 
-        const bestScore = Math.max(sim, STORE.get("speak_" + set.id + "_" + targetIdx, 0));
-        STORE.set("speak_" + set.id + "_" + targetIdx, bestScore);
-        STORE.set(todayKey, STORE.get(todayKey, 0) + 1);
+        const prevBest = getSentenceScore(targetIdx);
+        const bestScore = Math.max(sim, prevBest !== null ? prevBest : 0);
+        setSentenceScore(targetIdx, bestScore);
+        if (!isPreviewSet) STORE.set(todayKey, STORE.get(todayKey, 0) + 1);
 
         if (statusLbl) statusLbl.textContent = "Đã đánh giá xong";
         if (dotEl) {
@@ -1893,7 +1954,8 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
   window.addEventListener("popstate", window._rusiSpeakPopHandler);
 
   renderHub();
-  // checkUrlSet() đặt cấp độ/chế độ theo ?level= / ?mode= sau khi hub đã vẽ → vẽ lại nếu không mở bài nào
+  // checkUrlSet() đặt cấp độ/chế độ theo ?level= / ?mode= sau khi hub đã vẽ → vẽ lại nếu không mở bài nào.
+  // Live Preview (?preview=1) cũng mở qua checkUrlSet(): cờ preview đã chụp trong initialRoute nên renderHub() đổi URL không làm mất.
   if (!checkUrlSet() && (initialRoute.level || initialRoute.mode) && !document.body.classList.contains("in-workspace")) {
     renderHub();
   }
