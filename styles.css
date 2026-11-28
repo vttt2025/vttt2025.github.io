@@ -33930,6 +33930,8 @@ body.index-personalized #indexUserProgressHost {
 .trki-subtest-compact-score {
   font-size: 0.85rem;
   font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .trki-subtest-compact-score.pass {
@@ -36609,6 +36611,10 @@ body.cbt-resizing .cbt-gutter-handle {
 
 @media (max-width: 480px) {
   .cbt-subtest-name {
+    display: none;
+  }
+  /* Có thêm nút "Thử nộp lại": không đủ chỗ cho tiêu đề (đã hiện đầy đủ trong thẻ kết quả bên dưới) */
+  .cbt-top-bar:has(#btnResubmitTop) .cbt-title-group {
     display: none;
   }
 }
