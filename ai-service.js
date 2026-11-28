@@ -75,7 +75,10 @@
       taskType = "picture",
       imageUrl = "",
       userId = null,
-      isPro = null
+      isPro = null,
+      taskId = "",
+      taskCode = "",
+      clientSubmissionId = ""
     }) {
       const session = await (typeof window !== "undefined" ? window.RusiSupabase?.auth?.getSession?.() : null);
       const accessToken = session?.access_token;
@@ -114,7 +117,11 @@
             imageDesc,
             suggestedWords,
             taskType,
-            imageUrl
+            imageUrl,
+            // Edge Function mới đọc đề (ai_prompt, bài mẫu…) từ DB theo mã đề và tự lưu writing_submissions; bản cũ bỏ qua 3 trường này
+            taskId,
+            taskCode,
+            clientSubmissionId
           }),
           signal: fetchSignal
         });
@@ -132,7 +139,8 @@
               passed: data.passed !== undefined ? Boolean(data.passed) : (Number(data.total) >= 66),
               feedback: data.feedback || "Bài viết đã được AI phân tích.",
               fallback: Boolean(data.fallback),
-              quota: data.quota || null
+              quota: data.quota || null,
+              submissionId: data.submission_id || null
             };
           } else if (data && data.limitReached) {
             return {
