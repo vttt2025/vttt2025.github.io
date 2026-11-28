@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css?v=4.14" />
+  <link rel="stylesheet" href="admin.css?v=4.16" />
   <script src="js/theme.js?v=1.2"></script>
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="192x192" href="/assets/favicon-192.png" />
@@ -135,6 +135,14 @@
           <a class="payload-nav-link active" data-nav="dashboard" href="#dashboard">
             <span class="payload-nav-icon"><i data-rusi-icon="layout-dashboard" data-size="18"></i></span>
             <span class="payload-nav-label">Bảng điều khiển (Overview)</span>
+          </a>
+        </div>
+
+        <!-- Studio Chấm bài viết (B-16) — mục duy nhất giáo viên thấy (body.rusi-teacher-mode) -->
+        <div class="payload-nav-item rusi-nav-grading" style="margin-bottom:14px">
+          <a class="payload-nav-link" data-nav="grading" href="#grading">
+            <span class="payload-nav-icon"><i data-rusi-icon="pen-tool" data-size="18"></i></span>
+            <span class="payload-nav-label">Chấm bài viết</span>
           </a>
         </div>
 
@@ -350,6 +358,7 @@
   <script src="js/admin-local.js?v=1.0" defer></script>
   <script src="js/admin-drafts.js?v=1.1" defer></script>
   <script src="js/admin-monitor.js?v=1.1" defer></script>
-  <script src="admin.js?v=13.23" defer></script>
+  <script src="js/admin-grading.js?v=1.1" defer></script>
+  <script src="admin.js?v=13.24" defer></script>
 </body>
 </html>
