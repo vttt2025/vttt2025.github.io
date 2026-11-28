@@ -1031,7 +1031,7 @@ const MascotRusika = {
     } else if (/tăng cấp|tiến hóa|xp|cấp độ|mèo/i.test(query)) {
       return {
         title: "Hệ thống Tiến hóa của Mèo Rusika",
-        text: "Rusika sẽ lớn lên và thay đổi trang phục theo điểm XP của bạn:\n• <b>Cấp 1 (0–99 XP)</b>: Mèo con đeo chuông đỏ đáng yêu 🌱\n• <b>Cấp 2 (100–299 XP)</b>: Mèo học trò kính vàng & cà vạt Nga 📚\n• <b>Cấp 3 (300–699 XP)</b>: Mèo thông thái mũ cử nhân & nơ xanh 🎓\n• <b>Cấp 4 (700–1499 XP)</b>: Học sĩ Mũ lông Ushanka ấm áp ❄️\n• <b>Cấp 5 (1500+ XP)</b>: Đại hiệp Mèo Vương miện Hoàng gia Sa hoàng 👑\n\n👉 Nhận XP bằng cách: Học Lọ từ vựng (+10 XP), làm bài thi thử (+50 XP), viết bài luận (+30 XP) và mỗi câu hỏi trò chuyện (+5 XP)!"
+        text: "Rusika sẽ lớn lên và thay đổi trang phục theo điểm XP của bạn:\n• <b>Cấp 1 (0–99 XP)</b>: Mèo con đeo chuông đỏ đáng yêu 🌱\n• <b>Cấp 2 (100–299 XP)</b>: Mèo học trò kính vàng & cà vạt Nga 📚\n• <b>Cấp 3 (300–699 XP)</b>: Mèo thông thái mũ cử nhân & nơ xanh 🎓\n• <b>Cấp 4 (700–1499 XP)</b>: Học sĩ Mũ lông Ushanka ấm áp ❄️\n• <b>Cấp 5 (1500+ XP)</b>: Đại hiệp Mèo Vương miện Hoàng gia Sa hoàng 👑\n\n👉 Nhận XP bằng cách: Học Lọ từ vựng (+10 XP), làm bài thi thử (+50 XP) và viết bài luận (+30 XP)!"
       };
     } else {
       return {
