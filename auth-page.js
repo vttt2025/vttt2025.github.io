@@ -198,7 +198,7 @@
 
         // Tự động chuyển tiếp sau 1.5 giây nếu người dùng không thao tác đổi tài khoản
         autoRedirectTimer = setTimeout(executeRedirect, 1500);
-        return;
+        // Không return: vẫn gắn sự kiện cho nút Google/form Email bên dưới để dùng được sau khi bấm "Đổi tài khoản"
       }
     } else if (currentUser && isGuestUser(currentUser)) {
       // Xóa phiên Khách cũ nếu có để người dùng đăng nhập chính thống
