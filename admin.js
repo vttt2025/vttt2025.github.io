@@ -2609,7 +2609,11 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     if (btnSbModal) btnSbModal.onclick = openSupabaseModal;
 
     const btnPreview = document.getElementById("btnOpenPreviewDrawer");
-    if (btnPreview) btnPreview.onclick = window.openPreviewInNewTab;
+    if (btnPreview) btnPreview.onclick = () => {
+      const kd = document.getElementById("kebabDropdown");
+      if (kd) kd.classList.remove("open");
+      openLivePreview();
+    };
 
     const btnSave = document.getElementById("btnSaveDoc");
     if (btnSave) btnSave.onclick = () => window.saveDocument(true);
@@ -10153,14 +10157,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
   // 11. VIEW 4: LIVE PREVIEW DRAWER (PAYLOAD 3.0 SIGNATURE)
   // =========================================================================
 
-  function openLivePreview() {
-    const drawer = document.getElementById("previewDrawer");
-    const backdrop = document.getElementById("payloadBackdrop");
-    const iframe = document.getElementById("previewIframe");
-    const selector = document.getElementById("previewPageSelector");
-
-    if (!drawer || !backdrop) return;
-
+  function syncLivePreviewDraftPayload() {
     // Flush current DOM input values into draft buffer
     if (State.currentDraft && State.activeEditorTab !== "json") {
       if (State.activeEditorTab === "structure") syncContentTabFromDraft();
@@ -10188,11 +10185,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       }
     }
 
-    // Bản nháp xem trước chỉ đi qua sessionStorage/localStorage, không ghi vào kho admin trước khi bấm Lưu
+    // Bản nháp xem trước chỉ đi qua sessionStorage/localStorage cùng origin, không ghi vào kho admin trước khi bấm Lưu
     if (State.currentDraft && State.currentSlug) {
-      const idKey = State.currentDraft.id || State.currentDraft.slug || State.currentDraft.title;
-
-      // Lưu trữ bản nháp xem trước thời gian thực vào sessionStorage và localStorage
+      const idKey = State.currentDraft.id || State.currentDraft.code || State.currentDraft.slug || State.currentDraft.title;
       try {
         const previewPayload = {
           slug: State.currentSlug,
@@ -10200,18 +10195,25 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           doc: State.currentDraft,
           timestamp: Date.now()
         };
-        sessionStorage.setItem("rusi_live_preview_draft", JSON.stringify(previewPayload));
-        localStorage.setItem("rusi_live_preview_draft", JSON.stringify(previewPayload));
-      } catch (_) {}
+        const serialized = JSON.stringify(previewPayload);
+        sessionStorage.setItem("rusi_live_preview_draft", serialized);
+        localStorage.setItem("rusi_live_preview_draft", serialized);
+      } catch (err) {
+        console.warn("[LivePreview] Không thể lưu bản nháp xem trước:", err);
+      }
     }
+  }
 
-    let targetUrl = "mock-test.html";
+  function buildLivePreviewUrl(fallbackUrl) {
+    let targetUrl = fallbackUrl || "index.html";
     if (State.currentSlug && COLLECTIONS[State.currentSlug]) {
       const base = COLLECTIONS[State.currentSlug].webUrl;
-      const docId = State.currentDraft ? (State.currentDraft.id || State.currentDraft.slug) : State.currentDocId;
+      const docId = State.currentDraft
+        ? (State.currentDraft.id || State.currentDraft.code || State.currentDraft.slug)
+        : State.currentDocId;
 
       if (State.currentSlug === "TRKI_BANK" && docId) targetUrl = `mock-test.html?test=${encodeURIComponent(docId)}&preview=1`;
-      else if (State.currentSlug === "VOCAB_JARS" && docId) targetUrl = `vocabulary.html?topic=${encodeURIComponent(docId)}&mode=article&preview=1`;
+      else if (State.currentSlug === "VOCAB_JARS" && docId) targetUrl = `vocabulary.html?jar=${encodeURIComponent(docId)}&mode=jar&preview=1`;
       else if (State.currentSlug === "TOPIC_ARTICLES" && docId) targetUrl = `vocabulary.html?topic=${encodeURIComponent(docId)}&mode=article&preview=1`;
       else if (State.currentSlug === "BLOG_POSTS" && docId) targetUrl = `blog-post.html?slug=${encodeURIComponent(docId)}&preview=1`;
       else if (State.currentSlug === "LISTENING_LESSONS" && docId) targetUrl = `listening.html?lesson=${encodeURIComponent(docId)}&preview=1`;
@@ -10219,6 +10221,19 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       else if (State.currentSlug === "WRITING_TASKS" && docId) targetUrl = `writing.html?task=${encodeURIComponent(docId)}&preview=1`;
       else targetUrl = base;
     }
+    return targetUrl;
+  }
+
+  function openLivePreview() {
+    const drawer = document.getElementById("previewDrawer");
+    const backdrop = document.getElementById("payloadBackdrop");
+    const iframe = document.getElementById("previewIframe");
+    const selector = document.getElementById("previewPageSelector");
+
+    if (!drawer || !backdrop) return;
+
+    syncLivePreviewDraftPayload();
+    const targetUrl = buildLivePreviewUrl("mock-test.html");
 
     if (selector) selector.value = targetUrl.split("?")[0];
     if (iframe) iframe.src = targetUrl;
@@ -10230,7 +10245,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     if (closeBtn) closeBtn.onclick = closeLivePreview;
 
     const refreshBtn = document.getElementById("btnRefreshPreview");
-    if (refreshBtn) refreshBtn.onclick = () => { if (iframe) iframe.src = iframe.src; };
+    if (refreshBtn) refreshBtn.onclick = () => {
+      syncLivePreviewDraftPayload();
+      if (iframe) iframe.src = iframe.src;
+    };
 
     if (selector) selector.onchange = (e) => { if (iframe) iframe.src = e.target.value; };
 
@@ -10238,60 +10256,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
   }
 
   window.openPreviewInNewTab = function () {
-    // Flush current DOM input values into draft buffer
-    if (State.currentDraft && State.activeEditorTab !== "json") {
-      if (State.activeEditorTab === "structure") syncContentTabFromDraft();
-      document.querySelectorAll(".live-draft-field").forEach((inp) => {
-        const k = inp.getAttribute("data-key") || inp.name;
-        if (k) State.currentDraft[k] = inp.type === "number" ? Number(inp.value) : inp.value;
-      });
-      // Nếu canvas Notion trực quan đang hiện và đã bị sửa, đồng bộ canvas sang markdown
-      const canvasEl = document.querySelector(".notion-canvas");
-      if (canvasEl && mdCanvasNeedsSync() && typeof window.domToMarkdown === "function") {
-        const md = window.domToMarkdown(canvasEl);
-        const mdInp = document.querySelector(".live-markdown-input");
-        if (mdInp) mdInp.value = md;
-        State.currentDraft.content_md = md;
-        State.currentDraft.content = md;
-        State.currentDraft.content_markdown = md;
-      } else {
-        const mdInp = document.querySelector(".live-markdown-input");
-        if (mdInp) {
-          const val = mdInp.value;
-          State.currentDraft.content_md = val;
-          State.currentDraft.content = val;
-          State.currentDraft.content_markdown = val;
-        }
-      }
-    }
-
-    const docId = State.currentDraft ? (State.currentDraft.id || State.currentDraft.slug) : State.currentDocId;
-    let targetUrl = "index.html";
-    if (State.currentSlug && COLLECTIONS[State.currentSlug]) {
-      const base = COLLECTIONS[State.currentSlug].webUrl;
-      if (State.currentSlug === "TRKI_BANK" && docId) targetUrl = `mock-test.html?test=${encodeURIComponent(docId)}&preview=1`;
-      else if (State.currentSlug === "VOCAB_JARS" && docId) targetUrl = `vocabulary.html?topic=${encodeURIComponent(docId)}&mode=article&preview=1`;
-      else if (State.currentSlug === "TOPIC_ARTICLES" && docId) targetUrl = `vocabulary.html?topic=${encodeURIComponent(docId)}&mode=article&preview=1`;
-      else if (State.currentSlug === "BLOG_POSTS" && docId) targetUrl = `blog-post.html?slug=${encodeURIComponent(docId)}&preview=1`;
-      else if (State.currentSlug === "LISTENING_LESSONS" && docId) targetUrl = `listening.html?lesson=${encodeURIComponent(docId)}&preview=1`;
-      else if (State.currentSlug === "SPEAKING_SETS" && docId) targetUrl = `speaking.html?set=${encodeURIComponent(docId)}&preview=1`;
-      else if (State.currentSlug === "WRITING_TASKS" && docId) targetUrl = `writing.html?task=${encodeURIComponent(docId)}&preview=1`;
-      else targetUrl = base;
-    }
-
-    if (State.currentDraft && State.currentSlug) {
-      try {
-        const idKey = State.currentDraft.id || State.currentDraft.slug || State.currentDraft.title;
-        const previewPayload = {
-          slug: State.currentSlug,
-          docId: idKey,
-          doc: State.currentDraft,
-          timestamp: Date.now()
-        };
-        sessionStorage.setItem("rusi_live_preview_draft", JSON.stringify(previewPayload));
-        localStorage.setItem("rusi_live_preview_draft", JSON.stringify(previewPayload));
-      } catch (_) {}
-    }
+    syncLivePreviewDraftPayload();
+    const targetUrl = buildLivePreviewUrl("index.html");
     window.open(targetUrl, "_blank");
   };
 
