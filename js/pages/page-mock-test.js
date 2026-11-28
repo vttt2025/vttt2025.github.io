@@ -928,6 +928,11 @@ function initMockTestPage() {
     if (currentTest && currentTest.code && currentTest.code.startsWith("trki_zlat")) {
       await loadQBankIntoTest(currentTest);
     }
+    // Lượt mới: xoá đáp án/giải thích máy chủ trả về ở lượt trước (gắn trên chính object câu hỏi trong RAM),
+    // tránh "Làm lại đề" bị khoá câu và lộ đáp án ngay cú bấm đầu. Dữ liệu công khai không có các trường này.
+    (currentTest.parts || []).forEach((p) => (p.questions || []).forEach((q) => {
+      ["a", "aMulti", "ex", "_correctAnswer", "_checkRequested", "_checking", "_checkFailed", "_proRequired"].forEach((k) => { delete q[k]; });
+    }));
 
     const selectedPartList = getExamPartList();
     const isSubset = Boolean(selectedPartList && selectedPartList.length > 0 && selectedPartList.length < (currentTest.parts || []).length);
