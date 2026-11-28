@@ -3156,6 +3156,7 @@ function initListeningPage() {
     let dictPlayToken = 0;       // mỗi lần phát một token: callback của lần phát cũ (TTS bị cancel, audio cũ) bị bỏ qua
     let dictCheckEnd = null;     // listener timeupdate của lần phát hiện tại (gỡ khi dừng)
     const hintedSentences = new Set(); // câu đã dùng gợi ý (Tab) trong phiên này → không cộng XP câu
+    const revealedSentences = new Set(); // câu đã bấm "Xem đáp án" → XP cả bài giảm theo tỉ lệ
 
     // Câu có mốc thời gian trong file audio cả bài → đoạn [start_sec, end_sec] để vẽ sóng và tính tiến độ
     const getSentenceSegment = (s) => (s && typeof s.start_sec === "number" && typeof s.end_sec === "number" && s.end_sec > s.start_sec)
@@ -3362,12 +3363,13 @@ function initListeningPage() {
 
     const tokenizeSentence = (sentenceText) => {
       const tokens = [];
-      const regex = /([а-яА-ЯёЁa-zA-Z0-9\-]+|[^а-яА-ЯёЁa-zA-Z0-9\s]+|\s+)/g;
+      // \u0300/\u0301: dấu trọng âm kết hợp (вода́) — là một phần của từ, không tách thành dấu câu
+      const regex = /([а-яА-ЯёЁa-zA-Z0-9\-\u0300\u0301]+|[^а-яА-ЯёЁa-zA-Z0-9\s\u0300\u0301]+|\s+)/g;
       let m;
       while ((m = regex.exec(sentenceText)) !== null) {
         const val = m[1];
         if (/^\s+$/.test(val)) continue;
-        const isWord = /^[а-яА-ЯёЁa-zA-Z0-9\-]+$/.test(val);
+        const isWord = /^[а-яА-ЯёЁa-zA-Z0-9\-\u0300\u0301]+$/.test(val);
         tokens.push({ text: val, isWord });
       }
       return tokens;
@@ -3655,6 +3657,12 @@ function initListeningPage() {
                   </div>
 
                   <div class="lis-dict-toolbar-right">
+                    <button type="button" class="lis-dict-tool-btn" id="btnDictHint" title="Gợi ý 1 từ (phím Tab)" aria-label="Gợi ý 1 từ">
+                      ${icon("lightbulb", 16)} <span>Gợi ý</span>
+                    </button>
+                    <button type="button" class="lis-dict-tool-btn ${showAnswer ? "is-active" : ""}" id="btnDictShowAnswer" title="Xem đáp án câu này (giảm XP cả bài)" aria-label="Xem đáp án" aria-pressed="${showAnswer}">
+                      ${icon("eye", 16)} <span>Đáp án</span>
+                    </button>
                     <button type="button" class="lis-dict-tool-btn is-icon-only ${hideInstantCheck ? "is-active" : ""}" id="btnToggleHideResult" title="${hideInstantCheck ? "Đang ẩn kết quả (nhấn Enter để kiểm tra)" : "Ẩn kết quả tới khi nhấn Enter"}" aria-label="Ẩn kết quả">
                       ${icon("eye-off", 16)}
                     </button>
@@ -3814,7 +3822,7 @@ function initListeningPage() {
       flow.innerHTML = units.join("");
 
       const inputs = Array.from(flow.querySelectorAll(".lis-dict-word-input"));
-      const norm = (str) => (str || "").trim().toLowerCase().replace(/[.,!?;:«»""'']/g, "").replace(/ё/g, "е");
+      const norm = (str) => (str || "").trim().toLowerCase().replace(/[\u0300\u0301]/g, "").replace(/[.,!?;:«»""'']/g, "").replace(/ё/g, "е");
 
       // Hàm kiểm tra khi bấm Enter (hoặc khi ở chế độ hideInstantCheck)
       const checkAllInputsOnEnter = (currentInput) => {
@@ -3913,7 +3921,10 @@ function initListeningPage() {
         if (!Progress.doneList("listenDone").includes(lessonKey) && sentences.every((_, i) => isSentenceDone(i))) {
           // Mọi câu đều đã mở bằng gợi ý → không thưởng XP cả bài
           const allHinted = hintedSentences.size >= sentences.length;
-          lessonRewardXp = allHinted ? 0 : ((window.RUSI_XP_RULES && window.RUSI_XP_RULES.LISTENING_DICTATION_PASS) || 20);
+          const baseXp = (window.RUSI_XP_RULES && window.RUSI_XP_RULES.LISTENING_DICTATION_PASS) || 20;
+          // Đã xem đáp án câu nào thì mất phần XP của câu đó (không nhận trọn XP khi xem đáp án)
+          const revealedRatio = sentences.length ? Math.min(1, revealedSentences.size / sentences.length) : 0;
+          lessonRewardXp = allHinted ? 0 : Math.round(baseXp * (1 - revealedRatio));
           Progress.markDone("listenDone", lessonKey, { title: lesson.title, score: 100, xp: lessonRewardXp });
           if (lessonRewardXp) Progress.addXp(lessonRewardXp);
         }
@@ -4253,6 +4264,23 @@ function initListeningPage() {
           toggleHideBtn.classList.toggle("is-active", hideInstantCheck);
           toggleHideBtn.title = hideInstantCheck ? "Đang ẩn kết quả (nhấn Enter để kiểm tra)" : "Ẩn kết quả tới khi nhấn Enter";
           toast(hideInstantCheck ? "Đang bật ẩn kết quả: Gõ xong nhấn Enter để kiểm tra" : "Đã tắt ẩn kết quả: Tự động chuyển khi điền đúng");
+        };
+      }
+
+      // Gợi ý 1 từ / Xem đáp án: bấm được trên điện thoại (không có phím Tab)
+      const hintBtn = host.querySelector("#btnDictHint");
+      if (hintBtn) hintBtn.onclick = () => hintOneWord();
+      const showAnswerBtn = host.querySelector("#btnDictShowAnswer");
+      if (showAnswerBtn) {
+        showAnswerBtn.onclick = () => {
+          showAnswer = !showAnswer;
+          if (showAnswer && !(isRePracticing ? rePracticeDone.has(currentSentenceIdx) : isSentenceDone(currentSentenceIdx))) {
+            revealedSentences.add(currentSentenceIdx);
+          }
+          const box = host.querySelector("#dictInlineResult");
+          if (box) box.classList.toggle("hidden", !showAnswer);
+          showAnswerBtn.classList.toggle("is-active", showAnswer);
+          showAnswerBtn.setAttribute("aria-pressed", String(showAnswer));
         };
       }
 
