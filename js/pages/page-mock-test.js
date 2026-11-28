@@ -62,7 +62,16 @@ function initMockTestPage() {
   let shuffleOptionsEnabled = typeof STORE !== "undefined" ? STORE.get("trki_shuffle_options", true) : true;
   let sessionOptionOrders = {};
 
-  const checkUrlExam = () => {
+  // Link thẳng tới đề (?test=) mà lúc khởi tạo chưa có mục lục đề → mở khi dữ liệu về
+  let pendingUrlExamId = null;
+  const openPendingUrlExam = () => {
+    if (!pendingUrlExamId || document.body.classList.contains("in-workspace")) return false;
+    const id = pendingUrlExamId;
+    pendingUrlExamId = null;
+    return checkUrlExam(id);
+  };
+
+  const checkUrlExam = (overrideId) => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || urlParams.get(k);
@@ -70,7 +79,7 @@ function initMockTestPage() {
       if (targetLevel && ["A1", "A2", "B1", "B2", "C1", "C2"].includes(targetLevel.toUpperCase())) {
         currentLevel = targetLevel.toUpperCase();
       }
-      const targetId = getParam("exam") || getParam("test") || getParam("id");
+      const targetId = overrideId || getParam("exam") || getParam("test") || getParam("id");
       const urlMode = urlParams.get("mode");
       if (urlMode === "exam" || urlMode === "practice") {
         examMode = urlMode;
@@ -88,6 +97,7 @@ function initMockTestPage() {
           openExamBriefing(found, null, examMode);
           return true;
         }
+        if (!bank.length) pendingUrlExamId = targetId;
       }
     } catch (_) {}
     return false;
@@ -106,6 +116,7 @@ function initMockTestPage() {
             currentTest = bank[0];
           }
           console.log(`[Supabase] Đã nạp & đồng bộ ${bank.length} đề thi TRKI!`);
+          if (openPendingUrlExam()) return;
           if (!document.body.classList.contains("in-workspace")) {
             renderTrkiCards();
           }
@@ -125,6 +136,7 @@ function initMockTestPage() {
         if (!currentTest || !bank.some(t => t.id === currentTest.id)) {
           currentTest = bank[0];
         }
+        if (openPendingUrlExam()) return;
         if (!document.body.classList.contains("in-workspace")) {
           renderTrkiCards();
         }
@@ -2154,6 +2166,14 @@ function initMockTestPage() {
       window.addEventListener("pointermove", doDrag);
       window.addEventListener("pointerup", stopDrag);
       window.addEventListener("pointercancel", stopDrag);
+      // Gỡ cùng lúc với audio/phím tắt khi rời phòng thi (tránh dồn listener mỗi lần vẽ lại phòng thi)
+      const prevTeardown = workspaceTeardown;
+      workspaceTeardown = () => {
+        if (prevTeardown) prevTeardown();
+        window.removeEventListener("pointermove", doDrag);
+        window.removeEventListener("pointerup", stopDrag);
+        window.removeEventListener("pointercancel", stopDrag);
+      };
     }
 
     // QUẢN LÝ DRAWER MA TRẬN BẢNG CÂU HỎI
@@ -2837,6 +2857,23 @@ function initMockTestPage() {
     } catch(e) {}
     return false;
   };
+
+  // Nút Back trình duyệt: URL về /mock-test (pushState) mà màn giới thiệu đề / kết quả vẫn mở → chạy nút quay lại trong trang.
+  // Đang làm bài thì bỏ qua, tránh rời phòng thi ngoài ý muốn.
+  if (window._rusiTrkiPopHandler) window.removeEventListener("popstate", window._rusiTrkiPopHandler);
+  window._rusiTrkiPopHandler = () => {
+    if (started || !currentTest || !document.body.classList.contains("in-workspace")) return;
+    const ids = [currentTest.id, currentTest.code].filter(Boolean).map((v) => String(v).toLowerCase());
+    let urlIds = [];
+    try {
+      urlIds = window.location.pathname.split("/").concat(Array.from(new URLSearchParams(window.location.search).values()))
+        .map((v) => { try { return decodeURIComponent(v).toLowerCase(); } catch (_) { return String(v).toLowerCase(); } });
+    } catch (_) {}
+    if (ids.some((id) => urlIds.includes(id))) return;
+    const backBtn = host.querySelector("#btnBriefingBack, #btnReviewBack");
+    if (backBtn) backBtn.click();
+  };
+  window.addEventListener("popstate", window._rusiTrkiPopHandler);
 
   if (!checkUrlExam() && !checkResumeActiveExam()) {
     renderHub();
