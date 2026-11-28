@@ -974,6 +974,9 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         <button type="button" class="quizlet-mode-btn ${initialMode === "learn" ? "active" : ""}" data-mode="learn">
           ${window.RusiIcons ? RusiIcons.get("brain", { size: 16 }) : ""} <span class="btn-text">Trắc nghiệm</span>
         </button>
+        <button type="button" class="quizlet-mode-btn ${initialMode === "write" ? "active" : ""}" data-mode="write">
+          ${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 16 }) : ""} <span class="btn-text">Gõ từ</span>
+        </button>
         <button type="button" class="quizlet-mode-btn ${initialMode === "match" ? "active" : ""}" data-mode="match">
           ${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 16 }) : ""} <span class="btn-text">Ghép thẻ</span>
         </button>
@@ -982,6 +985,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       <div class="qmode-pane ${initialMode === "list" ? "active" : ""}" id="paneList"></div>
       <div class="qmode-pane ${initialMode === "flashcard" ? "active" : ""}" id="paneFlashcard"></div>
       <div class="qmode-pane ${initialMode === "learn" ? "active" : ""}" id="paneLearn"></div>
+      <div class="qmode-pane ${initialMode === "write" ? "active" : ""}" id="paneWrite"></div>
       <div class="qmode-pane ${initialMode === "match" ? "active" : ""}" id="paneMatch"></div>
     </div>
   `;
@@ -1004,6 +1008,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
     list: container.querySelector("#paneList"),
     flashcard: container.querySelector("#paneFlashcard"),
     learn: container.querySelector("#paneLearn"),
+    write: container.querySelector("#paneWrite"),
     match: container.querySelector("#paneMatch")
   };
 
@@ -1023,6 +1028,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
     if (mode === "flashcard") renderFlashcardMode();
     if (mode === "learn") renderLearnMode();
+    if (mode === "write") renderWriteMode();
     if (mode === "match") renderMatchMode();
     if (mode === "list") renderListMode();
   };
@@ -1859,7 +1865,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           <p style="color:var(--muted);font-size:1.1rem;margin:0 0 20px">
             Bạn đã gõ đúng <b>${wCorrect}</b> / ${wQueue.length} từ vựng (${pct}%)
           </p>
-          <div style="display:flex;gap:12px;justify-content:center">
+          <div class="quizlet-summary-actions" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
             <button class="btn btn-primary" id="btnWriteRestart">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 16 }) : ""} Luyện lại từ đầu</button>
             <button class="btn btn-soft" id="btnWriteToFlash">${window.RusiIcons ? RusiIcons.get("flashcards-layers", { size: 16 }) : ""} Về thẻ ghi nhớ</button>
           </div>
@@ -1888,7 +1894,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           <div class="write-prompt-meaning">${esc(currentWord.vi)}</div>
           ${currentWord.note ? `<div class="scroll-pos" style="display:inline-block;margin-bottom:10px">${esc(currentWord.note)}</div>` : ""}
           <div style="margin-top:6px">
-            <button type="button" class="btn btn-soft btn-sm" id="btnWriteSpeak">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""} <span class="btn-text">Nghe</span> phát âm gợi ý</button>
+            <button type="button" class="btn btn-soft btn-sm" id="btnWriteSpeak">${window.RusiIcons ? RusiIcons.get("volume-high", { size: 14 }) : ""} <span>Nghe phát âm gợi ý</span></button>
           </div>
         </div>
 
@@ -1931,14 +1937,22 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       };
     });
 
+    const normalizeWriteAnswer = (str) => {
+      const base = (typeof SRS !== "undefined" && typeof SRS._norm === "function")
+        ? SRS._norm(str)
+        : String(str || "").replace(/[\u0300\u0301]/g, "").toLowerCase().trim();
+      return rusiNormalize(base.normalize("NFC")).replace(/\s+/g, " ");
+    };
+
     const form = pane.querySelector("#writeForm");
-    form.onsubmit = () => {
-      if (submitted) return;
+    form.onsubmit = (e) => {
+      if (e) e.preventDefault();
+      if (submitted) return false;
       submitted = true;
 
       const userVal = inp.value.trim();
-      const normUser = rusiNormalize(userVal);
-      const normTarget = rusiNormalize(currentWord.ru);
+      const normUser = normalizeWriteAnswer(userVal);
+      const normTarget = normalizeWriteAnswer(currentWord.ru || currentWord.stress);
       const resBox = pane.querySelector("#writeResult");
 
       if (normUser === normTarget && normUser.length > 0) {
@@ -1960,7 +1974,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         resBox.innerHTML = `
           <div style="font-weight:700;margin-bottom:6px">Chưa đúng chính tả!</div>
           <div style="color:var(--text);font-size:0.95rem">Bạn đã gõ: <span style="text-decoration:line-through">${esc(userVal || "(bỏ trống)")}</span></div>
-          <div style="font-size:1.2rem;font-weight:800;color:var(--primary);margin:6px 0">Đáp án đúng: ${esc(currentWord.ru)}</div>
+          <div style="font-size:1.2rem;font-weight:800;color:var(--primary);margin:6px 0">Đáp án đúng: ${esc(currentWord.stress || currentWord.ru)}</div>
           <button type="button" class="btn btn-primary btn-sm" id="btnWriteNext" style="margin-top:10px">Tiếp tục →</button>
         `;
         pane.querySelector("#btnWriteNext").onclick = () => {
@@ -2095,135 +2109,6 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         }
       };
     });
-  };
-
-  /* ---------------- MODE 5: TEST ---------------- */
-  const renderTestMode = () => {
-    const pane = panes.test;
-    if (!pane) return;
-
-    const testPool = qShuffleArray([...words]).slice(0, Math.min(8, words.length));
-    const questions = testPool.map((w, idx) => {
-      const isChoice = idx % 2 === 0;
-      if (isChoice) {
-        const distractors = getQuizletDistractors(w, words, 3);
-        const options = qShuffleArray([w.vi, ...distractors]);
-        return {
-          id: idx,
-          type: "choice",
-          ru: w.stress || w.ru,
-          correct: w.vi,
-          options
-        };
-      } else {
-        const isTrue = Math.random() > 0.5;
-        const fakeMeaning = isTrue ? w.vi : (getQuizletDistractors(w, words, 1)[0] || "nghĩa khác");
-        return {
-          id: idx,
-          type: "tf",
-          ru: w.stress || w.ru,
-          statement: fakeMeaning,
-          isTrue,
-          correct: isTrue ? "true" : "false"
-        };
-      }
-    });
-
-    pane.innerHTML = `
-      <div class="quizlet-learn-box" style="max-width:720px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px">
-          <div>
-            <h3 style="margin:0;display:flex;align-items:center;gap:8px">${window.RusiIcons ? RusiIcons.get("pen-tool", { size: 20 }) : ""} Bài kiểm tra từ vựng: ${esc(jarTitle)}</h3>
-            <span style="font-size:0.85rem;color:var(--muted)">Gồm ${questions.length} câu hỏi trắc nghiệm & đúng/sai</span>
-          </div>
-          <span class="rusi-badge rusi-badge-a1">${questions.length} câu</span>
-        </div>
-
-        <form id="quizletTestForm">
-          ${questions.map((q, idx) => `
-            <div style="background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
-              <div style="font-size:0.85rem;font-weight:700;color:var(--muted);margin-bottom:6px">CÂU ${idx + 1}:</div>
-              ${q.type === "choice" ? `
-                <div style="font-size:1.25rem;font-weight:800;margin-bottom:10px" class="ru">
-                  ${esc(q.ru)} có nghĩa là gì?
-                </div>
-                <div style="display:grid;grid-template-columns:repeat(2, 1fr);gap:8px">
-                  ${q.options.map((opt) => `
-                    <label style="display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:0.92rem">
-                      <input type="radio" name="q_${q.id}" value="${esc(opt)}" required />
-                      <span>${esc(opt)}</span>
-                    </label>
-                  `).join("")}
-                </div>
-              ` : `
-                <div style="font-size:1.25rem;font-weight:800;margin-bottom:10px" class="ru">
-                  ${esc(q.ru)} có nghĩa là ${esc(q.statement)}?
-                </div>
-                <div style="display:flex;gap:12px">
-                  <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer">
-                    <input type="radio" name="q_${q.id}" value="true" required />
-                    <span>${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 14 }) : ""} Đúng</span>
-                  </label>
-                  <label style="flex:1;display:flex;align-items:center;gap:8px;padding:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer">
-                    <input type="radio" name="q_${q.id}" value="false" required />
-                    <span>${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : ""} Sai</span>
-                  </label>
-                </div>
-              `}
-            </div>
-          `).join("")}
-
-          <div style="text-align:center;margin-top:20px">
-            <button type="submit" class="btn btn-primary btn-lg">${window.RusiIcons ? RusiIcons.get("check-circle-correct", { size: 16 }) : ""} Nộp bài kiểm tra</button>
-          </div>
-        </form>
-
-        <div id="testResultBox" style="display:none;margin-top:20px"></div>
-      </div>
-    `;
-
-    const form = pane.querySelector("#quizletTestForm");
-    form.onsubmit = (e) => {
-      e.preventDefault();
-      let correct = 0;
-      const formData = new FormData(form);
-
-      questions.forEach(q => {
-        const val = formData.get("q_" + q.id);
-        if (q.type === "choice") {
-          if (val === q.correct) correct++;
-        } else {
-          if (val === q.correct) correct++;
-        }
-      });
-
-      const pct = Math.round((correct / questions.length) * 100);
-      // XP Kiểm tra: tối đa 1 lần/ngày/lọ (cùng cách với learn_done_ / match_done_)
-      const testKey = "test_done_" + xpJarId + "_" + new Date().toDateString();
-      if (pct >= 70 && typeof Progress !== "undefined" && !STORE.get(testKey, false)) {
-        STORE.set(testKey, true);
-        Progress.addXp(25);
-      }
-
-      form.style.display = "none";
-      const resBox = pane.querySelector("#testResultBox");
-      resBox.style.display = "block";
-      resBox.innerHTML = `
-        <div class="quizlet-summary-box">
-          <div class="quizlet-summary-trophy">${window.RusiIcons ? RusiIcons.get(pct >= 80 ? "trophy-reward" : pct >= 50 ? "award-badge" : "book-open-blog", { size: 48 }) : ""}</div>
-          <h2 style="margin:0 0 8px">Kết quả: ${pct}% (${correct}/${questions.length} câu đúng)</h2>
-          <p style="color:var(--muted);margin-bottom:20px">
-            ${pct >= 80 ? "Xuất sắc! Bạn đã làm chủ rất tốt các từ vựng này." : pct >= 50 ? "Khá tốt! Hãy ôn lại các từ chưa vững nhé." : "Cần rèn luyện thêm, hãy dùng thẻ ghi nhớ để ôn lại."}
-          </p>
-          <div style="display:flex;gap:12px;justify-content:center">
-            <button class="btn btn-primary" id="btnTestAgain">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 16 }) : ""} Làm lại bài kiểm tra</button>
-            <button class="btn btn-soft" id="btnTestToFlash">${window.RusiIcons ? RusiIcons.get("flashcards-layers", { size: 16 }) : ""} Về thẻ ghi nhớ</button>
-          </div>
-        </div>
-      `;
-      pane.querySelector("#btnTestAgain").onclick = () => renderTestMode();
-      pane.querySelector("#btnTestToFlash").onclick = () => switchMode("flashcard");
-    };
   };
 
   /* ---------------- MODE 6: WORD LIST ---------------- */
