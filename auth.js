@@ -10,6 +10,18 @@
 
   try { localStorage.removeItem("trki_sb_service_key"); } catch (_) {}
 
+  // Tham số callback lúc tải trang, ghi lại TRƯỚC khi Auth.isReady() đổi mã PKCE và xoá ?code khỏi URL.
+  // js/auth-recovery.js dùng để nhận biết người dùng quay lại từ email "Quên mật khẩu".
+  window.RusiAuthCallbackAtLoad = (function () {
+    try {
+      const sp = new URLSearchParams(window.location.search || "");
+      const hp = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
+      return { hasCode: sp.has("code"), tokenHash: sp.get("token_hash") || "", type: sp.get("type") || hp.get("type") || "" };
+    } catch (_) {
+      return { hasCode: false, tokenHash: "", type: "" };
+    }
+  })();
+
   function safeEsc(val) {
     if (typeof esc === "function") return esc(val);
     return String(val == null ? "" : val).replace(/[&<>"']/g, (c) => ({
