@@ -39209,3 +39209,99 @@ select.add-jar-input {
 @media (max-width: 640px) {
   .lis-dict-tool-btn { width: 44px !important; min-width: 44px !important; height: 44px !important; }
 }
+
+/* Luyện viết: bàn phím Cyrillic ảo (gập/mở) */
+.writing-cyr-kbd-wrap {
+  margin-top: 8px;
+}
+.writing-cyr-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.writing-cyr-toggle:hover,
+.writing-cyr-toggle.is-active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.writing-cyr-kbd {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.writing-cyr-kbd.hidden {
+  display: none;
+}
+.writing-cyr-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+.writing-cyr-key {
+  flex: 0 1 56px;
+  min-height: 44px;
+  min-width: 0;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg, var(--surface));
+  color: var(--text);
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.writing-cyr-key:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.writing-cyr-key:focus-visible,
+.writing-cyr-toggle:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+.writing-cyr-key--fn {
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+.writing-cyr-key--fn.is-active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.writing-cyr-key--space {
+  flex-basis: 220px;
+}
+@media (max-width: 1024px) {
+  .writing-cyr-kbd {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+    padding: 8px;
+  }
+  .writing-cyr-kbd.hidden {
+    display: none;
+  }
+  .writing-cyr-row {
+    display: contents;
+  }
+  .writing-cyr-key--space {
+    grid-column: span 2;
+  }
+}

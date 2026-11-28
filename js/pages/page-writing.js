@@ -520,6 +520,20 @@ function initWritingPage() {
               </div>
 
               <textarea class="write-area ru writing-input-textarea" placeholder="Пишите здесь...">${esc(STORE.get("write_" + t.id, ""))}</textarea>
+              <!-- Bàn phím Cyrillic ảo (PROJECT_SPEC): gập/mở, dùng cho máy chưa cài bộ gõ tiếng Nga -->
+              <div class="writing-cyr-kbd-wrap">
+                <button type="button" class="writing-cyr-toggle" id="writingKbdToggle" aria-expanded="false" aria-controls="writingCyrKbd">
+                  ${icon("keyboard-cyrillic", 16)} <span>Bàn phím tiếng Nga</span>
+                </button>
+                <div class="writing-cyr-kbd hidden" id="writingCyrKbd" role="group" aria-label="Bàn phím tiếng Nga ảo">
+                  ${CYRILLIC_KEYS.map((row) => `<div class="writing-cyr-row">${row.map((k) => `<button type="button" class="writing-cyr-key ru" data-key="${k}">${k.toLowerCase()}</button>`).join("")}</div>`).join("")}
+                  <div class="writing-cyr-row">
+                    <button type="button" class="writing-cyr-key writing-cyr-key--fn" data-action="shift" aria-pressed="false" title="Chữ hoa / chữ thường">Aa</button>
+                    <button type="button" class="writing-cyr-key writing-cyr-key--fn writing-cyr-key--space" data-action="space" title="Dấu cách">␣</button>
+                    <button type="button" class="writing-cyr-key writing-cyr-key--fn" data-action="back" title="Xoá ký tự trước" aria-label="Xoá ký tự trước">⌫</button>
+                  </div>
+                </div>
+              </div>
               <div class="write-meta">
                 <span class="word-count">0 từ / tối thiểu ${minWords(t)} từ</span>
                 <span>${icon("check-circle-correct", 14)} Tự động lưu trên trình duyệt</span>
@@ -653,6 +667,51 @@ function initWritingPage() {
         STORE.set("write_" + t.id, area.value);
         updateCount();
       };
+
+      // Bàn phím Cyrillic ảo: chèn chữ qua insertText(); gập/mở và nhớ trạng thái trên máy này
+      const kbdToggle = panel.querySelector("#writingKbdToggle");
+      const kbd = panel.querySelector("#writingCyrKbd");
+      if (kbdToggle && kbd) {
+        let upper = false;
+        const isTouch = typeof window.matchMedia === "function" && window.matchMedia("(pointer: coarse)").matches;
+        const setKbdOpen = (open) => {
+          kbd.classList.toggle("hidden", !open);
+          kbdToggle.setAttribute("aria-expanded", String(open));
+          kbdToggle.classList.toggle("is-active", open);
+          // Màn cảm ứng: khi đang mở bàn phím ảo thì không bật bàn phím hệ thống che màn hình
+          if (isTouch) {
+            if (open) area.setAttribute("inputmode", "none");
+            else area.removeAttribute("inputmode");
+          }
+          STORE.set("writing_kbd_open", open);
+        };
+        setKbdOpen(Boolean(STORE.get("writing_kbd_open", false)));
+        kbdToggle.onclick = () => setKbdOpen(kbd.classList.contains("hidden"));
+        // Giữ con trỏ trong ô viết khi bấm phím ảo
+        kbd.addEventListener("mousedown", (e) => e.preventDefault());
+        kbd.onclick = (e) => {
+          const keyBtn = e.target.closest(".writing-cyr-key");
+          if (!keyBtn) return;
+          const action = keyBtn.dataset.action;
+          if (action === "shift") {
+            upper = !upper;
+            keyBtn.setAttribute("aria-pressed", String(upper));
+            keyBtn.classList.toggle("is-active", upper);
+            kbd.querySelectorAll(".writing-cyr-key[data-key]").forEach((b) => {
+              b.textContent = upper ? b.dataset.key : b.dataset.key.toLowerCase();
+            });
+          } else if (action === "space") {
+            insertText(" ");
+          } else if (action === "back") {
+            const start = area.selectionStart;
+            const end = area.selectionEnd;
+            if (start === end && start > 0) area.selectionStart = start - 1;
+            if (area.selectionStart !== area.selectionEnd) insertText("");
+          } else if (keyBtn.dataset.key) {
+            insertText(upper ? keyBtn.dataset.key : keyBtn.dataset.key.toLowerCase());
+          }
+        };
+      }
 
       host.querySelector("#writingBack").onclick = () => {
         closeSidebar();
