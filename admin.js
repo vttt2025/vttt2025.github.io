@@ -2475,7 +2475,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       nav.innerHTML = `
         <a class="payload-crumb-item" href="#dashboard">${homeIcon} Dashboard</a>
         ${sep}
-        <a class="payload-crumb-item" href="#collection/${State.currentSlug}">${col ? esc(col.label) : esc(State.currentSlug)}</a>
+        <a class="payload-crumb-item" href="#collection/${encodeURIComponent(State.currentSlug || "")}">${col ? esc(col.label) : esc(State.currentSlug)}</a>
         ${sep}
         <span class="payload-crumb-item active">${title} ${statusPill}</span>
       `;
@@ -2527,7 +2527,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     if (State.currentRoute === "list") {
       primaryBtn = State.currentSlug === "USERS"
         ? ""
-        : `<a class="p-btn p-btn-primary p-btn-sm" href="#collection/${State.currentSlug}/create">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Tạo mới</a>`;
+        : `<a class="p-btn p-btn-primary p-btn-sm" href="#collection/${encodeURIComponent(State.currentSlug || "")}/create">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Tạo mới</a>`;
       secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncWeb" type="button" title="Đồng bộ vào runtime web">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} Đẩy về Web</button>`;
       if (SupabaseSyncEngine && SupabaseSyncEngine.hasMapping(State.currentSlug)) {
         secondaryBtn += `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncCloudSingle" type="button" title="Đẩy các bản sửa chưa lưu của collection này lên Supabase">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Lưu Cloud</button>`;
@@ -2538,7 +2538,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
       primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSaveDoc" type="button" title="Lưu thay đổi (Ctrl+S)">${window.RusiIcons ? RusiIcons.get("save", { size: 14 }) : ""} Lưu thay đổi</button>`;
 
-      const backBtn = `<a class="p-btn p-btn-ghost p-btn-sm" href="#collection/${State.currentSlug}" title="Quay lại danh sách">← Quay lại</a>`;
+      const backBtn = `<a class="p-btn p-btn-ghost p-btn-sm" href="#collection/${encodeURIComponent(State.currentSlug || "")}" title="Quay lại danh sách">← Quay lại</a>`;
       const saveCloseBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSaveAndClose" type="button" title="Lưu và quay lại danh sách">${window.RusiIcons ? RusiIcons.get("check", { size: 13 }) : ""} Lưu &amp; Đóng</button>`;
 
       secondaryBtn = `${backBtn}${saveCloseBtn}`;
