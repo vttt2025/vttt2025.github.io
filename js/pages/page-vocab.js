@@ -1147,14 +1147,12 @@ function initVocabPage() {
   };
 
 const showTopicArticle = (jarId) => {
-    if (window.setRusiDeepUrl && jarId) {
-      window.setRusiDeepUrl('/vocabulary/chu_de/' + encodeURIComponent(jarId));
-    }
-    if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?topic=" + encodeURIComponent(jarId || ""))) return;
-    // 1. Kiểm tra bản nháp xem trước thời gian thực từ CMS (sessionStorage / localStorage)
+    // 1. Kiểm tra bản nháp xem trước thời gian thực từ CMS (sessionStorage / localStorage) — chỉ khi URL có ?preview=1
     let previewDraft = null;
     try {
-      const rawPreview = sessionStorage.getItem("rusi_live_preview_draft") || localStorage.getItem("rusi_live_preview_draft");
+      const rawPreview = new URLSearchParams(window.location.search).get("preview") === "1"
+        ? (sessionStorage.getItem("rusi_live_preview_draft") || localStorage.getItem("rusi_live_preview_draft"))
+        : null;
       if (rawPreview) {
         const parsed = JSON.parse(rawPreview);
         if (parsed && (parsed.slug === "TOPIC_ARTICLES" || parsed.slug === "VOCAB_JARS")) {
@@ -1164,6 +1162,12 @@ const showTopicArticle = (jarId) => {
         }
       }
     } catch (_) {}
+    if (!previewDraft) {
+      if (window.setRusiDeepUrl && jarId) {
+        window.setRusiDeepUrl('/vocabulary/chu_de/' + encodeURIComponent(jarId));
+      }
+      if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?topic=" + encodeURIComponent(jarId || ""))) return;
+    }
 
     const allJars = getVocabJars();
     let item = allJars.find(j => j.id === jarId || j.code === jarId || (j.raw && (j.raw.code === jarId || j.raw.id === jarId)));

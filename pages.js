@@ -1474,7 +1474,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
         if (typeof Progress !== "undefined") {
           Progress.markDone("vocabDone", jarId);
           Progress.addXp(15);
-          fXpAwarded = true;
+          fXpAwarded = !isPreview;
         }
       }
 
@@ -1559,8 +1559,8 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
           STORE.set("flash_rev_" + jarId, []); // reset cho các lượt ôn tập sau
           Progress.markDone("vocabDone", jarId);
           Progress.addXp(15);
-          fXpAwarded = true;
-          toast("Chúc mừng! Bạn đã hoàn thành toàn bộ thẻ trong lọ từ vựng (+15 XP)!");
+          fXpAwarded = !isPreview;
+          if (!isPreview) toast("Chúc mừng! Bạn đã hoàn thành toàn bộ thẻ trong lọ từ vựng (+15 XP)!");
         }
       }
     }
@@ -1718,7 +1718,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
       if (pct >= 70 && !lIsRetry && typeof Progress !== "undefined" && !STORE.get(learnKey, false)) {
         STORE.set(learnKey, true);
         Progress.addXp(15);
-        lXpAwarded = true;
+        lXpAwarded = !isPreview;
       }
       pane.innerHTML = `
         <div class="quizlet-summary-box">
@@ -2087,7 +2087,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               if (typeof Progress !== "undefined" && !STORE.get(matchKey, false)) {
                 STORE.set(matchKey, true);
                 Progress.addXp(25);
-                matchXpAwarded = true;
+                matchXpAwarded = !isPreview;
               }
 
               grid.style.display = "none";
