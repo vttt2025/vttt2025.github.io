@@ -92,7 +92,7 @@ function initSpeakingPage() {
         currentMode = modeParam;
       }
       const lvlParam = (getParam("level") || "").toUpperCase();
-      if (lvlParam && ["A1", "A2", "B1", "B2"].includes(lvlParam)) {
+      if (lvlParam && ["A1", "A2", "B1", "B2", "C1", "C2"].includes(lvlParam)) {
         currentLevel = lvlParam;
       }
       const targetId = getParam("set") || getParam("id");
@@ -1416,11 +1416,9 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
           if (startToken !== recordStartToken || !isRecording) return;
           console.warn("[RusiAudioRecorder] Mic access error:", recErr);
           toast(recErr.message || "Không thể mở microphone.");
-          // Không có nhận dạng giọng nói để chạy tiếp → trả nút ghi âm về trạng thái thường
-          if (!SR) {
-            stopRecording();
-            return;
-          }
+          // Không mở được micro thì nhận dạng giọng nói cũng không chạy được → dừng luôn, tránh báo lỗi lần hai
+          stopRecording();
+          return;
         }
       }
 
@@ -1434,13 +1432,27 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
         recognitionInstance.interimResults = true;
         recognitionInstance.maxAlternatives = 3;
 
+        // maxAlternatives = 3: chọn ứng viên khớp câu mẫu nhất (giảm chấm oan khi máy nghe gần đúng)
+        const pickBestAlternative = (result, prefix) => {
+          let best = result[0] ? result[0].transcript : "";
+          if (result.length <= 1) return best;
+          let bestAcc = -1;
+          for (let a = 0; a < result.length; a++) {
+            const alt = result[a] && result[a].transcript;
+            if (!alt) continue;
+            const acc = computeWordErrorRate(targetText, prefix + alt).accuracy;
+            if (acc > bestAcc) { bestAcc = acc; best = alt; }
+          }
+          return best;
+        };
+
         recognitionInstance.onresult = (ev) => {
           let interimChunk = "";
           for (let i = ev.resultIndex; i < ev.results.length; ++i) {
             if (ev.results[i].isFinal) {
-              accumulatedTranscript += ev.results[i][0].transcript + " ";
+              accumulatedTranscript += pickBestAlternative(ev.results[i], accumulatedTranscript) + " ";
             } else {
-              interimChunk += ev.results[i][0].transcript;
+              interimChunk += pickBestAlternative(ev.results[i], accumulatedTranscript + interimChunk);
             }
           }
 
@@ -1571,7 +1583,7 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
 
     // Điều chỉnh chế độ lặp lại
     const toggleLoop = () => {
-      const loops = [0, 1, 2, 3];
+      const loops = [0, 3, 5]; // Tắt → 3x → 5x (PROJECT_SPEC)
       const nextIdx = (loops.indexOf(loopMode) + 1) % loops.length;
       loopMode = loops[nextIdx];
       loopRemaining = loopMode;
@@ -1881,7 +1893,10 @@ const openSpeakingWorkspace = (set, mode = currentMode) => {
   window.addEventListener("popstate", window._rusiSpeakPopHandler);
 
   renderHub();
-  checkUrlSet();
+  // checkUrlSet() đặt cấp độ/chế độ theo ?level= / ?mode= sau khi hub đã vẽ → vẽ lại nếu không mở bài nào
+  if (!checkUrlSet() && (initialRoute.level || initialRoute.mode) && !document.body.classList.contains("in-workspace")) {
+    renderHub();
+  }
 }
 window.initSpeakingPage = initSpeakingPage;
 window._initSpeakingPage = initSpeakingPage;
