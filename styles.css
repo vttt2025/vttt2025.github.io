@@ -39038,3 +39038,48 @@ select.add-jar-input {
     line-height: 1.35;
   }
 }
+
+/* ==========================================================================
+   RESPONSIVE UI AUDIT r1 — Tab cấp độ 820px (đủ 6 cấp không cắt) & tiêu đề thanh workspace
+   ========================================================================== */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .level-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    overflow-x: visible !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
+    gap: 4px !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+  }
+  .level-tab {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 2px !important;
+    padding: 10px 4px !important;
+    min-width: 0 !important;
+    border-radius: 0 !important;
+  }
+  .level-tab span.level-code {
+    font-size: 20px !important;
+  }
+  .level-tab small {
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+  }
+  .level-tab .level-tab-count {
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+  }
+}
+@media (max-width: 1024px) {
+  .rusi-workspace-back-bar .rusi-workspace-info {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}
