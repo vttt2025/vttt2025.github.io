@@ -101,7 +101,8 @@
     if (ok) {
       try { await window.RusiAdminCache.deleteDraft(key); } catch (_) { /* bản trên máy chỉ là dự phòng */ }
     }
-    index.set(key, { ...meta, source: ok ? "cloud" : "local" });
+    index.set(key, { ...(index.get(key) || {}), ...meta, source: ok ? "cloud" : "local" });
+    updateBadge();
     return ok;
   }
 
@@ -147,13 +148,44 @@
     const sb = sbClient();
     if (sb) {
       const { data, error } = await sb.from("cms_drafts")
-        .select("collection, doc_key, title, is_new, base_updated_at, updated_at")
+        .select("collection, doc_key, title, is_new, base_updated_at, updated_at, updated_by")
         .order("updated_at", { ascending: false }).limit(500);
       if (error) console.warn("[Drafts] Không đọc được danh sách nháp:", error);
+      index.forEach((m, k) => { if (m.source === "cloud") index.delete(k); });
       (data || []).forEach((r) => index.set(k2(r.collection, r.doc_key), { ...r, source: "cloud" }));
     }
     await flushLocal();
+    updateBadge();
   }
+
+  function updateBadge() {
+    const el = document.getElementById("navBadgeDrafts");
+    if (!el) return;
+    el.textContent = String(index.size);
+    el.hidden = index.size === 0;
+  }
+
+  // Tên người soạn (email) cho trang quản lý — RPC rusi_admin_user_emails (chỉ admin)
+  const authorEmails = new Map();
+  async function loadAuthors(ids) {
+    const sb = sbClient();
+    const missing = Array.from(new Set(ids.filter((id) => id && !authorEmails.has(id))));
+    if (!sb || !missing.length) return;
+    const { data, error } = await sb.rpc("rusi_admin_user_emails", { p_ids: missing });
+    if (error) { console.warn("[Drafts] Không đọc được email người soạn:", error); return; }
+    missing.forEach((id) => authorEmails.set(id, ""));
+    (data || []).forEach((r) => authorEmails.set(r.id, r.email || ""));
+  }
+
+  // Bài trên Cloud đã được lưu sau khi bắt đầu soạn nháp? (so mốc trong danh sách CMS đã tải, nếu có)
+  function cloudNewer(meta) {
+    if (!meta.base_updated_at || meta.is_new || typeof window.getMergedList !== "function") return null;
+    const item = (window.getMergedList(meta.collection) || []).find((it) => [it.id, it.code, it.slug, it.uuid, it.word_with_stress].some((v) => v != null && String(v) === String(meta.doc_key)));
+    if (!item || !item.__cloud_updated_at) return null;
+    return new Date(item.__cloud_updated_at) > new Date(meta.base_updated_at) ? item.__cloud_updated_at : null;
+  }
+
+  const mgr = { collection: "", q: "", selected: new Set(), focusQ: false };
 
   async function fetchDraft(collection, docKey) {
     const key = k2(collection, docKey);
@@ -172,6 +204,7 @@
     const key = k2(collection, docKey);
     index.delete(key);
     lastSaved.delete(key);
+    updateBadge();
     try { await window.RusiAdminCache.deleteDraft(key); } catch (_) { /* không có bản trên máy */ }
     const sb = sbClient();
     if (sb) {
@@ -283,6 +316,129 @@
 
     flushNow() { return tick(); },
 
+    count() { return index.size; },
+
+    // Trang "Quản lý bản nháp" (#drafts): mọi nháp của các admin, lọc / tìm / mở / bỏ (từng cái hoặc nhiều cái)
+    async renderManager(container) {
+      if (!container) return;
+      container.innerHTML = `<div class="rusi-mon-empty">Đang tải danh sách nháp…</div>`;
+      try { await loadIndex(); } catch (err) { console.warn("[Drafts] Không tải lại được danh sách nháp:", err); }
+      await loadAuthors(Array.from(index.values()).map((m) => m.updated_by));
+      if (!container.isConnected) return;
+      const cols = window.COLLECTIONS || {};
+      const labelOf = (c) => (cols[c] && cols[c].label) || c;
+      const all = Array.from(index.values()).sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)));
+      const collections = Array.from(new Set(all.map((m) => m.collection)));
+      const q = mgr.q.trim().toLowerCase();
+      const items = all.filter((m) => (!mgr.collection || m.collection === mgr.collection)
+        && (!q || String(m.title || m.doc_key).toLowerCase().includes(q) || String(m.doc_key).toLowerCase().includes(q)));
+      mgr.selected.forEach((k) => { if (!index.has(k)) mgr.selected.delete(k); });
+      const me = window.Auth && window.Auth.user && window.Auth.user.id;
+
+      container.innerHTML = `
+        <div class="payload-list-header">
+          <div class="payload-list-title-wrap">
+            <h1 class="payload-list-title">Quản lý bản nháp</h1>
+            <span class="p-pill p-pill-neutral">${all.length}</span>
+          </div>
+        </div>
+        <p class="rusi-drafts-intro">Bản nháp được tự lưu khi đang sửa và <strong>chưa lên web</strong>. Mở nháp rồi bấm Lưu để đưa lên Cloud và xuất bản; bỏ nháp không ảnh hưởng bài đang có.</p>
+        <div class="rusi-mon-toolbar">
+          <label class="rusi-mon-filter"><span>Mục</span>
+            <select class="p-select" id="drMgrCol"><option value="">Tất cả mục</option>${collections.map((c) => `<option value="${esc(c)}" ${mgr.collection === c ? "selected" : ""}>${esc(labelOf(c))}</option>`).join("")}</select>
+          </label>
+          <label class="rusi-mon-filter"><span>Tìm</span>
+            <input type="search" class="p-input" id="drMgrQ" placeholder="Tiêu đề hoặc mã…" value="${esc(mgr.q)}" />
+          </label>
+          <button type="button" class="p-btn p-btn-secondary p-btn-sm" id="drMgrReload">Tải lại</button>
+          <button type="button" class="p-btn p-btn-danger p-btn-sm" id="drMgrBulk" ${mgr.selected.size ? "" : "disabled"}>Bỏ ${mgr.selected.size || ""} nháp đã chọn</button>
+        </div>
+        <div class="payload-table-wrapper">
+          <div class="payload-table-scroll">
+            <table class="payload-table rusi-mon-table">
+              <thead><tr>
+                <th class="payload-table-check"><input type="checkbox" id="drMgrAll" aria-label="Chọn tất cả" ${items.length && items.every((m) => mgr.selected.has(k2(m.collection, m.doc_key))) ? "checked" : ""} /></th>
+                <th>Bản nháp</th><th>Mục</th><th>Người soạn</th><th>Lưu lúc</th><th>Trạng thái</th><th style="text-align:right">Thao tác</th>
+              </tr></thead>
+              <tbody>
+                ${items.length ? items.map((m) => {
+                  const key = k2(m.collection, m.doc_key);
+                  const newer = cloudNewer(m);
+                  const author = m.updated_by ? (m.updated_by === me ? "Bạn" : (authorEmails.get(m.updated_by) || String(m.updated_by).slice(0, 8) + "…")) : (m.source === "local" ? "Bạn (máy này)" : "—");
+                  return `<tr>
+                    <td class="payload-table-check"><input type="checkbox" class="drMgrRow" data-key="${esc(key)}" ${mgr.selected.has(key) ? "checked" : ""} aria-label="Chọn nháp" /></td>
+                    <td data-label="Bản nháp"><div class="rusi-drafts-title">${esc(m.title || m.doc_key)}</div><div class="rusi-mon-sub">${m.is_new ? "Bài mới" : `<code>${esc(m.doc_key)}</code>`}</div></td>
+                    <td data-label="Mục">${esc(labelOf(m.collection))}</td>
+                    <td data-label="Người soạn">${esc(author)}</td>
+                    <td data-label="Lưu lúc">${esc(fmtTime(m.updated_at))}</td>
+                    <td data-label="Trạng thái">
+                      ${m.source === "local" ? `<span class="p-pill p-pill-danger" title="Chưa đẩy được lên Cloud — chỉ có trên máy này">Chỉ trên máy này</span>` : `<span class="p-pill p-pill-success">Đã lưu Cloud</span>`}
+                      ${newer ? `<div class="rusi-mon-sub rusi-drafts-warn">Bài đã được lưu lúc ${esc(fmtTime(newer))}, sau khi bắt đầu nháp</div>` : ""}
+                    </td>
+                    <td style="text-align:right"><div class="payload-row-actions">
+                      <button type="button" class="p-btn p-btn-secondary p-btn-sm drMgrOpen" data-col="${esc(m.collection)}" data-key="${esc(m.doc_key)}">Mở</button>
+                      <button type="button" class="p-btn p-btn-ghost p-btn-sm drMgrDrop" data-col="${esc(m.collection)}" data-key="${esc(m.doc_key)}" style="color:var(--p-danger)">Bỏ nháp</button>
+                    </div></td>
+                  </tr>`;
+                }).join("") : `<tr><td colspan="7" class="rusi-mon-empty">${all.length ? "Không có nháp khớp bộ lọc." : "Chưa có bản nháp nào. Nháp tự lưu khi bạn sửa một bài mà chưa bấm Lưu."}</td></tr>`}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+
+      const rerender = () => Drafts.renderManager(container);
+      container.querySelector("#drMgrCol").onchange = (e) => { mgr.collection = e.target.value; rerender(); };
+      const qInp = container.querySelector("#drMgrQ");
+      let qTimer = null;
+      qInp.oninput = () => { clearTimeout(qTimer); qTimer = setTimeout(() => { mgr.q = qInp.value; mgr.focusQ = true; rerender(); }, 250); };
+      if (mgr.focusQ) {
+        // Vẽ lại bảng khi đang gõ tìm → giữ con trỏ trong ô tìm
+        mgr.focusQ = false;
+        qInp.focus();
+        qInp.setSelectionRange(qInp.value.length, qInp.value.length);
+      }
+      container.querySelector("#drMgrReload").onclick = rerender;
+      container.querySelector("#drMgrAll").onchange = (e) => {
+        items.forEach((m) => { const k = k2(m.collection, m.doc_key); if (e.target.checked) mgr.selected.add(k); else mgr.selected.delete(k); });
+        rerender();
+      };
+      container.querySelectorAll(".drMgrRow").forEach((cb) => {
+        cb.onchange = () => {
+          if (cb.checked) mgr.selected.add(cb.dataset.key); else mgr.selected.delete(cb.dataset.key);
+          const bulk = container.querySelector("#drMgrBulk");
+          bulk.disabled = !mgr.selected.size;
+          bulk.textContent = `Bỏ ${mgr.selected.size || ""} nháp đã chọn`;
+        };
+      });
+      container.querySelectorAll(".drMgrOpen").forEach((b) => {
+        b.onclick = () => {
+          const col = b.dataset.col, key = b.dataset.key;
+          if (key.startsWith("new:")) { pendingCreateKey = key; window.location.hash = `#collection/${col}/create`; }
+          else window.location.hash = `#collection/${col}/edit/${encodeURIComponent(key)}`;
+        };
+      });
+      container.querySelectorAll(".drMgrDrop").forEach((b) => {
+        b.onclick = async () => {
+          if (!confirm("Bỏ bản nháp này? Nháp sẽ bị xoá vĩnh viễn (bài đang có trên Cloud và web không đổi).")) return;
+          await discard(b.dataset.col, b.dataset.key);
+          A().toast && A().toast("Đã bỏ bản nháp.", "info");
+          rerender();
+        };
+      });
+      container.querySelector("#drMgrBulk").onclick = async () => {
+        const keys = Array.from(mgr.selected);
+        if (!keys.length) return;
+        if (!confirm(`Bỏ ${keys.length} bản nháp đã chọn? Các nháp sẽ bị xoá vĩnh viễn (bài trên Cloud và web không đổi).`)) return;
+        for (const k of keys) {
+          const m = index.get(k);
+          if (m) await discard(m.collection, m.doc_key);
+        }
+        mgr.selected.clear();
+        A().toast && A().toast(`Đã bỏ ${keys.length} bản nháp.`, "info");
+        rerender();
+      };
+    },
+
     renderPanel(el) {
       if (!el) return;
       const items = Array.from(index.values()).sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)));
@@ -293,9 +449,10 @@
           <div class="rusi-drafts-head">
             <h3>Bản nháp đang soạn (${items.length})</h3>
             <span>Tự lưu khi đang sửa · chưa lên web cho tới khi mở bài và bấm Lưu</span>
+            <a class="rusi-drafts-all" href="#drafts">Quản lý tất cả →</a>
           </div>
           <ul class="rusi-drafts-list">
-            ${items.map((m) => {
+            ${items.slice(0, 5).map((m) => {
               const label = (cols[m.collection] && cols[m.collection].label) || m.collection;
               return `<li>
                 <button type="button" class="rusi-drafts-open" data-col="${esc(m.collection)}" data-key="${esc(m.doc_key)}">
