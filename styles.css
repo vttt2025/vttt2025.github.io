@@ -22796,6 +22796,17 @@ html, body {
   }
 }
 
+/* Màn rất hẹp (320–359px): chỉ giữ ô logo "Я" (link vẫn có aria-label) để nút menu không bị đẩy ra ngoài mép */
+@media (max-width: 359px) {
+  .brand-text {
+    display: none !important;
+  }
+  .brand {
+    min-width: 44px !important;
+    justify-content: center !important;
+  }
+}
+
 /* --- 3. BỘ LỌC TABS & SCROLL TRACKS ("MORE..." GRADIENT MASK) --- */
 /* Báo hiệu có thể cuộn ngang, viền phải mờ dần, không chém cụt tab cuối */
 @media (max-width: 1024px) {
