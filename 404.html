@@ -25,7 +25,8 @@
 
       // Bỏ dấu gạch chéo cuối và dấu chấm thừa nếu có (vd: /vocabulary/chu_de/lo_tu_vung./////)
       var clean = relPath.replace(/[\/.]+$/, '');
-      if (clean === '' || clean === '/' || clean === '/404' || clean === '/404.html') {
+      var hasQ = /(?:^|[?&])q=/.test(search);
+      if (clean === '' || clean === '/' || ((clean === '/404' || clean === '/404.html') && !hasQ)) {
         window.location.replace(root + 'index.html');
         return;
       }
@@ -253,12 +254,12 @@
 
       // 2. Nếu người dùng tìm/nhập đường dẫn không đúng:
       // Chuyển hướng trình duyệt về đúng trang 404.html (tránh lặp vô tận nếu đã ở 404.html)
-      var is404 = slug === '404' || slug === '404.html';
+      var is404 = clean === '/404' || clean === '/404.html';
       if (!is404) {
         var queryStr = search ? search : '';
-        // Nếu đường dẫn ban đầu là một từ/cụm từ tìm kiếm (ví dụ /tim-kiem, /hello), giữ lại gợi ý
-        if (!queryStr && slug && slug !== 'index') {
-          queryStr = '?q=' + encodeURIComponent(slug);
+        // Nếu đường dẫn ban đầu là một từ/cụm từ tìm kiếm (ví dụ /tim-kiem, /hello), giữ lại gợi ý ?q=
+        if (!/(?:^|[?&])q=/.test(queryStr) && slug && slug !== 'index') {
+          queryStr = (queryStr ? (queryStr + '&') : '?') + 'q=' + encodeURIComponent(slug);
         }
         window.location.replace(root + '404.html' + queryStr + hash);
         return;
