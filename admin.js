@@ -9328,7 +9328,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             }
           }
         }
-      } catch (_) {}
+      } catch (err) {
+        console.warn("[autoFetchVocabAudio] Lỗi tra cứu Wikimedia Commons:", err);
+      }
     }
 
     // 3. Tra cứu trong bucket vocab-audio (kho AI Neural Voice đã sinh trên Supabase Storage)
@@ -9338,7 +9340,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       try {
         const headRes = await fetch(storageUrl, { method: "HEAD" });
         if (headRes.ok) foundUrl = storageUrl;
-      } catch (_) {}
+      } catch (err) {
+        console.warn("[autoFetchVocabAudio] Lỗi kiểm tra bucket vocab-audio:", err);
+      }
     }
 
     if (foundUrl) {
