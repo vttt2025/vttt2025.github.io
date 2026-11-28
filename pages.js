@@ -887,6 +887,20 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
   // Mốc XP "1 lần/ngày/lọ": mọi lọ tự tạo dùng chung 1 lượt (tạo nhiều lọ nhỏ không nhân XP)
   const xpJarId = isCustomJar ? "custom" : jarId;
   const onWordListChange = options.onWordListChange;
+  // Live Preview CMS (options.isPreview): che STORE/Progress/SRS bằng bản tạm trên RAM — không ghi tiến độ, XP, thẻ SRS hay localStorage
+  const isPreview = Boolean(options.isPreview);
+  const previewMem = {};
+  const STORE = isPreview ? Object.assign(Object.create(window.STORE), {
+    get: (k, fallback) => (Object.prototype.hasOwnProperty.call(previewMem, k) ? previewMem[k] : window.STORE.get(k, fallback)),
+    set: (k, v) => { previewMem[k] = v; }
+  }) : window.STORE;
+  const Progress = isPreview ? Object.assign(Object.create(window.Progress), {
+    addXp: () => {}, markDone: () => {}, syncToCloud: () => {}
+  }) : window.Progress;
+  const SRS = (isPreview && window.SRS) ? Object.assign(Object.create(window.SRS), {
+    ensureCard: (w) => (w && typeof w === "object" ? (w.id || w.ru) : w),
+    review: () => null, markMastered: () => {}, unmarkMastered: () => {}
+  }) : window.SRS;
 
   const getWordType = (w) => {
     if (!w) return "";
