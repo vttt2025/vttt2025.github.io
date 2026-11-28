@@ -313,7 +313,10 @@
               btnShare.innerHTML = `${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : ""} Chia sẻ bài viết`;
             }, 2500);
           }).catch(() => {
-            alert("Đã sao chép liên kết bài viết: " + window.location.href);
+            // Trình duyệt chặn clipboard: báo nhẹ kèm liên kết để tự chép (không dùng alert chặn trang)
+            const msg = "Không sao chép tự động được, hãy chép liên kết: " + window.location.href;
+            if (typeof toast === "function") toast(msg);
+            else console.warn("[Blog] " + msg);
           });
         };
       }
