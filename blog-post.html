@@ -119,7 +119,9 @@
     function safeMediaUrl(url, fallback) {
       const raw = String(url || "").trim();
       if (!raw) return fallback || "";
-      if (/^(https?:\/\/|assets\/|\/(?!\/))/i.test(raw)) return raw;
+      // "assets/..." tính từ gốc: URL /blog/<slug> làm đường dẫn tương đối thành /blog/assets/... (404)
+      if (/^assets\//i.test(raw)) return (window.rusiRootUrl ? window.rusiRootUrl(raw) : raw);
+      if (/^(https?:\/\/|\/(?!\/))/i.test(raw)) return raw;
       return fallback || "";
     }
 

@@ -16,6 +16,35 @@ window.getRusiAppRoot = function() {
   if (window.location.protocol === "file:") return "";
   return window.location.pathname.indexOf("/rusitrki/") === 0 ? "/rusitrki/" : "/";
 };
+// URL sạch nhiều cấp (/blog/<slug>, /vocabulary/lo_tu/<id>...): link tương đối ("vocabulary.html") bị phân giải thành
+// /blog/vocabulary.html. Mọi trang .html nằm ở thư mục gốc → ngay trước khi người dùng dùng một link (rê chuột, focus,
+// chạm, bấm, chuột giữa/phải) thì đổi href tương đối thành đường dẫn từ gốc. Không dùng <base>: <base> làm đổi
+// "#muc", history.pushState("#...") và url(#id) trong SVG.
+window.rusiRootUrl = function(rel) {
+  const h = String(rel || "");
+  if (!h || /^([a-z][a-z0-9+.-]*:|\/|#|\?)/i.test(h)) return h;
+  return window.getRusiAppRoot() + h;
+};
+(function fixRelativeLinksOnNestedUrls() {
+  if (typeof document === "undefined") return;
+  const isNested = () => {
+    const root = window.getRusiAppRoot();
+    let rel = window.location.pathname;
+    if (root && root !== "/" && rel.indexOf(root) === 0) rel = "/" + rel.slice(root.length);
+    return rel.split("/").filter(Boolean).length > 1;
+  };
+  const fix = (e) => {
+    const a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+    if (!a || !isNested()) return;
+    const h = a.getAttribute("href");
+    const abs = window.rusiRootUrl(h);
+    if (abs !== h) a.setAttribute("href", abs);
+  };
+  ["mouseover", "focusin", "pointerdown", "touchstart", "click", "auxclick", "contextmenu"].forEach((t) => {
+    document.addEventListener(t, fix, { capture: true, passive: true });
+  });
+})();
+
 window.esc = window.esc || function(str) {
   if (str === null || str === undefined) return "";
   return String(str)
@@ -2565,7 +2594,7 @@ function renderUserArea() {
   const upgradeBtn = host.querySelector("#btnUpgradeHeader");
   if (upgradeBtn) {
     upgradeBtn.addEventListener("click", () => {
-      window.location.href = "upgrade.html";
+      window.location.href = window.rusiRootUrl("upgrade.html");
     });
   }
   const manageBtn = host.querySelector("#btnManageProHeader");
@@ -2593,7 +2622,7 @@ function renderUserArea() {
     cardUpgrade.addEventListener("click", () => {
       const dd = host.querySelector("#userDropdown");
       if (dd) dd.classList.remove("open");
-      window.location.href = "upgrade.html";
+      window.location.href = window.rusiRootUrl("upgrade.html");
     });
   }
   const cardManage = host.querySelector("#btnUserMenuManagePro");
@@ -2650,7 +2679,7 @@ function renderUserArea() {
         console.error("[Auth] Lỗi đăng xuất:", e);
       }
       // Tải lại trang chủ ở trạng thái khách hoàn toàn trắng sạch
-      window.location.href = "index.html";
+      window.location.href = window.rusiRootUrl("index.html");
     });
   }
 }
