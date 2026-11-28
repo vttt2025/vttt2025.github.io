@@ -43,6 +43,9 @@
   }
 
   // Wrapper timeout cho các query Supabase nhằm tránh treo vĩnh viễn khi mạng gián đoạn
+  // Trần số dòng cho các truy vấn dự phòng (chỉ chạy khi module tĩnh data/modules/*.json trống/lỗi) — 0-Egress
+  var FALLBACK_ROW_LIMIT = 200;
+
   function withTimeout(promise, ms) {
     if (!promise || typeof promise.then !== "function") return promise;
     var timer = null;
@@ -439,11 +442,12 @@
               sb.from("vocab_jars")
                 .select("id, code, name, level, icon, word_count, is_system, is_pro, jar_items(position, vocabularies(*))")
                 .eq("is_system", true)
-                .order("created_at", { ascending: true }),
+                .order("created_at", { ascending: true })
+                .limit(FALLBACK_ROW_LIMIT),
               5000
             );
             var articlesPromise = withTimeout(
-              sb.from("topic_articles").select("*"),
+              sb.from("topic_articles").select("*").limit(FALLBACK_ROW_LIMIT),
               3500
             );
 
@@ -1057,7 +1061,8 @@
             var q = sb
               .from("listening_lessons")
               .select("*, topic:listening_topics(*), vocab_items:listening_lesson_vocab(sort_order, line_index, vocab:vocabularies(*))")
-              .order("sort_order", { ascending: true });
+              .order("sort_order", { ascending: true })
+              .limit(FALLBACK_ROW_LIMIT);
             if (level && level !== "all") q = q.eq("level", level);
             var res = await withTimeout(q, 4000);
             if (res.error || !res.data) return null;
@@ -1133,7 +1138,7 @@
           var sb = getClient();
           if (!sb) return null;
           try {
-            var q = sb.from("speaking_lessons").select("*");
+            var q = sb.from("speaking_lessons").select("*").limit(FALLBACK_ROW_LIMIT);
             if (level && level !== "all") q = q.eq("level", level);
             var res = await withTimeout(q, 3500);
             if (res.error || !res.data) return null;
@@ -1232,14 +1237,14 @@
                   examples
                 )
               )
-            `).order("sort_order", { ascending: true });
+            `).order("sort_order", { ascending: true }).limit(FALLBACK_ROW_LIMIT);
 
             if (level && level !== "all") q = q.eq("level", level);
             var res = await withTimeout(q, 4500);
 
             if (res.error || !res.data) {
               console.warn("[RusiSupabase] Query writing_tasks fallback:", res.error);
-              var fb = await withTimeout(sb.from("writing_topics").select("*"), 3500);
+              var fb = await withTimeout(sb.from("writing_topics").select("*").limit(FALLBACK_ROW_LIMIT), 3500);
               if (fb.error || !fb.data) return null;
               return fb.data;
             }
