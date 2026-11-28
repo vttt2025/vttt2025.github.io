@@ -217,7 +217,7 @@ console.log(`✓ Kiểm tra bảo mật: Không có mã bí mật (Secret Keys) 
     : `✓ Xung đột Git: ${scanned} tệp không còn dấu xung đột.`);
 }
 
-// 4c. CÂN NGOẶC {} TRONG CSS (styles.css, styles.min.css) — bỏ qua chú thích và chuỗi
+// 4c. CÂN NGOẶC {} TRONG CSS (styles.css, styles.min.css, admin.css) — bỏ qua chú thích và chuỗi
 {
   function cssBraceIssue(src) {
     let depth = 0, line = 1;
@@ -243,14 +243,14 @@ console.log(`✓ Kiểm tra bảo mật: Không có mã bí mật (Secret Keys) 
     return depth === 0 ? null : `thiếu ${depth} dấu } ở cuối tệp`;
   }
   const cssIssues = [];
-  for (const f of ['styles.css', 'styles.min.css']) {
+  for (const f of ['styles.css', 'styles.min.css', 'admin.css']) {
     if (!fs.existsSync(f)) continue;
     const issue = cssBraceIssue(fs.readFileSync(f, 'utf8'));
     if (issue) cssIssues.push(`[CSS] ${f}: ${issue}`);
   }
   cssIssues.forEach((e) => errors.push(e));
   if (!cssIssues.length) passedChecks++;
-  console.log(cssIssues.length ? `✗ Cân ngoặc CSS: ${cssIssues.length} tệp lỗi.` : '✓ Cân ngoặc CSS: styles.css và styles.min.css cân {}.');
+  console.log(cssIssues.length ? `✗ Cân ngoặc CSS: ${cssIssues.length} tệp lỗi.` : '✓ Cân ngoặc CSS: styles.css, styles.min.css và admin.css cân {}.');
 }
 
 // 5. 0-EGRESS: truy vấn đọc trong supabase-client.js phải có giới hạn (.limit/.range/.eq/.in/.single/.maybeSingle)
