@@ -160,6 +160,15 @@
         } catch (_) {}
       }
 
+      // 1b. Bản đã xuất bản (data/modules/blog_posts.json) — BLOG_POSTS trong data.js chỉ là bản dự phòng
+      if (window.RusiDataLoader) {
+        try {
+          await window.RusiDataLoader.load("BLOG_POSTS");
+        } catch (err) {
+          console.warn("[RusiDataLoader] Lỗi nạp bài blog:", err);
+        }
+      }
+
       // 2. Lấy dữ liệu từ bộ nhớ đệm hoặc Supabase
       const cached = (window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("blog:all") : null;
       let posts = (cached && cached.length) ? cached : [];
