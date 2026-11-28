@@ -2503,9 +2503,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       primaryBtn = State.currentSlug === "USERS"
         ? ""
         : `<a class="p-btn p-btn-primary p-btn-sm" href="#collection/${encodeURIComponent(State.currentSlug || "")}/create">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Tạo mới</a>`;
-      secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncWeb" type="button" title="Đồng bộ vào runtime web">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} Đẩy về Web</button>`;
       if (SupabaseSyncEngine && SupabaseSyncEngine.hasMapping(State.currentSlug)) {
-        secondaryBtn += `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncCloudSingle" type="button" title="Đẩy các bản sửa chưa lưu của collection này lên Supabase">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Lưu Cloud</button>`;
+        secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncCloudSingle" type="button" title="Đẩy các bản sửa chưa lưu của collection này lên Supabase">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Lưu Cloud</button>`;
       }
     } else if (State.currentRoute === "editor") {
       const mapping = SupabaseSyncEngine && SupabaseSyncEngine.MAPPINGS[State.currentSlug];
@@ -2518,7 +2517,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
       secondaryBtn = `${backBtn}${saveCloseBtn}`;
     } else {
-      primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSyncWeb" type="button">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} Đẩy về Web</button>`;
+      primaryBtn = `<button class="p-btn p-btn-primary p-btn-sm" id="btnSyncCloudAll" type="button" title="Đẩy mọi bản sửa chưa lưu lên Supabase">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Lưu Cloud</button>`;
       secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnOpenSupabaseModal" type="button">${window.RusiIcons ? RusiIcons.get("database-tests", { size: 14 }) : ""} Supabase</button>`;
     }
 
@@ -2565,11 +2564,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     `;
 
     // Bind event listeners
-    const btnSync = document.getElementById("btnSyncWeb");
-    if (btnSync) btnSync.onclick = () => {
-      syncDataToWeb();
-      toast("Đã cập nhật và đột biến dữ liệu runtime thành công trên toàn bộ website!");
-    };
+    const btnSyncAll = document.getElementById("btnSyncCloudAll");
+    if (btnSyncAll) btnSyncAll.onclick = () => window.syncAllToSupabase();
 
     const btnSyncCloud = document.getElementById("btnSyncCloudSingle");
     if (btnSyncCloud) btnSyncCloud.onclick = () => window.syncSingleCollection(State.currentSlug);
