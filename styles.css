@@ -39083,3 +39083,39 @@ select.add-jar-input {
     max-width: none !important;
   }
 }
+
+/* ==========================================================================
+   RESPONSIVE UI AUDIT r1 — Vùng chạm ≥44px cho điều khiển Nghe & nút đóng modal Từ vựng
+   ========================================================================== */
+#closeProgressModal {
+  flex-shrink: 0 !important;
+}
+@media (max-width: 1024px), (pointer: coarse) {
+  #btnCompSkipFwd,
+  #btnDictReplay,
+  .lis-dict-sidebar-close-btn,
+  #closeProgressModal,
+  .create-jar-close {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    flex-shrink: 0 !important;
+  }
+  #btnCompPlay,
+  #btnDictPlay {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+  }
+  .lis-dict-pct-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+@media (max-width: 768px) {
+  .create-jar-header {
+    padding-right: 52px;
+  }
+}
