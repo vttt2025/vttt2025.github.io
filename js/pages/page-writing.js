@@ -925,7 +925,7 @@ function initWritingPage() {
             AuthModal.open();
           } else {
             setTimeout(() => {
-              window.location.href = "login.html?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
+              window.location.href = (window.rusiRootUrl ? window.rusiRootUrl("login.html") : "login.html") + "?redirect=" + encodeURIComponent(window.location.pathname + window.location.search);
             }, 1200);
           }
           return;
