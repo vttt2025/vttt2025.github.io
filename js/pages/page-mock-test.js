@@ -818,6 +818,7 @@ function initMockTestPage() {
         if (activeMicStream) {
           cleanupHardwareTests();
           if (micMeter) micMeter.hidden = true;
+          if (!micBadge.classList.contains("ok")) micBadge.textContent = "Chưa kiểm tra";
           btnMic.classList.remove("active");
           btnMic.innerHTML = `${icon("mic-speaking", 14)} <span>Kiểm tra lại Micro</span>`;
           if (window.RusiIcons) RusiIcons.replace(btnMic);
@@ -841,6 +842,8 @@ function initMockTestPage() {
             btnMic.classList.add("active");
             if (micMeter) micMeter.hidden = false;
             btnMic.innerHTML = `${icon("mic-speaking", 14)} <span>Đang lắng nghe...</span>`;
+            micBadge.className = "cbt-status-pill-check idle";
+            micBadge.textContent = "Hãy nói thử…";
 
             let hasDetectedVoice = false;
             const updateMeter = () => {
@@ -857,7 +860,7 @@ function initMockTestPage() {
               if (pct > 15 && !hasDetectedVoice) {
                 hasDetectedVoice = true;
                 micBadge.className = "cbt-status-pill-check ok";
-                micBadge.innerHTML = `${icon("check-circle-correct", 13)} Micro hoạt động tốt ✓`;
+                micBadge.innerHTML = `${icon("check-circle-correct", 13)} Micro hoạt động tốt`;
                 if (window.RusiIcons) RusiIcons.replace(micBadge);
               }
 
@@ -866,12 +869,14 @@ function initMockTestPage() {
             updateMeter();
           } else {
             micBadge.className = "cbt-status-pill-check ok";
-            micBadge.innerHTML = `${icon("check-circle-correct", 13)} Micro sẵn sàng ✓`;
+            micBadge.innerHTML = `${icon("check-circle-correct", 13)} Micro sẵn sàng`;
           }
         } catch (err) {
           console.warn("[TRKI Mic Test] Không thể truy cập mic:", err);
           micBadge.className = "cbt-status-pill-check idle";
-          micBadge.innerHTML = "Không tìm thấy mic (Có thể bỏ qua)";
+          micBadge.innerHTML = (err && (err.name === "NotAllowedError" || err.name === "SecurityError"))
+            ? "Chưa được cấp quyền micro — bấm biểu tượng ổ khoá trên thanh địa chỉ để cho phép"
+            : "Không tìm thấy mic (Có thể bỏ qua)";
           btnMic.innerHTML = `${icon("mic-speaking", 14)} <span>Thử lại Micro</span>`;
         }
         if (window.RusiIcons) RusiIcons.replace(host);
