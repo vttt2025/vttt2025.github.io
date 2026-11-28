@@ -334,7 +334,7 @@ const DIAGNOSTIC_QUESTIONS = [
   {
     cat: "cases",
     catName: "Ngữ pháp 6 Cách",
-    q: "Вчера на семинаре было три нового ...",
+    q: "Вчера на семинаре было три новых ...",
     options: ["студента", "студент", "студентов", "студенту"],
     a: 0,
     ex: "Sau các số đếm 2, 3, 4 (два, три, четыре), danh từ đi kèm bắt buộc chia ở dạng Cách 2 số ít (три студента)."

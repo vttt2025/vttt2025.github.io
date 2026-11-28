@@ -26,7 +26,7 @@ function initIndexPage() {
       if (diagBtn.dataset.loading) return;
       diagBtn.dataset.loading = "1";
       const s = document.createElement("script");
-      s.src = (typeof window.getRusiAppRoot === "function" ? window.getRusiAppRoot() : "") + "js/pages/page-shop.js?v=12.1";
+      s.src = (typeof window.getRusiAppRoot === "function" ? window.getRusiAppRoot() : "") + "js/pages/page-shop.js?v=12.2";
       s.onload = () => {
         delete diagBtn.dataset.loading;
         if (typeof window.openDiagnosticTestModal === "function") window.openDiagnosticTestModal();
