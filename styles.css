@@ -38963,3 +38963,78 @@ select.add-jar-input {
 @media (max-width: 1024px), (pointer: coarse) {
   .cbt-app-portal .cbt-hw-confirm { min-height: 44px; padding: 6px 14px; }
 }
+
+/* ==========================================================================
+   RESPONSIVE UI AUDIT r1 — Trang chủ (Hero 1280px, Bảng giá 820px, Dashboard & Chạm mobile)
+   ========================================================================== */
+.eyebrow-dot {
+  flex-shrink: 0;
+}
+.pricing-popular-badge,
+.pricing-amount {
+  white-space: nowrap;
+}
+.pricing-card:has(.pricing-popular-badge) {
+  padding-top: 34px;
+}
+@media (min-width: 1101px) and (max-width: 1460px) {
+  .hero-content {
+    max-width: min(620px, calc(100% - 500px));
+  }
+  .hero-visual {
+    left: auto;
+    right: max(36px, calc(50vw - 660px));
+    transform-origin: right center;
+    transform: scale(0.92);
+  }
+  .hero-visual .progress-card {
+    right: 0;
+  }
+}
+@media (min-width: 1101px) and (max-width: 1220px) {
+  .hero-content {
+    max-width: min(560px, calc(100% - 440px));
+  }
+  .hero-visual {
+    transform: scale(0.82);
+  }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pricing-grid {
+    max-width: 100% !important;
+  }
+}
+@media (max-width: 960px) {
+  .user-trigger {
+    padding: 3px !important;
+    gap: 0 !important;
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+@media (max-width: 768px) {
+  #indexUserProgressHost .index-skills-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .brand,
+  .footer-brand {
+    min-height: 44px;
+  }
+  .user-dropdown-item {
+    min-height: 44px;
+  }
+  .faq-intro a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  #pricing .section-heading .btn-outline {
+    white-space: normal;
+    text-align: left;
+    height: auto;
+    padding: 10px 14px;
+    line-height: 1.35;
+  }
+}
