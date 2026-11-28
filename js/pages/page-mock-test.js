@@ -1218,9 +1218,15 @@ function initMockTestPage() {
 
           <div class="cbt-header-center">
             ${isPractice ? `
-              <div class="cbt-clock-pill cbt-practice-pill" style="color:var(--primary);font-size:0.95rem" title="Luyện tập tự do" aria-label="Luyện tập tự do">
-                ${icon("sparkles-clean", 16)} <span>Luyện tập tự do</span>
-              </div>
+              <label class="cbt-practice-part-pick" title="Chọn phân môn muốn luyện">
+                ${icon("sparkles-clean", 16)}
+                <select id="cbtPracticePartSelect" aria-label="Chọn phân môn muốn luyện">
+                  <option value="full">Tất cả phần</option>
+                  ${(currentTest.parts || []).filter((p) => (p.questions || []).length || (p.writing_tasks || []).length || (p.speaking_tasks || []).length).map((p) => `
+                    <option value="${esc(p.id)}" ${isSubset && selectedPartList.length === 1 && selectedPartList[0] === p.id ? "selected" : ""}>${esc(String(p.vi || p.name || p.id).replace(/\s*\(\s*\d+\s*(câu|bài)\s*\)\s*$/i, ""))}</option>
+                  `).join("")}
+                </select>
+              </label>
             ` : `
               <div class="cbt-clock-pill" id="cbtTimerBox" title="Thời gian còn lại của bài thi">
                 ${icon("timer-clock", 18)} <span id="timerVal">${fmt(timeLeft)}</span>
@@ -2321,6 +2327,15 @@ function initMockTestPage() {
     }
 
     // Thoát bài thi
+    // Luyện tập: đổi phân môn ngay trên thanh đầu (mặc định tất cả phân môn, vào thẳng câu 1)
+    const practicePartSelect = el("#cbtPracticePartSelect");
+    if (practicePartSelect) {
+      practicePartSelect.onchange = () => {
+        const v = practicePartSelect.value;
+        startTest(currentTest, v === "full" ? null : v, "practice");
+      };
+    }
+
     el("#btnExitTest").onclick = () => {
       const exitMsg = isPractice
         ? "Bạn có chắc chắn muốn kết thúc bài luyện tập?"
