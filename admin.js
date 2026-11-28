@@ -226,7 +226,9 @@
             { v: "reading", l: "Đọc hiểu (Чтение)" },
             { v: "listening", l: "Nghe hiểu (Аудирование)" },
             { v: "writing", l: "Viết (Письмо)" },
-            { v: "speaking", l: "Nói (Говорение)" }
+            { v: "speaking", l: "Nói (Говорение)" },
+            { v: "mock", l: "Đề thi thử (mock)" },
+            { v: "integrated", l: "Đề tích hợp (integrated)" }
           ],
           defaultValue: "full"
         },
@@ -278,7 +280,7 @@
       desc: "Ngân hàng 1870+ câu hỏi trắc nghiệm TRKI các cấp độ A1, A2, B1, B2 theo từng mã đề Zlatoust và chuyên đề ngữ pháp/đọc hiểu/nghe hiểu.",
       createDefault: () => ({
         id: generateUUID(),
-        code: "TRKI_Q_" + Date.now().toString().slice(-4),
+        code: "TRKI_Q_" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase(),
         test_code: "trki_zlat_a1_elem",
         test_id: "trki_zlat_a1_elem",
         level: "A1",
@@ -345,7 +347,9 @@
             { v: "A1", l: "A1 — Sơ cấp" },
             { v: "A2", l: "A2 — Cơ bản" },
             { v: "B1", l: "B1 — Trung cấp 1" },
-            { v: "B2", l: "B2 — Trung cấp 2" }
+            { v: "B2", l: "B2 — Trung cấp 2" },
+            { v: "C1", l: "C1 — Cao cấp" },
+            { v: "C2", l: "C2 — Thành thạo" }
           ],
           defaultValue: "A1"
         },
@@ -358,7 +362,9 @@
             { v: "reading", l: "Đọc hiểu (Чтение)" },
             { v: "listening", l: "Nghe hiểu (Аудирование)" },
             { v: "writing", l: "Viết (Письмо)" },
-            { v: "speaking", l: "Nói (Говорение)" }
+            { v: "speaking", l: "Nói (Говорение)" },
+            { v: "history", l: "Lịch sử (История)" },
+            { v: "law", l: "Luật (Право)" }
           ],
           defaultValue: "lexis_grammar"
         },
@@ -388,7 +394,11 @@
             { v: 0, l: "Phương án 1 (Dòng 1)" },
             { v: 1, l: "Phương án 2 (Dòng 2)" },
             { v: 2, l: "Phương án 3 (Dòng 3)" },
-            { v: 3, l: "Phương án 4 (Dòng 4)" }
+            { v: 3, l: "Phương án 4 (Dòng 4)" },
+            { v: 4, l: "Phương án 5 (Dòng 5)" },
+            { v: 5, l: "Phương án 6 (Dòng 6)" },
+            { v: 6, l: "Phương án 7 (Dòng 7)" },
+            { v: 7, l: "Phương án 8 (Dòng 8)" }
           ],
           defaultValue: 0
         },
@@ -599,17 +609,7 @@
         { key: "structures", label: "Cấu trúc ngữ pháp đi kèm (mỗi dòng 1 cấu trúc)", type: "list-lines", placeholder: "читать что? (В.п.)\nучиться где? (П.п.)" },
         { key: "synonyms", label: "Từ đồng nghĩa (synonyms — mỗi dòng 1 từ)", type: "list-lines" },
         { key: "antonyms", label: "Từ trái nghĩa (antonyms — mỗi dòng 1 từ)", type: "list-lines" },
-        { key: "notes", label: "Ghi chú ngữ pháp & cách dùng", type: "textarea", rows: 2 },
-        {
-          key: "publication_status",
-          label: "Trạng thái",
-          type: "select",
-          options: [
-            { v: "published", l: "Đã xuất bản (Công khai)" },
-            { v: "draft", l: "Bản nháp (Draft)" }
-          ],
-          defaultValue: "published"
-        }
+        { key: "notes", label: "Ghi chú ngữ pháp & cách dùng", type: "textarea", rows: 2 }
       ]
     },
 
@@ -820,6 +820,16 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           label: "Nội dung bài học chuyên sâu (.md Markdown)",
           type: "markdown",
           required: true
+        },
+        {
+          key: "publication_status",
+          label: "Trạng thái",
+          type: "select",
+          options: [
+            { v: "published", l: "Đã xuất bản (Công khai)" },
+            { v: "draft", l: "Bản nháp (Draft) — lưu Cloud, chưa lên web" }
+          ],
+          defaultValue: "published"
         }
       ]
     },
@@ -1119,6 +1129,16 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
             { v: "true", l: "Khóa VIP (Chỉ dành cho tài khoản PRO)" }
           ],
           defaultValue: "false"
+        },
+        {
+          key: "publication_status",
+          label: "Trạng thái",
+          type: "select",
+          options: [
+            { v: "published", l: "Đã xuất bản (Công khai)" },
+            { v: "draft", l: "Bản nháp (Draft) — lưu Cloud, chưa lên web" }
+          ],
+          defaultValue: "published"
         }
       ]
     },
@@ -1236,6 +1256,16 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
             { v: "true", l: "Chỉ dành cho PRO" }
           ],
           defaultValue: "false"
+        },
+        {
+          key: "publication_status",
+          label: "Trạng thái",
+          type: "select",
+          options: [
+            { v: "published", l: "Đã xuất bản (Công khai)" },
+            { v: "draft", l: "Bản nháp (Draft) — lưu Cloud, chưa lên web" }
+          ],
+          defaultValue: "published"
         }
       ]
     },
@@ -1653,6 +1683,7 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         { key: "id", label: "Mã đơn hàng / ID", type: "text", required: true },
         { key: "order_code", label: "Mã đơn hàng chuẩn (order_code)", type: "text", required: true, help: "Ví dụ: ORD-123456" },
         { key: "user_id", label: "Mã UUID học viên (user_id)", type: "text", placeholder: "UUID tài khoản học viên" },
+        { key: "userEmail", label: "Email học viên (chỉ xem — từ tài khoản đăng nhập)", type: "text", readonly: true },
         { key: "package_id", label: "Mã gói cước / Sản phẩm mua (package_id)", type: "text", defaultValue: "pro_3m" },
         { key: "packageId", label: "Mã gói phụ (packageId)", type: "text", defaultValue: "pro_3m" },
         { key: "userEmail", label: "Email học viên", type: "text" },
@@ -1676,11 +1707,12 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
           options: [
             { v: "pending", l: "Chờ thanh toán (Pending)" },
             { v: "paid", l: "Đã kích hoạt PRO (Paid)" },
-            { v: "cancelled", l: "Đã hủy (Cancelled)" }
+            { v: "cancelled", l: "Đã hủy (Cancelled)" },
+            { v: "expired", l: "Hết hạn thanh toán (Expired)" }
           ],
           defaultValue: "pending"
         },
-        { key: "shipping_address", label: "Địa chỉ giao hàng (shipping_address - nếu mua sách/bánh kẹo)", type: "text", placeholder: "Địa chỉ nhận sách, quà..." },
+        { key: "shipping_address", label: "Địa chỉ giao hàng (shipping_address - nếu mua sách/bánh kẹo)", type: "textarea", rows: 3, placeholder: "Địa chỉ nhận sách, quà...", help: "Nhập địa chỉ dạng chữ, hoặc JSON {\"name\":..., \"phone\":..., \"address\":...}. Để trống nếu không giao hàng." },
         { key: "casso_trans_id", label: "Mã giao dịch Casso / Bank (casso_trans_id)", type: "text", placeholder: "Mã giao dịch ngân hàng" },
         { key: "paid_at", label: "Thời điểm thanh toán thành công (paid_at)", type: "text", placeholder: "ISO 8601 timestamp" },
         { key: "expires_at", label: "Thời hạn đơn hàng (expires_at)", type: "text", placeholder: "ISO 8601 timestamp" },
@@ -1798,7 +1830,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       }),
       fields: [
         { key: "id", label: "User ID", type: "text", required: true },
-        { key: "email", label: "Email Gmail", type: "text", required: false },
+        { key: "email", label: "Email đăng nhập (chỉ xem — từ tài khoản)", type: "text", readonly: true },
+        { key: "last_sign_in_at", label: "Đăng nhập gần nhất (chỉ xem)", type: "text", readonly: true },
         { key: "full_name", label: "Họ và tên", type: "text" },
         {
           key: "role",
@@ -1823,9 +1856,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           defaultValue: "false"
         },
         { key: "pro_expires_at", label: "Thời hạn VIP PRO (Hết hạn)", type: "text", placeholder: "2026-12-31T23:59:59Z", help: "Thời điểm hết hạn gói VIP (chuẩn ISO date, để trống nếu vĩnh viễn)" },
-        { key: "avatar_url", label: "URL Ảnh đại diện (avatar_url)", type: "text", placeholder: "https://..." },
-        { key: "streak", label: "Chuỗi ngày học liên tục (Streak)", type: "number", defaultValue: 0 },
-        { key: "xp", label: "Điểm kinh nghiệm (XP)", type: "number", defaultValue: 0 }
+        { key: "avatar_url", label: "URL Ảnh đại diện (avatar_url)", type: "text", placeholder: "https://..." }
       ]
     }
   };
@@ -1857,6 +1888,77 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
   // Bộ sưu tập không có file xuất bản tĩnh: dữ liệu chỉ có sau khi kéo từ Cloud.
   // "auto": nhỏ → tự kéo khi mở danh sách (1 lần/lần tải trang); "manual": lớn (6.000+ câu) → nhắc bấm Kéo.
   const CLOUD_ONLY_COLLECTIONS = { LISTENING_TOPICS: "auto", USERS: "auto", ORDERS: "auto", TRKI_QUESTION_BANK: "manual" };
+
+  async function loadQuestionBankFromCache() {
+    const sb = SupabaseSyncEngine.getClient();
+    let cached = null;
+    try {
+      cached = await window.RusiAdminCache.loadQBIfFresh(sb);
+    } catch (err) {
+      console.warn("[QB cache] Không kiểm tra được bộ đệm ngân hàng:", err);
+    }
+    if (cached && cached.rows && cached.rows.length) {
+      window.TRKI_QUESTION_BANK = cached.rows;
+      toast(`Đã nạp ${cached.rows.length} câu hỏi từ bộ đệm trên máy (khớp Cloud).`, "success");
+    }
+    renderSidebarLists();
+    if (State.currentRoute === "list" && State.currentSlug === "TRKI_QUESTION_BANK") handleRoute();
+  }
+
+  async function pullUnpublishedTrkiTests() {
+    const sb = SupabaseSyncEngine.getClient();
+    const mapping = SupabaseSyncEngine.MAPPINGS.TRKI_BANK;
+    if (!sb || !mapping) return;
+    const { data, error } = await sb.from(mapping.table).select("*").eq("is_published", false).limit(200);
+    if (error) { console.warn("[TRKI] Không kéo được đề nháp:", error); return; }
+    if (!data || !data.length) return;
+    const store = loadAdminStore();
+    store.TRKI_BANK = store.TRKI_BANK || [];
+    let added = 0;
+    data.forEach((row) => {
+      const doc = mapping.fromRow(row);
+      const key = mapping.idKey(doc);
+      const idx = store.TRKI_BANK.findIndex((x) => mapping.idKey(x) === key || (doc.uuid && x.uuid === doc.uuid));
+      if (idx >= 0 && store.TRKI_BANK[idx].__unsynced) return; // bản sửa chưa lên Cloud: giữ nguyên
+      const entry = { ...doc, __admin: true, __fromSupabase: true };
+      if (idx >= 0) store.TRKI_BANK[idx] = entry; else { store.TRKI_BANK.push(entry); added++; }
+    });
+    saveAdminStore(store);
+    renderSidebarLists();
+    if (added && State.currentRoute === "list" && State.currentSlug === "TRKI_BANK" && !isEditorDirty()) handleRoute();
+  }
+
+  // Email đăng nhập (auth.users) cho Học viên / Đơn hàng — qua RPC rusi_admin_user_emails (chỉ admin)
+  async function enrichAccountEmails(slug) {
+    if (slug !== "USERS" && slug !== "ORDERS") return;
+    const sb = SupabaseSyncEngine.getClient();
+    if (!sb) return;
+    const store = loadAdminStore();
+    const list = store[slug] || [];
+    const ids = Array.from(new Set(list.map((it) => (slug === "USERS" ? it.id : it.user_id)).filter((x) => x && isValidUUID(x))));
+    if (!ids.length) return;
+    const { data, error } = await sb.rpc("rusi_admin_user_emails", { p_ids: ids });
+    if (error) { console.warn("[Emails] Không đọc được email tài khoản:", error); return; }
+    const byId = new Map((data || []).map((r) => [r.id, r]));
+    list.forEach((it) => {
+      const r = byId.get(slug === "USERS" ? it.id : it.user_id);
+      if (!r) return;
+      if (slug === "USERS") { it.email = r.email || ""; it.last_sign_in_at = r.last_sign_in_at || ""; }
+      else it.userEmail = r.email || "";
+    });
+    saveAdminStore(store);
+    renderSidebarLists();
+    if (State.currentRoute === "list" && State.currentSlug === slug) handleRoute();
+  }
+
+  // Sau khi kéo đủ một bảng từ Cloud: bỏ các bản cục bộ từng kéo về (__fromSupabase) mà Cloud không còn (đã bị xoá),
+  // trừ bản sửa chưa lưu lên Cloud (__unsynced). Tránh "đơn ma" / bấm Lưu làm hồi sinh bản đã xoá.
+  function pruneCloudDeleted(list, mapping, pulledKeys) {
+    return (list || []).filter((x) => {
+      if (!x || !x.__fromSupabase || x.__unsynced) return true;
+      return pulledKeys.has(mapping.idKey(x)) || (x.uuid && pulledKeys.has("uuid:" + x.uuid));
+    });
+  }
 
   let _ramAdminStore = null;
   function invalidateAdminStoreCache() {
@@ -1918,6 +2020,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       delete clone.__admin;
       const key = clone.id || clone.code || clone.slug || clone.title;
       if (slug === "TRKI_BANK" && OBSOLETE_MOCK_TEST_IDS.has(key)) return;
+      // Bản cục bộ đã lưu lên Cloud nhưng không có mốc thời gian (CMS cũ) → không đè bản đã xuất bản (mới hơn)
+      if (!it.__unsynced && !it.__cloud_updated_at && map.has(key) && SupabaseSyncEngine.hasMapping(slug)) return;
       if (key && !deletedSet.has(key)) {
         map.set(key, { ...clone, __source: "admin" });
       }
@@ -2119,6 +2223,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     if (parts[0] === "api-explorer") {
       return { route: "api-explorer" };
     }
+    if (parts[0] === "monitor") {
+      return { route: "monitor" };
+    }
     return { route: "dashboard" };
   }
 
@@ -2134,7 +2241,10 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
 
   function handleRoute() {
     if (isEditorDirty()) {
-      if (!confirm("Có thay đổi chưa lưu. Rời trang và bỏ các thay đổi này?")) {
+      const draftKept = Boolean(window.RusiAdminDrafts && window.RusiAdminDrafts.isCurrentSaved());
+      if (!confirm(draftKept
+        ? "Có thay đổi chưa lưu lên Cloud (đã tự lưu thành bản nháp — mở lại bài để sửa tiếp). Rời trang?"
+        : "Có thay đổi chưa lưu. Rời trang và bỏ các thay đổi này?")) {
         // Giữ nguyên editor; đưa URL về tài liệu đang sửa (replaceState không bắn lại hashchange)
         if (State.editorHash && window.location.hash !== State.editorHash) history.replaceState(null, "", State.editorHash);
         return;
@@ -2168,6 +2278,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       const col = COLLECTIONS[State.currentSlug];
       if (State.isCreating) {
         State.currentDraft = (col && col.createDefault) ? col.createDefault() : { id: "item_" + Date.now().toString().slice(-4), title: "Mục mới" };
+        if (window.RusiAdminDrafts) window.RusiAdminDrafts.onCreateEntered();
       } else {
         const targetId = String(State.currentDocId || "").trim();
         const item = getMergedList(State.currentSlug).find((it) => {
@@ -2210,9 +2321,18 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         } else {
           State.currentDraft = item ? JSON.parse(JSON.stringify(stripSource(item))) : null;
         }
+        // Bản không có mốc Cloud (lấy từ file công khai): dùng thời điểm mở trình soạn làm mốc chống ghi đè —
+        // ai đó lưu bản mới hơn trong lúc đang sửa → máy chủ từ chối (RS409) thay vì ghi đè âm thầm.
+        const openKey = State.currentSlug + ":" + targetId;
+        if (State.draftOpenKey !== openKey) {
+          State.draftOpenKey = openKey;
+          State.draftOpenedAt = new Date().toISOString();
+        }
+        if (State.currentDraft && !State.currentDraft.__cloud_updated_at) State.currentDraft.__stale_base = State.draftOpenedAt;
       }
     } else {
       State.currentDraft = null;
+      State.draftOpenKey = null;
     }
 
     updateSidebarNav();
@@ -2230,6 +2350,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       renderDocumentEditor(container, State.currentSlug);
       State.savedSnapshot = State.currentDraft ? JSON.stringify(State.currentDraft) : null;
       State.editorHash = window.location.hash;
+      if (window.RusiAdminDrafts) window.RusiAdminDrafts.onEditorRendered();
+    } else if (State.currentRoute === "monitor") {
+      if (window.RusiAdminMonitor) window.RusiAdminMonitor.render(container);
     } else if (State.currentRoute === "globals") {
       renderGlobalsView(container, State.currentSlug);
     } else if (State.currentRoute === "supabase-sync") {
@@ -2276,7 +2399,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         <a class="payload-nav-link" data-nav="collection:${col.slug}" href="#collection/${col.slug}">
           <span class="payload-nav-icon">${window.RusiIcons ? RusiIcons.get(col.icon, { size: 18 }) : col.icon}</span>
           <span class="payload-nav-label">${esc(col.label)}</span>
-          <span class="payload-nav-badge" id="badge_${col.slug}">${items.length}</span>
+          <span class="payload-nav-badge" id="badge_${col.slug}"${(CLOUD_ONLY_COLLECTIONS[col.slug] && !items.length) ? ` title="Chưa kéo từ Cloud"` : ""}>${(CLOUD_ONLY_COLLECTIONS[col.slug] && !items.length) ? "—" : items.length}</span>
         </a>
       `;
 
@@ -2301,6 +2424,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       else if (State.currentRoute === "globals" && target === `globals:${State.currentSlug}`) isActive = true;
       else if (State.currentRoute === "supabase-sync" && target === "supabase-sync") isActive = true;
       else if (State.currentRoute === "api-explorer" && target === "api-explorer") isActive = true;
+      else if (State.currentRoute === "monitor" && target === "monitor") isActive = true;
 
       link.classList.toggle("active", isActive);
     });
@@ -2350,6 +2474,12 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         <a class="payload-crumb-item" href="#dashboard">${homeIcon} Dashboard</a>
         ${sep}
         <span class="payload-crumb-item active">REST API & Schema Explorer</span>
+      `;
+    } else if (State.currentRoute === "monitor") {
+      nav.innerHTML = `
+        <a class="payload-crumb-item" href="#dashboard">${homeIcon} Dashboard</a>
+        ${sep}
+        <span class="payload-crumb-item active">Theo dõi học viên</span>
       `;
     }
   }
@@ -2504,7 +2634,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
               <div class="payload-card-icon-wrap">${window.RusiIcons ? RusiIcons.get(col.icon, { size: 20 }) : col.icon}</div>
               <div>
                 <h3 class="payload-card-title">${esc(col.label)}</h3>
-                <span class="p-card-count">${items.length} tài liệu</span>
+                <span class="p-card-count">${(CLOUD_ONLY_COLLECTIONS[key] && !items.length) ? "Chưa kéo từ Cloud" : `${items.length} tài liệu`}</span>
               </div>
             </div>
           </div>
@@ -2529,10 +2659,13 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         </div>
       </div>
 
+      <div id="dashDraftsPanel"></div>
+
       <div class="payload-collections-grid">
         ${collectionsHtml}
       </div>
     `;
+    if (window.RusiAdminDrafts) window.RusiAdminDrafts.renderPanel(document.getElementById("dashDraftsPanel"));
   }
 
   // =========================================================================
@@ -2555,6 +2688,17 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       State.autoPulled[slug] = true;
       autoPulling = true;
       setTimeout(() => { window.pullSingleCollection(slug); }, 0);
+    }
+    // Ngân hàng câu hỏi: bộ đệm của admin (IndexedDB) khớp phiên bản Cloud → nạp từ máy, không tải lại 6.000+ câu
+    if (slug === "TRKI_QUESTION_BANK" && !isTrashMode && allItems.length === 0 && !State.autoPulled.__qbCache && window.RusiAdminCache && window.RusiAdminCache.isAllowed()) {
+      State.autoPulled.__qbCache = true;
+      autoPulling = true;
+      setTimeout(() => { loadQuestionBankFromCache(); }, 0);
+    }
+    // Đề thi: file công khai chỉ có đề đã xuất bản → kéo thêm đề nháp (is_published = false) để admin xem/sửa rồi bật lên web
+    if (slug === "TRKI_BANK" && !isTrashMode && !State.autoPulled.__trkiDrafts) {
+      State.autoPulled.__trkiDrafts = true;
+      setTimeout(() => { pullUnpublishedTrkiTests(); }, 0);
     }
 
     let filtered = allItems.filter((item) => {
@@ -2666,9 +2810,16 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         }
         const levelBadge = it.level ? `<span class="p-pill p-pill-info">${esc(it.level)}</span>` : "";
         const proBadge = (String(it.is_pro_only) === "true" || String(it.is_pro) === "true") ? `<span class="p-pill p-pill-warning">${window.RusiIcons ? RusiIcons.get("crown-vip", { size: 12 }) : ""} PRO</span>` : "";
+        // Trạng thái: nháp (chưa lên web) / chưa lưu lên Cloud / đang có bản nháp soạn dở
+        const isDraftItem = it.publication_status === "draft" || it.publication_status === "archived" || (slug === "TRKI_BANK" && String(it.is_published) === "false");
+        const stateBadges = isTrashMode ? "" : [
+          isDraftItem ? `<span class="p-pill p-pill-neutral" title="Lưu trên Cloud nhưng chưa xuất bản lên web">Nháp</span>` : "",
+          it.__unsynced ? `<span class="p-pill p-pill-danger" title="Bản sửa chỉ nằm trên máy này">Chưa lên Cloud</span>` : "",
+          (window.RusiAdminDrafts && window.RusiAdminDrafts.has(slug, idKey)) ? `<span class="p-pill p-pill-warning" title="Có bản nháp đang soạn dở (tự lưu)">Đang soạn</span>` : ""
+        ].join(" ").trim();
         const sourceBadge = isTrashMode
           ? `<span class="p-pill p-pill-danger">${window.RusiIcons ? RusiIcons.get("trash-2", { size: 11 }) : ""} Đã xóa</span>`
-          : (it.__source === "admin" ? `<span class="p-pill p-pill-violet">Đã sửa</span>` : "");
+          : ([it.__source === "admin" ? `<span class="p-pill p-pill-violet">Đã sửa</span>` : "", stateBadges].join(" ").trim());
 
         rowsHtml += `
           <tr class="payload-table-row" onclick="if(!event.target.closest('input,button,a')) window.location.hash='#collection/${slug}/edit/'+encodeURIComponent(${escAttr(JSON.stringify(String(idKey)))})">
@@ -3004,15 +3155,29 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
             }))
           ];
         }
-        const opts = optsList.map((o) => {
+        const hasMatch = optsList.some((o) => String(val) === String(o.v) || (o.code && String(val) === String(o.code)));
+        // Giá trị đang lưu không có trong danh sách (vd. cấp C1/C2, đáp án vị trí ≥4) → giữ nguyên làm lựa chọn,
+        // không để trình duyệt tự chọn mục đầu tiên rồi bấm Lưu ghi đè dữ liệu.
+        const fallbackOpt = (val != null && String(val) !== "" && !hasMatch)
+          ? `<option value="${escAttr(val)}" selected>${esc(String(val))} (giá trị hiện tại)</option>`
+          : "";
+        const opts = fallbackOpt + optsList.map((o) => {
           const isSelected = String(val) === String(o.v) || (o.code && String(val) === String(o.code));
           return `<option value="${escAttr(o.v)}" ${isSelected ? "selected" : ""}>${esc(o.l)}</option>`;
         }).join("");
+        // Đổi vai trò chỉ dành cho Super Admin (máy chủ cũng chặn); ở đây chỉ khoá giao diện
+        const roleLocked = slug === "USERS" && f.key === "role" && window.__rusiAdminRole !== "super_admin";
+        // Đơn đã thanh toán là chốt (không hoàn tiền); chỉ Super Admin đánh dấu "đã thanh toán" (máy chủ cũng chặn)
+        const orderPaidLocked = slug === "ORDERS" && f.key === "status" && draft._loaded_status === "paid";
+        const orderHelp = slug === "ORDERS" && f.key === "status"
+          ? (orderPaidLocked ? "Đơn đã thanh toán là chốt — không đổi trạng thái, không hoàn tiền."
+            : (window.__rusiAdminRole !== "super_admin" ? "Chỉ Super Admin được đánh dấu đơn đã thanh toán." : ""))
+          : "";
         formFieldsHtml += `
           <div class="p-field-row p-field-select" data-field-key="${escAttr(f.key)}">
             <label class="p-label">${esc(f.label)} ${f.required ? '<span class="p-label-req">*</span>' : ""}</label>
-            <select class="p-select live-draft-field" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}">${opts}</select>
-            ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
+            <select class="p-select live-draft-field" name="${escAttr(f.key)}" data-key="${escAttr(f.key)}"${(roleLocked || orderPaidLocked) ? " disabled" : ""}>${(slug === "ORDERS" && f.key === "status" && window.__rusiAdminRole !== "super_admin" && !orderPaidLocked) ? opts.replace(/(<option value="paid")/, "$1 disabled") : opts}</select>
+            ${roleLocked ? `<div class="p-help">Chỉ Super Admin được đổi vai trò tài khoản.</div>` : (orderHelp ? `<div class="p-help">${esc(orderHelp)}</div>` : (f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""))}
           </div>
         `;
       } else if (f.type === "textarea") {
@@ -3612,8 +3777,10 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
             ${f.help ? `<div class="p-help">${esc(f.help)}</div>` : ""}
         `;
       } else {
-        const codeIsConflictKey = f.key === "code" && Boolean(SupabaseSyncEngine.MAPPINGS[State.currentSlug] && SupabaseSyncEngine.MAPPINGS[State.currentSlug].conflict === "code");
-        const isIdDisabled = !State.isCreating && (f.key === "id" || f.key === "slug" || codeIsConflictKey);
+        // Đề thi / câu hỏi TRKI tra bản ghi Cloud theo code (resolveExistingIds) → đổi code của bản đang có sẽ ghi đè bản khác cùng code
+        const codeIsConflictKey = f.key === "code" && (Boolean(SupabaseSyncEngine.MAPPINGS[State.currentSlug] && SupabaseSyncEngine.MAPPINGS[State.currentSlug].conflict === "code")
+          || State.currentSlug === "TRKI_BANK" || State.currentSlug === "TRKI_QUESTION_BANK");
+        const isIdDisabled = Boolean(f.readonly) || (!State.isCreating && (f.key === "id" || f.key === "slug" || codeIsConflictKey));
         let mediaPreview = "";
         if (f.key === "image_url" && val && typeof val === "string" && val.startsWith("http")) {
           mediaPreview = `
@@ -3766,17 +3933,6 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       }
     }
 
-    const jsonArea = document.getElementById("jsonEditorArea");
-    if (jsonArea) {
-      jsonArea.onchange = () => {
-        try {
-          const parsed = JSON.parse(jsonArea.value);
-          State.currentDraft = parsed;
-        } catch (e) {
-          // Keep draft as is
-        }
-      };
-    }
 
     // =========================================================================
     // NOTION-STYLE WYSIWYG DOCUMENT CANVAS & TWO-WAY MARKDOWN SYNC
@@ -5412,18 +5568,6 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
     });
   };
 
-  window.formatJsonEditor = function () {
-    const el = document.getElementById("jsonEditorArea");
-    if (!el) return;
-    try {
-      const obj = JSON.parse(el.value);
-      State.currentDraft = obj;
-      el.value = JSON.stringify(obj, null, 2);
-      toast("Đã định dạng JSON chuẩn.");
-    } catch (e) {
-      toast("Lỗi cú pháp JSON: " + e.message);
-    }
-  };
 
   // =========================================================================
   // 9. ARRAY BUILDERS (TRKI, VOCAB, LISTENING, SPEAKING, PACKAGES)
@@ -6767,6 +6911,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     if (!State.currentDraft || !Array.isArray(State.currentDraft.words) || !State.currentDraft.words[idx]) return;
     const item = State.currentDraft.words[idx];
     item[field] = val;
+    item.__dirty = true; // chỉ từ đã sửa trong lọ mới ghi lại vào bảng vocabularies
     if (field === "ru") {
       item.word_with_stress = val;
       item.stress = val;
@@ -6992,7 +7137,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             title: doc.title || "Đề thi TRKI",
             level: doc.level || "A1",
             level_name: doc.level_name ?? doc.levelName ?? ("Sơ cấp " + (doc.level || "A1")),
-            category: subType,
+            // Ô "Mã chuyên mục" riêng; trước đây luôn bị ép = sub_test_type → mất category khác
+            category: doc.category || subType,
             sub_test_type: subType,
             duration_min: dur,
             duration_minutes: dur,
@@ -7009,7 +7155,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             is_pro_only: parseBool(doc.is_pro_only, false),
             is_published: parseBool(doc.is_published, true),
             test_mode: doc.test_mode || doc.mode || "practice",
-            raw_data: { parts: normalizedParts },
+            // Giữ các khoá khác của raw_data (chỉ thay parts)
+            raw_data: { ...((doc.raw_data && typeof doc.raw_data === "object" && !Array.isArray(doc.raw_data)) ? doc.raw_data : {}), parts: normalizedParts },
             updated_at: new Date().toISOString()
           };
         },
@@ -7032,8 +7179,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             level: row.level || "A1",
             levelName: lvlName,
             level_name: lvlName,
-            category: subType,
+            category: row.category || subType,
             sub_test_type: subType,
+            raw_data: row.raw_data || null,
             categoryName: catName,
             category_name: catName,
             test_mode: row.test_mode || "practice",
@@ -7090,7 +7238,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           }
           return {
             id: qId,
-            code: doc.code || ("TRKI_Q_" + Date.now().toString().slice(-4)),
+            code: doc.code || ("TRKI_Q_" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase()),
             test_code: doc.test_code || "",
             test_id: doc.test_id || doc.test_code || null,
             level: doc.level || "A1",
@@ -7188,6 +7336,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           id: row.id,
           uuid: row.id,
           jar_id: (Array.isArray(row.jar_items) && row.jar_items[0] && row.jar_items[0].jar_id) ? row.jar_items[0].jar_id : "",
+          // Lọ lúc tải về: đổi sang lọ khác thì gỡ khỏi lọ cũ khi lưu
+          _loaded_jar_id: (Array.isArray(row.jar_items) && row.jar_items[0] && row.jar_items[0].jar_id) ? row.jar_items[0].jar_id : "",
           word_with_stress: row.word_with_stress,
           ru: row.word_with_stress,
           word_normalized: row.word_normalized,
@@ -7210,6 +7360,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       VOCAB_JARS: {
         table: "vocab_jars",
         conflict: "code",
+        preserveIfAbsent: { publication_status: ["publication_status"] },
         deleteCol: "code",
         label: "Lọ từ vựng",
         idKey: (doc) => doc.id || doc.code,
@@ -7230,6 +7381,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             owner_id: (doc.owner_id && isValidUUID(doc.owner_id)) ? doc.owner_id : null,
             is_pro: isProVal,
             word_count: wordsArr.length || Number(doc.word_count) || 0,
+            // Nháp ("draft") ở lại CMS, không xuất bản lên web (publish-content.js, rusi_pro_catalog)
+            publication_status: ["draft", "published", "archived"].includes(doc.publication_status) ? doc.publication_status : "published",
             updated_at: new Date().toISOString()
           };
         },
@@ -7254,11 +7407,13 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
                   aspect: v.aspect || null,
                   audio_url: v.audio_url || null,
                   structures: v.structures || [],
-                  examples: v.examples || []
+                  examples: v.examples || [],
+                  __cloud_updated_at: v.updated_at || null
                 };
               });
           }
           return {
+            publication_status: row.publication_status || "published",
             id: row.code || row.id,
             uuid: row.id,
             code: row.code || row.id,
@@ -7281,6 +7436,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       TOPIC_ARTICLES: {
         table: "topic_articles",
         conflict: "id",
+        preserveIfAbsent: { publication_status: ["publication_status"] },
         deleteCol: "id",
         label: "Bài học chủ đề (Article)",
         idKey: (doc) => doc.id,
@@ -7317,6 +7473,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             grammar_notes: grammarNotes,
             action_chains: actionChains,
             cultural_tip: cTip,
+            // Nháp ("draft") ở lại CMS, không xuất bản lên web (publish-content.js, rusi_pro_catalog)
+            publication_status: ["draft", "published", "archived"].includes(doc.publication_status) ? doc.publication_status : "published",
             updated_at: new Date().toISOString()
           };
         },
@@ -7339,6 +7497,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const gNotes = Array.isArray(row.grammar_notes) ? row.grammar_notes : (Array.isArray(art.grammarNotes) ? art.grammarNotes : []);
           const aChains = Array.isArray(row.action_chains) ? row.action_chains : (Array.isArray(art.actionChains) ? art.actionChains : []);
           return {
+            publication_status: row.publication_status || "published",
             id: row.id || row.code,
             title: row.title || art.title || ("Bài học: " + (row.id || row.code)),
             level: row.level || "A1",
@@ -7415,7 +7574,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             access_entitlement: row.access_entitlement || (row.is_pro_only ? "pro" : "free"),
             rules: Array.isArray(row.rules) ? row.rules : [],
             examples: Array.isArray(row.examples) ? row.examples : [],
-            table_data: Array.isArray(row.table_data) ? row.table_data : [],
+            // Trang học viên dùng table_data dạng object (content-shapes.js) → giữ nguyên, không ép thành []
+            table_data: (row.table_data && typeof row.table_data === "object") ? row.table_data : [],
             questions: Array.isArray(row.questions) ? row.questions : [],
             is_pro_only: Boolean(row.is_pro_only || row.access_entitlement === "pro"),
             is_published: row.publication_status !== "draft"
@@ -7464,7 +7624,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         conflict: "code",
         deleteCol: "code",
         label: "Bài luyện nghe & chính tả",
-        preserveIfAbsent: { sort_order: ["sort_order"], lesson_type: ["lesson_type"] },
+        preserveIfAbsent: { sort_order: ["sort_order"], lesson_type: ["lesson_type"], publication_status: ["publication_status"] },
         idKey: (doc) => doc.code || doc.id,
         toRow: (doc) => {
           const lesUuid = (doc.lesson_uuid && isValidUUID(doc.lesson_uuid)) ? doc.lesson_uuid : ((doc.uuid && isValidUUID(doc.uuid)) ? doc.uuid : ((doc.id && isValidUUID(doc.id)) ? doc.id : generateUUID()));
@@ -7507,6 +7667,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             raw_data: nextRaw,
             sort_order: Number(doc.sort_order) || 1,
             is_pro_only: isProVal,
+            // Nháp ("draft") ở lại CMS, không xuất bản lên web (publish-content.js, rusi_pro_catalog)
+            publication_status: ["draft", "published", "archived"].includes(doc.publication_status) ? doc.publication_status : "published",
             updated_at: new Date().toISOString()
           };
         },
@@ -7517,6 +7679,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const aud = row.audio_url || "";
           const isProVal = Boolean(row.is_pro_only || row.access_entitlement === "pro");
           return {
+            publication_status: row.publication_status || "published",
             id: row.code || row.id,
             uuid: row.id,
             lesson_uuid: row.id,
@@ -7554,6 +7717,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       SPEAKING_SETS: {
         table: "speaking_lessons",
         conflict: "code",
+        preserveIfAbsent: { publication_status: ["publication_status"] },
         deleteCol: "code",
         label: "Bài luyện nói",
         idKey: (doc) => doc.code || doc.id,
@@ -7592,6 +7756,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
               items: itemsArr,
               sentences: itemsArr
             },
+            // Nháp ("draft") ở lại CMS, không xuất bản lên web (publish-content.js, rusi_pro_catalog)
+            publication_status: ["draft", "published", "archived"].includes(doc.publication_status) ? doc.publication_status : "published",
             updated_at: new Date().toISOString()
           };
         },
@@ -7632,6 +7798,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           const catName = row.category_name || (ytId ? "Shadowing qua phim hoạt hình" : "Giao tiếp cơ bản");
 
           return {
+            publication_status: row.publication_status || "published",
             id: row.code || row.id,
             uuid: row.id,
             code: row.code || row.id,
@@ -8081,13 +8248,26 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             id: ordUuid,
             order_code: ordCode,
             user_id: uId,
-            package_id: doc.package_id || doc.packageId || "",
+            // Rỗng → null (chuỗi rỗng vi phạm khoá ngoại tới packages)
+            package_id: doc.package_id || doc.packageId || null,
             amount: Number(doc.amount) || 0,
+            // VND không có đơn vị lẻ: amount_minor = amount (khớp supabase-client.js và trigger đơn hàng)
             amount_minor: Math.max(1, Number(doc.amount) || 1),
             currency: "VND",
             payment_method: String(doc.payment_method || doc.paymentMethod || "VIETQR").toUpperCase(),
             status: ordStatus,
-            shipping_address: (typeof doc.shipping_address === "string" ? (() => { try { return JSON.parse(doc.shipping_address); } catch(_) { return doc.shipping_address; } })() : doc.shipping_address) || null,
+            // Cột jsonb chỉ nhận object (CHECK orders_shipping_address_check): chữ thường → { address: "..." }
+            shipping_address: (() => {
+              const v = doc.shipping_address;
+              if (v && typeof v === "object" && !Array.isArray(v)) return v;
+              const txt = String(v || "").trim();
+              if (!txt) return null;
+              try {
+                const parsed = JSON.parse(txt);
+                if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed;
+              } catch (_) { /* không phải JSON → coi là địa chỉ dạng chữ */ }
+              return { address: txt };
+            })(),
             casso_trans_id: doc.casso_trans_id || null,
             paid_at: isPaidStatus ? (doc.paid_at ? new Date(doc.paid_at).toISOString() : new Date().toISOString()) : null,
             expires_at: doc.expires_at || new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
@@ -8104,11 +8284,13 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           packageId: row.package_id || "",
           package_id: row.package_id || "",
           packageName: row.package_id || "",
-          amount: Number(row.amount || (row.amount_minor ? row.amount_minor / 100 : 0)) || 0,
+          amount: Number(row.amount ?? row.amount_minor ?? 0) || 0,
           paymentMethod: row.payment_method || "VIETQR",
           payment_method: row.payment_method || "VIETQR",
           status: String(row.status || "pending").toLowerCase(),
-          shipping_address: row.shipping_address || "",
+          _loaded_status: String(row.status || "pending").toLowerCase(),
+          // jsonb object → chuỗi JSON để hiện/sửa trong ô (trước đây hiện "[object Object]")
+          shipping_address: row.shipping_address && typeof row.shipping_address === "object" ? JSON.stringify(row.shipping_address, null, 2) : (row.shipping_address || ""),
           casso_trans_id: row.casso_trans_id || "",
           paid_at: row.paid_at || "",
           expires_at: row.expires_at || "",
@@ -8159,7 +8341,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     },
 
     // Giữ nguyên UUID / Primary Key đang có trên Supabase khi cập nhật từ dữ liệu local (tránh lỗi 409 / 23503 FK)
-    async resolveExistingIds(sb, slug, docs) {
+    async resolveExistingIds(sb, slug, docs, opts = {}) {
       const mapping = this.MAPPINGS[slug];
       if (!mapping || !Array.isArray(docs) || docs.length === 0) return;
 
@@ -8181,21 +8363,25 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         const byKey = new Map();
         for (let i = 0; i < uniqueKeys.length; i += 50) {
           const chunk = uniqueKeys.slice(i, i + 50);
-          try {
-            const { data, error } = await sb.from(mapping.table).select(`id, ${lookupCol}`).in(lookupCol, chunk);
-            if (!error && Array.isArray(data)) {
-              for (const r of data) {
-                if (r && r[lookupCol] != null && r.id != null) {
-                  byKey.set(String(r[lookupCol]).trim(), r.id);
-                }
-              }
+          // Lỗi tra cứu → dừng lưu (trước đây nuốt lỗi → insert bản trùng / ghi sai khoá)
+          const { data, error } = await sb.from(mapping.table).select(`id, ${lookupCol}`).in(lookupCol, chunk);
+          if (error) throw new Error("Không tra được bản ghi hiện có trên Cloud (" + mapping.table + "): " + error.message);
+          for (const r of (data || [])) {
+            if (r && r[lookupCol] != null && r.id != null) {
+              byKey.set(String(r[lookupCol]).trim(), r.id);
             }
-          } catch (_) {}
+          }
         }
         for (const doc of docs) {
           if (!doc) continue;
           const k = String(doc[lookupCol] || doc.id || "").trim();
           const dbId = byKey.get(k);
+          if (dbId && opts.isCreating) {
+            // Tạo mới mà mã đã có trên Cloud (vd. bài nháp chưa có trong danh sách) → không ghi đè âm thầm
+            const dupErr = new Error(`Mã "${k}" đã tồn tại trên Cloud. Hãy đặt mã khác (hoặc Kéo từ Cloud để sửa bản đang có).`);
+            dupErr.duplicate = true;
+            throw dupErr;
+          }
           if (dbId) {
             if (slug === "LISTENING_LESSONS") doc.lesson_uuid = dbId;
             if (slug === "WRITING_TASKS") doc.taskId = dbId;
@@ -8215,17 +8401,16 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         if (topicCodes.length > 0) {
           const topicMap = new Map();
           for (let i = 0; i < topicCodes.length; i += 50) {
-            try {
-              const { data, error } = await sb.from(parentTable).select("id, code").in("code", topicCodes.slice(i, i + 50));
-              if (!error && Array.isArray(data)) {
-                data.forEach(r => { if (r && r.code && r.id) topicMap.set(String(r.code).trim(), r.id); });
-              }
-            } catch (_) {}
+            const { data, error } = await sb.from(parentTable).select("id, code").in("code", topicCodes.slice(i, i + 50));
+            if (error) throw new Error("Không tra được chủ đề trên Cloud (" + parentTable + "): " + error.message);
+            (data || []).forEach(r => { if (r && r.code && r.id) topicMap.set(String(r.code).trim(), r.id); });
           }
           docs.forEach(d => {
             if (d && d.topic_id && !isValidUUID(d.topic_id)) {
               const mappedUuid = topicMap.get(String(d.topic_id).trim());
               if (mappedUuid) d.topic_id = mappedUuid;
+              // Mã chủ đề không có trên Cloud → báo lỗi thay vì lưu topic_id = null (bài bị tách khỏi chủ đề)
+              else throw new Error(`Chủ đề "${d.topic_id}" không có trên Cloud (${parentTable}). Hãy chọn chủ đề có sẵn.`);
             }
           });
         }
@@ -8283,8 +8468,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           ? VOCABULARIES.find(item => stripStressMarks(item.word_normalized || item.word_with_stress || "").toLowerCase() === cleanNorm)
           : null;
         const foundId = found && [found.id, found.uuid].find((x) => x && isValidUUID(x));
-        // Từ chưa có UUID nhưng đã có trong kho từ điển → dùng lại, chỉ gán vào lọ (không tạo bản trùng, không ghi đè)
-        const reuseExisting = !(w.id && isValidUUID(w.id)) && !!foundId;
+        // Từ chưa có UUID nhưng đã có trong kho từ điển → dùng lại, chỉ gán vào lọ (không tạo bản trùng, không ghi đè).
+        // Từ đã có UUID mà không sửa trong lọ → cũng chỉ gán vào lọ: bản trong lọ có thể cũ hơn bản trong Kho từ vựng.
+        const reuseExisting = (!(w.id && isValidUUID(w.id)) && !!foundId) || (w.id && isValidUUID(w.id) && !w.__dirty);
         const wId = (w.id && isValidUUID(w.id)) ? w.id : (foundId || generateUUID());
         w.id = wId;
         let wAudio = w.audio_url || w.audio || null;
@@ -8307,7 +8493,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             notes: w.notes ?? w.note ?? null,
             structures: Array.isArray(w.structures) ? w.structures : [],
             examples: Array.isArray(w.examples) ? w.examples : (w.ex ? [{ ru: w.ex, vi: w.ex_vi || "" }] : []),
-            audio_url: wAudio
+            audio_url: wAudio,
+            // Chốt chặn bản cũ (rusi_00_stale_guard): gửi mốc đã tải; từ mới → null (máy chủ đặt now())
+            updated_at: w.__cloud_updated_at || null
           });
           itemsToInsert.push({
             jar_id: jarId,
@@ -8318,10 +8506,14 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       }
 
       if (wordsToUpsert.length > 0) {
-        const { error: vocabErr } = await sb.from("vocabularies").upsert(wordsToUpsert, { onConflict: "id" });
+        const { data: savedWords, error: vocabErr } = await sb.from("vocabularies").upsert(wordsToUpsert, { onConflict: "id" }).select("id, updated_at");
         if (vocabErr) {
           return { ok: false, error: vocabErr, message: "Lỗi đồng bộ bảng vocabularies: " + vocabErr.message };
         }
+        const stampById = new Map((savedWords || []).map((r) => [r.id, r.updated_at]));
+        words.forEach((w) => {
+          if (w && stampById.has(w.id)) { w.__cloud_updated_at = stampById.get(w.id); delete w.__dirty; }
+        });
       }
 
       // Ghi danh sách mới trước (khoá chính jar_id,vocab_id), rồi mới xoá các từ không còn trong lọ:
@@ -8371,7 +8563,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       }
 
       try {
-        await this.resolveExistingIds(sb, slug, [doc]);
+        await this.resolveExistingIds(sb, slug, [doc], { isCreating: !!opts.isCreating });
         const preserved = await this.fetchPreservedRows(sb, slug, [doc]);
         const row = this.applyPreserved(slug, doc, mapping.toRow(doc), preserved);
         const { data, error } = await sb
@@ -8386,7 +8578,11 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
 
         // Mốc phiên bản mới cho lần lưu sau + dữ liệu máy chủ đã dựng lại
         const saved = data && data[0];
-        if (saved && saved.updated_at && slug !== "USERS" && slug !== "ORDERS") doc.__cloud_updated_at = saved.updated_at;
+        if (saved && saved.updated_at) { doc.__cloud_updated_at = saved.updated_at; delete doc.__stale_base; }
+        if (slug === "USERS" && saved) {
+          // Ảnh chụp quyền vừa lưu → lần lưu sau chỉ gửi trường thật sự đổi (không ghi đè hạn PRO bằng giá trị cũ)
+          doc._loaded = { role: saved.role || "student", is_pro: Boolean(saved.is_pro), pro_expires_at: saved.pro_expires_at || "" };
+        }
         if (slug === "TRKI_BANK" && saved) {
           // Câu hỏi của đề có ngân hàng được máy chủ lấy lại từ ngân hàng → giữ bản cục bộ giống Cloud
           ["parts", "sections", "part1", "part2", "part3", "part4", "part5"].forEach((k) => {
@@ -8415,21 +8611,31 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         if (slug === "VOCABULARIES" && doc.jar_id && isValidUUID(doc.jar_id)) {
           const vId = (data && data[0] && data[0].id) || row.id;
           if (vId && isValidUUID(vId)) {
+            // Từ đã có trong lọ → giữ nguyên vị trí (ignoreDuplicates); chỉ từ mới gán vào cuối lọ
             const { error: jiErr } = await sb.from("jar_items").upsert({
               jar_id: doc.jar_id,
               vocab_id: vId,
               position: 999
-            }, { onConflict: "jar_id,vocab_id" });
+            }, { onConflict: "jar_id,vocab_id", ignoreDuplicates: true });
             if (jiErr) {
               return { ok: false, error: jiErr, message: "Từ vựng đã lưu nhưng gán vào lọ (jar_items) lỗi: " + jiErr.message, table: mapping.table, data };
             }
           }
         }
+        if (slug === "VOCABULARIES" && doc._loaded_jar_id && isValidUUID(doc._loaded_jar_id) && doc._loaded_jar_id !== doc.jar_id) {
+          // Bỏ chọn / đổi lọ → gỡ từ khỏi lọ cũ (trước đây từ vẫn nằm trong lọ cũ)
+          const vId = (data && data[0] && data[0].id) || row.id;
+          const { error: rmErr } = await sb.from("jar_items").delete().eq("jar_id", doc._loaded_jar_id).eq("vocab_id", vId);
+          if (rmErr) {
+            return { ok: false, error: rmErr, message: "Từ vựng đã lưu nhưng gỡ khỏi lọ cũ lỗi: " + rmErr.message, table: mapping.table, data };
+          }
+        }
+        if (slug === "VOCABULARIES") doc._loaded_jar_id = doc.jar_id || "";
 
         return { ok: true, table: mapping.table, data };
       } catch (err) {
         console.error(`[SupabaseSyncEngine] Ngoại lệ khi upsert:`, err);
-        return { ok: false, error: err, message: err.message };
+        return { ok: false, duplicate: !!(err && err.duplicate), error: err, message: err.message };
       }
     },
 
@@ -8465,9 +8671,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
 
       for (let i = 0; i < targetItems.length; i += BATCH_SIZE) {
         const chunk = targetItems.slice(i, i + BATCH_SIZE);
-        await this.resolveExistingIds(sb, slug, chunk);
 
         try {
+          // Lỗi tra cứu (mạng, chủ đề không có) → nhánh catch lưu từng mục để báo đúng mục lỗi
+          await this.resolveExistingIds(sb, slug, chunk);
           // Lỗi đọc dòng hiện có → catch bên dưới thử từng mục (upsertDoc báo lỗi), không ghi giá trị mặc định
           const preserved = await this.fetchPreservedRows(sb, slug, chunk);
           const rows = chunk.map(it => this.applyPreserved(slug, it, mapping.toRow(it), preserved));
@@ -8776,7 +8983,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             if (slug === "TRKI_QUESTION_BANK") {
               const mappedDocs = data.map(mapping.fromRow);
               window.TRKI_QUESTION_BANK = mappedDocs;
-              if (typeof window.DATA !== "undefined") window.DATA.trkiQuestionBank = mappedDocs;
+              // DATA.trkiQuestionBank là getter đọc window.TRKI_QUESTION_BANK (gán vào → lỗi ở strict mode)
               if (window.RusiDataLoader && typeof window.RusiDataLoader.saveToIndexedDB === "function") {
                 window.RusiDataLoader.saveToIndexedDB("TRKI_QUESTION_BANK", mappedDocs).catch(() => {});
               }
@@ -8785,10 +8992,13 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             }
 
             store[slug] = store[slug] || [];
+            const pulledKeys = new Set();
             data.forEach((row) => {
               const doc = mapping.fromRow(row);
               const idKey = mapping.idKey(doc);
               if (!idKey) return;
+              pulledKeys.add(idKey);
+              if (doc.uuid) pulledKeys.add("uuid:" + doc.uuid);
 
               const idx = store[slug].findIndex((x) => mapping.idKey(x) === idKey || (doc.uuid && x.uuid === doc.uuid)); // cùng dòng Cloud dù mã cục bộ cũ khác (vd. ngữ pháp trước đây dùng id = id dòng thay vì code)
               if (idx >= 0 && store[slug][idx].__unsynced) {
@@ -8803,6 +9013,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
               }
               totalPulled++;
             });
+            store[slug] = pruneCloudDeleted(store[slug], mapping, pulledKeys);
           }
         } catch (err) {
           console.warn(`[SupabaseSyncEngine] Ngoại lệ pull bảng ${mapping.table}:`, err);
@@ -8827,9 +9038,12 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         const mapping = this.MAPPINGS[slug];
         try {
           const { count, error } = await sb.from(mapping.table).select("*", { count: "exact", head: true });
-          stats[slug] = error ? 0 : (count || 0);
-        } catch (_) {
-          stats[slug] = 0;
+          // Lỗi đọc → null (hiện "—"), không giả làm 0 dòng
+          if (error) console.warn(`[fetchStats] Không đếm được ${mapping.table}:`, error);
+          stats[slug] = error ? null : (count || 0);
+        } catch (err) {
+          console.warn(`[fetchStats] Không đếm được ${slug}:`, err);
+          stats[slug] = null;
         }
       }
       return stats;
@@ -8840,8 +9054,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
   // Chống ghi đè bản cũ: nhớ updated_at của dòng Cloud lúc tải về (__cloud_updated_at) và gửi lại khi lưu.
   // Máy chủ (trigger rusi_00_stale_guard) từ chối (lỗi RS409) nếu dòng đã được sửa sau mốc đó.
   // Bản không có mốc (lấy từ file công khai / kéo bằng CMS cũ) thì không gửi updated_at → không kiểm tra được.
+  // USERS / ORDERS cũng kiểm tra (trigger rusi_00_stale_guard trên profiles, orders): tránh ghi đè đơn Casso vừa đánh dấu 'paid'.
   Object.keys(SupabaseSyncEngine.MAPPINGS).forEach((slug) => {
-    if (slug === "USERS" || slug === "ORDERS") return;
     const m = SupabaseSyncEngine.MAPPINGS[slug];
     const origFromRow = m.fromRow;
     const origToRow = m.toRow;
@@ -8854,6 +9068,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       const row = origToRow(doc);
       if (row && typeof row === "object") {
         if (doc && doc.__cloud_updated_at) row.updated_at = doc.__cloud_updated_at;
+        else if (doc && doc.__stale_base) row.updated_at = doc.__stale_base;
         else delete row.updated_at;
       }
       return row;
@@ -8863,21 +9078,66 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
   // Sau khi ghi nội dung lên Cloud: kiểm tra tín hiệu xuất bản tới GitHub có thành công không (thiếu token / token hết hạn
   // trước đây không ai thấy, web không cập nhật). Gom nhiều lần lưu liên tiếp thành một lần kiểm tra.
   let publishCheckTimer = null;
-  function schedulePublishCheck() {
+  let deployWatchTimer = null;
+  function schedulePublishCheck(attempt = 0) {
     clearTimeout(publishCheckTimer);
     publishCheckTimer = setTimeout(async () => {
       const sb = SupabaseSyncEngine.getClient();
       if (!sb) return;
       const { data, error } = await sb.rpc("rusi_publish_status");
       if (error) { console.warn("[Publish] Không đọc được trạng thái xuất bản:", error); return; }
-      if (!data || data.pending) return;
+      if (!data) return;
+      if (data.pending) {
+        // pg_net chưa có phản hồi từ GitHub → thử lại (tối đa ~1 phút) thay vì im lặng bỏ qua
+        if (attempt < 4) schedulePublishCheck(attempt + 1);
+        else toast("Chưa nhận được phản hồi từ GitHub sau khi lưu — web có thể chưa cập nhật. Kiểm tra lại sau ít phút.", "warning");
+        return;
+      }
       const failed = data.error || data.error_msg || (data.status_code && (data.status_code < 200 || data.status_code >= 300));
       if (failed) {
         const detail = data.error || data.error_msg || ("GitHub trả mã " + data.status_code);
         console.error("[Publish] Gửi tín hiệu xuất bản thất bại:", data);
         toast("Đã lưu lên Cloud nhưng chưa xuất bản được lên web (" + detail + "). Kiểm tra token github_publish_token.", "error");
+        return;
       }
+      watchDeploy(sb);
     }, 15000);
+  }
+
+  // Tín hiệu tới GitHub thành công chưa có nghĩa là web đã cập nhật (workflow có thể lỗi: test, push...).
+  // So bộ đếm content_versions trên Cloud với manifest.json đang chạy trên web: khớp → báo đã lên web;
+  // quá 10 phút chưa khớp → cảnh báo. Chỉ chạy trên tên miền thật (localhost dùng manifest cục bộ, không cập nhật).
+  function watchDeploy(sb) {
+    const host = location.hostname;
+    if (!host || host === "localhost" || host === "127.0.0.1" || host.endsWith(".localhost")) return;
+    clearTimeout(deployWatchTimer);
+    const startedAt = Date.now();
+    const tick = async () => {
+      try {
+        const [{ data: rows, error }, res] = await Promise.all([
+          sb.from("content_versions").select("table_name,version"),
+          fetch("data/modules/manifest.json?t=" + Date.now(), { cache: "no-store" })
+        ]);
+        if (error) throw error;
+        const manifest = res.ok ? await res.json() : null;
+        const sources = (manifest && manifest.sources) || {};
+        const behind = (rows || []).filter((r) => Number(sources[r.table_name] || 0) < Number(r.version)).map((r) => r.table_name);
+        if (!behind.length) {
+          toast("Nội dung đã lên web (rusitrki.com).", "success");
+          return;
+        }
+        if (Date.now() - startedAt > 10 * 60 * 1000) {
+          console.error("[Publish] Web chưa cập nhật sau 10 phút, bảng còn chậm:", behind);
+          toast("Web chưa cập nhật sau 10 phút (" + behind.join(", ") + "). Kiểm tra workflow publish-content trên GitHub Actions.", "error");
+          return;
+        }
+      } catch (err) {
+        console.warn("[Publish] Không kiểm tra được trạng thái web:", err);
+        return;
+      }
+      deployWatchTimer = setTimeout(tick, 30000);
+    };
+    deployWatchTimer = setTimeout(tick, 45000);
   }
   ["upsertDoc", "deleteDoc", "syncCollectionBatch"].forEach((name) => {
     const orig = SupabaseSyncEngine[name];
@@ -9118,22 +9378,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       });
     };
 
-    // If on JSON tab, ensure JSON parse
-    if (State.activeEditorTab === "json") {
-      const jsonEl = document.getElementById("jsonEditorArea");
-      try {
-        State.currentDraft = JSON.parse(jsonEl.value);
-        if (slug === "TRKI_BANK" && Array.isArray(State.currentDraft.parts)) {
-          ["part1", "part2", "part3", "part4", "part5"].forEach((pk, idx) => {
-            if (State.currentDraft.parts[idx]) State.currentDraft[pk] = State.currentDraft.parts[idx];
-          });
-        }
-      } catch (err) {
-        restoreButtons(false);
-        toast("Lỗi cú pháp JSON: " + err.message, "error");
-        return;
-      }
-    } else {
+    // (Tab JSON thô cũ đã bỏ — trình dựng cấu trúc thay thế; trước đây nhánh này dùng #jsonEditorArea không còn tồn tại)
+    {
       // Đồng bộ tức thời tất cả các input DOM vào State.currentDraft trước khi lưu
       if (State.activeEditorTab === "structure") syncContentTabFromDraft();
       document.querySelectorAll(".live-draft-field").forEach((inp) => {
@@ -9177,6 +9423,13 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     if (slug === "TRKI_BANK" && trkiDocMissingAnswers(data)) {
       restoreButtons(false);
       toast("Đề này là bản công khai đã xoá đáp án — hãy Kéo đề thi TRKI từ Cloud trước khi lưu.", "error");
+      return;
+    }
+
+    // profiles.id phải trùng tài khoản đăng nhập (auth.users) → CMS không tạo được; hồ sơ tự sinh khi học viên đăng ký
+    if (slug === "USERS" && State.isCreating) {
+      restoreButtons(false);
+      toast("Không tạo tài khoản từ CMS: hồ sơ học viên tự sinh khi học viên đăng ký. Hãy Kéo danh sách rồi sửa tài khoản có sẵn.", "warning");
       return;
     }
 
@@ -9224,11 +9477,13 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         : (typeof data.options === "string" ? data.options.split("\n").map(s => s.trim()).filter(Boolean) : []);
       data.options = opts;
       const cIdx = Number(data.correct_index != null ? data.correct_index : 0);
-      if (opts[cIdx]) {
+      // Chỉ dạng chọn đáp án mới suy ra từ vị trí; dạng điền từ / nối / sắp xếp giữ đáp án admin đã nhập
+      const qType = String(data.question_type || "multiple_choice");
+      if (opts[cIdx] && (qType === "multiple_choice" || qType === "multi_select" || !String(data.correct_answer || "").trim())) {
         data.correct_answer = opts[cIdx];
       }
       if (!data.code) {
-        data.code = "TRKI_Q_" + Date.now().toString().slice(-4);
+        data.code = "TRKI_Q_" + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 6).toUpperCase();
       }
       if (!data.sub_test) {
         data.sub_test = "lexis_grammar";
@@ -9262,6 +9517,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         }
         return;
       }
+      // Bỏ bản cũ cùng mã (vd. đang nằm trong Thùng rác) để không có hai bản cục bộ trùng mã
+      store[slug] = store[slug].filter((it) => (it.id || it.slug || it.title) !== idKey);
       store[slug].push({ ...data, __admin: true, __edited: true, __unsynced: hasCloudMapping });
     } else {
       const idx = store[slug].findIndex((it) => (it.id || it.code || it.slug || it.title) === (State.currentDocId || idKey));
@@ -9285,7 +9542,17 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     if (SupabaseSyncEngine && SupabaseSyncEngine.hasMapping(slug)) {
       const preSyncKey = State.currentDocId || idKey;
       try {
-        const syncRes = await SupabaseSyncEngine.upsertDoc(slug, data);
+        const syncRes = await SupabaseSyncEngine.upsertDoc(slug, data, { isCreating: State.isCreating });
+        if (syncRes.duplicate && State.isCreating) {
+          // Mã trùng bản đang có trên Cloud: bỏ bản tạm vừa thêm vào kho cục bộ, giữ form tạo mới để đổi mã
+          const dupStore = loadAdminStore();
+          dupStore[slug] = (dupStore[slug] || []).filter((it) => !((it.id || it.slug || it.title) === idKey && it.__unsynced));
+          saveAdminStore(dupStore);
+          renderSidebarLists();
+          restoreButtons(false);
+          toast(syncRes.message, "error");
+          return;
+        }
         if (syncRes.ok) {
           if (syncRes.data && syncRes.data[0]) {
             const returnedRow = syncRes.data[0];
@@ -9317,6 +9584,10 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
             saveAdminStore(syncedStore);
           }
           toast(`Đã lưu & đồng bộ thành công lên Supabase (bảng ${syncRes.table})!`, "success");
+          if (window.RusiAdminDrafts) window.RusiAdminDrafts.onSaved(slug, [preSyncKey, idKey]).catch((err) => console.warn("[Drafts] Không xoá được nháp sau khi lưu:", err));
+          if (slug === "TRKI_QUESTION_BANK" && window.RusiAdminCache && window.RusiAdminCache.isAllowed()) {
+            window.RusiAdminCache.patchQB(SupabaseSyncEngine.getClient(), data).catch((err) => console.warn("[QB cache] Không cập nhật được bộ đệm:", err));
+          }
         } else if (syncRes.conflict) {
           cloudSuccess = false;
           const reload = confirm(syncRes.message + "\n\nOK: bỏ bản sửa của bạn và tải bản mới nhất từ Cloud.\nHuỷ: giữ bản sửa trên máy này (CHƯA lưu lên Cloud).");
@@ -10107,8 +10378,8 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
       const el = document.getElementById(`sbCloudCount_${slug}`);
       if (el) {
         const cnt = stats[slug];
-        el.textContent = `${cnt} dòng`;
-        el.className = "p-pill p-pill-info";
+        el.textContent = cnt == null ? "— (lỗi đọc)" : `${cnt} dòng`;
+        el.className = cnt == null ? "p-pill p-pill-warning" : "p-pill p-pill-info";
       }
     });
   };
@@ -10265,7 +10536,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         if (slug === "TRKI_QUESTION_BANK") {
           const mappedDocs = data.map(mapping.fromRow);
           window.TRKI_QUESTION_BANK = mappedDocs;
-          if (typeof window.DATA !== "undefined") window.DATA.trkiQuestionBank = mappedDocs;
+          // DATA.trkiQuestionBank là getter đọc window.TRKI_QUESTION_BANK (gán vào → lỗi ở strict mode)
           if (window.RusiDataLoader && typeof window.RusiDataLoader.saveToIndexedDB === "function") {
             window.RusiDataLoader.saveToIndexedDB("TRKI_QUESTION_BANK", mappedDocs).catch(() => {});
           }
@@ -10273,6 +10544,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           handleRoute();
           toast(`Đã kéo thành công ${data.length} câu hỏi TRKI từ Cloud!`);
           window.refreshSupabaseStats();
+          if (window.RusiAdminCache && window.RusiAdminCache.isAllowed()) {
+            window.RusiAdminCache.saveQBWithCloudVersion(sb, mappedDocs).catch((err) => console.warn("[QB cache] Không lưu được bộ đệm:", err));
+          }
           return;
         }
 
@@ -10280,10 +10554,13 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         store[slug] = store[slug] || [];
         const mappedDocs = data.map(row => ({ ...mapping.fromRow(row), __admin: true, __fromSupabase: true }));
         let keptLocal = 0;
+        const pulledKeys = new Set();
         data.forEach((row) => {
           const doc = mapping.fromRow(row);
           const idKey = mapping.idKey(doc);
           if (!idKey) return;
+          pulledKeys.add(idKey);
+          if (doc.uuid) pulledKeys.add("uuid:" + doc.uuid);
           const idx = store[slug].findIndex((x) => mapping.idKey(x) === idKey || (doc.uuid && x.uuid === doc.uuid)); // cùng dòng Cloud dù mã cục bộ cũ khác (vd. ngữ pháp trước đây dùng id = id dòng thay vì code)
           if (idx >= 0 && store[slug][idx].__unsynced) {
             keptLocal++;
@@ -10292,6 +10569,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
           if (idx >= 0) store[slug][idx] = { ...doc, __admin: true, __fromSupabase: true };
           else store[slug].push({ ...doc, __admin: true, __fromSupabase: true });
         });
+        if (data.length > 0) store[slug] = pruneCloudDeleted(store[slug], mapping, pulledKeys);
         // Clear deleted flags for records present on Cloud
         if (store.__deleted && Array.isArray(store.__deleted[slug])) {
           const pulledIds = new Set(mappedDocs.map(mapping.idKey).filter(Boolean));
@@ -10305,6 +10583,7 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
         renderSidebarLists();
         handleRoute();
         toast(`Đã kéo ${data.length} bản ghi ${mapping.label} từ Cloud về máy!`, "success");
+        enrichAccountEmails(slug);
         if (keptLocal) {
           toast(`Giữ nguyên ${keptLocal} bản sửa cục bộ chưa lưu lên Cloud (không ghi đè). Hãy mở và Lưu lại.`, "warning");
         }
@@ -10570,15 +10849,20 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     }
     const store = loadAdminStore();
     let count = 0;
+    let pendingCloud = 0;
     COLLECTION_KEYS.forEach((k) => {
       if (Array.isArray(obj[k])) {
         store[k] = store[k] || [];
+        // Đánh dấu chưa lên Cloud → "Lưu Cloud" (pushUnsynced) đẩy lên, lần Kéo sau không ghi đè bản import
+        const toCloud = Boolean(SupabaseSyncEngine && SupabaseSyncEngine.hasMapping(k));
         obj[k].forEach((it) => {
           const idKey = it.id || it.slug || it.title;
           if (!idKey) return;
+          const entry = { ...it, __admin: true, __edited: true };
+          if (toCloud) { entry.__unsynced = true; pendingCloud++; }
           const idx = store[k].findIndex((x) => (x.id || x.slug || x.title) === idKey);
-          if (idx >= 0) store[k][idx] = { ...it, __admin: true };
-          else store[k].push({ ...it, __admin: true });
+          if (idx >= 0) store[k][idx] = entry;
+          else store[k].push(entry);
           count++;
         });
       }
@@ -10587,7 +10871,9 @@ Cho điểm tổng kết từ 0 đến 100 kèm phân tích lỗi sai và đề 
     syncDataToWeb();
     renderSidebarLists();
     handleRoute();
-    toast(`Đã import thành công ${count} tài liệu và đồng bộ về website!`);
+    toast(pendingCloud
+      ? `Đã import ${count} tài liệu vào CMS. ${pendingCloud} mục CHƯA lên Cloud — bấm "Lưu Cloud" để đẩy lên và xuất bản.`
+      : `Đã import thành công ${count} tài liệu.`, pendingCloud ? "warning" : "success");
   }
 
   function resetAdminData() {
@@ -10918,6 +11204,8 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
       const roleEl = document.getElementById("sidebarUserRole");
       if (nameEl) nameEl.textContent = user.displayName || user.name || email;
       if (avatarEl) avatarEl.textContent = (user.displayName || user.name || email)[0].toUpperCase();
+      window.__rusiAdminRole = String(user.role || "").toLowerCase().trim(); // chỉ để ẩn/khoá giao diện
+      if (window.RusiAdminDrafts) window.RusiAdminDrafts.start();
       if (roleEl) {
         roleEl.textContent = (user.role === "super_admin")
           ? "Super Admin"
@@ -11100,6 +11388,8 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
         if (window.Auth && window.Auth.signOut) await window.Auth.signOut();
         applyAuthState(false);
         toast("Đã đăng xuất tài khoản.");
+        // Bộ đệm ngân hàng câu hỏi (có đáp án) chỉ dành cho phiên admin
+        if (window.RusiAdminCache) window.RusiAdminCache.clearSensitive();
       };
     }
 
@@ -11226,4 +11516,12 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
   window.SupabaseSyncEngine = SupabaseSyncEngine;
   window.handleRoute = handleRoute;
   window.renderActiveStructureBuilder = renderActiveStructureBuilder;
+  // API cho các module CMS tách file (js/admin-drafts.js, js/admin-monitor.js)
+  window.RusiAdmin = {
+    toast, esc, escAttr, isEditorDirty, loadAdminStore, saveAdminStore, renderSidebarLists,
+    rerenderEditor() {
+      const c = document.getElementById("payloadViewContainer");
+      if (c && State.currentRoute === "editor" && State.currentSlug) renderDocumentEditor(c, State.currentSlug);
+    }
+  };
 })();

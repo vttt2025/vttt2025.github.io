@@ -5237,3 +5237,144 @@ body.payload-body {
     margin-right: 6px;
   }
 }
+
+/* =========================================================================
+   Nháp tự lưu (js/admin-drafts.js) + Theo dõi học viên (js/admin-monitor.js) — 28/11/2026
+   Dùng biến --p-* nên tự theo giao diện sáng/tối.
+   ========================================================================= */
+.rusi-draft-status {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: var(--p-radius);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--p-text-muted);
+  background: var(--p-surface-hover);
+  border: 1px solid var(--p-border);
+}
+.rusi-draft-status[data-tone="warn"] { color: var(--p-text); background: var(--p-warning-soft); border-color: var(--p-warning-border); }
+.rusi-draft-status[data-tone="error"] { color: var(--p-text); background: var(--p-danger-soft); border-color: var(--p-danger-border); }
+
+.rusi-draft-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border-radius: var(--p-radius-lg);
+  background: var(--p-primary-soft);
+  border: 1px solid var(--p-primary-border);
+  color: var(--p-text);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.rusi-draft-banner-text { flex: 1 1 320px; min-width: 0; }
+.rusi-draft-banner-warn {
+  margin-top: 6px;
+  padding: 6px 10px;
+  border-radius: var(--p-radius-sm);
+  background: var(--p-warning-soft);
+  border: 1px solid var(--p-warning-border);
+  font-size: 12.5px;
+}
+.rusi-draft-banner-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.rusi-drafts-panel {
+  margin: 0 0 20px;
+  padding: 14px 16px;
+  border-radius: var(--p-radius-lg);
+  background: var(--p-surface-elevated);
+  border: 1px solid var(--p-border);
+}
+.rusi-drafts-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 10px; }
+.rusi-drafts-head h3 { margin: 0; font-size: 15px; color: var(--p-text); }
+.rusi-drafts-head span { font-size: 12px; color: var(--p-text-muted); }
+.rusi-drafts-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.rusi-drafts-open {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 12px;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--p-radius);
+  border: 1px solid var(--p-border);
+  background: var(--p-surface);
+  color: var(--p-text);
+  font: inherit;
+}
+.rusi-drafts-open:hover { background: var(--p-surface-hover); border-color: var(--p-border-strong); }
+.rusi-drafts-open:focus-visible { outline: 2px solid var(--p-border-focus); outline-offset: 2px; }
+.rusi-drafts-title { font-weight: 600; font-size: 13.5px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rusi-drafts-meta { font-size: 12px; color: var(--p-text-muted); }
+
+.rusi-mon-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: 4px;
+  margin: 4px 0 12px;
+}
+.rusi-mon-tab {
+  flex: 0 0 auto;
+  min-height: 36px;
+  padding: 6px 14px;
+  border-radius: var(--p-radius-full);
+  border: 1px solid var(--p-border);
+  background: var(--p-surface);
+  color: var(--p-text-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.rusi-mon-tab:hover { color: var(--p-text); background: var(--p-surface-hover); }
+.rusi-mon-tab.active { color: var(--p-primary-text); background: var(--p-primary); border-color: var(--p-primary); }
+.rusi-mon-tab:focus-visible { outline: 2px solid var(--p-border-focus); outline-offset: 2px; }
+.rusi-mon-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; margin-bottom: 12px; }
+.rusi-mon-filter { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--p-text-muted); min-width: 220px; max-width: 100%; }
+.rusi-mon-error {
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: var(--p-radius);
+  background: var(--p-danger-soft);
+  border: 1px solid var(--p-danger-border);
+  color: var(--p-text);
+  font-size: 13px;
+}
+.rusi-mon-table td { vertical-align: top; }
+.rusi-mon-sub { font-size: 11.5px; color: var(--p-text-muted); margin-top: 2px; }
+.rusi-mon-key { display: inline-block; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+.rusi-mon-empty { text-align: center; padding: 36px 16px !important; color: var(--p-text-muted); }
+.rusi-mon-detail td { background: var(--p-surface-hover); }
+.rusi-mon-detail-block { margin: 4px 0 10px; }
+.rusi-mon-detail-block pre {
+  margin: 6px 0 0;
+  max-height: 320px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--p-font);
+  font-size: 13px;
+  line-height: 1.55;
+  padding: 10px 12px;
+  border-radius: var(--p-radius);
+  background: var(--p-surface);
+  border: 1px solid var(--p-border);
+  color: var(--p-text);
+}
+
+@media (max-width: 768px) {
+  .rusi-mon-filter { min-width: 0; flex: 1 1 100%; }
+  .rusi-mon-filter .p-select { font-size: 16px; min-height: 44px; }
+  .rusi-mon-tab { min-height: 44px; }
+  #monRefresh, #monPrev, #monNext, .rusi-mon-more { min-height: 44px; }
+  .rusi-draft-banner-actions { width: 100%; }
+  .rusi-draft-banner-actions .p-btn { flex: 1 1 0; min-height: 44px; }
+}

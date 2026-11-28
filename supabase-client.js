@@ -401,7 +401,8 @@
         var sb = getClient();
         if (!sb || !profileData || !profileData.id || !isValidUUID(profileData.id)) return false;
         try {
-          profileData.updated_at = new Date().toISOString();
+          // updated_at do máy chủ đặt (trigger rusi_touch); gửi giờ máy học viên có thể lệch → chốt chặn bản cũ báo nhầm
+          delete profileData.updated_at;
           var res = await sb.from("profiles").upsert(profileData);
           return !res.error;
         } catch (_) {

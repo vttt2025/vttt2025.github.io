@@ -39,7 +39,12 @@ async function api(cfg, q) {
   const text = await res.text();
   egressBytes += Buffer.byteLength(text);
   if (!res.ok) throw new Error(`HTTP ${res.status} [${q}]: ${text.slice(0, 300)}`);
-  return JSON.parse(text);
+  const data = JSON.parse(text);
+  // PostgREST trả tối đa 1000 dòng/lần: đúng 1000 dòng mà không tự phân trang → có thể bị cắt, mục thừa biến mất khỏi web
+  if (Array.isArray(data) && data.length >= 1000 && !/[?&](limit|offset)=/.test(q)) {
+    throw new Error(`[${q}] trả ${data.length} dòng — chạm giới hạn 1000 của PostgREST, dữ liệu có thể bị cắt. Chuyển truy vấn này sang apiAll().`);
+  }
+  return data;
 }
 async function apiAll(cfg, q, pageSize = 1000) {
   const all = [];
@@ -53,7 +58,9 @@ async function apiAll(cfg, q, pageSize = 1000) {
   return all;
 }
 
-const fetchArticles = (cfg) => api(cfg, `topic_articles?select=${SELECTS.topic_articles}`);
+// Chỉ nội dung đã xuất bản (publication_status = 'published'); bản nháp ở lại trong CMS
+const PUB = '&publication_status=eq.published';
+const fetchArticles = (cfg) => api(cfg, `topic_articles?select=${SELECTS.topic_articles}${PUB}`);
 
 // ---------------------------------------------------------------------------
 // Bài PRO: file công khai chỉ chứa metadata (`content_locked: true`), lấy từ public.rusi_pro_catalog()
@@ -139,7 +146,7 @@ const BUILDERS = {
   'vocab_jars.json': {
     tables: ['vocab_jars', 'jar_items', 'vocabularies', 'topic_articles'],
     async build(cfg) {
-      const rawJars = await api(cfg, `vocab_jars?select=${SELECTS.vocab_jars},created_at&is_system=eq.true&order=created_at.asc`);
+      const rawJars = await api(cfg, `vocab_jars?select=${SELECTS.vocab_jars},created_at&is_system=eq.true${PUB}&order=created_at.asc`);
       const articles = {};
       (await fetchArticles(cfg)).forEach((a) => { articles[a.id] = a; });
       return assembleModule('vocab_jars.json', rawJars, await fetchProCatalog(cfg), { articles });
@@ -158,7 +165,7 @@ const BUILDERS = {
   'listening_lessons.json': {
     tables: ['listening_lessons', 'listening_topics', 'listening_lesson_vocab', 'vocabularies'],
     async build(cfg) {
-      const rows = await api(cfg, `listening_lessons?select=${SELECTS.listening_lessons}&order=sort_order.asc`);
+      const rows = await api(cfg, `listening_lessons?select=${SELECTS.listening_lessons}${PUB}&order=sort_order.asc`);
       return assembleModule('listening_lessons.json', rows, await fetchProCatalog(cfg));
     }
   },
@@ -177,14 +184,14 @@ const BUILDERS = {
   'speaking_sets.json': {
     tables: ['speaking_lessons'],
     async build(cfg) {
-      const rows = await api(cfg, `speaking_lessons?select=${SELECTS.speaking_lessons}&order=sort_order.asc`);
+      const rows = await api(cfg, `speaking_lessons?select=${SELECTS.speaking_lessons}${PUB}&order=sort_order.asc`);
       return assembleModule('speaking_sets.json', rows, await fetchProCatalog(cfg));
     }
   },
   'writing_tasks.json': {
     tables: ['writing_tasks', 'writing_topics', 'writing_task_vocab', 'vocabularies'],
     async build(cfg) {
-      const rows = await api(cfg, `writing_tasks?select=${SELECTS.writing_tasks}&order=sort_order.asc`);
+      const rows = await api(cfg, `writing_tasks?select=${SELECTS.writing_tasks}${PUB}&order=sort_order.asc`);
       return assembleModule('writing_tasks.json', rows, await fetchProCatalog(cfg));
     }
   },
@@ -225,28 +232,30 @@ const BUILDERS = {
     tables: ['packages'],
     async build(cfg) {
       const rows = await api(cfg, 'packages?select=*&order=price.asc');
-      return rows.map((pkg) => ({
+      // Gói ngừng bán (status khác 'active') không hiện ở /upgrade — đặt mua sẽ bị máy chủ từ chối "Gói không hợp lệ"
+      return rows.filter((pkg) => !pkg.status || pkg.status === 'active').map((pkg) => ({
         id: pkg.code || pkg.id, code: pkg.code || pkg.id,
         badge: pkg.badge || (pkg.duration_days === 365 ? '1 NĂM' : pkg.duration_days === 180 ? '6 THÁNG' : 'TRỌN ĐỜI'),
         name: pkg.name || pkg.title, title: pkg.name || pkg.title, desc: pkg.description || '', description: pkg.description || '',
         price: Number(pkg.price_vnd || pkg.price), price_vnd: Number(pkg.price_vnd || pkg.price),
         priceOld: Number(pkg.price_old || (Number(pkg.price) * 2)), price_old: Number(pkg.price_old || (Number(pkg.price) * 2)),
         duration_months: pkg.duration_months, duration_days: pkg.duration_days, is_lifetime: Boolean(pkg.is_lifetime),
-        popular: Boolean(pkg.is_popular), is_popular: Boolean(pkg.is_popular), features: Array.isArray(pkg.features) ? pkg.features : []
+        // Cột thật là "popular" (is_popular là tên cũ)
+        popular: Boolean(pkg.popular ?? pkg.is_popular), is_popular: Boolean(pkg.popular ?? pkg.is_popular), features: Array.isArray(pkg.features) ? pkg.features : []
       }));
     }
   },
   'grammar_lessons.json': {
     tables: ['grammar_lessons'],
     async build(cfg) {
-      const rows = await api(cfg, `grammar_lessons?select=${SELECTS.grammar_lessons}&order=order_index.asc`);
+      const rows = await api(cfg, `grammar_lessons?select=${SELECTS.grammar_lessons}${PUB}&order=order_index.asc`);
       return assembleModule('grammar_lessons.json', rows, await fetchProCatalog(cfg));
     }
   },
   'blog_posts.json': {
     tables: ['blog_posts'],
     async build(cfg) {
-      const rows = await api(cfg, 'blog_posts?select=*&order=created_at.desc');
+      const rows = await api(cfg, `blog_posts?select=*${PUB}&order=created_at.desc`);
       return rows.map((row) => ({
         slug: row.slug || row.code || row.id, id: row.code || row.id, title: row.title, category: row.category,
         categoryName: row.category === 'du_hoc_trai_nghiem' ? 'Trải nghiệm du học & KTX' : (row.category === 'ngu_phap' ? 'Thành ngữ & Ngữ pháp Nga' : 'Cẩm nang du học'),

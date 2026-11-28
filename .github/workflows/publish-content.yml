@@ -13,10 +13,12 @@ on:
         type: boolean
         default: false
 
-# Gộp các lần lưu liên tiếp: lần chạy mới huỷ lần đang chờ; chỉ bản cuối cùng xuất bản.
+# Gộp các lần lưu liên tiếp: chỉ một lần chạy cùng lúc + một lần chờ (lần chờ mới thay lần chờ cũ).
+# Không huỷ lần đang chạy: huỷ giữa chừng sau khi đã push nhưng trước bước "Yêu cầu GitHub Pages build lại"
+# thì lần sau không thấy thay đổi → không gọi build → web giữ bản cũ.
 concurrency:
   group: publish-content
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: write

@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css?v=4.8" />
+  <link rel="stylesheet" href="admin.css?v=4.10" />
   <script src="js/theme.js?v=1.2"></script>
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="192x192" href="/assets/favicon-192.png" />
@@ -179,6 +179,12 @@
               </a>
             </li>
             <li class="payload-nav-item">
+              <a class="payload-nav-link" data-nav="monitor" href="#monitor">
+                <span class="payload-nav-icon"><i data-rusi-icon="bar-chart" data-size="18"></i></span>
+                <span class="payload-nav-label">Theo dõi học viên</span>
+              </a>
+            </li>
+            <li class="payload-nav-item">
               <a class="payload-nav-link" data-nav="supabase-sync" href="#supabase-sync">
                 <span class="payload-nav-icon"><i data-rusi-icon="refresh-cw" data-size="18"></i></span>
                 <span class="payload-nav-label">Supabase Cloud Sync</span>
@@ -337,7 +343,7 @@
   <!-- SCRIPTS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js" integrity="sha384-2zrRDgDHSYB/GN3nFW3fsZXoxEhKIr3N2h63Tc6DEOB9JJdFIu8xMJT2Cph/gBil" crossorigin="anonymous" defer></script>
   <script src="supabase-config.js" defer></script>
-  <script src="supabase-client.js?v=12.7" defer></script>
+  <script src="supabase-client.js?v=12.8" defer></script>
   <script src="rusi-icons.js?v=5.0" defer></script>
   <script src="data.js?v=12.5" defer></script>
   <script src="auth.js?v=12.4" defer></script>
@@ -345,6 +351,9 @@
   <script src="vocab-sync.js?v=1.2" defer></script>
   <script src="js/content-shapes.js?v=1.3" defer></script>
   <script src="js/pro-content.js?v=1.1" defer></script>
-  <script src="admin.js?v=13.14" defer></script>
+  <script src="js/admin-local.js?v=1.0" defer></script>
+  <script src="js/admin-drafts.js?v=1.0" defer></script>
+  <script src="js/admin-monitor.js?v=1.0" defer></script>
+  <script src="admin.js?v=13.16" defer></script>
 </body>
 </html>
