@@ -2226,6 +2226,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     if (parts[0] === "monitor") {
       return { route: "monitor" };
     }
+    if (parts[0] === "drafts") {
+      return { route: "drafts" };
+    }
     return { route: "dashboard" };
   }
 
@@ -2353,6 +2356,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       if (window.RusiAdminDrafts) window.RusiAdminDrafts.onEditorRendered();
     } else if (State.currentRoute === "monitor") {
       if (window.RusiAdminMonitor) window.RusiAdminMonitor.render(container);
+    } else if (State.currentRoute === "drafts") {
+      if (window.RusiAdminDrafts) window.RusiAdminDrafts.renderManager(container);
     } else if (State.currentRoute === "globals") {
       renderGlobalsView(container, State.currentSlug);
     } else if (State.currentRoute === "supabase-sync") {
@@ -2425,6 +2430,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       else if (State.currentRoute === "supabase-sync" && target === "supabase-sync") isActive = true;
       else if (State.currentRoute === "api-explorer" && target === "api-explorer") isActive = true;
       else if (State.currentRoute === "monitor" && target === "monitor") isActive = true;
+      else if (State.currentRoute === "drafts" && target === "drafts") isActive = true;
 
       link.classList.toggle("active", isActive);
     });
@@ -2480,6 +2486,12 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         <a class="payload-crumb-item" href="#dashboard">${homeIcon} Dashboard</a>
         ${sep}
         <span class="payload-crumb-item active">Theo dõi học viên</span>
+      `;
+    } else if (State.currentRoute === "drafts") {
+      nav.innerHTML = `
+        <a class="payload-crumb-item" href="#dashboard">${homeIcon} Dashboard</a>
+        ${sep}
+        <span class="payload-crumb-item active">Quản lý bản nháp</span>
       `;
     }
   }

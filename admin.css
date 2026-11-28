@@ -5518,3 +5518,54 @@ select.rsel-native {
 }
 @keyframes payload-auth-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .payload-auth-spinner { animation-duration: 2.4s; } }
+
+/* Máy tính bảng (≤1024px) / cảm ứng: vùng chạm 44px và chữ ô nhập 16px (iPad không tự phóng to khi bấm vào ô) — 28/11/2026 */
+@media (max-width: 1024px), (pointer: coarse) {
+  .p-btn,
+  .p-btn-sm,
+  .payload-menu-toggle,
+  .payload-editor-tab,
+  .rusi-mon-tab,
+  .payload-filter-select,
+  .rsel-btn,
+  .payload-search-input {
+    min-height: 44px;
+  }
+  .p-btn-icon,
+  .payload-menu-toggle,
+  .payload-toast-close {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .p-input,
+  .p-textarea,
+  .p-select,
+  .rsel-btn,
+  .payload-search-input,
+  .payload-filter-select {
+    font-size: 16px;
+  }
+}
+
+/* Trang Quản lý bản nháp (#drafts) — 28/11/2026 */
+.rusi-drafts-intro { margin: 0 0 14px; font-size: 13.5px; line-height: 1.55; color: var(--p-text-muted); max-width: 760px; }
+.rusi-drafts-warn { color: var(--p-warning); }
+[data-theme="light"] .rusi-drafts-warn { color: #b45309; }
+.rusi-drafts-all { margin-left: auto; font-size: 13px; font-weight: 600; color: var(--p-primary); text-decoration: none; padding: 6px 0; }
+.rusi-drafts-all:hover { text-decoration: underline; }
+.payload-nav-badge[hidden] { display: none; }
+
+/* Thanh công cụ soạn thảo Markdown trên máy tính bảng / cảm ứng: nút 44px (trước 24–28px) */
+@media (max-width: 1024px), (pointer: coarse) {
+  .notion-tb-btn,
+  .notion-view-btn,
+  .notion-zen-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .notion-tbl-btn {
+    min-height: 44px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
