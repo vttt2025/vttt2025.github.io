@@ -1436,26 +1436,54 @@ const showTopicArticle = (jarId) => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const showJarDetail = (jarId, initialMode = "list") => {
-    if (window.setRusiDeepUrl && jarId) {
-      window.setRusiDeepUrl('/vocabulary/lo_tu/' + encodeURIComponent(jarId));
+  // Live Preview CMS (?preview=1): đọc bản nháp VOCAB_JARS chưa lưu; không ghi tiến độ/XP/SRS/cache
+  const readJarPreviewDraft = (targetId) => {
+    if (new URLSearchParams(window.location.search).get("preview") !== "1") return null;
+    try {
+      const raw = sessionStorage.getItem("rusi_live_preview_draft") || localStorage.getItem("rusi_live_preview_draft");
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || parsed.slug !== "VOCAB_JARS" || !parsed.doc || typeof parsed.doc !== "object") return null;
+      const d = parsed.doc;
+      const keys = [parsed.docId, d.id, d.code].filter(Boolean).map(String);
+      if (targetId && keys.length && !keys.includes(String(targetId))) return null;
+      const cloned = JSON.parse(JSON.stringify(d));
+      cloned.id = cloned.id || cloned.code || targetId || "preview-jar";
+      cloned.code = cloned.code || cloned.id;
+      cloned.name = cloned.name || cloned.title || "Bản nháp lọ từ vựng";
+      cloned.words = Array.isArray(cloned.words) ? cloned.words : [];
+      cloned.content_locked = false;
+      cloned._isPreview = true;
+      return cloned;
+    } catch (err) {
+      console.warn("[LivePreview] Không đọc được bản nháp lọ từ vựng:", err);
+      return null;
     }
-    if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?jar=" + encodeURIComponent(jarId || ""))) return;
+  };
+
+  const showJarDetail = (jarId, initialMode = "list") => {
+    const previewJar = readJarPreviewDraft(jarId);
+    if (!previewJar) {
+      if (window.setRusiDeepUrl && jarId) {
+        window.setRusiDeepUrl('/vocabulary/lo_tu/' + encodeURIComponent(jarId));
+      }
+      if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?jar=" + encodeURIComponent(jarId || ""))) return;
+    }
     window.currentActiveJarId = jarId;
-    const customJars = STORE.get("custom_jars", []);
+    const customJars = previewJar ? [] : STORE.get("custom_jars", []);
     const baseJars = (cloudJars && cloudJars.length)
       ? cloudJars
       : ((typeof VOCAB_JARS !== "undefined" && Array.isArray(VOCAB_JARS))
         ? VOCAB_JARS
         : (((window.RusiSupabase && window.RusiSupabase.cache) ? window.RusiSupabase.cache.get("jars:system") : []) || []));
-    let jar = [...baseJars, ...customJars].find((j) => j.id === jarId || j.code === jarId);
+    let jar = previewJar || [...baseJars, ...customJars].find((j) => j.id === jarId || j.code === jarId);
     if (!jar) {
       console.warn("Không tìm thấy lọ từ vựng:", jarId);
       renderVocabHub();
       return;
     }
     // Lọ PRO: file công khai chỉ có metadata — tải nội dung bằng phiên PRO rồi mở lại
-    if (jar.content_locked && window.RusiProContent) {
+    if (!previewJar && jar.content_locked && window.RusiProContent) {
       window.RusiProContent.ensureFull("VOCAB_JARS", jar, { title: "Nội dung dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng nâng cao và ôn tập không giới hạn." })
         .then((full) => { if (full && !full.content_locked) showJarDetail(jarId, initialMode); });
       return;
@@ -1482,7 +1510,7 @@ const showTopicArticle = (jarId) => {
 
     // Kiểm tra quyền truy cập PRO
     const isProJar = Boolean(jar.is_pro_only || jar.is_pro || jar.is_vip);
-    if (isProJar && !Monetization.isPro()) {
+    if (!previewJar && isProJar && !Monetization.isPro()) {
       Monetization.showProGateModal("Nội dung dành cho PRO", "Nâng cấp lên gói PRO để mở khóa toàn bộ kho từ vựng nâng cao và ôn tập không giới hạn.");
       return;
     }
@@ -1493,7 +1521,8 @@ const showTopicArticle = (jarId) => {
     const detail = el("#jarDetailHost");
     if (detail) {
       detail.classList.remove("hidden");
-      const isCustom = jar.is_system === false || String(jar.id).startsWith("custom-") || jar.level === "custom";
+      // Xem trước: không hiện nút thêm/xoá lọ cá nhân (tránh ghi custom_jars)
+      const isCustom = !previewJar && (jar.is_system === false || String(jar.id).startsWith("custom-") || jar.level === "custom");
 
       detail.innerHTML = `
         <!-- STICKY TOP BACK BAR WITH EMBEDDED MODES (SINGLE LINE) -->
@@ -1532,6 +1561,15 @@ const showTopicArticle = (jarId) => {
         </div>
 
         <div class="workspace" style="padding:14px 4px;border:none;background:transparent;box-shadow:none">
+          ${previewJar ? `
+            <div class="topic-preview-badge-row" role="status" style="margin-bottom:16px">
+              <span aria-hidden="true">${window.RusiIcons ? RusiIcons.get("eye", { size: 18 }) : "👁️"}</span>
+              <div style="min-width:0;flex:1">
+                <strong>Chế độ Xem trước CMS (Live Preview)</strong>
+                <div style="font-size:0.8rem;opacity:0.9;font-weight:400">Đang hiển thị bản nháp lọ từ vựng chưa xuất bản từ CMS. Chế độ xem trước không lưu tiến độ, XP hay thẻ ôn tập.</div>
+              </div>
+            </div>
+          ` : ""}
           <!-- QUIZLET STUDY ENGINE HOST -->
           <div id="jarQuizletSuiteHost"></div>
         </div>
@@ -1591,6 +1629,7 @@ const showTopicArticle = (jarId) => {
         jarId: jar.id,
         jarTitle: jar.name,
         isCustomJar: isCustom,
+        isPreview: Boolean(previewJar),
         initialMode: initialMode || "list",
         onWordListChange: (mode) => {
           showJarDetail(jar.id, mode || getActiveWorkspaceMode());
@@ -1816,14 +1855,14 @@ const showTopicArticle = (jarId) => {
   const targetMode = getParam("mode");
 
   if (targetTopic) {
-    if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?topic=" + encodeURIComponent(targetTopic))) return;
+    if (!(targetMode === "jar" && readJarPreviewDraft(targetTopic)) && typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?topic=" + encodeURIComponent(targetTopic))) return;
     if (targetMode === "jar") {
       showJarDetail(targetTopic);
     } else {
       showTopicArticle(targetTopic);
     }
   } else if (targetJar) {
-    if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?jar=" + encodeURIComponent(targetJar))) return;
+    if (!readJarPreviewDraft(targetJar) && typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?jar=" + encodeURIComponent(targetJar))) return;
     showJarDetail(targetJar);
   } else if (getParam("srs")) {
     if (typeof window.requireAuth === "function" && !window.requireAuth("vocabulary.html?srs=1")) return;
