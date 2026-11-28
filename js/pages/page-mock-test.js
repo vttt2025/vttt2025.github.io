@@ -61,6 +61,66 @@ function initMockTestPage() {
   };
   let shuffleOptionsEnabled = typeof STORE !== "undefined" ? STORE.get("trki_shuffle_options", true) : true;
   let sessionOptionOrders = {};
+  const isPreviewUrl = (() => {
+    try { return new URLSearchParams(window.location.search).get("preview") === "1"; } catch (_) { return false; }
+  })();
+  const PREVIEW_ANSWER_FIELDS = [
+    "a", "aMulti", "ans", "answer", "answers", "answer_key", "answerKey",
+    "correct", "correct_index", "correctIndex", "correct_indices", "correctIndices",
+    "correct_answer", "correctAnswer", "correct_option", "correctOption",
+    "official_key", "officialKey", "ex", "explanation", "_correctAnswer"
+  ];
+  const stripPreviewAnswers = (node) => {
+    if (!node || typeof node !== "object") return node;
+    if (Array.isArray(node)) return node.map(stripPreviewAnswers);
+    const out = {};
+    const hadMultiKeys = (Array.isArray(node.aMulti) && node.aMulti.length > 1) ||
+      (Array.isArray(node.correct_indices) && node.correct_indices.length > 1);
+    Object.keys(node).forEach((k) => {
+      if (PREVIEW_ANSWER_FIELDS.includes(k)) return;
+      out[k] = stripPreviewAnswers(node[k]);
+    });
+    if (hadMultiKeys && !out.multi) out.multi = true;
+    return out;
+  };
+  const readMockTestPreviewDraft = (targetId) => {
+    if (!isPreviewUrl) return null;
+    try {
+      const raw = sessionStorage.getItem("rusi_live_preview_draft") || localStorage.getItem("rusi_live_preview_draft");
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || parsed.slug !== "TRKI_BANK" || !parsed.doc || typeof parsed.doc !== "object") return null;
+      const d = parsed.doc;
+      const docKey = String(parsed.docId || d.id || d.code || "").trim();
+      if (targetId && docKey && docKey !== String(targetId) && String(d.id || "") !== String(targetId) && String(d.code || "") !== String(targetId)) {
+        return null;
+      }
+      // Luôn tách bản sao sạch và xoá toàn bộ trường đáp án để không lộ đáp án khi xem trước
+      const cloned = stripPreviewAnswers(JSON.parse(JSON.stringify(d)));
+      cloned.id = cloned.id || cloned.code || targetId || "preview-trki";
+      cloned.code = cloned.code || cloned.id;
+      cloned.title = cloned.title || "Bản nháp đề thi TRKI";
+      cloned.level = cloned.level || "A1";
+      cloned.parts = Array.isArray(cloned.parts)
+        ? cloned.parts.map((p, idx) => Object.assign({}, p, { id: (p && p.id) ? p.id : ("part_" + (idx + 1)) }))
+        : [];
+      cloned.content_locked = false;
+      cloned._isPreview = true;
+      return cloned;
+    } catch (err) {
+      console.warn("[LivePreview] Không đọc được bản nháp đề thi:", err);
+      return null;
+    }
+  };
+  const mockPreviewBannerHtml = (extraStyle = "") => `
+    <div class="topic-preview-badge-row" role="status" style="${extraStyle}">
+      <span aria-hidden="true">${icon("eye", 18) || "👁️"}</span>
+      <div style="min-width:0;flex:1">
+        <strong>Chế độ Xem trước CMS (Live Preview)</strong>
+        <div style="font-size:0.8rem;opacity:0.9;font-weight:400">Đang hiển thị bản nháp đề thi từ CMS (đã ẩn toàn bộ đáp án). Không gọi RPC chấm bài, không lưu lượt thi hay cộng XP.</div>
+      </div>
+    </div>
+  `;
 
   const checkUrlExam = () => {
     try {
@@ -74,6 +134,15 @@ function initMockTestPage() {
       const urlMode = urlParams.get("mode");
       if (urlMode === "exam" || urlMode === "practice") {
         examMode = urlMode;
+      }
+      if (isPreviewUrl) {
+        const draftTest = readMockTestPreviewDraft(targetId);
+        if (draftTest) {
+          currentLevel = draftTest.level || currentLevel;
+          const previewMode = urlMode === "practice" ? "practice" : "exam";
+          openExamBriefing(draftTest, null, previewMode);
+          return true;
+        }
       }
       if (targetId) {
         const found = bank.find(t => t.id === targetId || t.code === targetId);
@@ -93,7 +162,18 @@ function initMockTestPage() {
     return false;
   };
 
+  const hasInitialPreviewDraft = (() => {
+    if (!isPreviewUrl) return false;
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      return Boolean(readMockTestPreviewDraft(sp.get("test") || sp.get("exam") || sp.get("id")));
+    } catch (_) {
+      return false;
+    }
+  })();
+
   const loadCloudTests = async () => {
+    if (hasInitialPreviewDraft) return;
     // 0-Egress rule: Bỏ qua truy vấn Supabase nếu đã có mục lục hoặc ngân hàng đề thi trong RAM/IndexedDB
     if ((window.TRKI_BANK && window.TRKI_BANK.length > 0) || (window.TRKI_INDEX && window.TRKI_INDEX.length > 0)) return;
     if (window.RusiSupabase && typeof window.RusiSupabase.isReady === "function" && window.RusiSupabase.isReady()) {
@@ -117,7 +197,7 @@ function initMockTestPage() {
   };
   loadCloudTests();
 
-  if (window.RusiDataLoader && !bank.length) {
+  if (window.RusiDataLoader && !bank.length && !hasInitialPreviewDraft) {
     const modKey = window.RusiDataLoader.isLoaded("TRKI_BANK") ? "TRKI_BANK" : "TRKI_INDEX";
     window.RusiDataLoader.load(modKey).then((loaded) => {
       if (loaded && loaded.length && (!bank || !bank.length)) {
@@ -299,6 +379,9 @@ function initMockTestPage() {
     if (visibilityHandler) {
       document.removeEventListener("visibilitychange", visibilityHandler);
       visibilityHandler = null;
+    }
+    if (currentTest && currentTest._isPreview) {
+      currentTest = bank[0] || null;
     }
     document.body.classList.remove("in-workspace", "cbt-fullscreen-mode");
 
@@ -486,8 +569,9 @@ function initMockTestPage() {
    * GIAI ĐOẠN 1: CỬA SỔ THÔNG BÁO BÀI THI & KIỂM TRA THIẾT BỊ (BRIEFING)
    * ===================================================================== */
   const openExamBriefing = async (test, partId = null, mode = "exam") => {
-    if (!requireExamLogin()) return;
-    if (window.setRusiDeepUrl && test) {
+    const isPreviewTest = Boolean((test && test._isPreview) || (!test && currentTest && currentTest._isPreview));
+    if (!isPreviewTest && !requireExamLogin()) return;
+    if (!isPreviewTest && window.setRusiDeepUrl && test) {
       window.setRusiDeepUrl('/mock-test/de_thi/' + encodeURIComponent(test.id || test.code));
     }
     if (test) currentTest = test;
@@ -498,7 +582,7 @@ function initMockTestPage() {
     document.body.classList.add("in-workspace", "cbt-fullscreen-mode");
 
     // Nạp chi tiết câu hỏi từ TRKI_BANK theo nhu cầu (On-Demand Lazy Load) khi chọn từ mục lục nhẹ
-    if (currentTest && (currentTest._isIndexOnly || !Array.isArray(currentTest.parts) || !currentTest.parts.length)) {
+    if (!isPreviewTest && currentTest && (currentTest._isIndexOnly || !Array.isArray(currentTest.parts) || !currentTest.parts.length)) {
       host.innerHTML = `<div style="padding:80px 24px;text-align:center;color:var(--muted)"><div class="rusi-skeleton-hero" style="max-width:520px;margin:0 auto 16px"></div><p>Đang tải nội dung đề thi...</p></div>`;
       if (window.RusiDataLoader && typeof window.RusiDataLoader.load === "function") {
         const loadedFull = await window.RusiDataLoader.load("TRKI_BANK");
@@ -511,13 +595,13 @@ function initMockTestPage() {
     }
 
     // Đề PRO: file công khai chỉ có metadata — tải đề (đã xoá đáp án, view trki_tests_public) bằng phiên PRO
-    if (currentTest && currentTest.content_locked && window.RusiProContent) {
+    if (!isPreviewTest && currentTest && currentTest.content_locked && window.RusiProContent) {
       host.innerHTML = `<div style="padding:80px 24px;text-align:center;color:var(--muted)"><div class="rusi-skeleton-hero" style="max-width:520px;margin:0 auto 16px"></div><p>Đang tải nội dung đề thi...</p></div>`;
       const full = await window.RusiProContent.ensureFull("TRKI_BANK", currentTest, { title: "Đề thi TRKI dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết." });
       if (!full || full.content_locked) { renderHub(); return; }
     }
 
-    if (currentTest && currentTest.code && currentTest.code.startsWith("trki_zlat")) {
+    if (!isPreviewTest && currentTest && currentTest.code && currentTest.code.startsWith("trki_zlat")) {
       if (!(currentTest.parts && currentTest.parts[0] && Array.isArray(currentTest.parts[0].questions) && currentTest.parts[0].questions.length > 0)) {
         await loadQBankIntoTest(currentTest);
       }
@@ -583,6 +667,7 @@ function initMockTestPage() {
         <div class="cbt-portal-content">
           <div class="cbt-briefing-stage">
             <div class="cbt-briefing-card">
+              ${isPreviewTest ? mockPreviewBannerHtml("margin:0 0 16px") : ""}
               <div class="cbt-briefing-hero">
                 <div class="cbt-briefing-eyebrow">
                   ${isPractice ? `${icon("target", 14)} CHẾ ĐỘ LUYỆN TẬP TỰ DO` : `${icon("shield-anti-cheat", 14)} THI THỬ MÔ PHỎNG ТРКИ`}
@@ -908,10 +993,12 @@ function initMockTestPage() {
    * GIAI ĐOẠN 2: BẮT ĐẦU TÍNH GIỜ & KHỞI TẠO PHIÊN THI (START TEST)
    * ===================================================================== */
   const startTest = async (test = null, partId = null, mode = "exam") => {
-    if (!requireExamLogin()) return;
+    const targetTest = test || currentTest;
+    const isPreviewTest = Boolean(targetTest && targetTest._isPreview);
+    if (!isPreviewTest && !requireExamLogin()) return;
     if (test) currentTest = test;
     // Đề PRO (vd. khôi phục phiên thi): tải nội dung bằng phiên PRO trước khi vào phòng thi
-    if (currentTest && currentTest.content_locked && window.RusiProContent) {
+    if (!isPreviewTest && currentTest && currentTest.content_locked && window.RusiProContent) {
       const full = await window.RusiProContent.ensureFull("TRKI_BANK", currentTest, { title: "Đề thi TRKI dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ phòng thi mô phỏng ТРКИ chuẩn quốc tế và nhận phân tích chi tiết." });
       if (!full || full.content_locked) { renderHub(); return; }
     }
@@ -925,7 +1012,7 @@ function initMockTestPage() {
     tabSwitches = 0;
 
     // Bug #1 fix: Nạp câu hỏi từ trki_question_bank nếu test có code trki_zlat_*
-    if (currentTest && currentTest.code && currentTest.code.startsWith("trki_zlat")) {
+    if (!isPreviewTest && currentTest && currentTest.code && currentTest.code.startsWith("trki_zlat")) {
       await loadQBankIntoTest(currentTest);
     }
     // Lượt mới: xoá đáp án/giải thích máy chủ trả về ở lượt trước (gắn trên chính object câu hỏi trong RAM),
@@ -938,11 +1025,13 @@ function initMockTestPage() {
     const isSubset = Boolean(selectedPartList && selectedPartList.length > 0 && selectedPartList.length < (currentTest.parts || []).length);
     const storageKey = getExamStorageKey();
 
-    try {
-      sessionStorage.setItem("trki_active_exam_id", currentTest.id);
-      sessionStorage.setItem("trki_active_part_id", isSubset ? selectedPartList.join(",") : "full");
-      sessionStorage.setItem("trki_exam_mode", examMode);
-    } catch(e) {}
+    if (!isPreviewTest) {
+      try {
+        sessionStorage.setItem("trki_active_exam_id", currentTest.id);
+        sessionStorage.setItem("trki_active_part_id", isSubset ? selectedPartList.join(",") : "full");
+        sessionStorage.setItem("trki_exam_mode", examMode);
+      } catch(e) {}
+    }
 
     const activeParts = isSubset
       ? (currentTest.parts || []).filter(p => selectedPartList.includes(p.id))
@@ -954,49 +1043,58 @@ function initMockTestPage() {
     // Timestamp chống reload
     const now = Date.now();
     let storedEndTime = 0;
-    try { storedEndTime = parseInt(sessionStorage.getItem(storageKey + "_endTime") || "0", 10); } catch(e) {}
-    // Thi thật: giờ đã hết (tải lại sau giờ nộp) thì giữ nguyên để bộ đếm tự nộp bài ngay, không cấp lại giờ mới
-    if (!storedEndTime || (storedEndTime <= now && examMode !== "exam")) {
+    if (isPreviewTest) {
       storedEndTime = now + examDurationMin * 60 * 1000;
-      try { sessionStorage.setItem(storageKey + "_endTime", String(storedEndTime)); } catch(e) {}
-    }
-    timeLeft = Math.max(0, Math.floor((storedEndTime - now) / 1000));
-    try {
-      if (!sessionStorage.getItem(storageKey + "_startTime")) sessionStorage.setItem(storageKey + "_startTime", String(now));
-    } catch(e) {}
-
-    // Khôi phục câu trả lời nếu đã lưu
-    answers = {};
-    try {
-      const savedAnswers = sessionStorage.getItem(storageKey + "_answers");
-      if (savedAnswers) answers = JSON.parse(savedAnswers);
-    } catch(e) {
+      timeLeft = Math.max(0, Math.floor((storedEndTime - now) / 1000));
       answers = {};
-    }
-
-    // Khôi phục số lần rời màn hình (tải lại trang không xoá vi phạm)
-    try { tabSwitches = examMode === "exam" ? (parseInt(sessionStorage.getItem(storageKey + "_tabs") || "0", 10) || 0) : 0; } catch (e) { tabSwitches = 0; }
-
-    // Khôi phục cờ đánh dấu
-    flagged = {};
-    try {
-      const savedFlagged = sessionStorage.getItem(storageKey + "_flagged");
-      if (savedFlagged) flagged = JSON.parse(savedFlagged);
-    } catch(e) {
+      tabSwitches = 0;
       flagged = {};
-    }
-
-    // Cơ chế đáp án ngẫu nhiên
-    const savedAnswers = sessionStorage.getItem(storageKey + "_answers");
-    if (!savedAnswers || Object.keys(answers).length === 0) {
       sessionOptionOrders = {};
-      try { sessionStorage.removeItem(storageKey + "_opt_orders"); } catch(e) {}
     } else {
+      try { storedEndTime = parseInt(sessionStorage.getItem(storageKey + "_endTime") || "0", 10); } catch(e) {}
+      // Thi thật: giờ đã hết (tải lại sau giờ nộp) thì giữ nguyên để bộ đếm tự nộp bài ngay, không cấp lại giờ mới
+      if (!storedEndTime || (storedEndTime <= now && examMode !== "exam")) {
+        storedEndTime = now + examDurationMin * 60 * 1000;
+        try { sessionStorage.setItem(storageKey + "_endTime", String(storedEndTime)); } catch(e) {}
+      }
+      timeLeft = Math.max(0, Math.floor((storedEndTime - now) / 1000));
       try {
-        const savedOrders = sessionStorage.getItem(storageKey + "_opt_orders");
-        sessionOptionOrders = savedOrders ? JSON.parse(savedOrders) : {};
+        if (!sessionStorage.getItem(storageKey + "_startTime")) sessionStorage.setItem(storageKey + "_startTime", String(now));
+      } catch(e) {}
+
+      // Khôi phục câu trả lời nếu đã lưu
+      answers = {};
+      try {
+        const savedAnswers = sessionStorage.getItem(storageKey + "_answers");
+        if (savedAnswers) answers = JSON.parse(savedAnswers);
       } catch(e) {
+        answers = {};
+      }
+
+      // Khôi phục số lần rời màn hình (tải lại trang không xoá vi phạm)
+      try { tabSwitches = examMode === "exam" ? (parseInt(sessionStorage.getItem(storageKey + "_tabs") || "0", 10) || 0) : 0; } catch (e) { tabSwitches = 0; }
+
+      // Khôi phục cờ đánh dấu
+      flagged = {};
+      try {
+        const savedFlagged = sessionStorage.getItem(storageKey + "_flagged");
+        if (savedFlagged) flagged = JSON.parse(savedFlagged);
+      } catch(e) {
+        flagged = {};
+      }
+
+      // Cơ chế đáp án ngẫu nhiên
+      const savedAnswers = sessionStorage.getItem(storageKey + "_answers");
+      if (!savedAnswers || Object.keys(answers).length === 0) {
         sessionOptionOrders = {};
+        try { sessionStorage.removeItem(storageKey + "_opt_orders"); } catch(e) {}
+      } else {
+        try {
+          const savedOrders = sessionStorage.getItem(storageKey + "_opt_orders");
+          sessionOptionOrders = savedOrders ? JSON.parse(savedOrders) : {};
+        } catch(e) {
+          sessionOptionOrders = {};
+        }
       }
     }
 
@@ -1006,7 +1104,7 @@ function initMockTestPage() {
       document.removeEventListener("visibilitychange", visibilityHandler);
       visibilityHandler = null;
     }
-    if (examMode === "exam") {
+    if (examMode === "exam" && !isPreviewTest) {
       visibilityHandler = () => {
         if (!started) return;
         if (document.hidden) {
@@ -1088,6 +1186,7 @@ function initMockTestPage() {
       return;
     }
 
+    const isPreviewTest = Boolean(currentTest && currentTest._isPreview);
     const isPractice = (examMode === "practice");
     const selectedPartList = getExamPartList();
     const isSubset = Boolean(selectedPartList && selectedPartList.length > 0 && selectedPartList.length < (currentTest.parts || []).length);
@@ -1231,6 +1330,7 @@ function initMockTestPage() {
 
         <!-- TẦNG 2: SPLIT-PANE 2 CỘT CÓ THANH RESIZER KÉO DI CHUYỂN ĐƯỢC 4/6 -->
         <div class="cbt-portal-content">
+          ${isPreviewTest ? mockPreviewBannerHtml("margin:10px 16px 0") : ""}
           <div class="cbt-workspace-split" id="cbtWorkspaceSplit">
             <!-- CỘT TRÁI: NGỮ CẢNH / BÀI ĐỌC / AUDIO / TÓM TẮT PHÂN MÔN -->
             <section class="cbt-split-left" id="cbtSplitLeft" style="width: ${splitterPct}%" aria-label="Tài liệu ngữ cảnh bài thi">
@@ -1759,7 +1859,9 @@ function initMockTestPage() {
         if (!sessionOptionOrders[id] || sessionOptionOrders[id].length !== rawOpts.length) {
           const indices = rawOpts.map((_, idx) => idx);
           sessionOptionOrders[id] = (rawOpts.length >= 2) ? qShuffleArray(indices) : indices;
-          try { sessionStorage.setItem(storageKey + "_opt_orders", JSON.stringify(sessionOptionOrders)); } catch(e) {}
+          if (!isPreviewTest) {
+            try { sessionStorage.setItem(storageKey + "_opt_orders", JSON.stringify(sessionOptionOrders)); } catch(e) {}
+          }
         }
         const order = sessionOptionOrders[id] || rawOpts.map((_, idx) => idx);
         const letters = ["A", "B", "C", "D", "E", "F"];
@@ -1816,13 +1918,13 @@ function initMockTestPage() {
             </div>
           ` : `
             <div class="trki-practice-feedback" style="margin-top:20px;color:var(--muted)">
-              ${q._proRequired ? ((typeof Monetization !== "undefined" && Monetization.isPro()) ? 'Phiên đăng nhập trên thiết bị này chưa được xác nhận PRO. Tải lại trang hoặc đăng xuất bớt thiết bị cũ rồi chọn lại đáp án.' : 'Câu hỏi này thuộc đề dành cho PRO. Nâng cấp PRO để xem đáp án và giải thích.') : q._checkFailed ? 'Không thể kết nối máy chủ kiểm tra đáp án lúc này. Vui lòng thử chọn lại.' : 'Đang đối chiếu đáp án từ máy chủ...'}
+              ${isPreviewTest ? 'Chế độ Xem trước CMS: không gọi máy chủ kiểm tra đáp án và không hiển thị đáp án.' : q._proRequired ? ((typeof Monetization !== "undefined" && Monetization.isPro()) ? 'Phiên đăng nhập trên thiết bị này chưa được xác nhận PRO. Tải lại trang hoặc đăng xuất bớt thiết bị cũ rồi chọn lại đáp án.' : 'Câu hỏi này thuộc đề dành cho PRO. Nâng cấp PRO để xem đáp án và giải thích.') : q._checkFailed ? 'Không thể kết nối máy chủ kiểm tra đáp án lúc này. Vui lòng thử chọn lại.' : 'Đang đối chiếu đáp án từ máy chủ...'}
             </div>
           `) : ""}
         `;
 
-        // Chế độ Luyện tập: Kiểm tra đáp án 1 câu qua RPC bảo mật (Zero-Answer Leak)
-        if (isPractice && hasAnswered && !hasServerKey && !q._checking && !q._checkFailed) {
+        // Chế độ Luyện tập: Kiểm tra đáp án 1 câu qua RPC bảo mật (Zero-Answer Leak); KHÔNG gọi RPC trong chế độ Xem trước CMS
+        if (!isPreviewTest && isPractice && hasAnswered && !hasServerKey && !q._checking && !q._checkFailed) {
           q._checking = true;
           q._checkFailed = false;
           const checkCode = currentTest.code || currentTest.id;
@@ -1873,7 +1975,9 @@ function initMockTestPage() {
             if (multi) toggleMultiAnswer(answers, id, oi);
             else answers[id] = oi;
             q._checkFailed = false;
-            try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(e) {}
+            if (!isPreviewTest) {
+              try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(e) {}
+            }
             refreshMatrixCounts();
             renderQuestionAt(currentItemIndex);
           };
@@ -1916,7 +2020,9 @@ function initMockTestPage() {
           textarea.oninput = () => {
             const val = textarea.value;
             answers[id] = val;
-            try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(e) {}
+            if (!isPreviewTest) {
+              try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(e) {}
+            }
             const wc = val.trim() ? val.trim().split(/\s+/).length : 0;
             const wcBadge = el("#cbtWordCountBadge");
             if (wcBadge) wcBadge.innerHTML = `Dung lượng: <b>${wc} từ</b> (Tối thiểu ${wt.minWords || 35} từ)`;
@@ -1983,7 +2089,9 @@ function initMockTestPage() {
                 stream.getTracks().forEach(t => t.stop());
                 activeMicStream = null;
                 answers[id] = true;
-                try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(e) {}
+                if (!isPreviewTest) {
+                  try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(e) {}
+                }
                 refreshMatrixCounts();
               };
               recorder.start();
@@ -2017,7 +2125,9 @@ function initMockTestPage() {
     // Toggle cờ xem lại
     const toggleFlag = (id) => {
       flagged[id] = !flagged[id];
-      try { sessionStorage.setItem(storageKey + "_flagged", JSON.stringify(flagged)); } catch(e) {}
+      if (!isPreviewTest) {
+        try { sessionStorage.setItem(storageKey + "_flagged", JSON.stringify(flagged)); } catch(e) {}
+      }
       renderQuestionAt(currentItemIndex);
     };
 
@@ -2072,7 +2182,9 @@ function initMockTestPage() {
           if (multi) toggleMultiAnswer(answers, item.id, oi);
           else answers[item.id] = oi;
           q._checkFailed = false;
-          try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(err) {}
+          if (!isPreviewTest) {
+            try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(err) {}
+          }
           refreshMatrixCounts();
           renderQuestionAt(currentItemIndex);
           return;
@@ -2138,7 +2250,9 @@ function initMockTestPage() {
         if (pct < 25) pct = 25;
         if (pct > 75) pct = 75;
         leftPane.style.width = pct + "%";
-        try { localStorage.setItem("trki_splitter_pct", pct.toFixed(1)); } catch(_) {}
+        if (!isPreviewTest) {
+          try { localStorage.setItem("trki_splitter_pct", pct.toFixed(1)); } catch(_) {}
+        }
       };
 
       const stopDrag = (e) => {
@@ -2308,17 +2422,19 @@ function initMockTestPage() {
         stopCbtAudio();
         cleanupHardwareTests();
         document.removeEventListener("keydown", handleKeyNav);
-        try {
-          sessionStorage.removeItem("trki_active_exam_id");
-          sessionStorage.removeItem("trki_active_part_id");
-          sessionStorage.removeItem("trki_exam_mode");
-          if (currentTest && currentTest.id) {
-            sessionStorage.removeItem(storageKey + "_endTime");
-            sessionStorage.removeItem(storageKey + "_startTime");
-            sessionStorage.removeItem(storageKey + "_answers");
-            sessionStorage.removeItem(storageKey + "_flagged");
-          }
-        } catch(e) {}
+        if (!isPreviewTest) {
+          try {
+            sessionStorage.removeItem("trki_active_exam_id");
+            sessionStorage.removeItem("trki_active_part_id");
+            sessionStorage.removeItem("trki_exam_mode");
+            if (currentTest && currentTest.id) {
+              sessionStorage.removeItem(storageKey + "_endTime");
+              sessionStorage.removeItem(storageKey + "_startTime");
+              sessionStorage.removeItem(storageKey + "_answers");
+              sessionStorage.removeItem(storageKey + "_flagged");
+            }
+          } catch(e) {}
+        }
         clearInterval(timer);
         if (visibilityHandler) document.removeEventListener("visibilitychange", visibilityHandler);
         document.body.classList.remove("in-workspace", "cbt-fullscreen-mode");
@@ -2425,6 +2541,57 @@ function initMockTestPage() {
     if (visibilityHandler) {
       document.removeEventListener("visibilitychange", visibilityHandler);
       visibilityHandler = null;
+    }
+
+    // Chế độ Xem trước CMS: TUYỆT ĐỐI không gọi RPC chấm thi, không hiển thị đáp án, không lưu lượt thi/XP/tiến độ
+    if (currentTest && currentTest._isPreview) {
+      const selectedPartsPrev = getExamPartList();
+      const isSubsetPrev = Boolean(selectedPartsPrev && selectedPartsPrev.length > 0 && selectedPartsPrev.length < (currentTest.parts || []).length);
+      const previewParts = isSubsetPrev
+        ? (currentTest.parts || []).filter(p => selectedPartsPrev.includes(p.id))
+        : (currentTest.parts || []);
+      let previewTotal = 0;
+      let previewAnswered = 0;
+      previewParts.forEach((p) => {
+        (p.questions || []).forEach((_, qi) => {
+          previewTotal++;
+          if (answers[p.id + "_" + qi] !== undefined) previewAnswered++;
+        });
+        (p.writing_tasks || []).forEach((_, wi) => {
+          previewTotal++;
+          if (answers["write_" + p.id + "_" + wi]) previewAnswered++;
+        });
+        (p.speaking_tasks || []).forEach((_, si) => {
+          previewTotal++;
+          if (answers["speak_" + p.id + "_" + si]) previewAnswered++;
+        });
+      });
+      toast("Chế độ Xem trước CMS: không gọi RPC chấm thi, không lưu lượt thi hay cộng XP.");
+      host.innerHTML = `
+        <div class="trki-result-container" style="max-width:720px;margin:28px auto;padding:0 16px">
+          ${mockPreviewBannerHtml("margin:0 0 18px")}
+          <div class="card" style="padding:24px;text-align:center">
+            <h2 style="margin:0 0 8px">${esc(currentTest.title)}</h2>
+            <p style="color:var(--muted);margin:0 0 18px">
+              Đã hoàn tất lượt thử trong chế độ Xem trước CMS (${previewAnswered}/${previewTotal} câu/bài đã chọn). Hệ thống không gọi máy chủ chấm điểm, không hiển thị đáp án và không ghi nhận lượt thi hay XP.
+            </p>
+            <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap">
+              <button type="button" class="btn btn-primary" id="btnPreviewBackBriefing">Xem lại màn giới thiệu</button>
+              <button type="button" class="btn btn-outline" id="btnPreviewRetry">Thử lại bản nháp</button>
+              <button type="button" class="btn btn-soft" id="btnPreviewToHub">Quay lại danh sách đề</button>
+            </div>
+          </div>
+        </div>
+      `;
+      const btnBrief = el("#btnPreviewBackBriefing");
+      if (btnBrief) btnBrief.onclick = () => openExamBriefing(currentTest, activePartId, "exam");
+      const btnRetry = el("#btnPreviewRetry");
+      if (btnRetry) btnRetry.onclick = () => startTest(currentTest, activePartId, examMode);
+      const btnHub = el("#btnPreviewToHub");
+      if (btnHub) btnHub.onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); };
+      if (window.RusiIcons && typeof RusiIcons.replace === "function") RusiIcons.replace(host);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
     }
 
     const selectedPartList = getExamPartList();
@@ -2793,6 +2960,7 @@ function initMockTestPage() {
   };
 
   const checkResumeActiveExam = () => {
+    if (isPreviewUrl) return false;
     try {
       const activeId = sessionStorage.getItem("trki_active_exam_id");
       const activePart = sessionStorage.getItem("trki_active_part_id");
