@@ -22796,6 +22796,17 @@ html, body {
   }
 }
 
+/* Màn rất hẹp (320–359px): chỉ giữ ô logo "Я" (link vẫn có aria-label) để nút menu không bị đẩy ra ngoài mép */
+@media (max-width: 359px) {
+  .brand-text {
+    display: none !important;
+  }
+  .brand {
+    min-width: 44px !important;
+    justify-content: center !important;
+  }
+}
+
 /* --- 3. BỘ LỌC TABS & SCROLL TRACKS ("MORE..." GRADIENT MASK) --- */
 /* Báo hiệu có thể cuộn ngang, viền phải mờ dần, không chém cụt tab cuối */
 @media (max-width: 1024px) {
@@ -32776,9 +32787,11 @@ body.index-personalized #indexUserProgressHost {
   #indexUserProgressHost .index-metric-label {
     font-size: 0.72rem;
     margin-top: 2px;
-    white-space: nowrap;
+    /* Tối đa 2 dòng thay vì cắt "Từ mới sẵn sà…" */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   [data-theme="dark"] #indexUserProgressHost .index-metric-card {
@@ -37982,8 +37995,8 @@ body.cbt-resizing .cbt-app-portal .cbt-gutter-handle { background: var(--cbt-acc
 
 /* Tab cấp độ (A1…C2) */
 [data-theme="dark"] body .level-tabs { border-bottom-color: rgba(255, 255, 255, 0.1) !important; }
-[data-theme="dark"] body .level-tab:not(.active) { color: #8796ab !important; }
-[data-theme="dark"] body .level-tab:not(.active):hover { color: #cbd5e1 !important; }
+[data-theme="dark"] body .level-tab:not(.active):not(.level-tab-active) { color: #8796ab !important; }
+[data-theme="dark"] body .level-tab:not(.active):not(.level-tab-active):hover { color: #cbd5e1 !important; }
 
 /* Huy hiệu "Hoàn thành" trên thẻ chủ đề / bài học */
 [data-theme="dark"] body .topic-status-completed { background: rgba(22, 163, 74, 0.16) !important; color: #6ee7a0 !important; border-color: rgba(22, 163, 74, 0.35) !important; }
@@ -38871,8 +38884,8 @@ select.add-jar-input {
   border-color: var(--cbt-accent-ink);
 }
 /* Nhãn phụ tab cấp độ (ТЭУ, số đề) ở chế độ tối */
-[data-theme="dark"] body .level-tab:not(.active) small,
-[data-theme="dark"] body .level-tab:not(.active) .level-tab-count {
+[data-theme="dark"] body .level-tab:not(.active):not(.level-tab-active) small,
+[data-theme="dark"] body .level-tab:not(.active):not(.level-tab-active) .level-tab-count {
   color: #aab6c6;
   opacity: 1;
 }
