@@ -716,11 +716,23 @@ function initListeningPage() {
     return [];
   };
 
+  // Link thẳng tới bài (?id=) mà lúc khởi tạo chưa có dữ liệu → mở khi dữ liệu về
+  let pendingUrlLessonId = null;
+  const openPendingUrlLesson = () => {
+    if (!pendingUrlLessonId || currentLesson) return false;
+    const id = pendingUrlLessonId;
+    pendingUrlLessonId = null;
+    return checkUrlLesson(id);
+  };
+  // Trang đích sau đăng nhập: giữ chế độ chép chính tả
+  const lessonAuthTarget = (id, mode = currentMode) => "listening.html?" + (mode === "dictation" ? "mode=dictation&" : "") + "id=" + encodeURIComponent(id || "");
+
   const loadCloudListening = async () => {
     // 0-Egress rule: Nạp từ RAM/IndexedDB/CDN JSON trước, bỏ qua truy vấn Supabase nếu đã có dữ liệu
     if (window.RusiDataLoader && !window.RusiDataLoader.isLoaded("LISTENING_LESSONS")) {
       await window.RusiDataLoader.load("LISTENING_LESSONS");
       if (window.LISTENING_LESSONS && window.LISTENING_LESSONS.length > 0) {
+        if (openPendingUrlLesson()) return;
         if (!currentLesson && !document.body.classList.contains("in-workspace")) {
           renderListeningCards();
         }
@@ -734,6 +746,7 @@ function initListeningPage() {
         if (remote && remote.length) {
           cloudListening = remote;
           console.log(`[Supabase] Đã tải ${remote.length} bài nghe từ Database!`);
+          if (openPendingUrlLesson()) return;
           if (!currentLesson && !document.body.classList.contains("in-workspace")) {
             renderListeningCards();
           }
@@ -873,7 +886,7 @@ function initListeningPage() {
 
     const openLesson = (card) => {
       const id = card.dataset.listenId;
-      if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent(id || ""))) return;
+      if (typeof window.requireAuth === "function" && !window.requireAuth(lessonAuthTarget(id || ""))) return;
       const lesson = all.find((x) => x.id === id);
       if (!lesson) return;
       if (isListeningLessonLocked(lesson)) {
@@ -2095,12 +2108,12 @@ function initListeningPage() {
   const openComprehensionWorkspace = (lesson) => {
     // Bài PRO: file công khai chỉ có metadata — tải nội dung bằng phiên PRO rồi mở lại
     if (lesson && lesson.content_locked && window.RusiProContent) {
-      if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent(lesson.id || ""))) return;
+      if (typeof window.requireAuth === "function" && !window.requireAuth(lessonAuthTarget(lesson.id || "", "comprehension"))) return;
       window.RusiProContent.ensureFull("LISTENING_LESSONS", lesson, { title: "Nội dung nghe dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao." })
         .then((full) => { if (full && !full.content_locked) openComprehensionWorkspace(full); });
       return;
     }
-    if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent((lesson && lesson.id) || ""))) return;
+    if (typeof window.requireAuth === "function" && !window.requireAuth(lessonAuthTarget((lesson && lesson.id) || "", "comprehension"))) return;
     // Đổi URL sau khi qua kiểm tra đăng nhập (không để URL bài học khi bị chuyển sang trang đăng nhập)
     if (window.setRusiDeepUrl && lesson) {
       window.setRusiDeepUrl('/listening/bai_hoc/' + encodeURIComponent(lesson.id || lesson.code));
@@ -3056,12 +3069,12 @@ function initListeningPage() {
   const openDictationWorkspace = (lesson) => {
     // Bài PRO: file công khai chỉ có metadata — tải nội dung bằng phiên PRO rồi mở lại
     if (lesson && lesson.content_locked && window.RusiProContent) {
-      if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent(lesson.id || ""))) return;
+      if (typeof window.requireAuth === "function" && !window.requireAuth(lessonAuthTarget(lesson.id || "", "dictation"))) return;
       window.RusiProContent.ensureFull("LISTENING_LESSONS", lesson, { title: "Nội dung nghe dành cho PRO", desc: "Nâng cấp lên gói PRO để mở khóa toàn bộ bài luyện nghe trung & nâng cao kèm audio chất lượng cao." })
         .then((full) => { if (full && !full.content_locked) openDictationWorkspace(full); });
       return;
     }
-    if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent((lesson && lesson.id) || ""))) return;
+    if (typeof window.requireAuth === "function" && !window.requireAuth(lessonAuthTarget((lesson && lesson.id) || "", "dictation"))) return;
     // Đổi URL sau khi qua kiểm tra đăng nhập (không để URL bài học khi bị chuyển sang trang đăng nhập)
     if (window.setRusiDeepUrl && lesson) {
       window.setRusiDeepUrl('/listening/dictation/' + encodeURIComponent(lesson.id || lesson.code));
@@ -4349,7 +4362,7 @@ function initListeningPage() {
     });
   };
 
-  const checkUrlLesson = () => {
+  const checkUrlLesson = (overrideId) => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || urlParams.get(k);
@@ -4357,9 +4370,9 @@ function initListeningPage() {
       if (modeParam === "dictation" || modeParam === "comprehension") {
         currentMode = modeParam;
       }
-      const targetId = getParam("id") || getParam("lesson");
+      const targetId = overrideId || getParam("id") || getParam("lesson");
       if (targetId) {
-        if (typeof window.requireAuth === "function" && !window.requireAuth("listening.html?id=" + encodeURIComponent(targetId))) return true;
+        if (typeof window.requireAuth === "function" && !window.requireAuth(lessonAuthTarget(targetId))) return true;
         const all = typeof getListeningLessons === "function" ? getListeningLessons() : [];
         const found = all.find(l => l.id === targetId || l.code === targetId);
         if (found) {
@@ -4372,6 +4385,7 @@ function initListeningPage() {
           else openComprehensionWorkspace(found);
           return true;
         }
+        if (!all.length) pendingUrlLessonId = targetId;
       }
     } catch (_) {}
     return false;

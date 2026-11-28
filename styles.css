@@ -38964,6 +38964,7 @@ select.add-jar-input {
   .cbt-app-portal .cbt-hw-confirm { min-height: 44px; padding: 6px 14px; }
 }
 
+<<<<<<< HEAD
 /* ==========================================================================
    RESPONSIVE UI AUDIT r1 — Trang chủ (Hero 1280px, Bảng giá 820px, Dashboard & Chạm mobile)
    ========================================================================== */
@@ -39118,4 +39119,48 @@ select.add-jar-input {
   .create-jar-header {
     padding-right: 52px;
   }
+=======
+/* Luyện tập: chọn phân môn gọn trên thanh đầu phòng thi (mặc định "Tất cả phân môn") */
+.cbt-practice-part-pick {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cbt-ink-2, var(--muted));
+  min-width: 0;
+}
+.cbt-practice-part-pick select {
+  appearance: none;
+  -webkit-appearance: none;
+  max-width: 260px;
+  min-height: 36px;
+  padding: 6px 28px 6px 10px;
+  border: 1px solid var(--cbt-line-strong, #cfd6df);
+  border-radius: 8px;
+  background: var(--cbt-surface, #fff) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 9px center;
+  color: var(--cbt-ink, #0f1f38);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.cbt-practice-part-pick select:focus-visible {
+  outline: 2px solid var(--cbt-accent, #1757a6);
+  outline-offset: 1px;
+}
+@media (max-width: 1024px), (pointer: coarse) {
+  .cbt-practice-part-pick select { min-height: 44px; }
+}
+@media (max-width: 768px) {
+  .cbt-practice-part-pick svg { display: none; }
+  .cbt-practice-part-pick select { max-width: 132px; font-size: 16px; padding-right: 26px; }
+}
+@media (max-width: 480px) {
+  /* Dòng phụ "Phần N" đã có ở dòng "Câu x / y · Phần N" ngay dưới → nhường chỗ cho ô chọn phân môn */
+  .cbt-app-portal .cbt-portal-header:has(.cbt-practice-part-pick) .cbt-header-info { display: none; }
+  .cbt-app-portal .cbt-portal-header:has(.cbt-practice-part-pick) .cbt-header-left { flex: 0 0 auto; }
+  .cbt-practice-part-pick select { max-width: 150px; padding-left: 8px; }
+>>>>>>> team/qa
 }

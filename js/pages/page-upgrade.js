@@ -214,8 +214,8 @@ function initUpgradePage() {
       <!-- QUY TRÌNH 3 BƯỚC THANH TOÁN VIETQR -->
       <section class="steps-section">
         <div style="text-align:center">
-          <span class="section-kicker">KÍCH HOẠT TỨC THÌ</span>
-          <h2 style="font-size:1.6rem;font-weight:800;color:var(--text);margin-bottom:6px">Quy Trình 3 Bước Kích Hoạt Tự Động</h2>
+          <span class="section-kicker">KÍCH HOẠT SAU ĐỐI SOÁT</span>
+          <h2 style="font-size:1.6rem;font-weight:800;color:var(--text);margin-bottom:6px">Quy Trình 3 Bước Kích Hoạt PRO</h2>
           <p style="color:var(--muted);font-size:0.92rem">Chuyển khoản đúng nội dung để được kích hoạt nhanh nhất.</p>
         </div>
 
@@ -235,8 +235,8 @@ function initUpgradePage() {
           <div class="step-card">
             <span class="step-num step-card-num">03</span>
             <div class="step-icon">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 28 }) : ""}</div>
-            <div class="step-title">Mở Khóa Tức Thì</div>
-            <div class="step-desc">Hệ thống xác thực chữ ký điện tử và kích hoạt tài khoản PRO ngay trong 3 giây.</div>
+            <div class="step-title">Mở Khóa PRO</div>
+            <div class="step-desc">Đội ngũ RUSI đối soát giao dịch và kích hoạt tài khoản PRO trong giờ làm việc.</div>
           </div>
         </div>
       </section>
@@ -278,7 +278,7 @@ function initUpgradePage() {
               <i>+</i>
             </button>
             <div class="faq-answer">
-              <p>Hệ thống tích hợp cổng thanh toán VietQR tự động của VietinBank. Ngay sau khi bạn quét mã và hoàn tất chuyển khoản, hệ thống sẽ xác thực chữ ký số và kích hoạt tài khoản PRO trong vòng 3 đến 5 giây mà bạn không cần phải F5 hay chờ duyệt tay.</p>
+              <p>Sau khi bạn quét mã VietQR và hoàn tất chuyển khoản đúng nội dung, đội ngũ RUSI sẽ đối soát giao dịch và kích hoạt tài khoản PRO trong giờ làm việc.</p>
             </div>
           </div>
           <div class="faq-item">

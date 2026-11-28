@@ -1770,6 +1770,27 @@ const showTopicArticle = (jarId) => {
     }
   });
 
+  // Nút Back/Forward trình duyệt: URL đổi (pushState) → mở đúng màn theo URL (kho từ / lọ từ / bài chủ đề / SRS)
+  if (window._rusiVocabPopHandler) window.removeEventListener("popstate", window._rusiVocabPopHandler);
+  window._rusiVocabPopHandler = () => {
+    window.__RUSI_DEEP_PARAMS__ = null; // chỉ đọc từ URL hiện tại
+    const sp = new URLSearchParams(window.location.search);
+    const gp = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || sp.get(k);
+    const topic = gp("topic") || gp("article");
+    const jar = gp("jar") || gp("lo_tu") || gp("id");
+    if (topic) {
+      if (gp("mode") === "jar") showJarDetail(topic);
+      else showTopicArticle(topic);
+    } else if (jar) {
+      showJarDetail(jar);
+    } else if (gp("srs")) {
+      showSrsWorkspace();
+    } else {
+      showMainLayout();
+    }
+  };
+  window.addEventListener("popstate", window._rusiVocabPopHandler);
+
   // Hỗ trợ mở trực tiếp Lọ từ vựng hoặc Bài học chủ đề từ URL / Live Preview Studio CMS / Deep Link
   const urlParams = new URLSearchParams(window.location.search);
   const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || urlParams.get(k);

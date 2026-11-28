@@ -62,7 +62,16 @@ function initMockTestPage() {
   let shuffleOptionsEnabled = typeof STORE !== "undefined" ? STORE.get("trki_shuffle_options", true) : true;
   let sessionOptionOrders = {};
 
-  const checkUrlExam = () => {
+  // Link thẳng tới đề (?test=) mà lúc khởi tạo chưa có mục lục đề → mở khi dữ liệu về
+  let pendingUrlExamId = null;
+  const openPendingUrlExam = () => {
+    if (!pendingUrlExamId || document.body.classList.contains("in-workspace")) return false;
+    const id = pendingUrlExamId;
+    pendingUrlExamId = null;
+    return checkUrlExam(id);
+  };
+
+  const checkUrlExam = (overrideId) => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const getParam = (k) => (window.getRusiRouteParam ? window.getRusiRouteParam(k) : null) || urlParams.get(k);
@@ -70,7 +79,7 @@ function initMockTestPage() {
       if (targetLevel && ["A1", "A2", "B1", "B2", "C1", "C2"].includes(targetLevel.toUpperCase())) {
         currentLevel = targetLevel.toUpperCase();
       }
-      const targetId = getParam("exam") || getParam("test") || getParam("id");
+      const targetId = overrideId || getParam("exam") || getParam("test") || getParam("id");
       const urlMode = urlParams.get("mode");
       if (urlMode === "exam" || urlMode === "practice") {
         examMode = urlMode;
@@ -88,6 +97,7 @@ function initMockTestPage() {
           openExamBriefing(found, null, examMode);
           return true;
         }
+        if (!bank.length) pendingUrlExamId = targetId;
       }
     } catch (_) {}
     return false;
@@ -106,6 +116,7 @@ function initMockTestPage() {
             currentTest = bank[0];
           }
           console.log(`[Supabase] Đã nạp & đồng bộ ${bank.length} đề thi TRKI!`);
+          if (openPendingUrlExam()) return;
           if (!document.body.classList.contains("in-workspace")) {
             renderTrkiCards();
           }
@@ -125,6 +136,7 @@ function initMockTestPage() {
         if (!currentTest || !bank.some(t => t.id === currentTest.id)) {
           currentTest = bank[0];
         }
+        if (openPendingUrlExam()) return;
         if (!document.body.classList.contains("in-workspace")) {
           renderTrkiCards();
         }
@@ -1206,9 +1218,15 @@ function initMockTestPage() {
 
           <div class="cbt-header-center">
             ${isPractice ? `
-              <div class="cbt-clock-pill cbt-practice-pill" style="color:var(--primary);font-size:0.95rem" title="Luyện tập tự do" aria-label="Luyện tập tự do">
-                ${icon("sparkles-clean", 16)} <span>Luyện tập tự do</span>
-              </div>
+              <label class="cbt-practice-part-pick" title="Chọn phân môn muốn luyện">
+                ${icon("sparkles-clean", 16)}
+                <select id="cbtPracticePartSelect" aria-label="Chọn phân môn muốn luyện">
+                  <option value="full">Tất cả phần</option>
+                  ${(currentTest.parts || []).filter((p) => (p.questions || []).length || (p.writing_tasks || []).length || (p.speaking_tasks || []).length).map((p) => `
+                    <option value="${esc(p.id)}" ${isSubset && selectedPartList.length === 1 && selectedPartList[0] === p.id ? "selected" : ""}>${esc(String(p.vi || p.name || p.id).replace(/\s*\(\s*\d+\s*(câu|bài)\s*\)\s*$/i, ""))}</option>
+                  `).join("")}
+                </select>
+              </label>
             ` : `
               <div class="cbt-clock-pill" id="cbtTimerBox" title="Thời gian còn lại của bài thi">
                 ${icon("timer-clock", 18)} <span id="timerVal">${fmt(timeLeft)}</span>
@@ -1506,7 +1524,8 @@ function initMockTestPage() {
           if (isReading) {
             // Phần ĐỌC HIỂU (ЧТЕНИЕ)
             const pRu = (part.text && (part.text.ru || part.text)) || qPassage || "";
-            const pVi = (part.text && part.text.vi) || "";
+            // Thi thật: không có bản dịch (chỉ Luyện tập)
+            const pVi = examMode === "exam" ? "" : ((part.text && part.text.vi) || "");
             const wordCount = pRu.trim() ? pRu.trim().split(/\s+/).length : 0;
 
             leftHost.innerHTML = `
@@ -1586,7 +1605,7 @@ function initMockTestPage() {
                 </div>
               </div>
 
-              ${(part.lines && Array.isArray(part.lines) && part.lines.length) ? `
+              ${(examMode !== "exam" && part.lines && Array.isArray(part.lines) && part.lines.length) ? `
                 <div class="cbt-dialogue-transcript-card">
                   <div class="cbt-dialogue-head">
                     <span>${icon("message-square", 14)} Lời thoại hội thoại</span>
@@ -2153,6 +2172,14 @@ function initMockTestPage() {
       window.addEventListener("pointermove", doDrag);
       window.addEventListener("pointerup", stopDrag);
       window.addEventListener("pointercancel", stopDrag);
+      // Gỡ cùng lúc với audio/phím tắt khi rời phòng thi (tránh dồn listener mỗi lần vẽ lại phòng thi)
+      const prevTeardown = workspaceTeardown;
+      workspaceTeardown = () => {
+        if (prevTeardown) prevTeardown();
+        window.removeEventListener("pointermove", doDrag);
+        window.removeEventListener("pointerup", stopDrag);
+        window.removeEventListener("pointercancel", stopDrag);
+      };
     }
 
     // QUẢN LÝ DRAWER MA TRẬN BẢNG CÂU HỎI
@@ -2300,6 +2327,15 @@ function initMockTestPage() {
     }
 
     // Thoát bài thi
+    // Luyện tập: đổi phân môn ngay trên thanh đầu (mặc định tất cả phân môn, vào thẳng câu 1)
+    const practicePartSelect = el("#cbtPracticePartSelect");
+    if (practicePartSelect) {
+      practicePartSelect.onchange = () => {
+        const v = practicePartSelect.value;
+        startTest(currentTest, v === "full" ? null : v, "practice");
+      };
+    }
+
     el("#btnExitTest").onclick = () => {
       const exitMsg = isPractice
         ? "Bạn có chắc chắn muốn kết thúc bài luyện tập?"
@@ -2836,6 +2872,23 @@ function initMockTestPage() {
     } catch(e) {}
     return false;
   };
+
+  // Nút Back trình duyệt: URL về /mock-test (pushState) mà màn giới thiệu đề / kết quả vẫn mở → chạy nút quay lại trong trang.
+  // Đang làm bài thì bỏ qua, tránh rời phòng thi ngoài ý muốn.
+  if (window._rusiTrkiPopHandler) window.removeEventListener("popstate", window._rusiTrkiPopHandler);
+  window._rusiTrkiPopHandler = () => {
+    if (started || !currentTest || !document.body.classList.contains("in-workspace")) return;
+    const ids = [currentTest.id, currentTest.code].filter(Boolean).map((v) => String(v).toLowerCase());
+    let urlIds = [];
+    try {
+      urlIds = window.location.pathname.split("/").concat(Array.from(new URLSearchParams(window.location.search).values()))
+        .map((v) => { try { return decodeURIComponent(v).toLowerCase(); } catch (_) { return String(v).toLowerCase(); } });
+    } catch (_) {}
+    if (ids.some((id) => urlIds.includes(id))) return;
+    const backBtn = host.querySelector("#btnBriefingBack, #btnReviewBack");
+    if (backBtn) backBtn.click();
+  };
+  window.addEventListener("popstate", window._rusiTrkiPopHandler);
 
   if (!checkUrlExam() && !checkResumeActiveExam()) {
     renderHub();

@@ -24,7 +24,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.min.css?v=17.3" />
+  <link rel="stylesheet" href="styles.min.css?v=17.4" />
   <script src="js/theme.js?v=1.2"></script>
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
   <link rel="apple-touch-icon" sizes="192x192" href="/assets/favicon-192.png" />
@@ -313,7 +313,10 @@
               btnShare.innerHTML = `${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 14 }) : ""} Chia sẻ bài viết`;
             }, 2500);
           }).catch(() => {
-            alert("Đã sao chép liên kết bài viết: " + window.location.href);
+            // Trình duyệt chặn clipboard: báo nhẹ kèm liên kết để tự chép (không dùng alert chặn trang)
+            const msg = "Không sao chép tự động được, hãy chép liên kết: " + window.location.href;
+            if (typeof toast === "function") toast(msg);
+            else console.warn("[Blog] " + msg);
           });
         };
       }

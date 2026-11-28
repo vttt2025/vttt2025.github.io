@@ -420,7 +420,11 @@ function initWritingPage() {
     if (window.setRusiDeepUrl && initialTask) {
       window.setRusiDeepUrl('/writing/bai_viet/' + encodeURIComponent(initialTask.id || initialTask.code || (topic && topic.key)));
     }
-    if (typeof window.requireAuth === "function" && !window.requireAuth("writing.html?topic=" + encodeURIComponent((topic && (topic.key || topic.id || topic.title)) || ""))) return;
+    // Trang đích sau đăng nhập: mở lại đúng đề đang chọn (không chỉ đề đầu tiên của chủ đề)
+    const authTarget = (initialTask && (initialTask.id || initialTask.code))
+      ? "writing.html?task=" + encodeURIComponent(initialTask.id || initialTask.code)
+      : "writing.html?topic=" + encodeURIComponent((topic && (topic.key || topic.id || topic.title)) || "");
+    if (typeof window.requireAuth === "function" && !window.requireAuth(authTarget)) return;
     // Đề PRO: file công khai chỉ có metadata — tải nội dung mọi đề khoá của chủ đề bằng phiên PRO rồi mở lại
     // (chưa PRO: chỉ xét đề đang mở, để vẫn mở được đề miễn phí trong chủ đề có đề PRO)
     const isProUser = typeof Monetization !== "undefined" && Monetization.isPro();
