@@ -38964,7 +38964,6 @@ select.add-jar-input {
   .cbt-app-portal .cbt-hw-confirm { min-height: 44px; padding: 6px 14px; }
 }
 
-<<<<<<< HEAD
 /* ==========================================================================
    RESPONSIVE UI AUDIT r1 — Trang chủ (Hero 1280px, Bảng giá 820px, Dashboard & Chạm mobile)
    ========================================================================== */
@@ -39119,7 +39118,8 @@ select.add-jar-input {
   .create-jar-header {
     padding-right: 52px;
   }
-=======
+}
+
 /* Luyện tập: chọn phân môn gọn trên thanh đầu phòng thi (mặc định "Tất cả phân môn") */
 .cbt-practice-part-pick {
   display: inline-flex;
@@ -39162,5 +39162,4 @@ select.add-jar-input {
   .cbt-app-portal .cbt-portal-header:has(.cbt-practice-part-pick) .cbt-header-info { display: none; }
   .cbt-app-portal .cbt-portal-header:has(.cbt-practice-part-pick) .cbt-header-left { flex: 0 0 auto; }
   .cbt-practice-part-pick select { max-width: 150px; padding-left: 8px; }
->>>>>>> team/qa
 }
