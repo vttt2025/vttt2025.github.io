@@ -11293,11 +11293,6 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
       if (deniedRole) {
         deniedRole.innerHTML = `Vai trò hiện tại: <span class="p-pill p-pill-neutral">${esc(user.role || "student")}</span>`;
       }
-
-      const sqlSnippet = document.getElementById("sqlRoleSnippet");
-      if (sqlSnippet) {
-        sqlSnippet.textContent = `UPDATE profiles SET role = 'super_admin' WHERE id = (SELECT id FROM auth.users WHERE email = '${email}' LIMIT 1);`;
-      }
     }
   }
 
@@ -11423,23 +11418,6 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
         }
       };
     }
-
-    // Nút Copy câu lệnh SQL ở Denied Gate
-    const copySqlBtn = document.getElementById("btnCopySqlRole");
-    if (copySqlBtn) {
-      copySqlBtn.onclick = () => {
-        const snippet = document.getElementById("sqlRoleSnippet");
-        if (snippet) {
-          navigator.clipboard.writeText(snippet.textContent.trim()).then(() => {
-            toast("Đã sao chép câu lệnh SQL cấp quyền!");
-          }).catch(() => {
-            toast("Không thể tự sao chép, vui lòng bôi đen và nhấn Ctrl+C.");
-          });
-        }
-      };
-    }
-
-
 
     // Supabase Cloud Buttons
     const pushSb = document.getElementById("btnPushAllToSb");
