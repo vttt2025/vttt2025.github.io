@@ -51,6 +51,12 @@ function initMockTestPage() {
   let submitting = false; // chặn nộp bài 2 lần (hết giờ + bấm nộp, vi phạm + bấm nộp...)
   let tabSwitches = 0;
   let visibilityHandler = null;
+  // Bản ghi phần Nói của lượt làm bài hiện tại: id câu → { url, blob }. Chỉ giữ trong bộ nhớ, thu hồi URL khi rời phòng thi.
+  let speakRecordings = {};
+  const clearSpeakRecordings = () => {
+    Object.values(speakRecordings).forEach((r) => { try { URL.revokeObjectURL(r.url); } catch (_) {} });
+    speakRecordings = {};
+  };
   // Dọn audio + phím tắt của phòng thi hiện tại (gán trong renderTestRoom, gọi khi nộp bài / render lại).
   let workspaceTeardown = null;
   const runWorkspaceTeardown = () => {
@@ -386,6 +392,7 @@ function initMockTestPage() {
     flagged = {};
     sessionOptionOrders = {};
     tabSwitches = 0;
+    clearSpeakRecordings();
     cleanupHardwareTests();
     if (timer) clearInterval(timer);
     if (visibilityHandler) {
@@ -1022,6 +1029,7 @@ function initMockTestPage() {
     started = true;
     submitting = false;
     tabSwitches = 0;
+    clearSpeakRecordings(); // lượt mới: bỏ bản ghi của lượt trước
 
     // Bug #1 fix: Nạp câu hỏi từ trki_question_bank nếu test có code trki_zlat_*
     if (!isPreviewTest && currentTest && currentTest.code && currentTest.code.startsWith("trki_zlat")) {
@@ -2072,6 +2080,7 @@ function initMockTestPage() {
               </button>
               <span id="speakRecStatus" style="font-size:0.84rem;color:var(--muted)"></span>
             </div>
+            <div id="speakRecPlayback" style="margin-top:12px">${speakRecordings[id] ? `<audio controls preload="metadata" src="${speakRecordings[id].url}" style="width:100%;max-width:420px"></audio>` : ""}</div>
             <div class="hidden" id="speakSampleBox" style="margin-top:14px;padding:12px 14px;background:var(--surface);border:1px dashed var(--border);border-radius:8px;font-size:0.95rem">
               <strong style="color:var(--primary)">Gợi ý mẫu:</strong> <span class="ru">${esc(st.suggested || "")}</span>
             </div>
@@ -2107,6 +2116,16 @@ function initMockTestPage() {
               recorder.onstop = () => {
                 stream.getTracks().forEach(t => t.stop());
                 activeMicStream = null;
+                // Giữ bản ghi để nghe lại ở màn làm bài và màn kết quả
+                if (chunks.length) {
+                  if (speakRecordings[id]) { try { URL.revokeObjectURL(speakRecordings[id].url); } catch (_) {} }
+                  const blob = new Blob(chunks, { type: recorder.mimeType || "audio/webm" });
+                  speakRecordings[id] = { url: URL.createObjectURL(blob), blob };
+                  const playback = el("#speakRecPlayback");
+                  if (playback && examItems[currentItemIndex] && examItems[currentItemIndex].id === id) {
+                    playback.innerHTML = `<audio controls preload="metadata" src="${speakRecordings[id].url}" style="width:100%;max-width:420px"></audio>`;
+                  }
+                }
                 answers[id] = true;
                 if (!isPreviewTest) {
                   try { sessionStorage.setItem(storageKey + "_answers", JSON.stringify(answers)); } catch(e) {}
@@ -2957,6 +2976,28 @@ function initMockTestPage() {
           </div>`;
           })
           .join("");
+      } else if (Array.isArray(part.speaking_tasks) && part.speaking_tasks.length) {
+        review.innerHTML += part.speaking_tasks.map((st, sti) => {
+          const sId = "speak_" + part.id + "_" + sti;
+          const rec = speakRecordings[sId];
+          return `
+            <div class="trki-review-row" style="border-left-color: var(--primary)">
+              <div class="trki-review-row-header">
+                <div class="trki-review-num-wrap">
+                  <span class="trki-review-num">Bài nói ${sti + 1}</span>
+                </div>
+              </div>
+              <p class="trki-review-prompt ru">${esc(st.title || st.prompt || "")}</p>
+              <div class="trki-review-expl">
+                <div class="trki-expl-content">
+                  <b class="trki-expl-title">Bản ghi âm của bạn:</b>
+                  <div style="margin-top:6px">${rec
+                    ? `<audio controls preload="metadata" src="${rec.url}" style="width:100%;max-width:420px"></audio>`
+                    : `<span class="trki-expl-text">${answers[sId] ? "Đã ghi âm (bản ghi không còn sau khi tải lại trang)" : "— Chưa ghi âm —"}</span>`}</div>
+                </div>
+              </div>
+            </div>`;
+        }).join("");
       } else if (Array.isArray(part.writing_tasks)) {
         review.innerHTML += part.writing_tasks.map((wt, wti) => {
           const wId = "write_" + part.id + "_" + wti;
