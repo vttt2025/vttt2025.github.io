@@ -16,15 +16,9 @@ const WRITE_RE = /\.(insert|upsert|update|delete)\(/;
 // Khoá = "<bảng>@<tên hàm bao ngoài gần nhất>" (không dùng số dòng để không vỡ khi file đổi).
 const ALLOWLIST = {
   'profiles@testConnection': 'select("id", { head: true }) — chỉ đếm, không tải dòng nào.',
-  'topic_articles@getAll': 'MÃ CHẾT (không nơi nào gọi topicArticles.getAll) — chờ quyết định gỡ (báo cáo sec-r2).',
-  'vocabularies@getAll': 'MÃ CHẾT (không nơi nào gọi vocabularies.getAll) — chờ quyết định gỡ (báo cáo sec-r2).',
-  'vocab_jars@getByTopicCode': 'Có giới hạn nhưng thêm theo điều kiện ở câu sau (.or(id/code) hoặc .eq("code") rồi .maybeSingle()).',
-  'listening_topics@getTopics': 'MÃ CHẾT (không nơi nào gọi listening.getTopics) — chờ quyết định gỡ (báo cáo sec-r2).',
   'blog_posts@getAll': 'Fallback chỉ khi BLOG_POSTS tích hợp sẵn trong data.js trống (page-blog.js, blog-post.html); bảng nhỏ.',
   'shop_products@getAll': 'Fallback page-shop.js chỉ khi SHOP_PRODUCTS tích hợp sẵn trống; bảng nhỏ.',
-  'grammar_lessons@getAll': 'MÃ CHẾT (không nơi nào gọi grammar.getAll) — chờ quyết định gỡ (báo cáo sec-r2).',
-  'packages@getAll': 'Fallback page-upgrade.js chỉ khi PACKAGES tích hợp sẵn trống; bảng vài gói cước.',
-  'orders@getMine': 'MÃ CHẾT (không nơi nào gọi orders.getMine); nếu gọi bằng phiên admin sẽ tải cả bảng orders — chờ quyết định gỡ.'
+  'packages@getAll': 'Fallback page-upgrade.js chỉ khi PACKAGES tích hợp sẵn trống; bảng vài gói cước.'
 };
 
 /** Cắt chuỗi lệnh bắt đầu từ `.from(` tới `;` hoặc `,`/ngoặc đóng ở cùng cấp. */
