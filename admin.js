@@ -2378,10 +2378,11 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
   // 4. SIDEBAR & BREADCRUMBS
   // =========================================================================
 
-  // Danh sách các bộ sưu tập phân cấp phụ ẩn khỏi sidebar (đã tích hợp trong dropdown bài học)
+  // Danh sách các bộ sưu tập phân cấp phụ / tạm ẩn khỏi sidebar & dashboard (giữ nguyên code/dữ liệu)
   const HIDDEN_CMS_KEYS = new Set([
     "LISTENING_TOPICS",    // Chủ đề luyện nghe phụ (đã tích hợp chọn trong LISTENING_LESSONS)
-    "WRITING_TOPICS"       // Chủ đề luyện viết phụ (đã tích hợp chọn trong WRITING_TASKS)
+    "WRITING_TOPICS",      // Chủ đề luyện viết phụ (đã tích hợp chọn trong WRITING_TASKS)
+    "SHOP_PRODUCTS"        // Tạm ẩn Shop hàng Nga khỏi menu CMS (giữ code/dữ liệu để phát triển sau)
   ]);
 
   function renderSidebarLists() {
