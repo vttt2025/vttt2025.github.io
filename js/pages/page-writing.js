@@ -865,6 +865,9 @@ function initWritingPage() {
           let feedbackComment = "";
           let quotaInfo = null;
           let isFallback = false; // máy chủ trả điểm ước tính (không gọi được AI)
+          let serverSubmissionId = null; // Edge Function mới tự lưu writing_submissions (B-05)
+          const clientSubmissionId = (window.RusiSupabase && typeof window.RusiSupabase.generateUUID === "function") ? window.RusiSupabase.generateUUID() : "";
+          const taskCode = String(t.code || t.id || "");
           const FALLBACK_NOTE = "Đây là điểm ước tính tự động, chưa được AI chấm.";
 
           const modelAns = modelAnswer(t);
@@ -887,7 +890,10 @@ function initWritingPage() {
                 taskType: isPicture ? "picture" : "translation",
                 imageUrl: isPicture ? taskImage(t) : "",
                 userId: curUser.id || curUser.uid,
-                isPro: isPro
+                isPro: isPro,
+                taskId: t.uuid || "",
+                taskCode,
+                clientSubmissionId
               });
 
               if (aiRes) {
@@ -927,6 +933,7 @@ function initWritingPage() {
                   scores = [Number(aiRes.grammar) || 0, Number(aiRes.lexis) || 0, Number(aiRes.structure) || 0, Number(aiRes.content) || 0];
                   feedbackComment = aiRes.feedback;
                   quotaInfo = aiRes.quota;
+                  serverSubmissionId = aiRes.submissionId || null;
                 }
               }
             } catch (aiErr) {
@@ -939,6 +946,25 @@ function initWritingPage() {
             if (scoreBox) scoreBox.classList.add("hidden");
             toast("Không kết nối được máy chủ chấm AI nên chưa chấm được bài viết. Bài viết của bạn vẫn được giữ nguyên, vui lòng thử lại sau!");
             return;
+          }
+
+          // Lưu bài nộp (B-05): Edge Function mới đã lưu thì bỏ qua; bản cũ/chấm dự phòng → client tự lưu (không chặn hiển thị điểm)
+          if (!serverSubmissionId && window.RusiSupabase && window.RusiSupabase.writing && typeof window.RusiSupabase.writing.saveSubmission === "function") {
+            window.RusiSupabase.writing.saveSubmission({
+              taskId: t.uuid || "",
+              taskCode,
+              title: t.title || "",
+              level: t.level || currentLevel,
+              text,
+              wordCount: count,
+              clientSubmissionId,
+              review: { total, grammar: scores[0], lexis: scores[1], structure: scores[2], content: scores[3], feedback: feedbackComment, fallback: isFallback }
+            }).then((res) => {
+              if (!res || !res.ok) {
+                console.error("[Writing] Không lưu được bài nộp lên máy chủ:", res && res.message);
+                toast("Đã chấm xong nhưng chưa lưu được bài lên máy chủ. Hãy chép lại bài viết nếu cần giữ.");
+              }
+            });
           }
 
           // Điểm fallback (máy chủ không gọi được AI) chỉ là ước tính: không tính đạt, không thưởng điểm đạt/markDone

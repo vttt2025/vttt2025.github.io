@@ -1072,6 +1072,53 @@
      * 6. ĐỀ LUYỆN VIẾT & TẢ TRANH (WRITING TOPICS & TASKS)
      * ========================================================================= */
     writing: {
+      /**
+       * Lưu bài luyện viết đã chấm vào writing_submissions (B-05) khi Edge Function chưa tự lưu (bản cũ chưa deploy,
+       * hoặc chấm dự phòng). RLS: chỉ chèn bài của chính mình; trigger server ép status='submitted', source='client'.
+       * Trùng client_submission_id (server đã lưu) → coi như thành công.
+       */
+      saveSubmission: async function (sub) {
+        var sb = getClient();
+        if (!sb || !sub || !sub.text) return { ok: false, message: "Thiếu dữ liệu bài viết." };
+        try {
+          var sess = await sb.auth.getSession();
+          var userId = sess && sess.data && sess.data.session && sess.data.session.user ? sess.data.session.user.id : null;
+          if (!userId) return { ok: false, message: "Chưa đăng nhập." };
+          var taskId = isValidUUID(sub.taskId) ? sub.taskId : null;
+          if (!taskId && sub.taskCode) {
+            var tr = await sb.from("writing_tasks").select("id").eq("code", String(sub.taskCode)).maybeSingle();
+            if (tr.error) return { ok: false, message: tr.error.message, error: tr.error };
+            taskId = tr.data ? tr.data.id : null;
+          }
+          if (!taskId) return { ok: false, message: "Không tìm thấy đề bài trên máy chủ." };
+          var r = sub.review || {};
+          var row = {
+            user_id: userId,
+            task_id: taskId,
+            client_submission_id: isValidUUID(sub.clientSubmissionId) ? sub.clientSubmissionId : null,
+            prompt_snapshot: { code: sub.taskCode || "", title: sub.title || "", level: sub.level || "" },
+            student_text: String(sub.text).slice(0, 100000),
+            word_count: Math.max(0, Number(sub.wordCount) || 0),
+            overall_score: r.fallback ? null : (Number.isFinite(Number(r.total)) ? Number(r.total) : null),
+            ai_feedback: {
+              total: Number(r.total) || 0,
+              grammar: Number(r.grammar) || 0,
+              lexis: Number(r.lexis) || 0,
+              structure: Number(r.structure) || 0,
+              content: Number(r.content) || 0,
+              feedback: String(r.feedback || "").slice(0, 2000),
+              fallback: Boolean(r.fallback)
+            }
+          };
+          var res = await sb.from("writing_submissions").insert(row);
+          if (res.error && res.error.code === "23505") return { ok: true, duplicate: true };
+          if (res.error) return { ok: false, message: res.error.message, error: res.error };
+          return { ok: true };
+        } catch (e) {
+          return { ok: false, message: e.message || String(e), error: e };
+        }
+      },
+
       getAll: async function (level) {
         var cacheKey = "writing:" + (level || "all");
         return RusiCache.withCache(cacheKey, async function () {

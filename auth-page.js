@@ -101,6 +101,8 @@
 
   /** Điều hướng sang trang đích sau khi xác thực thành công */
   function executeRedirect() {
+    // Đang đặt lại mật khẩu từ liên kết email (js/auth-recovery.js): phiên khôi phục không được tự chuyển trang
+    if (window.RusiAuthRecovery && window.RusiAuthRecovery.isActive()) return;
     if (isRedirecting) return;
     isRedirecting = true;
     if (autoRedirectTimer) {
@@ -165,7 +167,8 @@
       currentUser = window.Auth.user || null;
     }
 
-    if (currentUser && !isGuestUser(currentUser)) {
+    const inRecovery = Boolean(window.RusiAuthRecovery && window.RusiAuthRecovery.isActive());
+    if (currentUser && !isGuestUser(currentUser) && !inRecovery) {
       const banner = document.getElementById("alreadyLoggedInBanner");
       if (banner) {
         banner.style.display = "block";
