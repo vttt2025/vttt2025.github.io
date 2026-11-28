@@ -2878,6 +2878,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
             <option value="A2" ${State.filterLevel === "A2" ? "selected" : ""}>Cấp độ A2</option>
             <option value="B1" ${State.filterLevel === "B1" ? "selected" : ""}>Cấp độ B1</option>
             <option value="B2" ${State.filterLevel === "B2" ? "selected" : ""}>Cấp độ B2</option>
+            <option value="C1" ${State.filterLevel === "C1" ? "selected" : ""}>Cấp độ C1</option>
+            <option value="C2" ${State.filterLevel === "C2" ? "selected" : ""}>Cấp độ C2</option>
           </select>
 
           <select class="payload-filter-select" id="filterPro">
@@ -11179,6 +11181,8 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
   }
 
   function applyAuthState(isAuthed) {
+    const splash = document.getElementById("authSplash");
+    if (splash) splash.style.display = "none";
     const loginGate = document.getElementById("loginGate");
     const deniedGate = document.getElementById("deniedGate");
     const appEl = document.getElementById("payloadApp");
@@ -11393,11 +11397,13 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
       };
     }
 
-    // Auth readiness listener (với timeout chống treo màn hình trắng)
+    // Auth readiness listener. Trước đây hẹn 1 giây rồi hiện trang đăng nhập trong khi phiên + hồ sơ (role) còn đang
+    // tải → mỗi lần vào CMS nháy trang đăng nhập. Nay giữ màn chờ (#authSplash) tới khi Auth sẵn sàng;
+    // hẹn giờ chỉ là dự phòng khi xác thực bị treo.
     if (window.Auth && window.Auth.isReady) {
       const authTimeout = setTimeout(() => {
         applyAuthState(!!(window.Auth && window.Auth.user));
-      }, 1000);
+      }, 8000);
 
       window.Auth.isReady().then(() => {
         clearTimeout(authTimeout);

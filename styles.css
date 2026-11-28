@@ -38563,6 +38563,9 @@ select.add-jar-input {
   box-sizing: border-box;
 }
 .rusi-select-pop[hidden] { display: none; }
+/* Ẩn thanh cuộn của danh sách (vẫn cuộn được bằng chuột / vuốt / phím) */
+.rusi-select-pop { scrollbar-width: none; -ms-overflow-style: none; }
+.rusi-select-pop::-webkit-scrollbar { display: none; width: 0; height: 0; }
 .rusi-select-group + .rusi-select-group,
 .rusi-select-clear + .rusi-select-group {
   margin-top: 4px;

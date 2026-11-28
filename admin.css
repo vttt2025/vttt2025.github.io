@@ -5378,3 +5378,143 @@ body.payload-body {
   .rusi-draft-banner-actions { width: 100%; }
   .rusi-draft-banner-actions .p-btn { flex: 1 1 0; min-height: 44px; }
 }
+
+/* Điện thoại / màn hình cảm ứng: vùng chạm tối thiểu 44px cho mọi nút CMS (p-btn-sm mặc định 32px) — 28/11/2026 */
+@media (max-width: 768px), (pointer: coarse) {
+  .p-btn,
+  .p-btn-sm,
+  .payload-row-actions .p-btn,
+  .payload-pagination .p-btn {
+    min-height: 44px;
+  }
+  .p-btn-icon,
+  .payload-toast-close {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* =========================================================================
+   Ô chọn tự vẽ (js/rusi-select.js) — thay danh sách thả xuống mặc định, ẩn thanh cuộn — 28/11/2026
+   ========================================================================= */
+select.rsel-native {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  pointer-events: none !important;
+}
+.rsel-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+  color: var(--p-text);
+  line-height: 1.4;
+}
+.rsel-btn .rsel-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rsel-btn .rsel-chevron {
+  flex: 0 0 auto;
+  color: var(--p-text-muted);
+  transition: transform 0.18s ease;
+}
+.rsel-btn.is-open { border-color: var(--p-border-focus); box-shadow: 0 0 0 3px var(--p-primary-soft); }
+.rsel-btn.is-open .rsel-chevron { transform: rotate(180deg); }
+.rsel-btn.rsel-placeholder .rsel-value { color: var(--p-text-muted); }
+.rsel-btn:focus-visible { outline: none; border-color: var(--p-border-focus); box-shadow: 0 0 0 3px var(--p-primary-soft); }
+.rsel-btn:disabled { cursor: not-allowed; opacity: 0.6; }
+.rsel-btn:disabled .rsel-chevron { opacity: 0.4; }
+
+.rsel-pop {
+  position: fixed;
+  z-index: 10060;
+  box-sizing: border-box;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--p-surface-elevated);
+  border: 1px solid var(--p-border-strong);
+  border-radius: var(--p-radius-lg);
+  box-shadow: 0 18px 44px -12px rgba(15, 23, 42, 0.35), 0 2px 6px rgba(15, 23, 42, 0.08);
+  font-family: var(--p-font);
+  font-size: 13.5px;
+  color: var(--p-text);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  animation: rsel-in 0.12s ease-out;
+}
+.rsel-pop::-webkit-scrollbar { display: none; width: 0; height: 0; }
+.rsel-pop:focus { outline: none; }
+@keyframes rsel-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.rsel-pop.is-up { animation-name: rsel-in-up; }
+@keyframes rsel-in-up { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rsel-pop { animation: none; } }
+
+.rsel-opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 36px;
+  padding: 8px 10px;
+  border-radius: var(--p-radius);
+  cursor: pointer;
+  line-height: 1.35;
+}
+.rsel-opt-text { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.rsel-opt.is-active { background: var(--p-surface-hover); }
+.rsel-opt.is-selected { color: var(--p-primary); font-weight: 600; background: var(--p-primary-soft); }
+.rsel-opt.is-selected.is-active { background: var(--p-primary-soft); box-shadow: inset 0 0 0 1px var(--p-primary-border); }
+.rsel-opt .rsel-check { flex: 0 0 auto; color: var(--p-primary); }
+.rsel-opt.is-disabled { color: var(--p-text-disabled); cursor: not-allowed; background: none; }
+.rsel-group + .rsel-group, .rsel-opt + .rsel-group { margin-top: 4px; padding-top: 4px; border-top: 1px solid var(--p-border); }
+.rsel-group-label {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--p-text-muted);
+}
+[data-theme="dark"] .rsel-opt.is-selected { color: #93c5fd; }
+[data-theme="dark"] .rsel-opt .rsel-check { color: #93c5fd; }
+
+@media (max-width: 768px), (pointer: coarse) {
+  .rsel-btn { min-height: 44px; font-size: 16px; }
+  .rsel-pop { font-size: 15px; }
+  .rsel-opt { min-height: 44px; }
+}
+
+/* Màn chờ kiểm tra đăng nhập (tránh nháy trang đăng nhập khi đã có phiên) — 28/11/2026 */
+.payload-auth-splash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  color: var(--p-text-muted);
+  font-size: 13.5px;
+}
+.payload-auth-spinner {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 3px solid var(--p-border-strong);
+  border-top-color: var(--p-primary);
+  animation: payload-auth-spin 0.8s linear infinite;
+}
+@keyframes payload-auth-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .payload-auth-spinner { animation-duration: 2.4s; } }
