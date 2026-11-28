@@ -1685,8 +1685,6 @@ Chủ đề này giúp bạn làm quen và tự tin xử lý các tình huống 
         { key: "user_id", label: "Mã UUID học viên (user_id)", type: "text", placeholder: "UUID tài khoản học viên" },
         { key: "userEmail", label: "Email học viên (chỉ xem — từ tài khoản đăng nhập)", type: "text", readonly: true },
         { key: "package_id", label: "Mã gói cước / Sản phẩm mua (package_id)", type: "text", defaultValue: "pro_3m" },
-        { key: "packageId", label: "Mã gói phụ (packageId)", type: "text", defaultValue: "pro_3m" },
-        { key: "userEmail", label: "Email học viên", type: "text" },
         { key: "packageName", label: "Tên gói cước", type: "text" },
         { key: "amount", label: "Số tiền thanh toán (VNĐ)", type: "number", required: true },
         {
@@ -2143,7 +2141,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       // Không gộp vi ↔ translation_vi: ở Bài nghe "vi" là tiêu đề, "translation_vi" là bản dịch cả bài
       model_answer: ["sample_essay", "sample_text"],
       is_pro: ["is_pro_only"],
-      is_pro_only: ["is_pro"]
+      is_pro_only: ["is_pro"],
+      package_id: ["packageId"]
     };
     if (aliasMap[key]) {
       aliasMap[key].forEach((ak) => { draft[ak] = val; });
@@ -2507,7 +2506,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     let secondaryBtn = "";
 
     if (State.currentRoute === "list") {
-      primaryBtn = `<a class="p-btn p-btn-primary p-btn-sm" href="#collection/${State.currentSlug}/create">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Tạo mới</a>`;
+      primaryBtn = State.currentSlug === "USERS"
+        ? ""
+        : `<a class="p-btn p-btn-primary p-btn-sm" href="#collection/${State.currentSlug}/create">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Tạo mới</a>`;
       secondaryBtn = `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncWeb" type="button" title="Đồng bộ vào runtime web">${window.RusiIcons ? RusiIcons.get("zap-xp", { size: 14 }) : ""} Đẩy về Web</button>`;
       if (SupabaseSyncEngine && SupabaseSyncEngine.hasMapping(State.currentSlug)) {
         secondaryBtn += `<button class="p-btn p-btn-secondary p-btn-sm" id="btnSyncCloudSingle" type="button" title="Đẩy các bản sửa chưa lưu của collection này lên Supabase">${window.RusiIcons ? RusiIcons.get("cloud-upload", { size: 14 }) : ""} Lưu Cloud</button>`;
@@ -2607,7 +2608,13 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         e.stopPropagation();
         kebabDropdown.classList.toggle("open");
       };
-      document.addEventListener("click", () => kebabDropdown.classList.remove("open"));
+      if (!updateTopbarActions._docClickBound) {
+        updateTopbarActions._docClickBound = true;
+        document.addEventListener("click", () => {
+          const dd = document.getElementById("kebabDropdown");
+          if (dd) dd.classList.remove("open");
+        });
+      }
     }
 
     const kebabSb = document.getElementById("kebabSbBtn");
@@ -2871,7 +2878,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
           ${isTrashMode ? '<span class="p-pill p-pill-danger" style="margin-left:6px">Thùng rác</span>' : ''}
         </div>
         <div style="display:flex;align-items:center;gap:10px">
-          <a class="p-btn p-btn-primary" href="#collection/${slug}/create">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm mới</a>
+          ${slug === "USERS" ? "" : `<a class="p-btn p-btn-primary" href="#collection/${slug}/create">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm mới</a>`}
           <a class="p-btn p-btn-secondary" href="${col.webUrl}" target="_blank" title="Mở trang tương ứng của học viên">${window.RusiIcons ? RusiIcons.get("external-link", { size: 14 }) : ""} Xem trên web</a>
         </div>
       </div>
@@ -11169,7 +11176,9 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
     if (el) el.style.display = "none";
   }
 
+  let _emailLoginInFlight = false;
   async function handleEmailLogin() {
+    if (_emailLoginInFlight) return;
     const emailInput = document.getElementById("adminEmailInput");
     const passInput = document.getElementById("adminPasswordInput");
     const submitBtn = document.getElementById("btnAdminEmailLogin");
@@ -11189,6 +11198,13 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
       return;
     }
 
+    _emailLoginInFlight = true;
+    const resetSubmitBtn = () => {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = (window.RusiIcons ? RusiIcons.get("key", { size: 16 }) : "") + " Đăng nhập Studio";
+      }
+    };
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.innerHTML = "Đang xác thực...";
@@ -11203,33 +11219,29 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
       const res = await window.Auth.signInWithEmail(email, password);
       if (res && res.error) {
         showLoginAlert(res.error.message || "Email hoặc mật khẩu không chính xác.", "error");
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = (window.RusiIcons ? RusiIcons.get("key", { size: 16 }) : "") + " Đăng nhập Studio";
-        }
+        resetSubmitBtn();
       } else if (res && res.user) {
         showLoginAlert("Đăng nhập thành công! Đang tải dữ liệu quản trị...", "success");
         try {
           if (window.Auth && window.Auth.refreshProfile) {
             await window.Auth.refreshProfile();
           }
-        } catch (_) {}
+        } catch (profileErr) {
+          console.warn("[AdminLogin] Không làm mới được hồ sơ sau đăng nhập:", profileErr);
+        }
         setTimeout(() => {
+          resetSubmitBtn();
           applyAuthState(true);
         }, 120);
       } else {
         showLoginAlert("Không nhận được phản hồi từ hệ thống xác thực.", "error");
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.innerHTML = (window.RusiIcons ? RusiIcons.get("key", { size: 16 }) : "") + " Đăng nhập Studio";
-        }
+        resetSubmitBtn();
       }
     } catch (err) {
       showLoginAlert("Lỗi đăng nhập: " + (err.message || err), "error");
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = (window.RusiIcons ? RusiIcons.get("key", { size: 16 }) : "") + " Đăng nhập Studio";
-      }
+      resetSubmitBtn();
+    } finally {
+      _emailLoginInFlight = false;
     }
   }
 
@@ -11355,7 +11367,7 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
     const impInput = document.getElementById("importFileInput");
     if (impInput) impInput.addEventListener("change", onImportFile);
 
-    // Form Đăng nhập Email
+    // Form Đăng nhập Email (chỉ nghe submit để tránh gửi kép khi nút type="submit" có thêm onclick)
     const loginForm = document.getElementById("adminEmailLoginForm");
     if (loginForm) {
       loginForm.onsubmit = (e) => {
@@ -11363,8 +11375,6 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
         handleEmailLogin();
       };
     }
-    const btnEmailLogin = document.getElementById("btnAdminEmailLogin");
-    if (btnEmailLogin) btnEmailLogin.onclick = handleEmailLogin;
 
     // Toggle ẩn/hiện mật khẩu
     const togglePassBtn = document.getElementById("btnTogglePassword");
