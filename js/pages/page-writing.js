@@ -971,6 +971,24 @@ function initWritingPage() {
         }
         if (submitBtn) submitBtn.disabled = true;
 
+        // Không chấm được: giữ khung kết quả với thông báo cố định + nút thử lại (toast tự tắt sau ~2 giây, dễ bỏ lỡ)
+        const showReviewError = (msg) => {
+          if (typeof toast === "function") toast(msg);
+          if (!scoreBox) return;
+          scoreBox.classList.remove("hidden");
+          scoreBox.innerHTML = `
+            <div class="writing-score-result ai-review-error" role="alert">
+              <div style="font-weight:700;color:var(--text);font-size:1.02rem;">${icon("alert-triangle", 18)} Chưa chấm được bài viết</div>
+              <div style="font-size:0.9rem;color:var(--muted);margin-top:4px;">${esc(msg)}</div>
+              ${/giữ nguyên/.test(msg) ? "" : `<div style="font-size:0.9rem;color:var(--muted);margin-top:2px;">Bài viết của bạn vẫn được giữ nguyên trong ô trả lời.</div>`}
+              <button type="button" class="btn btn-primary btn-sm" data-ai-retry style="min-height:44px;margin-top:12px">${icon("refresh-cw", 15)} Thử chấm lại</button>
+            </div>
+          `;
+          const retryBtn = scoreBox.querySelector("[data-ai-retry]");
+          if (retryBtn && submitBtn) retryBtn.onclick = () => submitBtn.click();
+          scoreBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        };
+
         try {
           let total = null;
           let scores = [0, 0, 0, 0];
@@ -1026,9 +1044,8 @@ function initWritingPage() {
                 }
 
                 if (aiRes.serverError) {
-                  if (scoreBox) scoreBox.classList.add("hidden");
                   if (submitBtn) submitBtn.disabled = false;
-                  toast(aiRes.message || "Máy chủ AI đang bảo trì. Vui lòng thử lại sau.");
+                  showReviewError(aiRes.message || "Máy chủ AI đang bảo trì. Vui lòng thử lại sau.");
                   return;
                 }
 
@@ -1055,8 +1072,7 @@ function initWritingPage() {
 
           // Không chấm được bằng AI (lỗi mạng/timeout/phản hồi lỗi): báo lỗi, giữ nguyên bài viết, không chấm điểm/XP
           if (total === null || total === undefined || !Number.isFinite(total)) {
-            if (scoreBox) scoreBox.classList.add("hidden");
-            toast("Không kết nối được máy chủ chấm AI nên chưa chấm được bài viết. Bài viết của bạn vẫn được giữ nguyên, vui lòng thử lại sau!");
+            showReviewError("Không kết nối được máy chủ chấm AI nên chưa chấm được bài viết. Bài viết của bạn vẫn được giữ nguyên, vui lòng thử lại sau!");
             return;
           }
 
@@ -1175,7 +1191,7 @@ function initWritingPage() {
           scoreBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
         } catch (submitErr) {
           console.error("Lỗi khi xử lý bài viết:", submitErr);
-          toast("Có lỗi xảy ra khi chấm bài viết. Vui lòng thử lại!");
+          showReviewError("Có lỗi xảy ra khi chấm bài viết. Vui lòng thử lại!");
         } finally {
           if (submitBtn) submitBtn.disabled = false;
         }

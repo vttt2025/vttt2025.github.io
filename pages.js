@@ -2144,26 +2144,27 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
     // Helper to get mastered words
     const getMasteredWords = () => (typeof STORE !== "undefined") ? STORE.get("vocab_mastered_words", []) : [];
+    // So khớp như SRS._norm (bỏ dấu trọng âm): "соба́ка" và "собака" là một từ
+    const normMastered = (w) => (typeof SRS !== "undefined" && typeof SRS._norm === "function")
+      ? SRS._norm(w)
+      : String(w || "").replace(/[\u0300\u0301]/g, "").toLowerCase().trim();
     const toggleMasteredWord = (ruWord) => {
       let list = getMasteredWords();
-      const norm = (ruWord || "").toLowerCase().trim();
-      const idx = list.findIndex(w => w.toLowerCase().trim() === norm);
-      let isMastered = false;
-      if (idx !== -1) {
-        list.splice(idx, 1);
-        if (typeof SRS !== "undefined" && typeof SRS.unmarkMastered === "function") {
-          SRS.unmarkMastered(norm);
-        }
-      } else {
-        list.push(ruWord);
-        isMastered = true;
-        if (typeof SRS !== "undefined" && typeof SRS.markMastered === "function") {
-          // Truyền object từ đầy đủ (ru/vi/pos/ex) để thẻ SRS mới không thiếu nghĩa
-          const wordObj = words.find(w => (w.ru || "").toLowerCase().trim() === norm);
-          SRS.markMastered(withJar(wordObj) || ruWord);
-        }
-      }
+      const norm = normMastered(ruWord);
+      const wasMastered = list.some(w => normMastered(w) === norm);
+      const isMastered = !wasMastered;
+      // Ghi danh sách TRƯỚC khi gọi SRS: SRS tự đồng bộ "vocab_mastered_words", ghi sau sẽ đè mất cập nhật của SRS
+      list = wasMastered ? list.filter(w => normMastered(w) !== norm) : list.concat(ruWord);
       if (typeof STORE !== "undefined") STORE.set("vocab_mastered_words", list);
+      if (wasMastered) {
+        if (typeof SRS !== "undefined" && typeof SRS.unmarkMastered === "function") {
+          SRS.unmarkMastered(ruWord);
+        }
+      } else if (typeof SRS !== "undefined" && typeof SRS.markMastered === "function") {
+        // Truyền object từ đầy đủ (ru/vi/pos/ex) để thẻ SRS mới không thiếu nghĩa
+        const wordObj = words.find(w => normMastered(w.ru) === norm);
+        SRS.markMastered(withJar(wordObj) || ruWord);
+      }
       if (typeof Progress !== "undefined" && typeof Progress.syncToCloud === "function") {
         Progress.syncToCloud();
       }
@@ -2173,16 +2174,16 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
 
     const renderListUI = () => {
       const starredList = getQuizletStarred().map(s => s.toLowerCase());
-      const masteredList = getMasteredWords().map(s => s.toLowerCase().trim());
+      const masteredList = getMasteredWords().map(normMastered);
 
       const starredCount = words.filter(w => starredList.includes(w.ru.toLowerCase())).length;
-      const masteredCount = words.filter(w => masteredList.includes(w.ru.toLowerCase().trim())).length;
+      const masteredCount = words.filter(w => masteredList.includes(normMastered(w.ru))).length;
 
       // Filter and sort words
       const qNorm = rusiNormalize(searchTxt);
       let filtered = words.filter(w => {
         if (filterMode === "starred" && !starredList.includes(w.ru.toLowerCase())) return false;
-        if (filterMode === "mastered" && !masteredList.includes(w.ru.toLowerCase().trim())) return false;
+        if (filterMode === "mastered" && !masteredList.includes(normMastered(w.ru))) return false;
         if (!qNorm) return true;
         const hay = rusiNormalize(w.ru + " " + (w.stress || "") + " " + w.vi + " " + (w.note || "") + " " + (w.ex || "") + " " + (w.syn || ""));
         return hay.includes(qNorm);
@@ -2209,7 +2210,7 @@ window.initQuizletSuite = function(container, rawWords, options = {}) {
               </div>
             ` : filtered.map((w, idx) => {
               const isStarred = starredList.includes(w.ru.toLowerCase());
-              const isMastered = masteredList.includes(w.ru.toLowerCase().trim());
+              const isMastered = masteredList.includes(normMastered(w.ru));
               const displayWord = w.stress || w.ru;
               const structStr = (Array.isArray(w.structures) && w.structures.length)
                 ? w.structures.map(s => typeof s === "string" ? s : (s && (s.structure || s.ru || s.text) || "")).filter(Boolean).join(" · ")
