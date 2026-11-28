@@ -96,23 +96,9 @@
       <h2 style="margin:0 0 8px 0;font-size:20px;font-weight:700">Quyền truy cập bị từ chối</h2>
       <p id="deniedInfo" style="color:var(--p-text);font-weight:600;margin-bottom:4px;word-break:break-all"></p>
       <p id="deniedRole" style="font-size:12px;color:var(--p-text-muted);margin:0 0 16px 0">Vai trò hiện tại: <span class="p-pill p-pill-neutral">student</span></p>
-      <p style="color:var(--p-text-muted);margin:0 0 18px 0;font-size:13px;line-height:1.5">
-        Tài khoản của bạn đã được xác thực thành công trên Supabase Auth nhưng chưa được gán vai trò quản trị (<code>academic_admin</code> hoặc <code>super_admin</code>).
+      <p style="color:var(--p-text-muted);margin:0 0 20px 0;font-size:13px;line-height:1.5">
+        Tài khoản của bạn đã được xác thực thành công trên Supabase Auth nhưng chưa được gán vai trò quản trị (<code>academic_admin</code> hoặc <code>super_admin</code>). Vui lòng liên hệ quản trị viên hệ thống để được cấp quyền truy cập.
       </p>
-
-      <!-- Hộp hướng dẫn cấp quyền nhanh cho Quản trị viên -->
-      <div style="background:var(--p-surface-elevated);border:1px solid var(--p-border);border-radius:var(--p-radius);padding:14px;text-align:left;margin-bottom:20px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-          <span style="font-size:12px;font-weight:600;color:var(--p-text)">Hướng dẫn cấp quyền Quản trị:</span>
-          <button class="p-btn p-btn-secondary p-btn-sm" id="btnCopySqlRole" type="button" style="font-size:11px;padding:3px 8px" title="Sao chép câu lệnh SQL">
-            <i data-rusi-icon="copy-clipboard" data-size="12"></i> Copy SQL
-          </button>
-        </div>
-        <pre id="sqlRoleSnippet" style="background:var(--p-bg);padding:8px 10px;border-radius:4px;font-family:var(--p-font-mono);font-size:11px;overflow-x:auto;margin:0 0 8px 0;color:var(--p-primary)">UPDATE profiles SET role = 'super_admin' WHERE id = (SELECT id FROM auth.users WHERE email = 'YOUR_EMAIL' LIMIT 1);</pre>
-        <div style="font-size:11px;color:var(--p-text-muted)">
-          Dán vào <a href="https://supabase.com/dashboard/project/nrhtdwjihnlaxrbitmcf/sql/new" target="_blank" rel="noopener noreferrer" style="color:var(--p-primary);text-decoration:underline">Supabase SQL Editor ↗</a> rồi bấm Run.
-        </div>
-      </div>
 
       <div style="display:flex;flex-direction:column;gap:10px">
         <button class="p-btn p-btn-primary" id="btnRecheckAuth" type="button">
@@ -167,7 +153,7 @@
         <div class="payload-nav-group">
           <div class="payload-nav-heading">
             <span>Kinh Doanh & Dịch Vụ</span>
-            <span class="payload-nav-badge" id="badgeCountCommerce">4</span>
+            <span class="payload-nav-badge" id="badgeCountCommerce">3</span>
           </div>
           <ul class="payload-nav-list" id="navListCommerce">
             <!-- Render dynamically -->
@@ -265,7 +251,7 @@
             <option value="listening.html">Luyện nghe (listening.html)</option>
             <option value="speaking.html">Luyện nói (speaking.html)</option>
             <option value="writing.html">Luyện viết (writing.html)</option>
-            <option value="shop.html">Shop hàng Nga (shop.html)</option>
+            <!-- Tạm ẩn Shop khỏi Live Preview (giữ code/dữ liệu để phát triển sau): <option value="shop.html">Shop hàng Nga (shop.html)</option> -->
             <option value="blog.html">Cẩm nang Blog (blog.html)</option>
             <option value="blog-post.html">Chi tiết bài viết (blog-post.html)</option>
             <option value="index.html">Trang chủ (index.html)</option>
@@ -364,6 +350,6 @@
   <script src="js/admin-local.js?v=1.0" defer></script>
   <script src="js/admin-drafts.js?v=1.1" defer></script>
   <script src="js/admin-monitor.js?v=1.1" defer></script>
-  <script src="admin.js?v=13.21" defer></script>
+  <script src="admin.js?v=13.23" defer></script>
 </body>
 </html>
