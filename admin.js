@@ -2199,7 +2199,11 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
   // =========================================================================
 
   function parseHash() {
-    const hash = (window.location.hash || "#dashboard").replace(/^#/, "");
+    const rawHash = (window.location.hash || "#dashboard").replace(/^#/, "");
+    const qIdx = rawHash.indexOf("?");
+    const hash = qIdx >= 0 ? rawHash.slice(0, qIdx) : rawHash;
+    const queryStr = qIdx >= 0 ? rawHash.slice(qIdx + 1) : "";
+    const searchQuery = queryStr ? (new URLSearchParams(queryStr).get("q") || "") : "";
     const parts = hash.split("/");
 
     if (parts[0] === "dashboard" || !parts[0]) {
@@ -2212,7 +2216,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       if (parts[2] === "edit" && parts[3]) {
         return { route: "editor", slug: parts[1], docId: decodeURIComponent(parts[3]), isCreating: false };
       }
-      return { route: "list", slug: parts[1] };
+      return { route: "list", slug: parts[1], searchQuery, hashPath: hash };
     }
     if (parts[0] === "globals" && parts[1]) {
       return { route: "globals", slug: parts[1] };
@@ -2258,6 +2262,13 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     State.isCreating = !!parsed.isCreating;
     State.selectedRows.clear();
     State.currentPage = 1;
+    if (parsed.route === "list" && parsed.searchQuery) {
+      State.searchQuery = parsed.searchQuery;
+      State.filterLevel = "all";
+      State.filterPro = "all";
+      State.filterSource = "all";
+      if (parsed.hashPath) history.replaceState(null, "", "#" + parsed.hashPath);
+    }
 
     // Tự động nạp module theo nhu cầu nếu chưa có trong bộ nhớ (On-demand Lazy Loading)
     const _MODULAR_COLLECTIONS = new Set(["TRKI_BANK", "TRKI_QUESTION_BANK", "VOCAB_JARS", "VOCABULARIES", "TOPIC_ARTICLES", "SPEAKING_SETS", "LISTENING_LESSONS", "WRITING_TASKS", "GRAMMAR_LESSONS", "WRITING_TOPICS"]);
@@ -5654,10 +5665,26 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
     if (!draft.answers || typeof draft.answers !== "object") draft.answers = {};
   }
 
+  // Đề có câu trong Ngân hàng câu hỏi: trigger trki_tests_parts_from_bank dựng lại parts[].questions từ ngân hàng khi lưu
+  function isTrkiBankManaged(draft) {
+    if (!draft) return false;
+    if (Array.isArray(draft.parts) && draft.parts.some((p) => p && (p.sub_test ||
+      (Array.isArray(p.questions) && p.questions.some((q) => q && q.code))))) {
+      return true;
+    }
+    const code = String(draft.code || draft.id || "").trim();
+    return Boolean(code && Array.isArray(window.TRKI_QUESTION_BANK) && window.TRKI_QUESTION_BANK.some((q) => q && q.test_code === code));
+  }
+
   function renderTrkiPartsBuilder(parts, draft) {
     draft = draft || State.currentDraft;
     if (!draft) return "";
     normalizeTrkiDraftParts(draft);
+
+    const bankManaged = isTrkiBankManaged(draft);
+    const testCode = String(draft.code || draft.id || "").trim();
+    const qDis = bankManaged ? " disabled" : "";
+    const qLockStyle = bankManaged ? "background:var(--p-surface-hover);cursor:not-allowed;opacity:0.85;" : "";
 
     const activeTab = (typeof State.activeTrkiSubtest === "number") ? State.activeTrkiSubtest : 0;
 
@@ -5695,25 +5722,29 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
         const opts = (q.options || []).join("\n");
         rowsHtml += `
           <div class="payload-array-row" style="margin-bottom:12px;padding:12px;background:var(--p-surface-elevated,#fff);border:1px solid var(--p-border-subtle,#e5e7eb);border-radius:10px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <span class="payload-array-row-num" style="font-weight:700;color:var(--p-primary,#0039A6)">Câu ${qIdx + 1}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span class="payload-array-row-num" style="font-weight:700;color:var(--p-primary,#0039A6)">Câu ${qIdx + 1}</span>
+                ${bankManaged && q.code ? `<code style="font-size:11px;color:var(--p-text-muted)">${esc(q.code)}</code>` : ""}
+              </div>
+              ${bankManaged ? `<span class="p-pill p-pill-neutral" style="font-size:11px">Chỉ đọc (Ngân hàng)</span>` : `
               <div style="display:flex;gap:4px">
                 <button class="p-btn-icon" type="button" onclick="window.cloneTrkiQuestion(0, ${qIdx})" title="Nhân bản câu này">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 13 }) : "📋"}</button>
                 <button class="p-btn-icon" type="button" onclick="window.removeTrkiQuestion(0, ${qIdx})" title="Xoá câu này" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
-              </div>
+              </div>`}
             </div>
             <div class="payload-array-row-fields" style="display:flex;flex-direction:column;gap:8px">
-              <input type="text" class="p-input" placeholder="Câu hỏi hoặc câu khuyết: ví dụ: Анна идёт в ___ (магазин)." value="${escAttr(q.q || "")}" oninput="window.updateTrkiQuestion(0, ${qIdx}, 'q', this.value)" style="font-size:13.5px;font-weight:600" />
-              <div style="display:flex;gap:10px;align-items:flex-start">
-                <textarea class="p-textarea" rows="3" placeholder="Các phương án (mỗi dòng 1 phương án)..." oninput="window.updateTrkiQuestionOptions(0, ${qIdx}, this.value)" style="flex:1;font-size:13px">${esc(opts)}</textarea>
+              <input type="text" class="p-input" placeholder="Câu hỏi hoặc câu khuyết: ví dụ: Анна идёт в ___ (магазин)." value="${escAttr(q.q || "")}" oninput="window.updateTrkiQuestion(0, ${qIdx}, 'q', this.value)" style="${qLockStyle}font-size:13.5px;font-weight:600"${qDis} />
+              <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
+                <textarea class="p-textarea" rows="3" placeholder="Các phương án (mỗi dòng 1 phương án)..." oninput="window.updateTrkiQuestionOptions(0, ${qIdx}, this.value)" style="${qLockStyle}flex:1 1 240px;font-size:13px"${qDis}>${esc(opts)}</textarea>
                 <div style="width:160px;display:flex;flex-direction:column;gap:6px">
                   <label class="p-label" style="font-size:11.5px">Đáp án đúng:</label>
-                  <select class="p-select" onchange="window.updateTrkiQuestion(0, ${qIdx}, 'a', Number(this.value))">
+                  <select class="p-select" onchange="window.updateTrkiQuestion(0, ${qIdx}, 'a', Number(this.value))"${qDis}>
                     ${answerLineOptions(q)}
                   </select>
                 </div>
               </div>
-              <input type="text" class="p-input" placeholder="Giải thích ngữ pháp / căn cứ chia cách: ví dụ: Động từ chuyển động đi vào đâu dùng cách 4: в магазин." value="${escAttr(q.ex || "")}" oninput="window.updateTrkiQuestion(0, ${qIdx}, 'ex', this.value)" style="font-size:12.5px" />
+              <input type="text" class="p-input" placeholder="Giải thích ngữ pháp / căn cứ chia cách: ví dụ: Động từ chuyển động đi vào đâu dùng cách 4: в магазин." value="${escAttr(q.ex || "")}" oninput="window.updateTrkiQuestion(0, ${qIdx}, 'ex', this.value)" style="${qLockStyle}font-size:12.5px"${qDis} />
             </div>
           </div>
         `;
@@ -5721,12 +5752,12 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
 
       subtestBodyHtml = `
         <div class="payload-array-container">
-          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px;flex-wrap:wrap">
             <div>
               <div style="font-weight:700;font-size:15px">Phần 1: Từ vựng &amp; Ngữ pháp (Часть 1. Лексика и грамматика)</div>
               <div style="font-size:12px;color:var(--p-text-muted)">Tổng số: ${qList.length} câu hỏi trắc nghiệm</div>
             </div>
-            <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addTrkiQuestion(0)">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu hỏi</button>
+            ${bankManaged ? "" : `<button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addTrkiQuestion(0)">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu hỏi</button>`}
           </div>
           <div class="payload-array-items">
             ${rowsHtml || '<div style="padding:24px;text-align:center;color:var(--p-text-muted)">Chưa có câu hỏi nào. Bấm "+ Thêm câu hỏi" để bắt đầu.</div>'}
@@ -5748,25 +5779,29 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
         const opts = (q.options || []).join("\n");
         rowsHtml += `
           <div class="payload-array-row" style="margin-bottom:12px;padding:12px;background:var(--p-surface-elevated,#fff);border:1px solid var(--p-border-subtle,#e5e7eb);border-radius:10px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <span class="payload-array-row-num" style="font-weight:700;color:var(--p-primary,#0039A6)">Câu đọc hiểu ${qIdx + 1}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span class="payload-array-row-num" style="font-weight:700;color:var(--p-primary,#0039A6)">Câu đọc hiểu ${qIdx + 1}</span>
+                ${bankManaged && q.code ? `<code style="font-size:11px;color:var(--p-text-muted)">${esc(q.code)}</code>` : ""}
+              </div>
+              ${bankManaged ? `<span class="p-pill p-pill-neutral" style="font-size:11px">Chỉ đọc (Ngân hàng)</span>` : `
               <div style="display:flex;gap:4px">
                 <button class="p-btn-icon" type="button" onclick="window.cloneTrkiQuestion(1, ${qIdx})" title="Nhân bản câu này">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 13 }) : "📋"}</button>
                 <button class="p-btn-icon" type="button" onclick="window.removeTrkiQuestion(1, ${qIdx})" title="Xoá câu này" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
-              </div>
+              </div>`}
             </div>
             <div class="payload-array-row-fields" style="display:flex;flex-direction:column;gap:8px">
-              <input type="text" class="p-input" placeholder="Câu hỏi đọc hiểu: ví dụ: Куда поехал Антон летом?" value="${escAttr(q.q || "")}" oninput="window.updateTrkiQuestion(1, ${qIdx}, 'q', this.value)" style="font-size:13.5px;font-weight:600" />
-              <div style="display:flex;gap:10px;align-items:flex-start">
-                <textarea class="p-textarea" rows="3" placeholder="Các phương án (mỗi dòng 1 phương án)..." oninput="window.updateTrkiQuestionOptions(1, ${qIdx}, this.value)" style="flex:1;font-size:13px">${esc(opts)}</textarea>
+              <input type="text" class="p-input" placeholder="Câu hỏi đọc hiểu: ví dụ: Куда поехал Антон летом?" value="${escAttr(q.q || "")}" oninput="window.updateTrkiQuestion(1, ${qIdx}, 'q', this.value)" style="${qLockStyle}font-size:13.5px;font-weight:600"${qDis} />
+              <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
+                <textarea class="p-textarea" rows="3" placeholder="Các phương án (mỗi dòng 1 phương án)..." oninput="window.updateTrkiQuestionOptions(1, ${qIdx}, this.value)" style="${qLockStyle}flex:1 1 240px;font-size:13px"${qDis}>${esc(opts)}</textarea>
                 <div style="width:160px;display:flex;flex-direction:column;gap:6px">
                   <label class="p-label" style="font-size:11.5px">Đáp án đúng:</label>
-                  <select class="p-select" onchange="window.updateTrkiQuestion(1, ${qIdx}, 'a', Number(this.value))">
+                  <select class="p-select" onchange="window.updateTrkiQuestion(1, ${qIdx}, 'a', Number(this.value))"${qDis}>
                     ${answerLineOptions(q)}
                   </select>
                 </div>
               </div>
-              <input type="text" class="p-input" placeholder="Căn cứ trong bài đọc: ví dụ: Trong đoạn 2 tác giả viết: 'Антон поехал в Санкт-Петербург'." value="${escAttr(q.ex || "")}" oninput="window.updateTrkiQuestion(1, ${qIdx}, 'ex', this.value)" style="font-size:12.5px" />
+              <input type="text" class="p-input" placeholder="Căn cứ trong bài đọc: ví dụ: Trong đoạn 2 tác giả viết: 'Антон поехал в Санкт-Петербург'." value="${escAttr(q.ex || "")}" oninput="window.updateTrkiQuestion(1, ${qIdx}, 'ex', this.value)" style="${qLockStyle}font-size:12.5px"${qDis} />
             </div>
           </div>
         `;
@@ -5789,12 +5824,12 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
           </div>
 
           <div class="payload-array-container">
-            <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px;flex-wrap:wrap">
               <div>
                 <div style="font-weight:700;font-size:15px">Câu hỏi trắc nghiệm Đọc hiểu (Часть 2. Чтение)</div>
                 <div style="font-size:12px;color:var(--p-text-muted)">Tổng số: ${qList.length} câu hỏi</div>
               </div>
-              <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addTrkiQuestion(1)">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu hỏi đọc hiểu</button>
+              ${bankManaged ? "" : `<button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addTrkiQuestion(1)">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu hỏi đọc hiểu</button>`}
             </div>
             <div class="payload-array-items">
               ${rowsHtml || '<div style="padding:24px;text-align:center;color:var(--p-text-muted)">Chưa có câu hỏi đọc hiểu. Bấm "+ Thêm câu hỏi" để tạo.</div>'}
@@ -5841,25 +5876,29 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
         const opts = (q.options || []).join("\n");
         qHtml += `
           <div class="payload-array-row" style="margin-bottom:12px;padding:12px;background:var(--p-surface-elevated,#fff);border:1px solid var(--p-border-subtle,#e5e7eb);border-radius:10px">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-              <span class="payload-array-row-num" style="font-weight:700;color:var(--p-primary,#0039A6)">Câu nghe ${qIdx + 1}</span>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <span class="payload-array-row-num" style="font-weight:700;color:var(--p-primary,#0039A6)">Câu nghe ${qIdx + 1}</span>
+                ${bankManaged && q.code ? `<code style="font-size:11px;color:var(--p-text-muted)">${esc(q.code)}</code>` : ""}
+              </div>
+              ${bankManaged ? `<span class="p-pill p-pill-neutral" style="font-size:11px">Chỉ đọc (Ngân hàng)</span>` : `
               <div style="display:flex;gap:4px">
                 <button class="p-btn-icon" type="button" onclick="window.cloneTrkiQuestion(2, ${qIdx})" title="Nhân bản câu này">${window.RusiIcons ? RusiIcons.get("copy-clipboard", { size: 13 }) : "📋"}</button>
                 <button class="p-btn-icon" type="button" onclick="window.removeTrkiQuestion(2, ${qIdx})" title="Xoá câu này" style="color:var(--p-danger,#dc2626)">${window.RusiIcons ? RusiIcons.get("x", { size: 14 }) : "✕"}</button>
-              </div>
+              </div>`}
             </div>
             <div class="payload-array-row-fields" style="display:flex;flex-direction:column;gap:8px">
-              <input type="text" class="p-input" placeholder="Câu hỏi nghe hiểu: ví dụ: Что хочет купить Анна?" value="${escAttr(q.q || "")}" oninput="window.updateTrkiQuestion(2, ${qIdx}, 'q', this.value)" style="font-size:13.5px;font-weight:600" />
-              <div style="display:flex;gap:10px;align-items:flex-start">
-                <textarea class="p-textarea" rows="3" placeholder="Các phương án (mỗi dòng 1 phương án)..." oninput="window.updateTrkiQuestionOptions(2, ${qIdx}, this.value)" style="flex:1;font-size:13px">${esc(opts)}</textarea>
+              <input type="text" class="p-input" placeholder="Câu hỏi nghe hiểu: ví dụ: Что хочет купить Анна?" value="${escAttr(q.q || "")}" oninput="window.updateTrkiQuestion(2, ${qIdx}, 'q', this.value)" style="${qLockStyle}font-size:13.5px;font-weight:600"${qDis} />
+              <div style="display:flex;gap:10px;align-items:flex-start;flex-wrap:wrap">
+                <textarea class="p-textarea" rows="3" placeholder="Các phương án (mỗi dòng 1 phương án)..." oninput="window.updateTrkiQuestionOptions(2, ${qIdx}, this.value)" style="${qLockStyle}flex:1 1 240px;font-size:13px"${qDis}>${esc(opts)}</textarea>
                 <div style="width:160px;display:flex;flex-direction:column;gap:6px">
                   <label class="p-label" style="font-size:11.5px">Đáp án đúng:</label>
-                  <select class="p-select" onchange="window.updateTrkiQuestion(2, ${qIdx}, 'a', Number(this.value))">
+                  <select class="p-select" onchange="window.updateTrkiQuestion(2, ${qIdx}, 'a', Number(this.value))"${qDis}>
                     ${answerLineOptions(q)}
                   </select>
                 </div>
               </div>
-              <input type="text" class="p-input" placeholder="Căn cứ hội thoại: ví dụ: Người nói 1 đã hỏi..." value="${escAttr(q.ex || "")}" oninput="window.updateTrkiQuestion(2, ${qIdx}, 'ex', this.value)" style="font-size:12.5px" />
+              <input type="text" class="p-input" placeholder="Căn cứ hội thoại: ví dụ: Người nói 1 đã hỏi..." value="${escAttr(q.ex || "")}" oninput="window.updateTrkiQuestion(2, ${qIdx}, 'ex', this.value)" style="${qLockStyle}font-size:12.5px"${qDis} />
             </div>
           </div>
         `;
@@ -5894,12 +5933,12 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
 
           <!-- Listening Questions -->
           <div class="payload-array-container">
-            <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px;flex-wrap:wrap">
               <div>
                 <div style="font-weight:700;font-size:15px">Câu hỏi trắc nghiệm Nghe hiểu (Часть 3. Аудирование)</div>
                 <div style="font-size:12px;color:var(--p-text-muted)">Tổng số: ${qList.length} câu hỏi</div>
               </div>
-              <button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addTrkiQuestion(2)">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu hỏi nghe</button>
+              ${bankManaged ? "" : `<button class="p-btn p-btn-primary p-btn-sm" type="button" onclick="window.addTrkiQuestion(2)">${window.RusiIcons ? RusiIcons.get("plus", { size: 14 }) : "+"} Thêm câu hỏi nghe</button>`}
             </div>
             <div class="payload-array-items">
               ${qHtml || '<div style="padding:24px;text-align:center;color:var(--p-text-muted)">Chưa có câu hỏi nghe hiểu. Bấm "+ Thêm câu hỏi nghe" để tạo.</div>'}
@@ -6051,37 +6090,42 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
 
       subtestBodyHtml = `
         <div class="payload-array-container">
-          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div class="payload-array-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:8px;flex-wrap:wrap">
             <div>
               <div style="font-weight:700;font-size:15px">Bảng đáp án chính thức (Official Answer Keys)</div>
               <div style="font-size:12px;color:var(--p-text-muted)">Dùng đối soát kết quả trắc nghiệm các Phần 1, 2, 3</div>
             </div>
-            <button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.autoGenerateTrkiAnswers()">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 13 }) : "🔄"} Tự động sinh từ câu hỏi</button>
+            ${bankManaged ? `<span class="p-pill p-pill-neutral" style="font-size:11px">Chỉ đọc (Ngân hàng)</span>` : `<button class="p-btn p-btn-secondary p-btn-sm" type="button" onclick="window.autoGenerateTrkiAnswers()">${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 13 }) : "🔄"} Tự động sinh từ câu hỏi</button>`}
           </div>
           <div style="display:flex;flex-direction:column;gap:14px;padding:12px">
             <div>
               <label class="p-label" style="font-weight:700">Đáp án Phần 1 (Ngữ pháp — mảng số index 0..3):</label>
-              <input type="text" class="p-input" value="${escAttr(JSON.stringify(a1))}" oninput="window.updateTrkiAnswerKey('part1', this.value)" style="font-family:monospace;font-size:13px" />
+              <input type="text" class="p-input" value="${escAttr(JSON.stringify(a1))}" oninput="window.updateTrkiAnswerKey('part1', this.value)" style="${qLockStyle}font-family:monospace;font-size:13px"${qDis} />
             </div>
             <div>
               <label class="p-label" style="font-weight:700">Đáp án Phần 2 (Đọc hiểu — mảng số index 0..3):</label>
-              <input type="text" class="p-input" value="${escAttr(JSON.stringify(a2))}" oninput="window.updateTrkiAnswerKey('part2', this.value)" style="font-family:monospace;font-size:13px" />
+              <input type="text" class="p-input" value="${escAttr(JSON.stringify(a2))}" oninput="window.updateTrkiAnswerKey('part2', this.value)" style="${qLockStyle}font-family:monospace;font-size:13px"${qDis} />
             </div>
             <div>
               <label class="p-label" style="font-weight:700">Đáp án Phần 3 (Nghe hiểu — mảng số index 0..3):</label>
-              <input type="text" class="p-input" value="${escAttr(JSON.stringify(a3))}" oninput="window.updateTrkiAnswerKey('part3', this.value)" style="font-family:monospace;font-size:13px" />
+              <input type="text" class="p-input" value="${escAttr(JSON.stringify(a3))}" oninput="window.updateTrkiAnswerKey('part3', this.value)" style="${qLockStyle}font-family:monospace;font-size:13px"${qDis} />
             </div>
           </div>
         </div>
       `;
     }
 
-    // Đề có câu trong Ngân hàng câu hỏi: máy chủ lấy câu hỏi từ ngân hàng khi lưu (sửa câu ở đây bị bỏ qua)
-    const bankManaged = (Array.isArray(draft.parts) ? draft.parts : []).some((p) => p && (p.sub_test ||
-      (Array.isArray(p.questions) && p.questions.some((q) => q && q.code))));
     const bankNotice = bankManaged ? `
-        <div role="note" style="padding:10px 12px;border-radius:10px;border:1px solid var(--p-warning,#f59e0b);background:var(--p-surface-subtle,#fffbeb);font-size:13px;line-height:1.5">
-          <strong>Câu hỏi của đề này lấy từ Ngân hàng câu hỏi TRKI.</strong> Sửa, thêm, ẩn câu hoặc đáp án ở mục Ngân hàng câu hỏi (mã đề <code>${esc(draft.code || draft.id || "")}</code>); đề tự cập nhật. Sửa câu ở đây sẽ không được lưu — chỉ tên phần, thời gian, mô tả... được lưu.
+        <div class="rusi-draft-banner" role="note" style="margin:0;background:var(--p-warning-soft);border-color:var(--p-warning-border)">
+          <div class="rusi-draft-banner-text">
+            <strong>Câu hỏi của đề này lấy từ Ngân hàng câu hỏi TRKI.</strong>
+            Các câu hỏi trắc nghiệm và đáp án tại đây đã khoá chỉ đọc vì máy chủ sẽ dựng lại từ ngân hàng khi lưu (mã đề <code>${esc(testCode)}</code>). Vẫn sửa được đoạn văn đọc hiểu, audio, lời thoại, Phần Viết và Phần Nói.
+          </div>
+          <div class="rusi-draft-banner-actions">
+            <button type="button" class="p-btn p-btn-primary p-btn-sm" onclick="window.openTrkiQuestionBankForTest(${escAttr(JSON.stringify(testCode))})">
+              Mở Ngân hàng câu hỏi →
+            </button>
+          </div>
         </div>` : "";
 
     return `
@@ -6097,6 +6141,11 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
   }
 
   // Window helpers for TRKI Builder
+  window.openTrkiQuestionBankForTest = function (testCode) {
+    const q = String(testCode || "").trim();
+    navigateTo(q ? `#collection/TRKI_QUESTION_BANK?q=${encodeURIComponent(q)}` : "#collection/TRKI_QUESTION_BANK");
+  };
+
   window.switchTrkiSubtest = function (idx) {
     State.activeTrkiSubtest = idx;
     refreshStructureTab();
@@ -6119,7 +6168,7 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
   };
 
   window.addTrkiQuestion = function (partIdx) {
-    if (!State.currentDraft) return;
+    if (!State.currentDraft || isTrkiBankManaged(State.currentDraft)) return;
     normalizeTrkiDraftParts(State.currentDraft);
     const targetPart = partIdx === 0 ? State.currentDraft.part1 : (partIdx === 1 ? State.currentDraft.part2 : State.currentDraft.part3);
     targetPart.questions = targetPart.questions || [];
@@ -6134,7 +6183,7 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
   };
 
   window.removeTrkiQuestion = function (partIdx, qIdx) {
-    if (!State.currentDraft) return;
+    if (!State.currentDraft || isTrkiBankManaged(State.currentDraft)) return;
     normalizeTrkiDraftParts(State.currentDraft);
     const targetPart = partIdx === 0 ? State.currentDraft.part1 : (partIdx === 1 ? State.currentDraft.part2 : State.currentDraft.part3);
     if (targetPart && targetPart.questions) {
@@ -6145,7 +6194,7 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
   };
 
   window.cloneTrkiQuestion = function (partIdx, qIdx) {
-    if (!State.currentDraft) return;
+    if (!State.currentDraft || isTrkiBankManaged(State.currentDraft)) return;
     normalizeTrkiDraftParts(State.currentDraft);
     const targetPart = partIdx === 0 ? State.currentDraft.part1 : (partIdx === 1 ? State.currentDraft.part2 : State.currentDraft.part3);
     if (targetPart && targetPart.questions && targetPart.questions[qIdx]) {
@@ -6173,7 +6222,7 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
   }
 
   window.updateTrkiQuestion = function (partIdx, qIdx, field, val) {
-    if (!State.currentDraft) return;
+    if (!State.currentDraft || isTrkiBankManaged(State.currentDraft)) return;
     normalizeTrkiDraftParts(State.currentDraft);
     const targetPart = partIdx === 0 ? State.currentDraft.part1 : (partIdx === 1 ? State.currentDraft.part2 : State.currentDraft.part3);
     if (targetPart && targetPart.questions && targetPart.questions[qIdx]) {
@@ -6183,7 +6232,7 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
   };
 
   window.updateTrkiQuestionOptions = function (partIdx, qIdx, textVal) {
-    if (!State.currentDraft) return;
+    if (!State.currentDraft || isTrkiBankManaged(State.currentDraft)) return;
     normalizeTrkiDraftParts(State.currentDraft);
     const targetPart = partIdx === 0 ? State.currentDraft.part1 : (partIdx === 1 ? State.currentDraft.part2 : State.currentDraft.part3);
     if (targetPart && targetPart.questions && targetPart.questions[qIdx]) {
@@ -6301,7 +6350,7 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
   };
 
   window.updateTrkiAnswerKey = function (partKey, jsonText) {
-    if (!State.currentDraft) return;
+    if (!State.currentDraft || isTrkiBankManaged(State.currentDraft)) return;
     try {
       State.currentDraft.answers = State.currentDraft.answers || {};
       State.currentDraft.answers[partKey] = JSON.parse(jsonText);
@@ -6309,7 +6358,7 @@ Khi gặp gỡ người lớn tuổi hoặc thầy cô giáo tại Nga, luôn nh
   };
 
   window.autoGenerateTrkiAnswers = function () {
-    if (!State.currentDraft) return;
+    if (!State.currentDraft || isTrkiBankManaged(State.currentDraft)) return;
     normalizeTrkiDraftParts(State.currentDraft);
     State.currentDraft.answers = State.currentDraft.answers || {};
     const q1 = (State.currentDraft.part1 && State.currentDraft.part1.questions) || [];
