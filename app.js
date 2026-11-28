@@ -16,6 +16,31 @@ window.getRusiAppRoot = function() {
   if (window.location.protocol === "file:") return "";
   return window.location.pathname.indexOf("/rusitrki/") === 0 ? "/rusitrki/" : "/";
 };
+// URL sạch nhiều cấp (/blog/<slug>, /vocabulary/lo_tu/<id>...) làm link/ảnh tương đối ("vocabulary.html", "assets/...")
+// bị phân giải sai thành /blog/vocabulary.html. Mọi trang .html đều nằm ở thư mục gốc → khi URL nhiều cấp, đặt <base> về gốc;
+// URL một cấp thì gỡ <base> (giữ đúng các link "#muc" trong trang).
+window.syncRusiBaseHref = function() {
+  if (typeof document === "undefined" || window.location.protocol === "file:") return;
+  try {
+    const root = window.getRusiAppRoot();
+    let rel = window.location.pathname;
+    if (root !== "/" && rel.indexOf(root) === 0) rel = "/" + rel.slice(root.length);
+    const nested = rel.replace(/\/+$/, "").split("/").filter(Boolean).length > 1;
+    let baseEl = document.querySelector("base[data-rusi-base]");
+    if (nested) {
+      if (!baseEl) {
+        baseEl = document.createElement("base");
+        baseEl.setAttribute("data-rusi-base", "1");
+        (document.head || document.documentElement).prepend(baseEl);
+      }
+      baseEl.setAttribute("href", root);
+    } else if (baseEl) {
+      baseEl.remove();
+    }
+  } catch (_) {}
+};
+window.addEventListener("popstate", () => window.syncRusiBaseHref());
+
 window.esc = window.esc || function(str) {
   if (str === null || str === undefined) return "";
   return String(str)
@@ -62,6 +87,7 @@ window.esc = window.esc || function(str) {
       }
     } catch (_) {}
   }
+  window.syncRusiBaseHref();
 })();
 
 // Hàm toàn cục lấy tham số điều hướng từ query param, session params hoặc deep pathname
@@ -143,6 +169,7 @@ window.setRusiDeepUrl = function(path) {
     if (window.location.pathname + window.location.search !== finalUrl) {
       window.history.pushState(null, document.title, finalUrl);
     }
+    window.syncRusiBaseHref();
   } catch (_) {}
 };
 
