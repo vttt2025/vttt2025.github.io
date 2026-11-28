@@ -10,7 +10,7 @@
 
   const PAGE = 25;
   const A = () => window.RusiAdmin || {};
-  const esc = (s) => (A().esc ? A().esc(s) : String(s == null ? "" : s));
+  const esc = (s) => (A().esc ? A().esc(s) : String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])));
   const sbClient = () => (window.SupabaseSyncEngine && window.SupabaseSyncEngine.getClient ? window.SupabaseSyncEngine.getClient() : null);
   const fmt = (iso) => {
     if (!iso) return "—";
