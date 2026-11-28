@@ -9364,7 +9364,14 @@ footer > small {
   box-shadow: 0 4px 16px rgba(16, 42, 76, 0.04);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+}
+
+/* JS bật form bằng style.display = "block" nên gap của flex không áp dụng → giãn cách bằng margin */
+.auth-email-form > * + * {
+  margin-top: 14px;
+}
+.auth-email-form > .btn-submit-email {
+  margin-top: 18px;
 }
 
 .auth-form-group {
@@ -37914,6 +37921,7 @@ body.cbt-resizing .cbt-app-portal .cbt-gutter-handle { background: var(--cbt-acc
 
 /* Đăng nhập / Đăng ký */
 [data-theme="dark"] body .auth-title { color: #f1f5f9; }
+[data-theme="dark"] body .auth-email-form { background: var(--surface); box-shadow: none; }
 /* Nút Google giữ nền trắng theo nhận diện của Google → chữ tối */
 [data-theme="dark"] body .btn-auth-google,
 [data-theme="dark"] body .btn-auth-google span { color: #1f2937; }
