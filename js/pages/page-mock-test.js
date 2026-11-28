@@ -2600,7 +2600,8 @@ function initMockTestPage() {
       } else if (isPracticeMode) {
         statusBadgeText = `KẾT QUẢ LUYỆN TẬP · ${pct}% (CHUẨN ≥ ${requiredPassPct}%)`;
       }
-      if (typeof Progress !== "undefined") {
+      // Máy chủ chưa chấm được: điểm 0% chỉ là tạm, không ghi vào lịch sử
+      if (typeof Progress !== "undefined" && serverGraded) {
         Progress.syncToCloud({
           skill_type: "mock-test",
           item_id: currentTest.id + "_" + pKeyStr,
@@ -2632,7 +2633,11 @@ function initMockTestPage() {
         </div>
 
         <div class="cbt-top-bar-right">
-          <button class="btn btn-primary btn-sm btn-cbt-submit-top" id="btnRetryTop" title="Làm lại đề thi này">
+          ${!serverGraded && !gradeProRequired ? `
+          <button class="btn btn-primary btn-sm btn-cbt-submit-top" id="btnResubmitTop" title="Gửi lại bài làm này lên máy chủ để chấm">
+            ${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 15 }) : ""} <span>Thử nộp lại</span>
+          </button>` : ""}
+          <button class="btn ${!serverGraded && !gradeProRequired ? "btn-outline" : "btn-primary"} btn-sm btn-cbt-submit-top" id="btnRetryTop" title="Làm lại đề thi này">
             ${window.RusiIcons ? RusiIcons.get("refresh-cw", { size: 15 }) : ""} <span>Làm lại đề</span>
           </button>
         </div>
@@ -2653,8 +2658,8 @@ function initMockTestPage() {
               </p>
             </div>
             <div class="trki-eval-top-score">
-              <span class="trki-score-num ${examStatus === 'pass' ? 'pass' : 'fail'}">${pct}%</span>
-              <span class="trki-score-ratio">${correct}/${total} câu đúng</span>
+              <span class="trki-score-num ${examStatus === 'pass' ? 'pass' : 'fail'}">${serverGraded ? pct + "%" : "—"}</span>
+              <span class="trki-score-ratio">${serverGraded ? `${correct}/${total} câu đúng` : "Chưa chấm"}</span>
             </div>
           </div>
 
@@ -2664,7 +2669,7 @@ function initMockTestPage() {
                 <div class="trki-subtest-compact-item ${d.passed ? 'is-pass' : 'is-fail'}">
                   <div class="trki-subtest-compact-row">
                     <span class="trki-subtest-compact-name">${esc(d.part.vi)}</span>
-                    <span class="trki-subtest-compact-score ${d.passed ? 'pass' : 'fail'}">${d.count}/${d.total} (${d.pct}%)</span>
+                    <span class="trki-subtest-compact-score ${d.passed ? 'pass' : 'fail'}">${serverGraded ? `${d.count}/${d.total} (${d.pct}%)` : "Chưa chấm"}</span>
                   </div>
                   <div class="trki-subtest-compact-track">
                     <div class="trki-subtest-compact-fill ${d.passed ? 'pass' : 'fail'}" style="width:${d.pct}%"></div>
@@ -2711,12 +2716,12 @@ function initMockTestPage() {
             const given = answers[part.id + "_" + qi];
             const ok = isAnswerCorrect(q, given);
             return `
-          <div class="trki-review-row ${ok ? 'is-correct' : 'is-wrong'}">
+          <div class="trki-review-row ${!serverGraded ? '' : ok ? 'is-correct' : 'is-wrong'}">
             <div class="trki-review-row-header">
               <div class="trki-review-num-wrap">
                 <span class="trki-review-num">Câu ${qi + 1}</span>
-                <span class="trki-review-pill ${ok ? 'pass' : 'fail'}">
-                  ${ok ? '✓ Đúng' : '✕ Sai'}
+                <span class="trki-review-pill ${!serverGraded ? '' : ok ? 'pass' : 'fail'}">
+                  ${!serverGraded ? 'Chưa chấm' : ok ? '✓ Đúng' : '✕ Sai'}
                 </span>
               </div>
             </div>
@@ -2724,9 +2729,9 @@ function initMockTestPage() {
             <div class="trki-review-answers-grid">
               <div class="trki-review-ans-col">
                 <span class="trki-ans-label">Bạn chọn:</span>
-                <span class="trki-ans-val ru ${ok ? 'pass' : 'fail'}">${given !== undefined ? esc(optionTexts(q.options, given)) : "— bỏ trống —"}</span>
+                <span class="trki-ans-val ru ${!serverGraded ? '' : ok ? 'pass' : 'fail'}">${given !== undefined ? esc(optionTexts(q.options, given)) : "— bỏ trống —"}</span>
               </div>
-              ${ok ? "" : `
+              ${ok || !serverGraded ? "" : `
                 <div class="trki-review-ans-col">
                   <span class="trki-ans-label">Đáp án đúng:</span>
                   <span class="trki-ans-val ru pass">${esc(isMultiQ(q) ? optionTexts(q.options, q.aMulti) : q.options[q.a])}</span>
@@ -2772,6 +2777,8 @@ function initMockTestPage() {
 
     el("#btnReviewBack").onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); window.scrollTo({ top: 0, behavior: "smooth" }); };
     el("#btnRetryTop").onclick = () => startTest(currentTest, activePartId, examMode);
+    // Bài làm vẫn còn trong `answers` (và sessionStorage) khi chấm lỗi → gửi lại đúng bài này
+    if (el("#btnResubmitTop")) el("#btnResubmitTop").onclick = () => { submitting = false; submit(); };
     if (el("#retryTest")) el("#retryTest").onclick = () => startTest(currentTest, activePartId, examMode);
     if (el("#btnBackToHub")) el("#btnBackToHub").onclick = () => { document.body.classList.remove("in-workspace"); renderHub(); };
     if (window.RusiIcons && typeof RusiIcons.replace === "function") {
