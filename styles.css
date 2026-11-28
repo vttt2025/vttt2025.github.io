@@ -5354,6 +5354,7 @@ body.rusika-chat-open .rusika-floating-widget {
   font-weight: 800;
   color: #102a4c;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .vietqr-amount-val b {
@@ -5572,6 +5573,12 @@ body.rusika-chat-open .rusika-floating-widget {
 .manage-pro-close-btn:hover {
   background: var(--bg-hover, rgba(0, 0, 0, 0.05));
   color: var(--text, #0f172a);
+}
+@media (max-width: 768px) {
+  .manage-pro-close-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 .manage-pro-body {
@@ -9364,7 +9371,14 @@ footer > small {
   box-shadow: 0 4px 16px rgba(16, 42, 76, 0.04);
   display: flex;
   flex-direction: column;
-  gap: 14px;
+}
+
+/* JS bật form bằng style.display = "block" nên gap của flex không áp dụng → giãn cách bằng margin */
+.auth-email-form > * + * {
+  margin-top: 14px;
+}
+.auth-email-form > .btn-submit-email {
+  margin-top: 18px;
 }
 
 .auth-form-group {
@@ -33916,6 +33930,8 @@ body.index-personalized #indexUserProgressHost {
 .trki-subtest-compact-score {
   font-size: 0.85rem;
   font-weight: 800;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .trki-subtest-compact-score.pass {
@@ -36597,6 +36613,10 @@ body.cbt-resizing .cbt-gutter-handle {
   .cbt-subtest-name {
     display: none;
   }
+  /* Có thêm nút "Thử nộp lại": không đủ chỗ cho tiêu đề (đã hiện đầy đủ trong thẻ kết quả bên dưới) */
+  .cbt-top-bar:has(#btnResubmitTop) .cbt-title-group {
+    display: none;
+  }
 }
 
 @media (max-width: 860px) {
@@ -37914,6 +37934,7 @@ body.cbt-resizing .cbt-app-portal .cbt-gutter-handle { background: var(--cbt-acc
 
 /* Đăng nhập / Đăng ký */
 [data-theme="dark"] body .auth-title { color: #f1f5f9; }
+[data-theme="dark"] body .auth-email-form { background: var(--surface); box-shadow: none; }
 /* Nút Google giữ nền trắng theo nhận diện của Google → chữ tối */
 [data-theme="dark"] body .btn-auth-google,
 [data-theme="dark"] body .btn-auth-google span { color: #1f2937; }
@@ -38143,6 +38164,7 @@ body.cbt-resizing .cbt-app-portal .cbt-gutter-handle { background: var(--cbt-acc
 [data-theme="dark"] body .trki-eval-status-pill.retake { background: rgba(245, 158, 11, 0.16); color: #fcd34d; border-color: rgba(245, 158, 11, 0.4); }
 [data-theme="dark"] body .manage-pro-status-tag,
 [data-theme="dark"] body .manage-pro-expiry-days { color: #34d399; }
+[data-theme="dark"] body .manage-pro-expiry-days.is-urgent { color: #fca5a5; }
 
 /* Thẻ giá ở trang chủ (#pricing) — cùng kiểu thẻ tối của trang Gói PRO */
 [data-theme="dark"] body .pricing-card,
@@ -39303,6 +39325,10 @@ select.add-jar-input {
   }
   .writing-cyr-key--space {
     grid-column: span 2;
+  }
+  /* Hàng chức năng (Aa ␣ ⌫) luôn bắt đầu dòng mới, không dính sau chữ cuối */
+  .writing-cyr-key[data-action="shift"] {
+    grid-column-start: 1;
   }
 }
 
