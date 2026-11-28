@@ -27,8 +27,11 @@ if (fs.existsSync(path.join('js', 'pages'))) {
     jsFiles.push(path.join('js', 'pages', f));
   });
 }
-if (fs.existsSync(path.join('js', 'audioRecorder.js'))) {
-  jsFiles.push(path.join('js', 'audioRecorder.js'));
+// Mọi file js/*.js (admin-*.js, auth-recovery.js, pro-content.js...) — trước đây chỉ có audioRecorder.js
+if (fs.existsSync('js')) {
+  fs.readdirSync('js').filter(f => f.endsWith('.js')).forEach(f => {
+    jsFiles.push(path.join('js', f));
+  });
 }
 if (fs.existsSync('scripts')) {
   fs.readdirSync('scripts').filter(f => f.endsWith('.js')).forEach(f => {
@@ -186,6 +189,69 @@ jsFiles.forEach(file => {
   });
 });
 console.log(`✓ Kiểm tra bảo mật: Không có mã bí mật (Secret Keys) bị lộ.`);
+
+// 4b. DẤU XUNG ĐỘT GIT (<<<<<<< / ======= / >>>>>>>) còn sót trong mã nguồn & dữ liệu
+{
+  const exts = new Set(['.html', '.js', '.css', '.json', '.sql']);
+  const skipDirs = new Set(['.git', 'node_modules']);
+  const conflictRe = /^(<{7}(?: |$)|={7}$|>{7}(?: |$))/m;
+  const found = [];
+  let scanned = 0;
+  (function walk(dir) {
+    for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (ent.isDirectory()) {
+        if (!skipDirs.has(ent.name)) walk(path.join(dir, ent.name));
+      } else if (exts.has(path.extname(ent.name).toLowerCase())) {
+        const p = path.join(dir, ent.name);
+        const content = fs.readFileSync(p, 'utf8').replace(/\r\n?/g, '\n');
+        scanned++;
+        const m = content.match(conflictRe);
+        if (m) found.push(`${p}:${content.slice(0, m.index).split('\n').length}`);
+      }
+    }
+  })('.');
+  found.forEach((f) => errors.push(`[Xung đột Git] Còn dấu xung đột chưa giải quyết tại ${f}`));
+  if (!found.length) passedChecks++;
+  console.log(found.length
+    ? `✗ Xung đột Git: ${found.length} tệp còn dấu <<<<<<< / ======= / >>>>>>>.`
+    : `✓ Xung đột Git: ${scanned} tệp không còn dấu xung đột.`);
+}
+
+// 4c. CÂN NGOẶC {} TRONG CSS (styles.css, styles.min.css) — bỏ qua chú thích và chuỗi
+{
+  function cssBraceIssue(src) {
+    let depth = 0, line = 1;
+    for (let i = 0; i < src.length; i++) {
+      const c = src[i];
+      if (c === '\n') { line++; continue; }
+      if (c === '/' && src[i + 1] === '*') {
+        const end = src.indexOf('*/', i + 2);
+        if (end < 0) return `chú thích /* không đóng (dòng ${line})`;
+        line += (src.slice(i, end).match(/\n/g) || []).length;
+        i = end + 1;
+        continue;
+      }
+      if (c === '"' || c === "'") {
+        let j = i + 1;
+        while (j < src.length && src[j] !== c && src[j] !== '\n') { if (src[j] === '\\') j++; j++; }
+        i = j;
+        continue;
+      }
+      if (c === '{') depth++;
+      else if (c === '}') { depth--; if (depth < 0) return `thừa dấu } (dòng ${line})`; }
+    }
+    return depth === 0 ? null : `thiếu ${depth} dấu } ở cuối tệp`;
+  }
+  const cssIssues = [];
+  for (const f of ['styles.css', 'styles.min.css']) {
+    if (!fs.existsSync(f)) continue;
+    const issue = cssBraceIssue(fs.readFileSync(f, 'utf8'));
+    if (issue) cssIssues.push(`[CSS] ${f}: ${issue}`);
+  }
+  cssIssues.forEach((e) => errors.push(e));
+  if (!cssIssues.length) passedChecks++;
+  console.log(cssIssues.length ? `✗ Cân ngoặc CSS: ${cssIssues.length} tệp lỗi.` : '✓ Cân ngoặc CSS: styles.css và styles.min.css cân {}.');
+}
 
 // 5. 0-EGRESS: truy vấn đọc trong supabase-client.js phải có giới hạn (.limit/.range/.eq/.in/.single/.maybeSingle)
 // Ngoại lệ khai báo kèm lý do trong scripts/check_unbounded_queries.js (ALLOWLIST)

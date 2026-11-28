@@ -2229,6 +2229,9 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
     if (parts[0] === "monitor") {
       return { route: "monitor" };
     }
+    if (parts[0] === "grading") {
+      return { route: "grading" };
+    }
     return { route: "dashboard" };
   }
 
@@ -2254,7 +2257,12 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       }
     }
     State.savedSnapshot = null;
-    const parsed = parseHash();
+    let parsed = parseHash();
+    // Giáo viên chỉ dùng Studio Chấm bài (chỉ ẩn giao diện — quyền thật ở RLS: teacher không ghi được bảng nội dung nào)
+    if (window.__rusiAdminRole === "teacher" && parsed.route !== "grading") {
+      history.replaceState(null, "", "#grading");
+      parsed = { route: "grading" };
+    }
     State.currentRoute = parsed.route;
     State.currentSlug = parsed.slug || null;
     State.currentDocId = parsed.docId || null;
@@ -2363,6 +2371,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       if (window.RusiAdminDrafts) window.RusiAdminDrafts.onEditorRendered();
     } else if (State.currentRoute === "monitor") {
       if (window.RusiAdminMonitor) window.RusiAdminMonitor.render(container);
+    } else if (State.currentRoute === "grading") {
+      if (window.RusiAdminGrading) window.RusiAdminGrading.render(container);
     } else if (State.currentRoute === "globals") {
       renderGlobalsView(container, State.currentSlug);
     } else if (State.currentRoute === "supabase-sync") {
@@ -2436,6 +2446,7 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
       else if (State.currentRoute === "supabase-sync" && target === "supabase-sync") isActive = true;
       else if (State.currentRoute === "api-explorer" && target === "api-explorer") isActive = true;
       else if (State.currentRoute === "monitor" && target === "monitor") isActive = true;
+      else if (State.currentRoute === "grading" && target === "grading") isActive = true;
 
       link.classList.toggle("active", isActive);
     });
@@ -2492,6 +2503,8 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
         ${sep}
         <span class="payload-crumb-item active">Theo dõi học viên</span>
       `;
+    } else if (State.currentRoute === "grading") {
+      nav.innerHTML = `<span class="payload-crumb-item active">${homeIcon} Chấm bài viết</span>`;
     }
   }
 
@@ -2502,6 +2515,11 @@ Hành trình du học tại Liên bang Nga luôn mở ra nhiều cơ hội quý 
   function updateTopbarActions() {
     const area = document.getElementById("topbarActions");
     if (!area) return;
+    // Studio Chấm bài không dùng các nút đồng bộ/xuất nhập nội dung
+    if (State.currentRoute === "grading") {
+      area.innerHTML = "";
+      return;
+    }
 
     let primaryBtn = "";
     let secondaryBtn = "";
@@ -11263,8 +11281,24 @@ GRANT EXECUTE ON FUNCTION public.is_admin(uuid) TO authenticated, anon;`;
     const user = window.Auth.user;
     const email = String(user.email || "").toLowerCase().trim();
     const isAdmin = isUserAdmin(user);
+    // Giáo viên vào CMS ở chế độ chỉ Studio Chấm bài (B-16); body.rusi-teacher-mode ẩn mọi mục khác ở sidebar
+    const isTeacher = !isAdmin && String(user.role || "").toLowerCase().trim() === "teacher";
+    document.body.classList.toggle("rusi-teacher-mode", isTeacher);
 
-    if (isAdmin) {
+    if (isTeacher) {
+      if (loginGate) loginGate.style.display = "none";
+      if (deniedGate) deniedGate.style.display = "none";
+      if (appEl) appEl.style.display = "flex";
+      const nameEl = document.getElementById("sidebarUserName");
+      const avatarEl = document.getElementById("sidebarAvatar");
+      const roleEl = document.getElementById("sidebarUserRole");
+      if (nameEl) nameEl.textContent = user.displayName || user.name || email;
+      if (avatarEl) avatarEl.textContent = (user.displayName || user.name || email)[0].toUpperCase();
+      if (roleEl) roleEl.textContent = "Giáo viên";
+      const wasTeacher = window.__rusiAdminRole === "teacher";
+      window.__rusiAdminRole = "teacher"; // chỉ để ẩn giao diện
+      if (!wasTeacher) handleRoute();
+    } else if (isAdmin) {
       if (loginGate) loginGate.style.display = "none";
       if (deniedGate) deniedGate.style.display = "none";
       if (appEl) appEl.style.display = "flex";

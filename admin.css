@@ -5518,3 +5518,38 @@ select.rsel-native {
 }
 @keyframes payload-auth-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .payload-auth-spinner { animation-duration: 2.4s; } }
+
+/* ===== Studio Chấm bài viết (B-16, js/admin-grading.js) ===== */
+body.rusi-teacher-mode .payload-sidebar-nav > :not(.rusi-nav-grading) { display: none; }
+.rusi-grade-ai pre {
+  margin: 6px 0 0; white-space: pre-wrap; word-break: break-word; font-family: var(--p-font); font-size: 13px;
+  line-height: 1.55; padding: 10px 12px; border-radius: var(--p-radius); background: var(--p-surface);
+  border: 1px solid var(--p-border); color: var(--p-text);
+}
+.rusi-grade-ai-parts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.rusi-grade-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 6px 0 10px; }
+.rusi-grade-field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--p-text-muted); }
+.rusi-grade-field .p-input, .rusi-grade-field .p-select { width: 100%; box-sizing: border-box; }
+.rusi-grade-notes textarea { min-height: 96px; resize: vertical; font-family: var(--p-font); }
+.rusi-grade-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.rusi-grade-chip { white-space: normal; text-align: left; }
+.rusi-grade-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+@media (max-width: 768px) {
+  .rusi-grade-fields { grid-template-columns: 1fr; }
+  .rusi-grade-field .p-input, .rusi-grade-field .p-select, .rusi-grade-notes textarea { font-size: 16px; min-height: 44px; }
+  .rusi-grade-chip, .rusi-grade-open, .rusi-grade-actions .p-btn, #gradeRefresh, #gradePrev, #gradeNext { min-height: 44px; }
+  .rusi-grade-actions .p-btn { flex: 1 1 100%; }
+  .rusi-mon-tabs.rusi-grade-tabs { flex-wrap: wrap; overflow: visible; }
+  /* Bảng bài nộp thành thẻ dọc: không cuộn ngang, form chấm vừa màn hình */
+  .payload-table.rusi-grade-table { min-width: 0; width: 100%; }
+  .payload-table.rusi-grade-table thead { display: none; }
+  .payload-table.rusi-grade-table tbody,
+  .payload-table.rusi-grade-table tr,
+  .payload-table.rusi-grade-table td,
+  .payload-table.rusi-grade-table td:nth-child(n) { display: block; width: auto; height: auto; }
+  .payload-table.rusi-grade-table tr { border-bottom: 1px solid var(--p-border); padding: 8px 0; }
+  .payload-table.rusi-grade-table td { padding: 4px 12px; border: 0; }
+  .payload-table.rusi-grade-table td[data-label]::before {
+    content: attr(data-label) ": "; font-size: 11.5px; color: var(--p-text-muted); font-weight: 600;
+  }
+}
