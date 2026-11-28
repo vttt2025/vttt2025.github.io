@@ -4231,6 +4231,40 @@ body.payload-body {
     min-height: 60px;
   }
 
+  /* Đầu ngăn kéo Xem trước: xuống dòng để nút Đóng không bị đẩy ra ngoài màn hình */
+  .payload-preview-head {
+    height: auto;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .payload-preview-head > div:first-child {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+
+  .payload-preview-head > div:first-child > span {
+    white-space: nowrap;
+  }
+
+  .payload-preview-head select {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  .payload-preview-head > div:last-child {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .payload-preview-head .p-btn-icon {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
   .payload-toast-container {
     right: 12px;
     bottom: 12px;
