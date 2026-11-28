@@ -38963,3 +38963,159 @@ select.add-jar-input {
 @media (max-width: 1024px), (pointer: coarse) {
   .cbt-app-portal .cbt-hw-confirm { min-height: 44px; padding: 6px 14px; }
 }
+
+/* ==========================================================================
+   RESPONSIVE UI AUDIT r1 — Trang chủ (Hero 1280px, Bảng giá 820px, Dashboard & Chạm mobile)
+   ========================================================================== */
+.eyebrow-dot {
+  flex-shrink: 0;
+}
+.pricing-popular-badge,
+.pricing-amount {
+  white-space: nowrap;
+}
+.pricing-card:has(.pricing-popular-badge) {
+  padding-top: 34px;
+}
+@media (min-width: 1101px) and (max-width: 1460px) {
+  .hero-content {
+    max-width: min(620px, calc(100% - 500px));
+  }
+  .hero-visual {
+    left: auto;
+    right: max(36px, calc(50vw - 660px));
+    transform-origin: right center;
+    transform: scale(0.92);
+  }
+  .hero-visual .progress-card {
+    right: 0;
+  }
+}
+@media (min-width: 1101px) and (max-width: 1220px) {
+  .hero-content {
+    max-width: min(560px, calc(100% - 440px));
+  }
+  .hero-visual {
+    transform: scale(0.82);
+  }
+}
+@media (min-width: 769px) and (max-width: 1024px) {
+  .pricing-grid {
+    max-width: 100% !important;
+  }
+}
+@media (max-width: 960px) {
+  .user-trigger {
+    padding: 3px !important;
+    gap: 0 !important;
+    min-width: 44px;
+    min-height: 44px;
+    justify-content: center;
+  }
+}
+@media (max-width: 768px) {
+  #indexUserProgressHost .index-skills-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .brand,
+  .footer-brand {
+    min-height: 44px;
+  }
+  .user-dropdown-item {
+    min-height: 44px;
+  }
+  .faq-intro a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  #pricing .section-heading .btn-outline {
+    white-space: normal;
+    text-align: left;
+    height: auto;
+    padding: 10px 14px;
+    line-height: 1.35;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE UI AUDIT r1 — Tab cấp độ 820px (đủ 6 cấp không cắt) & tiêu đề thanh workspace
+   ========================================================================== */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .level-tabs {
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    overflow-x: visible !important;
+    padding-right: 0 !important;
+    padding-bottom: 0 !important;
+    gap: 4px !important;
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+  }
+  .level-tab {
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center !important;
+    gap: 2px !important;
+    padding: 10px 4px !important;
+    min-width: 0 !important;
+    border-radius: 0 !important;
+  }
+  .level-tab span.level-code {
+    font-size: 20px !important;
+  }
+  .level-tab small {
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+    white-space: nowrap !important;
+  }
+  .level-tab .level-tab-count {
+    font-size: 0.72rem !important;
+    line-height: 1.2 !important;
+  }
+}
+@media (max-width: 1024px) {
+  .rusi-workspace-back-bar .rusi-workspace-info {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+}
+
+/* ==========================================================================
+   RESPONSIVE UI AUDIT r1 — Vùng chạm ≥44px cho điều khiển Nghe & nút đóng modal Từ vựng
+   ========================================================================== */
+#closeProgressModal {
+  flex-shrink: 0 !important;
+}
+@media (max-width: 1024px), (pointer: coarse) {
+  #btnCompSkipFwd,
+  #btnDictReplay,
+  .lis-dict-sidebar-close-btn,
+  #closeProgressModal,
+  .create-jar-close {
+    width: 44px !important;
+    height: 44px !important;
+    min-width: 44px !important;
+    min-height: 44px !important;
+    flex-shrink: 0 !important;
+  }
+  #btnCompPlay,
+  #btnDictPlay {
+    width: 46px !important;
+    height: 46px !important;
+    min-width: 46px !important;
+    min-height: 46px !important;
+  }
+  .lis-dict-pct-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+@media (max-width: 768px) {
+  .create-jar-header {
+    padding-right: 52px;
+  }
+}
