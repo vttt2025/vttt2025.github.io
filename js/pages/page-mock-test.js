@@ -1506,7 +1506,8 @@ function initMockTestPage() {
           if (isReading) {
             // Phần ĐỌC HIỂU (ЧТЕНИЕ)
             const pRu = (part.text && (part.text.ru || part.text)) || qPassage || "";
-            const pVi = (part.text && part.text.vi) || "";
+            // Thi thật: không có bản dịch (chỉ Luyện tập)
+            const pVi = examMode === "exam" ? "" : ((part.text && part.text.vi) || "");
             const wordCount = pRu.trim() ? pRu.trim().split(/\s+/).length : 0;
 
             leftHost.innerHTML = `
@@ -1586,7 +1587,7 @@ function initMockTestPage() {
                 </div>
               </div>
 
-              ${(part.lines && Array.isArray(part.lines) && part.lines.length) ? `
+              ${(examMode !== "exam" && part.lines && Array.isArray(part.lines) && part.lines.length) ? `
                 <div class="cbt-dialogue-transcript-card">
                   <div class="cbt-dialogue-head">
                     <span>${icon("message-square", 14)} Lời thoại hội thoại</span>
