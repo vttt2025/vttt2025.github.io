@@ -5354,6 +5354,7 @@ body.rusika-chat-open .rusika-floating-widget {
   font-weight: 800;
   color: #102a4c;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .vietqr-amount-val b {
@@ -5572,6 +5573,12 @@ body.rusika-chat-open .rusika-floating-widget {
 .manage-pro-close-btn:hover {
   background: var(--bg-hover, rgba(0, 0, 0, 0.05));
   color: var(--text, #0f172a);
+}
+@media (max-width: 768px) {
+  .manage-pro-close-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 .manage-pro-body {
@@ -38151,6 +38158,7 @@ body.cbt-resizing .cbt-app-portal .cbt-gutter-handle { background: var(--cbt-acc
 [data-theme="dark"] body .trki-eval-status-pill.retake { background: rgba(245, 158, 11, 0.16); color: #fcd34d; border-color: rgba(245, 158, 11, 0.4); }
 [data-theme="dark"] body .manage-pro-status-tag,
 [data-theme="dark"] body .manage-pro-expiry-days { color: #34d399; }
+[data-theme="dark"] body .manage-pro-expiry-days.is-urgent { color: #fca5a5; }
 
 /* Thẻ giá ở trang chủ (#pricing) — cùng kiểu thẻ tối của trang Gói PRO */
 [data-theme="dark"] body .pricing-card,
